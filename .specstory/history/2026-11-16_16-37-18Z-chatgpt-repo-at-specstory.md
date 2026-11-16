@@ -22065,3 +22065,544 @@ slot holds a loop, its green light means it plays. The small dial at the right o
 it carries a red dot while REC is armed (steady) or recording (blinking).
 ```
 </details></tool-use>
+
+_**Agent (claude-fable-5-2 2026-11-16 20:23:58Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Write the ChoralRoot tutorial and add the Unbricker's bootloader notes, then commit and push
+
+````bash
+python3 - <<'EOF'
+import pathlib
+def sub(path, pairs):
+    p=pathlib.Path(path); s=p.read_text()
+    for a,b in pairs:
+        assert a in s, (path,a[:70]); s=s.replace(a,b,1)
+    p.write_text(s)
+pathlib.Path("docs/firmware/choralroot/tutorial.md").write_text('''# ChoralRoot 教學：和弦樂器的玩法
+
+ChoralRoot 仿的是 Telepathic Instruments 的 Orchid。它的操作邏輯和一般鍵盤不同，這頁照「先懂觀念、再一步步加東西」的順序走一遍。內容整理自[上游手冊](https://github.com/Quixotic7/ChoralRootFM1/blob/main/docs/MANUAL.md)（0.41）`[上游]`；我的機器已刷入 ChoralRoot，但這些步驟我還沒逐一在機器上確認。
+
+## 觀念：一隻手決定「什麼和弦」，另一隻手決定「哪個音」
+
+一般鍵盤上，彈 Dm7 要同時按 D、F、A、C 四個鍵，換和弦就要換一組指型。Orchid 式的樂器把這件事拆開：
+
+- **和弦性質**（大、小、減、掛留，加不加七音、九音）用一組固定的鍵決定。
+- **根音**用另一組鍵彈，一次只要一根手指。
+- 機器負責組出和弦、安排聲部，並把和弦名稱顯示在螢幕上。
+
+好處是不需要會指型就能彈出完整的和弦進行，而且換調、換 voicing 都是轉一個旋鈕的事。它是用來找和弦、寫歌、做和聲鋪底的工具，不是用來彈旋律的鍵盤。（關於 Orchid 本身的這段是我的一般認識，沒有查證。）
+
+## 鍵盤配置
+
+27 個鍵，F3 到 G5。**左邊七個是 chord block，其餘 20 個是根音。**
+
+```
+黑鍵      DIM   MIN   MAJ         C#4   D#4         F#4  ...
+          F#3   G#3   A#3
+                \\_ SUS _/   （G#3 + A#3 一起按）
+白鍵    6     m7    M7    9     C4    D4    E4    F4  ...  G5
+        F3    G3    A3    B3    |------- 根音：C4 到 G5 -------|
+```
+
+| 鍵 | 名稱 | 加在根音上面的音（半音數） |
+|---|---|---|
+| F#3 | DIM 減 | 3、6 |
+| G#3 | MIN 小 | 3、7 |
+| A#3 | MAJ 大 | 4、7 |
+| G#3 + A#3 | SUS 掛留 | 5、7 |
+| F3 | 6 | 再加 9 |
+| G3 | m7（小七度） | 再加 10 |
+| A3 | M7（大七度） | 再加 11 |
+| B3 | 9 | 再加 14 |
+
+兩條規則：
+
+- **chord 鍵要在根音按下去之前就按著。** 預設的 Play Style 是 Simple，和弦在根音落下的那一刻就定了。
+- **延伸音可以疊。** MAJ + 6 + 9 會顯示 `D` `6 9`。疊三個顯示 `JAZZ`，四個全按顯示 `WTF`。
+
+螢幕上：大三和弦單獨出現時寫成大寫 M（`DM`），小三和弦是小寫 m（`Dm`）；加了延伸音後大和弦的 M 省略（`D` 加一個小的 `7`）。延伸音用橘色顯示。
+
+## 第一課：彈出和弦
+
+| 想彈 | 按住 | 再按 | 螢幕 |
+|---|---|---|---|
+| D（單音） | 什麼都不按 | D4 | `D` |
+| D 大三和弦 | MAJ（A#3） | D4 | `DM` |
+| D 小三和弦 | MIN（G#3） | D4 | `Dm` |
+| Dm7 | MIN + m7（G#3 + G3） | D4 | `Dm` 加小 `7` |
+| G7（屬七） | MAJ + m7（A#3 + G3） | G4 | `G` 加小 `7` |
+| CM7（大七） | MAJ + M7（A#3 + A3） | C4 | `C` 加小 `M7` |
+| Dsus | G#3 + A#3（一指按兩鍵） | D4 | `Dsus` |
+
+注意 **m7 鍵加的是小七度**，所以 MAJ + m7 是屬七和弦（G7），不是大七和弦。大七要用 M7 鍵。
+
+**練習：ii–V–I（C 大調）**
+
+1. 按住 MIN + m7，彈 D4 → Dm7
+2. 換成 MAJ + m7，彈 G4 → G7
+3. 換成 MAJ + M7，彈 C4 → CM7
+
+## 第二課：LOCK，把左手空出來
+
+每次都要按住 chord 鍵很累。**LOCK**（面板上印的是 **`LFO`**）會把 chord block 鎖住：
+
+1. 點 `LFO`，燈亮，螢幕右上出現 `lock`。
+2. 按住 MIN 再放開：MIN 保持亮著，接下來彈的每個根音都是小和弦。
+3. 沒按住任何 chord 鍵時：
+    - 點一個**種類鍵**（DIM / MIN / MAJ）：換成那個種類，延伸音清掉。
+    - 點一個**延伸鍵**（6 / m7 / M7 / 9）：開或關那個延伸音，種類不變。
+4. 再點 `LFO` 關掉 LOCK。
+
+鎖住之後左手可以去轉旋鈕、按其他功能鍵。
+
+## 第三課：Key Mode，一根手指彈整首歌
+
+這是最省事的模式。點 **KEY**（面板印的是 **`SEL`**），燈亮，螢幕左上顯示 `Key: C`。
+
+現在**單獨按一個根音，機器會彈出那個音在這個調裡該有的和弦**。C 大調下：
+
+| 按 | 得到 |
+|---|---|
+| C | C |
+| D | Dm |
+| E | Em |
+| F | F |
+| G | G |
+| A | Am |
+| B | Bdim |
+
+- 調外的音會彈成鄰近音階音上的 sus 和弦。
+- 按住 chord 鍵可以**臨時覆蓋**音階的選擇（例如在 C 大調裡硬彈一個 D 大三和弦）。
+- 琴鍵的燈會顯示這個調：音階內的音微亮，主音較亮，調外的音不亮。
+
+**換調**：按住 KEY 並同時按一個根音，那個音就成為主音。要小調就同時按 MIN。然後 `OCT-` 關閉 layer。
+
+按住 KEY 會開 **KEY layer**：KNOB 1 選主音、KNOB 2 選音階（共 23 種：大小調、各種 mode、五聲、藍調…）、KNOB 3 移調（±24 半音）。
+
+**練習：流行進行 I–V–vi–IV（C 大調）**
+
+開 Key Mode，依序按 C4、G4、A4、F4。四根手指，四個和弦。
+
+## 第四課：Voicing
+
+同一個和弦可以有不同的排列。**按住和弦轉 KNOB 1**：
+
+- 往上一格：最低音上移八度。
+- 往下一格：最高音下移八度。
+- 範圍 -12 到 +12，螢幕顯示 `voicing +2`。
+
+這個設定會套用到之後所有的和弦，包括正在播放的 loop。`OCT-` / `OCT+` 則是把根音整組移八度（-2 到 +2）。
+
+## 第五課：加 bass
+
+點 **BASS**（面板印的是 **`ENV`**）。每個和弦下面會自動加一個 bass 音，螢幕右上顯示 `Bass`。
+
+- **ALGORITHM**：換 bass 的音色（轉到底是 off）。
+- **KNOB 2**：bass 的音域，-2 到 +4 八度。
+- 按住 BASS 轉 ALGORITHM：bass 的音量。
+- bass 是單音的獨立聲部，有自己的引擎。
+
+## 第六課：Performance mode，讓它幫你彈
+
+點 **PERF**（面板印的是 **`ARP`**）開關。按住 PERF 開 PERF layer，用 **SELECT** 選模式：
+
+| 模式 | 效果 |
+|---|---|
+| **Strum** | 和弦音一個接一個掃出來，像刷吉他 |
+| **Slop** | 時間不整齊的 strum |
+| **Arpeggiate** | 依 tempo 輪流彈和弦音 |
+| **Pattern** | 12 種節奏型（pulse、alberti、waltz、stride…） |
+| **Harp** | 跨好幾個八度的快速琶音 |
+
+在 layer 裡 KNOB 1 是速度（Rate 或 Division）、KNOB 2 是順序（上、下、上下、照彈的順序、隨機）、KNOB 3 與 KNOB 4 依模式而定。layer 外面 KNOB 3 直接調該模式的主要參數。
+
+琶音在放開鍵時會停。要讓它持續：**LATCH**（按住 `GLO` 再點 `LFO`）。
+
+## 第七課：Looper，錄的是和弦不是聲音
+
+1. 點 **`REC`**。燈亮，訊息顯示 `rec: play to start`。
+2. 彈幾個和弦。第一個和弦落下時開始錄。
+3. 再點 `REC`（或 `PLAY`）：`loop recorded`，立刻開始循環。
+4. **LOOP**（面板印的是 **`PLAY`**）：停止 / 播放。
+5. **按住 `SAVE`**：存起來，否則關機就沒了。
+
+重點：loop 記的是「哪個根音、哪種和弦、什麼時候、多長」，播放時重新經過樂器。所以 loop 播放中你可以：
+
+- 轉 PRESETS 換音色，loop 跟著變。
+- 轉 KNOB 1 改 voicing。
+- 開關 bass、換 performance mode。
+- 改 tempo：只改速度，不改音高。
+
+按住 `REC`：undo 最後一層。按住 `GLO` 再點 `REC`：切換錄音模式（Overwrite、Overdub…）。
+
+## 換音色
+
+- **PRESETS**：同一個引擎的下一個音色。
+- **按住 OPT（`GLO`）轉 PRESETS**：換引擎。有 FM6、FM TONE、VA、CZ-1、P5、WHEEL、GRAIN。
+- **`EDIT`**：進音色編輯器。
+
+## 面板對照
+
+面板上印的字大多換了工作：
+
+| 印的 | ChoralRoot | 點一下 | 按住 |
+|---|---|---|---|
+| `FX` | FX | 效果開關 | FX layer |
+| `SEL` | **KEY** | Key Mode 開關 | KEY layer |
+| `ENV` | **BASS** | bass 開關 | BASS layer |
+| `LFO` | **LOCK** | LOCK 開關 | LOCK layer |
+| `EDIT` | EDIT | 音色編輯器 | 引擎選擇 |
+| `GLO` | **OPT** | Options | 搭配旋鈕：第二功能 |
+| `HOME` | HOME | 回主畫面 / 下一個畫面 | 畫面選單 |
+| `SAVE` | SAVE | 存音色 | **存全部** |
+| `ARP` | **PERF** | performance 開關 | PERF layer |
+| `SEQ` | SEQ | loop 編輯器 | 節拍器 / 鼓 |
+| `PLAY` | **LOOP** | 播放 / 停止 loop | PLAY 選單 |
+| `REC` | REC | 錄音 | undo 一層 |
+
+layer 的通則：點一下是開關，按住約半秒是打開 layer（放開後仍開著，按鈕會閃）。`OCT-`、`OCT+` 或 `HOME` 關閉 layer。
+
+## 卡住的時候
+
+- **`OCT-` + `OCT+` 同時按**：PANIC，所有音關掉。
+- 這兩個鍵**加 `HOME` 按住 5 秒**：進 update mode。平常不要按這個組合。
+- 琴鍵沒有力度感應，音量是固定值（在 Options 裡設）。
+
+## 建議的練習順序
+
+1. 第一課的 ii–V–I，確認看得懂螢幕上的和弦名稱。
+2. 開 LOCK，鎖住 MIN + m7，隨便彈根音，聽小七和弦的平行移動。
+3. 開 Key Mode，彈 I–V–vi–IV；換一個調再彈一次。
+4. 加 bass，轉 KNOB 1 聽 voicing 的差別。
+5. PERF 選 Strum，再換 Arpeggiate。
+6. 錄一個四小節的 loop，播放中換音色與 performance mode。
+
+## 沒寫到的
+
+手冊還有很多：三種 Play Style（Simple、Advanced、Free）、Secret Chords（同時按兩三個種類鍵得到 power chord、augmented、add4）、Classic 配置（Orchid 原本的鍵位）、鼓、loop 編輯器、音色編輯器、MIDI out 三個 channel、USB audio 三組立體聲。需要時查[上游手冊](https://github.com/Quixotic7/ChoralRootFM1/blob/main/docs/MANUAL.md)。
+''')
+sub("zensical.toml",[('    { "ChoralRoot" = "firmware/choralroot/index.md" },','    { "ChoralRoot" = [\n      { "概觀與安裝紀錄" = "firmware/choralroot/index.md" },\n      { "教學" = "firmware/choralroot/tutorial.md" },\n    ] },')])
+sub("docs/firmware/choralroot/index.md",[("## 不刷機怎麼玩 { #emulate }","完整的上手教學見 [ChoralRoot 教學](tutorial.md)。\n\n## 不刷機怎麼玩 { #emulate }")])
+sub("docs/getting-started/bricking.md",[("## 我的機器目前在哪","""## Unbricker 怎麼看替代 bootloader
+
+Unbricker 的 README 沒有反對 m-bootloader，但它把「換掉 boot head」明確列為一種會出事的情況 `[上游]`：
+
+- 它舉的例子就是「用 M-Flasher 裝了一個替代 bootloader，結果開不起來」：韌體可以完全正確，機器仍然是黑的。
+- 它的 `restore` **從不寫 boot head**（`0x00000`–`0x03FFF`），所以救不了這種情況。要用 `full-restore`，它會把原廠的 boot head 連同韌體一起寫回去。
+- `full-restore` 預設只接受原廠 V15 或 V16 的 boot head（比對 sha256）。要寫回 m-bootloader 得加 `--other-head`，而且來源是你自己的備份。
+- 前提是機器還能以 `WL82 UBOOT1.00` 出現。**Transporter 這條硬體路線不能寫 boot head**，它的韌體會拒絕。
+- 如果寫 boot head 的途中被打斷，機器在重新執行同一個指令之前都開不了機。
+
+這和我暫緩 m-bootloader 的理由一致：boot head 是唯一一個「寫壞了就可能需要額外硬體」的區域，而我的新晶片在這方面的實測資料最少。
+
+## 我的機器目前在哪""")])
+EOF
+just docs-check 2>&1 | tail -1; git add -A && git commit -q -m "Add a ChoralRoot tutorial and what the Unbricker says about replacement bootloaders
+
+Co-Authored-By: Claude Fable 5.2 <noreply@anthropic.com>" && git push -q origin main && echo pushed
+````
+
+```text
+{"status": "ok", "pages": 40, "llm_pages": 40, "deployed": false}
+pushed
+```
+</details></tool-use>
+
+_**Agent (claude-fable-5-2 2026-11-16 20:24:13Z)**_
+
+ChoralRoot 的教學寫好了，Unbricker 對 m-bootloader 的說法也補進文件，都已 push。
+
+## ChoralRoot 教學
+
+<https://daviddwlee84.github.io/M-VAVE_FM-1/firmware/choralroot/tutorial/>
+
+整理自上游手冊，分七課，每課只加一樣東西。我沒有在機器上逐步確認過，你實際彈的時候如果和文件對不上，告訴我我來修。
+
+核心觀念：一般鍵盤彈 Dm7 要同時按四個鍵，Orchid 式的樂器把它拆開。左邊七個鍵決定「什麼和弦」，其餘的鍵決定「哪個根音」，一次一根手指。
+
+最值得先試的三件事：
+
+- **彈和弦**：按住 MIN 加 m7（兩個左邊的鍵），再按 D4，得到 Dm7。chord 鍵要在根音之前就按著。
+- **LOCK**（面板印的是 `LFO`）：把和弦性質鎖住，左手就空出來了。
+- **Key Mode**（面板印的是 `SEL`）：開了之後單按一個根音，機器自動彈出那個音在這個調裡該有的和弦。C 大調下依序按 C、G、A、F 就是最常見的流行進行，四根手指四個和弦。
+
+有個容易搞錯的地方：**m7 鍵加的是小七度**，所以 MAJ 加 m7 是屬七和弦（G7），不是大七和弦。大七要用 M7 鍵。
+
+另外面板上印的字大多換了工作（`SEL` 是 KEY、`ENV` 是 BASS、`ARP` 是 PERF、`PLAY` 是 LOOP），教學最後有一張完整對照表。
+
+教學裡關於 Orchid 本身的介紹是我的一般認識，沒有查證。
+
+## Unbricker 有提到 m-bootloader 嗎
+
+有，而且和我們的結論方向一致。它沒有反對 m-bootloader，但把「換掉 boot 區」明確列為一種會出事的情況：
+
+- 它舉的例子就是「用 M-Flasher 裝了替代 bootloader，結果開不起來」：韌體可以完全正確，機器仍然是黑的。
+- 它平常的 `restore` 指令**從不寫 boot 區**，所以救不了這種情況，要用另一個會連 boot 區一起寫回的 `full-restore`。
+- `full-restore` 預設只接受原廠的 boot 區。要寫回 m-bootloader 得另外加參數，而且來源是你自己的備份。
+- 前提是電腦還看得到機器。**硬體救援那條路（Transporter）不能寫 boot 區**，它的韌體會拒絕。
+
+最後一點比我之前知道的更嚴格：boot 區壞掉時，硬體只能把機器帶回電腦看得到的狀態，實際修復仍要靠軟體工具把 boot 區寫回去。這段已加進「變磚的原理與分級」頁。
+
+## 目前狀態
+
+機器上是 ChoralRoot 0.41，寫入與驗證成功。SLOOP 的曲子在 `backups/2026-11-17-0341-pre-ctl-1.0.3/`，這份和 04:13 那份都還沒上傳到 Release。
+
+---
+
+_**User (2026-11-16 20:31:52Z)**_
+
+是說 ChoralRoot 是不是可以類似 CTR-1 一樣 傳midi出去然後自己不發音？
+這樣可以用到上面沒有的音色？（是說上面能切什麼音色嗎？現在感覺比較單一）
+
+另外有沒有類似Quantiloop Pro之類的looper firmware推薦的？
+
+---
+
+_**Agent (claude-fable-5-2 2026-11-16 20:32:01Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Find ChoralRoot's sound, MIDI out, and local-sound options in its manual
+
+`grep -n "^## \|^### " /tmp/choral-manual.md | sed -n '40,110p'; grep -n -i -E "local|MIDI out|silent|mute the|internal sound|Chord Ch|Bass Ch|MIDI Chord|Notes Out|volume 0|level" /tmp/choral-manual.md | grep -i -E "option|\*\*MIDI|local|silen" | cut -c1-330 | head -24`
+
+```text
+1399:### Slots and saving
+1436:## 11. Sounds
+1441:### The engines
+1457:### Presets: one pool per engine
+1503:### The engine picker
+1519:### Saving
+1619:### Sounds from outside
+1635:## 12. The sound editor
+1639:### In and out
+1652:### Groups, screens, lanes
+1678:### Knob speed and OPT snap
+1737:### VA
+1755:### FM6
+1767:### FM TONE
+1799:### CZ-1
+1811:### P5
+1833:### WHEEL
+1845:### GRAIN
+1898:## 13. Views
+1918:## 14. Options
+2070:### What the FM-1 remembers
+2129:## 15. MIDI and USB
+2134:### MIDI out (USB)
+2151:### MIDI in (USB, Bluetooth and the TRS jack)
+2193:### MIDI CC: the sounds' parameters
+2372:### Bluetooth MIDI
+2398:### USB Host: a MIDI device on the FM-1's USB-C
+2422:### USB audio recording
+2457:### The web device manager
+2474:### Backup and restore
+2493:## 16. Updating and recovery
+2495:### Before every update
+2504:### Updating
+2538:### If an update is interrupted
+2553:### Power-on and held gestures
+2572:### Calibration
+2582:### SAFE MODE
+2597:### If the FM-1 stays dark
+2604:### Switching firmwares
+2630:## 17. Troubleshooting
+2686:## 18. Quick reference
+2688:### Buttons
+2711:### In the sound editor
+2730:### Knobs
+2743:### Keys
+2759:### At power-on
+2766:## 19. Where to read more
+3:For ChoralRoot 0.41 on the M-VAVE FM-1 (what is new since 0.22 is marked so; what 0.41 brought, each drum's own Chorus, Delay and Reverb sends, Level, Drive and Filter on the Kick, Snare and Hats Mix pages, and the drums on the second core: [releases/0.41.md](releases/0.41.md); what 0.40 brought, drums on the metronome's keys 
+204:The battery level shows only on the Options pages, at the top right.
+634:- `Off`: as described above, a key outside the scale is silent.
+777:| **Solo** | only the bass sounds, at the chord's root in the octave you play it (KNOB 2 moves it by octaves; new in 0.37); the chord sound is silent (`Bass Solo` at the top right). Until 0.36 Solo played in the bass register, the same octave from every key (GitHub issues 40, 43) |
+779:The same setting is Options > Bass Behaviour. The behaviour, the register and the level are kept by a global save (SAVE held).
+1361:- **Chance.** 100, 90, 75, 60, 50, 40, 25 or 10 %: each pass, the step plays or stays silent by that chance. The
+1851:0.24 a source fell silent while its knobs turned). A GRAIN sound stores its knobs, never audio. **MORPH** mixes the
+2028:  metronome, the looper's options (length, record mode, quantize, count-in, level, what its keys do), the bass
+2448:- Options > USB Level = Fixed records at full level while MASTER only turns the speaker and headphones down.
+2646:| The chord sound is silent, the bass plays | Bass Behaviour is Solo (`Bass Solo`) | BASS layer, another behaviour, or tap BASS |
+2649:| The loop plays but is silent | its Level is 0 | PLAY menu, page 2, KNOB 1 |
+2700:| GLO | OPT | Options (SELECT setting · KNOB 1 value). In the PLAY menu: its keys play / loops. In the KEY layer: its keys pick / play. In the editor: SHIFT latch | + **SAVE, both held 1 s: revert to the last save** · + PRESETS: engine · + ALGORITHM: bass engine (both wherever the knob alone is the sound: the main screen, t
+2737:| ALGORITHM | bass sound (with BASS held: bass level) | the bass sound's engine, wherever ALGORITHM alone is the bass sound: the main screen, the Options, the layers, the sound editor (PLAY menu: the record mode, as without OPT; loop editor: the step's Voicing, `Follow` / `0`; the editor's picker and the save dialog: as wit
+```
+</details></tool-use>
+
+_**Agent (claude-fable-5-2 2026-11-16 20:32:09Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Read ChoralRoot's engines, presets, and MIDI out sections, and list looper firmwares in the Hub catalog
+
+```bash
+sed -n '1436,1502p;2134,2150p' /tmp/choral-manual.md | cut -c1-520; sed -n '1918,2000p' /tmp/choral-manual.md | grep -i -E "MIDI|Volume|Level|Chord Level|speaker|Local" | cut -c1-300 | head -20; echo "=== loopers in hub"; python3 -c "
+import json; d=json.load(open('/tmp/hub-catalog.json'))
+r=[i for i in d['firmwares'] if any(k in ((i.get('what') or '')+i['name']).lower() for k in ('looper','live loop','loop station','audio loop','overdub'))]
+for i in sorted(r,key=lambda i:-(i.get('installs') or 0))[:16]: print(i['id'],'|',i['name'],i['version'],'chip='+i['chip'],'inst',i.get('installs'),'|',(i.get('what') or '')[:170],'|',i.get('repo'))"
+```
+
+```text
+## 11. Sounds
+
+ChoralRoot plays two sounds at once: the **chord sound** (PRESETS) and the **bass sound** (ALGORITHM). Each belongs
+to one of seven engines (six before 0.24-beta2).
+
+### The engines
+
+| Engine | What it is | Factory presets |
+| --- | --- | --- |
+| **FM6** | six-operator FM that plays DX7 voices | 25 |
+| **FM TONE** | four-operator FM in the style of the Digitone | 16 |
+| **VA** | ChoralRoot's virtual analog: four oscillators, a morphing filter, four envelopes, four LFOs, a modulation matrix, stereo | 25 |
+| **CZ-1** | Casio CZ-1 phase distortion, with Casio's own 64 tones | 64 |
+| **P5** | a Prophet-5 model (Melodee's engine; new in 0.22): two oscillators with sync and Poly-Mod into a four-pole filter, two envelopes, the wheel's modulation; Sequential's own programs | 115 |
+| **WHEEL** | a tonewheel organ with nine drawbars | 5 |
+| **GRAIN** | a granular synth (new in 0.24-beta2): clouds of grains read from two sources, A and B, that it makes itself from four knobs each, MORPH between them; the VA's filter, two envelopes, two LFOs and a modulation matrix | 8 |
+
+This is the order in which the instrument shows them. Up to 0.17 there were six more, PHASE, LOFI, VOICE, TRIO,
+NOISE and PHYS; they are retired (see [Sounds from outside](#sounds-from-outside) for what happens to a sound saved on one). At power-on the chord sound is the one of your last global save (on a
+new unit FM6 `TINE EP`), and the bass sound is VA `DEEP SUB` until you choose another.
+
+### Presets: one pool per engine
+
+Every engine has one list, its **pool**:
+
+- `00 INIT`, the engine's plain starting sound;
+- then the factory presets;
+- then the sounds you added.
+
+<img src="manual/sound-popup.png" width="240" alt="The sound read-out: FM6 in orange over 02, FM BELL, two of the 25 stripes lit, Hold OPT to change engine">
+
+**PRESETS** turns through the pool of the chord sound's engine and wraps round. The read-out is the engine's name
+in orange, the place big under it, and the sound's name. The stripes are the presets of the pool (`00 INIT` is not
+one): none is lit on INIT, all of them on the last preset, so they show how many there are and where you are. A
+small square after the name marks a factory preset you have saved over. The bottom line says how to get to another
+engine: `Hold OPT to change engine` (hold OPT, printed GLO, and turn PRESETS). **ALGORITHM** does the same for the
+bass, with `00 off` in front of the pool; its read-out is all orange and its bottom line is the same,
+`Hold OPT to change engine` (hold OPT and turn ALGORITHM: the bass part's engine). The line is there wherever
+holding OPT does change the engine, which from 0.19 includes the layers. Where it does not (the PLAY menu, the sound
+editor's picker, the save dialog, and for the chord sound the sound editor) the bottom line is the engine and the
+place instead (`FM6 · 02/25`) and nothing stands over the number.
+
+When you step to another preset the stripes move from where they were: going up, the ones in between light one after
+another; going down, they go out. Only the first read-out after switching on, and the first after changing the engine,
+fills from the left. A long way (from the last preset round to INIT, say) takes under half a second.
+
+**OPT + PRESETS** changes the chord sound's engine: hold OPT, turn PRESETS until the engine you want is in the
+middle (the screen shows how many presets it has), let go. You land on the sound you last used in that engine.
+**OPT + ALGORITHM** does the same for the bass.
+
+The rule, the same for both knobs (0.19): **wherever the knob alone changes the sound, OPT held makes it change the
+engine; where the knob has another job, OPT leaves that job alone.**
+
+| Where | PRESETS alone | OPT + PRESETS | ALGORITHM alone | OPT + ALGORITHM |
+| --- | --- | --- | --- | --- |
+| the main screen (any view), the Options | chord sound | **chord engine** | bass sound | **bass engine** |
+| a layer: KEY, PERF, FX, BASS, SEQ (metronome), LOCK, the view menu | chord sound | **chord engine** (new in 0.19) | bass sound | **bass engine** (new in 0.19) |
+| the sound editor | opens the editor's preset picker | the same (the editor's picker) | bass sound | **bass engine** (new in 0.19) |
+| the PLAY menu | the loop slot | the loop slot | the record mode | the record mode |
+| the loop editor | the step | 8 steps a click | the step's Voicing | Voicing `Follow` / `0` |
+| the editor's picker (EDIT held, or PRESETS in the editor) | its presets | its presets | bass sound | bass sound |
+| the save dialog | chord sound | chord sound | bass sound | bass sound |
+
+In the editor's picker and on the save dialog OPT changes nothing about either knob: each of them is busy with one
+sound (a preview you can still cancel, the sound you are naming). A knob you turn while a layer's own button is held
+past the hold time is always that layer's, whatever else is held.
+
+### MIDI out (USB)
+
+| What | Channel (Options) | Carries |
+| --- | --- | --- |
+| Perform | MIDI Perform, ch 1 | what the chord sound plays: the chord, or the performance mode's notes |
+| Bass | MIDI Bass, ch 2 | the bass line, or the bass's performance mode's notes |
+| Raw Chord | MIDI Raw Chord, Off | the plain chord as a block, whatever the performance mode does |
+
+With MIDI Clock set to Out (the default) the FM-1 also sends MIDI clock at the tempo, a start when the loop starts
+playing and a stop when it stops. PANIC sends all notes off (CC 123). With MIDI CC set to Out or In + Out (the
+default is In) a knob turned on a sound's parameter sends its CC on the part's channel ([MIDI CC](#midi-cc-the-sounds-parameters)).
+
+**Note names** (explained in 0.37). The screen names notes the usual way, middle C (MIDI note 60) as **C4**, and MIDI out sends the note
+the screen names: C4 on the screen is note 60. Some programs (Ableton Live, Logic, Cubase and others that follow
+Yamaha's convention) call note 60 **C3**, so there every note reads an octave lower than on the FM-1; the notes are
+the same. The bass's notes are wherever its Behaviour and Register put them ([Bass](#6-bass)).
+
+Tap **OPT** (printed GLO). The settings are in groups (new in 0.39): **Play**, **Chords**, **Keys**, **MIDI**,
+| **Velocity** | 1 to 127 | 100 | the velocity of every key, for the sound and for MIDI out |
+**MIDI**
+| **MIDI Perform** | Off, ch 1 to ch 16 | ch 1 | the channel the chord sound's notes go out on, and come in on |
+| **MIDI Bass** | Off, ch 1 to ch 16 | ch 2 | the same for the bass |
+| **MIDI Raw Chord** | Off, ch 1 to ch 16 | Off | the channel for the plain chord, without the performance mode. From Off the first step is ch 1; choose a channel of its own (the Orchid uses 3) |
+| **MIDI Keys** | Off, ch 1 to ch 16 | Off | the channel whose notes 53 to 79 press the FM-1's keys F3 to G5, and notes 36 to 44 (a pad controller's first pads) the chord keys F3 to C#4 ([MIDI in](#midi-in-usb-bluetooth-and-the-trs-jack)); the MIDI Perform, MIDI Bass and MIDI Roots channels are skip
+| **MIDI Roots** | Off, ch 1 to ch 16 | Off | the channel whose every note is a root at its own pitch: a whole keyboard plays chords, with the chord keys held on the FM-1 or over MIDI Keys ([MIDI in](#midi-in-usb-bluetooth-and-the-trs-jack)); the MIDI Perform, MIDI Bass and MIDI Keys channels are sk
+| **MIDI Clock** | Off, Out, In | Out | Out: sends clock, and start / stop with the loop; incoming start / stop work as LOOP. In: follows the clock and start / stop |
+| **MIDI CC** | Off, In, Out, In + Out | In | CCs on the sounds' parameters ([MIDI CC](#midi-cc-the-sounds-parameters)). In: a CC sets the parameter; Out: a knob turned on such a parameter sends its CC. Off: only CC 7, 91, 93 and 94 as before. New in 0.33 |
+| **Bluetooth** | Off, On | Off | the FM-1 only: MIDI over Bluetooth, the same MIDI as over USB ([Bluetooth MIDI](#bluetooth-midi)); the first On takes effect at the next power-on. The line under it says what the link is doing. Kept apart from the other settings (Reset Settings leaves it, a backup d
+| **USB Host** | Off, On | Off | the FM-1 only: the USB-C port hosts a USB MIDI keyboard, controller or second FM-1 instead of talking to a computer ([USB Host](#usb-host-a-midi-device-on-the-fm-1s-usb-c)). Never saved: every start-up is a USB device again |
+| **Output** | Classic, Clean | Clean | the last stage before the headphones, the speaker and the USB recording. Classic: as 0.18 and before. Clean: 0.19's, with less distortion on chords and at low MASTER settings; a single note is a little quieter, a full chord with the bass a little louder, and e
+=== loopers in hub
+choralroot | ChoralRoot 0.41 chip=new inst 2071 | A Telepathic Orchid-style chord instrument: one hand plays roots, the other shapes chords; voicings, performance modes, bass and a looper. | Quixotic7/ChoralRootFM1
+tonitor | Tonitor 2026.11.10 chip=new inst 1272 | Six tracks for live ambient and experimental music: three synth engines, patches generated by algorithm, free-length loops with up to ten overdubs each, a granulator, fil | nzimas/tonitor
+fumi | FuMi-1 1.1.0 chip=old inst 340 | A shigin conductor after the Suiko ST-50: its two rows of keys, the key set in honsū, equal or its own just tuning, a koto and twelve more sounds on a 6-op FM engine, rin | cartesive/fumi-1
+chord | fm1-chord 0.3 chip=old inst 338 | A chord machine after the HiChord, with extras: chords in a key under the white keys, slash chords and inversions, sounds, envelopes, effects and a looper. | math0ne/fm1-chord
+bigorna | Bigorna 2026.11.16 chip=old inst 169 | Rhythmic noise, power noise, industrial and IDM after the Elektron Digitone II: six tracks, four machines (4-OP, DRUM, WAVY, HIVE), parameter locks on a 16-step sequencer | nzimas/bigorna
+ptfm | PT/FM 0.26 chip=old inst 62 | A ProTracker-style pocket studio: DX7 FM, JUNO-106, TB-303, chip, sampler and FUSION instruments side by side, 16 voices on both cores, a loop station, a two-deck DJ mode | hitosu/ptfm
+```
+</details></tool-use>
+
+_**Agent (claude-fable-5-2 2026-11-16 20:32:19Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Check whether ChoralRoot has a local-off setting or part levels, and read the Tonitor README
+
+`grep -n -i -E "local off|local control|\bLocal\b" /tmp/choral-manual.md | cut -c1-240 | head -5; grep -n -i -E "MASTER \||MASTER\*\*|\| MASTER|chord level|Chord Lvl|part.s level|Mix page|Levels" /tmp/choral-manual.md | cut -c1-300 | head -12; gh api repos/nzimas/tonitor/readme --jq .content | base64 -d | cut -c1-600 | head -30`
+
+```text
+3:For ChoralRoot 0.41 on the M-VAVE FM-1 (what is new since 0.22 is marked so; what 0.41 brought, each drum's own Chorus, Delay and Reverb sends, Level, Drive and Filter on the Kick, Snare and Hats Mix pages, and the drums on the second core: [releases/0.41.md](releases/0.41.md); what 0.40 brought, 
+178:| MASTER | the volume | |
+230:**Key Mode on the keys.** The key lights have four levels: faint (an idle chord key), low (the glow: a note of
+250:Stock has two levels only and is as it always was: idle chord keys and, with Key Mode off, every root key are lit;
+730:PRESETS and ALGORITHM keep their jobs in a layer (except in the PLAY menu and in SEQ's hold menu, where they are the beat's, and on its Mix pages a drum's Drive and Filter: [The drums](#the-drums)). The hold time is set in Options > Hold
+1082:  pages it does nothing, and on the Mix pages it is the drum's Filter), and **PRESETS** starts and stops the beat on
+1083:  every page but the Mix pages, where it is the drum's Drive (right on, left off; a tap of SEQ does the same). KNOB 1 is the level (the click's, or the
+1115:| **Kick Mix**, **Snare Mix**, **Hats Mix** (new in 0.41; 0.40 had one Mix page, a send a drum): the drum in a ring as full as its Level, red spikes round it as hot as its Drive (its value under it), a wire from it through a white filter box (filled with as much of the drum as goes through the 
+1123:- **Filter and Drive** (new in 0.41), on each Mix page: PRESETS the Drive, ALGORITHM the Filter. **Filter** is how much of the
+1741:| OSC | (1) the four oscillators as rows: Wave · Level · Coarse · Fine. (2) the same four: Mode · Shape · Key trk · Sync/Ring. (3) the mixer: the four levels as tall bars |
+1803:| OSC | (1) the two lines as rows: Wave · Wave · Window · Level. (2) `DETUNE`: Sign · Oct · Note · Fine. (3) the mixer: the two lines' levels |
+2002:| **USB Level** | Master, Fixed | Master | Master: the recording follows the MASTER knob. Fixed: it is recorded at full level and MASTER only sets what you hear |
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/assets/logo-dark.svg">
+    <img src="docs/assets/logo-light.svg" alt="Tonitor" width="520">
+  </picture>
+</p>
+
+<p align="center"><b>An alternative firmware for the M-VAVE FM-1, for electroacoustic experimentation, live ambient music and sound exploration.</b></p>
+
+<p align="center">
+  <a href="https://nzimas.github.io/tonitor/install.html"><b>Install via browser</b></a> ·
+  <a href="https://nzimas.github.io/tonitor/manual.html">Manual</a> ·
+  <a href="https://nzimas.github.io/tonitor/">Website</a> ·
+  <a href="CHANGELOG.md">Changelog</a>
+</p>
+
+---
+
+> [!WARNING]
+> Installing Tonitor replaces the firmware M-VAVE ships with the FM-1. It is unofficial, is not made,
+> endorsed or supported by M-VAVE, and installing it **may void any warranty that applies to your device**.
+> You install it at your own risk; read the [disclaimer](#disclaimer) first.
+
+## What it is
+
+Tonitor turns the FM-1, a small FM groovebox, into an instrument for **acousmatic and electroacoustic
+music** — sound heard for itself, its texture, its grain and its movement — and for **live ambient music**,
+dark ambient above all.
+
+**It is not a groovebox.** There is no tempo, no step sequencer, no pattern, no drum kit. Instead there
+```
+</details></tool-use>

@@ -57,6 +57,50 @@
 
 面板上印的標示多半換了工作：`SEL` 是 KEY、`ARP` 是 PERF、`ENV` 是 BASS、`LFO` 是 LOCK、`GLO` 是 OPT、`PLAY` 是 LOOP。琴鍵沒有 velocity（FM-1 的鍵感測不到），用固定值。
 
+## 音色：七個引擎，不只一種 { #sounds }
+
+剛裝好時會覺得音色單一，是因為 **PRESETS 只在目前這個引擎裡轉**。換引擎要**按住 `GLO`（OPT）再轉 PRESETS**，轉到想要的引擎後放開。`[上游]`
+
+| 引擎 | 是什麼 | 內建音色數 |
+|---|---|---|
+| **FM6** | 六運算子 FM，能載入 DX7 音色。開機預設是這個（`TINE EP`） | 25 |
+| **FM TONE** | 四運算子 FM，Digitone 風格 | 16 |
+| **VA** | virtual analog：四個振盪器、可變形濾波器、四組 envelope 與 LFO | 25 |
+| **CZ-1** | Casio CZ-1 的 phase distortion，含原廠 64 個音色 | 64 |
+| **P5** | Prophet-5 模型 | 115 |
+| **WHEEL** | 九支 drawbar 的 tonewheel 風琴 | 5 |
+| **GRAIN** | granular 合成 | 8 |
+
+合計 258 個內建音色。bass 是另一個獨立聲部：**ALGORITHM** 換 bass 音色，**按住 `GLO` 轉 ALGORITHM** 換 bass 的引擎。每個引擎還能存自己做的音色，`EDIT` 進編輯器。
+
+## 當成 MIDI 和弦控制器：送 MIDI 出去、自己不發聲 { #midi-out }
+
+可以。ChoralRoot 彈出的和弦會從 USB MIDI（開了的話還有 Bluetooth）送出去，所以能拿它的和弦邏輯去驅動 iPad 或電腦上的任何音源。`[上游]`
+
+| 送出的東西 | Options 裡的設定 | 預設 channel | 內容 |
+|---|---|---|---|
+| Perform | MIDI Perform | ch 1 | 和弦聲部實際彈的音：整個和弦，或 performance mode 拆出來的琶音 |
+| Bass | MIDI Bass | ch 2 | bass 線 |
+| Raw Chord | MIDI Raw Chord | Off | 不經 performance mode 的原始和弦塊。Orchid 用 ch 3 |
+
+另外預設會送 MIDI clock，loop 開始與停止時送 start / stop。
+
+**讓它自己不發聲**：手冊裡沒有像 CTL-1 那樣的 Sound On/Off 或 local off 選項。最直接的做法是把 **MASTER 旋鈕轉到底**，MIDI 照常送出。我還沒在機器上確認轉到底是否完全無聲。`[調研]`
+
+接 iPad 時和 CTL-1 的差別：
+
+| | CTL-1 | ChoralRoot |
+|---|---|---|
+| 送的 MIDI | 你按的音、旋鈕的 CC | **組好的和弦**、bass、clock |
+| 關掉自己的聲音 | Sound 頁有開關 | 沒有開關，用 MASTER |
+| iPad 的聲音會不會被導到 FM-1 | 會（它是 USB audio 輸出） | 手冊說電腦**不能**透過 FM-1 播放聲音，所以應該不會。未實測 |
+| Bluetooth MIDI | 開機就開 | 預設關，Options → Bluetooth 設 On，下次開機生效 |
+| 旋鈕送 CC | 四個 bank | Options → MIDI CC 設成 Out 或 In + Out 後，轉音色參數時會送 |
+
+在接收端：把一個音源放在 ch 1 收和弦、另一個放 ch 2 收 bass（AUM 可以分別路由）。很多 DAW 把 MIDI note 60 叫 C3，ChoralRoot 叫 C4，所以看起來會差一個八度，音其實一樣。
+
+也可以反過來：Options → **MIDI Roots** 指定一個 channel，外接鍵盤上的每個音都當成根音，chord block 仍在 FM-1 上按。這樣就有一整排鍵盤可以彈和弦。
+
 ## 刷之前要知道的
 
 ChoralRoot 本身支援新晶片（上游 0.29.1 起接受 `0xB36014`，Hub 也這樣標）。問題在**從 SLOOP 切過去**：

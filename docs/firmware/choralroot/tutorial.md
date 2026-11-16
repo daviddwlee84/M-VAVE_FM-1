@@ -157,8 +157,9 @@ ChoralRoot 仿的是 Telepathic Instruments 的 Orchid。它的操作邏輯和�
 
 ## 換音色
 
-- **PRESETS**：同一個引擎的下一個音色。
-- **按住 OPT（`GLO`）轉 PRESETS**：換引擎。有 FM6、FM TONE、VA、CZ-1、P5、WHEEL、GRAIN。
+- **PRESETS**：同一個引擎的下一個音色。只轉這個會覺得音色很單一，因為它不會跨引擎。
+- **按住 OPT（`GLO`）轉 PRESETS**：換引擎。有 FM6、FM TONE、VA、CZ-1、P5、WHEEL、GRAIN，合計 258 個內建音色，見[七個引擎](index.md#sounds)。
+- 想用機器上沒有的音色：把它當 MIDI 和弦控制器，見[送 MIDI 出去](index.md#midi-out)。
 - **`EDIT`**：進音色編輯器。
 
 ## 面板對照

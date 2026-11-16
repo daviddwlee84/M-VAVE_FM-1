@@ -18,6 +18,23 @@ FM-1 同一時間只跑一套主要韌體，換韌體就是重刷。可以先在
 | [Felucca](https://github.com/hugelton/Felucca) | 多 engine 合成器 | 多數社群韌體的源頭與硬體層 |
 | [FM-1 SID](https://github.com/joakimeriksson/fm1-sid) | Commodore 64 SID 合成器 | 跑在 fm1-dock 上 |
 
+## 想要 looper 的話
+
+先講限制：**FM-1 沒有音訊輸入**，所以做不到 Quantiloop 那種「錄進來的聲音疊錄」的 audio looper。FM-1 上的 looper 錄的都是它自己彈的音符或和弦，再重新發聲。要 loop 外部聲音（吉他、人聲），還是得用 iPad 上的 Quantiloop / Loopy Pro，FM-1 當音源或控制器。
+
+| 韌體 | looper 的性質 | 新晶片（Hub 標示） | 備註 |
+|---|---|---|---|
+| [SLOOP](sloop/index.md) | 即興疊錄的四軌 groovebox：free take 模式下不用節拍器，loop 的長度決定 tempo，可一直 overdub | 認得 | 最接近「現場 loop 一首歌」。我用過 |
+| [ChoralRoot](choralroot/index.md) | 錄和弦的 looper：十個 slot，Overwrite / Overdub / Replace / Step 等錄音模式，播放中可換音色與 voicing | 認得 | 我現在裝的 |
+| [Tonitor](https://github.com/nzimas/tonitor) | 六軌、**沒有 tempo 與格線**的自由長度 loop，每軌最多十層 overdub，另有 granulator。走 ambient / 實驗路線 | 認得 | Hub 上約 1,300 次安裝。作者強調它不是 groovebox。我沒試過 |
+| [RemoteFM1](remotefm1/index.md) | 不接主機時內建一個 looper | 認得 | 附帶功能 |
+| [fm1-chord](https://github.com/math0ne/fm1-chord) | 和弦機加 looper | **只認舊晶片** | 不要裝在我的機器上 |
+| [PT/FM](https://github.com/hitosu/ptfm) | tracker 式的口袋工作站，含 loop station | **只認舊晶片** | 同上 |
+
+清單來自 Firmware Hub 目錄的描述（2026-11-17），除了 SLOOP 與 ChoralRoot 以外我都沒有實際用過。
+
+用法上的建議：要「打一段鼓、疊 bass、再疊和弦」這種 looper 手感，SLOOP 最合適；要自由、沒有節拍的聲音疊層，看 Tonitor；要 loop 真的聲音，用 iPad。
+
 ## 控制器與工具類
 
 | 韌體 | 變成什麼 | 用途 |
