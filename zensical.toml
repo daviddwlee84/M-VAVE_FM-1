@@ -21,6 +21,7 @@ nav = [
   { "硬體" = [
     { "接口與連線" = "hardware/io.md" },
     { "兩種 Flash 晶片" = "hardware/flash-chips.md" },
+    { "相關硬體" = "hardware/related.md" },
   ] },
   { "Firmware" = [
     { "韌體地圖" = "firmware/index.md" },

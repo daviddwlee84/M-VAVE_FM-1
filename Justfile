@@ -4,7 +4,7 @@
 #   read-only   fm1-find, fm1-info, fm1-backup, fm1-fetch, fm1-verify-backups, fm1-versions,
 #               emu-* (the emulator never touches the unit)
 #   mode switch fm1-download-mode, fm1-restart
-#   write       fm1-flash   (owner only; M-Flasher asks for a typed "yes")
+#   write       fm1-flash, fm1-switch   (owner only; M-Flasher asks for a typed "yes")
 # There is deliberately no recipe for bootloader, restore or run-ram.
 
 m_flasher := env("M_FLASHER", "/Applications/M-Flasher.app/Contents/MacOS/M-Flasher")
@@ -224,6 +224,33 @@ fm1-restart:
 [confirm("This writes firmware to the FM-1. A verified backup exists and the package supports this flash chip?")]
 fm1-flash package:
     "{{m_flasher}}" firmware "{{package}}"
+
+# M-Flasher shows the plan and waits for a typed "yes". Owner only.
+# Switch firmware: download mode -> backup -> install -> restart. target: sloop | agtdeck | path/to/x.fwsc
+fm1-switch target:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    case "{{target}}" in
+      sloop)   pkg="downloads/sloop-{{sloop_version}}.fwsc" ;;
+      agtdeck) pkg="downloads/agtdeck-{{agtdeck_version}}.fwsc" ;;
+      *)       pkg="{{target}}" ;;
+    esac
+    test -f "$pkg" || { echo "no such package: $pkg (try: just fm1-fetch / just agtdeck-fetch)" >&2; exit 1; }
+    name=$(basename "$pkg" .fwsc)
+    units=$("{{m_flasher}}" find)
+    echo "$units"
+    if echo "$units" | grep -q "(emu)"; then
+      echo "An emulated FM-1 is on USB MIDI. Close the emulator first, so the switch cannot go to the wrong device." >&2; exit 1
+    fi
+    if ! echo "$units" | grep -q "^usb:"; then
+      "{{m_flasher}}" download-mode
+    fi
+    dir="backups/$(date +%Y-%m-%d-%H%M)-pre-$name"
+    mkdir -p "$dir"
+    "{{m_flasher}}" backup "$dir" | grep -E "firmware|app |Backup saved"
+    shasum -a 256 "$dir"/*.bin
+    echo "Backup before the switch: $dir (not uploaded; just fm1-backup-release $(basename "$dir") if you want it off this machine)"
+    "{{m_flasher}}" firmware "$pkg" --restart
 
 # ---- off-machine copies -----------------------------------------------------
 

@@ -24,10 +24,26 @@ FM-1 的社群韌體看起來很多，但整個生態非常新。這頁整理它
 **兩者都有，而且是社群先。**
 
 - **先是逆向。** 7 月就有人逆向原廠韌體與更新協定。10 月初的 Felucca 提供了第一個完整的開源硬體層（現在獨立成 [felucca-bsp](https://github.com/hugelton/felucca-bsp)），後來大多數韌體都是從它或它的衍生物（Dinghy、SLOOP）長出來的。Felucca 的 README 明說它與 M-VAVE 無關、未經其背書。
-- **官方隨後跟進。** M-VAVE 在 10 月中發布 `fm1_open`：一份 GPLv3（附 SDK linking exception）的開放韌體「FM1 Open V14」，含 binary SDK、8 軌、8 個 sample slot、16 個效果示範，以及一個網頁版的 [Workbench](https://open.m-vave.com/fm1-workbench)（更新韌體、預覽、管理 project 與 sample）。它的 build 需要 Windows 與 JieLi 的 Windows toolchain。
+- **官方隨後跟進。** M-VAVE 在 10 月中發布 `fm1_open`：一份 GPLv3（附 SDK linking exception）的開放韌體「FM1 Open V14」。Firmware Hub 對它的描述是 app 開源、**聲音引擎是閉源的**（binary SDK）。它含 binary SDK、8 軌、8 個 sample slot、16 個效果示範，以及一個網頁版的 [Workbench](https://open.m-vave.com/fm1-workbench)（更新韌體、預覽、管理 project 與 sample）。它的 build 需要 Windows 與 JieLi 的 Windows toolchain。
 - **晶片本身有公開資料。** SoC 是 JieLi AC791N，JieLi 有公開的 AC79 SDK 與 toolchain。社群韌體 build 時用的就是 JieLi 的 clang，加上從 SDK 取用的幾個檔案。這是逆向能進展這麼快的原因之一。
 
 所以 M-VAVE 不是「一開始就設計成開放平台」，而是在社群已經做出成果之後，選擇開放自己的韌體原始碼與 SDK，而不是封鎖。
+
+## FM-1 是第一台這樣被玩的機器嗎
+
+不是。社群替硬體寫自己的韌體有很長的歷史，以下是我憑一般知識舉的例子，沒有逐一查證年份：
+
+- **音樂播放器與相機**：Rockbox（MP3 播放器）、CHDK 與 Magic Lantern（Canon 相機）。
+- **路由器**：OpenWrt，起點是 Linksys WRT54G。
+- **合成器與音樂器材，廠商主動開放的**：Mutable Instruments 的模組（開源，衍生出大量替代韌體）、Korg 的 logue SDK（prologue、minilogue xd、NTS-1）、Monome Norns、Critter & Guitari Organelle、Novation Launchpad Pro 的開放韌體。
+- **社群逆向或改造的**：Zoom 效果器的自製 effect、Elektron Model:Cycles 的 mod（Firmware Hub 也有收）。
+
+FM-1 特別的地方不在「第一」，而在速度與完整度：
+
+- 從逆向到 200 多個韌體只花了幾個月，主要爆發在六週內。
+- 很短時間內就有完整的配套：硬體層、template、晶片層級模擬器、瀏覽器安裝、目錄、刷機與救援工具。
+- 機器便宜，加上 AI 輔助寫程式，讓不是韌體工程師的人也能做出能用的東西。
+- 廠商在社群之後選擇開放，而不是封鎖。
 
 ## 為什麼這麼快
 
@@ -63,7 +79,7 @@ FM-1 的社群韌體看起來很多，但整個生態非常新。這頁整理它
 
 ## VIBE FM Mk1 是什麼
 
-**不是 FM-1，也不是 FM-1 的模擬器。** 它是 Firmware Hub 那群人（zvenson / designburg）正在籌備的**另一台硬體**：一台「官方支援開放韌體」的機器，目前還在預告與登記名單階段（網站寫 crowdfunding、join the list）。`[上游]`，我沒有找到出貨日期或規格。
+**不是 FM-1，也不是 FM-1 的模擬器。** 它是 Firmware Hub 那群人（zvenson / Designburg）正在籌備的**另一台硬體**：一台「官方支援開放韌體」的機器，網站寫 Coming 2027、即將 crowdfunding，目前只能登記名單，規格與價格未公布。它與 M-VAVE 無關。`[上游]` 平台、相容性與我對這個模式的看法見[相關硬體](hardware/related.md)。
 
 網頁上那個畫面是 **VIBE FM Web Player**：在瀏覽器裡的 VIBE FM。它長得和 FM-1 不一樣，是因為它畫的是 VIBE 的面板（16 個 pad、較長的鍵盤、DATA 旋鈕、transport 鍵）。它能跑「轉換過的」FM-1 韌體，例如截圖裡的 JIANT FM 3.0；同樣的東西也有 VST 版。
 

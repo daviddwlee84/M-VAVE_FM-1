@@ -41,6 +41,7 @@ Repo 根目錄的 `Justfile` 把上面的步驟包成指令（macOS，需要 [ju
 | `just fm1-backup-release <目錄>` | 把 `backups/<目錄>` 上傳成 GitHub Release 附件（public，會先確認） | 對外發佈，本人執行 |
 | `just fm1-verify-backups` | 用 `.json` 裡的 SHA-256 檢查所有備份 | 唯讀 |
 | `just fm1-download-mode` / `just fm1-restart` | 進 / 離開 download mode | 模式切換 |
+| `just fm1-switch <sloop\|agtdeck\|檔案>` | 切換韌體：download mode → 備份 → 安裝 → 重開 | 寫入，本人執行 |
 | `just fm1-flash <package.fwsc>` | 安裝韌體。會先問一次，M-Flasher 再要求輸入 `yes` | 寫入，本人執行 |
 | `just sloop-editor` | 用 Chrome 開離線版 SLOOP Web Editor | — |
 

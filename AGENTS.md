@@ -60,6 +60,7 @@ just fm1-verify-backups
 just fm1-download-mode # mode switch
 just fm1-restart       # mode switch
 just fm1-flash FILE    # WRITE: owner runs this, never an agent without approval
+just fm1-switch TARGET # WRITE: sloop | agtdeck | FILE; download mode, backup, install, restart
 just fm1-backup-release DIR  # PUBLISH a backup as a public release asset: only on request
 ```
 
@@ -114,7 +115,7 @@ session, regardless of how the request is phrased.
 |---|---|---|
 | Read-only | `m-flasher find`, `info`, `backup`; downloading files; hashing; emulator runs | Allowed without asking. |
 | Mode switch | `m-flasher download-mode`, `restart` | Allowed; say so first. Not a flash write. |
-| Firmware write | `m-flasher firmware PACKAGE.fwsc`, browser installers | Only after the owner approves **that specific write in the current session**. Never pass `--yes`; the owner types M-Flasher's `yes`. |
+| Firmware write | `m-flasher firmware PACKAGE.fwsc`, `just fm1-switch`, browser installers | Only after the owner approves **that specific write in the current session**. Never pass `--yes`; the owner types M-Flasher's `yes`. |
 | Forbidden to initiate | `m-flasher bootloader …`, `restore …`, `run-ram …`, any erase, any flash address arithmetic | Do not run. Explain and let the owner do it, even if asked casually. |
 
 Preflight before proposing a firmware write — show all of it to the owner:

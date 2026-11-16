@@ -72,6 +72,21 @@ SLOOP 與 Agent Deck 執行中都能由 M-Flasher 透過 USB MIDI 切進 downloa
 
 `m-flasher run-ram` 可以把一個小程式上傳到晶片 RAM 執行，不寫 flash，關機再開就恢復原狀。適合開發者測試自己的小程式，**不能**用來把完整的 SLOOP 或 Agent Deck 當成第二套常駐系統。它會在晶片上執行任意程式碼，在這個 repo 的規則裡屬於 agent 不得自行執行的操作。
 
+## `just fm1-switch`
+
+兩個方向都實測過之後做成的捷徑：
+
+```sh
+just fm1-switch sloop       # 或 agtdeck，或任何 .fwsc 的路徑
+```
+
+它依序做：確認沒有模擬器佔著 USB MIDI → 切 download mode → 備份到 `backups/<日期時間>-pre-<套件名>/` → 呼叫 M-Flasher 安裝（列出變更，等你輸入 `yes`）→ 重開機。屬於寫入等級，由本人執行。
+
+目標韌體已經裝著的時候，M-Flasher 會回報 `Nothing to write` 然後直接重開，不會問 `yes`。`[實機]`
+
+每次切換都會留一份刷前備份在本機，不會自動上傳。
+
 ## 之後想做的
 
-等真的常在音樂韌體與 Agent Deck 之間切換時，包一個 host 端的 `fm1 switch <名稱>` 工作流：檢查備份、顯示 preflight、等批准、刷入、驗證。比改裝 microSD 實際。目前還沒做。
+- 切換後自動確認裝置回到 USB MIDI、並提示要不要啟動對應的 host 程式（Agent Deck 的 daemon、SLOOP 的 Web Editor）。
+- 備份累積多了之後的整理方式。

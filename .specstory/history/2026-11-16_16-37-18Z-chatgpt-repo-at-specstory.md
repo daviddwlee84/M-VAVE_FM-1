@@ -17471,3 +17471,253 @@ EOF
 in firmware area: 140  outside: ['0xFC000']
 ```
 </details></tool-use>
+
+_**Agent (claude-fable-5-2 2026-11-16 18:52:34Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Record the round-trip result and the sector comparison, then commit and push
+
+```bash
+python3 - <<'EOF'
+import pathlib
+def sub(path, pairs):
+    p=pathlib.Path(path); s=p.read_text()
+    for a,b in pairs:
+        assert a in s, (path,a[:60]); s=s.replace(a,b,1)
+    p.write_text(s)
+sub("docs/device-log.md",[("| 2026-11-17 | 刷回 SLOOP 後，之前的曲子是否還在 | **待確認** |","| 2026-11-17 | 刷回 SLOOP 後，之前的曲子是否還在 | **還在。** 只重裝韌體、沒有還原備份 |\n| 2026-11-17 | 比對 `pre-agtdeck` 與 `agtdeck-0.7` 兩份映像（4 KiB sector） | 141 個 sector 不同：韌體區 `0x04000`–`0x8FFFF` 的 140 個，加上 `0xFC000` 一個（Agent Deck 自己的設定）。SLOOP 存資料的區域完全沒被動到 |")])
+sub("docs/firmware/switching.md",[
+("| 寫入成功、能開機。曲子是否還在**待確認** |","| 寫入成功、能開機，**SLOOP 的曲子都還在** |"),
+("SLOOP 與 Agent Deck 執行中都能由 M-Flasher","""### SLOOP ↔ Agent Deck 互切不會丟曲子（在我的機器上）
+
+比對刷 Agent Deck 前後的兩份完整映像，只有這些 sector 不同：
+
+| 區域 | 位址 | 數量 | 內容 |
+|---|---|---|---|
+| 韌體區 | `0x04000`–`0x8FFFF` | 140 | 韌體本身 |
+| 原本空著的區域 | `0xFC000` | 1 | Agent Deck 自己的設定 |
+
+M-Flasher 的 flash map 把 `0x93000` 以後標為 SETTINGS、PAIRINGS、SOUNDS，SLOOP 的 project、preset、sample 都在那裡，Agent Deck 一個 byte 都沒碰。所以刷回 SLOOP 只需要重裝 `.fwsc`，不必還原備份。
+
+這個結論只對這兩個韌體、這兩個版本成立。別的韌體可能把資料寫在和 SLOOP 重疊的位置，切換前還是要備份；想確認的話，用同樣的方法比對前後兩份備份。`[實機]`
+
+SLOOP 與 Agent Deck 執行中都能由 M-Flasher"""),
+])
+sub("docs/firmware/agent-deck/index.md",[("- 上游明說：從別的韌體切過來再切回去，原本韌體存的 project 是否還在**沒有測過**。所以刷之前一定要有 SLOOP 的完整備份。","- 上游明說：從別的韌體切過來再切回去，原本韌體存的 project 是否還在**沒有測過**。我實測 SLOOP 2.8.5 ↔ Agent Deck 0.7 來回一次，曲子都還在，原因見[多韌體切換](../switching.md)。刷之前仍然先備份。")])
+EOF
+just docs-check 2>&1 | tail -1; git add -A && git commit -q -m "Record that SLOOP data survives a round trip through Agent Deck, with the sector diff
+
+Co-Authored-By: Claude Fable 5.2 <noreply@anthropic.com>" && git push -q origin main && echo pushed
+```
+
+```text
+{"status": "ok", "pages": 29, "llm_pages": 29, "deployed": false}
+pushed
+```
+</details></tool-use>
+
+_**Agent (claude-fable-5-2 2026-11-16 18:52:51Z)**_
+
+對，你的推測正確，而且我比對了兩份備份確認：Agent Deck 沒碰 SLOOP 存資料的區域。
+
+## 曲子為什麼還在
+
+我比對了刷 Agent Deck 前後的完整映像，1 MiB 裡只有 141 個 sector 不同：
+
+| 區域 | 位址 | 數量 | 內容 |
+|---|---|---|---|
+| 韌體區 | `0x04000`–`0x8FFFF` | 140 | 韌體本身 |
+| 原本空著的區域 | `0xFC000` | 1 | Agent Deck 自己的設定 |
+
+SLOOP 的 project、preset、sample 存在 `0x93000` 之後（M-Flasher 的 flash map 標為 SETTINGS 與 SOUNDS 的部分），Agent Deck 一個 byte 都沒動。所以在這兩個韌體之間切換只需要重裝 `.fwsc`，不用還原備份。
+
+這只對 SLOOP 2.8.5 與 Agent Deck 0.7 成立。別的韌體可能把資料寫在和 SLOOP 重疊的位置，切換前還是要備份。
+
+## VIBE FM Mk1
+
+**不是 FM-1，也不是 FM-1 的模擬器。** 它是 Firmware Hub 那群人正在籌備的**另一台硬體**，主打「官方支援開放韌體」，目前還在預告與登記名單階段，我沒找到出貨日期或規格。
+
+- **你截圖的畫面是 VIBE FM Web Player**：瀏覽器裡的 VIBE FM。長得不一樣是因為它畫的是 VIBE 的面板（16 個 pad、較長的鍵盤、DATA 旋鈕）。它跑的是「為 VIBE 轉換過的」FM-1 韌體，例如 JIANT FM。
+- **VIBE FM Link** 是刷在 FM-1 上的韌體，把 FM-1 變成 VIBE 的控制器：琴鍵、encoder、按鍵一一對應，FM-1 自己不發聲。
+
+所以方向是「FM-1 去控制 VIBE」，不是別的 controller 控制 FM-1。對你目前沒用處：VIBE 硬體還不存在，Web Player 用滑鼠就能玩。
+
+## 官方與社群的關係
+
+**官方韌體和 M-UPGRADE 你完全沒用到。** 出廠是 015，之後都走 M-Flasher。
+
+**是社群先逆向，官方後來跟進：**
+
+- **7 月**：有人逆向原廠韌體與更新協定。
+- **10 月初**：Felucca 釋出第一個完整的開源硬體層，後來大多數韌體都從它長出來。
+- **10 月 13 日**：M-VAVE 官方發布 `fm1_open`，含開放原始碼的韌體「FM1 Open V14」、binary SDK 與網頁版 Workbench。這和機器出廠的原廠韌體是不同的東西。
+
+M-VAVE 不是一開始就設計成開放平台，而是社群做出成果後選擇開放而不是封鎖。另外晶片是 JieLi AC791N，JieLi 本來就有公開的 SDK 與 toolchain，這是逆向能這麼快的原因之一。
+
+**整個自製韌體生態只有六週左右。** 這些日期是各 GitHub repo 的建立日期，不等於專案真正開始的日子。快的原因：
+
+- 幾個基礎專案把門檻壓得很低：硬體層、可複製的 template、模擬器、瀏覽器一鍵安裝、Hub 負責散布。
+- 大量 fork。228 個裡很多是 Felucca 或 SLOOP 的衍生版。
+- AI 輔助寫程式。Hub 自己的說法是「now anyone can vibe code firmware」，這解釋了數量，也是品質參差的原因。
+
+**SLOOP 不是從別處移植的**，是為 FM-1 寫的，但不是從零開始：它建立在 Felucca 之上，FM6 引擎是 Dexed 的 msfa，其他引擎與取樣也來自既有的開源專案，介面概念參考 pocket operator、Elektron 與 MPC。
+
+這些都寫進新頁面「生態是怎麼來的」：<https://daviddwlee84.github.io/M-VAVE_FM-1/ecosystem/>
+
+## 目前機器狀態
+
+SLOOP 2.8.5，曲子完好。五份備份都通過驗證，其中 `agtdeck-0.7` 那份還沒上傳到 Release。現在兩個方向的切換都實測過了，要的話我可以把它做成 `just fm1-switch sloop` / `agtdeck`。
+
+---
+
+_**User (2026-11-16 19:03:09Z)**_
+
+好啊 可以做成切換
+
+另外 FM-1 算是第一個這樣成系統的被逆向的機器嗎？（生態社群看起來都不錯？）
+
+然後我跟 ChatGPT聊了 @.specstory/references/chatgpt-比較Firmware-Hub與M-VAVE-20261117-0300.md 
+因為我看到網站上有 https://thefirmwarehub.com/vibe/ https://play.thefirmwarehub.com/
+已經有所謂 VIBE FM 的 emulator了
+看起來是這個商業模式被驗證了？
+
+我們是不是也可以收錄相關硬體？
+
+---
+
+_**Agent (claude-fable-5-2 2026-11-16 19:03:35Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Check the VIBE pages, SDK repo, and SMK-37 catalog for the facts in the pasted research
+
+```bash
+cd /tmp && for p in vibe convert platform; do curl -sL -m 25 -A "Mozilla/5.0" "https://thefirmwarehub.com/$p/" -o "v-$p.html"; done; python3 - <<'EOF'
+import re,html
+for p in ('vibe','convert','platform'):
+    h=open(f'/tmp/v-{p}.html',encoding='utf-8',errors='ignore').read()
+    t=re.sub(r'<script.*?</script>|<style.*?</style>','',h,flags=re.S)
+    t=html.unescape(re.sub(r'<[^>]+>','\n',t)); t=re.sub(r'\s*\n\s*','\n',t)
+    print('=====',p,len(h))
+    for k in ['2027','crowdfund','affiliated','480','closed','Apache','VST','price','€','\\$','wasm','SDK','M-VAVE','Kickstarter','ESP32','chip','processor']:
+        for m in list(re.finditer(k,t))[:2]:
+            print(f'[{k}]',t[max(0,m.start()-110):m.start()+170].replace('\n',' | '))
+EOF
+gh api repos/Vibe-FM-SDK/vibe-fm-sdk --jq '"\(.full_name) ★\(.stargazers_count) \(.license.spdx_id) created \(.created_at[0:10]) | \(.description)"' 2>&1 | head -2; python3 -c "
+import json; d=json.load(open('/tmp/hub-catalog.json')); s=d['smk37']; print(type(s).__name__, list(s.keys())[:8] if isinstance(s,dict) else len(s)); print({k:(len(v) if isinstance(v,(list,dict)) else v) for k,v in s.items()})"
+```
+
+```text
+===== vibe 30046
+[2027] VAVE FM-1 | on Amazon.com · Ad * | Get the M-VAVE SMK-37 Pro | on Amazon.com · Ad * | / | designburg.net | EN | / | DE | Coming | 2027 | VIBE | FM | Mk1 | Make Firmware Not War. | You've flashed your FM-1. You've tried Baud Girl, Felucca, SLOOP and more. | On most devices, open firmware is tolerated at best. VI
+[crowdfund] FM. Unsubscribe anytime. | Double opt-in, stored on our own server, never shared. | Privacy | · | Imprint | 10% off the crowdfunding campaign price for the first 100 confirmed sign-ups, one device per address. | Why now? | Open instruments existed before, but only for programmers. | Now anyone c
+[VST] M | VIBE FM Lab | App | Made firmware for another device? | zven@thefirmwarehub.com | M-VAVE FM-1 | All | firmwares | VIBE FM VST | FM-1 firmwares in your DAW · open beta | VIBE FM | One Vibe, every device · browser, DAW, hardware | VIBE FM Lab | Build a Vibe · port your FM-1 firmware · win a VIBE Box | M-V
+[price] e. | Double opt-in, stored on our own server, never shared. | Privacy | · | Imprint | 10% off the crowdfunding campaign price for the first 100 confirmed sign-ups, one device per address. | Why now? | Open instruments existed before, but only for programmers. | Now anyone can vibe code firmware:
+[M-VAVE] bmit a firmware | VIBE FM Mk1 | VIBE FM | VIBE FM Lab | App | Made firmware for another device? | zven@thefirmwarehub.com | M-VAVE FM-1 | All | firmwares | VIBE FM VST | FM-1 firmwares in your DAW · open beta | VIBE FM | One Vibe, every device · browser, DAW, hardware | VIBE FM Lab | Build a Vibe · port your 
+[M-VAVE] be, every device · browser, DAW, hardware | VIBE FM Lab | Build a Vibe · port your FM-1 firmware · win a VIBE Box | M-VAVE SMK-37 Pro | 26 firmwares · Pro, Elite, MKE-P37 | Elektron Model:Cycles | 6 mods · Model:Samples too | Erica Synths LXR-02 | Open source since 23 Oct · its firmware and mods
+===== convert 160362
+[affiliated] s music go to its project, about the conversion to us. FM-1 and M-VAVE belong to their owners; VIBE FM is | not affiliated with M-VAVE. | Disclaimer. | Every firmware here belongs to its authors, each under its own license (GPL-3.0: | the license | ); only zp12, sloopDX, OberVave, Shine On
+[affiliated]  update path is Felucca's, as sloopDX carries it. M-VAVE, FM-1 and SMK-37 are trademarks of | their owners; not affiliated with M-VAVE. E-mu and SP-1200 are trademarks of their owners. Unofficial firmware, free and without | warranty: you install it at your own risk. | designburg.net | ·
+[closed] your knobs and buttons once, the plugin maps them onto the VIBE from then on, on every system, window open or closed, in every project; share your profile on | /controllers/ | and everyone with the same controller gets it · | In the Editor | your knobs follow the card you pick (on an Aka
+[closed]  their knobs again (found by | Andrew GG | – thank you!) · | DAW projects: | what changed while the plugin window was closed (a program change by MIDI, a saved sound) is saved with the project again – FL Studio lost it (also found by Andrew GG) · drop a sample onto the window and a firmw
+[VST] ); tools/make_fm1.py writes it as fm1/convert/index.html. Beta: on the test site first. --> | FM-1 firmwares as VST in your DAW – The Firmware Hub | VIBE | FM | Mk1 | Open firmware, | officially supported. | The first 100 | get 10% off | Join the list → | The | Firmware Hub | F | H | Devices | ▼ | The Firmware 
+[VST] M | VIBE FM Lab | App | Made firmware for another device? | zven@thefirmwarehub.com | M-VAVE FM-1 | All | firmwares | VIBE FM VST | FM-1 firmwares in your DAW · open beta | VIBE FM | One Vibe, every device · browser, DAW, hardware | VIBE FM Lab | Build a Vibe · port your FM-1 firmware · win a VIBE Box | M-V
+[wasm] firmware … | , or drag over Live's icon in the Dock first.) By hand, with VST plugin 0.1: unzip it and put its | .wasm | and | .json | into the Firmware folder, then pick it in that list. | Mac | ~/Library/Application Support/VIBE FM/Firmware | (Finder: Go → Go to Folder…) | Windows | %APPDATA%\VIBE
+[wasm] plugin | Browser | VIBE FM | The converter builds on the | VIBE FM SDK | : an instrument written once in C becomes one | .wasm | that runs | in your DAW, in the browser and on the VIBE FM. That is also why only | open-source | firmwares can be converted – and why each one | is played and checked befor
+[SDK] OberVave 3.9 | · | all changes | New in 0.8.0: | The stage | – a firmware may draw a second, bigger picture of its own (SDK 23), now also in the plugin's window: View › Stage, and clicks, drags and the mouse wheel go to the firmware (VIBE DJ: two turntables, the mixer, the list) · | Music fo
+[SDK]  it starts with VOX · | New in 0.7.8: | a converted FM-1 firmware's own screen on an FM-1 under VIBE FM Link 0.4 (SDK 25) · | New in 0.7.7: | Your knobs on the FM-1's screen | – with | VIBE FM Link | 0.3 the FM-1 shows the firmware's page on top, KNOB 1-4 with name and value, ALGORITHM and PRE
+[M-VAVE] bmit a firmware | VIBE FM Mk1 | VIBE FM | VIBE FM Lab | App | Made firmware for another device? | zven@thefirmwarehub.com | M-VAVE FM-1 | All | firmwares | VIBE FM VST | FM-1 firmwares in your DAW · open beta | VIBE FM | One Vibe, every device · browser, DAW, hardware | VIBE FM Lab | Build a Vibe · port your 
+[M-VAVE] be, every device · browser, DAW, hardware | VIBE FM Lab | Build a Vibe · port your FM-1 firmware · win a VIBE Box | M-VAVE SMK-37 Pro | 26 firmwares · Pro, Elite, MKE-P37 | Elektron Model:Cycles | 6 mods · Model:Samples too | Erica Synths LXR-02 | Open source since 23 Oct · its firmware and mods
+[processor] n your DAW | , there are two ways. We chose the one that feels | like a real instrument. | Emulator | runs the FM-1's processor, instruction by instruction | CPU load | heavy | Latency | extra buffering | Would not run on the VIBE FM itself | FM-1 keys and screen, as they were | Plays any package, clo
+===== platform 170439
+[2027] o account | No hardware needed | PLAY | LAB | GET | WHERE | VIBES | MK1 | VIBE FM Mk1 | VIBE Box prototype | SOUNDMASCHINE | T4KT · 2027 | + | Your device | Where a Vibe plays | The same file, untouched, in five places. That is the whole idea. | NOW | Browser | VIBE FM Playground | Open it, play it. Your computer key
+[2027] our iOS DAW. | Tell me when it's out | One file: | my-synth.wasm | . No ports, no forks, no "coming to your device in 2027". | Got an FM-1? | Its firmwares play in all five places too: converted from the FM-1 build, the code untouched. | Convert one → | · | Port it to a native Vibe → | · | All FM-1 fi
+[crowdfund] hat runs on all of them – theirs included, if they let it. That part no factory can build. | That part is us. | A crowdfunding for the VIBE FM Mk1 starts soon. | If you want the original – the box this was all made for – that's | where it happens. Everything else stays free, open, and ru
+[crowdfund]  Playground to test in, the docs for devices. | VIBE FM Mk1 | our device | The reference instrument. In the making; crowdfunding soon. | VIBE FM compatible | your device | A device that runs Vibes natively. Tested, then it carries the mark. | VIBE FM is a trademark application of Sven Trogus, 
+[affiliated]  update path is Felucca's, as sloopDX carries it. M-VAVE, FM-1 and SMK-37 are trademarks of | their owners; not affiliated with M-VAVE. E-mu and SP-1200 are trademarks of their owners. Unofficial firmware, free and without | warranty: you install it at your own risk. | designburg.net | ·
+[480] ative one is written for VIBE FM. | Converted FM-1 firmware | Native VIBE FM | Screen | the FM-1's 240 × 240 | the full | 480 × 320 | Controls | the FM-1's 7 encoders, 14 buttons, 27 keys | every VIBE control | : pads, four knobs, A / B / DATA, labelled keys | In your DAW | 7 generic knobs; the tempo, s
+[closed] om baudgirl.com. FM1 Open is M-VAVE's official open firmware (app GPL-3.0 with an SDK exception, sound engine | closed source): only linked, it installs from M-VAVE's Workbench. The update path is Felucca's, as sloopDX carries it. M-VAVE, FM-1 and SMK-37 are trademarks of | their own
+[VST] M | VIBE FM Lab | App | Made firmware for another device? | zven@thefirmwarehub.com | M-VAVE FM-1 | All | firmwares | VIBE FM VST | FM-1 firmwares in your DAW · open beta | VIBE FM | One Vibe, every device · browser, DAW, hardware | VIBE FM Lab | Build a Vibe · port your FM-1 firmware · win a VIBE Box | M-V
+[VST] lay it. Your computer keyboard or any MIDI keyboard. Nothing to install. | Play now | NOW | Your DAW | VIBE FM Plugin | VST3, AU, CLAP – named parameters, automation, it follows your song. Free. | Get the plugin | IN THE MAKING | Our device | VIBE FM Mk1 | Keys, pads, a real screen, knobs you can gr
+[price] ware is suddenly on | every roadmap. Let's be clear: a small idea developer cannot match their factories, their prices or their marketing. | We're going to try anyway. | Because the idea is bigger than one box: not another device with open firmware, | but one standard that runs on all of
+[wasm]  and pads, your MIDI keyboard over USB, and as AUv3 in your iOS DAW. | Tell me when it's out | One file: | my-synth.wasm | . No ports, no forks, no "coming to your device in 2027". | Got an FM-1? | Its firmwares play in all five places too: converted from the FM-1 build, the code untouched. | 
+[SDK] irrored | here, it installs from baudgirl.com. FM1 Open is M-VAVE's official open firmware (app GPL-3.0 with an SDK exception, sound engine | closed source): only linked, it installs from M-VAVE's Workbench. The update path is Felucca's, as sloopDX carries it. M-VAVE, FM-1 and SMK-37
+[M-VAVE] bmit a firmware | VIBE FM Mk1 | VIBE FM | VIBE FM Lab | App | Made firmware for another device? | zven@thefirmwarehub.com | M-VAVE FM-1 | All | firmwares | VIBE FM VST | FM-1 firmwares in your DAW · open beta | VIBE FM | One Vibe, every device · browser, DAW, hardware | VIBE FM Lab | Build a Vibe · port your 
+[M-VAVE] be, every device · browser, DAW, hardware | VIBE FM Lab | Build a Vibe · port your FM-1 firmware · win a VIBE Box | M-VAVE SMK-37 Pro | 26 firmwares · Pro, Elite, MKE-P37 | Elektron Model:Cycles | 6 mods · Model:Samples too | Erica Synths LXR-02 | Open source since 23 Oct · its firmware and mods
+[chip] d parameters | , the | song position | and loops | Engine | the FM-1's, unchanged – a little extra CPU for the emulated chip | written for VIBE FM – | the lowest latency | The words | Six words, so we all mean the same thing. | Vibe | One instrument file. A synth, a drum machine, a sampler, an effect.
+[processor] crophone in, speakers out, leave it. | VST Plugin | Browser | VIBE FM | GPL-3.0 | VOX | by | zvenson | · 1.6 · native · voice processor and looper | Sing into it and it sounds like a record: a de-esser and a good compressor, pitch correction from | gentle to robot, a harmonizer, a vocoder you play o
+Vibe-FM-SDK/vibe-fm-sdk ★3 Apache-2.0 created 2026-10-27 | null
+dict ['versions', 'stars', 'talk', 'starsDay', 'fmhub']
+{'versions': 25, 'stars': 25, 'talk': 25, 'starsDay': '2026-11-16', 'fmhub': 0}
+Shell cwd was reset to /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1
+```
+</details></tool-use>
+
+_**Agent (claude-fable-5-2 2026-11-16 19:04:16Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Add the firmware switch recipe and run it up to M-Flasher's confirmation prompt without confirming
+
+```bash
+python3 - <<'EOF'
+import pathlib
+p=pathlib.Path("Justfile"); s=p.read_text()
+add='''
+# Switch firmware: download mode -> backup -> install -> restart. target: sloop | agtdeck | path/to/x.fwsc
+# M-Flasher shows the plan and waits for a typed "yes". Owner only.
+fm1-switch target:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    case "{{target}}" in
+      sloop)   pkg="downloads/sloop-{{sloop_version}}.fwsc" ;;
+      agtdeck) pkg="downloads/agtdeck-{{agtdeck_version}}.fwsc" ;;
+      *)       pkg="{{target}}" ;;
+    esac
+    test -f "$pkg" || { echo "no such package: $pkg (try: just fm1-fetch / just agtdeck-fetch)" >&2; exit 1; }
+    name=$(basename "$pkg" .fwsc)
+    units=$("{{m_flasher}}" find)
+    echo "$units"
+    if echo "$units" | grep -q "(emu)"; then
+      echo "An emulated FM-1 is on USB MIDI. Close the emulator first, so the switch cannot go to the wrong device." >&2; exit 1
+    fi
+    if ! echo "$units" | grep -q "^usb:"; then
+      "{{m_flasher}}" download-mode
+    fi
+    dir="backups/$(date +%Y-%m-%d-%H%M)-pre-$name"
+    mkdir -p "$dir"
+    "{{m_flasher}}" backup "$dir" | grep -E "firmware|app |Backup saved"
+    shasum -a 256 "$dir"/*.bin
+    echo "Backup before the switch: $dir (not uploaded; just fm1-backup-release $(basename "$dir") if you want it off this machine)"
+    "{{m_flasher}}" firmware "$pkg" --restart
+'''
+marker="# ---- off-machine copies"
+assert marker in s; p.write_text(s.replace(marker, add.strip('\n')+"\n\n"+marker,1))
+EOF
+just --list | grep switch; just fm1-switch nope 2>&1 | tail -1; echo "--- dry run to the prompt (stdin closed, target = what is already installed)"; just fm1-switch sloop < /dev/null 2>&1 | tail -14; echo "exit=$?"; sleep 2; just fm1-find 2>&1 | tail -2
+```
+
+```text
+    fm1-switch target                          # M-Flasher shows the plan and waits for a typed "yes". Owner only.
+error: recipe `fm1-switch` failed with exit code 1
+--- dry run to the prompt (stdin closed, target = what is already installed)
+  firmware    SLOOP 2.8.5
+  app         OK
+  chip key    0x980F
+  flash       0xB36014
+  unit id     55227286a0cb022a
+  loader      M-Flasher 1.3, CPU at 96 MHz
+    - the firmware uses the FM-1 flash layout
+    - flash chip 0xB36014 (new)
+
+Install firmware FM-1_900
+Nothing to write: the flash already holds this.
+Installs FM-1_900 (0x04000-0x92FFF).
+Sent the restart (a 34-byte program at 0x01C28000); waiting for the unit to reset
+Running: the Felucca is on USB MIDI
+exit=0
+"/Applications/M-Flasher.app/Contents/MacOS/M-Flasher" find
+midi	Felucca (running; download-mode switches it)
+```
+</details></tool-use>

@@ -20,6 +20,7 @@
 | 搞懂官方、社群、Hub、VIBE 的關係 | [生態是怎麼來的](ecosystem.md) |
 | 找某個 repo 或目前版本 | [資源地圖](resources.md) |
 | 查我這台現在的狀態 | [我的機器](device-log.md) |
+| 看同晶片的機器、VIBE FM、救援硬體 | [相關硬體](hardware/related.md) |
 
 ## 路線圖
 

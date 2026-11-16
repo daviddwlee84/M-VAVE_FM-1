@@ -66,6 +66,7 @@ M-Flasher 在兩次寫入前各自動存了一份：`~/Documents/M-Flasher/backu
 | 2026-11-17 | Agent Deck 執行中 `just fm1-download-mode`，本人執行 `just fm1-flash downloads/sloop-2.8.5.fwsc` | 計畫：140 sectors（560 KiB）`0x04000`–`0x8FFFF`。寫入完成，晶片 CRC32 相符。`just fm1-restart` 後機器在 USB MIDI 上 |
 | 2026-11-17 | 刷回 SLOOP 後，之前的曲子是否還在 | **還在。** 只重裝韌體、沒有還原備份 |
 | 2026-11-17 | 比對 `pre-agtdeck` 與 `agtdeck-0.7` 兩份映像（4 KiB sector） | 141 個 sector 不同：韌體區 `0x04000`–`0x8FFFF` 的 140 個，加上 `0xFC000` 一個（Agent Deck 自己的設定）。SLOOP 存資料的區域完全沒被動到 |
+| 2026-11-17 | 測試 `just fm1-switch sloop`（SLOOP 已安裝） | 切 download mode、備份、M-Flasher 回報 `Nothing to write`、重開，全程沒有寫入 |
 
 ## Phase 1 驗收
 
