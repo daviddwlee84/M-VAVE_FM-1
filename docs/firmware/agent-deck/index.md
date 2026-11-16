@@ -20,14 +20,18 @@ just emu-run downloads/agtdeck-0.7.fwsc     # 在 fm1-emu 裡開韌體（新晶�
 `just emu-run` 單獨開只會停在 `NO HOST`，因為沒有 daemon。開兩個 terminal：
 
 ```sh
-# terminal 1：模擬器，加 --usb 插上虛擬 USB 線
-just emu-run downloads/agtdeck-0.7.fwsc uc25hq80 --usb
+# terminal 1：模擬器，插上虛擬 USB 線（等同 emu-run … --usb）
+just agtdeck-emu
 
 # terminal 2：daemon 的硬體模式（不是 --simulate），會找到名為 "FM-1 AGTDECK (emu)" 的 MIDI 裝置
 just agtdeck-run
 ```
 
-我確認過的：模擬器視窗開著並帶 `--usb` 時，macOS 上會出現 MIDI 輸入與輸出 `FM-1 AGTDECK (emu)`，daemon 沒有回報找不到裝置。畫面是否真的顯示出 agent grid 我沒看到（那要看視窗），請自己確認。headless 的 `emu-shot` 不會建立這個虛擬裝置。`[模擬]`
+2026-11-17 實測成功 `[模擬]`：模擬器畫面從 `NO HOST` 變成 `HOST`，列出 Herdr 的 pane（名稱、種類 `SH` / `CL`、停留時間），標頭顯示 blocked 數與總數。daemon 端印出 `[midi] in='FM-1 AGTDECK (emu)'` 與 `[device] firmware speaks proto v6`。
+
+**沒帶 `--usb` 就永遠是 `NO HOST`**：那等於沒插 USB 線，daemon 看不到任何 MIDI 裝置。headless 的 `emu-shot` 也不會建立虛擬裝置。
+
+模擬器視窗的操作（取自 `fm1-live` 啟動時印的說明，視窗要先取得焦點）：滑鼠點或拖琴鍵與按鈕、拖或滾動旋鈕；鍵盤 `A W S E D F T G Y H U J K O L P ; '` 是 C4 到 F5，`Z` / `X` 是 `OCT-` / `OCT+`，空白鍵 `PLAY`，`R` 是 `REC`，數字鍵 `1`–`0` 是功能鍵，方向鍵與 `,` `.` 是 SELECT / PRESETS / ALGORITHM。
 
 `just agtdeck-run` 用 repo 的 `fw` dependency group 提供 `mido` 與 `python-rtmidi`，不必另外 `pip install`。接實機時也是同一個指令。
 

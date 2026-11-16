@@ -15260,3 +15260,416 @@ out ['FM-1 AGTDECK (emu)']
 USB: "FM-1 AGTDECK" (1209:0001) on the bus, MIDI device "FM-1 AGTDECK (emu)"
 ```
 </details></tool-use>
+
+_**Agent (claude-fable-5-2 2026-11-16 18:23:11Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Add the daemon run shortcut, update the build status docs, then commit and push
+
+````bash
+python3 - <<'EOF'
+import pathlib,re
+def sub(path, pairs):
+    p=pathlib.Path(path); s=p.read_text()
+    for a,b in pairs:
+        assert a in s, (path,a[:60]); s=s.replace(a,b,1)
+    p.write_text(s)
+sub("Justfile",[
+("# ---- upstream watch","""# Run the daemon against a MIDI device: a real FM-1 with Agent Deck, or the emulator
+# started with `just emu-run downloads/agtdeck-{{agtdeck_version}}.fwsc uc25hq80 --usb`.
+agtdeck-run backend="herdr" *args: agtdeck-clone
+    uv run --locked --all-groups python vendor/fm-1-agent-deck/host/agtdeck.py --backend "{{backend}}" {{args}}
+
+# ---- upstream watch"""),
+])
+p=pathlib.Path("docs/dev/index.md"); s=p.read_text()
+s=s.replace("**狀態（2026-11-17）：host simulator 這一段已跑通；實機套件的 build 卡在 Docker 拉不到 image，還沒產出 `.fwsc`。**",
+ "**狀態（2026-11-17）：host simulator、實機套件 build、fm1-emu 兩種晶片開機都已跑通；還沒刷進實機。**")
+s=s.replace("| `just fw-build [app]` | build 實機套件 `firmware/<app>/build/*.fwsc` | **失敗**，見下 |",
+ "| `just fw-build [app]` | build 實機套件 `firmware/<app>/build/*.fwsc` | 是，約 17 秒，產出 `template.fwsc`（616 KB，identity `FM-1_1100`） |")
+a=s.index("## 實機 build 目前卡在哪"); b=s.index("## 預設的 template 帶 Bluetooth")
+s=s[:a]+'''## Build 結果
+
+`just fw-build hello` 的輸出（2026-11-17）：app 226,264 B；RAM code 9,296 / 32,768 B；`.data+.bss` 76,452 / 98,304 B；build 自帶的檢查全部 `ok`（沒有 soft-double、register 存取只在 felucca-bsp 內）。
+
+在 fm1-emu 開機 `[模擬]`：
+
+| 晶片 | 結果 |
+|---|---|
+| `uc25hq80` | 開機到 TEMPLATE 畫面，5 秒內 12 次 flash erase / program |
+| `p25q80` | 同上，12 次 |
+
+兩種晶片行為一致。這只是開機與寫入次數，「改設定 → 重開 → 讀回」還沒做。
+
+!!! note "之前卡住的地方"
+    第一次 build 失敗是因為 Docker daemon 的 proxy 連不上，拉不到 `debian:bookworm-slim`（`build: cannot start the toolchain container`）。修好 Docker 的網路後就正常。遇到同樣訊息先查 `docker pull --platform linux/amd64 debian:bookworm-slim` 能不能成功。
+
+'''+s[b:]
+s=s.replace("- [ ] 修好 Docker 的 proxy，跑通 `just fw-build hello`\n","- [x] 跑通 `just fw-build hello`\n")
+s=s.replace("- [ ] `just emu-run firmware/hello/build/template.fwsc` 兩種晶片各一次，改設定、重開、確認保存","- [x] `just emu-shot firmware/hello/build/template.fwsc` 兩種晶片都開機\n- [ ] `just emu-run firmware/hello/build/template.fwsc` 兩種晶片各一次，改設定、重開、確認保存")
+p.write_text(s)
+sub("docs/firmware/agent-deck/index.md",[
+("## 試用結果","""## 讓模擬器裡的韌體接上真的 daemon
+
+`just emu-run` 單獨開只會停在 `NO HOST`，因為沒有 daemon。開兩個 terminal：
+
+```sh
+# terminal 1：模擬器，加 --usb 插上虛擬 USB 線
+just emu-run downloads/agtdeck-0.7.fwsc uc25hq80 --usb
+
+# terminal 2：daemon 的硬體模式（不是 --simulate），會找到名為 "FM-1 AGTDECK (emu)" 的 MIDI 裝置
+just agtdeck-run
+```
+
+我確認過的：模擬器視窗開著並帶 `--usb` 時，macOS 上會出現 MIDI 輸入與輸出 `FM-1 AGTDECK (emu)`，daemon 沒有回報找不到裝置。畫面是否真的顯示出 agent grid 我沒看到（那要看視窗），請自己確認。headless 的 `emu-shot` 不會建立這個虛擬裝置。`[模擬]`
+
+`just agtdeck-run` 用 repo 的 `fw` dependency group 提供 `mido` 與 `python-rtmidi`，不必另外 `pip install`。接實機時也是同一個指令。
+
+`just agtdeck-sim` 會每秒重印全部 slot，pane 多的時候輸出很洗版，那是模擬模式把每個 frame 印出來的正常行為。
+
+## 試用結果"""),
+("- [ ] `just emu-run downloads/agtdeck-0.7.fwsc` 看過各個畫面","- [ ] 用上面的兩個 terminal 讓模擬器接上 daemon，看過 grid 與各個畫面"),
+])
+sub("AGENTS.md",[("just agtdeck-sim       # Agent Deck daemon without an FM-1 (interactive; prints frames)","just agtdeck-sim       # Agent Deck daemon without an FM-1 (interactive; prints frames)\njust agtdeck-run       # daemon against a MIDI device: real unit, or `just emu-run … --usb`"),
+("The device build (`just fw-build`) has not produced a package yet; see\n`docs/dev/index.md`.","No own build has been flashed to hardware yet; see `docs/dev/index.md`.")])
+EOF
+just docs-check 2>&1 | tail -1; git add -A && git commit -q -m "Device build works; connect emulated Agent Deck to the real daemon
+
+fw-build produces template.fwsc and it boots on both emulated flash chips.
+Add agtdeck-run, sync all dependency groups in recipes so docs and firmware
+tools stop uninstalling each other.
+
+Co-Authored-By: Claude Fable 5.2 <noreply@anthropic.com>" && git push -q origin main && echo pushed
+````
+
+```text
+{"status": "ok", "pages": 26, "llm_pages": 26, "deployed": false}
+pushed
+```
+</details></tool-use>
+
+_**Agent (claude-fable-5-2 2026-11-16 18:23:24Z)**_
+
+你的 `fw-build` 成功了，Docker 那邊修好後整條 build 鏈就通了。模擬器停在 `NO HOST` 是正常的：它沒接上 daemon。要讓兩邊連起來，開兩個 terminal：
+
+```sh
+# terminal 1：模擬器，加 --usb 插上虛擬 USB 線
+just emu-run downloads/agtdeck-0.7.fwsc uc25hq80 --usb
+
+# terminal 2：daemon 的硬體模式（不是 agtdeck-sim）
+just agtdeck-run
+```
+
+我確認到的是：模擬器視窗帶 `--usb` 開著時，macOS 上會出現 MIDI 裝置 `FM-1 AGTDECK (emu)`，daemon 沒有回報找不到裝置。**畫面有沒有真的顯示出 agent grid 我沒看到**，那要看視窗，請你跑一次確認。我測試時短暫開過一次模擬器視窗，幾秒後就關掉了。
+
+## 這次做的
+
+- **`just agtdeck-run`**（新）：daemon 的硬體模式，`mido` 由 repo 的相依套件提供，不必另外安裝。之後接實機也是同一個指令。
+- **你 build 出來的 `template.fwsc`** 我在模擬器的新舊兩種晶片各開了一次，都開到 TEMPLATE 畫面，flash 寫入次數一致（各 12 次）。還沒做「改設定、重開、讀回」。
+- **修了一個相依套件的問題**：你的輸出裡 `fw-setup` 把 zensical 等 11 個 docs 套件移除了，因為兩組相依套件互相覆蓋。現在所有 recipe 都同時安裝兩組，不會再來回裝卸。
+- `docs/dev/` 與 Agent Deck 頁已更新並 push。
+
+## 關於你貼的 `agtdeck-sim` 輸出
+
+- 模擬模式會每秒把所有 slot 重印一次，48 個 pane 就很洗版。這是它的正常行為，不是壞掉。
+- 內容本身是對的：它抓到 3 個 BLOCKED 的 agent（包含這個 session 自己）、各 agent 的 context 用量，並對超過 80% 的發出警告。這些正是實機上會亮燈與嗶聲的東西。
+- 上一則提到的問題在這裡很明顯：48 個 slot 裡大約三分之二是 shell。
+
+## 接下來可以做的
+
+1. 兩個 terminal 接起來，看 Agent Deck 的 grid 在你的 pane 數量下實際長什麼樣，再決定要不要實刷。
+2. 把 `hello` 刷進實機驗證整條鏈。這是你自己 build 的第一個套件，風險比裝別人的韌體高一點，要刷時跟我說，我列 preflight。
+3. 開始寫第一個自己的 app（MIDI controller / macro pad）。
+
+---
+
+_**User (2026-11-16 18:26:00Z)**_
+
+```
+
+
+<pasted_content id="fec1">
+M-VAVE_FM-1 on  main [!] via  v3.15.1
+❯ uv run ./vendor/fm-1-agent-deck/host/agtdeck.py
+Using CPython 3.13.3
+Creating virtual environment at: vendor/fm-1-agent-deck/.venv
+      Built fm1-agtdeck @ file:///Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/vendor/fm-1-agent-deck                             Installed 4 packages in 4ms
+[agtdeck] no FM-1 MIDI port found.
+  inputs:  (none)
+  outputs: (none)
+[agtdeck] waiting for an FM-1 to be plugged in (--no-wait to exit instead)
+[agtdeck] backend=herdr mode=midi proto=v6
+[agtdeck] herdr socket: /Users/zhouhanru/.config/herdr/herdr.sock
+[agtdeck] config: defaults, 9 prompt presets
+[discover] slot 0: 1:~ (id=w3J:p1, kind=shell)
+[discover] slot 1: 2:~ (id=w3J:p2, kind=shell)
+[discover] slot 2: 1:Tadronaut-Mono-Repo (id=wV:p1, kind=claude)
+[discover] slot 3: 2:Tadronaut-Mono-Repo (id=wV:p47, kind=claude)
+[discover] slot 4: 3:Tadronaut-Mono-Repo (id=wV:p51, kind=shell)
+[discover] slot 5: 4:Tadronaut-Mono-Repo (id=wV:p5K, kind=claude)
+[discover] slot 6: 5:Tadronaut-Mono-Repo (id=wV:p61, kind=shell)
+[discover] slot 7: 6:Tadronaut-Mono-Repo (id=wV:p62, kind=claude)
+[discover] slot 8: 1:ferry (id=w2Q:p1, kind=shell)
+[discover] slot 9: 2:ferry (id=w2Q:p2, kind=shell)
+[discover] slot 10: 3:ferry (id=w2Q:p3, kind=shell)
+[discover] slot 11: 1:quant-data-kit (id=w2X:pS, kind=shell)
+[discover] slot 12: 2:quant-data-kit (id=w2X:p1N, kind=shell)
+[discover] slot 13: 3:quant-data-kit (id=w2X:p2R, kind=shell)
+[discover] slot 14: 1:SyntheticSnapshot (id=w32:p1, kind=claude)
+[discover] slot 15: 2:SyntheticSnapshot (id=w32:p2, kind=claude)
+[discover] slot 16: 3:SyntheticSnapshot (id=w32:p4, kind=claude)
+[discover] slot 17: 4:SyntheticSnapshot (id=w32:pW, kind=shell)
+[discover] slot 18: 1:AlphaResearch (id=w37:p1, kind=claude)
+[discover] slot 19: 2:AlphaResearch (id=w37:p2, kind=claude)
+[discover] slot 20: 3:AlphaResearch (id=w37:p7, kind=shell)
+[discover] slot 21: 4:AlphaResearch (id=w37:p9, kind=claude)
+[discover] slot 22: 5:AlphaResearch (id=w37:pA, kind=shell)
+[discover] slot 23: Wealthfolio (id=w38:p1, kind=shell)
+[discover] slot 24: 1:Investment (id=w20:p1, kind=codex)
+[discover] slot 25: 2:Investment (id=w20:p2, kind=shell)
+[discover] slot 26: 1:brilliant-frame (id=w2F:p1, kind=claude)
+[discover] slot 27: 2:brilliant-frame (id=w2F:p2, kind=shell)
+[discover] slot 28: 1:lazytodo (id=w39:p1, kind=shell)
+[discover] slot 29: 2:lazytodo (id=w39:p9, kind=shell)
+[discover] slot 30: 3:lazytodo (id=w39:p2, kind=shell)
+[discover] slot 31: 1:dev-cli (id=w3A:p1, kind=claude)
+[discover] slot 32: 2:dev-cli (id=w3A:p3, kind=claude)
+[discover] slot 33: 3:dev-cli (id=w3A:p4, kind=shell)
+[discover] slot 34: translate (id=w3B:p1, kind=shell)
+[discover] slot 35: 1:AlphaGPT-Reproduce (id=w3E:p1, kind=claude)
+[discover] slot 36: 2:AlphaGPT-Reproduce (id=w3E:p2, kind=shell)
+[discover] slot 37: alpha-dashboard (id=w3F:p1, kind=shell)
+[discover] slot 38: 1:DagsterPlayground (id=w3G:p1, kind=shell)
+[discover] slot 39: 2:DagsterPlayground (id=w3G:p2, kind=shell)
+[discover] slot 40: 3:DagsterPlayground (id=w3G:p3, kind=shell)
+[discover] slot 41: 4:DagsterPlayground (id=w3G:p4, kind=shell)
+[discover] slot 42: 1:agent-skills (id=w3N:p1, kind=claude)
+[discover] slot 43: 2:agent-skills (id=w3N:p2, kind=shell)
+[discover] slot 44: alpha-risk-kit (id=w3P:p1, kind=shell)
+[discover] slot 45: 1:M-VAVE_FM-1 (id=w3Q:p1, kind=claude)
+[discover] slot 46: 2:M-VAVE_FM-1 (id=w3Q:p3, kind=shell)
+[discover] slot 47: 3:M-VAVE_FM-1 (id=w3Q:p5, kind=shell)
+[discover] slot 48: 4:M-VAVE_FM-1 (id=w3Q:p2, kind=shell)
+[context] 1:AlphaResearch is 89% full
+[context] 4:AlphaResearch is 97% full
+[context] 2:dev-cli is 96% full
+[context] 1:agent-skills is 93% full
+[state] slot 0 1:~: NONE -> IDLE
+[state] slot 1 2:~: NONE -> IDLE
+[state] slot 2 1:Tadronaut-Mono-Repo: NONE -> IDLE
+[state] slot 3 2:Tadronaut-Mono-Repo: NONE -> IDLE
+[state] slot 4 3:Tadronaut-Mono-Repo: NONE -> IDLE
+[state] slot 5 4:Tadronaut-Mono-Repo: NONE -> BLOCKED
+[state] slot 6 5:Tadronaut-Mono-Repo: NONE -> IDLE
+[state] slot 7 6:Tadronaut-Mono-Repo: NONE -> IDLE
+[state] slot 8 1:ferry: NONE -> IDLE
+[state] slot 9 2:ferry: NONE -> IDLE
+[state] slot 10 3:ferry: NONE -> IDLE
+[state] slot 11 1:quant-data-kit: NONE -> IDLE
+[state] slot 12 2:quant-data-kit: NONE -> IDLE
+[state] slot 13 3:quant-data-kit: NONE -> IDLE
+[state] slot 14 1:SyntheticSnapshot: NONE -> IDLE
+[state] slot 15 2:SyntheticSnapshot: NONE -> IDLE
+[state] slot 16 3:SyntheticSnapshot: NONE -> IDLE
+[state] slot 17 4:SyntheticSnapshot: NONE -> IDLE
+[state] slot 18 1:AlphaResearch: NONE -> IDLE
+[state] slot 19 2:AlphaResearch: NONE -> BLOCKED
+[state] slot 20 3:AlphaResearch: NONE -> IDLE
+[state] slot 21 4:AlphaResearch: NONE -> DONE
+[state] slot 22 5:AlphaResearch: NONE -> IDLE
+[state] slot 23 Wealthfolio: NONE -> IDLE
+[state] slot 24 1:Investment: NONE -> IDLE
+[state] slot 25 2:Investment: NONE -> IDLE
+[state] slot 26 1:brilliant-frame: NONE -> IDLE
+[state] slot 27 2:brilliant-frame: NONE -> IDLE
+[state] slot 28 1:lazytodo: NONE -> IDLE
+[state] slot 29 2:lazytodo: NONE -> IDLE
+[state] slot 30 3:lazytodo: NONE -> IDLE
+[state] slot 31 1:dev-cli: NONE -> IDLE
+[state] slot 32 2:dev-cli: NONE -> IDLE
+[state] slot 33 3:dev-cli: NONE -> IDLE
+[state] slot 34 translate: NONE -> IDLE
+[state] slot 35 1:AlphaGPT-Reproduce: NONE -> IDLE
+[state] slot 36 2:AlphaGPT-Reproduce: NONE -> IDLE
+[state] slot 37 alpha-dashboard: NONE -> IDLE
+[state] slot 38 1:DagsterPlayground: NONE -> IDLE
+[state] slot 39 2:DagsterPlayground: NONE -> IDLE
+[state] slot 40 3:DagsterPlayground: NONE -> IDLE
+[state] slot 41 4:DagsterPlayground: NONE -> IDLE
+[state] slot 42 1:agent-skills: NONE -> IDLE
+[state] slot 43 2:agent-skills: NONE -> IDLE
+[state] slot 44 alpha-risk-kit: NONE -> IDLE
+[state] slot 45 1:M-VAVE_FM-1: NONE -> WORKING
+[state] slot 46 2:M-VAVE_FM-1: NONE -> IDLE
+[state] slot 47 3:M-VAVE_FM-1: NONE -> IDLE
+[state] slot 48 4:M-VAVE_FM-1: NONE -> IDLE
+[midi] in='FM-1 AGTDECK (emu)' out='FM-1 AGTDECK (emu)'
+[midi] the FM-1 is back - full resync
+[state] slot 0 1:~: NONE -> IDLE
+[state] slot 1 2:~: NONE -> IDLE
+[state] slot 2 1:Tadronaut-Mono-Repo: NONE -> IDLE
+[state] slot 3 2:Tadronaut-Mono-Repo: NONE -> IDLE
+[state] slot 4 3:Tadronaut-Mono-Repo: NONE -> IDLE
+[state] slot 5 4:Tadronaut-Mono-Repo: NONE -> BLOCKED
+[state] slot 6 5:Tadronaut-Mono-Repo: NONE -> IDLE
+[state] slot 7 6:Tadronaut-Mono-Repo: NONE -> IDLE
+[state] slot 8 1:ferry: NONE -> IDLE
+[state] slot 9 2:ferry: NONE -> IDLE
+[state] slot 10 3:ferry: NONE -> IDLE
+[state] slot 11 1:quant-data-kit: NONE -> IDLE
+[state] slot 12 2:quant-data-kit: NONE -> IDLE
+[state] slot 13 3:quant-data-kit: NONE -> IDLE
+[state] slot 14 1:SyntheticSnapshot: NONE -> IDLE
+[state] slot 15 2:SyntheticSnapshot: NONE -> IDLE
+[state] slot 16 3:SyntheticSnapshot: NONE -> IDLE
+[state] slot 17 4:SyntheticSnapshot: NONE -> IDLE
+[state] slot 18 1:AlphaResearch: NONE -> IDLE
+[state] slot 19 2:AlphaResearch: NONE -> BLOCKED
+[state] slot 20 3:AlphaResearch: NONE -> IDLE
+[state] slot 21 4:AlphaResearch: NONE -> DONE
+[state] slot 22 5:AlphaResearch: NONE -> IDLE
+[state] slot 23 Wealthfolio: NONE -> IDLE
+[state] slot 24 1:Investment: NONE -> IDLE
+[state] slot 25 2:Investment: NONE -> IDLE
+[state] slot 26 1:brilliant-frame: NONE -> IDLE
+[state] slot 27 2:brilliant-frame: NONE -> IDLE
+[state] slot 28 1:lazytodo: NONE -> IDLE
+[state] slot 29 2:lazytodo: NONE -> IDLE
+[state] slot 30 3:lazytodo: NONE -> IDLE
+[state] slot 31 1:dev-cli: NONE -> IDLE
+[state] slot 32 2:dev-cli: NONE -> IDLE
+[state] slot 33 3:dev-cli: NONE -> IDLE
+[state] slot 34 translate: NONE -> IDLE
+[state] slot 35 1:AlphaGPT-Reproduce: NONE -> IDLE
+[state] slot 36 2:AlphaGPT-Reproduce: NONE -> IDLE
+[state] slot 37 alpha-dashboard: NONE -> IDLE
+[state] slot 38 1:DagsterPlayground: NONE -> IDLE
+[state] slot 39 2:DagsterPlayground: NONE -> IDLE
+[state] slot 40 3:DagsterPlayground: NONE -> IDLE
+[state] slot 41 4:DagsterPlayground: NONE -> IDLE
+[state] slot 42 1:agent-skills: NONE -> IDLE
+[state] slot 43 2:agent-skills: NONE -> IDLE
+[state] slot 44 alpha-risk-kit: NONE -> IDLE
+[state] slot 45 1:M-VAVE_FM-1: NONE -> WORKING
+[state] slot 46 2:M-VAVE_FM-1: NONE -> IDLE
+[state] slot 47 3:M-VAVE_FM-1: NONE -> IDLE
+[state] slot 48 4:M-VAVE_FM-1: NONE -> IDLE
+[select] slot 7 (6:Tadronaut-Mono-Repo)
+[device] firmware speaks proto v6
+[state] slot 0 1:~: NONE -> IDLE
+[state] slot 1 2:~: NONE -> IDLE
+[state] slot 2 1:Tadronaut-Mono-Repo: NONE -> IDLE
+[state] slot 3 2:Tadronaut-Mono-Repo: NONE -> IDLE
+[state] slot 4 3:Tadronaut-Mono-Repo: NONE -> IDLE
+[state] slot 5 4:Tadronaut-Mono-Repo: NONE -> BLOCKED
+[state] slot 6 5:Tadronaut-Mono-Repo: NONE -> IDLE
+[state] slot 7 6:Tadronaut-Mono-Repo: NONE -> IDLE
+[state] slot 8 1:ferry: NONE -> IDLE
+[state] slot 9 2:ferry: NONE -> IDLE
+[state] slot 10 3:ferry: NONE -> IDLE
+[state] slot 11 1:quant-data-kit: NONE -> IDLE
+[state] slot 12 2:quant-data-kit: NONE -> IDLE
+[state] slot 13 3:quant-data-kit: NONE -> IDLE
+[state] slot 14 1:SyntheticSnapshot: NONE -> IDLE
+[state] slot 15 2:SyntheticSnapshot: NONE -> IDLE
+[state] slot 16 3:SyntheticSnapshot: NONE -> IDLE
+[state] slot 17 4:SyntheticSnapshot: NONE -> IDLE
+[state] slot 18 1:AlphaResearch: NONE -> IDLE
+[state] slot 19 2:AlphaResearch: NONE -> BLOCKED
+[state] slot 20 3:AlphaResearch: NONE -> IDLE
+[state] slot 21 4:AlphaResearch: NONE -> DONE
+[state] slot 22 5:AlphaResearch: NONE -> IDLE
+[state] slot 23 Wealthfolio: NONE -> IDLE
+[state] slot 24 1:Investment: NONE -> IDLE
+[state] slot 25 2:Investment: NONE -> IDLE
+[state] slot 26 1:brilliant-frame: NONE -> IDLE
+[state] slot 27 2:brilliant-frame: NONE -> IDLE
+[state] slot 28 1:lazytodo: NONE -> IDLE
+[state] slot 29 2:lazytodo: NONE -> IDLE
+[state] slot 30 3:lazytodo: NONE -> IDLE
+[state] slot 31 1:dev-cli: NONE -> IDLE
+[state] slot 32 2:dev-cli: NONE -> IDLE
+[state] slot 33 3:dev-cli: NONE -> IDLE
+[state] slot 34 translate: NONE -> IDLE
+[state] slot 35 1:AlphaGPT-Reproduce: NONE -> IDLE
+[state] slot 36 2:AlphaGPT-Reproduce: NONE -> IDLE
+[state] slot 37 alpha-dashboard: NONE -> IDLE
+[state] slot 38 1:DagsterPlayground: NONE -> IDLE
+[state] slot 39 2:DagsterPlayground: NONE -> IDLE
+[state] slot 40 3:DagsterPlayground: NONE -> IDLE
+[state] slot 41 4:DagsterPlayground: NONE -> IDLE
+[state] slot 42 1:agent-skills: NONE -> IDLE
+[state] slot 43 2:agent-skills: NONE -> IDLE
+[state] slot 44 alpha-risk-kit: NONE -> IDLE
+[state] slot 45 1:M-VAVE_FM-1: NONE -> WORKING
+[state] slot 46 2:M-VAVE_FM-1: NONE -> IDLE
+[state] slot 47 3:M-VAVE_FM-1: NONE -> IDLE
+[state] slot 48 4:M-VAVE_FM-1: NONE -> IDLE
+</pasted_content id="fec1">
+
+
+
+
+<pasted_content id="fec1">
+❯ just emu-run downloads/agtdeck-0.7.fwsc
+audio: Mac mini Speakers at 48000 Hz, 2 channels, buffer Default
+MIDI in: no inputs
+mouse: click/drag the keys (lower = harder; drag down on a held key = aftertouch), click buttons, drag or scroll the knobs (MASTER = volume)
+keys: A W S E D F T G Y H U J K O L P ; ' = C4..F5, Z/X OCT, Space PLAY, R REC, 1..0 buttons, arrows and , . for SELECT/PRESETS/ALGORITHM; F3 records a WAV (to Music/fm1-emu); F4 another firmware; Esc quits
+[  2.1 s] 1.00x real time | 240 MHz | audio 52 ms queued (target 50), 0 underruns
+[  4.1 s] 1.01x real time | 240 MHz | audio 55 ms queued (target 50), 0 underruns
+[  6.1 s] 1.00x real time | 240 MHz | audio 52 ms queued (target 50), 0 underruns
+[  8.1 s] 0.99x real time | 240 MHz | audio 44 ms queued (target 50), 0 underruns
+[ 10.1 s] 1.00x real time | 240 MHz | audio 52 ms queued (target 50), 0 underruns
+[ 12.1 s] 1.01x real time | 240 MHz | audio 55 ms queued (target 50), 0 underruns
+[ 14.1 s] 1.00x real time | 240 MHz | audio 47 ms queued (target 50), 0 underruns
+[ 16.1 s] 1.01x real time | 240 MHz | audio 55 ms queued (target 50), 0 underruns
+[ 18.1 s] 1.00x real time | 240 MHz | audio 52 ms queued (target 50), 0 underruns
+[ 20.1 s] 1.00x real time | 240 MHz | audio 44 ms queued (target 50), 0 underruns
+[ 22.1 s] 1.00x real time | 240 MHz | audio 52 ms queued (target 50), 0 underruns
+[ 24.1 s] 1.01x real time | 240 MHz | audio 55 ms queued (target 50), 0 underruns
+[ 26.1 s] 1.00x real time | 240 MHz | audio 52 ms queued (target 50), 0 underruns
+error: recipe `emu-run` was terminated by signal 15
+</pasted_content id="fec1">
+
+
+
+<pasted_content id="fec1">
+[state] slot 47 3:M-VAVE_FM-1: NONE -> IDLE
+[state] slot 48 4:M-VAVE_FM-1: NONE -> IDLE
+[select] slot 7 (6:Tadronaut-Mono-Repo)
+[midi] the FM-1 is gone (unplugged?) - waiting for it
+[state] slot 5 4:Tadronaut-Mono-Repo: BLOCKED -> IDLE
+</pasted_content id="fec1">
+
+```
+
+好像emulator不一定能找到host？
+
+[Image #18]
+
+不過用你的方式是成功了
+
+```
+
+
+<pasted_content id="fec1">
+# terminal 1：模擬器，加 --usb 插上虛擬 USB 線
+just emu-run downloads/agtdeck-0.7.fwsc uc25hq80 --usb
+
+# terminal 2：daemon 的硬體模式（不是 agtdeck-sim）
+just agtdeck-run
+</pasted_content id="fec1">
+
+```
+
+我用herdr中開兩個terminal works
+
+(不過emulator不知道為什麼 好像沒辦法mouse click？ 不確定怎麽觸發它的鍵盤）
+
+---
+
+_**User (2026-11-16 18:26:00Z)**_
+
+[Image: source: /private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/5f461408-bbdd-44d0-bb3b-b0642eabaa31/images/18.png]

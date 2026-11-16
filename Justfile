@@ -155,6 +155,10 @@ fw-build app="hello": fw-setup fw-toolchain
     JIELI_TOOLCHAIN="$PWD/tools/jieli/toolchain" AC79_SDK="$PWD/tools/fw-AC79_AIoT_SDK" \
       uv run --locked --all-groups python "{{fm1_base}}/tools/build.py" "firmware/{{app}}"
 
+# Agent Deck in the emulator with the virtual USB cable plugged in (pair with `just agtdeck-run`).
+agtdeck-emu chip="uc25hq80": agtdeck-fetch
+    just emu-run "downloads/agtdeck-{{agtdeck_version}}.fwsc" "{{chip}}" --usb
+
 # Run the daemon against a MIDI device: a real FM-1 with Agent Deck, or the emulator
 # started with `just emu-run downloads/agtdeck-{{agtdeck_version}}.fwsc uc25hq80 --usb`.
 agtdeck-run backend="herdr" *args: agtdeck-clone
