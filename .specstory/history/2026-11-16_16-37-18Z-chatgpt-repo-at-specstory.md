@@ -16848,3 +16848,469 @@ Checked: the chip's CRC32 of the flash matches the read
     - flash chip 0xB36014 (new)
 ```
 </details></tool-use>
+
+_**Agent (claude-fable-5-2 2026-11-16 18:44:45Z)**_
+
+機器已切到 download mode、可以刷回 SLOOP 了。我同時把 Firmware Hub 的介紹與影片說法的比對寫進文件，寫完一起回覆。
+
+_**Agent (claude-fable-5-2 2026-11-16 18:45:43Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Add a Firmware Hub page and a claims comparison to the flash chip page, then commit and push
+
+```bash
+python3 - <<'EOF'
+import pathlib
+def sub(path, pairs):
+    p=pathlib.Path(path); s=p.read_text()
+    for a,b in pairs:
+        assert a in s, (path,a[:60]); s=s.replace(a,b,1)
+    p.write_text(s)
+pathlib.Path("docs/firmware/hub.md").write_text('''# The Firmware Hub
+
+[The Firmware Hub](https://thefirmwarehub.com/) 是目前最大的 FM-1 社群韌體目錄：列出韌體、在瀏覽器裡一鍵安裝（Chrome / Edge，Web MIDI）、連到模擬器試玩，並附救援教學。安裝不需要帳號。
+
+以下數字來自它的 `catalog.json`，查核於 **2026-11-17**（目錄自己標的更新時間是 2026-11-16 18:01 UTC）。`[上游]`
+
+## 有什麼
+
+FM-1 共 **228** 個韌體：
+
+| 類別 | 數量 |
+|---|---|
+| synth | 89 |
+| groove（groovebox） | 76 |
+| other（控制器、工具、遊戲等） | 26 |
+| drums | 16 |
+| tracker | 11 |
+| chords | 8 |
+
+安裝次數最多的幾個：SLOOP（約 11,500）、JIANT FM、Skiff、Felucca、Melodee、OberVave、FMini-1、Clipper。很多條目是這幾個主幹的衍生版。
+
+除了 FM-1，Hub 也收 M-VAVE SMK-37、Elektron Model:Cycles、Erica Synths LXR-02 的韌體，並有工具區（模擬器、editor、備份與救援、自己 build）、Knowledge Base 與 creator 名單。
+
+## 新晶片篩選：對我這台最重要的功能
+
+Hub 會從每個套件裡讀出它認得哪些 flash 晶片，並提供篩選 **Saves on newer FM-1s**。我的機器是新晶片 `0xB36014`，裝東西前先看這一欄。
+
+| Hub 的標示 | 意思 | 數量 |
+|---|---|---|
+| Every FM-1, the newer chip too | 套件認得新晶片 | 152 |
+| The first FM-1s only | 只認得舊晶片：在新機上存檔只留在 RAM，更新也可能失敗 | 71 |
+| Every FM-1: it does not check the chip | 不檢查晶片；Hub 註明他們沒在新晶片上試過 | 5 |
+
+我在用或考慮過的：
+
+| 韌體 | Hub 版本 | 新晶片 |
+|---|---|---|
+| SLOOP | 2.8.5 | 認得 |
+| Felucca | 1.8.2 | 認得 |
+| Melodee | 1.6.1 | 認得 |
+| Clipper | 1.3.1 | 認得 |
+| X0X | 1.2.2 | 認得 |
+| CTL-1 | 1.0.3 | 認得 |
+| AGTDECK（Agent Deck） | 0.6.3 | 認得（Hub 版本比上游 release 的 0.7 舊） |
+| SLOOP DX7 Banks、SLOOP Floyd FM、X0X-RMX、Felucca [Salt] | — | **只認舊晶片**，不要裝 |
+
+衍生版不一定跟上主幹：SLOOP 本身支援新晶片，但基於舊版 SLOOP 的幾個 fork 還沒有。
+
+!!! warning "「認得晶片」不等於「測過」"
+    這一欄是從套件內容判讀出來的，不是實機測試結果。Hub 自己聲明它不跑測試也不做 review，只檢查檔案是不是 FM-1 套件。還是要自己備份、刷完做存檔測試。
+
+## 我怎麼用它
+
+- **找東西、看新晶片標示**：用 Hub。
+- **下載與安裝**：仍然從韌體作者自己的 GitHub release 下載、對 digest，再用 `just fm1-flash`。這樣版本最新（例如 Agent Deck），而且寫入前有 M-Flasher 的檢查與自動備份。
+- **試玩**：Hub 的 Try 與 [fm1-emu](../agentic/emulator.md) 是同一個模擬器。
+- **救援教學**：Hub 的 [FM-1 rescue](https://thefirmwarehub.com/tools/rescue/) 依「你看到什麼」分步驟寫，和[救援](../getting-started/recovery.md)互補。
+
+Hub 上標「Built from source」的套件有 build attestation（由共用的 [zvenson/fm1-build](https://github.com/zvenson/fm1-build) 產生）。那代表檔案確實是從那個 commit build 出來的，不代表韌體安全。
+
+## 官方網站
+
+M-VAVE 官方的產品頁與下載在 [cuvave.com](https://www.cuvave.com/product?id=fm-1)（Cuvave 是 M-VAVE 的公司網站）。官方韌體 `FM-1.fwsc` 與更新工具 M-UPGRADE 從那裡的 Download 取得。頁面內容是 JavaScript 動態載入的，我沒有逐項核對上面目前列的版本。
+''')
+sub("zensical.toml",[('    { "多韌體切換" = "firmware/switching.md" },','    { "The Firmware Hub" = "firmware/hub.md" },\n    { "多韌體切換" = "firmware/switching.md" },')])
+sub("docs/hardware/flash-chips.md",[
+("## 可以先在模擬器試","""## 常見說法對照
+
+有一支介紹新舊晶片的影片（[FM-1 New VS Old Flash Chip](https://www.youtube.com/watch?v=VNFZqDnTFYs)）。我看的是 Gemini 的摘要，不是影片本身，所以以下是 `[調研]` 對 `[上游]` 的比對。
+
+| 影片的說法（摘要） | 和上游一致嗎 |
+|---|---|
+| 螢幕下方的 logo 不能判斷晶片，有 logo 的也可能是舊晶片 | 一致。唯一可靠的是 M-Flasher 讀 `FLASH CHIP` |
+| 新舊晶片硬體規格相同，差別只在晶片 ID | 一致 |
+| 在 Firmware Hub 篩選支援新晶片的韌體 | 一致。見 [The Firmware Hub](../firmware/hub.md)。影片說 157 款相容、73 款不相容；我 2026-11-17 從目錄算到 152 與 71（另有 5 個不檢查晶片） |
+| 不支援的韌體通常改兩行程式碼就能相容 | 合理。問題就是 JEDEC ID 的白名單 |
+| 新晶片刷到不支援的舊韌體「可能導致設備損壞」 | **說得太重。** 上游與 Hub 描述的後果是存檔只留在 RAM、關機消失，以及之後的更新可能失敗，不是硬體損壞。麻煩在於可能卡在那個韌體上，要靠 download mode 救回來 |
+| 無論新舊晶片都建議裝 bootloader 來防變磚 | **和上游不一致。** 見下 |
+
+### 「裝 bootloader 防變磚」為什麼不適用我這台
+
+這句話有一半是對的：m-bootloader 讓「韌體刷壞」之後能從按鍵進 recovery，不必靠額外硬體，這是真的保護。
+
+但安裝它本身就是對 boot 區的寫入，而 m-bootloader 作者自己在 README 寫：新晶片測試很少，一台裝完無法啟動、原因不明，另一台正常，結論是 `0xB36014` 的機器 install it at your own risk。影片的「無論新舊都建議裝」沒有帶這個保留。
+
+所以它防的是一種磚（韌體壞掉），代價是冒另一種磚（bootloader 壞掉）的風險；後者在新晶片上還沒有足夠的資料，而且只有 USB_KEY 能救。對舊晶片機，裝它是合理的。對我這台，維持[暫緩](../watch.md)。
+
+另外，沒有 m-bootloader 也不是毫無退路：SLOOP 與 Agent Deck 執行中都能由 M-Flasher 透過 USB MIDI 切進 download mode，Dinghy / Felucca 系的韌體按住 `OCT-` 開機有自己的 USB rescue。`[實機]` 前者我已實際用過多次。
+
+## 可以先在模擬器試"""),
+])
+sub("docs/index.md",[("| 選一套韌體來玩 | [韌體地圖](firmware/index.md) |","| 選一套韌體來玩 | [韌體地圖](firmware/index.md)、[The Firmware Hub](firmware/hub.md) |")])
+sub("AGENTS.md",[("2. [FM1 Developers' Wiki](https://sbegueria.github.io/fm1-dev-wiki/).","2. [FM1 Developers' Wiki](https://sbegueria.github.io/fm1-dev-wiki/). For\n   \"does firmware X know the new flash chip\", the Firmware Hub's\n   `https://thefirmwarehub.com/catalog.json` has a per-package `chip` field\n   (`new` / `old` / `any`), read from the package, not hardware-tested.")])
+EOF
+just docs-check 2>&1 | tail -1; git add -A && git commit -q -m "Document the Firmware Hub and compare the flash-chip video's claims with upstream
+
+Co-Authored-By: Claude Fable 5.2 <noreply@anthropic.com>" && git push -q origin main && echo pushed
+```
+
+```text
+{"status": "ok", "pages": 28, "llm_pages": 28, "deployed": false}
+pushed
+```
+</details></tool-use>
+
+_**Agent (claude-fable-5-2 2026-11-16 18:46:01Z)**_
+
+機器已在 download mode，可以刷回 SLOOP 了。另外兩個問題的答案也整理好並寫進文件。
+
+## 刷回 SLOOP
+
+請執行：
+
+```sh
+just fm1-flash downloads/sloop-2.8.5.fwsc
+```
+
+Preflight：
+
+| 項目 | 狀態 |
+|---|---|
+| 目前韌體 | Agent Deck（`FM-1 243`），app OK，原廠 bootloader |
+| 備份 | Agent Deck 狀態已有 `2026-11-17-agtdeck-0.7`；刷 Agent Deck 之前的 SLOOP（含你的曲子）在 `2026-11-17-pre-agtdeck`，本機與 Release 都有，digest 相符 |
+| 套件 | `sloop-2.8.5.fwsc`，digest 已驗證，支援你的晶片，之前刷過一次 |
+
+這次是實驗：只裝韌體、不還原備份，看曲子還在不在。上游說這點沒測過。預期範圍是 `0x04000`–`0x92FFF`，不含 boot 區；範圍不對或有警告就先不要輸入 `yes`。
+
+刷完把輸出貼給我，我重開機並記錄。然後請你看曲子還在不在：
+- **還在**：之後在兩者間切換只需要重裝韌體。
+- **不在**：由你在 M-Flasher 的 GUI 用 **RESTORE FULL FLASH** 還原 `pre-agtdeck` 那份備份。
+
+## 影片的 bootloader 說法：和我們的結論不一樣
+
+我看的是 Gemini 的摘要，不是影片本身。摘要裡大部分說法和上游一致（logo 不能判斷晶片、差別只在 ID、用 Hub 篩選），但有兩點不同：
+
+- **「無論新舊都建議裝 bootloader 防變磚」**：一半對。m-bootloader 確實讓「韌體刷壞」之後能從按鍵救回來。但安裝它本身是對 boot 區的寫入，而作者自己在 README 寫新晶片測試很少、一台裝完無法啟動、`0xB36014` 的機器風險自負。影片沒帶這個保留。它防的是一種磚，代價是冒另一種磚的風險，而後者只有 Pico 能救。對舊晶片機裝它合理，對你這台我仍建議暫緩。
+- **「刷到不支援的舊韌體可能導致設備損壞」**：說得太重。上游描述的後果是存檔只留在 RAM、關機消失，以及之後更新可能失敗，不是硬體損壞。
+
+你今天其實已經驗證了沒有 m-bootloader 也有退路：SLOOP 和 Agent Deck 執行中都能用指令切進 download mode。
+
+## Firmware Hub
+
+原本文件只有一行帶過，現在新增了專頁。我抓了它的目錄（2026-11-17）：
+
+- **FM-1 共 228 個韌體**：synth 89、groovebox 76、其他 26、鼓機 16、tracker 11、和弦 8。安裝數最高的是 SLOOP，約 11,500 次。
+- **新晶片篩選**：152 個認得新晶片、71 個只認舊晶片、5 個不檢查。影片說的 157 與 73 和這個接近。
+- **對你有用的細節**：SLOOP 本身支援新晶片，但幾個基於舊版的衍生版（SLOOP DX7 Banks、SLOOP Floyd FM、X0X-RMX、Felucca [Salt]）只認舊晶片，不要裝。
+- 這個標示是從套件內容判讀的，不是實機測試。Hub 自己聲明不做測試也不做 review。
+- Hub 上的 Agent Deck 是 0.6.3，比你裝的 0.7 舊。所以我的建議是用 Hub 找東西，下載仍從作者的 GitHub release。
+
+`cuvave.com` 是 M-VAVE 官方網站，官方韌體與 M-UPGRADE 從那裡下載。那個頁面是動態載入的，我沒核對上面目前列的版本。
+
+新頁面：「The Firmware Hub」，以及「兩種 Flash 晶片」頁新增的「常見說法對照」。
+
+---
+
+_**User (2026-11-16 18:49:30Z)**_
+
+[Image #21] FM MK1 是什麼？
+https://thefirmwarehub.com/firmware/jiant/
+https://thefirmwarehub.com/firmware/vibe-link/
+https://github.com/zvenson/vibe-link
+它是不是網頁試用的emulator 但是怎麽看起來跟我們的機器不一樣？
+還是它的用法是 拿其他MIDI controller來控制 FM1？
+
+```
+
+
+<pasted_content id="fec1">
+❯ just fm1-flash downloads/sloop-2.8.5.fwsc
+This writes firmware to the FM-1. A verified backup exists and the package supports this flash chip? yes
+"/Applications/M-Flasher.app/Contents/MacOS/M-Flasher" firmware "downloads/sloop-2.8.5.fwsc"
+Connecting to usb:2-4
+M-Flasher loader 1.3 already running
+Flash chip 0xB36014 (new)
+Reading the flash
+  100%
+Read in 1.3 s (798 KB/s)
+Checked: the chip's CRC32 of the flash matches the read
+  model       FM-1
+  bootloader  stock (M-VAVE)
+  firmware    FM-1 243
+  app         OK
+  chip key    0x980F
+  flash       0xB36014
+  unit id     55227286a0cb022a
+  loader      M-Flasher 1.3, CPU at 96 MHz
+    - the firmware uses the FM-1 flash layout
+    - flash chip 0xB36014 (new)
+
+Install firmware FM-1_900
+Writes 140 sectors (560 KiB): 0x04000-0x8FFFF
+Installs FM-1_900 (0x04000-0x92FFF).
+Type "yes" to write: yes
+Backup saved: /Users/zhouhanru/Documents/M-Flasher/backups/fm1-20261117-024717.bin
+Writing 0x04000-0x8FFFF
+  100%
+Done: everything written is verified (the chip's CRC32 matches)
+</pasted_content id="fec1">
+
+```
+
+另外 官方韌體與 M-UPGRADE 這部分我們是不是都沒有用到？ 現在官方只是說讓機器變得開放？還是user自己逆向的？ 或是其實也有提供起始包？
+（因為感覺目前生態也很多 但好像機器也很新 是大家開發得很快？ 還是比如SLOOP其實是其他地方的東西 只是移植上來？ 等等的）
+帶我理解一下
+
+---
+
+_**User (2026-11-16 18:49:30Z)**_
+
+[Image: source: /private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/5f461408-bbdd-44d0-bb3b-b0642eabaa31/images/21.png]
+
+---
+
+_**Agent (claude-fable-5-2 2026-11-16 18:49:59Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Restart the unit, then gather repo creation dates and the vibe-link README
+
+`just fm1-restart 2>&1 | tail -1; just fm1-find 2>&1 | tail -1; echo "=== created dates"; for r in m-vave/fm1_open hugelton/Felucca isod89/sloop-fm1 aroum/fm1-custom-fw zvenson/dinghy zvenson/vibe-link joakimeriksson/fm1-emu jvitkauskas/m-flasher Quixotic7/MvaveFM1Unbricker AL-255/FM-1-RE charlesvestal/fm1-base; do printf "%-32s " $r; gh api repos/$r --jq '"created \(.created_at[0:10]) ★\(.stargazers_count) | \(.description // "" | .[0:110])"' 2>&1 | head -1; done; echo "=== vibe-link README"; gh api repos/zvenson/vibe-link/readme --jq .content | base64 -d | cut -c1-600 | head -60`
+
+```text
+Running: the Felucca is on USB MIDI
+midi	Felucca (running; download-mode switches it)
+=== created dates
+m-vave/fm1_open                  created 2026-10-13 ★366 | 
+hugelton/Felucca                 created 2026-10-02 ★739 | Custom firmware for M-VAVE FM-1
+isod89/sloop-fm1                 created 2026-10-04 ★816 | A live groovebox firmware for the M-VAVE FM-1
+aroum/fm1-custom-fw              created 2026-07-25 ★421 | M-VAVE FM-1 resource hub: custom firmwares directory, docs, MIDI SysEx protocol tools & firmware flasher
+zvenson/dinghy                   created 2026-10-09 ★53 | The smallest firmware for the M-VAVE FM-1 to build your own on: the plumbing done and documented (updates, USB
+zvenson/vibe-link                created 2026-11-07 ★2 | 
+joakimeriksson/fm1-emu           created 2026-10-12 ★274 | Emulator for the M-VAVE FM-1 pocket synth: runs its firmwares unchanged in the browser and natively
+jvitkauskas/m-flasher            created 2026-10-17 ★187 | 
+Quixotic7/MvaveFM1Unbricker      created 2026-10-07 ★115 | 
+AL-255/FM-1-RE                   created 2026-07-19 ★133 | Reverse Engineering of the M-VAVE FM-1 Pocket Synthesizer Firmware
+charlesvestal/fm1-base           created 2026-10-17 ★39 | An MPL-2.0 base and template for M-VAVE FM-1 firmware, on felucca-bsp: platform, host simulator, browser emula
+=== vibe-link README
+<p align="center"><img src="assets/logo.svg" width="96" alt="VIBE FM Link"></p>
+
+# VIBE FM Link
+
+**Your M-VAVE FM-1 as a controller for the [VIBE FM](https://thefirmwarehub.com/vibe), the VIBE FM Web Player and the
+VIBE FM VST – and for anything else that takes MIDI.**
+
+Install it on the FM-1 like any firmware from the [FM-1 Firmware Hub](https://thefirmwarehub.com), plug the FM-1 into
+the VIBE (or your computer), done: the keys play, the seven encoders are the VIBE's encoders, every button is a VIBE
+button. The FM-1 makes no sound of its own in this firmware; the VIBE does. Back to any other firmware: the hub, as
+always.
+
+Built on [Dinghy](https://github.com/zvenson/dinghy), the smallest FM-1 firmware to build your own on. GPL-3.0.
+
+## What the FM-1 becomes
+
+| FM-1 | VIBE FM | MIDI (channel 1) |
+| --- | --- | --- |
+| keys | the keys | notes, velocity 100 |
+| OCT- / OCT+ | (the FM-1's own octave) | – |
+| KNOB 1-4 | encoders 1-4 | CC 20-23, relative |
+| SELECT | DATA | CC 24, relative |
+| ALGORITHM | encoder A | CC 25, relative |
+| PRESETS | encoder B | CC 26, relative |
+| MASTER | the volume | CC 7 |
+| EDIT ENV LFO ARP FX SEQ | the six keys SOUND ENV LFO ARP FX SEQ | CC 46 44 45 50 42 51 |
+| SEL | ENTER | CC 43 |
+| HOME | HOME | CC 48 |
+| PLAY, REC | PLAY, REC | CC 52, 53 |
+| **SAVE held** | **SHIFT** | CC 49 |
+| SAVE + PLAY | STOP | CC 54 |
+| SAVE + OCT- / OCT+ | LEFT / RIGHT | CC 56 / 57 |
+| **GLO held** + EDIT ENV LFO ARP FX SEQ | **F1-F6** (the soft keys under the display) | CC 60-65 |
+| GLO tapped alone | MENU | CC 47 |
+
+**The screen shows what you play (0.3).** The VIBE, the Web Player and the VST's window tell the FM-1 the firmware's
+page and what every knob is now (VIBE FM SDK 24, a SysEx `F0 7D 56 4C 01 … F7`): the page on top, KNOB 1-4 with name
+and value, ALGORITHM and PRESETS below. A knob you turn lights up; a click on the host shows here too. Without a host
+the screen keeps the page you last chose (EDIT ENV LFO ARP FX SEQ HOME).
+
+**A converted FM-1 firmware shows its own screen here (0.4).** When the VIBE, the Web Player or the VST runs an FM-1
+firmware converted for it (SLOOP, JIANT, FRASIL …), the FM-1 shows that firmware's own 240 x 240 screen, as it would on
+an FM-1 by itself (VIBE FM SDK 25: SysEx `F0 7D 56 4C 02 … F7`, only what changed, each piece answered `F0 7D 56 4C 03 F7`;
+~75 KB/s). The VIBE's own firmwares (OberVave …) keep the page and the knobs. Three seconds without a picture: the
+screen of its own again.
+
+Buttons send 127 pressed and 0 let go. Relative encoders send two's complement: +n as n, -n as 128 - n; a fast turn
+counts more (2, 3, 6 a detent). A MIDI clock coming in blinks PLAY on the beat, START / STOP light it. The screen shows
+the last thing sent.
+
+The VIBE, the Web Player and the VST know this firmware by its USB name, "VIBE FM Link", and map it with the profile
+[`controllers/vibe-fm-link.json`](https://github.com/zvenson/vibe-sdk) of the VIBE FM SDK. In a DAW, choose
+"VIBE FM Link" under Controller in the plugin window once. Every CC is plain MIDI: any synth or DAW can learn it too.
+
+OberVave 3.4 on the FM-1 has the same thing built in (OUTPUT page, SELECT pressed: VIBE LINK off / on / control), so
+the FM-1 can play and control at once.
+
+## Build it yourself
+
+As Dinghy: Linux x86-64 (or Docker), Python 3 with Pillow, the JieLi toolchain (`tools/get_toolchain.sh`) and the
+```
+</details></tool-use>
+
+_**Agent (claude-fable-5-2 2026-11-16 18:50:09Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Read the Hub's VIBE FM page and M-VAVE's official open firmware README
+
+```bash
+cd /tmp && curl -sL -m 25 -A "Mozilla/5.0" https://thefirmwarehub.com/vibe -o vibe.html; python3 - <<'EOF'
+import re,html
+h=open('/tmp/vibe.html',encoding='utf-8',errors='ignore').read()
+t=re.sub(r'<script.*?</script>|<style.*?</style>','',h,flags=re.S)
+t=html.unescape(re.sub(r'<[^>]+>','\n',t)); L=[l.strip() for l in t.split('\n') if len(l.strip())>40]
+print('\n'.join(l[:330] for l in L[:28]))
+EOF
+echo "=== fm1_open"; gh api repos/m-vave/fm1_open/readme --jq .content | base64 -d | cut -c1-500 | head -45
+```
+
+```text
+Open-source firmware for small music machines, from their makers, installed in the browser.
+One Vibe, every device · browser, DAW, hardware
+Build a Vibe · port your FM-1 firmware · win a VIBE Box
+Open source since 23 Oct · its firmware and mods
+Hardware with open firmware · join the list
+Everything around the firmwares: emulators, editors, backup and rescue, building your own. Open source, from their makers.
+Emulators, editors, backup, building your own
+Does not start, update or save? What to do
+The people behind the firmwares, and what the players wish for next. Installing is free and needs no account; a hub
+account (no password, a link by mail) keeps your favourites, ratings and wishes.
+Your FM-1 tunes on two decks – upload yours
+A synth, a feature, a device: wish and vote
+Firmwear, the hub's community shirt, on Fourthwall, and the machines the firmwares run on, from Amazon.de.
+Firmwear: the hub's community shirt, on Fourthwall.
+Firmwear, the hub's community shirt, on Fourthwall, and the machines the firmwares run on, from Amazon.com.
+* Affiliate link (ad, Anzeige): as an Amazon Associate I earn from qualifying purchases; it costs you nothing extra. Als Amazon-Partner verdiene ich an qualifizierten Verkäufen.
+* Affiliate link (ad). As an Amazon Associate I earn from qualifying purchases; it costs you nothing extra.
+You've flashed your FM-1. You've tried Baud Girl, Felucca, SLOOP and more.
+On most devices, open firmware is tolerated at best. VIBE FM Mk1 officially supports it: built for it from day one, with a community that's already here.
+Synth, sampler, groovebox, vocal or guitar FX: it becomes whatever the firmware makes it. Open, and never bricked.
+Something is coming. Join the list for first details and a say in the final design.
+I'd like to receive news about VIBE FM. Unsubscribe anytime.
+Double opt-in, stored on our own server, never shared.
+10% off the crowdfunding campaign price for the first 100 confirmed sign-ups, one device per address.
+Open instruments existed before, but only for programmers.
+Now anyone can vibe code firmware: describe your instrument, AI writes the code.
+The FM-1 scene proves it: more than 20 open firmwares for a device that was never built for it.
+What was missing is hardware made for this. That's VIBE.
+=== fm1_open
+# FM1 Open V14
+
+English · [简体中文](README.zh-CN.md)
+
+8 tracks, 8 sample slots, 16 FX demos; binary SDK included.
+
+[Workbench and development kit](https://open.m-vave.com/fm1-workbench) · [Official forum](https://forum.m-vave.com)
+
+Use the workbench to update firmware, preview the instrument and manage projects, samples and DX7 voices. Select "Source + SDK" to download the development kit matching the online release. Back up projects, voices and samples before updating, and keep the device powered during writes.
+
+## V14 features
+
+- **DX7 library:** 128 voices in four groups of 32, with the M-VAVE FM1 original V15 factory voices and order. Saved user banks take priority. DX7 single-voice and 32-voice bank SysEx import/export is supported; extension parameters are not handled. Changing the library does not change patches already saved in projects.
+- **Track roles:** on SEQ **8/8 TRACK ROLE**, K1 selects NORMAL, PLAY or OFF; K2 selects input MIDI channel 1–16. PLAY retains the track's timbre and held notes across project changes. MUTE/SOLO use the existing controls, with independent NORMAL and PLAY solo groups. PLAY timbre edits are not saved with projects: export a timbre file, or save DX7 voices to the independent library.
+- **Step recording:** with the track set to NORMAL, press REC while stopped and play notes. Releasing all played keys advances to the next step, including DRUM 808 and SAMPLER. Overlapping notes share a step; during playback, REC records in time. PLAY tracks are for live performance and do not record notes.
+- **Tempo and delay:** internal tempo is 30–300 BPM. Tap Tempo is available on the workbench, with SEQ on the FX DELAY page, or with HOME held while tapping SEQ elsewhere. Delay supports tempo synchronization and fixed times of about 30–2040 ms.
+
+## MIDI
+
+FM1 accepts DIN, USB and BLE MIDI input, with USB/BLE output. Default input channels 1–7 address tracks 1–7; channel 10 addresses track 8. Change each input channel on TRACK ROLE.
+
+- **5/8 SYNC / LOOP:** select internal or external clock, tempo, loop length and clock input.
+- **6/8 MIDI TRACK:** select SEQ/ARP LOCAL, BOTH or MIDI output, output channel, output ports and physical KEY OUT.
+- **7/8 MIDI ROUTING:** configure LOCAL, CLK OUT and MIDI Thru. For DAW monitoring with Local Off, enable KEY OUT and select the output ports.
+
+MIDI preferences are saved independently of projects. The browser simulator previews these settings without sending performance MIDI to external ports; configure the instrument on its panel. MIDI Clock, Start, Continue, Stop and Song Position Pointer input are supported. Clock loss stops synchronized playback.
+
+## Updates and compatibility
+
+V13 can update to V14. The workbench supports returning to original V15 and migrating from compatible third-party firmware. The standard FM1 update protocol remains available. Compatibility has been checked with selected firmware versions; it is not a guarantee for every third-party release.
+
+Firmware switching does not make project and sample formats interchangeable. Keep exported backups for rollback. Older firmware may not support V14 track preferences, the independent voice library or synchronized/extended delay settings.
+
+To back up the independent voice library, read and export groups A–D separately. Project files do not contain sample audio. Restore custom samples from their sample bank backup; writing the built-in sample bank replaces the current samples.
+
+The eight sample slots share about 19.55 seconds of new sample storage. Existing larger banks remain readable; they may need to be backed up and reduced before writing the independent DX7 library.
+
+## Build
+
+Requires Windows x64, PowerShell, `curl.exe` and `tar.exe`. Firmware builds require **JieLi Windows toolchain 2.5.3**, which includes PI32v2 clang 4.0.1. [Download the 2.5.3 installer from JieLi](https://jl-update.oss-cn-shenzhen.aliyuncs.com/2.5.3.exe) and follow the [installation guide](https://doc.zh-jieli.com/Tools/zh-cn/dev_tools/dev_env/jl_toolchain.html). Set `FM1_PI32_TOOLCHAIN` to its `pi32` folder containing `bin/clang.exe` (normally `C:\JL\pi32`). FM1 continues to use the `r3` CPU tar
+
+The build checks all 22 toolchain files against `sdk/manifest.json`. Older V14 kits were pinned to 2.5.2 and reject 2.5.3; update the complete source + SDK kit together, keeping the manifest checks enabled. For this revision, the expected SHA-256 of `pi32/bin/clang.exe` is `d4bc97cf421c1ccc373dd8924ce88720ff7457b3f1478d15df4aeda6ae923bce`.
+
+For a local web preview:
+Shell cwd was reset to /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1
+```
+</details></tool-use>
+
+_**Agent (claude-fable-5-2 2026-11-16 18:50:23Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Read the origins and credits of SLOOP, Felucca, and the community resource hub
+
+`cd /private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/5f461408-bbdd-44d0-bb3b-b0642eabaa31/scratchpad/up && sed -n '/^## Credits and thanks/,/^## Licence/p' sloop-readme.md | cut -c1-900 | head -16; echo "=== Felucca"; gh api repos/hugelton/Felucca/readme --jq .content | base64 -d > felucca-readme.md; grep -n -i -E "official|m-vave|reverse|SDK|jieli|origin|based on|history|fm1_open|bsp|from scratch|bare" felucca-readme.md | cut -c1-300 | head -22; echo "=== aroum"; gh api repos/aroum/fm1-custom-fw/readme --jq .content | base64 -d | grep -n -i -E "reverse|official|open|history|SysEx|first|JieLi|AC79|SDK" | cut -c1-260 | head -16; gh api "repos/isod89/sloop-fm1/commits?per_page=1&until=2026-10-06T00:00:00Z" --jq '.[0]|"\(.commit.author.date[0:10]) \(.commit.message|.[0:100])"'`
+
+```text
+## Credits and thanks
+
+- **[Felucca](https://github.com/hugelton/Felucca)** by **Leo Kuroshita** (@kurogedelic) / **Hügelton Instruments** — the engines, the sequencer, the editor, the installer, in 2.3 the USB audio input, the MIDI clock, the knob reading and many fixes, in 2.4 the FM6 engine and its DX7 patch editor (Felucca 1.0 / 1.0.1), and in 2.6 the INSERT effects, LFO 2 (SYNC / TRIG / POL), ENV SYNC, the ANALOG filter types, note LEN and step velocity, MIDI LEARN, the live drum mutes, the latched-arp fix (#191), the 1/4D delay and REV / ECHO THROW (Felucca 1.4 / 1.4.1 / 1.5 / 1.5.1), and in 2.7 the arp modes REPEAT, DNUP, UP+8, CONV, DIVG, PINKY, THUMB, WALK and CHORD, and ORD in the order you pressed (Felucca 1.4 / 1.5.1). Thank you.
+- **The Felucca community, who asked for those features first** (Felucca discussions and issues): **Wulgaren** (insert effects with dry / wet, #78; the arp report, #191), **etyrnal** (the lo-fi bit effect, #177; envelopes in note values, #175), **benjaminguerrer** (LFO sync, #154), **gospodindilly-ops** (the ANALOG filter types, #104), **Armstrong1980** (#178) and **oMauNaProducer** (#173) (note length, step velocity), **lostfictions** and **planist79** (MIDI LEARN, #170).
+- **@renebohne** — the played-note key lights (pull request #11) and, in 2.6, MIDI Program Change (Felucca pull request #179).
+- **ChanceTheMaker** and **keremimo** — the TRS MIDI input fix (Felucca Salt) and contributions to the MIDI clock.
+- **andrerezemini** ([sloop-lab](https://github.com/andrerezemini/sloop-lab)) — in 2.7 the sound on the FM-1's second core and 38 KB of RAM back (pull request #111), on the dual-core start of **Charles Vestal** ([X0X](https://github.com/charlesvestal/fm1-x0x)) and **keremimo** ([Melodee](https://github.com/keremimo/melodee)).
+- **juanjiant-bit** ([JIANT FM](https://github.com/juanjiant-bit/JIANT)) — in 2.7 the progressive knob acceleration (KNOB ACCEL) and the LEVEL / PAN glide come from JIANT's.
+- **renebohne** — in 2.7 MIDI CC 74 sweeps each engine's own cutoff or brightness, after his pull request #71 (Felucca 1.1.5's standard CC map).
+- **@ordenador** (Mario Faúndez Vidal) — the web editor's local audio preview: the firmware's own engines and sequencer in the browser (WebAssembly), with the playable piano / pads and the inline sequence editing (pull request #120).
+- **Everyone who installed SLOOP, made music with it, commented, reported a bug or asked for a feature** — most of each update comes from your messages: parameter locks, DX7 patches, dotted delays and longer steps (2.4); in 2.6 a MIDI channel per track, sustain and pitch bend, step entry from a MIDI keyboard, TEXTURE, the fixed crackles, the web editor bug with the same value on two tracks, and the MIDI learn backup. You asked, tested and reported them.
+- Samples: Versilian Studios VSCO-2 CE and VCSL, Sonic Pi (all CC0). Font: Terminus and Terminus Bold (SIL OFL 1.1). Icons: Fukiai (MIT, Hügelton Instruments). PHASE engine after CrispyZebra (GPL); VOICE after klattsch (MIT); FM6: msfa from Dexed by Google Inc. and Pascal Gauthier (Apache-2.0).
+- Interface ideas after teenage engineering's pocket operators and EP-133, Elektron's step entry and Akai's MPC (swing, note repeat, erase).
+
+## Licence
+=== Felucca
+5:Felucca is open-source custom synthesizer firmware for the **M-VAVE FM-1**.
+11:**Stable release: 1.8.2.** Connect your FM-1 by USB and use the [web installer](https://hugelton.github.io/Felucca/) in Chrome or Edge. The installer offers a way back to the official V15 or V16 firmware. Back up your projects and presets before changing firmware.
+13:**Newer FM-1 flash.** Some newer FM-1 units use UC25HQ80 flash (JEDEC ID `0xB36014`). 1.8.2 recognises it. On such a unit, 1.8.1 and earlier cannot start an update; see the [1.8.2 release notes](https://github.com/hugelton/Felucca/releases/tag/v1.8.2) for the way back through the official V15.
+24:The firmware uses [Felucca-Engines](https://github.com/hugelton/Felucca-Engines) (MIT) for its built-in sound engines and [felucca-bsp](https://github.com/hugelton/felucca-bsp) (MPL-2.0) for the FM-1 hardware layer. Neither repository implies support for Felucca on other hardware.
+36:M-VAVE and FM-1 are trademarks of their respective owners. Felucca is not affiliated with, endorsed by or supported by M-VAVE.
+=== aroum
+1:# M-VAVE FM1 Resource Hub, Custom Firmwares & MIDI SysEx Protocol Documentation
+3:A curated directory and reference hub for the **M-VAVE FM1** synthesizer (powered by the **JieLi AC791N** processor) — gathering community custom firmwares, documentation, tools, MIDI SysEx protocol details, and the `M-UPGRADE-FM1.app` (macOS) updater.
+17:> **Official Stock Firmware & Open Source SDK (M-VAVE):**  
+18:> * **Latest Stock Firmware:** **[FM-1.fwsc](https://yms-file-store.oss-cn-hongkong.aliyuncs.com/software/firmware/FM-1.fwsc)** (718 KB, SHA-256 verified) — major official release introducing an **8-part multitimbral engine** (MIDI channels 1–8), expanded *
+19:> * **Official Open Source Repository:** **[m-vave/fm1_open](https://github.com/m-vave/fm1_open)** (GPL-3.0, 8 tracks, 8 sample slots, 16 demo FX, hardware C drivers, and WebAssembly simulator).
+20:> * **Online Web Workbench:** **[open.m-vave.com/fm1-workbench](https://open.m-vave.com/fm1-workbench)** — provides in-browser WebAssembly simulation, testing, and direct USB firmware flashing.
+21:> * **Announcement & Discussion:** **[M-VAVE Official Forum Topic #4](https://forum.m-vave.com/topic/4)**.
+35:Firmwares built upon or directly forked from the foundational open-source multi-engine **Felucca** synthesizer core by Hügelton Instruments:
+39:| 1 | **Felucca by hugelton**<br>[GitHub](https://github.com/hugelton/Felucca) \| [Web Installer](https://hugelton.github.io/Felucca/) \| [Web Editor](https://hugelton.github.io/Felucca/webapp/editor/) \| [Build Guide](https://github.com/hugelton/Felucca/bl
+40:| 2 | **Felucca [Salt] by Chance Roth (ChanceTheMaker)**<br>[GitHub](https://github.com/ChanceTheMaker/Felucca) \| [Web Installer](https://chancethemaker.github.io/Felucca/webapp/installer/) \| [Web Studio](https://chancethemaker.github.io/Felucca/webapp/ed
+41:| 3 | **Melodee by keremimo**<br>[GitHub](https://github.com/keremimo/melodee) \| [Web Installer](https://keremimo.github.io/melodee/) \| [Web Editor](https://keremimo.github.io/melodee/webapp/editor/)<br>**License:** Open Source (GPL-3.0-only). Modified bu
+42:| 4 | **ChoralRoot FM-1 by Quixotic7**<br>[GitHub](https://github.com/Quixotic7/ChoralRootFM1) \| [Web Installer](https://quixotic7.github.io/ChoralRootFM1/) \| [Web Emulator](https://quixotic7.github.io/ChoralRootFM1/emu/)<br>**License:** Open Source (GPL-
+43:| 5 | **X0X by Charles Vestal**<br>[GitHub](https://github.com/charlesvestal/fm1-x0x) \| [Web Installer](https://charlesvestal.github.io/fm1-x0x/install/) \| [Web Emulator](https://charlesvestal.github.io/fm1-x0x/emu/) \| [Manual](https://charlesvestal.gith
+44:| 6 | **GHOULBOX by Jason Persinger**<br>[GitHub](https://github.com/jasonpersinger/ghoulbox-fm1-dungeon-synth) \| [Website & Browser Emulator](https://ghoulbox.messy.quest) \| [Web Installer](https://ghoulbox.messy.quest/webapp/installer/)<br>**License:** 
+45:| 7 | **Jangada by zednaked**<br>[GitHub](https://github.com/zednaked/jangada) \| [Web Installer](https://zednaked.github.io/jangada/) \| [Web Studio](https://zednaked.github.io/jangada/webapp/studio/)<br>**License:** Open Source (GPL-3.0). Based on Felucca
+46:| 8 | **REDACTED by DJ Redacted**<br>[Project Link](https://fm1-redacted-installer.xrhetor.chatgpt.site/)<br>**License:** Open Source (GPL-3.0). Built on Felucca by Hügelton Instruments. | **Polyphony:** 4-track layered groovebox architecture with dynamic v
+2026-10-05 SLOOP 2.2: new drum engine, 68 sounds by kind, grand piano, stereo effects
+Shell cwd was reset to /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1
+```
+</details></tool-use>

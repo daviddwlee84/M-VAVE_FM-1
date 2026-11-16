@@ -10,7 +10,7 @@
 | Flash 晶片 / JEDEC ID | **`0xB36014` (new)**，UCUN UC25HQ80，1 MiB |
 | Bootloader | stock (M-VAVE) |
 | 出廠韌體版本 | FM-1 015 (stock)，firmware check OK |
-| 目前韌體 | **Agent Deck 0.7**（2026-11-17 02:35 刷入；套件識別 `FM-1_24357`，M-Flasher 顯示 firmware `FM-1 243`）。之前是 SLOOP 2.8.5 |
+| 目前韌體 | **SLOOP 2.8.5**（2026-11-17 02:47 從 Agent Deck 刷回）。Agent Deck 0.7 在 02:35–02:47 之間裝過 |
 | m-bootloader | 未安裝 |
 | 主機 | macOS，M-Flasher 0.12.1 |
 
@@ -28,10 +28,10 @@
 |---|---|---|---|---|
 | 2026-11-17 | 原廠完整 flash（015，stock bootloader） | `backups/2026-11-17-stock/fm1-20261117-011632.bin` + `.json` | `c6a4790266bdb9e97500c20f50a98b80f0d334d8a219e1744bfc8e656a44fd38` | [GitHub Release](https://github.com/daviddwlee84/M-VAVE_FM-1/releases/tag/backup-2026-11-17-stock)（2026-11-17，digest 相符） |
 | 2026-11-17 | SLOOP 2.8.5 裝好並玩過之後的完整 flash（含當時的曲子與設定） | `backups/2026-11-17-sloop-2.8.5/fm1-20261117-014153.bin` + `.json` | `783060c08ac0727916e997dfc0b295a7469a45afe0ab4d460a4d5bc9bfc018b2` | [GitHub Release](https://github.com/daviddwlee84/M-VAVE_FM-1/releases/tag/backup-2026-11-17-sloop-2.8.5)（2026-11-17，digest 相符） |
-| 2026-11-17 | 刷 Agent Deck **之前**的 SLOOP 2.8.5（含當時最新的曲子） | `backups/2026-11-17-pre-agtdeck/fm1-20261117-023458.bin` + `.json` | `074cf36077e4e689aa2c4aae57baa7386428a73afd667ca042864714777546bc` | 尚未上傳 |
+| 2026-11-17 | 刷 Agent Deck **之前**的 SLOOP 2.8.5（含當時最新的曲子） | `backups/2026-11-17-pre-agtdeck/fm1-20261117-023458.bin` + `.json` | `074cf36077e4e689aa2c4aae57baa7386428a73afd667ca042864714777546bc` | GitHub Release |
 | 2026-11-17 | Agent Deck 0.7 刷入後 | `backups/2026-11-17-agtdeck-0.7/fm1-20261117-023846.bin` + `.json` | `8345795a8cfa07afc71bc196c46683e2e35916e677b8fc807cee3ac648b8767d` | 尚未上傳 |
 
-M-Flasher 在寫入前另外自動存了一份 `~/Documents/M-Flasher/backups/fm1-20261117-023538.bin`。
+M-Flasher 在兩次寫入前各自動存了一份：`~/Documents/M-Flasher/backups/fm1-20261117-023538.bin`、`fm1-20261117-024717.bin`。`pre-agtdeck` 已上傳到 [GitHub Release](https://github.com/daviddwlee84/M-VAVE_FM-1/releases/tag/backup-2026-11-17-pre-agtdeck)（digest 相符）。
 
 ## 下載的檔案
 
@@ -63,6 +63,8 @@ M-Flasher 在寫入前另外自動存了一份 `~/Documents/M-Flasher/backups/fm
 | 2026-11-17 | 本人執行 `just fm1-flash downloads/agtdeck-0.7.fwsc` | 計畫：140 sectors（560 KiB）`0x04000`–`0x8FFFF`，BOOT 區未動。寫入完成，晶片 CRC32 相符 |
 | 2026-11-17 | `just fm1-restart` | 機器已在執行。USB 產品名 `FM-1 AGTDECK`；macOS 的 MIDI 名稱仍顯示 `Felucca`（系統快取） |
 | 2026-11-17 | Agent Deck 執行中 `just fm1-download-mode` → `fm1-backup agtdeck-0.7` → `fm1-restart` | 全部成功。Agent Deck 也能由 USB MIDI 切進 download mode，不需要按鍵 |
+| 2026-11-17 | Agent Deck 執行中 `just fm1-download-mode`，本人執行 `just fm1-flash downloads/sloop-2.8.5.fwsc` | 計畫：140 sectors（560 KiB）`0x04000`–`0x8FFFF`。寫入完成，晶片 CRC32 相符。`just fm1-restart` 後機器在 USB MIDI 上 |
+| 2026-11-17 | 刷回 SLOOP 後，之前的曲子是否還在 | **待確認** |
 
 ## Phase 1 驗收
 

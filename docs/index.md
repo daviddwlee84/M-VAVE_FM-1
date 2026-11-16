@@ -17,6 +17,7 @@
 | 讓 agent 幫忙刷機或開發 | [Agentic 工作流](agentic/index.md) |
 | 自己寫韌體 | [自製韌體環境](dev/index.md) |
 | 試 Agent Deck | [Agent Deck 試用](firmware/agent-deck/index.md) |
+| 搞懂官方、社群、Hub、VIBE 的關係 | [生態是怎麼來的](ecosystem.md) |
 | 找某個 repo 或目前版本 | [資源地圖](resources.md) |
 | 查我這台現在的狀態 | [我的機器](device-log.md) |
 
