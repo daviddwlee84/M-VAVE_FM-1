@@ -16293,3 +16293,558 @@ match it does not answer: the deck sounds the alert and says
 `AUTO HELD api: YOU DECIDE`. It is a pattern match on text, not a
 ```
 </details></tool-use>
+
+_**Agent (claude-fable-5-2 2026-11-16 18:40:27Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Write the Agent Deck usage page, record the flash and backups, add a CLI versus GUI comparison, commit and push
+
+````bash
+cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1 && python3 - <<'EOF'
+import pathlib
+def sub(path, pairs):
+    p=pathlib.Path(path); s=p.read_text()
+    for a,b in pairs:
+        assert a in s, (path,a[:60]); s=s.replace(a,b,1)
+    p.write_text(s)
+
+pathlib.Path("docs/firmware/agent-deck/usage.md").write_text('''# Agent Deck 操作速查
+
+整理自上游 README 的 Controls reference，對應韌體 0.7。`[上游]`，除非另外標示。我自己的試用與刷機紀錄在[概觀](index.md)。
+
+## 啟動
+
+```sh
+just agtdeck-run        # FM-1 已刷 Agent Deck 並接上 USB；預設用 Herdr backend
+just agtdeck-doctor     # 連不上時先跑這個：檢查 MIDI 埠、設定、agent CLI、Herdr
+```
+
+螢幕右上角從 `NO HOST` 變成 `HOST` 就是連上了。daemon 停掉或 USB 拔掉會回到 `NO HOST`，重新接上會自動重新同步。
+
+macOS 上這台裝置的 MIDI 名稱可能仍顯示成 `Felucca`（系統快取了之前 SLOOP 的名稱，USB 產品名其實是 `FM-1 AGTDECK`）。daemon 認得，不影響使用。`[實機]`
+
+## 琴鍵與 LED
+
+27 個琴鍵各是目前這一頁的一個 agent slot，按下去就選取那個 agent。LED 表示狀態：
+
+| LED | 狀態 | 意思 |
+|---|---|---|
+| 不亮 | EMPTY | 這個 slot 沒有 agent |
+| 微亮 | IDLE | 在等輸入 |
+| 恆亮 | WORKING | 忙碌中 |
+| 閃爍 2 Hz | BLOCKED | **需要你**：等批准或有問題要回答 |
+| 快閃約 6 Hz | ERROR | agent 或 backend 回報錯誤 |
+| 恆亮 2 秒後轉微亮 | DONE | 剛完成一輪 |
+| 慢速脈動 1 Hz | UNKNOWN | 有 agent 但狀態無法分類 |
+
+功能鍵的燈也會反映選取中的 agent：WORKING 時 `PLAY` 亮，BLOCKED 時 `REC` 閃，開了 auto-approve 時 `ARP` 亮。
+
+`OCT-` / `OCT+` 換 slot 頁，兩頁共 54 個 slot。
+
+## 最常用的幾個動作
+
+| 想做的事 | 按 |
+|---|---|
+| 選一個 agent | 它的琴鍵，或轉 **SELECT** |
+| 跳到下一個需要我的 agent | 轉 **KNOB 4** |
+| 批准目前的提示 | **`REC`** |
+| 批准並且不再問 | **`SAVE`** |
+| 拒絕 | **`FX`**（送 Esc） |
+| 中斷 | **`ENV`**（送 Ctrl-C） |
+| 按 Enter | **`SEL`** |
+| 在 agent 的選單裡移動 | **KNOB 2**（上下）、**KNOB 3**（左右），再按 `SEL` |
+| 看這個 agent 的輸出 | **`EDIT`**（同時在電腦上聚焦那個 pane）；再按切換 OUTPUT / INFO / DIFF |
+| 回列表 | **`HOME`**；在列表上再按一次切換「列表 / 方塊」 |
+| 看所有待批准的 | **`GLO`** |
+
+## 全部控制項
+
+動作由電腦上的 daemon 對**選取中的** agent 執行。
+
+| 控制 | 動作 |
+|---|---|
+| 琴鍵 | 選 slot（空的也可以選） |
+| **SELECT** | 在 agent 之間移動選取 |
+| **`PLAY`** | 開始 / 繼續；在純 shell 上：在裡面啟動預設 agent；在**空 slot** 上：開一個新 agent |
+| **`REC`** | 批准 |
+| **`SAVE`** | 批准且不再問（畫面上有那個選項時） |
+| **`FX`** | 拒絕（Esc） |
+| **`ENV`** | 中斷（Ctrl-C） |
+| **`SEL`** | Enter |
+| **KNOB 2** / **KNOB 3** | 上下 / 左右方向鍵 |
+| **`LFO`** | 切換 agent 的 mode（Shift+Tab） |
+| **PRESETS** | 選一個預設 prompt（顯示在底部那一行） |
+| **`SEQ`** | 送出選好的預設 prompt。對 BLOCKED 的 agent 會先排隊，等它有空再送 |
+| **`ARP`** | 切換這個 agent 的 auto-approve。預設關閉，daemon 重啟後不保留 |
+| **KNOB 1** | 往回捲 DETAIL 的輸出 |
+| **KNOB 4** | 跳到下一個需要你的 agent（BLOCKED → ERROR → DONE） |
+| **`EDIT`** | DETAIL 頁 |
+| **`HOME`** / **`GLO`** | GRID 頁 / APPROVALS 頁 |
+| **ALGORITHM** | 輪流切換 GRID → DETAIL → APPROVALS → MENU → ABOUT |
+| **`OCT-` / `OCT+`** | 上 / 下一頁 slot |
+| **MASTER** | 提示音音量 |
+
+## 一次處理多個
+
+**按住 `GLO` 再按** `REC` / `FX` / `ENV` / `SEQ` / `ARP`：對所有適用的 agent 做同一件事。批准或拒絕全部 BLOCKED、中斷全部 WORKING、把預設 prompt 送給全部 IDLE / DONE、關掉所有 auto-approve。
+
+**按住功能鍵再點琴鍵**（游標不動，按住時相關的鍵會亮起來提示）：
+
+| 組合 | 動作 |
+|---|---|
+| `REC` + 鍵 | 批准那個 agent |
+| `FX` + 鍵 | 拒絕那個 agent |
+| `ENV` + 鍵 | 中斷那個 agent |
+| `SEL` + 鍵 N | 回答第 N 個選項（輸入數字 1–9） |
+| `SEQ` + 鍵 N | 把第 N 個預設 prompt 送給選取中的 agent |
+| `PLAY` + 鍵 | 開始 / 繼續那個 agent；空鍵則在那裡開新 agent |
+| `SAVE` + 鍵 | 把選取中的 agent 搬到那個鍵（已有則交換） |
+| `LFO` + 鍵 | 標記 / 取消標記。有標記時，`GLO` + 動作只作用在標記的那幾個 |
+| `ARP` + 鍵 | 切換那個 agent 的 auto-approve |
+| `SEQ` 按住約 1 秒 | repeat mode：agent 每完成一輪就再送一次選好的 prompt |
+
+`SAVE` + 鍵可以用來整理版面：把真正的 agent 搬到前面，shell 留在後面。slot 配置會存在 `~/.config/agtdeck/slots.json`。
+
+## 畫面
+
+五個頁面，用 **ALGORITHM** 輪流切換：
+
+| 頁面 | 內容 |
+|---|---|
+| **GRID** | 所有 agent 的列表或方塊。一列是：狀態色邊條、slot 編號、狀態圖示、名稱、種類（`CL` Claude Code、`CX` Codex、`OC` OpenCode、`SH` shell…）、在該狀態的時間、旗標、context 用量條 |
+| **DETAIL** | 選取 agent 的輸出、INFO、DIFF |
+| **APPROVALS** | 等你批准的清單；沒有時顯示 ALL CLEAR |
+| **MENU** | SELECT 移動、`SEL` 選、`FX` 返回。可開新 agent、送 prompt、看 event log、關 agent、改設定 |
+| **ABOUT** | 韌體與協定版本、host 是否連線、backend、uptime |
+
+顏色就是狀態：琥珀色是在等你，綠色是完成，紅色是壞了，白色是工作中，灰色是閒置。
+
+列上的旗標：`A` auto-approve、`R` repeat、`+` 已標記、`Q` 有排隊的 prompt。
+
+## Auto-approve
+
+預設關閉，建議維持關閉。開了之後 daemon 會自動批准該 agent 的提示，但會先比對 `auto_never` 清單（預設含 `rm -r` / `-f`、`git push`、`git reset --hard`、`sudo`、`--force`、`drop table`、`mkfs` / `dd`），命中就不批准並發出警示。上游自己說明這是文字比對，不是安全保證。
+
+## 設定檔
+
+`~/.config/agtdeck/config.json`，不存在時用預設值。`python3 vendor/fm-1-agent-deck/host/agtdeck.py --print-config` 會印出完整預設。常改的：
+
+| 欄位 | 用途 |
+|---|---|
+| `presets` | 預設 prompt 清單（預設 9 個），也可以是多步驟的 pipeline |
+| `default_agent` | `PLAY` 在空 slot 上啟動哪一種 agent |
+| `projects` | 開新 agent 時可選的目錄 |
+| `auto_never` | auto-approve 絕不自動批准的字樣 |
+| `nag_minutes` | agent 一直 BLOCKED 時每隔幾分鐘再提醒 |
+| `follow` | 有 agent 被 block 時選取自動跳過去 |
+
+## 我遇到的
+
+- Herdr 裡 shell pane 也會佔 slot，我的 50 個 pane 大半是 shell，真正的 agent 被擠到後面。沒有隱藏 shell 的設定，目前只能用 `SAVE` + 鍵手動整理，或用 **KNOB 4** 直接跳到需要處理的 agent。`[實機]` host 端
+- 完整說明見上游 [README](https://github.com/kevinelliott/fm-1-agent-deck#controls-reference) 與[一頁式 cheat sheet](https://kevinelliott.github.io/fm-1-agent-deck/cheatsheet.html)。
+''')
+
+sub("docs/firmware/agent-deck/index.md",[
+("**狀態（2026-11-17）：host daemon 的模擬模式已接上我的 Herdr；韌體只在模擬器裡跑過，還沒刷進實機。**",
+ "**狀態（2026-11-17）：已刷進實機（新晶片 `0xB36014`），開機正常，daemon 的自我檢查找得到裝置。** 怎麼操作見[操作速查](usage.md)。"),
+("| 刷進實機 | 還沒做 | — |","| 刷進實機 | 2026-11-17 用 M-Flasher 寫入 140 個 sector（`0x04000`–`0x8FFFF`），驗證通過。重開後 USB 產品名 `FM-1 AGTDECK`，M-Flasher 讀到 firmware `FM-1 243`、app OK | `[實機]` |\n| daemon 對實機 | `--doctor` 回報 `FM-1 port: Felucca`、all good | `[實機]` |\n| 按鍵、LED、螢幕、批准流程 | 還沒逐項確認 | — |"),
+("## 風險","""## 新晶片上的結果
+
+上游沒有 UC25HQ80 的實機回報，這台是我知道的第一筆 `[實機]`：寫入與驗證成功、能開機、USB MIDI 正常、能再次被 M-Flasher 切進 download mode 並備份。設定是否正確保存、長時間使用是否穩定還沒驗證。
+
+## 風險"""),
+])
+sub("docs/device-log.md",[
+("| 目前韌體 | **SLOOP 2.8.5**（2026-11-17 刷入；M-Flasher 顯示套件識別為 `FM-1_900`） |","| 目前韌體 | **Agent Deck 0.7**（2026-11-17 02:35 刷入；套件識別 `FM-1_24357`，M-Flasher 顯示 firmware `FM-1 243`）。之前是 SLOOP 2.8.5 |"),
+("\n## 下載的檔案","| 2026-11-17 | 刷 Agent Deck **之前**的 SLOOP 2.8.5（含當時最新的曲子） | `backups/2026-11-17-pre-agtdeck/fm1-20261117-023458.bin` + `.json` | `074cf36077e4e689aa2c4aae57baa7386428a73afd667ca042864714777546bc` | 尚未上傳 |\n| 2026-11-17 | Agent Deck 0.7 刷入後 | `backups/2026-11-17-agtdeck-0.7/fm1-20261117-023846.bin` + `.json` | `8345795a8cfa07afc71bc196c46683e2e35916e677b8fc807cee3ac648b8767d` | 尚未上傳 |\n\nM-Flasher 在寫入前另外自動存了一份 `~/Documents/M-Flasher/backups/fm1-20261117-023538.bin`。\n\n## 下載的檔案"),
+("| 2026-11-17 | `agtdeck-0.7.fwsc` | `c0d0b43e688ca0f7f9911dce9ee0bdffb00b1127a66bc4629a934e087a97eacf` | [fm-1-agent-deck v0.7](https://github.com/kevinelliott/fm-1-agent-deck/releases/tag/v0.7)，build attestation 驗證通過。**尚未刷入實機** |",
+ "| 2026-11-17 | `agtdeck-0.7.fwsc` | `c0d0b43e688ca0f7f9911dce9ee0bdffb00b1127a66bc4629a934e087a97eacf` | [fm-1-agent-deck v0.7](https://github.com/kevinelliott/fm-1-agent-deck/releases/tag/v0.7)，build attestation 驗證通過 |"),
+("\n## Phase 1 驗收","| 2026-11-17 | `just fm1-download-mode`（SLOOP 執行中、已停止播放） | 成功，不需要按鍵。`just fm1-backup pre-agtdeck` 完成 |\n| 2026-11-17 | 本人執行 `just fm1-flash downloads/agtdeck-0.7.fwsc` | 計畫：140 sectors（560 KiB）`0x04000`–`0x8FFFF`，BOOT 區未動。寫入完成，晶片 CRC32 相符 |\n| 2026-11-17 | `just fm1-restart` | 機器已在執行。USB 產品名 `FM-1 AGTDECK`；macOS 的 MIDI 名稱仍顯示 `Felucca`（系統快取） |\n| 2026-11-17 | Agent Deck 執行中 `just fm1-download-mode` → `fm1-backup agtdeck-0.7` → `fm1-restart` | 全部成功。Agent Deck 也能由 USB MIDI 切進 download mode，不需要按鍵 |\n\n## Phase 1 驗收"),
+])
+sub("docs/firmware/switching.md",[
+("## m-apps slots 與 m-card","""## 實機紀錄
+
+| 日期 | 從 → 到 | 做法 | 結果 |
+|---|---|---|---|
+| 2026-11-17 | 原廠 015 → SLOOP 2.8.5 | M-Flasher GUI 安裝 `.fwsc` | 成功，存檔正常 |
+| 2026-11-17 | SLOOP 2.8.5 → Agent Deck 0.7 | `fm1-download-mode` → `fm1-backup` → `fm1-flash` → `fm1-restart`，全程不需要按機器上的鍵 | 成功 |
+| — | Agent Deck → SLOOP | 還沒做 | 曲子是否還在未知，上游說沒測過 |
+
+SLOOP 與 Agent Deck 執行中都能由 M-Flasher 透過 USB MIDI 切進 download mode（兩者在 `fm1-find` 都顯示為 `Felucca … download-mode switches it`）。`[實機]`
+
+## m-apps slots 與 m-card"""),
+])
+p=pathlib.Path("docs/agentic/m-flasher-cli.md"); s=p.read_text()
+s=s.rstrip()+'''
+
+## CLI 與 GUI 的差別 { #cli-vs-gui }
+
+同一個執行檔：不帶參數是視窗，帶參數就是 CLI。功能相同，檢查與驗證也相同。
+
+| | GUI | CLI |
+|---|---|---|
+| 適合 | 第一次用、想看 flash map、macOS 首次授權 | 重複操作、寫成捷徑、讓 agent 做唯讀部分 |
+| Flash map | 有，寫入前標出會改動的 sector | 沒有圖，只印位址範圍與 sector 數 |
+| 寫入確認 | 按 **WRITE N SECTORS** | 輸入 `yes`（或 `--yes`，這個 repo 不用） |
+| 備份位置 | `~/Documents/M-Flasher/backups` | 可指定目錄（`backup DIR`、`--backup-dir`） |
+| m-bootloader 建議 | 讀完 flash 會跳出詢問 | 我用 CLI 時沒有出現過 `[實機]` |
+| 只有它有的 | flash map、逐 sector 進度 | `run-ram`、`--device`、`--restart`、可放進 script |
+
+我的用法：這個 repo 的 `just fm1-*` 都是包 CLI。寫入前自動存的那份備份，兩者都會放在 `~/Documents/M-Flasher/backups`。
+'''
+p.write_text(s)
+sub("zensical.toml",[('    { "Agent Deck" = "firmware/agent-deck/index.md" },','    { "Agent Deck" = [\n      { "概觀與試用紀錄" = "firmware/agent-deck/index.md" },\n      { "操作速查" = "firmware/agent-deck/usage.md" },\n    ] },')])
+sub("docs/index.md",[("| 5 | SLOOP 3 / Agent Deck / Melodee 輪流刷入 | 未開始 |","| 5 | SLOOP 3 / Agent Deck / Melodee 輪流刷入 | Agent Deck 0.7 已刷入（2026-11-17），見[操作速查](firmware/agent-deck/usage.md) |")])
+EOF
+just docs-check 2>&1 | tail -1; git add -A && git commit -q -m "Record Agent Deck flash on the new chip, add Agent Deck usage page
+
+Co-Authored-By: Claude Fable 5.2 <noreply@anthropic.com>" && git push -q origin main && echo pushed
+````
+
+```text
+{"status": "ok", "pages": 27, "llm_pages": 27, "deployed": false}
+pushed
+```
+</details></tool-use>
+
+_**Agent (claude-fable-5-2 2026-11-16 18:40:42Z)**_
+
+Agent Deck 0.7 已成功刷進你的實機，刷後備份與操作說明文件也都完成並 push 了。
+
+## 燒錄結果
+
+- **寫入成功**：140 個 sector（`0x04000`–`0x8FFFF`），boot 區沒動，晶片 CRC32 相符。
+- **開機正常**：USB 產品名是 `FM-1 AGTDECK`，M-Flasher 讀到 app OK。
+- **daemon 找得到它**：自我檢查回報 all good。
+- **刷後備份完成**：`backups/2026-11-17-agtdeck-0.7/`，四份備份全部通過驗證。Agent Deck 執行中也能用指令切進 download mode，不用按鍵。
+
+上游沒有新晶片的實機回報，你這台是我知道的第一筆。我沒有確認的是機器本身：螢幕畫面、按鍵、LED、批准流程都要你實際操作才知道。
+
+macOS 的 MIDI 裝置名稱還是顯示 `Felucca`，那是系統快取了之前 SLOOP 的名稱，daemon 認得，不影響使用。
+
+## 現在可以用了
+
+```sh
+just agtdeck-run
+```
+
+螢幕右上角從 `NO HOST` 變成 `HOST` 就是連上了。最常用的幾個：琴鍵選 agent、`REC` 批准、`FX` 拒絕、`ENV` 中斷、KNOB 4 跳到下一個需要你的 agent、`HOME` 回列表。
+
+## Agent Deck 的說明文件
+
+新增「操作速查」頁：<https://daviddwlee84.github.io/M-VAVE_FM-1/firmware/agent-deck/usage/>（部署需要一兩分鐘）。內容整理自上游 README：LED 狀態、全部控制項、一次處理多個 agent 的組合鍵、五個畫面、auto-approve 的限制、設定檔。
+
+裡面有一個對你有用的技巧：`SAVE` + 琴鍵可以把選取中的 agent 搬到那個鍵，能用來把真正的 agent 排到前面、shell 留在後面。
+
+## M-Flasher 的 CLI
+
+有，而且你剛才用的就是：同一個執行檔不帶參數是視窗，帶參數就是 CLI，`just fm1-*` 全部是包它。功能與安全檢查完全相同，差別在介面：
+
+| | GUI | CLI |
+|---|---|---|
+| 適合 | 第一次用、macOS 首次授權 | 重複操作、寫成捷徑 |
+| Flash map | 有圖，標出會改動的 sector | 只印位址範圍與 sector 數 |
+| 寫入確認 | 按按鈕 | 輸入 `yes` |
+| 備份位置 | 固定在 `~/Documents/M-Flasher/backups` | 可指定目錄 |
+| 只有它有的 | 逐 sector 進度畫面 | 可寫成 script、`--restart` |
+
+這張表也寫進了「M-Flasher CLI」頁。
+
+## 還沒做的
+
+- **兩份新備份只在這台 Mac 上**（刷前的 SLOOP、刷後的 Agent Deck）。要上傳到 Release 的話是 `just fm1-backup-release 2026-11-17-pre-agtdeck`，刷前那份含你最新的曲子，建議至少傳這份。
+- **切回 SLOOP 還沒試過**，曲子會不會留著仍是未知。想玩音樂時跟我說，我們走一次並把結果記下來，之後就能做成 `fm1-switch`。
+
+---
+
+_**User (2026-11-16 18:43:40Z)**_
+
+@.specstory/references/gemini-FM-1-新舊快閃晶片總結---Google-Gemini-20261117-0239.md 然後有人介紹 https://youtu.be/VNFZqDnTFYs?si=xpxOSYAfYFwWXOLo 新舊晶片差異
+說  Flash Bootloader 能有效防止設備在刷機過程中「變磚（Bricking）」 這跟我們剛剛的結論一樣嗎？
+
+另外我看 Firmware Hub東西也蠻多 我們docs有介紹嗎？都有些什麼？
+https://thefirmwarehub.com/
+https://www.cuvave.com/product?id=fm-1
+
+我備份完了
+```
+❯ just fm1-backup-release 2026-11-17-pre-agtdeck
+Publish this full-flash backup as a PUBLIC release asset? yes
+https://github.com/daviddwlee84/M-VAVE_FM-1/releases/tag/backup-2026-11-17-pre-agtdeck
+```
+是不是能幫我刷回 SLOOP
+
+---
+
+_**Agent (claude-fable-5-2 2026-11-16 18:43:56Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Check the unit, verify the uploaded backup, and fetch the Firmware Hub front page
+
+`just fm1-find 2>&1 | tail -3; gh release view backup-2026-11-17-pre-agtdeck --json assets --jq '.assets[]|"\(.name) \(.digest)"'; echo "=== hub"; curl -sL -m 20 -A "Mozilla/5.0" https://thefirmwarehub.com/ -o /tmp/hub.html; wc -c /tmp/hub.html; grep -o -i -E '(src|href)="[^"]*\.(js|json)[^"]*"' /tmp/hub.html | head -15; grep -o -i -E "Safe on newer[^<]{0,60}|[0-9]+ firmwares?[^<]{0,40}" /tmp/hub.html | head -8`
+
+```text
+"/Applications/M-Flasher.app/Contents/MacOS/M-Flasher" find
+midi	Felucca (running; download-mode switches it)
+fm1-20261117-023458.bin sha256:074cf36077e4e689aa2c4aae57baa7386428a73afd667ca042864714777546bc
+fm1-20261117-023458.json sha256:901b1b51dd7e66195d29038f88431d42abb21f7cb765669b918b8f6784d798c1
+=== hub
+  260417 /tmp/hub.html
+href="https://github.com/${esc(f.repo)}/blob/HEAD/fmhub.json"
+1 firmware switcher (thefirmwarehub.com): tools/ma
+1 firmware, FM-1 custom firmware, FM-1 firmware hu
+1 firmware switcher, FM-1 firmware wars, open sour
+1 Firmware Hub", "Make Firmware, Not War", "FM-1 F
+1 Firmware Wars", "M-VAVE FM-1 firmware installer"
+1 firmware?", "acceptedAnswer": {"@type": "Answer"
+1 firmwares
+1 firmwares in your DAW · open beta
+```
+</details></tool-use>
+
+_**Agent (claude-fable-5-2 2026-11-16 18:44:03Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Extract the Firmware Hub's visible text, data sources, and its notes on newer units
+
+```bash
+cd /tmp && python3 - <<'EOF'
+import re,html
+h=open('/tmp/hub.html',encoding='utf-8',errors='ignore').read()
+# visible-ish text
+t=re.sub(r'<script.*?</script>|<style.*?</style>','',h,flags=re.S)
+t=html.unescape(re.sub(r'<[^>]+>','\n',t)); lines=[l.strip() for l in t.split('\n') if l.strip()]
+print(len(lines)); print('\n'.join(l[:160] for l in lines[:70]))
+print('--- fetch calls'); print(set(re.findall(r'fetch\(["\'`]([^"\'`]+)',h)))
+for k in ['newer','Safe on','B36014','UC25','brick','bootloader','FAQ']:
+    for m in list(re.finditer(k,h))[:2]: print(k,'::',re.sub(r'\s+',' ',h[max(0,m.start()-150):m.start()+250]))
+EOF
+```
+
+```text
+426
+The Firmware Hub – open-source firmwares for the M-VAVE FM-1, and growing
+VIBE
+FM
+Mk1
+Open firmware,
+officially supported.
+The first 100
+get 10% off
+Join the list →
+The
+Firmware Hub
+F
+H
+Devices
+▼
+The Firmware Hub
+Open-source firmware for small music machines, from their makers, installed in the browser.
+All FM-1 firmwares
+Knowledge Base
+Wall of Creators
+Submit a firmware
+VIBE FM Mk1
+VIBE FM
+VIBE FM Lab
+App
+Made firmware for another device?
+zven@thefirmwarehub.com
+M-VAVE FM-1
+All
+firmwares
+VIBE FM VST
+FM-1 firmwares in your DAW · open beta
+VIBE FM
+One Vibe, every device · browser, DAW, hardware
+VIBE FM Lab
+Build a Vibe · port your FM-1 firmware · win a VIBE Box
+M-VAVE SMK-37 Pro
+26 firmwares · Pro, Elite, MKE-P37
+Elektron Model:Cycles
+6 mods · Model:Samples too
+Erica Synths LXR-02
+Open source since 23 Oct · its firmware and mods
+VIBE FM Mk1
+Hardware with open firmware · join the list
++
+Your device
+Firmware for another machine? Tell us.
+Tools
+▼
+Tools
+Everything around the firmwares: emulators, editors, backup and rescue, building your own. Open source, from their makers.
+All tools
+Emulators, editors, backup, building your own
+FM-1 rescue
+Does not start, update or save? What to do
+Knowledge Base
+How to install, rescue, play
+Community
+▼
+Community
+The people behind the firmwares, and what the players wish for next. Installing is free and needs no account; a hub
+account (no password, a link by mail) keeps your favourites, ratings and wishes.
+A question, a firmware, a device?
+zven@thefirmwarehub.com
+Wall of Creators
+The people who make the firmwares
+Knowledge Base
+How to install, rescue, play
+Submit a firmware
+Made one? Put it on the hub
+--- fetch calls
+{'/api/cc', '/catalog.json?', '/engines.json?v=acd40931', '/fw/natives.json', '/api/convert/library', '/api/', 'catalog.json?'}
+newer :: ode is there for anyone to read.</p></div> <div class="qa" id="newflash"><h3>My FM-1 says "save error" – or saves are gone after switching off. A newer chip?</h3> <p>Probably. FM-1s sold since autumn 2026 have a different flash chip, <b>0xB36014</b> (the first ones: 0x856014). Your FM-1 is fine – but a firmware that only knows the old chip keeps your saves in RAM, gone when you 
+newer :: at only knows the old chip keeps your saves in RAM, gone when you switch off, and updates from it may fail. Tick <a href="#newchip">Saves on newer FM-1s</a> in the filter for the firmwares that know it (read from each package; the card's pop-up says it too). Already stuck on one that refuses every update? Don't install again and again: <a href="/tools/rescue/#chip">the r
+B36014 ::  error" – or saves are gone after switching off. A newer chip?</h3> <p>Probably. FM-1s sold since autumn 2026 have a different flash chip, <b>0xB36014</b> (the first ones: 0x856014). Your FM-1 is fine – but a firmware that only knows the old chip keeps your saves in RAM, gone when you switch off, and updates from it may fail. Tick <a href="#newchip">Saves on newer FM-1s</a>
+B36014 :: hy.join(" · ")}</small>` : ""); }; // the flash chip (catalog.json "chip", tools/fm1_chip.py: read from the package): newer FM-1s carry a UC25HQ80 (0xB36014) const CHIP = { new: 'Every FM-1, the newer chip <code>0xB36014</code> too', any: 'Every FM-1: it does not check the chip<small>Not tried by us on the newer chip <code>0xB36014</code></small>', old: '<b class="chipold">The first FM-1s only
+UC25 ::  `<small>${why.join(" · ")}</small>` : ""); }; // the flash chip (catalog.json "chip", tools/fm1_chip.py: read from the package): newer FM-1s carry a UC25HQ80 (0xB36014) const CHIP = { new: 'Every FM-1, the newer chip <code>0xB36014</code> too', any: 'Every FM-1: it does not check the chip<small>Not tried by us on the newer chip <code>0xB36014</code></small>', old: '<b class="chipold">The firs
+brick :: ref="/tools/rescue/#mac">M-Flasher, step by step</a>. <b>On Windows, or with a full backup first:</b> <a href="https://github.com/Quixotic7/MvaveFM1Unbricker" target="_blank" rel="noopener">MvaveFM1Unbricker</a> by Quixotic7 (MIT) takes the same way in. It reads the whole flash twice and keeps it, writes only the firmware area and checks every byte. An FM-1 that never shows "UBOO
+brick :: a>. <b>On Windows, or with a full backup first:</b> <a href="https://github.com/Quixotic7/MvaveFM1Unbricker" target="_blank" rel="noopener">MvaveFM1Unbricker</a> by Quixotic7 (MIT) takes the same way in. It reads the whole flash twice and keeps it, writes only the firmware area and checks every byte. An FM-1 that never shows "UBOOT1.00" at all comes back with its <a href
+bootloader :: pers</span></div> <p class="what">No installer finds the FM-1 any more, or an update stopped and it will not come back? Its chip has a bootloader in ROM that no firmware can overwrite. <a href="/tools/rescue/"><b>FM-1 rescue</b>: step by step for Windows, Mac and Linux</a>, by what you see. Here: the button that sends it there (any computer, Chrome or Edge), and tw
+bootloader :: /p> <details class="rsc"><summary class="go">Show the rescue steps</summary> <button id="rescue-uboot" class="go">1. Send the FM-1 to its bootloader</button> <p class="meta" id="rescue-msg">The screen stops and the computer sees a USB disk "UBOOT1.00". Nothing is written yet: switching the FM-1 off and on brings it back as it was.</p> <label class="chk">2. The firm
+FAQ :: @type": "Organization", "name": "designburg", "url": "https://designburg.net/"}, "about": {"@type": "Product", "name": "M-VAVE FM-1"}}, {"@type": "FAQPage", "mainEntity": [ {"@type": "Question", "name": "Which custom firmwares are there for the M-VAVE FM-1?", "acceptedAnswer": {"@type": "Answer", "text": "Felucca (Hügelton Instruments), Felucca [Salt] (Chance Roth), SLOOP (isod89), sloopDX an
+FAQ :: k: "center" }); el.classList.add("flash"); }, 300); } addEventListener("hashchange", jump); // (5.11.) a link on this page to a filter key (the FAQ's #newchip): that key alone, then the cards addEventListener("hashchange", () => { const k = location.hash.slice(1); if (!isKey(k) || !cat.length) return; sel = new Set([k]); keepKind(); chips(); render(); $("grid").scrollIntoView({ behavior: "
+Shell cwd was reset to /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1
+```
+</details></tool-use>
+
+_**Agent (claude-fable-5-2 2026-11-16 18:44:13Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Download the Firmware Hub catalog and summarize it by chip support and category
+
+```bash
+cd /tmp && curl -sL -m 30 -A "Mozilla/5.0" "https://thefirmwarehub.com/catalog.json" -o hub-catalog.json; python3 - <<'EOF'
+import json,collections
+d=json.load(open('/tmp/hub-catalog.json')); 
+items=d if isinstance(d,list) else d.get('firmwares') or d.get('items') or next(v for v in d.values() if isinstance(v,list))
+print(type(d).__name__, len(items)); print(sorted(items[0].keys()))
+C=collections.Counter
+print('chip',C(str(i.get('chip')) for i in items))
+for k in ('kind','device','category','type','attested','status'):
+    if any(k in i for i in items): print(k, C(str(i.get(k)) for i in items).most_common(12))
+tags=C(t for i in items for t in (i.get('tags') or [])); print('tags',tags.most_common(25))
+for i in items:
+    n=(i.get('name') or i.get('title') or '').lower()
+    if any(x in n for x in ('sloop','agent','agt','melodee','ctl','clipper','x0x','felucca')) and len(n)<22:
+        print({k:i.get(k) for k in ('id','name','version','chip','author','attested','base') if k in i})
+EOF
+```
+
+```text
+dict 228
+['added', 'ambient', 'author', 'base', 'beta', 'card', 'cheat', 'chip', 'color', 'date', 'dinghy', 'dinghyv', 'editor', 'fmhub', 'hid', 'id', 'ident', 'install', 'installs', 'kind', 'lic', 'loader', 'mirror', 'name', 'pkg', 'play', 'product', 'provCheck', 'published', 'relCheck', 'release', 'repo', 'sha256', 'site', 'size', 'source', 'srcref', 'stars', 'starsDay', 'tag', 'talk', 'version', 'vintage', 'what']
+chip Counter({'new': 152, 'old': 71, 'any': 5})
+kind [('synth', 89), ('groove', 76), ('other', 26), ('drums', 16), ('tracker', 11), ('chords', 8), ("['groove', 'dev']", 1), ('dev', 1)]
+tags []
+{'id': 'felucca', 'name': 'Felucca', 'version': '1.8.2', 'chip': 'new', 'author': 'Leo Kuroshita (Hügelton Instruments)', 'base': []}
+{'id': 'salt', 'name': 'Felucca [Salt]', 'version': '0.9-salt14', 'chip': 'old', 'author': 'Chance Roth (ChanceTheMaker)', 'base': []}
+{'id': 'melodee', 'name': 'Melodee', 'version': '1.6.1', 'chip': 'new', 'author': 'keremimo', 'base': []}
+{'id': 'sloop', 'name': 'SLOOP', 'version': '2.8.5', 'chip': 'new', 'author': 'isod89', 'base': []}
+{'id': 'clipper', 'name': 'Clipper', 'version': '1.3.1', 'chip': 'new', 'author': 'isod89', 'base': ['sloop']}
+{'id': 'floyd', 'name': 'SLOOP Floyd FM', 'version': '2.4', 'chip': 'old', 'author': 'René Bohne', 'base': []}
+{'id': 'sloopbanks', 'name': 'SLOOP DX7 Banks', 'version': '2.5-b28-test', 'chip': 'old', 'author': 'majnikool', 'base': []}
+{'id': 'sloopdx', 'name': 'sloopDX', 'version': '4.0.1', 'chip': 'new', 'author': 'zvenson', 'base': []}
+{'id': 'x0x', 'name': 'X0X', 'version': '1.2.2', 'chip': 'new', 'author': 'Charles Vestal', 'base': []}
+{'id': 'x0xrmx', 'name': 'X0X-RMX', 'version': '1.1.0', 'chip': 'old', 'author': 'Mr-Roboto (Oliver)', 'base': ['x0x']}
+{'id': 'ctl', 'name': 'CTL-1', 'version': '1.0.3', 'chip': 'new', 'author': 'Charles Vestal', 'base': []}
+{'id': 'felucca8', 'name': 'Felucca 8 Patterns', 'version': '1.8.5', 'chip': 'new', 'author': 'echoe', 'base': []}
+{'id': 'sloopdub', 'name': 'sloop-DUB', 'version': '1.7', 'chip': 'new', 'author': 'altessproduction', 'base': []}
+{'id': 'agtdeck', 'name': 'AGTDECK', 'version': '0.6.3', 'chip': 'new', 'author': 'Kevin Elliott', 'base': ['dinghy']}
+Shell cwd was reset to /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1
+```
+</details></tool-use>
+
+_**Agent (claude-fable-5-2 2026-11-16 18:44:24Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Fetch the Cuvave product page and list the most installed firmwares on the Hub
+
+```bash
+cd /tmp && curl -sL -m 25 -A "Mozilla/5.0" "https://www.cuvave.com/product?id=fm-1" -o cuvave.html; wc -c cuvave.html; python3 - <<'EOF'
+import re,html
+h=open('/tmp/cuvave.html',encoding='utf-8',errors='ignore').read()
+print(re.findall(r'<title>(.*?)</title>',h,re.S)[:1])
+t=re.sub(r'<script.*?</script>|<style.*?</style>','',h,flags=re.S)
+t=html.unescape(re.sub(r'<[^>]+>','\n',t)); L=[l.strip() for l in t.split('\n') if l.strip()]
+print(len(L)); print('\n'.join(l[:140] for l in L[:60]))
+print(set(re.findall(r'href="([^"]*(?:fwsc|zip|pdf|download|upgrade)[^"]*)"',h,re.I)))
+EOF
+python3 -c "
+import json,collections
+d=json.load(open('/tmp/hub-catalog.json')); it=next(v for v in d.values() if isinstance(v,list))
+print({k:(v if not isinstance(v,(list,dict)) else type(v).__name__) for k,v in d.items()})
+top=sorted(it,key=lambda i:-(i.get('installs') or 0))[:12]
+print([(i['name'],i.get('installs'),i['chip'],i['kind']) for i in top])
+print('attested', collections.Counter(str(i.get('provCheck')) for i in it).most_common(4))
+"
+```
+
+```text
+   65803 cuvave.html
+['Product - M-VAVE']
+29
+Product - M-VAVE
+Home
+Community
+Forum
+Products
+Artists
+News
+Download
+About
+Contact US
+EN
+EN
+中文
+ES
+PT
+Where technology meets music. Pioneering wireless audio solutions for musicians worldwide since 2018.
+Company
+Home
+Community
+Products
+Artists
+News
+Download
+About
+Contact US
+© 2024 M-VAVE. All rights reserved.
+Privacy Policy
+Warranty
+⇧
+{'download.html'}
+{'license': 'dict', 'updated': '2026-11-16 18:01 UTC', 'firmwares': 'list', 'smk37': 'dict', 'creators': 'dict', 'stock': 'dict'}
+[('SLOOP', 11556, 'new', 'groove'), ('JIANT FM', 7654, 'new', 'groove'), ('Skiff', 5882, 'new', 'groove'), ('Felucca', 4413, 'new', ['groove', 'dev']), ('Melodee', 3408, 'new', 'groove'), ('OberVave', 3094, 'new', 'synth'), ('FMini-1', 2949, 'new', 'synth'), ('Clipper', 2418, 'new', 'synth'), ('AMB-1', 2272, 'new', 'synth'), ('GR!MM', 2077, 'old', 'groove'), ('ChoralRoot', 2071, 'new', 'chords'), ('GHOULBOX', 1908, 'old', 'groove')]
+attested [('None', 14), ('89dc21f01e99cb03d50aeb3f5f51141f028d349174dd79fcf4e246ed28957734 2026-11-16', 2), ('fb1e6bfc01a74f145f93793fbeace8483888391be48f75aec7d423f05b6fac9d 2026-11-16', 1), ('ac81af292e035ee0c4b8b7ab3a78b942e4f03deee31ae213a2613c743cd9110f 2026-11-16', 1)]
+Shell cwd was reset to /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1
+```
+</details></tool-use>
+
+_**Agent (claude-fable-5-2 2026-11-16 18:44:40Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Switch the unit to download mode and read what is installed
+
+`just fm1-download-mode 2>&1 | tail -2 && sleep 2 && just fm1-info 2>&1 | grep -E "firmware|app |bootloader|flash " `
+
+```text
+Sent the Felucca the download-mode message over USB MIDI; waiting for it
+In download mode: usb:2-4	WL82 UBOOT1.00 (USB bus 2, device 4)
+Checked: the chip's CRC32 of the flash matches the read
+  bootloader  stock (M-VAVE)
+  firmware    FM-1 243
+  app         OK
+  flash       0xB36014
+    - the firmware uses the FM-1 flash layout
+    - flash chip 0xB36014 (new)
+```
+</details></tool-use>

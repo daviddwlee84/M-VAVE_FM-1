@@ -86,7 +86,10 @@ Run `just docs-check` before committing any change under `docs/` or to
 This ecosystem moves weekly. Trust, in order:
 
 1. Upstream repos, their docs and release pages (fetch them; do not rely on memory).
-2. [FM1 Developers' Wiki](https://sbegueria.github.io/fm1-dev-wiki/).
+2. [FM1 Developers' Wiki](https://sbegueria.github.io/fm1-dev-wiki/). For
+   "does firmware X know the new flash chip", the Firmware Hub's
+   `https://thefirmwarehub.com/catalog.json` has a per-package `chip` field
+   (`new` / `old` / `any`), read from the package, not hardware-tested.
 3. This repo's `docs/`.
 4. `.specstory/references/` — second-hand summaries. The ChatGPT export **lost
    every code block and citation**, so it contains no commands at all. Never

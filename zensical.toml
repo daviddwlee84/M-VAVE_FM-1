@@ -34,6 +34,7 @@ nav = [
       { "概觀與試用紀錄" = "firmware/agent-deck/index.md" },
       { "操作速查" = "firmware/agent-deck/usage.md" },
     ] },
+    { "The Firmware Hub" = "firmware/hub.md" },
     { "多韌體切換" = "firmware/switching.md" },
   ] },
   { "Agentic" = [

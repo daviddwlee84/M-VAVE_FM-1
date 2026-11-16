@@ -12,7 +12,7 @@
 | 第一次拿到機器，照順序做 | [Getting Started](getting-started/index.md) |
 | 知道哪些事絕對不要做 | [注意事項](getting-started/cautions.md) |
 | 機器開不了 | [救援](getting-started/recovery.md) |
-| 選一套韌體來玩 | [韌體地圖](firmware/index.md) |
+| 選一套韌體來玩 | [韌體地圖](firmware/index.md)、[The Firmware Hub](firmware/hub.md) |
 | 學 SLOOP 怎麼操作 | [SLOOP](firmware/sloop/index.md) |
 | 讓 agent 幫忙刷機或開發 | [Agentic 工作流](agentic/index.md) |
 | 自己寫韌體 | [自製韌體環境](dev/index.md) |
