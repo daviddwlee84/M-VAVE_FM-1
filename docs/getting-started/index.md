@@ -27,6 +27,24 @@
 - 走瀏覽器安裝或 Web Editor 的話需要 Chrome 或 Edge（要 Web MIDI + SysEx）。
 - 一個放備份的地方，以及另一個異地存放的地方。
 
+## 這個 repo 的捷徑
+
+Repo 根目錄的 `Justfile` 把上面的步驟包成指令（macOS，需要 [just](https://just.systems/) 與 `gh`）：
+
+| 指令 | 作用 | 等級 |
+|---|---|---|
+| `just fm1-fetch` | 下載 M-Flasher 與 SLOOP 到 `downloads/`，並與 release digest 比對 | 唯讀 |
+| `just fm1-install-flasher` | 下載後開啟 dmg（拖進 Applications 要自己做） | 唯讀 |
+| `just fm1-gui` | 開 M-Flasher 視窗 | — |
+| `just fm1-find` / `just fm1-info` | 找機器 / 讀機器資訊 | 唯讀 |
+| `just fm1-backup <label>` | 完整備份到 `backups/<日期>-<label>/` 並印出 SHA-256 | 唯讀 |
+| `just fm1-verify-backups` | 用 `.json` 裡的 SHA-256 檢查所有備份 | 唯讀 |
+| `just fm1-download-mode` / `just fm1-restart` | 進 / 離開 download mode | 模式切換 |
+| `just fm1-flash <package.fwsc>` | 安裝韌體。會先問一次，M-Flasher 再要求輸入 `yes` | 寫入，本人執行 |
+| `just sloop-editor` | 用 Chrome 開離線版 SLOOP Web Editor | — |
+
+刻意沒有 bootloader、restore、`run-ram` 的捷徑。等級的定義見[工作流與權限](../agentic/index.md)。
+
 ## 驗收清單
 
 - [ ] 原廠韌體版本已記錄

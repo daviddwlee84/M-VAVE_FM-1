@@ -10,7 +10,7 @@
 | Flash 晶片 / JEDEC ID | **`0xB36014` (new)**，UCUN UC25HQ80，1 MiB |
 | Bootloader | stock (M-VAVE) |
 | 出廠韌體版本 | FM-1 015 (stock)，firmware check OK |
-| 目前韌體 | FM-1 015 (stock) |
+| 目前韌體 | **SLOOP 2.8.5**（2026-11-17 刷入；M-Flasher 顯示套件識別為 `FM-1_900`） |
 | m-bootloader | 未安裝 |
 | 主機 | macOS，M-Flasher 0.12.1 |
 
@@ -46,6 +46,9 @@
 | 2026-11-17 | 安裝 M-Flasher，GUI 按 DOWNLOAD MODE | 成功。原廠 015 可由 USB MIDI 切進 download mode；整顆讀取 1.3 s（813 KB/s），晶片 CRC32 檢查通過 |
 | 2026-11-17 | M-Flasher 詢問是否安裝 m-bootloader | 選 No（新晶片，暫不安裝） |
 | 2026-11-17 | BACKUP FULL FLASH | 已存，SHA-256 與 `.json` 內記錄一致；原始檔在 `~/Documents/M-Flasher/backups`，另複製到 repo 的 `backups/` |
+| 2026-11-17 | GUI：FLASH FIRMWARE `sloop-2.8.5.fwsc` → REVIEW & FLASH | 計畫：寫 143 個 sector（572 KiB），`0x04000`–`0x92FFF`，只在 FIRMWARE 區，BOOT 區未動。01:23 完成，143 sectors written, read back and verified |
+| 2026-11-17 | 拔線、關機再開機 | 進入 SLOOP；存檔測試通過（存檔後重開機內容還在） |
+| 2026-11-17 | `just fm1-find`（SLOOP 執行中） | 回報 `midi Felucca (running; download-mode switches it)`：SLOOP 在 USB MIDI 上的名稱是 Felucca，M-Flasher 認得它 |
 
 ## Phase 1 驗收
 
@@ -54,5 +57,5 @@
 - [x] `FLASH CHIP` / JEDEC ID 已記錄
 - [x] 完整 flash 備份已存，SHA-256 已記錄
 - [ ] 備份另存一份到這台電腦以外的地方
-- [ ] SLOOP 2.8.5 已刷入
-- [ ] Save → 關機 → 開機 → Load 測試通過
+- [x] SLOOP 2.8.5 已刷入
+- [x] Save → 關機 → 開機 → Load 測試通過

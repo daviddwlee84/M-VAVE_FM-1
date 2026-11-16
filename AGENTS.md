@@ -33,7 +33,19 @@ tree. There is no application code; the only build is the documentation site.
 just docs-build        # uv run zensical build --strict
 just docs-check        # build, then scripts/check-docs-site.py
 just docs-serve        # preview on 127.0.0.1:8000 (just docs-serve 8769 for another port)
+
+just fm1-fetch         # download M-Flasher + SLOOP into downloads/, verify against release digests
+just fm1-find          # read-only: units in download mode / on USB MIDI
+just fm1-info          # read-only: what is on the unit
+just fm1-backup LABEL  # read-only: full-flash backup into backups/<date>-LABEL/
+just fm1-verify-backups
+just fm1-download-mode # mode switch
+just fm1-restart       # mode switch
+just fm1-flash FILE    # WRITE: owner runs this, never an agent without approval
 ```
+
+Prefer these recipes over calling M-Flasher directly. There is deliberately no
+recipe for `bootloader`, `restore` or `run-ram`.
 
 Run `just docs-check` before committing any change under `docs/` or to
 `zensical.toml`. Pushing to `main` deploys the site.

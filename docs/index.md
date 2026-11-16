@@ -22,10 +22,10 @@
 
 | 階段 | 配置 | 狀態 |
 |---|---|---|
-| 1 | 原廠韌體 + M-Flasher 完整備份 | 進行中，見[我的機器](device-log.md) |
-| 2 | SLOOP 2.8.5 + Web Editor，正常玩音樂 | 進行中 |
+| 1 | 原廠韌體 + M-Flasher 完整備份 | 完成（2026-11-17），見[我的機器](device-log.md) |
+| 2 | SLOOP 2.8.5 + Web Editor，正常玩音樂 | SLOOP 已刷入，開始玩 |
 | 3 | fm1-emu + Agent Deck host 模擬（不刷機） | 未開始 |
-| 4 | m-bootloader（先確認晶片相容與復原方案） | 未開始 |
+| 4 | m-bootloader（先確認晶片相容與復原方案） | 暫緩：我的機器是新晶片 |
 | 5 | SLOOP 3 / Agent Deck / Melodee 輪流刷入 | 未開始 |
 | 6 | m-apps + m-card 多系統切換（需硬體改裝） | 觀望 |
 
