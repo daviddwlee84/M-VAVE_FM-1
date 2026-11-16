@@ -109,6 +109,20 @@ emu-shot package chip="uc25hq80" ms="6000":
       --shot "{{ms}}" --lcd-only 2>&1 | grep -i -E "^flash:|fault|error" || true
     mv work/lcd.ppm "$name.ppm" && echo "LCD: tools/emu-state/$name.ppm"
 
+# ---- Agent Deck host daemon (no flashing) ------------------------------------
+
+# Clone Agent Deck at the pinned tag into vendor/ (git-ignored).
+agtdeck-clone:
+    test -d vendor/fm-1-agent-deck || git clone -q --depth 1 --branch "v{{agtdeck_version}}" https://github.com/kevinelliott/fm-1-agent-deck.git vendor/fm-1-agent-deck
+
+# Check the daemon's view of this machine: Python, MIDI, config, agent CLIs, Herdr.
+agtdeck-doctor backend="herdr": agtdeck-clone
+    python3 vendor/fm-1-agent-deck/host/agtdeck.py --backend "{{backend}}" --doctor --no-wait
+
+# Run the daemon without an FM-1: prints frames, reads commands from stdin (`quit` to leave).
+agtdeck-sim backend="herdr": agtdeck-clone
+    python3 vendor/fm-1-agent-deck/host/agtdeck.py --backend "{{backend}}" --simulate
+
 # ---- upstream watch -----------------------------------------------------------
 
 # Latest upstream releases, to compare with the version table in docs/resources.md.

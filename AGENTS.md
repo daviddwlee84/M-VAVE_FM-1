@@ -40,6 +40,8 @@ just emu-fetch         # fm1-emu into tools/fm1-emu/ (git-ignored), digest-verif
 just emu-run FILE [CHIP]   # play a .fwsc in a window; CHIP defaults to uc25hq80 (this unit)
 just emu-shot FILE [CHIP] [MS]  # headless boot: LCD image + flash write count
 just agtdeck-fetch     # Agent Deck package, digest + attestation verified
+just agtdeck-doctor    # Agent Deck host daemon self-check (clones upstream into vendor/)
+just agtdeck-sim       # Agent Deck daemon without an FM-1 (interactive; prints frames)
 just fm1-versions      # latest upstream releases, to refresh docs/resources.md and docs/watch.md
 
 just fm1-fetch         # download M-Flasher + SLOOP into downloads/, verify against release digests

@@ -12677,3 +12677,191 @@ just docs-check 2>&1 | tail -1
 {"status": "ok", "pages": 24, "llm_pages": 24, "deployed": false}
 ```
 </details></tool-use>
+
+_**Agent (claude-fable-5-2 2026-11-16 18:05:29Z)**_
+
+A（fm1-emu）與 D（追蹤）的捷徑和文件都通過檢查了，先 commit，接著做 B 的第一步：Agent Deck host daemon 的模擬模式接 Herdr。
+
+_**Agent (claude-fable-5-2 2026-11-16 18:05:58Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Commit and push, then clone Agent Deck v0.7 into the ignored vendor folder and show its daemon options
+
+```bash
+git add -A && git status --short | grep -v specstory && git commit -q -m "Add local fm1-emu workflow, emulator results and upstream watch ledger
+
+Justfile: emu-fetch, emu-run, emu-shot, agtdeck-fetch, fm1-versions.
+Docs: local emulator usage and first results on both flash chips, a watch
+ledger for on-hold items, and the conditions to revisit m-bootloader/SLOOP 3.
+
+Co-Authored-By: Claude Fable 5.2 <noreply@anthropic.com>" && git push -q origin main && echo pushed; mkdir -p vendor && cd vendor && (test -d fm-1-agent-deck || git clone -q --depth 1 --branch v0.7 https://github.com/kevinelliott/fm-1-agent-deck.git) && cd fm-1-agent-deck && git log --oneline -1 && ls host | head -20 && python3 host/agtdeck.py --help 2>&1 | head -50
+```
+
+```text
+M  .gitignore
+M  AGENTS.md
+M  Justfile
+M  docs/agentic/emulator.md
+M  docs/device-log.md
+M  docs/firmware/sloop/sloop3.md
+M  docs/index.md
+M  docs/resources.md
+A  docs/watch.md
+M  zensical.toml
+pushed
+Note: switching to 'b5e74e4f2aafa09b50ec8ca2b972c08a3c859820'.
+
+You are in 'detached HEAD' state. You can look around, make experimental
+changes and commit them, and you can discard any commits you make in this
+state without impacting any branches by switching back to a branch.
+
+If you want to create a new branch to retain commits you create, you may
+do so (now or later) by using -c with the switch command. Example:
+
+  git switch -c <new-branch-name>
+
+Or undo this operation with:
+
+  git switch -
+
+Turn off this advice by setting config variable advice.detachedHead to false
+
+b5e74e4 0.7: rename agentdeck to agtdeck; daemon reconnect, doctor, service, tests
+docker
+agtdeck.py
+config.example.json
+herdr-test.log
+simulate-test.log
+test_daemon.py
+test_simulate.sh
+usage: agtdeck.py [-h] [--backend {herdr,tmux,auto}] [--simulate]
+                  [--port PORT] [--herdr-session HERDR_SESSION]
+                  [--herdr-socket HERDR_SOCKET] [--poll POLL]
+                  [--config CONFIG] [--no-wait] [--doctor] [--install-service]
+                  [--uninstall-service] [--print-service] [--print-config]
+                  [--version]
+
+Agent Deck host daemon
+
+options:
+  -h, --help            show this help message and exit
+  --backend {herdr,tmux,auto}
+  --simulate            no MIDI; print frames, read commands from stdin
+  --port PORT           MIDI port name substring (default: match FM-1)
+  --herdr-session HERDR_SESSION
+  --herdr-socket HERDR_SOCKET
+  --poll POLL           seconds between backend polls (default 1.0)
+  --config CONFIG       JSON config (default: ~/.config/agtdeck/config.json if
+                        present)
+  --no-wait             exit when no FM-1 is found, instead of waiting for one
+                        to be plugged in
+  --doctor              check the FM-1, the config and the backend, report,
+                        and exit
+  --install-service     start the daemon at every login (launchd on macOS,
+                        systemd --user on Linux), with the other options given
+                        here
+  --uninstall-service
+  --print-service       show what --install-service would write
+  --print-config        print the default config as JSON and exit
+  --version             show program's version number and exit
+```
+</details></tool-use>
+
+_**Agent (claude-fable-5-2 2026-11-16 18:06:14Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Run the Agent Deck daemon's doctor check and a short simulate session against Herdr
+
+`echo "=== doctor"; timeout 30 python3 host/agtdeck.py --backend herdr --doctor --no-wait 2>&1 | head -30; echo "=== simulate (8s)"; (sleep 8) | timeout 12 python3 host/agtdeck.py --backend herdr --simulate 2>&1 | head -40; ls ~/.config/agtdeck 2>/dev/null`
+
+```text
+Exit code 2
+=== doctor
+Agent Deck 0.7, protocol v6
+  ok   python         3.15.1 (/opt/homebrew/opt/python@3.15/bin/python3.15)
+  FAIL mido           not installed: pip install mido python-rtmidi (--simulate works without)
+  ok   config         defaults (no ~/.config/agtdeck/config.json)
+  --   auto-approve   7 never-patterns, no allow-list
+  ok   agent CLIs     claude, codex, opencode
+  ok   herdr          /Users/zhouhanru/.config/herdr/herdr.sock, 48 agents
+  ok   claude logs    /Users/zhouhanru/.claude/projects
+  --   service        not installed (--install-service)
+1 thing to fix
+=== simulate (8s)
+[agtdeck] backend=herdr mode=simulate proto=v6
+[agtdeck] herdr socket: /Users/zhouhanru/.config/herdr/herdr.sock
+[agtdeck] config: defaults, 9 prompt presets
+[agtdeck] commands: select N | start | approve | always | deny | interrupt | enter | mode | auto | focus | next | prev | scroll N | preset N | send | prompt TEXT | spawn [KIND] | all approve|deny|interrupt|send | keys K.. | btn NAME [up|down] | enc NAME N | key N | page N | view | repeat | move N | copy | mark [N] | unmark | urgent | mute | queue | quit
+[frame] HELLO_ACK proto=6
+[discover] slot 0: 1:~ (id=w3J:p1, kind=shell)
+[discover] slot 1: 2:~ (id=w3J:p2, kind=shell)
+[discover] slot 2: 1:Tadronaut-Mono-Repo (id=wV:p1, kind=claude)
+[discover] slot 3: 2:Tadronaut-Mono-Repo (id=wV:p47, kind=claude)
+[discover] slot 4: 3:Tadronaut-Mono-Repo (id=wV:p51, kind=shell)
+[discover] slot 5: 4:Tadronaut-Mono-Repo (id=wV:p5K, kind=claude)
+[discover] slot 6: 5:Tadronaut-Mono-Repo (id=wV:p61, kind=shell)
+[discover] slot 7: 6:Tadronaut-Mono-Repo (id=wV:p62, kind=claude)
+[discover] slot 8: 1:ferry (id=w2Q:p1, kind=shell)
+[discover] slot 9: 2:ferry (id=w2Q:p2, kind=shell)
+[discover] slot 10: 3:ferry (id=w2Q:p3, kind=shell)
+[discover] slot 11: 1:quant-data-kit (id=w2X:pS, kind=shell)
+[discover] slot 12: 2:quant-data-kit (id=w2X:p1N, kind=shell)
+[discover] slot 13: 3:quant-data-kit (id=w2X:p2R, kind=shell)
+[discover] slot 14: 1:SyntheticSnapshot (id=w32:p1, kind=claude)
+[discover] slot 15: 2:SyntheticSnapshot (id=w32:p2, kind=claude)
+[discover] slot 16: 3:SyntheticSnapshot (id=w32:p4, kind=claude)
+[discover] slot 17: 4:SyntheticSnapshot (id=w32:pW, kind=shell)
+[discover] slot 18: 1:AlphaResearch (id=w37:p1, kind=claude)
+[discover] slot 19: 2:AlphaResearch (id=w37:p2, kind=claude)
+[discover] slot 20: 3:AlphaResearch (id=w37:p7, kind=shell)
+[discover] slot 21: 4:AlphaResearch (id=w37:p9, kind=claude)
+[discover] slot 22: 5:AlphaResearch (id=w37:pA, kind=shell)
+[discover] slot 23: Wealthfolio (id=w38:p1, kind=shell)
+[discover] slot 24: 1:Investment (id=w20:p1, kind=codex)
+[discover] slot 25: 2:Investment (id=w20:p2, kind=shell)
+[discover] slot 26: 1:brilliant-frame (id=w2F:p1, kind=claude)
+[discover] slot 27: 2:brilliant-frame (id=w2F:p2, kind=shell)
+[discover] slot 28: 1:lazytodo (id=w39:p1, kind=shell)
+[discover] slot 29: 2:lazytodo (id=w39:p9, kind=shell)
+[discover] slot 30: 3:lazytodo (id=w39:p2, kind=shell)
+[discover] slot 31: 1:dev-cli (id=w3A:p1, kind=claude)
+[discover] slot 32: 2:dev-cli (id=w3A:p3, kind=claude)
+[discover] slot 33: 3:dev-cli (id=w3A:p4, kind=shell)
+[discover] slot 34: translate (id=w3B:p1, kind=shell)
+```
+</details></tool-use>
+
+_**Agent (claude-fable-5-2 2026-11-16 18:06:20Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Look at Agent Deck's config options for filtering which panes appear
+
+`python3 host/agtdeck.py --print-config | python3 -c "import json,sys; d=json.load(sys.stdin); print({k:(v if not isinstance(v,(list,dict)) or len(str(v))<90 else type(v).__name__+f'[{len(v)}]') for k,v in d.items()})"; grep -n -i -E "shell|27 |slots|more than|bank|page of agents|hide|filter|kinds" README.md | cut -c1-230 | head -20`
+
+```text
+{'presets': 'list[9]', 'default_agent': 'claude', 'agents': 'dict[5]', 'spawn_cwd': None, 'projects': [], 'queue_when_working': False, 'auto_never': 'list[7]', 'auto_only': [], 'follow': False, 'repeat_max': 10, 'nag_minutes': 0, 'open_cmd': 'open', 'commands': ['/compact', '/clear', '/context', '/review', '/status'], 'ctx_window': 200000, 'ctx_warn_pct': 80, 'notify': False, 'sounds': True, 'ui_sounds': True, 'alert': 'loud', 'focus_on_edit': True}
+41:- **27 backlit keys** — a piano keyboard, or 27 status lights with buttons
+52:coding agents. The keys become agent slots, their LEDs become agent states.
+101:> single-bank; an interrupted write can leave the unit dark until rescued
+125:first nine slots in their state colours, the page name, a five-segment
+129:Copilot, `SH` a shell), time in state, flags (`A` auto-approve, `R`
+139:agents, down to all 27 keys of the page at once, where each tile is the
+142:| Up to 4 agents | Up to 16 | A full page of 27 |
+262:#    Claude Code approval prompt, a spinner, an idle shell — and drives the
+315:up to 54 agents (2 pages × 27 keys).
+329:Each of the 27 keys is one agent slot on the current page. Press a key to
+354:| **PLAY** | start / continue; on a bare shell, start the default agent in it; on an **empty slot**, spawn a new agent there (`default_agent`, in a new Herdr workspace / tmux window) |
+370:| **OCT− / OCT+** | previous / next slot page (54 slots total) |
+436:  deck: four big ones for a few agents, down to all 27 keys of the page
+514:`api: Bash npm test` instead of just `api NEEDS YOU`. Other agent kinds
+518:Slots are remembered across daemon restarts
+519:(`~/.config/agtdeck/slots.json`), so an agent keeps its key.
+619:| `agents` | `claude`, `codex`, `opencode`, `grok`, `copilot` | shell command per agent kind (add flags here) |
+716:  of typing over an approval dialog. For plain shell panes it falls back
+893:**Risk notes.** The FM-1's flash is **single-bank**: an interrupted
+930:| Daemon unit tests | `python3 host/test_daemon.py` | the daemon against a fake multiplexer and a recording device, no hardware: slots, panel controls and chords, the prompt queue and pipelines, auto-approve's never- and allow
+```
+</details></tool-use>
