@@ -15673,3 +15673,623 @@ just agtdeck-run
 _**User (2026-11-16 18:26:00Z)**_
 
 [Image: source: /private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/5f461408-bbdd-44d0-bb3b-b0642eabaa31/images/18.png]
+
+---
+
+_**Agent (claude-fable-5-2 2026-11-16 18:26:46Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Add a one-step Agent Deck emulator shortcut, document the result and controls, commit and push
+
+```bash
+python3 - <<'EOF'
+import pathlib
+def sub(path, pairs):
+    p=pathlib.Path(path); s=p.read_text()
+    for a,b in pairs:
+        assert a in s, (path,a[:60]); s=s.replace(a,b,1)
+    p.write_text(s)
+sub("Justfile",[("# Run the daemon against a MIDI device:","""# Agent Deck in the emulator with the virtual USB cable plugged in (pair with `just agtdeck-run`).
+agtdeck-emu chip="uc25hq80": agtdeck-fetch
+    just emu-run "downloads/agtdeck-{{agtdeck_version}}.fwsc" "{{chip}}" --usb
+
+# Run the daemon against a MIDI device:""")])
+sub("docs/firmware/agent-deck/index.md",[
+("# terminal 1：模擬器，加 --usb 插上虛擬 USB 線\njust emu-run downloads/agtdeck-0.7.fwsc uc25hq80 --usb","# terminal 1：模擬器，插上虛擬 USB 線（等同 emu-run … --usb）\njust agtdeck-emu"),
+("我確認過的：模擬器視窗開著並帶 `--usb` 時，macOS 上會出現 MIDI 輸入與輸出 `FM-1 AGTDECK (emu)`，daemon 沒有回報找不到裝置。畫面是否真的顯示出 agent grid 我沒看到（那要看視窗），請自己確認。headless 的 `emu-shot` 不會建立這個虛擬裝置。`[模擬]`",
+ "2026-11-17 實測成功 `[模擬]`：模擬器畫面從 `NO HOST` 變成 `HOST`，列出 Herdr 的 pane（名稱、種類 `SH` / `CL`、停留時間），標頭顯示 blocked 數與總數。daemon 端印出 `[midi] in='FM-1 AGTDECK (emu)'` 與 `[device] firmware speaks proto v6`。\n\n**沒帶 `--usb` 就永遠是 `NO HOST`**：那等於沒插 USB 線，daemon 看不到任何 MIDI 裝置。headless 的 `emu-shot` 也不會建立虛擬裝置。\n\n模擬器視窗的操作（取自 `fm1-live` 啟動時印的說明，視窗要先取得焦點）：滑鼠點或拖琴鍵與按鈕、拖或滾動旋鈕；鍵盤 `A W S E D F T G Y H U J K O L P ; '` 是 C4 到 F5，`Z` / `X` 是 `OCT-` / `OCT+`，空白鍵 `PLAY`，`R` 是 `REC`，數字鍵 `1`–`0` 是功能鍵，方向鍵與 `,` `.` 是 SELECT / PRESETS / ALGORITHM。"),
+])
+EOF
+just --list 2>/dev/null | grep agtdeck-emu; just docs-check 2>&1 | tail -1; git add -A && git commit -q -m "Add agtdeck-emu shortcut, record emulator-to-daemon result
+
+Co-Authored-By: Claude Fable 5.2 <noreply@anthropic.com>" && git push -q origin main && echo pushed
+```
+
+```text
+    agtdeck-emu chip="uc25hq80"                # Agent Deck in the emulator with the virtual USB cable plugged in (pair with `just agtdeck-run`).
+{"status": "ok", "pages": 26, "llm_pages": 26, "deployed": false}
+pushed
+```
+</details></tool-use>
+
+_**Agent (claude-fable-5-2 2026-11-16 18:26:59Z)**_
+
+模擬器找不找得到 host 只取決於有沒有帶 `--usb`。你第一次跑的 `just emu-run downloads/agtdeck-0.7.fwsc` 沒帶，那等於沒插 USB 線，所以一直是 `NO HOST`。
+
+## 你那次看到的混亂是我造成的
+
+你貼的兩段紀錄裡有兩件事是我的測試干擾的，抱歉：
+
+- **你的模擬器被 `signal 15` 終止**：我測試完用 `pkill` 關掉自己開的模擬器，比對條件太寬，連你正在跑的那個也一起殺掉了。
+- **daemon 短暫出現 `FM-1 AGTDECK (emu)` 又顯示 `the FM-1 is gone`**：它連上的是我那個帶 `--usb` 的測試視窗，不是你的。我關掉後它就斷線了。
+
+所以沒有「不一定找得到」的問題，行為是確定的：帶 `--usb` 就有，不帶就沒有。
+
+## 為了不再踩到
+
+新增 `just agtdeck-emu`，它固定帶 `--usb`。之後就是：
+
+```sh
+just agtdeck-emu     # terminal 1
+just agtdeck-run     # terminal 2
+```
+
+## 滑鼠與鍵盤
+
+我沒有實際操作過視窗，以下取自模擬器啟動時印的說明：
+
+- **滑鼠**：點或拖琴鍵與按鈕，拖或滾動旋鈕。
+- **鍵盤**：`A W S E D F T G Y H U J K O L P ; '` 對應 C4 到 F5 的琴鍵，`Z` / `X` 是 `OCT-` / `OCT+`，空白鍵是 `PLAY`，`R` 是 `REC`，數字鍵 `1`–`0` 是功能鍵，方向鍵與 `,` `.` 是 SELECT / PRESETS / ALGORITHM。
+
+你截圖裡視窗左上角的三顆按鈕是灰的，表示當時視窗沒有焦點。從 Herdr 的 terminal 啟動時焦點通常還留在 terminal，先點一下視窗標題列讓它取得焦點再試。如果取得焦點後滑鼠仍然沒反應，告訴我，那就是另一個問題。
+
+在 Agent Deck 裡，琴鍵是選 agent slot，`OCT-` / `OCT+` 換頁，所以最快的測試是按 `A` 或 `S` 看選取列會不會動。
+
+## 你的截圖說明了什麼
+
+連線成功後畫面顯示 1 個需要處理、共 48 個 pane，前 8 列裡有 4 個是 shell。一頁要翻很多次才看得到真正的 agent，這就是之前說的 shell 佔位問題，實際看起來比想像中更明顯。
+
+文件已更新並 push。
+
+---
+
+_**User (2026-11-16 18:32:01Z)**_
+
+所以帶了 --usb 的話我就能用我的硬體操控 emulator的意思？ （但它可能load進其他firmware了 我需要怎樣操作它的mode嗎？）
+然後可以幫我燒錄一下 agent deck firmware嗎？然後直接備份一個？（我需要先手動切近download mode？）
+
+---
+
+_**Agent (claude-fable-5-2 2026-11-16 18:32:20Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Read Agent Deck's first-flash guidance and check what M-Flasher currently sees
+
+`sed -n '/^## Arrival day/,/^## /p' vendor/fm-1-agent-deck/README.md | cut -c1-900 | head -75; echo ======; just fm1-find 2>&1 | tail -4`
+
+````text
+## Arrival day (read this before plugging anything in)
+
+This section was written before the author's unit arrived, as the plan
+for its first flash. That unit has since been flashed over USB with
+step 3 below — every release from 0.1 to 0.6.2 — and runs Agent Deck
+today. The plan stays here as the checklist for anyone else's first
+flash.
+
+A **late-2026 FM-1** will most likely carry the **UC25HQ80** flash chip
+(JEDEC id `0xB36014`), *not* the early Puya P25Q80 (`0x856014`), and
+ship with **stock firmware V16**.
+
+**Flash-chip check — already handled, verify anyway.** The only flash-ID
+gate in the whole stack is on-device: `FL_JEDEC_OK(id)` in
+`firmware-build/firmware/hal/fm1_flash_map.h`, used by the app and the
+update loader. **Dinghy 0.5 already accepts both chips on the FM-1:**
+
+```c
+#define FL_JEDEC_OK(id) ((id) == 0x856014u || (id) == 0xB36014u)
+```
+
+so no allowlist change is needed (older Felucca-derived bases saved to
+RAM only on UC25HQ80 units — that's the failure this avoids). The
+host-side installer `tools/fm1_install.py` performs **no** flash-ID
+check at all. If a future Dinghy rebase ever drops the second clause,
+that one line is the fix.
+
+**Sequence for the day the unit lands:**
+
+0. Already done for you: the exact package in `dist/` has been booted
+   and driven in fm1-emu (see [See it running](#see-it-running--fm1-emu)),
+   so what follows is confirming the real hardware behaves like the
+   emulated chip — repeat the `tools/emu_test.py` session by hand:
+   frames in, ALGORITHM through the pages, screens checked.
+1. Power it on stock first. Check the stock firmware version and enjoy
+   the synth briefly — it's a good one.
+2. **Return to stock V15 before flashing anything custom.** Community
+   guidance and every custom-firmware installer assume V15 as the base:
+   use M-VAVE's M-UPGRADE updater (or a browser installer's
+   "Return to official V15" option) if it shipped with V16.
+3. Flash Agent Deck over USB, using the package in `dist/`:
+   `python3 firmware-build/tools/fm1_install.py dist/agtdeck-0.7.fwsc`
+   (or the FM-1 Firmware Hub in Chrome/Edge). The installer asks before
+   it writes; the FM-1 restarts into Agent Deck.
+4. Start the daemon (`--backend auto`), watch the FM-1 screen switch
+   from `NO HOST` to `HOST OK`, and tap a few keys.
+5. Going back: any installer can return the unit to official V15/V16
+   the same way.
+
+**Risk notes.** The FM-1's flash is **single-bank**: an interrupted
+write can leave the unit dark. This is recoverable — the JieLi chip's
+mask-ROM boot mode (WL82 UBOOT) lives in ROM, not flash, and the
+community's FM-1-transporter exists for exactly this; holding **OCT−**
+at power-on also forces the USB rescue in Dinghy-derived firmware.
+Still: flash on a charged battery / stable USB, and don't unplug
+mid-write.
+
+## Troubleshooting
+======
+"/Applications/M-Flasher.app/Contents/MacOS/M-Flasher" find
+midi	Felucca (running; download-mode switches it)
+midi	FM-1 AGTDECK (emu) (running; download-mode switches it)
+````
+</details></tool-use>
+
+_**Agent (claude-fable-5-2 2026-11-16 18:32:26Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Check how M-Flasher selects a device when switching to download mode
+
+`/Applications/M-Flasher.app/Contents/MacOS/M-Flasher download-mode --help 2>&1 | head -20`
+
+```text
+usage: m-flasher [find | download-mode | restart | info | backup [DIR] | restore BACKUP.bin [--keep-bootloader] |
+                 firmware PACKAGE.fwsc |
+                 bootloader [--stock PACKAGE.fwsc | --file UBOOT.boot] |
+                 run-ram IMAGE --addr ADDR [--call OPCODE]... [--read ADDR:LEN -o OUT]]
+       options: --device PATH  --board fm1|smk37  --backup-dir DIR  --yes
+                --restart (restore, firmware, bootloader: start the unit when written)
+       without arguments: the window (`m-flasher run-ram --help`: the run-ram command)
+```
+</details></tool-use>
+
+_**Agent (claude-fable-5-2 2026-11-16 18:32:46Z)**_
+
+先回答第一個問題，再說燒錄：我已經準備好，但有兩件事要你先做，所以還沒動機器。
+
+## `--usb` 不是「用硬體操控模擬器」
+
+`--usb` 的意思是：**模擬出來的那台 FM-1** 對電腦插上一條虛擬 USB 線，讓電腦上的程式（例如 daemon）把它當成一台 USB MIDI 裝置。它和你手上那台實機沒有關係。
+
+你的實機確實能送 MIDI 給模擬器，因為 `fm1-live` 預設會收電腦上所有的 MIDI 輸入。但那些訊息是從模擬 FM-1 的 **MIDI IN 孔**進去的，不是按它的面板：
+
+- 模擬器裡跑的是合成器韌體時：實機的琴鍵可以彈響它。
+- 模擬器裡跑的是 Agent Deck 時：沒用。Agent Deck 把 MIDI IN 當成 daemon 的協定通道，實機送來的音符不會變成按鍵操作。這點我沒實測，是從上游文件推的。
+
+實機不需要切任何 mode。模擬器的面板只能用滑鼠或電腦鍵盤操作。
+
+## 燒錄 Agent Deck
+
+不用手動進 download mode。M-Flasher 認得執行中的 SLOOP，可以直接用指令切過去。
+
+**請先做這兩件事，做完跟我說：**
+
+1. **關掉模擬器視窗和 daemon。** 現在 M-Flasher 同時看到兩台裝置：實機（顯示為 `Felucca`）和模擬器（`FM-1 AGTDECK (emu)`）。切 download mode 的指令沒有明確的選擇方式，我不想賭它選對，也不想再誤關你的視窗。
+2. **讓 SLOOP 停止播放，等幾秒。** 它停止後約 2.5 秒才自動存檔，這樣刷之前的備份才包含你最新的曲子。
+
+**之後的流程：**
+
+| 步驟 | 誰 | 內容 |
+|---|---|---|
+| 1 | 我 | 切 download mode、讀機器資訊、**先備份現在的 SLOOP**（含最新曲子） |
+| 2 | 我 | 列出 preflight |
+| 3 | 你 | 執行 `just fm1-flash downloads/agtdeck-0.7.fwsc`，M-Flasher 列出變更後輸入 `yes` |
+| 4 | 我 | 重開機、確認裝置出現、接上 daemon、再備份一份 Agent Deck 的狀態、更新紀錄 |
+
+第 3 步留給你，是因為這個 repo 的規則是寫入時的 `yes` 由本人輸入，我不替你跳過那道確認。
+
+## 刷之前你該知道的風險
+
+- **新晶片沒有實機回報。** 上游原始碼明確接受 `0xB36014`，模擬器裡的新晶片模式也有正常寫入，但真機上還沒人回報過。你會是第一個。
+- **SLOOP 的曲子刷回來後還在不在，上游說沒測過。** 所以第 1 步的備份是必要的；回不來的話要由你在 M-Flasher 的 GUI 還原備份。
+- **救援**：Agent Deck 是 Dinghy 系，上游寫按住 `OCT-` 開機會進 USB rescue。你的機器是原廠 bootloader，如果連這個都進不去，就只剩 Pico 的 USB_KEY 一條路，而你手上沒有。這和當初刷 SLOOP 是同一類風險，但 Agent Deck 的實機驗證比 SLOOP 少得多。
+
+套件本身已驗證：digest 與 release 相符，build attestation 通過。
+
+---
+
+_**User (2026-11-16 18:34:36Z)**_
+
+關了模擬器與daemon了 SLOOP也停了 可以繼續
+
+---
+
+_**Agent (claude-fable-5-2 2026-11-16 18:34:46Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Confirm only the real unit is visible, then switch it to download mode
+
+`just fm1-find 2>&1 | tail -3 && echo "--- download-mode" && just fm1-download-mode 2>&1 | tail -5; sleep 3; echo "--- find"; just fm1-find 2>&1 | tail -3`
+
+```text
+"/Applications/M-Flasher.app/Contents/MacOS/M-Flasher" find
+midi	Felucca (running; download-mode switches it)
+--- download-mode
+"/Applications/M-Flasher.app/Contents/MacOS/M-Flasher" download-mode
+Sent the Felucca the download-mode message over USB MIDI; waiting for it
+In download mode: usb:2-4	WL82 UBOOT1.00 (USB bus 2, device 4)
+--- find
+"/Applications/M-Flasher.app/Contents/MacOS/M-Flasher" find
+usb:2-4	WL82 UBOOT1.00 (USB bus 2, device 4)
+```
+</details></tool-use>
+
+_**Agent (claude-fable-5-2 2026-11-16 18:34:58Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Back up the current SLOOP state before flashing and verify all backups
+
+`just fm1-backup pre-agtdeck 2>&1 | tail -22 && just fm1-verify-backups`
+
+```text
+Connecting to usb:2-4
+M-Flasher loader 1.3 already running
+Flash chip 0xB36014 (new)
+Reading the flash
+    1%    3%    4%    6%    7%    9%   10%   12%   14%   15%   17%   18%   20%   21%   23%   25%   26%   28%   29%   31%   32%   34%   35%   37%   39%   40%   42%   43%   45%   46%   48%   50%   51%   53%   54%   56%   57%   59%   60%   62%   64%   65%   67%   68%   70%   71%   73%   75%   76%   78%   79%   81%   82%   84%   85%   87%   89%   90%   92%   93%   95%   96%   98%  100%
+Read in 1.3 s (801 KB/s)
+Checked: the chip's CRC32 of the flash matches the read
+  model       FM-1
+  bootloader  stock (M-VAVE)
+  firmware    SLOOP 2.8.5
+  app         OK
+  chip key    0x980F
+  flash       0xB36014
+  unit id     55227286a0cb022a
+  loader      M-Flasher 1.3, CPU at 96 MHz
+    - the firmware uses the FM-1 flash layout
+    - flash chip 0xB36014 (new)
+Backup saved: backups/2026-11-17-pre-agtdeck/fm1-20261117-023458.bin
+074cf36077e4e689aa2c4aae57baa7386428a73afd667ca042864714777546bc  backups/2026-11-17-pre-agtdeck/fm1-20261117-023458.bin
+Record this in docs/device-log.md and keep a copy off this machine.
+ok   backups/2026-11-17-pre-agtdeck/fm1-20261117-023458.bin
+ok   backups/2026-11-17-sloop-2.8.5/fm1-20261117-014153.bin
+ok   backups/2026-11-17-stock/fm1-20261117-011632.bin
+```
+</details></tool-use>
+
+_**Agent (claude-fable-5-2 2026-11-16 18:35:08Z)**_
+
+機器已在 download mode，刷之前的備份也做好了。現在輪到你執行寫入。
+
+## Preflight
+
+| 項目 | 狀態 |
+|---|---|
+| 機器 | FM-1，download mode，原廠 bootloader |
+| 目前韌體 | SLOOP 2.8.5，app OK，晶片 CRC32 相符 |
+| Flash 晶片 | `0xB36014`（新） |
+| 刷前備份 | `backups/2026-11-17-pre-agtdeck/fm1-20261117-023458.bin`，SHA-256 `074cf360…7546bc`，三份備份全部通過驗證 |
+| 套件 | `downloads/agtdeck-0.7.fwsc`，SHA-256 `c0d0b43e…97eacf`，與 release digest 相符，build attestation 通過 |
+| 晶片支援 | 上游原始碼接受 `0xB36014`；模擬器新晶片模式有正常寫入；沒有實機回報 |
+| 會改動 | 只寫韌體區，boot 區保留（M-Flasher 會在確認前列出確切範圍） |
+
+這份新備份和 01:41 那份的 hash 不同，表示包含了你之後玩的內容。它目前只在這台 Mac 上，還沒上傳到 Release。
+
+## 請執行
+
+```sh
+just fm1-flash downloads/agtdeck-0.7.fwsc
+```
+
+它會先問一次確認，接著 M-Flasher 列出要寫入的 sector 範圍，再要求輸入 `yes`。
+
+輸入 `yes` 之前看一眼它列的範圍：應該只落在韌體區（當初 SLOOP 是 `0x04000`–`0x92FFF`），不該包含 `0x00000`–`0x03FFF` 的 boot 區。如果它提到 boot、bootloader，或出現任何警告，先不要輸入 `yes`，把畫面貼給我。
+
+寫入中不要拔線或關機。完成後把輸出貼給我，我接著重開機、確認裝置、接上 daemon、再備份一份並更新紀錄。機器先留在 download mode，不用自己重開。
+
+---
+
+_**User (2026-11-16 18:38:06Z)**_
+
+M-Flasher有CLI嗎？跟它自帶的GUI App比呢？
+
+```
+
+
+<pasted_content id="fec1">
+❯ just fm1-flash downloads/agtdeck-0.7.fwsc
+This writes firmware to the FM-1. A verified backup exists and the package supports this flash chip? y
+"/Applications/M-Flasher.app/Contents/MacOS/M-Flasher" firmware "downloads/agtdeck-0.7.fwsc"
+Connecting to usb:2-4
+M-Flasher loader 1.3 already running
+Flash chip 0xB36014 (new)
+Reading the flash
+  100%
+Read in 1.3 s (812 KB/s)
+Checked: the chip's CRC32 of the flash matches the read
+  model       FM-1
+  bootloader  stock (M-VAVE)
+  firmware    SLOOP 2.8.5
+  app         OK
+  chip key    0x980F
+  flash       0xB36014
+  unit id     55227286a0cb022a
+  loader      M-Flasher 1.3, CPU at 96 MHz
+    - the firmware uses the FM-1 flash layout
+    - flash chip 0xB36014 (new)
+
+Install firmware FM-1_24357
+Writes 140 sectors (560 KiB): 0x04000-0x8FFFF
+Installs FM-1_24357 (0x04000-0x92FFF).
+Type "yes" to write: yes
+Backup saved: /Users/zhouhanru/Documents/M-Flasher/backups/fm1-20261117-023538.bin
+Writing 0x04000-0x8FFFF
+  100%
+Done: everything written is verified (the chip's CRC32 matches)
+</pasted_content id="fec1">
+
+```
+
+---
+
+_**Agent (claude-fable-5-2 2026-11-16 18:38:15Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Restart the unit out of download mode and check that Agent Deck appears on USB MIDI
+
+`just fm1-restart 2>&1 | tail -4; sleep 3; just fm1-find 2>&1 | tail -3; uv run -q --locked --all-groups python -c "import mido; print(mido.get_input_names(), mido.get_output_names())"`
+
+```text
+"/Applications/M-Flasher.app/Contents/MacOS/M-Flasher" restart
+The Felucca is running already (on USB MIDI)
+"/Applications/M-Flasher.app/Contents/MacOS/M-Flasher" find
+midi	Felucca (running; download-mode switches it)
+['Felucca'] ['Felucca']
+```
+</details></tool-use>
+
+_**Agent (claude-fable-5-2 2026-11-16 18:38:24Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Read the USB product name of the connected unit and run the daemon's self-check against it
+
+`ioreg -p IOUSB -l -w0 2>/dev/null | grep -E '"USB Product Name"|"USB Vendor Name"|"idVendor"|"idProduct"' | grep -i -B1 -A3 -E "agt|feluc|fm-1|sloop" | head -12; timeout 40 uv run -q --locked --all-groups python vendor/fm-1-agent-deck/host/agtdeck.py --backend herdr --doctor --no-wait 2>&1 | head -12`
+
+```text
+  |         "idProduct" = 1
+  |         "USB Product Name" = "FM-1 AGTDECK"
+  |         "USB Vendor Name" = 
+  |         "idVendor" = 4617
+  |       "USB Vendor Name" = "VLI Inc."
+Agent Deck 0.7, protocol v6
+  ok   python         3.13.3 (/Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/.venv/bin/python)
+  ok   FM-1 port      Felucca
+  ok   config         defaults (no ~/.config/agtdeck/config.json)
+  --   auto-approve   7 never-patterns, no allow-list
+  ok   agent CLIs     claude, codex, opencode
+  ok   herdr          /Users/zhouhanru/.config/herdr/herdr.sock, 50 agents
+  ok   claude logs    /Users/zhouhanru/.claude/projects
+  --   service        not installed (--install-service)
+all good
+```
+</details></tool-use>
+
+_**Agent (claude-fable-5-2 2026-11-16 18:38:51Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Switch to download mode, back up the Agent Deck state, restart, and verify backups
+
+`just fm1-download-mode 2>&1 | tail -2 && sleep 2 && just fm1-backup agtdeck-0.7 2>&1 | grep -E "firmware|app |bootloader|Backup saved|^[0-9a-f]{64}" && just fm1-restart 2>&1 | tail -2; just fm1-verify-backups; ls ~/Documents/M-Flasher/backups/ | tail -4`
+
+```text
+Sent the Felucca the download-mode message over USB MIDI; waiting for it
+In download mode: usb:2-4	WL82 UBOOT1.00 (USB bus 2, device 4)
+  bootloader  stock (M-VAVE)
+  firmware    FM-1 243
+  app         OK
+    - the firmware uses the FM-1 flash layout
+Backup saved: backups/2026-11-17-agtdeck-0.7/fm1-20261117-023846.bin
+8345795a8cfa07afc71bc196c46683e2e35916e677b8fc807cee3ac648b8767d  backups/2026-11-17-agtdeck-0.7/fm1-20261117-023846.bin
+Sent the restart (a 34-byte program at 0x01C28000); waiting for the unit to reset
+Running: the Felucca is on USB MIDI
+ok   backups/2026-11-17-agtdeck-0.7/fm1-20261117-023846.bin
+ok   backups/2026-11-17-pre-agtdeck/fm1-20261117-023458.bin
+ok   backups/2026-11-17-sloop-2.8.5/fm1-20261117-014153.bin
+ok   backups/2026-11-17-stock/fm1-20261117-011632.bin
+fm1-20261117-011632.bin
+fm1-20261117-011632.json
+fm1-20261117-023538.bin
+fm1-20261117-023538.json
+```
+</details></tool-use>
+
+_**Agent (claude-fable-5-2 2026-11-16 18:38:57Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Read Agent Deck's control and page documentation from the upstream README
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/vendor/fm-1-agent-deck && grep -n "^## \|^### " README.md | sed -n '1,60p'; sed -n '322,470p' README.md | cut -c1-520`
+
+```text
+28:## Why an FM synth?
+107:## A tour of the screens
+177:## See it running — fm1-emu
+249:## Quick start (no FM-1 required)
+283:## How it works
+325:## Controls reference
+327:### Keys and LEDs
+346:### Buttons and encoders
+567:## The host daemon
+578:### CLI
+606:### Config
+641:### In a container
+703:### Backend: Herdr (preferred)
+736:### Backend: tmux
+758:## Building the firmware
+820:## Signed releases
+844:## Arrival day (read this before plugging anything in)
+901:## Troubleshooting
+915:## Testing
+935:## Scope limits & roadmap
+960:## Files
+989:## Credits
+1006:## License
+(CC 118 = control, CC 119 = data, 7-bit clean). The full wire spec —
+frame formats, state enum, versioning — is in **[PROTOCOL.md](PROTOCOL.md)**.
+
+## Controls reference
+
+### Keys and LEDs
+
+Each of the 27 keys is one agent slot on the current page. Press a key to
+select that agent. The key's LED shows its state:
+
+| LED | State | Meaning |
+|---|---|---|
+| off | EMPTY | no agent in this slot |
+| glow (dim) | IDLE | agent is waiting for input |
+| solid | WORKING | agent is busy |
+| blink, 2 Hz | BLOCKED | **agent needs you** — approval or a question |
+| fast blink (~6 Hz) | ERROR | agent/backend reported an error |
+| solid 2 s → glow | DONE | agent just finished a turn |
+| slow pulse, 1 Hz | UNKNOWN | agent present, state unclassified |
+
+Button LEDs echo context too: PLAY lights while the selected agent is
+WORKING, REC blinks while the selected agent is BLOCKED, ARP lights while
+it is on auto-approve, HOME/EDIT/GLO light on their pages.
+
+### Buttons and encoders
+
+Actions are executed by the host daemon against the *selected* agent:
+
+| Control | Action |
+|---|---|
+| **Keys** | select a slot (empty ones too) |
+| **SELECT** encoder | move the selection across agents |
+| **PLAY** | start / continue; on a bare shell, start the default agent in it; on an **empty slot**, spawn a new agent there (`default_agent`, in a new Herdr workspace / tmux window) |
+| **REC** | approve the pending prompt |
+| **SAVE** | approve *and don't ask again* — picks the prompt's "Yes, and don't ask again / allow all…" option when one is on screen; otherwise does nothing and says so |
+| **FX** | deny (Esc) |
+| **ENV** | interrupt (Ctrl-C) |
+| **SEL** | Enter |
+| **K2** / **K3** encoders | Up·Down / Left·Right arrow keys — with SEL, enough to answer any menu an agent shows |
+| **LFO** | cycle the agent's mode (Shift+Tab). Lit while the selected agent is marked (firmware 0.4) |
+| **PRESETS** encoder | arm a prompt preset (shown on the footer line) |
+| **SEQ** | send the armed preset as a prompt. To a BLOCKED agent it is **queued** instead and goes out once the agent is free (the row shows `Q`, firmware 0.6) |
+| **ARP** | toggle auto-approve for this agent (row shows `A`, ARP lights); the daemon then approves its prompts as they appear. Off by default, forgotten when the daemon restarts |
+| **K1** encoder | scroll DETAIL back through the agent's output; on the MENU page, move a page at a time |
+| **K4** encoder | jump to the next agent that needs you (BLOCKED, then ERROR, then DONE) |
+| **EDIT** | DETAIL page — and focus that pane on the computer. Pressed again on DETAIL: cycle **OUTPUT**, **INFO** and **DIFF** (below) |
+| **HOME** / **GLO** | GRID page / APPROVALS page. HOME pressed again on the GRID flips it between the **list** and the **boxes** (firmware 0.6). GLO pressed again on APPROVALS jumps to the agent that has waited longest (the oldest BLOCKED, else an ERROR, else a DONE) |
+| **ALGORITHM** encoder | cycle GRID → DETAIL → APPROVALS → MENU → ABOUT |
+| **OCT− / OCT+** | previous / next slot page (54 slots total) |
+| **GLO held +** REC / FX / ENV / SEQ / ARP | the same for *every* agent it applies to: approve or deny all BLOCKED, interrupt all WORKING, send the preset to all IDLE/DONE, auto-approve off everywhere. **While any agents are marked, the same buttons act on the marked ones only**, and GLO + LFO clears the marks |
+| **MASTER** | chime volume |
+
+**Chords** (firmware 0.3) — hold a button and tap keys; the cursor stays
+where it is, and while the button is held the keys light up to show what
+a tap would hit:
+
+| Chord | Action |
+|---|---|
+| **REC + key** | approve *that* agent (blocked ones blink) |
+| **FX + key** | deny that agent |
+| **ENV + key** | interrupt that agent (working ones blink) |
+| **SEQ + key N** | send prompt preset N to the selected agent |
+| **SEL + key N** | answer option N — types the digit 1–9. When the prompt on screen has numbered choices, exactly those keys light (the "don't ask again" one blinks) and the footer names the one you picked |
+| **PLAY + key** | start / continue that agent; on an empty key, spawn one there |
+| **SAVE + key** | move the selected agent to that key (a swap if it is taken) |
+| **LFO + key** | **mark / unmark** that agent (marked keys light). Marks make a group: GLO + REC / FX / ENV / SEQ then acts on just those agents. The row shows `+` (firmware 0.5) |
+| **ARP + key** | toggle auto-approve on that agent (keys on auto light) |
+| **SEQ held ~1 s** | **repeat mode**: send the armed prompt to this agent every time it finishes a turn, up to `repeat_max` times. The row shows `R` and SEQ stays lit; hold SEQ again to stop |
+
+**Knobs with a button held** (firmware 0.3):
+
+| Combo | Action |
+|---|---|
+| **PLAY held + PRESETS** | choose which agent PLAY starts (cycles the installed CLIs) |
+| **SEQ held + PRESETS** | how many times repeat mode sends (`repeat_max`) |
+| **SEL held + K1** | scroll DETAIL a page at a time |
+| **LFO held + K4** | step through the marked agents |
+
+A chord button tapped on its own still does its normal thing (on release).
+
+**The MENU page** (firmware 0.3; ALGORITHM turns to it) is drawn by the
+daemon: SELECT moves, SEL picks, FX backs out.
+
+| Entry | What it does |
+|---|---|
+| THIS AGENT | view, repeat mode, auto-approve, mark, mute (no sounds or alerts from this one), its prompt queue (clear it), **COMMANDS** (`/compact`, `/clear`, `/context`… from `commands`), focus on the computer, copy its last reply to the clipboard, open its folder |
+| FLEET | every agent on one screen — state, time in state, context size — with the counts in the title and a TOKENS row (context in use and tokens written, summed over the Claude Code agents; `out` counts the part of each log the daemon reads, so it is a floor for a long session, and there are no prices); pick a row to open that agent's DETAIL. Also MARK ALL / CLEAR MARKS |
+| NEW AGENT | pick an installed agent CLI and a directory (the current agents' directories plus `projects` from the config) and start it. `IN A NEW WORKTREE: YES` first makes a git worktree next to the repository (`<repo>-wt1` on branch `deck/wt1`, and so on) and starts the agent there |
+| SEND PROMPT | `IF WORKING:` send now or queue it; `AGAIN:` what the agent was last asked (Claude Code), then the preset list; pick one to send to the selected agent |
+| EVENT LOG | who got blocked, finished, was approved or closed, and how long ago |
+| CLOSE AGENT | close the selected agent's pane, after a yes/no |
+| SETTINGS | sounds, feedback sounds, how loud the BLOCKED alert is, nag while blocked (alert again every 2 / 5 / 10 min), desktop notifications, follow the blocked (the selection jumps to an agent when it blocks), focus-on-EDIT, auto-approve off everywhere, resync the device |
+| HELP | the control list above, on the device |
+| ABOUT | the ABOUT page (firmware 0.6; a text version on older firmware) |
+
+**The screen** (firmware 0.6) is shown page by page in
+[the tour](#a-tour-of-the-screens). In short:
+
+- **Colour is state:** amber is waiting on you, green is finished, red
+  is broken, white is working, grey is at rest.
+- The **header** has the live nine-pad logo, the page name and page
+  indicator, a host light, and a chip per state with its count.
+- A **GRID row** is a state-coloured edge, the slot number, a state icon
+  (a spinner while working, a blinking warning sign while blocked, a
+  tick, a cross), the name, a two-letter kind tag in the agent's colour
+  (`CL` `CX` `OC` `GK` `CP` `SH`), time in state, the flags (`A` auto,
+  `R` repeat, `+` marked, `Q` queue) and the context gauge. The selected
+  row is a highlighted band.
+- **GRID as boxes** (HOME again on the GRID; remembered across power
+  cycles): a tile per agent, filled in its state's colour — amber and
+  pulsing while it waits on you, green when finished, red when broken —
+  with its name, icon, kind, time in state and, up its right edge, the
+  context gauge (along the bottom edge in 0.6, where it ran through the
+  tile's last line of text; 0.6.1 moved it). The tiles resize with the
+  deck: four big ones for a few agents, down to all 27 keys of the page
+  at once; free keys are outlines.
+- **DETAIL** shows the state as a pill, the kind, the context bar and a
+  tag for the INFO / DIFF views; the text is coloured by what it is
+  (`LABEL:` prefixes, added lines green, prompts white).
+- **APPROVALS** shows a large tick and ALL CLEAR when nobody is waiting.
+- An empty deck shows the logo and what to do next; a power-on splash
+  shows the logo and firmware version; footer messages get a tinted band.
+- **ABOUT** (the fifth page, or MENU → ABOUT): firmware and protocol
+  version, the package identity, whether a host is connected and which
+  protocol it speaks, the daemon's version and backend, agents in use,
+  uptime, and the computer's OS and Python.
+
+**The prompt queue.** Each agent has one. A prompt sent to a BLOCKED
+agent waits in it (answer the agent first; the prompt follows by itself),
+and with `"queue_when_working": true` so does a prompt sent mid-turn. A
+preset can also be a **pipeline** — `{"label": "test > review > commit",
+"steps": [...]}` — whose steps go out one per finished turn; the queue
+pauses while the agent is BLOCKED or in ERROR. INFO lists what is queued,
+and MENU → THIS AGENT clears it. A queued prompt goes only to an agent
+that has settled: at rest for three seconds and, for Claude Code, with
+its turn closed in its own session log. (A multiplexer can report a busy
+agent as idle for a moment between tool calls; a prompt typed then would
+land in the next permission dialog.)
+
+**Recent prompts.** MENU → SEND PROMPT → RECENT PROMPTS lists what was
+last typed at a Claude Code agent, at the terminal or from the deck, to
+send again: the nearest the deck gets to free text.
+
+**Auto-approve has limits.** Before ARP's auto-approve answers a prompt,
+the daemon checks what the agent wants to run, and the prompt on screen,
+against `auto_never` — by default `rm -r`/`-f`, `git push`,
+`git reset --hard`, `sudo`, `--force`, `drop table`, `mkfs`/`dd`. On a
+match it does not answer: the deck sounds the alert and says
+`AUTO HELD api: YOU DECIDE`. It is a pattern match on text, not a
+```
+</details></tool-use>

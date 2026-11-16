@@ -2,7 +2,7 @@
 
 [FM-1 Agent Deck](https://github.com/kevinelliott/fm-1-agent-deck) 把 FM-1 變成 CLI coding agent 的實體控制台。這頁是我自己的試用紀錄；它是什麼、有哪些替代方案，見[用 FM-1 控制 agent](../../agentic/agent-deck.md)。
 
-**狀態（2026-11-17）：host daemon 的模擬模式已接上我的 Herdr；韌體只在模擬器裡跑過，還沒刷進實機。**
+**狀態（2026-11-17）：已刷進實機（新晶片 `0xB36014`），開機正常，daemon 的自我檢查找得到裝置。** 怎麼操作見[操作速查](usage.md)。
 
 ## 不刷機就能試的部分
 
@@ -45,7 +45,9 @@ just agtdeck-run
 | `--simulate --backend herdr` | 連上 Herdr，`HELLO_ACK proto=6`，列出我目前所有的 pane 並辨識種類（`claude`、`codex`、`shell`） | `[實機]` host 端 |
 | 韌體在 fm1-emu 開機 | 兩種晶片都到 `WAITING FOR THE HOST`，都有 flash 寫入 | `[模擬]` |
 | 套件來源 | release digest 相符，`gh attestation verify` 通過 | — |
-| 刷進實機 | 還沒做 | — |
+| 刷進實機 | 2026-11-17 用 M-Flasher 寫入 140 個 sector（`0x04000`–`0x8FFFF`），驗證通過。重開後 USB 產品名 `FM-1 AGTDECK`，M-Flasher 讀到 firmware `FM-1 243`、app OK | `[實機]` |
+| daemon 對實機 | `--doctor` 回報 `FM-1 port: Felucca`、all good | `[實機]` |
+| 按鍵、LED、螢幕、批准流程 | 還沒逐項確認 | — |
 
 ## 發現
 
@@ -61,6 +63,10 @@ just agtdeck-run
 - [ ] SLOOP 目前的狀態有備份（已有 `2026-11-17-sloop-2.8.5`；之後有新曲子要再備一次）
 - [ ] preflight 四項，見[工作流與權限](../../agentic/index.md)
 - [ ] 知道切回 SLOOP 的方法，見[多韌體切換](../switching.md)
+
+## 新晶片上的結果
+
+上游沒有 UC25HQ80 的實機回報，這台是我知道的第一筆 `[實機]`：寫入與驗證成功、能開機、USB MIDI 正常、能再次被 M-Flasher 切進 download mode 並備份。設定是否正確保存、長時間使用是否穩定還沒驗證。
 
 ## 風險
 

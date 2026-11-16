@@ -137,3 +137,18 @@ m-flasher firmware downloads/PACKAGE.fwsc --restart
 ```
 
 寫完後做實機存檔測試，並把備份檔名、hash、套件 hash、結果記進[我的機器](../device-log.md)。完整的手動版流程見[備份原廠與確認晶片](../getting-started/backup-and-chip.md)。
+
+## CLI 與 GUI 的差別 { #cli-vs-gui }
+
+同一個執行檔：不帶參數是視窗，帶參數就是 CLI。功能相同，檢查與驗證也相同。
+
+| | GUI | CLI |
+|---|---|---|
+| 適合 | 第一次用、想看 flash map、macOS 首次授權 | 重複操作、寫成捷徑、讓 agent 做唯讀部分 |
+| Flash map | 有，寫入前標出會改動的 sector | 沒有圖，只印位址範圍與 sector 數 |
+| 寫入確認 | 按 **WRITE N SECTORS** | 輸入 `yes`（或 `--yes`，這個 repo 不用） |
+| 備份位置 | `~/Documents/M-Flasher/backups` | 可指定目錄（`backup DIR`、`--backup-dir`） |
+| m-bootloader 建議 | 讀完 flash 會跳出詢問 | 我用 CLI 時沒有出現過 `[實機]` |
+| 只有它有的 | flash map、逐 sector 進度 | `run-ram`、`--device`、`--restart`、可放進 script |
+
+我的用法：這個 repo 的 `just fm1-*` 都是包 CLI。寫入前自動存的那份備份，兩者都會放在 `~/Documents/M-Flasher/backups`。

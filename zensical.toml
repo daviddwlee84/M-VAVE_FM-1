@@ -30,7 +30,10 @@ nav = [
       { "Web Editor" = "firmware/sloop/web-editor.md" },
       { "SLOOP 3" = "firmware/sloop/sloop3.md" },
     ] },
-    { "Agent Deck" = "firmware/agent-deck/index.md" },
+    { "Agent Deck" = [
+      { "概觀與試用紀錄" = "firmware/agent-deck/index.md" },
+      { "操作速查" = "firmware/agent-deck/usage.md" },
+    ] },
     { "多韌體切換" = "firmware/switching.md" },
   ] },
   { "Agentic" = [
