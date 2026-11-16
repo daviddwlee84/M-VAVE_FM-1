@@ -12865,3 +12865,931 @@ Look at Agent Deck's config options for filtering which panes appear
 930:| Daemon unit tests | `python3 host/test_daemon.py` | the daemon against a fake multiplexer and a recording device, no hardware: slots, panel controls and chords, the prompt queue and pipelines, auto-approve's never- and allow
 ```
 </details></tool-use>
+
+_**Agent (claude-fable-5-2 2026-11-16 18:07:11Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Add Agent Deck daemon shortcuts and a trial-notes page, then commit and push
+
+````bash
+cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1 && python3 - <<'EOF'
+import pathlib
+def sub(path, pairs):
+    p=pathlib.Path(path); s=p.read_text()
+    for a,b in pairs:
+        assert a in s, (path,a[:60]); s=s.replace(a,b,1)
+    p.write_text(s)
+sub("Justfile",[
+("# ---- upstream watch","""# ---- Agent Deck host daemon (no flashing) ------------------------------------
+
+# Clone Agent Deck at the pinned tag into vendor/ (git-ignored).
+agtdeck-clone:
+    test -d vendor/fm-1-agent-deck || git clone -q --depth 1 --branch "v{{agtdeck_version}}" https://github.com/kevinelliott/fm-1-agent-deck.git vendor/fm-1-agent-deck
+
+# Check the daemon's view of this machine: Python, MIDI, config, agent CLIs, Herdr.
+agtdeck-doctor backend="herdr": agtdeck-clone
+    python3 vendor/fm-1-agent-deck/host/agtdeck.py --backend "{{backend}}" --doctor --no-wait
+
+# Run the daemon without an FM-1: prints frames, reads commands from stdin (`quit` to leave).
+agtdeck-sim backend="herdr": agtdeck-clone
+    python3 vendor/fm-1-agent-deck/host/agtdeck.py --backend "{{backend}}" --simulate
+
+# ---- upstream watch"""),
+])
+pathlib.Path("docs/firmware/agent-deck").mkdir(exist_ok=True)
+pathlib.Path("docs/firmware/agent-deck/index.md").write_text('''# Agent Deck
+
+[FM-1 Agent Deck](https://github.com/kevinelliott/fm-1-agent-deck) 把 FM-1 變成 CLI coding agent 的實體控制台。這頁是我自己的試用紀錄；它是什麼、有哪些替代方案，見[用 FM-1 控制 agent](../../agentic/agent-deck.md)。
+
+**狀態（2026-11-17）：host daemon 的模擬模式已接上我的 Herdr；韌體只在模擬器裡跑過，還沒刷進實機。**
+
+## 不刷機就能試的部分
+
+```sh
+just agtdeck-doctor     # 檢查 Python、MIDI、設定、agent CLI、Herdr
+just agtdeck-sim        # 沒有 FM-1 也能跑：印出 frame，從 stdin 讀指令，輸入 quit 離開
+just agtdeck-fetch      # 下載 .fwsc，驗 digest 與 build attestation
+just emu-run downloads/agtdeck-0.7.fwsc     # 在 fm1-emu 裡開韌體（新晶片模式）
+```
+
+`agtdeck-doctor` 與 `agtdeck-sim` 會先把上游 v0.7 clone 到 `vendor/fm-1-agent-deck`（gitignore）。
+
+## 試用結果
+
+| 項目 | 結果 | 標記 |
+|---|---|---|
+| `--doctor` | Herdr socket 找到、`claude` / `codex` / `opencode` CLI 找到；唯一的 FAIL 是沒裝 `mido`（模擬模式不需要，接實機才需要） | `[實機]` host 端 |
+| `--simulate --backend herdr` | 連上 Herdr，`HELLO_ACK proto=6`，列出我目前所有的 pane 並辨識種類（`claude`、`codex`、`shell`） | `[實機]` host 端 |
+| 韌體在 fm1-emu 開機 | 兩種晶片都到 `WAITING FOR THE HOST`，都有 flash 寫入 | `[模擬]` |
+| 套件來源 | release digest 相符，`gh attestation verify` 通過 | — |
+| 刷進實機 | 還沒做 | — |
+
+## 發現
+
+- **Pane 太多。** 我的 Herdr 當下有 48 個 pane，其中很多是 shell。Agent Deck 一頁 27 鍵、共兩頁 54 個 slot，放得下，但 shell 佔掉大半的鍵。上游設定檔裡我沒找到「只顯示 agent、隱藏 shell」的選項（`--print-config` 列出的欄位中沒有），這是之後自己改或自己寫時要解決的第一件事。
+- **Slot 會被記住。** daemon 把 slot 對應存在 `~/.config/agtdeck/slots.json`，agent 重啟後還在同一個鍵上。
+- **auto-approve 預設有 7 條 never-pattern、沒有 allow-list。** 維持不開。
+- **接實機需要** `pip install mido python-rtmidi`。還沒裝。
+
+## 實刷前要做的
+
+- [ ] 在 `just agtdeck-sim` 裡實際操作一輪（`select`、`approve`、`deny`、`interrupt`），確認對 Herdr 的動作符合預期
+- [ ] `just emu-run downloads/agtdeck-0.7.fwsc` 看過各個畫面
+- [ ] SLOOP 目前的狀態有備份（已有 `2026-11-17-sloop-2.8.5`；之後有新曲子要再備一次）
+- [ ] preflight 四項，見[工作流與權限](../../agentic/index.md)
+- [ ] 知道切回 SLOOP 的方法，見[多韌體切換](../switching.md)
+
+## 風險
+
+- 上游沒有新晶片 `0xB36014` 的實機回報。模擬器裡的寫入行為與舊晶片一致，但那只是 `[模擬]`。
+- 上游明說：從別的韌體切過來再切回去，原本韌體存的 project 是否還在**沒有測過**。所以刷之前一定要有 SLOOP 的完整備份。
+- 它是獨立韌體，裝上去之後 FM-1 就不是合成器了，要重刷才回得來。
+''')
+sub("zensical.toml",[('''    { "多韌體切換" = "firmware/switching.md" },''','''    { "Agent Deck" = "firmware/agent-deck/index.md" },
+    { "多韌體切換" = "firmware/switching.md" },''')])
+sub("AGENTS.md",[("just fm1-versions      # latest","just agtdeck-doctor    # Agent Deck host daemon self-check (clones upstream into vendor/)\njust agtdeck-sim       # Agent Deck daemon without an FM-1 (interactive; prints frames)\njust fm1-versions      # latest")])
+EOF
+just agtdeck-doctor 2>&1 | tail -3; just docs-check 2>&1 | tail -1; git add -A && git commit -q -m "Record Agent Deck host simulation against Herdr, add daemon shortcuts
+
+Co-Authored-By: Claude Fable 5.2 <noreply@anthropic.com>" && git push -q origin main && echo pushed
+````
+
+```text
+  --   service        not installed (--install-service)
+1 thing to fix
+error: recipe `agtdeck-doctor` failed on line 120 with exit code 1
+{"status": "ok", "pages": 25, "llm_pages": 25, "deployed": false}
+pushed
+```
+</details></tool-use>
+
+_**Agent (claude-fable-5-2 2026-11-16 18:07:17Z)**_
+
+B 的不刷機部分完成並已 push：Agent Deck daemon 的模擬模式接上了你的 Herdr。現在開始 C，引入 fm1-base 並試著把 template 在本機 host simulator 跑起來。
+
+_**Agent (claude-fable-5-2 2026-11-16 18:07:25Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Add fm1-base as a submodule and inspect its template, tools, and build options
+
+`git submodule add -q https://github.com/charlesvestal/fm1-base.git third_party/fm1-base 2>&1 | tail -2; cd third_party/fm1-base && git submodule update -q --init --recursive 2>&1 | tail -3; git log --oneline -1; git submodule status | cut -c1-120; du -sh . ; ls; ls template tools host | head -60; python3 tools/build.py --help 2>&1 | head -50`
+
+```text
+c8e0599 The package carries the resource region: build.py puts NAME-res.bin into the .fwsc (fm1pkg_make.py --res: an entry of type 101, the region's address from app.h's APP_RES_BASE at byte 0x14), and felucca-bsp's update loader writes it after the app, so an install from a host that sends only the package (The Firmware Hub, M-UPGRADE) has the app's resources; device/res.c checks the address is the one the app reads. NAME-res.bin stays beside the package for the host's own write (fm1_resources.py, the installer page: a region there already answers at once). bsp: felucca-bsp 18eadad
+ 18eadadb8c364abd026accd2b1ea1c14ca347f06 bsp (remotes/origin/pocketamp-board-8-g18eadad)
+9.7M	.
+template:
+docs
+site
+tests
+app.c
+app.h
+fm1.toml
+README.md
+words.tsv
+
+tools:
+bt
+boot_pack.py
+build.py
+firmware_json.py
+fit_fastmath.py
+fm1_backup.py
+fm1_debug.py
+fm1_install.py
+fm1_mirror.py
+fm1_remote.py
+fm1_resources.py
+fm1pkg_make.py
+fm1ports.py
+gen_font.py
+gen_words.py
+get_toolchain.sh
+lz4blk.py
+make_site.py
+manual_html.py
+provenance.py
+publish_site.sh
+ram_run.py
+ramcode.py
+rfm1_pack.py
+romref.py
+stack_depth.py
+stack_ir.py
+
+host:
+build_host.sh
+plat_host.c
+rfm1.c
+usage: build.py [-h] [--release X.Y[.Z]] [--no-ble] [--sdk SDK] [--host]
+                [--web] [--rfm1]
+                app
+
+positional arguments:
+  app                the app's directory (with fm1.toml)
+
+options:
+  -h, --help         show this help message and exit
+  --release X.Y[.Z]  release build: identity id_prefix + XXYYZZ, version
+                     string X.Y[.Z]
+  --no-ble           without Bluetooth (fm1.toml ble = true): NAME-usb.fwsc
+  --sdk SDK          JieLi AC79 SDK checkout (default: $AC79_SDK)
+  --host             build the host simulator instead of the firmware
+  --web              build the browser emulator instead of the firmware
+  --rfm1             build an .rfm1 (host apps) instead of the firmware
+```
+</details></tool-use>
+
+_**Agent (claude-fable-5-2 2026-11-16 18:07:30Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Read the fm1-base template guide, toolchain script, and host build script
+
+`cat template/README.md | cut -c1-500 | head -70; echo "=== get_toolchain"; head -40 tools/get_toolchain.sh | cut -c1-200; echo "=== host build"; cat host/build_host.sh | head -40 | cut -c1-200; cat template/fm1.toml | head -40`
+
+```text
+# The template
+
+The smallest complete fm1-base firmware. Copy this directory to start your own: it builds, installs, updates, runs
+in the host simulator and in the browser, speaks to a screen reader, and publishes a site with an installer and a
+manual.
+
+| File | What |
+| --- | --- |
+| `app.h` | The app's settings (name, block size, the store's objects) and its half of the contract with the platform |
+| `app.c` | The app: input, sound, screen, saving |
+| `fm1.toml` | Build and site settings: name, package identity, USB names, tagline, source, licence, and firmware.json's |
+| `words.tsv` | The screen reader's words (fm1-reader): the screen's text and how to say it |
+| `tests/basic.txt` | Host simulator checks: keys, MIDI, settings across a reboot, the sound, the screen reader |
+| `tests/screens.txt` | The manual's screenshots |
+| `docs/MANUAL.md` | The manual (an example to rewrite) |
+| `site/landing.md` | The site's front page |
+| `.github/workflows/release.yml` | Signed releases built on GitHub (moved to the repository's root: Make it your own) |
+
+## Build, test, install
+
+From the fm1-base directory:
+
+    tools/build.py template                     # template/build/template.fwsc (JieLi toolchain, AC79 SDK)
+    tools/build.py template --host              # the host simulator, then:
+    template/build/host/template_host template/tests/basic.txt template/build/host
+    tools/build.py template --web               # the browser emulator: template/build/emu/
+    python3 tools/fm1_install.py template/build/template.fwsc
+
+For the toolchain, the SDK and the container the build runs in, see fm1-base's README.
+
+## Release and site
+
+    tools/build.py template --release 0.1       # template/build/template-0.1.fwsc, identity FM-1_11000100
+    tools/publish_site.sh template 0.1          # builds the release, the emulator and the site; pushes gh-pages
+
+The site has the front page, the installer, the emulator, the manual and the screen reader's words. To build it
+without publishing, run `tools/make_site.py template template/build/template-0.1.fwsc 0.1 OUT_DIR`.
+
+In a firmware's own repository, a release is built on GitHub from its tag by `.github/workflows/release.yml`, which
+calls the shared FM-1 builder ([`zvenson/fm1-build` at `v1`](https://github.com/zvenson/fm1-build/tree/v1)). The
+builder runs `./build.sh --release X.Y` and `tests/run_tests.sh` (a failing test stops the release) and signs build
+provenance for `NAME-X.Y.fwsc` and `NAME-X.Y-app.bin`; the FM-1 Firmware Hub shows such packages as built from
+source. It also builds `NAME-X.Y.rfm1` for host apps such as RemoteFM1, with Emscripten 6.0.10 from emsdk, and
+releases and signs it with `firmware.json`. The workflow makes a draft release (or keeps the one you wrote, with its notes), checks the sums and the
+signatures, then publishes it. A tag with a suffix (`v0.2-beta`) is a prerelease; a published release is never
+rebuilt. For the site, download that package and give it to `publish_site.sh`, so the site has the attested one:
+
+    gh release download v0.1 --pattern '*.fwsc' --dir app/build
+    base/tools/publish_site.sh app 0.1 app/build/NAME-0.1.fwsc
+
+## Make it your own
+
+1. Copy `template/` to your firmware's repository, with fm1-base beside it as a git submodule.
+2. In `app.h`, set `APP_NAME`, and the store's objects and their flash offsets (`APP_STORE_MAP`).
+3. In `fm1.toml`, set the name, an `id_prefix` of your own (`FM-1_` and digits; each firmware has its own), the USB
+   names, the site's tagline, source and credits, and your name, a description, tags, your install page and a
+   screenshot. The build writes them to `firmware.json` at your repository's root, which firmware hubs read
+   (fm1-base's docs/FIRMWARE-JSON.md); commit it. A release build refuses until your name, the description, the
+   tags, the install page, the tagline, the source, the licence and the screenshot are set. The screenshot is a
+   square PNG of at least 240 × 240 in your repository, its path relative to the repository's root; one of the
+   manual's screenshots (`tests/screens.txt`) fits as it is.
+4. In `words.tsv`, set the `# url:` line to where your site publishes its words.
+5. Write your app in `app.c`: `app_render` for the sound, `app_frame` for the screen and the controls, and the rest
+   of the contract in `app.h`.
+6. Rewrite `docs/MANUAL.md` and `site/landing.md`, and the tests.
+7. For signed releases, move `.github/workflows/release.yml` to the repository's root (`.github/workflows/`) and
+   change the lines marked `# <- yours`: the name in the release title and the concurrency group, `pkg=` (fm1.toml's
+   name in lower case), any other assets, and what the tests need. Then a pushed tag `vX.Y` builds, tests, attests
+   and publishes the release.
+
+=== get_toolchain
+#!/bin/sh
+# SPDX-License-Identifier: MPL-2.0
+# Copyright (C) 2026 Charles Vestal
+# Copyright (C) 2026 Leo Kuroshita (@kurogedelic), Hügelton Instruments
+# Download JieLi's Linux toolchain (clang 4.0.1 for pi32v2) and link it as DEST/toolchain.
+#   tools/get_toolchain.sh [DEST]      (default: ~/.jieli)
+set -e
+DEST="${1:-$HOME/.jieli}"
+mkdir -p "$DEST"
+curl -fL --retry 3 https://pkgman.jieliapp.com/s/linux-toolchain | tar -xJ -C "$DEST"
+TC="$(ls -d "$DEST"/jieli-linux-toolchains-* | sort | tail -1)"
+ln -sfn "$(basename "$TC")" "$DEST/toolchain"
+echo "JIELI_TOOLCHAIN=$DEST/toolchain ($(basename "$TC"))"
+=== host build
+#!/bin/sh
+# SPDX-License-Identifier: MPL-2.0
+# Copyright (C) 2026 Charles Vestal
+# Build the OMNI host simulator (the whole app on this machine) into build/host/omni_host.
+# Same sources as the firmware, -ffp-contract=off like the device (no fused multiply-add).
+set -e
+cd "$(dirname "$0")/.."
+CC="${CC:-cc}"
+mkdir -p build/gen build/host
+[ -f build/gen/felucca_font.h ] || python3 tools/gen_font.py build/gen/felucca_font.h >/dev/null
+python3 tools/gen_words.py firmware/words.tsv web/words build/gen/ann_words.h >/dev/null
+$CC -O2 -ffp-contract=off -std=c99 -Wall -Wextra -Wno-unused-function -Wno-unused-parameter \
+    -DOM_HOST -Ifirmware/src -Ifirmware/src/dsp -Ibuild/gen -o build/host/omni_host host/omni_host.c \
+    firmware/src/dsp/omni.c -lm
+echo "host: build/host/omni_host"
+# The template's build settings (tools/build.py)
+name = "TEMPLATE"              # APP_NAME is in app.h; this names the build's files
+id_prefix = "FM-1_11"          # package identity (each firmware its own): dev FM-1_1100, releases FM-1_11XXYYZZ
+usb_manufacturer = "fm1-base"
+usb_product = "TEMPLATE FM-1"
+o2 = []                        # separate units compiled at -O2 (an app's DSP)
+words = "words.tsv"
+ble = true                     # Bluetooth MIDI (--no-ble builds without it)
+ble_central = true             # and the FM-1 connects to Bluetooth MIDI devices too
+# the site (tools/make_site.py, tools/publish_site.sh)
+tagline = "a starting point for FM-1 firmware"
+repo = "https://github.com/charlesvestal/fm1-base"
+licence = "MPL-2.0"
+credits = ""                   # a sentence for the installer's footer: what your firmware is built from
+# firmware.json, for firmware hubs (docs/FIRMWARE-JSON.md): the build writes it from these and the keys above
+author = "Charles Vestal"      # who made it
+description = "The smallest complete firmware for the FM-1, made to be copied. The keys play a simple voice with velocity and pressure, your settings save, MIDI goes in and out over USB and Bluetooth and comes in over TRS, and it works with a screen reader."
+tags = ["synth", "utility"]    # from the list in docs/FIRMWARE-JSON.md; the build refuses another
+install = "https://charlesvestal.github.io/fm1-base/install/"   # the page that installs it
+site = "https://charlesvestal.github.io/fm1-base/"
+screenshot = "docs/img/screen-playing.png"   # for the hubs' cards: a square PNG, at least 240 x 240, in your repository
+```
+</details></tool-use>
+
+_**Agent (claude-fable-5-2 2026-11-16 18:07:37Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Copy the fm1-base template into firmware/hello and build its host simulator
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1 && mkdir -p firmware && cp -R third_party/fm1-base/template firmware/hello && ls -a firmware/hello && python3 third_party/fm1-base/tools/build.py firmware/hello --host 2>&1 | tail -15; ls firmware/hello/build/host 2>/dev/null | head`
+
+```text
+.github
+docs
+site
+tests
+.gitignore
+app.c
+app.h
+fm1.toml
+README.md
+words.tsv
+Traceback (most recent call last):
+  File "/Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/third_party/fm1-base/tools/gen_font.py", line 20, in <module>
+    from PIL import Image, ImageDraw, ImageFont
+ModuleNotFoundError: No module named 'PIL'
+build: gen_font.py failed
+```
+</details></tool-use>
+
+_**Agent (claude-fable-5-2 2026-11-16 18:07:51Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Add a firmware tooling dependency group and retry the host simulator build
+
+`uv add -q --group fw pillow mido python-rtmidi 2>&1 | tail -3; cat pyproject.toml | sed -n '/dependency-groups/,$p'; uv run -q --group fw python third_party/fm1-base/tools/build.py firmware/hello --host 2>&1 | tail -12; ls firmware/hello/build/host 2>/dev/null | head`
+
+```text
+[dependency-groups]
+docs = ["zensical==0.0.73"]
+fw = [
+    "mido>=1.3.3",
+    "pillow>=13.0.0",
+    "python-rtmidi>=1.5.8",
+]
+
+[tool.uv]
+package = false
+  File "/Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/third_party/fm1-base/tools/gen_font.py", line 175, in render
+    top = max(0, font.getbbox("A8|(", features=feats)[1] - 1)
+                 ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/.venv/lib/python3.13/site-packages/PIL/ImageFont.py", line 468, in getbbox
+    size, offset = self.font.getsize(
+                   ~~~~~~~~~~~~~~~~~^
+        text, mode, direction, features, language, anchor
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+KeyError: 'setting text direction, language or font features is not supported without libraqm'
+build: gen_font.py failed
+```
+</details></tool-use>
+
+_**Agent (claude-fable-5-2 2026-11-16 18:07:59Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Check Pillow's text-shaping support and what fm1-base says it needs
+
+```bash
+uv run -q --group fw python -c "
+from PIL import features
+print('raqm',features.check('raqm'), features.version('raqm'), 'fribidi',features.version('fribidi'),'harfbuzz',features.version('harfbuzz'))"; brew list --versions fribidi libraqm harfbuzz 2>&1 | head; grep -rn -i "raqm\|fribidi" third_party/fm1-base/README.md third_party/fm1-base/docs third_party/fm1-base/tools/gen_font.py 2>/dev/null | cut -c1-200 | head -8
+```
+
+```text
+raqm False None fribidi None harfbuzz None
+fribidi 1.0.16
+harfbuzz 14.4.0
+```
+</details></tool-use>
+
+_**Agent (claude-fable-5-2 2026-11-16 18:08:06Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Retry with Homebrew's library path so Pillow can load fribidi, then build the host simulator
+
+```bash
+export DYLD_FALLBACK_LIBRARY_PATH=/opt/homebrew/lib && uv run -q --group fw python -c "
+from PIL import features
+print('raqm',features.check('raqm'), features.version('raqm'), 'fribidi',features.version('fribidi'))" && uv run -q --group fw python third_party/fm1-base/tools/build.py firmware/hello --host 2>&1 | tail -6; ls firmware/hello/build/host 2>/dev/null | head; 
+```
+
+```text
+raqm False None fribidi None
+        text, mode, direction, features, language, anchor
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+KeyError: 'setting text direction, language or font features is not supported without libraqm'
+build: gen_font.py failed
+```
+</details></tool-use>
+
+_**Agent (claude-fable-5-2 2026-11-16 18:08:15Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Find fm1-base's documented build prerequisites
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/third_party/fm1-base && grep -n -i -E "pillow|raqm|container|docker|brew|macos|apt|emcc|emscripten|AC79_SDK|JIELI_TOOLCHAIN" README.md | cut -c1-260 | head -30`
+
+```text
+36:| USB MIDI after the USB audio interfaces, so macOS 13-15 show the audio device | on with the USB audio input, unless `usb_midi_last = false` | nothing |
+61:and together they don't fit. WiFi, and Bluetooth on JieLi's stack, need JieLi's AC79 SDK (`$AC79_SDK`) for its
+75:  Without it a pairing is refused; macOS and iOS connect anyway.
+213:    tools/build.py APP_DIR --rfm1                    # APP_DIR/build/rfm1/ID-dev+COMMIT.rfm1 (emcc, as --web)
+```
+</details></tool-use>
+
+_**Agent (claude-fable-5-2 2026-11-16 18:08:25Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Diagnose why Pillow lacks text shaping and whether Homebrew offers libraqm
+
+```bash
+cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1 && uv run -q --group fw python -c "
+import PIL, ctypes, ctypes.util, sys
+print(PIL.__version__, sys.version.split()[0])
+from PIL import _imagingft as f
+print({k:getattr(f,k,None) for k in ('HAVE_RAQM','HAVE_FRIBIDI','HAVE_HARFBUZZ','raqm_version','fribidi_version','harfbuzz_version')})
+for n in ('libfribidi.dylib','/opt/homebrew/lib/libfribidi.dylib'):
+    try: ctypes.CDLL(n); print('ok',n)
+    except OSError as e: print('fail',n,str(e)[:80])
+"; brew info --json=v2 libraqm 2>/dev/null | python3 -c "import json,sys; d=json.load(sys.stdin)['formulae'][0]; print(d['name'], d['versions']['stable'], 'installed' if d['installed'] else 'not installed')"
+```
+
+```text
+13.0.0 3.13.3
+{'HAVE_RAQM': False, 'HAVE_FRIBIDI': False, 'HAVE_HARFBUZZ': False, 'raqm_version': None, 'fribidi_version': None, 'harfbuzz_version': None}
+fail libfribidi.dylib dlopen(libfribidi.dylib, 0x0006): tried: 'libfribidi.dylib' (no such file), '/Sy
+ok /opt/homebrew/lib/libfribidi.dylib
+libraqm 0.11.0 not installed
+```
+</details></tool-use>
+
+_**Agent (claude-fable-5-2 2026-11-16 18:08:35Z)**_
+
+<think><details><summary>Thought Process</summary>
+fm1-base 的 host simulator build 卡在字型產生，因為 macOS 的 Pillow 預編譯版缺少 libraqm 支援。我改用 Homebrew 安裝 libraqm，並讓 Pillow 從原始碼編譯。
+
+</details></think>
+
+_**Agent (claude-fable-5-2 2026-11-16 18:08:59Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Install libraqm with Homebrew and rebuild Pillow from source with text-shaping support
+
+```bash
+brew list --versions freetype jpeg-turbo libraqm 2>&1 | head; HOMEBREW_NO_AUTO_UPDATE=1 brew install -q libraqm 2>&1 | tail -3; python3 - <<'EOF'
+import pathlib
+p=pathlib.Path("pyproject.toml"); s=p.read_text()
+s=s.replace("[tool.uv]\npackage = false","[tool.uv]\npackage = false\n# fm1-base's font generator needs Pillow with libraqm (OpenType features);\n# the macOS wheels are built without it, so build Pillow from source against\n# Homebrew's libraqm (`brew install libraqm`).\nno-binary-package = [\"pillow\"]")
+p.write_text(s)
+EOF
+uv lock -q 2>&1 | tail -2; uv sync -q --group fw --reinstall-package pillow 2>&1 | tail -5; uv run -q --group fw python -c "
+from PIL import features; print('raqm',features.check('raqm'),features.version('raqm'))"
+```
+
+```text
+freetype 2.14.3
+jpeg-turbo 3.2.0
+==> Installing libraqm
+==> Pouring libraqm-0.11.0.arm64_golden_gate.bottle.tar.gz
+🍺  /opt/homebrew/Cellar/libraqm/0.11.0: 12 files, 105KB
+raqm True 0.11.0
+```
+</details></tool-use>
+
+_**Agent (claude-fable-5-2 2026-11-16 18:09:05Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Build the host simulator for firmware/hello and run its test script
+
+`uv run -q --group fw python third_party/fm1-base/tools/build.py firmware/hello --host 2>&1 | tail -6; ls firmware/hello/build/host | head; cd firmware/hello && ./build/host/template_host tests/basic.txt build/host 2>&1 | tail -15; ls build/host | head -20; cat .gitignore`
+
+```text
+font B: BarlowSemiCondensed-Bold.ttf 15px h 16, digit adv 8, 8752 B
+font M: BarlowSemiCondensed-SemiBold.ttf 23px h 24, digit adv 12, 11832 B
+font L: BarlowSemiCondensed-Bold.ttf 31px h 32, digit adv 16, 19776 B
+font set barlow: 60782 B (approx)
+words: 3 own + 51 common -> /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/firmware/hello/web/words/95a41ce197.json (1059 B)
+host     /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/firmware/hello/build/host/template_host
+o2
+template_host
+  ok midi_in_from == 8
+  ok note == -1
+  ok midi_in_from == 2
+  ok midi_in_from == 0
+  ok midi_in_from == 1
+  ok room_ble == 0
+  ok room_ble_dev == 64
+  out 90 48 64 -> USB BLE BLE-DEV
+  out 80 48 00 -> USB BLE BLE-DEV
+  ok out 80 48 00 -> BLE-DEV
+  ok not out 80 48 00 -> BLE
+said!: BLE DISCONNECTED
+  ok ble_dev == 0
+  ok room_ble_dev == 0
+host: 13186 ms simulated, 225 blits, render 0.0% of real time (host CPU)
+o2
+boot.png
+controls.png
+key.png
+master.wav
+midi_out.txt
+note.wav
+template_host
+touch.png
+build/
+web/words/
+```
+</details></tool-use>
+
+_**Agent (claude-fable-5-2 2026-11-16 18:09:15Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Check for a container runtime and read how the shared FM-1 builder produces device packages
+
+`which docker podman colima orb 2>/dev/null; docker info --format '{{.ServerVersion}} {{.OSType}}/{{.Architecture}}' 2>&1 | head -2; which emcc; gh api repos/zvenson/fm1-build/readme --jq .content | base64 -d | cut -c1-400 | head -45; cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1 && cat firmware/hello/.github/workflows/release.yml | head -60 | cut -c1-160`
+
+````text
+/usr/local/bin/docker
+podman not found
+colima not found
+/opt/homebrew/bin/orb
+29.8.2 linux/aarch64
+emcc not found
+# fm1-build
+
+One shared, reusable GitHub Actions workflow that builds a firmware for the **M-VAVE FM-1** (and SMK-37) from its own
+repository and signs a **build attestation** for the packages. The [FM-1 Firmware Hub](https://thefirmwarehub.com)
+shows a firmware as **"Built from source"** only when its package was attested by this workflow, at a tag the hub has
+reviewed (currently `v1`). The badge links the exact commit and the public build log.
+
+**What the badge means:** the file you install is exactly the one GitHub built from that commit, and anyone can check
+it. **What it does not mean:** that the firmware is safe. The code is reviewed only by those who read it, but now it
+can be: the binary is tied to a public snapshot of the source.
+
+## What the workflow does (and nothing else)
+
+1. checks out the calling repository at the commit of the run
+2. installs Python + Pillow and JieLi's Linux toolchain from JieLi's own server (`pkgman.jieliapp.com`)
+3. optionally clones the JieLi AC79 SDK at a fixed tag from JieLi's gitee repository
+4. runs **your repository's** build command (and, if given, your tests)
+5. attests the packages with [`actions/attest-build-provenance`](https://github.com/actions/attest-build-provenance)
+   and, on a tag, publishes them as the release of that tag
+
+Every action is pinned to a commit SHA. The file is short on purpose: review it in
+[`.github/workflows/build.yml`](.github/workflows/build.yml).
+
+## Use it
+
+In your firmware repository, add `.github/workflows/release.yml`:
+
+```yaml
+name: release
+on:
+  push:
+    tags: ['v*']
+jobs:
+  build:
+    uses: zvenson/fm1-build/.github/workflows/build.yml@v1
+    permissions:
+      contents: write
+      id-token: write
+      attestations: write
+    with:
+      build: ./build.sh --release "${GITHUB_REF_NAME#v}"
+      packages: build/*.fwsc
+      # test: sh tests/run_tests.sh
+```
+
+# SPDX-License-Identifier: MPL-2.0
+# A firmware's release: built from source on GitHub by the shared FM-1 builder, its packages signed with build
+# provenance, so the FM-1 Firmware Hub shows them as built from source. From fm1-base's template, as LOOM-8's;
+# after X0X's (charlesvestal/fm1-x0x#25, by Kerem Kilic) and Melodee's (keremimo/melodee 4f5fb6d).
+#
+# For a firmware laid out as fm1-base's template expects (the app in app/, fm1-base in base/ with felucca-bsp in
+# base/bsp/, ./build.sh running base/tools/build.py app, tests/run_tests.sh). Move this file to the repository's
+# root, as .github/workflows/release.yml. The lines a firmware changes are marked "# <- yours":
+#   - the concurrency group and the release title: the firmware's name (TEMPLATE)
+#   - pkg=template, twice (build and test): fm1.toml's name in lower case, which names the build's files
+#     (app/build/template.fwsc, template-X.Y.fwsc, template.bin, template-X.Y.rfm1)
+#   - any other assets beside the package, the app, the .rfm1 and firmware.json (LOOM-8's resource region, CTL-1's
+#     build without Bluetooth)
+#   - the tests: anything they need beside this repository (reference sources at fixed commits), or tests-block
+name: Build and attest firmware
+
+on:
+  push:
+    tags: ['v[0-9]*']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: template-release-${{ github.ref }}             # <- yours
+  cancel-in-progress: false
+
+jobs:
+  prepare:
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    steps:
+      - name: Prepare a draft without replacing a public release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          TITLE: TEMPLATE                                  # <- yours
+        run: |
+          set -euo pipefail
+          if [[ "$GITHUB_REF" != refs/tags/* ]]; then exit 0; fi
+          version=${GITHUB_REF_NAME#v}
+          # (the versions base/tools/build.py --release takes)
+          [[ "$version" =~ ^[0-9]{1,2}\.[0-9]{1,2}(\.[0-9]{1,2})?(-[A-Za-z0-9]+)?$ ]]
+          flags=(--prerelease=false)
+          if [[ "$version" == *-* ]]; then flags=(--prerelease --latest=false); fi
+          if draft=$(gh release view "$GITHUB_REF_NAME" --json isDraft --jq .isDraft); then
+            [[ "$draft" == true ]] || { echo 'Refusing to rebuild a public release'; exit 1; }
+          else
+            gh release create "$GITHUB_REF_NAME" --verify-tag --draft \
+              --title "$TITLE $version" --generate-notes "${flags[@]}"
+          fi
+
+  firmware:
+    needs: prepare
+    # The Firmware Hub recognises attestations from this reviewed builder tag.
+    uses: zvenson/fm1-build/.github/workflows/build.yml@v1
+    permissions:
+      contents: write
+````
+</details></tool-use>
+
+_**Agent (claude-fable-5-2 2026-11-16 18:09:15Z)**_
+
+<tool-use data-tool-type="read" data-tool-name="Read"><details>
+<summary>Tool use: **Read**</summary>
+ `./firmware/hello/build/host/boot.png`
+</details></tool-use>
+
+_**Agent (claude-fable-5-2 2026-11-16 18:09:26Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Read what the device build needs from the JieLi SDK and toolchain
+
+`grep -n -i -E "three SDK files|AC79_SDK|sdk" third_party/fm1-base/LICENSING.md | cut -c1-300 | head -12; grep -n -i -E "AC79_SDK|JIELI_TOOLCHAIN|sdk" third_party/fm1-base/tools/build.py | cut -c1-200 | head -25`
+
+```text
+19:| `ble/` (the Bluetooth shim and the MIDI service; `ble/wifi`, the WiFi glue) | Charles Vestal's fm1-ble and fm1-radio, used by fm1-ctl | his own; a few parts repeat the JieLi AC79 SDK (below) |
+41:| The radio's start-up tables: JieLi's `rf_init` as M-VAVE's stock V15 firmware runs it (Copyright (c) 2024-2026 Zhuhai Jieli Technology Co., Ltd., AC79 AIoT SDK; Copyright (c) 2026 Zhuhai Shengke / M-VAVE, `fm1_open`), packed by Optimist; the header states the changes | Apache-2.0 | `bsp/chip/bl
+42:| The radio's calibration at every start: JieLi's SDK calibration (`wl_rf_common.a`, Copyright (c) 2024-2026 Zhuhai Jieli Technology Co., Ltd.) rewritten in C by Charles Vestal; the header states the changes | Apache-2.0 | `bsp/chip/fm1_rf_cal.h` (`bsp/NOTICE`; how it works: `docs/bt/RF-CALIBRATI
+43:| Register writes recorded in an emulator from stock V15 and the SDK's `demo_ble` (the same JieLi and M-VAVE sources as the tables above), for reference | Apache-2.0 | `docs/bt/ble-traces/` |
+50:Some files in `ble/` repeat parts of the JieLi AC79 SDK, Copyright (c) JIELI (Zhuhai Jieli Technology Co., Ltd.),
+66:| JieLi AC79 SDK files a package needs (`uboot.boot`, `cfg_tool.bin`, `eq_cfg_hw.bin`) | Apache-2.0 | read from your SDK checkout at build time; never in this repository |
+67:| JieLi's Bluetooth libraries (`btctrler.a`, `btstack.a`, `wl_rf_common.a`, ...: binary only) and the few SDK sources and headers they need | Apache-2.0 | copied from your SDK checkout into `build/` by a build with `ble = true` on JieLi's stack (not with `ble_stack = "own"`); never in this reposi
+68:| JieLi's WiFi libraries (`wl_wifi_sta_sfc.a`, `wpasupplicant.a`, `hsm.a`: binary only) and the SDK's lwIP 2.1.3 sources | Apache-2.0 (lwIP: BSD-3-Clause) | copied from your SDK checkout into `build/` by a build with `wifi = true`; never in this repository. `ble/lwip/lwipopts_sfc.h` and `ble/wifi
+209:                             FM1B_BLE_OWN) instead of JieLi's libraries: nothing of the SDK's linked, no shim
+217:  ble = true                 Bluetooth MIDI (FM1B_BLE): ble/ on JieLi's BT libraries, from the AC79 SDK ($AC79_SDK);
+219:  wifi = true                WiFi (FM1B_WIFI): a station on JieLi's WiFi libraries and the SDK's lwIP (built from its
+222:  net = ["net/stream.c"]     with wifi: the app's network code (lwIP's sockets), compiled as the SDK builds code that
+271:The JieLi toolchain is Linux x86-64 only. JIELI_TOOLCHAIN points at it; on
+303:# the AC79's single-precision FPU (the SDK's own flags); no fused multiply-add, so the host
+309:# SDK files of AC79NN_SDK_V1.2.1_2023-12-13 (the tested version)
+310:SDK_SHA256 = {
+361:    tc = os.environ.get("JIELI_TOOLCHAIN")
+363:        raise SystemExit("JIELI_TOOLCHAIN must point at the JieLi Linux toolchain "
+567:# ---- Bluetooth: JieLi's BT libraries (Apache-2.0, binary only; never in git) and a few SDK sources, on the shim
+570:BLE_SDK_SRC = ["apps/common/config/bt_profile_config.c",
+583:# the SDK's library configuration (compiled here as LTO bitcode: its constants fold into JieLi's code) cut to LE only,
+619:def ble_config(sdk, dst):
+620:    """the SDK's configuration sources into dst, as BLE_CONFIG cuts them (ble_trim); written only when changed"""
+628:    for f in BLE_SDK_SRC:
+629:        text = (sdk / f).read_text(errors="ignore")
+633:                raise SystemExit(f"build: {f} in the SDK has changed: no {rx!r}")
+669:# WiFi: the SDK's no-SDRAM builds (demo_audio) link the _sfc variants: smaller buffers, code from flash (fm1-radio's)
+672:# lwIP from the SDK's sources (its _sfc project's files and flags), with ble/lwip/lwipopts_sfc.h: a wider TCP window
+708:    """copy what the Bluetooth or WiFi build needs from the SDK into build/ble (the container sees only this tree);
+711:    sdk = Path(os.environ.get("AC79_SDK", Path.home() / "fw-AC79_AIoT_SDK"))
+712:    dst = OUT / "ble" / "sdk"
+716:            shutil.copytree(sdk / d, dst / d, dirs_exist_ok=True,
+721:            shutil.copy(sdk / "cpu/wl82/liba" / f, dst / "lib" / f)
+```
+</details></tool-use>
+
+_**Agent (claude-fable-5-2 2026-11-16 18:09:32Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Read fm1-base's guidance for building device packages on a Mac
+
+`sed -n '262,300p' third_party/fm1-base/tools/build.py | cut -c1-230; sed -n '355,380p' third_party/fm1-base/tools/build.py | cut -c1-200`
+
+```text
+                             folders, no ".."; the build checks it (a host simulator's screenshot fits as it is)
+The name is title (else usb_manufacturer, else app.h's APP_NAME), the id fm1.toml's name in lower case; the hardware's features
+are the parts this build has (printed as "parts"). A --release build of the firmware refuses without author (or
+authors), licence, tagline, description, tags, install, repo and a screenshot that passes the checks; any other
+build warns and writes the file without them.
+Outputs in APP_DIR/build/: NAME.bin (app), loader/ota.bin (update loader), NAME.fwsc (package), firmware.json
+(firmware-usb.json from --no-ble; every build writes it, --host, --web and --rfm1 too). An app in a firmware's
+repository (APP_DIR named app) also has the repository's firmware.json written, when it changes.
+
+The JieLi toolchain is Linux x86-64 only. JIELI_TOOLCHAIN points at it; on
+macOS (or with JIELI_DOCKER=1) each tool runs in a linux/amd64 container.
+"""
+import argparse
+import functools
+import hashlib
+import os
+import platform
+import re
+import struct
+import subprocess
+import sys
+from concurrent.futures import ThreadPoolExecutor
+from pathlib import Path
+
+SRC = Path(__file__).resolve().parents[1]        # fm1-base
+BSP = SRC / "bsp"                                 # felucca-bsp (git submodule)
+APP = OUT = GEN = LDR = ROOT = None               # set by main() from APP_DIR
+CONF = {}
+LAYOUT = {}                                       # the linked script's MEMORY regions: {name: (origin, length)}
+sys.path.insert(0, str(SRC / "tools"))
+import fm1pkg_make  # noqa: E402
+import boot_pack  # noqa: E402
+import firmware_json  # noqa: E402
+import lz4blk  # noqa: E402
+
+APP_XIP = 0x02000120                # app.bin offset 0 in the XIP map; the SPL jumps here
+APP_SLOT = fm1pkg_make.APP_SLOT
+LOADER_LOAD = 0x01C0A800
+LOADER_NAME = b"usb_hid_ota.bin"    # the file name the SPL looks for
+    if pending:
+        raise SystemExit(f"{path}:{start}: a list without its ]")
+    return conf
+
+
+def toolchain():
+    tc = os.environ.get("JIELI_TOOLCHAIN")
+    if not tc or not (Path(tc) / "pi32v2" / "bin" / "clang").exists():
+        raise SystemExit("JIELI_TOOLCHAIN must point at the JieLi Linux toolchain "
+                         "(the directory with pi32v2/ and common/; see tools/get_toolchain.sh)")
+    return Path(tc).resolve()
+
+
+def use_docker():
+    native = platform.system() == "Linux" and platform.machine() in ("x86_64", "AMD64")
+    return os.environ.get("JIELI_DOCKER", "0" if native else "1") == "1"
+
+
+_BUILDER = None
+_BUILDER_LOCK = __import__("threading").Lock()
+
+
+def builder():
+    """one long-lived toolchain container per source tree (starting a container per tool call cost
+    most of the build); it stops by itself after an hour without a build"""
+    global _BUILDER
+```
+</details></tool-use>
+
+_**Agent (claude-fable-5-2 2026-11-16 18:09:39Z)**_
+
+<think><details><summary>Thought Process</summary>
+fm1-base 的 `build.py` 在 macOS 上會自動用 linux/amd64 容器執行 JieLi toolchain，因此本機可以 build 實機套件。我接下來會把 toolchain 與 SDK 下載到 gitignore 的 `tools/` 下試 build。
+
+</details></think>
+
+_**Agent (claude-fable-5-2 2026-11-16 18:09:42Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Download the JieLi toolchain into the ignored tools folder
+
+`mkdir -p tools/jieli && (time sh third_party/fm1-base/tools/get_toolchain.sh "$PWD/tools/jieli") 2>&1 | tail -5; du -sh tools/jieli 2>/dev/null; ls tools/jieli`
+
+```text
+                                 Dload  Upload   Total   Spent    Left  Speed
+  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0
+  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0 31 24.8M   31 8095k    0     0  5148k      0  0:00:04  0:00:01  0:00:03 10.8M100 24.8M  100 24.8M    0     0  10.0M      0  0:00:02  0:00:02 --:--:-- 15.2M
+JIELI_TOOLCHAIN=/Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/tools/jieli/toolchain (jieli-linux-toolchains-20260730.1)
+sh third_party/fm1-base/tools/get_toolchain.sh "$PWD/tools/jieli"  1.11s user 0.19s system 51% cpu 2.508 total
+135M	tools/jieli
+jieli-linux-toolchains-20260730.1
+toolchain -> jieli-linux-toolchains-20260730.1
+```
+</details></tool-use>
+
+_**Agent (claude-fable-5-2 2026-11-16 18:10:09Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Shallow-clone the pinned JieLi AC79 SDK into the ignored tools folder
+
+`(test -d tools/fw-AC79_AIoT_SDK || timeout 540 git clone -q --depth 1 --branch AC79NN_SDK_V1.2.1_2023-12-13 https://gitee.com/Jieli-Tech/fw-AC79_AIoT_SDK.git tools/fw-AC79_AIoT_SDK 2>&1 | tail -3); du -sh tools/fw-AC79_AIoT_SDK 2>/dev/null; git -C tools/fw-AC79_AIoT_SDK log --oneline -1 2>&1 | head -2`
+
+```text
+Turn off this advice by setting config variable advice.detachedHead to false
+
+1.0G	tools/fw-AC79_AIoT_SDK
+d179b448 AC79NN_SDK_V1.2.1_2023-12-13
+```
+</details></tool-use>
+
+_**Agent (claude-fable-5-2 2026-11-16 18:10:15Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Build the device firmware package for firmware/hello using the containerized toolchain
+
+`export JIELI_TOOLCHAIN="$PWD/tools/jieli/toolchain" AC79_SDK="$PWD/tools/fw-AC79_AIoT_SDK" && (time uv run -q --group fw python third_party/fm1-base/tools/build.py firmware/hello) 2>&1 | tail -25; ls -la firmware/hello/build/*.fwsc firmware/hello/build/*.bin 2>/dev/null`
+
+```text
+Exit code 1
+Unable to find image 'debian:bookworm-slim' locally
+docker: Error response from daemon: Get "https://registry-1.docker.io/v2/": proxyconnect tcp: dial tcp 0.250.250.254:7890: connect: connection refused
+
+Run 'docker run --help' for more information
+Unable to find image 'debian:bookworm-slim' locally
+docker: Error response from daemon: Get "https://registry-1.docker.io/v2/": proxyconnect tcp: dial tcp 0.250.250.254:7890: connect: connection refused
+
+Run 'docker run --help' for more information
+font T: BarlowSemiCondensed-SemiBold.ttf 10px h 12, digit adv 5, 3600 B
+font XS: BarlowSemiCondensed-SemiBold.ttf 12px h 15, digit adv 6, 7005 B
+font S: BarlowSemiCondensed-Medium.ttf 15px h 16, digit adv 7, 8576 B
+font B: BarlowSemiCondensed-Bold.ttf 15px h 16, digit adv 8, 8752 B
+font M: BarlowSemiCondensed-SemiBold.ttf 23px h 24, digit adv 12, 11832 B
+font L: BarlowSemiCondensed-Bold.ttf 31px h 32, digit adv 16, 19776 B
+font set barlow: 60782 B (approx)
+words: 3 own + 51 common -> /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/firmware/hello/web/words/95a41ce197.json (1059 B)
+build: cannot start the toolchain container
+uv run -q --group fw python third_party/fm1-base/tools/build.py firmware/hell  0.22s user 0.15s system 52% cpu 0.706 total
+(eval):1: no matches found: firmware/hello/build/*.fwsc
+```
+</details></tool-use>
+
+_**Agent (claude-fable-5-2 2026-11-16 18:10:33Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Add firmware setup, test, and build recipes and run the host test through the shortcut
+
+```bash
+docker images --format '{{.Repository}}:{{.Tag}}' 2>/dev/null | head -5; rm -rf firmware/hello/.github && python3 - <<'EOF'
+import pathlib
+def sub(path, pairs):
+    p=pathlib.Path(path); s=p.read_text()
+    for a,b in pairs:
+        assert a in s, (path,a[:60]); s=s.replace(a,b,1)
+    p.write_text(s)
+sub("Justfile",[
+("# ---- upstream watch","""# ---- own firmware (firmware/<app>, on third_party/fm1-base) -------------------
+
+fm1_base := "third_party/fm1-base"
+
+# One-time: submodules and the Python tools. Needs `brew install libraqm` (Pillow is built against it).
+fw-setup:
+    git submodule update --init --recursive
+    uv sync --locked --group fw
+
+# Build an app's host simulator (no toolchain needed) and run its test script.
+fw-test app="hello": fw-setup
+    #!/usr/bin/env bash
+    set -euo pipefail
+    uv run --locked --group fw python "{{fm1_base}}/tools/build.py" "firmware/{{app}}" --host
+    bin=$(ls firmware/{{app}}/build/host/*_host)
+    cd "firmware/{{app}}" && "build/host/$(basename "$bin")" tests/basic.txt build/host
+    echo "screenshots and audio: firmware/{{app}}/build/host/"
+
+# One-time for device builds: JieLi toolchain and the pinned AC79 SDK into tools/ (about 1.2 GB).
+fw-toolchain:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    mkdir -p tools/jieli
+    test -e tools/jieli/toolchain || sh "{{fm1_base}}/tools/get_toolchain.sh" "$PWD/tools/jieli"
+    test -d tools/fw-AC79_AIoT_SDK || git clone --depth 1 --branch AC79NN_SDK_V1.2.1_2023-12-13 \\
+      https://gitee.com/Jieli-Tech/fw-AC79_AIoT_SDK.git tools/fw-AC79_AIoT_SDK
+
+# Build an app's device package (firmware/<app>/build/*.fwsc). On macOS the tools run in a linux/amd64 container.
+fw-build app="hello": fw-setup fw-toolchain
+    JIELI_TOOLCHAIN="$PWD/tools/jieli/toolchain" AC79_SDK="$PWD/tools/fw-AC79_AIoT_SDK" \\
+      uv run --locked --group fw python "{{fm1_base}}/tools/build.py" "firmware/{{app}}"
+
+# ---- upstream watch"""),
+])
+EOF
+just fw-test hello 2>&1 | tail -4
+```
+
+```text
+ghcr.io/astral-sh/uv:0.13.7-python3.12-trixie-slim
+wealthfolio/wealthfolio:3.12.0
+grafana/grafana-image-renderer:v5.12.10
+nginx:1.29-alpine
+grafana/grafana-oss:12.4.3
+  ok ble_dev == 0
+  ok room_ble_dev == 0
+host: 13186 ms simulated, 225 blits, render 0.0% of real time (host CPU)
+screenshots and audio: firmware/hello/build/host/
+```
+</details></tool-use>

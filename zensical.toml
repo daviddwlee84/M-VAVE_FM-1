@@ -40,6 +40,7 @@ nav = [
     { "Agent Skills" = "agentic/skills.md" },
     { "用 FM-1 控制 agent" = "agentic/agent-deck.md" },
   ] },
+  { "自製韌體" = "dev/index.md" },
   { "資源地圖" = "resources.md" },
   { "我的機器" = "device-log.md" },
   { "上游追蹤" = "watch.md" },

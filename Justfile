@@ -123,6 +123,38 @@ agtdeck-doctor backend="herdr": agtdeck-clone
 agtdeck-sim backend="herdr": agtdeck-clone
     python3 vendor/fm-1-agent-deck/host/agtdeck.py --backend "{{backend}}" --simulate
 
+# ---- own firmware (firmware/<app>, on third_party/fm1-base) -------------------
+
+fm1_base := "third_party/fm1-base"
+
+# One-time: submodules and the Python tools. Needs `brew install libraqm` (Pillow is built against it).
+fw-setup:
+    git submodule update --init --recursive
+    uv sync --locked --group fw
+
+# Build an app's host simulator (no toolchain needed) and run its test script.
+fw-test app="hello": fw-setup
+    #!/usr/bin/env bash
+    set -euo pipefail
+    uv run --locked --group fw python "{{fm1_base}}/tools/build.py" "firmware/{{app}}" --host
+    bin=$(ls firmware/{{app}}/build/host/*_host)
+    cd "firmware/{{app}}" && "build/host/$(basename "$bin")" tests/basic.txt build/host
+    echo "screenshots and audio: firmware/{{app}}/build/host/"
+
+# One-time for device builds: JieLi toolchain and the pinned AC79 SDK into tools/ (about 1.2 GB).
+fw-toolchain:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    mkdir -p tools/jieli
+    test -e tools/jieli/toolchain || sh "{{fm1_base}}/tools/get_toolchain.sh" "$PWD/tools/jieli"
+    test -d tools/fw-AC79_AIoT_SDK || git clone --depth 1 --branch AC79NN_SDK_V1.2.1_2023-12-13 \
+      https://gitee.com/Jieli-Tech/fw-AC79_AIoT_SDK.git tools/fw-AC79_AIoT_SDK
+
+# Build an app's device package (firmware/<app>/build/*.fwsc). On macOS the tools run in a linux/amd64 container.
+fw-build app="hello": fw-setup fw-toolchain
+    JIELI_TOOLCHAIN="$PWD/tools/jieli/toolchain" AC79_SDK="$PWD/tools/fw-AC79_AIoT_SDK" \
+      uv run --locked --group fw python "{{fm1_base}}/tools/build.py" "firmware/{{app}}"
+
 # ---- upstream watch -----------------------------------------------------------
 
 # Latest upstream releases, to compare with the version table in docs/resources.md.

@@ -7,8 +7,8 @@ Canonical instructions for any coding agent working in this repository.
 
 A personal knowledge base for one **M-VAVE FM-1** pocket synth: resources,
 flashing procedures, firmware notes (SLOOP first), usage notes, and the context
-agents need to help operate the device safely. It is **not** a firmware source
-tree. There is no application code; the only build is the documentation site.
+agents need to help operate the device safely. It also holds the owner's own
+experimental firmware apps under `firmware/`, built on the `fm1-base` submodule.
 
 ## Layout
 
@@ -24,6 +24,9 @@ tree. There is no application code; the only build is the documentation site.
 | `.specstory/references/` | Raw research exports (e.g. the ChatGPT conversation). **Unverified, lossy** — see below. |
 | `.specstory/history/` | Agent session transcripts. Never edit. |
 | `tools/`, `vendor/`, `build/` | Git-ignored. Emulator binaries and state, upstream checkouts, firmware build output. |
+| `firmware/<app>/` | Own firmware apps (fm1-base template layout: `app.c`, `app.h`, `fm1.toml`, `tests/`). `firmware/hello` is the unmodified template, kept as the toolchain smoke test. |
+| `third_party/fm1-base` | Git submodule (MPL-2.0, beta). Do not edit; bump deliberately. |
+| `docs/dev/` | Firmware development environment and its current state. |
 | `docs/watch.md` | Ledger of upstream checks for things on hold (m-bootloader on the new chip, SLOOP 3). Append, do not rewrite. |
 | `backups/`, `downloads/` | Git-ignored. Flash backups and downloaded installers/firmware. Never commit. Off-machine copies of backups go to GitHub Release assets (`just fm1-backup-release`). |
 | `zensical.toml`, `scripts/check-docs-site.py`, `Justfile` | Site config, output checker, task runner. |
@@ -43,6 +46,10 @@ just agtdeck-fetch     # Agent Deck package, digest + attestation verified
 just agtdeck-doctor    # Agent Deck host daemon self-check (clones upstream into vendor/)
 just agtdeck-sim       # Agent Deck daemon without an FM-1 (interactive; prints frames)
 just fm1-versions      # latest upstream releases, to refresh docs/resources.md and docs/watch.md
+
+just fw-setup          # submodules + Python tools (needs `brew install libraqm`)
+just fw-test [APP]     # host simulator build + tests/basic.txt; no toolchain, no hardware
+just fw-build [APP]    # device package via JieLi toolchain in Docker (see docs/dev/ for current blockers)
 
 just fm1-fetch         # download M-Flasher + SLOOP into downloads/, verify against release digests
 just fm1-find          # read-only: units in download mode / on USB MIDI
@@ -133,6 +140,22 @@ Other rules:
 - After any device operation, update `docs/device-log.md` (date, what ran,
   result, hashes).
 
+## Firmware development
+
+- Iterate in the host simulator: `just fw-test APP` must pass before anything
+  else. Add checks to `firmware/APP/tests/basic.txt` with each behaviour change.
+- Before proposing a hardware flash of an own build: run the `.fwsc` with
+  `just emu-run` on **both** `uc25hq80` and `p25q80`, including a save, a
+  restart and a reload. Report emulator results as `[模擬]`.
+- An own build is a firmware write like any other: owner approval per flash,
+  full preflight, `just fm1-flash`.
+- Persist data only through fm1-base's storage layer (`APP_STORE_MAP` in
+  `app.h`). Never compute flash addresses or call erase/program directly.
+- Build output (`firmware/*/build/`, `*.fwsc`) is not committed.
+- Licences: fm1-base is MPL-2.0 and lets an app choose its own licence. Code
+  copied from GPL-3.0 firmwares (Felucca, SLOOP, Dinghy, Agent Deck) makes the
+  app GPL-3.0; say so before copying.
+
 ## Publishing and git
 
 - The repo is public. Never commit flash backups or credentials to git.
@@ -147,6 +170,6 @@ Other rules:
 
 ## Not set up yet
 
-Firmware build toolchain, local `fm1-emu` checkout, a repo-owned FM-1 skill and
-an `fm1` CLI wrapper. They are described as later phases in
-`docs/agentic/`; do not assume they exist.
+A repo-owned FM-1 skill and an `fm1` CLI wrapper (the `Justfile` covers it for
+now). The device build (`just fw-build`) has not produced a package yet; see
+`docs/dev/index.md`. `fm1-emu` is a downloaded binary, not a source checkout.
