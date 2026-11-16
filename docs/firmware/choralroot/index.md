@@ -2,7 +2,7 @@
 
 [ChoralRoot FM-1](https://github.com/Quixotic7/ChoralRootFM1)（Quixotic7，GPL-3.0）是仿 Telepathic Instruments Orchid 的和弦樂器：鍵盤左端決定「要哪種和弦」，其餘的鍵彈根音，機器幫你組和弦、配置聲部，並把和弦名稱顯示在螢幕上。另有跟著和弦走的 bass、演奏模式（strum、arpeggio、pattern）、效果、錄和弦的 looper、七個合成引擎。建立在 Felucca 之上，與 Telepathic Instruments 及 M-VAVE 無關。
 
-**狀態（2026-11-17）：只模擬、不刷進實機，原因見「為什麼暫時不刷」。** 手冊：[docs/MANUAL.md](https://github.com/Quixotic7/ChoralRootFM1/blob/main/docs/MANUAL.md)
+**狀態（2026-11-17）：已刷進實機（新晶片 `0xB36014`），開機正常。** 代價如預期：SLOOP 的曲子已不在機器上，要回 SLOOP 得還原備份，見「刷之前要知道的」。 手冊：[docs/MANUAL.md](https://github.com/Quixotic7/ChoralRootFM1/blob/main/docs/MANUAL.md)
 
 ## 不刷機怎麼玩 { #emulate }
 
@@ -55,7 +55,7 @@
 
 面板上印的標示多半換了工作：`SEL` 是 KEY、`ARP` 是 PERF、`ENV` 是 BASS、`LFO` 是 LOCK、`GLO` 是 OPT、`PLAY` 是 LOOP。琴鍵沒有 velocity（FM-1 的鍵感測不到），用固定值。
 
-## 為什麼暫時不刷
+## 刷之前要知道的
 
 ChoralRoot 本身支援新晶片（上游 0.29.1 起接受 `0xB36014`，Hub 也這樣標）。問題在**從 SLOOP 切過去**：
 
@@ -67,7 +67,9 @@ ChoralRoot 本身支援新晶片（上游 0.29.1 起接受 `0xB36014`，Hub 也�
 
 掉進 ROM boot mode 本身救得回來（M-Flasher 還看得到機器，可以還原備份），所以不是變磚的風險，但需要我在 GUI 手動還原。
 
-**結論**：風險比我一開始以為的低，但確定的代價是 SLOOP 的曲子會被蓋掉。真的要刷的話：先確認 `pre-…` 備份在、照常 `just fm1-switch choralroot`，看 M-Flasher 列出的寫入範圍是否真的超過 `0x92FFF`；之後回 SLOOP 時由我在 GUI 還原備份，而不是只重裝韌體。
+**實機結果（2026-11-17）** `[實機]`：我照常 `just fm1-switch` 刷入，機器正常開機，USB 產品名變成 `ChoralRoot FM-1`。當時 flash 裡同時有 SLOOP 的 autosave、CTL-1 的設定等殘留，上游記載的事故在這台、這個版本沒有發生。
+
+**回 SLOOP 的方式**：不能用 `just fm1-switch sloop`，那只會得到沒有曲子的 SLOOP。要在 M-Flasher 的 GUI 用 **RESTORE FULL FLASH** 還原 `backups/2026-11-17-0341-pre-ctl-1.0.3/`（SLOOP 加上最新的曲子）。
 
 ## 已準備好的
 

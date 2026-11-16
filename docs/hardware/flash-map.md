@@ -54,7 +54,7 @@ Felucca、SLOOP、ChoralRoot 以及 Dinghy、fm1-base 系的韌體大多沿用�
 | → Agent Deck | 韌體區，加上 `0xFC000`（蓋掉 SLOOP 的設定） |
 | → 回 SLOOP | 韌體區，加上 `0xFE000`。曲子還在 |
 | → CTL-1 | 韌體區，加上 `0xDE000`、`0xDF000`、`0xFC000`、`0xFD000` |
-| → ChoralRoot（計畫） | `0x04000`–`0x9EFFF`，會蓋掉 `0x97000` 的 SLOOP project |
+| → ChoralRoot | `0x04000`–`0x9EFFF`，蓋掉了 `0x97000` 的 SLOOP project（已執行，尚未用備份比對確認其他 sector） |
 
 原廠出廠時 `0x93000`、`0xE9000`–`0xF2000`、`0xFA000`、`0xFB000` 有資料，`0xFC000`–`0xFE000` 是空的。
 

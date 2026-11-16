@@ -10,7 +10,8 @@
 | Flash 晶片 / JEDEC ID | **`0xB36014` (new)**，UCUN UC25HQ80，1 MiB |
 | Bootloader | stock (M-VAVE) |
 | 出廠韌體版本 | FM-1 015 (stock)，firmware check OK |
-| 目前韌體 | **CTL-1 1.0.3**（2026-11-17 03:41 刷入，套件識別 `FM-1_6010003`）。之前依序是原廠 015 → SLOOP 2.8.5 → Agent Deck 0.7 → SLOOP 2.8.5 |
+| 目前韌體 | **ChoralRoot 0.41**（2026-11-17 約 04:18 刷入，套件識別 `FM-1_920`，USB 產品名 `ChoralRoot FM-1`）。之前依序是原廠 015 → SLOOP 2.8.5 → Agent Deck 0.7 → SLOOP 2.8.5 → CTL-1 1.0.3 |
+| SLOOP 的曲子 | **已不在機器上**（`0x97000` 被 ChoralRoot 的韌體蓋掉）。完整保存在 `2026-11-17-0341-pre-ctl-1.0.3` 備份裡；回 SLOOP 要在 M-Flasher GUI 還原那份備份 |
 | m-bootloader | 未安裝 |
 | 主機 | macOS，M-Flasher 0.12.1 |
 
@@ -33,6 +34,7 @@
 
 M-Flasher 在兩次寫入前各自動存了一份：`~/Documents/M-Flasher/backups/fm1-20261117-023538.bin`、`fm1-20261117-024717.bin`。`pre-agtdeck` 已上傳到 [GitHub Release](https://github.com/daviddwlee84/M-VAVE_FM-1/releases/tag/backup-2026-11-17-pre-agtdeck)（digest 相符）。
 | 2026-11-17 | 刷 CTL-1 之前的 SLOOP 2.8.5 | `backups/2026-11-17-0341-pre-ctl-1.0.3/fm1-20261117-034125.bin` + `.json` | `8c9267e87a320a1e4cd592a9261907d978b8f3fdb94eaf15e685afae267b4451` | 尚未上傳 |
+| 2026-11-17 | 刷 ChoralRoot 之前的 CTL-1（仍含 SLOOP 的 project sector） | `backups/2026-11-17-0413-pre-choralroot-0.41/fm1-20261117-041350.bin` + `.json` | `8834d0188eb309c7229fb3ad9e89a76a349eca546accb666b8a741509a66eb10` | 尚未上傳 |
 
 ## 下載的檔案
 
@@ -73,6 +75,8 @@ M-Flasher 在兩次寫入前各自動存了一份：`~/Documents/M-Flasher/backu
 | 2026-11-17 | 本人執行 `just fm1-switch ctl` | 第一次用這個捷徑實際寫入。download mode → 備份 → 140 sectors（`0x04000`–`0x8FFFF`）→ CRC32 相符 → 自動重開，全程只輸入一次 `yes` |
 | 2026-11-17 | CTL-1 接 iPad | 能用。iPad 的聲音輸出自動改到 FM-1（USB audio out），且 CTL-1 自己的 GM 音色會疊上去；處理方式見 [CTL-1](firmware/ctl-1/index.md#ipad-audio) |
 | 2026-11-17 | 更正：ChoralRoot 套件下載錯誤 | 先前下載的是 SMK-37 版（`v0.41-smk37.1`），已刪除並改下載 FM-1 版 `choralroot-0.41.fwsc`（`8da57076…1ce0652`，digest 相符）。錯的檔案從未刷進機器 |
+| 2026-11-17 | 本人執行 `just fm1-switch downloads/choralroot-0.41.fwsc` | M-Flasher 的計畫：`Writes 152 sectors (608 KiB): 0x04000-0x8EFFF, 0x91000-0x91FFF, 0x93000-0x9EFFF`。寫入後機器重開，USB 產品名 `ChoralRoot FM-1`。M-Flasher 自動備份 `fm1-20261117-041838.bin` |
+| 2026-11-17 | ChoralRoot 在新晶片實機、且 flash 裡有 SLOOP 與 CTL-1 殘留資料的狀態下 | 開得起來、USB MIDI 正常。上游記載的「在 Sloop 資料上掉進 ROM boot」在這台、這個版本沒有發生 |
 
 ## Phase 1 驗收
 
