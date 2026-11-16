@@ -23,6 +23,7 @@ FM-1 同一時間只跑一套主要韌體，換韌體就是重刷。可以先在
 |---|---|---|
 | [CTL-1](https://github.com/charlesvestal/fm1-ctl) | MIDI controller，自帶 General MIDI 音色 | 控制 DAW、外部合成器；也適合 FM-1 MIDI → Python → 任意 API |
 | [Trireme](https://github.com/ignis32/trireme_fm1) | Vial 相容的 USB HID macro keyboard | 快捷鍵、桌面自動化，不需要 host daemon |
+| [RemoteFM1](https://github.com/Quixotic7/RemoteFM1) | 把 FM-1 變成面板，韌體在電腦、手機或瀏覽器上跑 | 不重刷就換韌體；見[搭配手機與平板](../hardware/mobile.md) |
 | [Macropad Patch](https://github.com/smememe/fm1-macropad-patch) | 把原廠 V15 patch 成 MIDI macro pad | host 端自訂所有按鍵行為 |
 | [MIDI Processor](https://midihax.github.io/fm1-midi-processor/html/index.html) | MIDI filter、remap、monitor | MIDI routing、debug `[調研]` |
 

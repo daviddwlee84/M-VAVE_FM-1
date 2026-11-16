@@ -1,11 +1,12 @@
 # 多韌體切換
 
-FM-1 沒有像 GRUB 那樣的開機選單可以選 SLOOP、Melodee 或 Agent Deck。目前有三條路：
+FM-1 沒有像 GRUB 那樣的開機選單可以選 SLOOP、Melodee 或 Agent Deck。目前有幾條路：
 
 | 方案 | 怎麼切換 | 要改硬體嗎 | 評價 |
 |---|---|---|---|
 | **M-Flasher 輪刷** | 接電腦，重刷另一套韌體或還原備份 | 否 | **現在最實際** |
 | **m-bootloader** | recovery menu、重裝韌體、啟動 RAM app | 否 | 是救援與開發工具，不是多系統選單 |
+| **RemoteFM1** | 刷一次 RemoteFM1，之後韌體在電腦或手機上跑，FM-1 當面板，點一下就換 | 否 | 另一種思路，見[搭配手機與平板](../hardware/mobile.md)。我還沒試 |
 | **m-apps `slots` + m-card** | SD 卡上存多個完整映像，選一個寫回內部 flash 再重開 | **要**（microSD 擴充板） | 進階實驗，尚未成熟 |
 
 ## 把電腦當 firmware manager
@@ -77,8 +78,11 @@ SLOOP 與 Agent Deck 執行中都能由 M-Flasher 透過 USB MIDI 切進 downloa
 兩個方向都實測過之後做成的捷徑：
 
 ```sh
+just fm1-switch             # 不帶參數：列出可用的目標與目前連著的裝置
 just fm1-switch sloop       # 或 agtdeck，或任何 .fwsc 的路徑
 ```
+
+具名目標目前只有 `sloop` 與 `agtdeck`，其他韌體把 `.fwsc` 的路徑傳進去。清單也會列出 `downloads/` 與 `firmware/*/build/` 裡現有的套件。
 
 它依序做：確認沒有模擬器佔著 USB MIDI → 切 download mode → 備份到 `backups/<日期時間>-pre-<套件名>/` → 呼叫 M-Flasher 安裝（列出變更，等你輸入 `yes`）→ 重開機。屬於寫入等級，由本人執行。
 

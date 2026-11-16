@@ -16,6 +16,8 @@
 - [ ] fm1-emu：在瀏覽器試玩 SLOOP 3、Melodee、Agent Deck
 - [ ] Agent Deck：host daemon 的 simulate mode 接 Herdr，不刷機
 - [ ] CTL-1 + `mido`：把琴鍵事件轉成 Herdr API 呼叫
+- [ ] SLOOP Web Editor 裝成 Android app，用 LIVE 頁當觸控面板（見[搭配手機與平板](../hardware/mobile.md)）
+- [ ] RemoteFM1：先在模擬器試，再決定要不要刷
 
 ## 記錄格式
 

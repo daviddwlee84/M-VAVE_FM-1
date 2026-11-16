@@ -226,11 +226,27 @@ fm1-flash package:
     "{{m_flasher}}" firmware "{{package}}"
 
 # M-Flasher shows the plan and waits for a typed "yes". Owner only.
-# Switch firmware: download mode -> backup -> install -> restart. target: sloop | agtdeck | path/to/x.fwsc
-fm1-switch target:
+# Switch firmware: download mode -> backup -> install -> restart. No argument lists the targets.
+fm1-switch target="":
     #!/usr/bin/env bash
     set -euo pipefail
     case "{{target}}" in
+      ""|-h|--help|list)
+        echo "usage: just fm1-switch TARGET"
+        echo
+        echo "named targets:"
+        for t in "sloop=downloads/sloop-{{sloop_version}}.fwsc" "agtdeck=downloads/agtdeck-{{agtdeck_version}}.fwsc"; do
+          f="${t#*=}"; if [ -f "$f" ]; then st="ready"; else st="not downloaded"; fi
+          printf '  %-9s %s  (%s)\n' "${t%%=*}" "$f" "$st"
+        done
+        echo
+        echo "packages on disk (pass the path):"
+        ls downloads/*.fwsc firmware/*/build/*.fwsc 2>/dev/null | sed 's/^/  /' || true
+        echo
+        echo "now installed:"
+        "{{m_flasher}}" find | sed 's/^/  /'
+        echo "  (docs/device-log.md has the firmware name; SLOOP and Agent Deck both show as Felucca here)"
+        exit 0 ;;
       sloop)   pkg="downloads/sloop-{{sloop_version}}.fwsc" ;;
       agtdeck) pkg="downloads/agtdeck-{{agtdeck_version}}.fwsc" ;;
       *)       pkg="{{target}}" ;;

@@ -17721,3 +17721,454 @@ exit=0
 midi	Felucca (running; download-mode switches it)
 ```
 </details></tool-use>
+
+_**Agent (claude-fable-5-2 2026-11-16 19:04:22Z)**_
+
+`fm1-switch` 做好並實測通過（用已安裝的 SLOOP 當目標，流程走完、沒有寫入任何東西）。現在把相關硬體頁與生態頁的補充寫進文件。
+
+_**Agent (claude-fable-5-2 2026-11-16 19:05:35Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Document the switch shortcut, add a related hardware page and ecosystem history, commit and push
+
+````bash
+ls backups && python3 - <<'EOF'
+import pathlib
+def sub(path, pairs):
+    p=pathlib.Path(path); s=p.read_text()
+    for a,b in pairs:
+        assert a in s, (path,a[:60]); s=s.replace(a,b,1)
+    p.write_text(s)
+sub("Justfile",[("# Switch firmware: download mode -> backup -> install -> restart. target: sloop | agtdeck | path/to/x.fwsc\n# M-Flasher shows the plan and waits for a typed \"yes\". Owner only.",
+ "# M-Flasher shows the plan and waits for a typed \"yes\". Owner only.\n# Switch firmware: download mode -> backup -> install -> restart. target: sloop | agtdeck | path/to/x.fwsc"),
+("#   write       fm1-flash   (owner only; M-Flasher asks for a typed \"yes\")","#   write       fm1-flash, fm1-switch   (owner only; M-Flasher asks for a typed \"yes\")")])
+
+pathlib.Path("docs/hardware/related.md").write_text('''# 相關硬體
+
+和 FM-1 共用晶片、韌體生態或工具的其他機器，以及救援與擴充用的小硬體。我只有一台 FM-1，這頁除了標 `[實機]` 的以外都是 `[上游]`，查核於 2026-11-17。
+
+## 同一顆晶片的機器
+
+| 機器 | 和 FM-1 的關係 | 韌體 |
+|---|---|---|
+| **Fame MiniFM** | FM-1 的換牌版本。M-Flasher 把它當成 FM-1，兩者的官方套件可以互刷（chip key、資料配置、boot 區相同），但互刷後機器會自報成另一個型號，M-UPGRADE 只接受那個型號的套件 | 和 FM-1 相同 |
+| **M-VAVE SMK-37 Pro / Elite** | 37 鍵鍵盤，裡面是 FM-1 的晶片：flash 配置、音訊、更新路徑相同，只有面板接線不同。16 個 RGB pad、8 個旋鈕、4 個 fader、pitch / mod wheel、螢幕 | Firmware Hub 上有 26 個；多數是用 [fm1-to-smk37](https://github.com/genkigenki/fm1-to-smk37) 從 FM-1 韌體移植 |
+| **MKE-P37**、**Donner Starrykey 37 Play** | 和 SMK-37 共用硬體 | 同 SMK-37 |
+
+M-Flasher、m-bootloader、fm1-emu 都同時支援 FM-1 與 SMK-37。SMK-37 的套件不能刷進 FM-1，M-Flasher 會拒絕型號不符的套件。
+
+對我的意義：如果之後想要有真正鍵盤、pad 與 fader 的版本，SMK-37 是同一套工具鏈能直接沿用的選擇。
+
+## Firmware Hub 收錄的其他機器
+
+和 FM-1 沒有技術關係，只是同一個目錄也收它們的韌體或 mod：
+
+| 機器 | Hub 上有什麼 |
+|---|---|
+| Elektron Model:Cycles / Model:Samples | 6 個 mod |
+| Erica Synths LXR-02 | 2026-10-23 起開源的韌體與 mod |
+
+## VIBE FM Mk1（尚未上市）
+
+Firmware Hub 背後的 Designburg（德國漢堡，Sven Trogus）正在做的自有硬體。它的頁面寫 **Coming 2027**，會走 crowdfunding，目前只能登記名單。規格與價格未公布，平台頁提到有一台 VIBE Box prototype。它**與 M-VAVE 無關**，網站自己寫明 not affiliated with M-VAVE。
+
+比硬體更具體的是軟體平台，現在就能用：
+
+| 東西 | 是什麼 | 狀態 |
+|---|---|---|
+| [VIBE FM SDK](https://github.com/Vibe-FM-SDK/vibe-fm-sdk) | 用 C 寫一個樂器，編成一個 `.wasm`，在瀏覽器、DAW、VIBE 硬體上跑同一個檔案 | Apache-2.0，2026-10-27 建立 |
+| VIBE FM Playground / Web Player | 瀏覽器裡的 VIBE FM | 可用 |
+| VIBE FM Plugin | VST3 / AU / CLAP | 免費，open beta |
+| Converter | 把有原始碼的 FM-1 韌體轉成 VIBE 的 `.wasm`，保留 FM-1 的 240×240 畫面與控制 | 可用；只有開源韌體能轉 |
+| [VIBE FM Link](https://github.com/zvenson/vibe-link) | 刷在 FM-1 上，把它變成 VIBE 的控制器 | GPL-3.0 |
+
+和 FM-1 的相容性：
+
+| 層次 | 能共用嗎 |
+|---|---|
+| 聲音引擎與 sequencer 的 C 程式碼 | 可以移植 |
+| 介面 | 要適配。原生 VIBE 是 480×320 加 pad；轉換的 FM-1 韌體維持 240×240 |
+| 韌體檔 | **不通用。** FM-1 是 `.fwsc`（原生機器碼），VIBE 是 `.wasm`。不能把 VIBE 的檔案刷進 FM-1 |
+
+「VIBE FM Plugin 的 host 是閉源」這點來自 ChatGPT 的調研，我沒有在網站上找到明文，標 `[調研]`。
+
+### 這個模式被驗證了嗎
+
+我的看法：**需求有訊號，商業模式還沒被驗證。**
+
+- 有訊號的部分：SLOOP 在 Hub 上約 11,500 次安裝，228 個韌體，M-VAVE 自己也跟進開放。有一群人願意在便宜硬體上玩自製韌體。
+- 還沒發生的部分：VIBE 硬體沒出貨，crowdfunding 還沒開始，沒有售價，沒有規格。「會安裝免費韌體」和「會付錢買一台新機器」是兩回事。
+- 它自己也承認風險：平台頁寫小團隊無法在工廠、價格、行銷上和大廠競爭，所以把賭注放在「一個能跑在各家硬體上的標準」，而不只是一台機器。
+
+真正要觀察的是有沒有**別的廠商**採用它的 runtime。只有它自己一台機器的話，它就是另一台開放韌體的合成器。
+
+對我目前的機器沒有影響。如果之後要寫自己的韌體，值得留意的是 SDK：同一份 C 程式碼除了 FM-1 還能在瀏覽器與 DAW 裡跑。
+
+## 救援與擴充用的小硬體
+
+| 硬體 | 用途 | 我有嗎 |
+|---|---|---|
+| **Raspberry Pi Pico**（RP2040）做的 USB_KEY | bootloader 壞掉時強制進 ROM download mode。[FM-1-transporter](https://github.com/kurogedelic/FM-1-transporter) | 沒有。這是我暫緩 m-bootloader 的原因之一，見[上游追蹤](../watch.md)。Raspberry Pi 3 不能替代 |
+| Flipper Zero | 另一種救援途徑（[flipper-fm1-recovery](https://github.com/merthsoft/flipper-fm1-recovery)） | 沒有 |
+| [m-card](https://github.com/jvitkauskas/m-card) | 接在螢幕排線上的 microSD 擴充板，搭配 m-apps 做多韌體 slot | 沒有；上游標為未測試的 prototype |
+| TRS-to-DIN MIDI 轉接線 | 讓外部鍵盤從 3.5 mm MIDI IN 進來（Type A 或 B，要試） | — |
+| USB-C 資料線 | 刷機與 USB MIDI。只能充電的線不行，也不要經過 hub | 有 `[實機]` |
+
+## 官方產品線
+
+M-VAVE（公司網站 [cuvave.com](https://www.cuvave.com/products)）的其他產品我沒有整理。和這個 repo 有關的只有 FM-1 與 SMK-37 系列。
+''')
+sub("zensical.toml",[('    { "兩種 Flash 晶片" = "hardware/flash-chips.md" },','    { "兩種 Flash 晶片" = "hardware/flash-chips.md" },\n    { "相關硬體" = "hardware/related.md" },')])
+
+p=pathlib.Path("docs/ecosystem.md"); s=p.read_text()
+s=s.replace("## 為什麼這麼快","""## FM-1 是第一台這樣被玩的機器嗎
+
+不是。社群替硬體寫自己的韌體有很長的歷史，以下是我憑一般知識舉的例子，沒有逐一查證年份：
+
+- **音樂播放器與相機**：Rockbox（MP3 播放器）、CHDK 與 Magic Lantern（Canon 相機）。
+- **路由器**：OpenWrt，起點是 Linksys WRT54G。
+- **合成器與音樂器材，廠商主動開放的**：Mutable Instruments 的模組（開源，衍生出大量替代韌體）、Korg 的 logue SDK（prologue、minilogue xd、NTS-1）、Monome Norns、Critter & Guitari Organelle、Novation Launchpad Pro 的開放韌體。
+- **社群逆向或改造的**：Zoom 效果器的自製 effect、Elektron Model:Cycles 的 mod（Firmware Hub 也有收）。
+
+FM-1 特別的地方不在「第一」，而在速度與完整度：
+
+- 從逆向到 200 多個韌體只花了幾個月，主要爆發在六週內。
+- 很短時間內就有完整的配套：硬體層、template、晶片層級模擬器、瀏覽器安裝、目錄、刷機與救援工具。
+- 機器便宜，加上 AI 輔助寫程式，讓不是韌體工程師的人也能做出能用的東西。
+- 廠商在社群之後選擇開放，而不是封鎖。
+
+## 為什麼這麼快""",1)
+s=s.replace("- **官方隨後跟進。** M-VAVE 在 10 月中發布 `fm1_open`：一份 GPLv3（附 SDK linking exception）的開放韌體「FM1 Open V14」，含 binary SDK",
+ "- **官方隨後跟進。** M-VAVE 在 10 月中發布 `fm1_open`：一份 GPLv3（附 SDK linking exception）的開放韌體「FM1 Open V14」。Firmware Hub 對它的描述是 app 開源、**聲音引擎是閉源的**（binary SDK）。它含 binary SDK",1)
+s=s.replace("**不是 FM-1，也不是 FM-1 的模擬器。** 它是 Firmware Hub 那群人（zvenson / designburg）正在籌備的**另一台硬體**：一台「官方支援開放韌體」的機器，目前還在預告與登記名單階段（網站寫 crowdfunding、join the list）。`[上游]`，我沒有找到出貨日期或規格。",
+ "**不是 FM-1，也不是 FM-1 的模擬器。** 它是 Firmware Hub 那群人（zvenson / Designburg）正在籌備的**另一台硬體**：一台「官方支援開放韌體」的機器，網站寫 Coming 2027、即將 crowdfunding，目前只能登記名單，規格與價格未公布。它與 M-VAVE 無關。`[上游]` 平台、相容性與我對這個模式的看法見[相關硬體](hardware/related.md)。",1)
+p.write_text(s)
+
+sub("docs/firmware/switching.md",[
+("## 之後想做的\n","## `just fm1-switch`\n\n兩個方向都實測過之後做成的捷徑：\n\n```sh\njust fm1-switch sloop       # 或 agtdeck，或任何 .fwsc 的路徑\n```\n\n它依序做：確認沒有模擬器佔著 USB MIDI → 切 download mode → 備份到 `backups/<日期時間>-pre-<套件名>/` → 呼叫 M-Flasher 安裝（列出變更，等你輸入 `yes`）→ 重開機。屬於寫入等級，由本人執行。\n\n目標韌體已經裝著的時候，M-Flasher 會回報 `Nothing to write` 然後直接重開，不會問 `yes`。`[實機]`\n\n每次切換都會留一份刷前備份在本機，不會自動上傳。\n\n## 之後想做的\n"),
+("等真的常在音樂韌體與 Agent Deck 之間切換時，包一個 host 端的 `fm1 switch <名稱>` 工作流：檢查備份、顯示 preflight、等批准、刷入、驗證。比改裝 microSD 實際。目前還沒做。",
+ "- 切換後自動確認裝置回到 USB MIDI、並提示要不要啟動對應的 host 程式（Agent Deck 的 daemon、SLOOP 的 Web Editor）。\n- 備份累積多了之後的整理方式。"),
+])
+sub("docs/getting-started/index.md",[("| `just fm1-flash <package.fwsc>` |","| `just fm1-switch <sloop\\|agtdeck\\|檔案>` | 切換韌體：download mode → 備份 → 安裝 → 重開 | 寫入，本人執行 |\n| `just fm1-flash <package.fwsc>` |")])
+sub("AGENTS.md",[("just fm1-flash FILE    # WRITE: owner runs this, never an agent without approval","just fm1-flash FILE    # WRITE: owner runs this, never an agent without approval\njust fm1-switch TARGET # WRITE: sloop | agtdeck | FILE; download mode, backup, install, restart"),
+("| Firmware write | `m-flasher firmware PACKAGE.fwsc`, browser installers |","| Firmware write | `m-flasher firmware PACKAGE.fwsc`, `just fm1-switch`, browser installers |")])
+sub("docs/index.md",[("| 查我這台現在的狀態 | [我的機器](device-log.md) |","| 查我這台現在的狀態 | [我的機器](device-log.md) |\n| 看同晶片的機器、VIBE FM、救援硬體 | [相關硬體](hardware/related.md) |")])
+sub("docs/device-log.md",[("\n## Phase 1 驗收","| 2026-11-17 | 測試 `just fm1-switch sloop`（SLOOP 已安裝） | 切 download mode、備份、M-Flasher 回報 `Nothing to write`、重開，全程沒有寫入 |\n\n## Phase 1 驗收")])
+EOF
+just docs-check 2>&1 | tail -1; git add -A && git commit -q -m "Add fm1-switch, related hardware page, and history notes on the ecosystem page
+
+Co-Authored-By: Claude Fable 5.2 <noreply@anthropic.com>" && git push -q origin main && echo pushed
+````
+
+```text
+2026-11-17-0303-pre-sloop-2.8.5
+2026-11-17-agtdeck-0.7
+2026-11-17-pre-agtdeck
+2026-11-17-sloop-2.8.5
+2026-11-17-stock
+{"status": "ok", "pages": 30, "llm_pages": 30, "deployed": false}
+pushed
+```
+</details></tool-use>
+
+_**Agent (claude-fable-5-2 2026-11-16 19:05:53Z)**_
+
+切換捷徑做好了，相關硬體也收錄成一頁，都已 push。
+
+## `just fm1-switch`
+
+```sh
+just fm1-switch sloop       # 或 agtdeck，或任何 .fwsc 的路徑
+```
+
+它依序做：確認沒有模擬器佔著 USB MIDI → 切 download mode → 備份 → 呼叫 M-Flasher 安裝（列出變更、等你輸入 `yes`）→ 重開機。
+
+我用「目標是已經裝著的 SLOOP」測過整個流程：M-Flasher 回報 `Nothing to write` 後直接重開，沒有寫入任何東西。**真正會寫入的路徑（輸入 `yes` 那一段）在這個捷徑裡還沒跑過**，下次你實際切換時就是第一次。這次測試留下一份多的備份 `backups/2026-11-17-0303-pre-sloop-2.8.5/`，可以刪掉。
+
+兩個設計：
+- 偵測到模擬器在 USB MIDI 上就拒絕執行，避免之前那種選錯裝置的情況。
+- 每次切換都會在本機留一份刷前備份，不會自動上傳。
+
+## FM-1 是第一台被這樣玩的機器嗎
+
+不是。社群替硬體寫韌體的歷史很長：Rockbox、相機的 CHDK 與 Magic Lantern、路由器的 OpenWrt；合成器這邊有 Mutable Instruments 的開源模組、Korg 的 logue SDK、Monome Norns。這些例子是我憑一般知識舉的，沒有逐一查證。
+
+FM-1 特別的是速度與完整度：幾個月內 200 多個韌體，而且硬體層、template、晶片層級模擬器、瀏覽器安裝、目錄、救援工具很快就齊了。便宜的機器加上 AI 輔助寫程式，讓不是韌體工程師的人也做得出東西。
+
+## VIBE FM：模式被驗證了嗎
+
+我核對了 ChatGPT 那份調研，大部分屬實：網站寫 Coming 2027、即將 crowdfunding、明文聲明與 M-VAVE 無關、SDK 是 Apache-2.0、原生畫面 480×320。「VST 的 host 是閉源」這點我在網站上沒找到明文，文件裡標為未驗證。
+
+我的看法是**需求有訊號，商業模式還沒被驗證**：
+
+- **有訊號**：SLOOP 約 11,500 次安裝、228 個韌體、M-VAVE 也跟進開放。
+- **還沒發生**：硬體沒出貨、crowdfunding 沒開始、沒有售價與規格。「會裝免費韌體」和「會付錢買新機器」是兩回事。
+- **它自己也承認**：平台頁寫小團隊無法在工廠、價格、行銷上和大廠競爭，所以賭的是「一個能跑在各家硬體上的標準」。
+
+所以你看到的 Web Player 驗證的是「技術可行、有人想玩」，不是「有人會買」。真正要看的是有沒有別的廠商採用它的 runtime。
+
+核對時順便發現一件事：Hub 描述 M-VAVE 官方的 `fm1_open` 是 app 開源、**聲音引擎閉源**。所以官方的「開放」比社群韌體有限。
+
+## 相關硬體頁
+
+新增「相關硬體」頁：<https://daviddwlee84.github.io/M-VAVE_FM-1/hardware/related/>
+
+- **同晶片的機器**：Fame MiniFM（FM-1 的換牌版）、M-VAVE SMK-37 Pro / Elite（37 鍵，Hub 上有 26 個韌體）、MKE-P37、Donner Starrykey 37 Play。M-Flasher、m-bootloader、fm1-emu 都同時支援 SMK-37。
+- **Hub 收錄的其他機器**：Elektron Model:Cycles、Erica Synths LXR-02。
+- **VIBE FM Mk1**：平台各部分的狀態，以及和 FM-1 的相容性（C 程式碼可移植，韌體檔不通用）。
+- **救援與擴充用的小硬體**：Pico 的 USB_KEY、Flipper Zero、m-card、TRS MIDI 轉接線。
+
+M-VAVE 的其他產品線我沒有整理。如果你想收錄的是別的方向，例如其他適合刷韌體的便宜合成器，告訴我範圍，我再補。
+
+---
+
+_**User (2026-11-16 19:08:49Z)**_
+
+BTW SLOOP是不是有配套的software還是web可以對歌曲備份之類的？
+
+另外我也有見過 FM1 搭配Android phone的combo？這相關是不是也可以列一個docs？
+（相當於extend了一個觸控螢幕？）
+（iOS根據我的理解應該比較難達到類似效果？）
+
+```
+
+
+<pasted_content id="fec1">
+M-VAVE_FM-1 on  main [!] via  v3.15.1 took 24s
+❯ just fm1-switch
+error: recipe `fm1-switch` got 0 positional arguments but takes 1
+usage:
+    just fm1-switch target
+
+M-VAVE_FM-1 on  main [!] via  v3.15.1
+❯ just fm1-switch -h
+no such package: -h (try: just fm1-fetch / just agtdeck-fetch)
+error: recipe `fm1-switch` failed with exit code 1
+</pasted_content id="fec1">
+
+```
+然後我是否能夠知道到底有哪些目標可以switch之類的？
+
+---
+
+_**Agent (claude-fable-5-2 2026-11-16 19:09:06Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Collect what upstream says about using the FM-1 with Android and iOS devices
+
+`cd /private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/5f461408-bbdd-44d0-bb3b-b0642eabaa31/scratchpad/up && grep -n -i -o -E ".{0,160}(android|iphone|ipad|\biOS\b|phone|tablet|OTG).{0,200}" sloop-readme.md | cut -c1-420 | head -14; echo "=== guide"; grep -n -i -o -E ".{0,120}(android|iphone|ipad|\biOS\b|OTG).{0,220}" sloop-guide.md | cut -c1-380 | head -8; echo "=== repos"; for r in Quixotic7/RemoteFM1 ocean/FM1Kit; do gh api repos/$r --jq '"\(.full_name) ★\(.stargazers_count) | \(.description)"'; done; gh api repos/Quixotic7/RemoteFM1/readme --jq .content | base64 -d | cut -c1-500 | head -25`
+
+```text
+ugrep: error: error at position 125
+\xbf][\x80-\xbf]*){0,200}
+                         \___exceeds complexity limits
+
+
+=== guide
+ugrep: error: error at position 112
+ad|\biOS\b|OTG)(?:[^\n\x80-\xbf][\x80-\xbf]*){0,220}
+                       exceeds complexity limits___/
+
+
+=== repos
+Quixotic7/RemoteFM1 ★46 | null
+ocean/FM1Kit ★2 | A Swift toolkit for the M-Vave FM-1 synthesiser
+# RemoteFM1
+
+**The firmware for your firmware so you can run firmwares without installing firmwares**
+
+| | |
+|---|---|
+| **Play in the browser** | [remotefm1.com](https://remotefm1.com/): the FM-1 Player |
+| **Install RemoteFM1 on an FM-1** | [remotefm1.com/installer](https://remotefm1.com/installer/) (Chrome or Edge, USB) |
+| **iPhone and iPad** (app and AUv3) | [TestFlight beta](https://testflight.apple.com/join/e6A47Xap) ([RemoteFM1IOS](https://github.com/Quixotic7/RemoteFM1IOS)) |
+| **Android** | [the APK](https://github.com/Quixotic7/RemoteFM1Android/releases/latest), sideloaded ([RemoteFM1Android](https://github.com/Quixotic7/RemoteFM1Android)) |
+| **Mac plugin and desktop app** (VST3 / AU) | [FM1VST](https://github.com/Quixotic7/FM1VST/releases/latest) |
+| **The firmwares** (.rfm1) | [RemoteFM1FW](https://github.com/Quixotic7/RemoteFM1FW/releases/latest): every app and the site read it |
+| **Firmware authors** | [RemoteFM1Metadata.json](https://github.com/Quixotic7/RemoteFM1FW/blob/main/docs/REMOTEFM1-METADATA.md): one file in your repo sets your firmware's card, screenshot, skin, panel labels and the release we build |
+
+RemoteFM1 is a firmware for the FM-1 that does almost nothing by itself. It sends every key, button, encoder and the
+MASTER pot to the computer, and shows whatever the computer sends back on its LEDs and its 240×240 screen. On the
+computer, phone or browser, an FM-1 firmware runs at full speed and uses the real FM-1 as its panel. That lets you
+try firmware changes without reflashing the unit, switch firmwares in a click, and run things the FM-1's own CPU and
+memory couldn't hold. Without a host, it is an instrument of its own: a DX7, a MIDI controller and a looper
+(see "Using it").
+
+**What the hosts run.** The FM-1 Player at [remotefm1.com](https://remotefm1.com/) lists about 160 FM-1 firmwares.
+Over 70 run as `.rfm1` files, a firmware's own code built to WebAssembly (from [RemoteFM1FW](https://github.com/Quixotic7/RemoteFM1FW),
+the same files the iOS and Android apps use), and about 20 as native cores built by the site. The rest run in the
+FM-1 emulator (`.fwsc` packages from the [FM-1 Firmware Hub](https://thefirmwarehub.com/)). Each plays on screen with
+Shell cwd was reset to /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1
+```
+</details></tool-use>
+
+_**Agent (claude-fable-5-2 2026-11-16 19:09:18Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Read SLOOP's phone notes and RemoteFM1's Android and iOS documentation
+
+`cd /private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/5f461408-bbdd-44d0-bb3b-b0642eabaa31/scratchpad/up && grep -n -i -E "android|iphone|ipad|phone|tablet" sloop-readme.md | cut -c1-330 | head -10; echo "=== RemoteFM1 using/phones"; gh api repos/Quixotic7/RemoteFM1/readme --jq .content | base64 -d > remotefm1.md; grep -n -i -E "android|iphone|ipad|usb-c|cable|OTG|power|bluetooth|latency|chip|B36014|UC25|touch|^## " remotefm1.md | cut -c1-300 | head -40; echo "=== android repo"; gh api repos/Quixotic7/RemoteFM1Android/readme --jq .content | base64 -d | cut -c1-420 | head -30`
+
+```text
+70:- **Kicks you hear on any speaker:** the synthesised kits' kicks (808, 909, 606, TRAP…) were a 50 Hz sine the FM-1's speaker, a phone or earbuds cannot play: only a quiet click was left. They now have the drive and pitch sweep that carry them up there, and more level.
+75:- **The editor's LIVE page:** play a whole show from a computer, tablet or phone: PLAY / REC, BPM and TAP, sections A–D on the next bar, a mixer (level, mute, solo, filter, pan, sends, sound), the 27 punch-in effects as pads, keys and drum pads, fills, full screen and computer-key shortcuts; songs saved as files and played fr
+78:- **USB RATE** (44.1 / 48 kHz) for phones; the drum **MUTE mode stays** after EDIT (#126).
+94:- **The web editor offline:** *Download the editor* saves it as one file that runs in Chrome or Edge without internet, or *Install the app* (Android too): the editor and the installer then open without internet.
+98:- **A cleaner output:** the master limiter looks ahead, so loud kicks and basses no longer crackle with MASTER turned up (headphones especially).
+108:- **153 factory sounds** (76 in 2.4): 77 new, every one level-matched. Besides PHYS and NOISE: bass guitar, mono and saw basses, harp, steel drum, glockenspiel, celesta, xylophone, tubular bell, pan flute, harmonica, accordion, a 70s string machine (ENSEMBLE), an 80s poly synth, rock and chapel organs, granular clouds (STR C
+111:- **USB audio at 48 kHz too: record into your phone.** The FM-1's USB audio input now also runs at 48 kHz when the phone, tablet or app asks for it (many only take 48 kHz), resampled in the FM-1 (after Felucca 1.1.5). Plug it into your phone and record into a sampler app. At 44.1 kHz nothing changed.
+151:| **USB audio** | On USB the FM-1 is also an audio input (*Felucca*, 44.1 or 48 kHz stereo, no driver): record it in your DAW, in Audacity or in a sampler app on your phone over the same cable. Its level follows the MASTER knob, or stays at a fixed full level (HOME menu → **USB AUDIO**). From Felucca 1.0. |
+202:| **FX** — punch | 27 punch-in effects on the whole mix. White keys: loops 1/4–1/32, stutter, reverse, tape stop, half speed, filter sweeps, phone, bit crush, alias, gate, echo, tape wobble. Black keys (2.6): kill low / mid / high, rewind, octave up, flanger, auto-pan, freeze, loop 1/8T, mono, fade out | FILTER · DUST · DUCK
+222:- **153 sounds, browsed by kind** — basses (sliding 808s, acid 303, reese, FM, bass guitar), guitars, sitar and koto (physical models), keys (Rhodes, a real Steinway grand, house and afro keys), organs and accordion, pads (string machine, granular clouds), leads (supersaw, talkbox, pan flute, harmonica), plucks and bells (ha
+=== RemoteFM1 using/phones
+9:| **iPhone and iPad** (app and AUv3) | [TestFlight beta](https://testflight.apple.com/join/e6A47Xap) ([RemoteFM1IOS](https://github.com/Quixotic7/RemoteFM1IOS)) |
+10:| **Android** | [the APK](https://github.com/Quixotic7/RemoteFM1Android/releases/latest), sideloaded ([RemoteFM1Android](https://github.com/Quixotic7/RemoteFM1Android)) |
+24:the same files the iOS and Android apps use), and about 20 as native cores built by the site. The rest run in the
+26:the keyboard, mouse, touch or a MIDI keyboard, or on your own FM-1 running RemoteFM1. The stock M-VAVE firmware can't
+36:> DX7 (saadet's FM6, Yamaha's 256 ROM voices and your own cartridges), a MIDI controller over USB, Bluetooth and the
+40:> adds Bluetooth MIDI; 0.2.1 adds USB audio; 0.2.2 makes Bluetooth about 6x faster and shows each screen change
+44:## For firmware authors
+63:## How it works
+79:  - USB-MIDI SysEx, which works everywhere, including Web MIDI and the iPad;
+81:  - Bluetooth MIDI SysEx (0.2): the same messages over the air, at a few KB/s, so a still screen and the panel more
+88:  (USB-MIDI for a USB session, Bluetooth for a Bluetooth one).
+93:core built to WebAssembly) on the site and in the iOS and Android apps. Firmwares built only as `.fwsc` packages run in
+96:## Using it
+99:   (USB + Bluetooth MIDI, or USB only) or any Felucca-family installer, for example
+104:2. **Without a host**, the screen reads REMOTE FM1 / WAITING FOR HOST, with USB's state, the Bluetooth name it
+107:   then **Play on my FM-1** (or Settings > Use my FM-1), in Chrome or Edge over USB or Bluetooth MIDI. The iOS and
+108:   Android apps and FM1VST connect the same way. From the command line on a Mac:
+136:flash, back at the next power-on. A DX7 32-voice bank sent over USB or Bluetooth MIDI (any librarian, or the site)
+141:take), a stop when it stops (PLAY again); over USB (to a computer, or USB HOST's device) and Bluetooth, with the
+145:power cycle); the DX7 is silent and every control sends MIDI on the channels of the settings page (HOME held):
+186:- **Power**: the FM-1 gives the port no 5 V. Use a powered USB hub, or a powered OTG adapter, between the FM-1 and
+189:  answers (no power?) leaves it at LOOKING after a few seconds of tries. A passing screen says when a device comes
+191:- In: notes, CCs, pitch bend, aftertouch, program changes on the channel, and clock / start / stop for the tempo, the
+196:- No computer meanwhile: no USB session, USB audio or updates over USB. A Bluetooth host's session still works, and
+198:- **Two FM-1s**: a plain USB-C cable between this FM-1 (USB HOST on) and a second FM-1 works, MIDI both ways
+200:- Never kept: OFF, or a restart, gives the port back to the computer (every power-on is a USB device, so a computer
+203:A computer that sleeps, or a USB cable pulled, also lets go of the notes it held.
+209:**Over Bluetooth** (0.2, the default package `remote-0.3.1.fwsc`; `remote-usb-0.3.1.fwsc` has no radio): Bluetooth
+210:is on at every power-on. Connect the FM-1 in Audio MIDI Setup > MIDI Studio > Bluetooth (on a Mac) or the app's Bluetooth MIDI page;
+214:**Sound over Bluetooth** (0.3.6, off by default): Bluetooth has room for the screen or the sound, not both. With the
+215:site's Settings > Use my FM-1 > **Sound on the FM-1 over Bluetooth** on, a Bluetooth session sends the firmware's
+228:**On an iPhone or iPad**, the [RemoteFM1 app](https://testflight.apple.com/join/e6A47Xap) (TestFlight beta; also an
+229:AUv3 plugin) runs the `.rfm1` firmwares and takes the FM-1 as its panel over USB or Bluetooth. **On
+230:Android**, the [RemoteFM1 APK](https://github.com/Quixotic7/RemoteFM1Android/releases/latest) does the same. In a
+233:adds Web MIDI, runs the whole site: the FM-1 as the panel over Bluetooth or USB, and its USB audio. Tested on an
+234:iPhone 13 Pro Max on 2026-10-28. In any iOS browser, an FM-1 plugged in by USB becomes the phone's sound output by
+235:itself (a Lightning iPhone needs a Lightning to USB camera adapter).
+291:## Safety
+294:starts: safe mode, USB on), the crash screen and record, the watchdog, the USB soft key into the chip's update mode,
+295:**REC held at power-on** for that same mode (also in safe mode; 0.1's OCT- went to its own loader), felucca-bsp's
+=== android repo
+# RemoteFM1 for Android
+
+An Android phone and tablet host for FM-1 firmware cores, the port of RemoteFM1 for iOS (`../RemoteFM1IOS`). See
+[PLAN.md](PLAN.md) for the design and the milestones.
+
+## Install (sideload)
+
+RemoteFM1 for Android is not in the Play Store. You install the APK yourself:
+
+1. On the phone or tablet, download `RemoteFM1-<version>.apk` from the
+   [GitHub Releases](https://github.com/Quixotic7/RemoteFM1Android/releases) page.
+2. Allow your browser or file manager to install apps: Android asks the first time you open the APK
+   (Settings › Apps › Special app access › Install unknown apps, then the app you downloaded it with).
+3. **Samsung:** turn off **Auto Blocker** while you install (Settings › Security and privacy › Auto Blocker). It blocks
+   every app not from a store. You can turn it back on afterwards.
+4. Open the APK and tap Install. Android may show a Play Protect note for an app it doesn't know: choose to install
+   anyway.
+
+Updates: download the newer APK and open it; it installs over the old one and keeps your firmware, states and
+settings (every release is signed with the same key). If Android refuses an update because the package conflicts
+with the one installed, that APK was not signed by me: don't uninstall to get round it, since uninstalling deletes
+the app's data (back it up first: Settings › Your data › Back up everything).
+
+What you need: Android 10 or newer on an arm64 phone or tablet (nearly every phone since 2017). For the panel, an
+FM-1 running the RemoteFM1 firmware, over USB (USB-C or an OTG adapter) or Bluetooth; without one you play on the
+screen. Known issues: on some Samsung/Qualcomm devices (seen on a Galaxy Tab A9+) sound through the FM-1's own USB
+audio doesn't work and can make the FM-1 drop off USB; play through the phone's speaker, headphones or Bluetooth
+(see [Known issues](#known-issues)).
+
+Check the download (optional): its SHA-256 is in the release notes and in `RemoteFM1-<version>.apk.sha256`:
+Shell cwd was reset to /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1
+```
+</details></tool-use>
+
+_**Agent (claude-fable-5-2 2026-11-16 19:09:32Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Make the switch shortcut list its targets when run without an argument, and test it
+
+```bash
+python3 -c "
+import json; d=json.load(open('/tmp/hub-catalog.json'))
+for i in d['firmwares']:
+    if 'remote' in i['name'].lower() or 'vibe' in i['name'].lower(): print(i['id'],i['name'],i['version'],i['chip'],i.get('installs'))" ; python3 - <<'EOF'
+import pathlib
+p=pathlib.Path("Justfile"); s=p.read_text()
+a=s.index("# M-Flasher shows the plan and waits for a typed \"yes\". Owner only.\n# Switch firmware")
+b=s.index('    test -f "$pkg" ||', a)
+new='''# M-Flasher shows the plan and waits for a typed "yes". Owner only.
+# Switch firmware: download mode -> backup -> install -> restart. No argument lists the targets.
+fm1-switch target="":
+    #!/usr/bin/env bash
+    set -euo pipefail
+    case "{{target}}" in
+      ""|-h|--help|list)
+        echo "usage: just fm1-switch TARGET"
+        echo
+        echo "named targets:"
+        for t in "sloop=downloads/sloop-{{sloop_version}}.fwsc" "agtdeck=downloads/agtdeck-{{agtdeck_version}}.fwsc"; do
+          f="${t#*=}"; if [ -f "$f" ]; then st="ready"; else st="not downloaded"; fi
+          printf '  %-9s %s  (%s)\\n' "${t%%=*}" "$f" "$st"
+        done
+        echo
+        echo "packages on disk (pass the path):"
+        ls downloads/*.fwsc firmware/*/build/*.fwsc 2>/dev/null | sed 's/^/  /' || true
+        echo
+        echo "now installed:"
+        "{{m_flasher}}" find | sed 's/^/  /'
+        echo "  (docs/device-log.md has the firmware name; SLOOP and Agent Deck both show as Felucca here)"
+        exit 0 ;;
+      sloop)   pkg="downloads/sloop-{{sloop_version}}.fwsc" ;;
+      agtdeck) pkg="downloads/agtdeck-{{agtdeck_version}}.fwsc" ;;
+      *)       pkg="{{target}}" ;;
+    esac
+'''
+p.write_text(s[:a]+new+s[b:])
+EOF
+just fm1-switch; echo ---; just fm1-switch -h | head -3; just fm1-switch nope 2>&1 | tail -2
+```
+
+```text
+vibe-link VIBE FM Link 0.4 new 49
+remotefm1 RemoteFM1 0.3.6 new 24
+usage: just fm1-switch TARGET
+
+named targets:
+  sloop     downloads/sloop-2.8.5.fwsc  (ready)
+  agtdeck   downloads/agtdeck-0.7.fwsc  (ready)
+
+packages on disk (pass the path):
+  downloads/agtdeck-0.7.fwsc
+  downloads/sloop-2.8.5.fwsc
+  firmware/hello/build/template.fwsc
+
+now installed:
+  midi	Felucca (running; download-mode switches it)
+  (docs/device-log.md has the firmware name; SLOOP and Agent Deck both show as Felucca here)
+---
+usage: just fm1-switch TARGET
+
+named targets:
+error: recipe `fm1-switch` was terminated by signal 13
+no such package: nope (try: just fm1-fetch / just agtdeck-fetch)
+error: recipe `fm1-switch` failed with exit code 1
+```
+</details></tool-use>
