@@ -20,15 +20,15 @@ default:
 
 # Build the site in strict mode.
 docs-build:
-    uv run --locked --group docs zensical build --strict
+    uv run --locked --all-groups zensical build --strict
 
 # Build, then verify the generated output (llms.txt, Markdown copies, search).
 docs-check: docs-build
-    uv run --locked --group docs python scripts/check-docs-site.py
+    uv run --locked --all-groups python scripts/check-docs-site.py
 
 # Live preview. `just docs-serve 8769` picks another port.
 docs-serve port="8000" host="127.0.0.1":
-    uv run --locked --group docs zensical serve --dev-addr "{{host}}:{{port}}"
+    uv run --locked --all-groups zensical serve --dev-addr "{{host}}:{{port}}"
 
 # ---- setup ------------------------------------------------------------------
 
@@ -130,13 +130,13 @@ fm1_base := "third_party/fm1-base"
 # One-time: submodules and the Python tools. Needs `brew install libraqm` (Pillow is built against it).
 fw-setup:
     git submodule update --init --recursive
-    uv sync --locked --group fw
+    uv sync --locked --all-groups
 
 # Build an app's host simulator (no toolchain needed) and run its test script.
 fw-test app="hello": fw-setup
     #!/usr/bin/env bash
     set -euo pipefail
-    uv run --locked --group fw python "{{fm1_base}}/tools/build.py" "firmware/{{app}}" --host
+    uv run --locked --all-groups python "{{fm1_base}}/tools/build.py" "firmware/{{app}}" --host
     bin=$(ls firmware/{{app}}/build/host/*_host)
     cd "firmware/{{app}}" && "build/host/$(basename "$bin")" tests/basic.txt build/host
     echo "screenshots and audio: firmware/{{app}}/build/host/"
@@ -153,7 +153,12 @@ fw-toolchain:
 # Build an app's device package (firmware/<app>/build/*.fwsc). On macOS the tools run in a linux/amd64 container.
 fw-build app="hello": fw-setup fw-toolchain
     JIELI_TOOLCHAIN="$PWD/tools/jieli/toolchain" AC79_SDK="$PWD/tools/fw-AC79_AIoT_SDK" \
-      uv run --locked --group fw python "{{fm1_base}}/tools/build.py" "firmware/{{app}}"
+      uv run --locked --all-groups python "{{fm1_base}}/tools/build.py" "firmware/{{app}}"
+
+# Run the daemon against a MIDI device: a real FM-1 with Agent Deck, or the emulator
+# started with `just emu-run downloads/agtdeck-{{agtdeck_version}}.fwsc uc25hq80 --usb`.
+agtdeck-run backend="herdr" *args: agtdeck-clone
+    uv run --locked --all-groups python vendor/fm-1-agent-deck/host/agtdeck.py --backend "{{backend}}" {{args}}
 
 # ---- upstream watch -----------------------------------------------------------
 

@@ -2,7 +2,7 @@
 
 目標是把 **改 code → host simulator → fm1-emu → 批准 → 實機** 整條鏈跑通，再談功能。基礎是 [fm1-base](https://github.com/charlesvestal/fm1-base)（MPL-2.0，beta）：它在 felucca-bsp 之上提供螢幕、按鍵、LED、音訊、MIDI、storage，以及跑同一份 app 的 host simulator。
 
-**狀態（2026-11-17）：host simulator 這一段已跑通；實機套件的 build 卡在 Docker 拉不到 image，還沒產出 `.fwsc`。**
+**狀態（2026-11-17）：host simulator、實機套件 build、fm1-emu 兩種晶片開機都已跑通；還沒刷進實機。**
 
 ## 結構
 
@@ -23,7 +23,7 @@ tools/fw-AC79_AIoT_SDK/    JieLi AC79 SDK，固定 tag（gitignore）
 | `just fw-setup` | 初始化 submodule、安裝 Python 工具（`fw` dependency group） | 是 |
 | `just fw-test [app]` | build host simulator 並跑 `tests/basic.txt`，產出截圖與 WAV 到 `firmware/<app>/build/host/` | 是，全部 `ok` |
 | `just fw-toolchain` | 下載 JieLi toolchain 與 AC79 SDK 到 `tools/`（約 1.2 GB） | 是 |
-| `just fw-build [app]` | build 實機套件 `firmware/<app>/build/*.fwsc` | **失敗**，見下 |
+| `just fw-build [app]` | build 實機套件 `firmware/<app>/build/*.fwsc` | 是，約 17 秒，產出 `template.fwsc`（616 KB，identity `FM-1_1100`） |
 
 ## 前置需求（macOS）
 
@@ -42,20 +42,21 @@ tools/fw-AC79_AIoT_SDK/    JieLi AC79 SDK，固定 tag（gitignore）
 
 Host simulator 讀一份腳本（`tests/basic.txt`）注入按鍵與 MIDI、檢查狀態、存截圖與音訊。這是讓 agent 自己驗證改動的主要手段，不需要任何硬體。
 
-## 實機 build 目前卡在哪
+## Build 結果
 
-`just fw-build hello` 在啟動 toolchain 容器時失敗：
+`just fw-build hello` 的輸出（2026-11-17）：app 226,264 B；RAM code 9,296 / 32,768 B；`.data+.bss` 76,452 / 98,304 B；build 自帶的檢查全部 `ok`（沒有 soft-double、register 存取只在 felucca-bsp 內）。
 
-```text
-Unable to find image 'debian:bookworm-slim' locally
-docker: Error response from daemon: Get "https://registry-1.docker.io/v2/":
-  proxyconnect tcp: dial tcp …:7890: connect: connection refused
-build: cannot start the toolchain container
-```
+在 fm1-emu 開機 `[模擬]`：
 
-Docker daemon 設了一個連不上的 proxy，所以拉不到 `debian:bookworm-slim`。這是本機 Docker 的網路設定，不是 fm1-base 的問題。修好 proxy（或先手動 `docker pull --platform linux/amd64 debian:bookworm-slim`）之後再跑 `just fw-build hello`。toolchain 與 SDK 都已下載好，不必重抓。
+| 晶片 | 結果 |
+|---|---|
+| `uc25hq80` | 開機到 TEMPLATE 畫面，5 秒內 12 次 flash erase / program |
+| `p25q80` | 同上，12 次 |
 
-在那之前，`.fwsc` 之後的每一步（fm1-emu 兩種晶片、實機）都還沒驗證。
+兩種晶片行為一致。這只是開機與寫入次數，「改設定 → 重開 → 讀回」還沒做。
+
+!!! note "之前卡住的地方"
+    第一次 build 失敗是因為 Docker daemon 的 proxy 連不上，拉不到 `debian:bookworm-slim`（`build: cannot start the toolchain container`）。修好 Docker 的網路後就正常。遇到同樣訊息先查 `docker pull --platform linux/amd64 debian:bookworm-slim` 能不能成功。
 
 ## 預設的 template 帶 Bluetooth
 
@@ -78,7 +79,8 @@ fm1-base template 附的 release workflow（透過共用的 [zvenson/fm1-build](
 
 ## 下一步
 
-- [ ] 修好 Docker 的 proxy，跑通 `just fw-build hello`
+- [x] 跑通 `just fw-build hello`
+- [x] `just emu-shot firmware/hello/build/template.fwsc` 兩種晶片都開機
 - [ ] `just emu-run firmware/hello/build/template.fwsc` 兩種晶片各一次，改設定、重開、確認保存
 - [ ] 批准後刷進實機，按鍵 → USB MIDI → host 端 `mido` 腳本收得到
 - [ ] 開第一個自己的 app：最小的 MIDI controller / macro pad（按鍵送 MIDI、螢幕顯示 layer）

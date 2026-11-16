@@ -45,6 +45,7 @@ just emu-shot FILE [CHIP] [MS]  # headless boot: LCD image + flash write count
 just agtdeck-fetch     # Agent Deck package, digest + attestation verified
 just agtdeck-doctor    # Agent Deck host daemon self-check (clones upstream into vendor/)
 just agtdeck-sim       # Agent Deck daemon without an FM-1 (interactive; prints frames)
+just agtdeck-run       # daemon against a MIDI device: real unit, or `just emu-run … --usb`
 just fm1-versions      # latest upstream releases, to refresh docs/resources.md and docs/watch.md
 
 just fw-setup          # submodules + Python tools (needs `brew install libraqm`)
@@ -171,5 +172,4 @@ Other rules:
 ## Not set up yet
 
 A repo-owned FM-1 skill and an `fm1` CLI wrapper (the `Justfile` covers it for
-now). The device build (`just fw-build`) has not produced a package yet; see
-`docs/dev/index.md`. `fm1-emu` is a downloaded binary, not a source checkout.
+now). No own build has been flashed to hardware yet; see `docs/dev/index.md`. `fm1-emu` is a downloaded binary, not a source checkout.
