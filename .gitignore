@@ -1,1 +1,9 @@
 .DS_Store
+/site/
+/.cache/
+/.venv/
+
+# Device-specific flash backups and downloaded installers/firmware.
+# Full-flash images hold this unit's own data; never publish them.
+/backups/
+/downloads/

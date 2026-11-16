@@ -1,0 +1,89 @@
+# Created by zensical-site-bootstrap; project-owned after initialization.
+[project]
+site_name = "M-VAVE FM-1 Notes"
+site_description = "M-VAVE FM-1 的刷機、韌體、使用心得與 agentic 工作流筆記"
+site_url = "https://daviddwlee84.github.io/M-VAVE_FM-1/"
+repo_url = "https://github.com/daviddwlee84/M-VAVE_FM-1"
+edit_uri = "edit/main/docs/"
+docs_dir = "docs"
+site_dir = "site"
+
+nav = [
+  { "首頁" = "index.md" },
+  { "Getting Started" = [
+    { "總覽與順序" = "getting-started/index.md" },
+    { "安裝 M-Flasher" = "getting-started/install-m-flasher.md" },
+    { "備份原廠與確認晶片" = "getting-started/backup-and-chip.md" },
+    { "刷 SLOOP 2.8.5" = "getting-started/flash-sloop.md" },
+    { "救援" = "getting-started/recovery.md" },
+    { "注意事項" = "getting-started/cautions.md" },
+  ] },
+  { "硬體" = [
+    { "接口與連線" = "hardware/io.md" },
+    { "兩種 Flash 晶片" = "hardware/flash-chips.md" },
+  ] },
+  { "Firmware" = [
+    { "韌體地圖" = "firmware/index.md" },
+    { "SLOOP" = [
+      { "概觀" = "firmware/sloop/index.md" },
+      { "操作速查" = "firmware/sloop/usage.md" },
+      { "Web Editor" = "firmware/sloop/web-editor.md" },
+      { "SLOOP 3" = "firmware/sloop/sloop3.md" },
+    ] },
+    { "多韌體切換" = "firmware/switching.md" },
+  ] },
+  { "Agentic" = [
+    { "工作流與權限" = "agentic/index.md" },
+    { "M-Flasher CLI" = "agentic/m-flasher-cli.md" },
+    { "fm1-emu 模擬器" = "agentic/emulator.md" },
+    { "Agent Skills" = "agentic/skills.md" },
+    { "用 FM-1 控制 agent" = "agentic/agent-deck.md" },
+  ] },
+  { "資源地圖" = "resources.md" },
+  { "我的機器" = "device-log.md" },
+  { "使用心得" = "notes/index.md" },
+]
+
+[project.theme]
+# Single-language zh-TW site. The bootstrap skill is only tested for English;
+# this is a deliberate deviation, not multilingual content.
+language = "zh-TW"
+features = [
+  "content.action.edit",
+  "content.action.copy",
+  "content.code.copy",
+  "navigation.footer",
+  "navigation.sections",
+  "navigation.top",
+  "search.highlight",
+]
+
+[[project.theme.palette]]
+scheme = "default"
+toggle.icon = "lucide/sun"
+toggle.name = "切換到深色模式"
+
+[[project.theme.palette]]
+scheme = "slate"
+toggle.icon = "lucide/moon"
+toggle.name = "切換到淺色模式"
+
+[project.markdown_extensions]
+admonition = {}
+attr_list = {}
+tables = {}
+toc.permalink = true
+pymdownx.details = {}
+pymdownx.highlight.pygments_lang_class = true
+pymdownx.superfences.custom_fences = [
+  { name = "mermaid", class = "mermaid", format = "pymdownx.superfences.fence_code_format" },
+]
+pymdownx.tabbed.alternate_style = true
+pymdownx.tasklist.custom_checkbox = true
+
+[project.plugins.llmstxt]
+full_output = "llms-full.txt"
+
+[project.plugins.llmstxt.sections]
+# **/*.md alone omits root pages in the tested Zensical release.
+Documentation = ["*.md", "**/*.md"]
