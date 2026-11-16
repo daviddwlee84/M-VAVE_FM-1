@@ -22,11 +22,11 @@
 
 ## 備份
 
-備份檔放在本機的 `backups/`（gitignore，不進 repo），另存一份到別處。
+備份檔放在本機的 `backups/`（gitignore，不進 git），異地副本用 `just fm1-backup-release <目錄>` 上傳成這個 repo 的 Release 附件。這個 repo 是 public，所以附件任何人都能下載；這是我自己的決定，映像只適用於這台機器。
 
 | 日期 | 內容 | 檔名 | SHA-256 | 異地副本 |
 |---|---|---|---|---|
-| 2026-11-17 | 原廠完整 flash（015，stock bootloader） | `backups/2026-11-17-stock/fm1-20261117-011632.bin` + `.json` | `c6a4790266bdb9e97500c20f50a98b80f0d334d8a219e1744bfc8e656a44fd38` | **尚未做** |
+| 2026-11-17 | 原廠完整 flash（015，stock bootloader） | `backups/2026-11-17-stock/fm1-20261117-011632.bin` + `.json` | `c6a4790266bdb9e97500c20f50a98b80f0d334d8a219e1744bfc8e656a44fd38` | [GitHub Release](https://github.com/daviddwlee84/M-VAVE_FM-1/releases/tag/backup-2026-11-17-stock)（2026-11-17，digest 相符） |
 
 ## 下載的檔案
 
@@ -49,6 +49,7 @@
 | 2026-11-17 | GUI：FLASH FIRMWARE `sloop-2.8.5.fwsc` → REVIEW & FLASH | 計畫：寫 143 個 sector（572 KiB），`0x04000`–`0x92FFF`，只在 FIRMWARE 區，BOOT 區未動。01:23 完成，143 sectors written, read back and verified |
 | 2026-11-17 | 拔線、關機再開機 | 進入 SLOOP；存檔測試通過（存檔後重開機內容還在） |
 | 2026-11-17 | `just fm1-find`（SLOOP 執行中） | 回報 `midi Felucca (running; download-mode switches it)`：SLOOP 在 USB MIDI 上的名稱是 Felucca，M-Flasher 認得它 |
+| 2026-11-17 | `just fm1-backup-release 2026-11-17-stock` | 原廠備份上傳為 Release `backup-2026-11-17-stock`，asset digest 與本機 SHA-256 一致 |
 
 ## Phase 1 驗收
 
@@ -56,6 +57,6 @@
 - [x] M-Flasher 已安裝，首次授權完成
 - [x] `FLASH CHIP` / JEDEC ID 已記錄
 - [x] 完整 flash 備份已存，SHA-256 已記錄
-- [ ] 備份另存一份到這台電腦以外的地方
+- [x] 備份另存一份到這台電腦以外的地方（GitHub Release）
 - [x] SLOOP 2.8.5 已刷入
 - [x] Save → 關機 → 開機 → Load 測試通過

@@ -21,7 +21,7 @@
 - **不要用 `--yes`。** M-Flasher 寫入前會列出變更並要求輸入 `yes`，那是最後一道確認。
 - **不要把完整備份當成跨機器的韌體安裝包。** 還原別台的備份時 M-Flasher 會保留這台自己的原廠資料，但那不是一般用法。
 - **不要假設還原備份不會動到 bootloader。** 完整還原會連 boot 區一起寫回。若之後裝了 m-bootloader 又想還原舊備份，要用 **Keep this unit's bootloader**（CLI：`--keep-bootloader`）。
-- **不要把完整備份 commit 進 public repo。**
+- **不要把完整備份 commit 進 git。** 要放 GitHub 就用 Release 附件，而且要清楚 public repo 的附件是公開的。
 
 ## 會把 bootloader 換回原廠的操作
 

@@ -57,7 +57,8 @@ shasum -a 256 <備份檔>.bin
 
 !!! danger "備份的處理"
     - **至少兩份**，一份在電腦、一份在別的儲存位置。
-    - **不要放進這個 public repo。** 完整映像包含這台機器自己的資料。repo 裡的 `backups/` 已被 gitignore。
+    - **不要 commit 進 git。** repo 裡的 `backups/` 已被 gitignore。
+    - 完整映像包含這台機器自己的資料（Bluetooth 位址、配對、unit id）。要不要公開是自己的決定：我選擇用 `just fm1-backup-release` 放到這個 public repo 的 Release 當異地副本；不想公開就放 private repo 或其他儲存空間。
     - 這份備份是回到原廠狀態（含原廠音色）的唯一可靠方法。原廠 016 執行後會覆寫 preset 區，官方更新不會還原它。
 
 ## 記錄

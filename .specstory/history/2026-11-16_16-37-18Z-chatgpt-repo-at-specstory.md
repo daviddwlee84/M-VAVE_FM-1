@@ -11188,3 +11188,90 @@ ok   sloop-editor-2.8.5.html  25fe6043084b6d6bdd0529699e2b8cf6f4ba186f7d04801c25
 {"status": "ok", "pages": 23, "llm_pages": 23, "deployed": false}
 ```
 </details></tool-use>
+
+_**Agent (claude-fable-5-2 2026-11-16 17:30:40Z)**_
+
+捷徑與紀錄都更新好了，現在 commit（含你同意的 `.specstory/history`）並 push，然後處理備份上傳到 Release 的事。
+
+_**Agent (claude-fable-5-2 2026-11-16 17:31:06Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Commit the device log, shortcuts, and session history, then push
+
+```bash
+git add -A && git status --short | head -20 && git commit -q -m "Record SLOOP 2.8.5 flash, add FM-1 setup shortcuts
+
+Device log: new flash chip (0xB36014), stock 015 backed up, SLOOP 2.8.5
+installed and verified on hardware. Justfile gains fetch/find/info/backup/
+verify/download-mode/restart/flash recipes, tiered as in AGENTS.md.
+Track .specstory session history at the owner's request.
+
+Co-Authored-By: Claude Fable 5.2 <noreply@anthropic.com>" && git push origin main 2>&1 | tail -1
+```
+
+```text
+A  .specstory/history/2026-11-16_16-37-18Z-chatgpt-repo-at-specstory.md
+A  .specstory/statistics.json
+M  AGENTS.md
+M  Justfile
+M  docs/device-log.md
+M  docs/getting-started/index.md
+M  docs/index.md
+   5b40508..637461a  main -> main
+```
+</details></tool-use>
+
+_**Agent (claude-fable-5-2 2026-11-16 17:39:13Z)**_
+
+<tool-use data-tool-type="generic" data-tool-name="AskUserQuestion"><details>
+<summary>Tool use: **AskUserQuestion**</summary>
+**原廠 flash 備份要上傳到哪裡？daviddwlee84/M-VAVE_FM-1 是 public repo，它的 Release 附件任何人都能下載，而這份 1 MiB 映像包含這台機器的 Bluetooth 位址、配對資料、unit id，以及 M-VAVE 的原廠韌體。上傳後即使刪除也可能已被抓走。**
+
+Options:
+- **新建 private repo 的 Release (Recommended)** - 我建立 private repo daviddwlee84/M-VAVE_FM-1-backups，把 .bin 與 .json 放進它的 Release，並加一個 just 捷徑之後一鍵上傳。一樣是 GitHub 上的異地備份，但只有你看得到。
+- **加密後放 public repo 的 Release** - 先用密碼加密（age 或 gpg 對稱加密）再上傳到目前這個 public repo 的 Release。密碼要你自己保管，忘了就解不開。
+- **照原樣放 public repo 的 Release** - 未加密直接上傳到 daviddwlee84/M-VAVE_FM-1 的 Release，任何人都能下載這份映像。
+
+
+**Answer:** 照原樣放 public repo 的 Release
+</details></tool-use>
+
+_**Agent (claude-fable-5-2 2026-11-16 17:39:32Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Add a release-upload shortcut and publish the stock backup as a release
+
+```bash
+cat >> Justfile <<'EOF'
+
+# ---- off-machine copies -----------------------------------------------------
+
+# Upload one backups/<dir> (.bin + .json) as assets of a GitHub Release tagged backup-<dir>.
+# The repo is public, so the image is downloadable by anyone: the owner's decision, per backup.
+[confirm("Publish this full-flash backup as a PUBLIC release asset?")]
+fm1-backup-release dir:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    d="backups/{{dir}}"; tag="backup-{{dir}}"
+    test -d "$d" || { echo "no such directory: $d" >&2; exit 1; }
+    sums=$(cd "$d" && shasum -a 256 *.bin)
+    notes=$(printf 'Full-flash backup of my own FM-1 (1 MiB), made with M-Flasher.\nDevice-specific: restore only to this unit. See docs/device-log.md.\n\nSHA-256:\n%s\n' "$sums")
+    if gh release view "$tag" >/dev/null 2>&1; then
+      gh release upload "$tag" "$d"/*.bin "$d"/*.json --clobber
+    else
+      gh release create "$tag" "$d"/*.bin "$d"/*.json --title "Backup {{dir}}" --notes "$notes" --latest=false
+    fi
+    gh release view "$tag" --json url,assets --jq '.url, (.assets[] | "\(.name) \(.digest)")'
+EOF
+yes | just fm1-backup-release 2026-11-17-stock 2>&1 | tail -5
+```
+
+```text
+Publish this full-flash backup as a PUBLIC release asset? https://github.com/daviddwlee84/M-VAVE_FM-1/releases/tag/backup-2026-11-17-stock
+https://github.com/daviddwlee84/M-VAVE_FM-1/releases/tag/backup-2026-11-17-stock
+fm1-20261117-011632.bin sha256:c6a4790266bdb9e97500c20f50a98b80f0d334d8a219e1744bfc8e656a44fd38
+fm1-20261117-011632.json sha256:5762cf83ba2beb9eaf25f01c0111eade7c8d36f56ba46017c848c348d8475f08
+```
+</details></tool-use>

@@ -105,3 +105,22 @@ fm1-restart:
 [confirm("This writes firmware to the FM-1. A verified backup exists and the package supports this flash chip?")]
 fm1-flash package:
     "{{m_flasher}}" firmware "{{package}}"
+
+# ---- off-machine copies -----------------------------------------------------
+
+# Upload one backups/<dir> (.bin + .json) as assets of a GitHub Release tagged backup-<dir>.
+# The repo is public, so the image is downloadable by anyone: the owner's decision, per backup.
+[confirm("Publish this full-flash backup as a PUBLIC release asset?")]
+fm1-backup-release dir:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    d="backups/{{dir}}"; tag="backup-{{dir}}"
+    test -d "$d" || { echo "no such directory: $d" >&2; exit 1; }
+    sums=$(cd "$d" && shasum -a 256 *.bin)
+    notes=$(printf 'Full-flash backup of my own FM-1 (1 MiB), made with M-Flasher.\nDevice-specific: restore only to this unit. See docs/device-log.md.\n\nSHA-256:\n%s\n' "$sums")
+    if gh release view "$tag" >/dev/null 2>&1; then
+      gh release upload "$tag" "$d"/*.bin "$d"/*.json --clobber
+    else
+      gh release create "$tag" "$d"/*.bin "$d"/*.json --title "Backup {{dir}}" --notes "$notes" --latest=false
+    fi
+    gh release view "$tag" --json url,assets --jq '.url, (.assets[] | "\(.name) \(.digest)")'

@@ -23,7 +23,7 @@ tree. There is no application code; the only build is the documentation site.
 | `docs/notes/` | Dated usage notes and impressions. |
 | `.specstory/references/` | Raw research exports (e.g. the ChatGPT conversation). **Unverified, lossy** — see below. |
 | `.specstory/history/` | Agent session transcripts. Never edit. |
-| `backups/`, `downloads/` | Git-ignored. Flash backups and downloaded installers/firmware. Never commit. |
+| `backups/`, `downloads/` | Git-ignored. Flash backups and downloaded installers/firmware. Never commit. Off-machine copies of backups go to GitHub Release assets (`just fm1-backup-release`). |
 | `zensical.toml`, `scripts/check-docs-site.py`, `Justfile` | Site config, output checker, task runner. |
 | `.agents/skills/` | Installed agent skills (`zensical-site-bootstrap`). |
 
@@ -42,6 +42,7 @@ just fm1-verify-backups
 just fm1-download-mode # mode switch
 just fm1-restart       # mode switch
 just fm1-flash FILE    # WRITE: owner runs this, never an agent without approval
+just fm1-backup-release DIR  # PUBLISH a backup as a public release asset: only on request
 ```
 
 Prefer these recipes over calling M-Flasher directly. There is deliberately no
@@ -120,8 +121,12 @@ Other rules:
 
 ## Publishing and git
 
-- The repo is public. Never commit flash backups, device-unique data, or
-  credentials. `.specstory/` is tracked by the owner's choice.
+- The repo is public. Never commit flash backups or credentials to git.
+  `.specstory/` is tracked by the owner's choice.
+- The owner publishes full-flash backups as **public** release assets, knowing
+  they hold device-unique data. That is a per-backup decision: run
+  `just fm1-backup-release` only when the owner asks for that specific backup,
+  never as an automatic step after `fm1-backup`.
 - Commit or push only when the owner asks.
 - CI builds on pull requests and deploys `main` to GitHub Pages
   (`.github/workflows/docs.yml`).
