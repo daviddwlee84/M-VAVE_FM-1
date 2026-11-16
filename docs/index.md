@@ -24,8 +24,8 @@
 |---|---|---|
 | 1 | 原廠韌體 + M-Flasher 完整備份 | 完成（2026-11-17），見[我的機器](device-log.md) |
 | 2 | SLOOP 2.8.5 + Web Editor，正常玩音樂 | SLOOP 已刷入，開始玩 |
-| 3 | fm1-emu + Agent Deck host 模擬（不刷機） | 未開始 |
-| 4 | m-bootloader（先確認晶片相容與復原方案） | 暫緩：我的機器是新晶片 |
+| 3 | fm1-emu + Agent Deck host 模擬（不刷機） | fm1-emu 已在本機可用，見[模擬器](agentic/emulator.md#local) |
+| 4 | m-bootloader（先確認晶片相容與復原方案） | 暫緩，只追蹤，見[上游追蹤](watch.md) |
 | 5 | SLOOP 3 / Agent Deck / Melodee 輪流刷入 | 未開始 |
 | 6 | m-apps + m-card 多系統切換（需硬體改裝） | 觀望 |
 
@@ -44,6 +44,7 @@
 
 - `[實機]`：在我自己的機器上看到的，日期記在[我的機器](device-log.md)。
 - `[上游]`：上游 repo 或文件寫的，附連結。
+- `[模擬]`：在 fm1-emu 裡看到的，不等於實機。
 - `[調研]`：來自調研筆記，還沒對過上游。
 
 沒標的段落預設是 `[上游]`，查核日期見[資源地圖](resources.md)。

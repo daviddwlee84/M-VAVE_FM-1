@@ -2,8 +2,31 @@
 
 [fm1-emu](https://github.com/joakimeriksson/fm1-emu) 模擬的是 FM-1 這顆晶片本身：CPU、螢幕、按鍵、旋鈕、音訊、MIDI、flash。社群韌體的 `.fwsc` 套件**不用改**就能在上面跑，和要裝到實機上的是同一個檔案。`[上游]` 這讓它成為刷機前最便宜的一道檢查。
 
-!!! note "這個 repo 的現況"
-    這個 repo **沒有**本機的 fm1-emu checkout，也沒有下載 `fm1-live`。目前只用線上頁面。下面的指令都取自上游 README，我還沒在自己的電腦上跑過。
+!!! note "本機狀態（2026-11-17）"
+    `fm1-emu` 0.5.1 的 macOS arm64 預編譯版已下載到 `tools/fm1-emu/`（gitignore），用 `just emu-fetch` 取得並對過 release digest。沒有原始碼 checkout，所以需要 checkout 的指令（`cargo run`、`--fw list`）我沒跑過。
+
+## 這個 repo 的用法 { #local }
+
+| 指令 | 作用 |
+|---|---|
+| `just emu-fetch` | 下載 fm1-emu、驗 digest、解到 `tools/fm1-emu/` |
+| `just emu-run <package.fwsc> [chip]` | 開視窗玩。`chip` 預設 `uc25hq80`（我這台），也可給 `p25q80`。存檔留在 `tools/emu-state/<套件>-<chip>.flash`，下次開還在 |
+| `just emu-shot <package.fwsc> [chip] [ms]` | headless 開機 `ms` 毫秒，把 LCD 存成 PPM，並印出 flash 寫入次數 |
+| `just agtdeck-fetch` | 下載 Agent Deck 套件，驗 digest 與 build attestation |
+
+`emu-run` 後面可以接 `fm1-live` 的其他旗標，例如 `just emu-run downloads/sloop-2.8.5.fwsc uc25hq80 --usb`。
+
+## 模擬器實測 { #results }
+
+2026-11-17，`fm1-live 0.5.1`，headless `--shot`。標記 `[模擬]`：在模擬器裡看到的，不等於實機。
+
+| 韌體 | `p25q80` | `uc25hq80` | 觀察 |
+|---|---|---|---|
+| SLOOP 2.8.5 | 開機到 TRACKS 畫面 | 開機到 TRACKS 畫面 | 腳本按鍵（`REC`、彈音、`PLAY`）有反應，但 12 秒內兩種晶片都是 0 次 flash 寫入，我沒能用腳本觸發存檔。存檔行為以實機為準（已通過，見[我的機器](../device-log.md)） |
+| Agent Deck 0.7 | 開機到 `WAITING FOR THE HOST` | 開機到 `WAITING FOR THE HOST` | 每次開機兩種晶片都是 3 次 flash erase / program，行為一致：它在新晶片模式下確實寫入 flash，沒有退回只存 RAM |
+| SLOOP 3 | — | — | **跑不了**：fm1-emu 的韌體清單沒有它，它的套件是給 m-bootloader 的 `.area`，不是 `.fwsc` |
+
+Agent Deck 那一列是目前唯一的新晶片相容性證據，上游沒有 UC25HQ80 的實機回報。它只說明「模擬的新晶片上寫入有發生」，設定是否正確讀回、實機是否正常都還沒驗證。
 
 ## 它是什麼
 

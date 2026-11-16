@@ -41,6 +41,7 @@ nav = [
   ] },
   { "資源地圖" = "resources.md" },
   { "我的機器" = "device-log.md" },
+  { "上游追蹤" = "watch.md" },
   { "使用心得" = "notes/index.md" },
 ]
 

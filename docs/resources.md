@@ -82,10 +82,10 @@ GitHub stars 只代表關注度，**不是刷機安全性的證據**。
 | [m-bootloader](https://github.com/jvitkauskas/m-bootloader/releases) | v2.4 | 2026-11-13 | |
 | [sloop-fm1](https://github.com/isod89/sloop-fm1/releases) | v2.8.5 | 2026-11-04 | SLOOP 2.8，支援 UC25HQ80 |
 | [sloop3-fm1](https://github.com/isod89/sloop3-fm1/releases) | v3.3.7-beta | 2026-11-16 | prerelease |
-| [fm1-emu](https://github.com/joakimeriksson/fm1-emu/releases) | v0.5.1 | 未記錄 | |
-| [fm-1-agent-deck](https://github.com/kevinelliott/fm-1-agent-deck) | 0.7 | 未記錄 | 版本取自 README，非 release API；作者實機跑的是 0.6.2 |
+| [fm1-emu](https://github.com/joakimeriksson/fm1-emu/releases) | v0.5.1 | 2026-11-14 | 本機用的版本，見[模擬器](agentic/emulator.md#local) |
+| [fm-1-agent-deck](https://github.com/kevinelliott/fm-1-agent-deck) | v0.7 | 2026-11-14 | 作者實機跑的是 0.6.2 |
 
-重新查某個 repo 的最新 release：
+一次列出全部：`just fm1-versions`。重新查某個 repo 的最新 release：
 
 ```sh
 gh api repos/<owner>/<repo>/releases --jq '.[0].tag_name'

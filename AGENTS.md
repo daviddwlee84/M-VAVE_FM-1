@@ -23,6 +23,8 @@ tree. There is no application code; the only build is the documentation site.
 | `docs/notes/` | Dated usage notes and impressions. |
 | `.specstory/references/` | Raw research exports (e.g. the ChatGPT conversation). **Unverified, lossy** — see below. |
 | `.specstory/history/` | Agent session transcripts. Never edit. |
+| `tools/`, `vendor/`, `build/` | Git-ignored. Emulator binaries and state, upstream checkouts, firmware build output. |
+| `docs/watch.md` | Ledger of upstream checks for things on hold (m-bootloader on the new chip, SLOOP 3). Append, do not rewrite. |
 | `backups/`, `downloads/` | Git-ignored. Flash backups and downloaded installers/firmware. Never commit. Off-machine copies of backups go to GitHub Release assets (`just fm1-backup-release`). |
 | `zensical.toml`, `scripts/check-docs-site.py`, `Justfile` | Site config, output checker, task runner. |
 | `.agents/skills/` | Installed agent skills (`zensical-site-bootstrap`). |
@@ -33,6 +35,12 @@ tree. There is no application code; the only build is the documentation site.
 just docs-build        # uv run zensical build --strict
 just docs-check        # build, then scripts/check-docs-site.py
 just docs-serve        # preview on 127.0.0.1:8000 (just docs-serve 8769 for another port)
+
+just emu-fetch         # fm1-emu into tools/fm1-emu/ (git-ignored), digest-verified
+just emu-run FILE [CHIP]   # play a .fwsc in a window; CHIP defaults to uc25hq80 (this unit)
+just emu-shot FILE [CHIP] [MS]  # headless boot: LCD image + flash write count
+just agtdeck-fetch     # Agent Deck package, digest + attestation verified
+just fm1-versions      # latest upstream releases, to refresh docs/resources.md and docs/watch.md
 
 just fm1-fetch         # download M-Flasher + SLOOP into downloads/, verify against release digests
 just fm1-find          # read-only: units in download mode / on USB MIDI
@@ -78,6 +86,7 @@ Mark claims in `docs/` with one of these tags when the distinction matters:
 
 - `[實機]` — observed on the owner's unit (record the date in `device-log.md`).
 - `[上游]` — stated in upstream documentation, link it.
+- `[模擬]` — observed in fm1-emu. Never treat it as hardware evidence.
 - `[調研]` — from research notes, not yet checked against upstream.
 
 Do not upgrade a tag without doing the check. If something cannot be verified,
@@ -111,8 +120,11 @@ Other rules:
   uncertain model, CRC mismatch). Do not work around a tool's refusal.
 - Do not downgrade stock 016 to 015: 016 overwrites the preset area and only a
   backup restores it.
-- m-bootloader is out of scope until the owner explicitly starts that phase.
-  It has little testing on the new flash chip.
+- m-bootloader is on hold (decided 2026-11-17): this unit has the new flash
+  chip and the owner has no USB_KEY (Pico) for recovery. A full backup does not
+  help if the boot area is bad. The conditions to revisit are in
+  `docs/firmware/sloop/sloop3.md`; do not propose installing it before then.
+  SLOOP 3 depends on it and is on hold too.
 - macOS: M-Flasher's first-run authorization is GUI-only and does not work over
   SSH. The CLI is `/Applications/M-Flasher.app/Contents/MacOS/M-Flasher`.
 - Connect by USB **data** cable, directly, no hub.

@@ -38,6 +38,8 @@
 | 2026-11-17 | `M-Flasher-0.12.1-macos.dmg` | `ccb469a1ceead508e50a42b6c02946ea0d0caee18a9d06ec830c268ee8717192` | [m-flasher v0.12.1](https://github.com/jvitkauskas/m-flasher/releases/tag/v0.12.1) |
 | 2026-11-17 | `sloop-2.8.5.fwsc` | `b0446effb840740a3aa5c386ce004e79334e4f833d48d82a9eb5edbfde92ae67` | [sloop-fm1 v2.8.5](https://github.com/isod89/sloop-fm1/releases/tag/v2.8.5) |
 | 2026-11-17 | `sloop-editor-2.8.5.html` | `25fe6043084b6d6bdd0529699e2b8cf6f4ba186f7d04801c2564882dabb76f03` | 同上 |
+| 2026-11-17 | `fm1-emu-0.5.1-macos-arm64.tar.gz` | `b5df55e1450210ae88be4ddfa903e608fa495a58bf72775d30047308e48b9895` | [fm1-emu v0.5.1](https://github.com/joakimeriksson/fm1-emu/releases/tag/v0.5.1) |
+| 2026-11-17 | `agtdeck-0.7.fwsc` | `c0d0b43e688ca0f7f9911dce9ee0bdffb00b1127a66bc4629a934e087a97eacf` | [fm-1-agent-deck v0.7](https://github.com/kevinelliott/fm-1-agent-deck/releases/tag/v0.7)，build attestation 驗證通過。**尚未刷入實機** |
 
 ## 操作歷史
 

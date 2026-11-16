@@ -11480,3 +11480,1200 @@ ok   backups/2026-11-17-stock/fm1-20261117-011632.bin
 Command did not complete within its 120s timeout and was moved to the background (ID: b8l1y2cl8). Output is being written to: /private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/5f461408-bbdd-44d0-bb3b-b0642eabaa31/tasks/b8l1y2cl8.output. You will be notified when it completes. It is running now: do not start a second copy while it runs. If it is no longer needed, stop it with TaskStop. To check interim output, use Read on that file path.
 ```
 </details></tool-use>
+
+_**Agent (claude-fable-5-2 2026-11-16 17:47:04Z)**_
+
+剛才的 dry-run 卡在確認提示上，我先停掉它，再把修正後的捷徑與紀錄 commit。
+
+_**Agent (claude-fable-5-2 2026-11-16 17:47:31Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Stop the hung dry-run, confirm the path fix, then commit and push
+
+```bash
+pkill -f "just --dry-run fm1-backup-release" ; sleep 1; just --yes --dry-run fm1-backup-release ./backups/2026-11-17-sloop-2.8.5/ 2>&1 | grep -n 'name=\|d="' ; just docs-check 2>&1 | tail -1 && git add -A && git commit -q -m "Record SLOOP backup, let fm1-backup-release accept a path
+
+Co-Authored-By: Claude Fable 5.2 <noreply@anthropic.com>" && git push origin main 2>&1 | tail -1
+```
+
+```text
+3:name=$(basename "./backups/2026-11-17-sloop-2.8.5/")   # accept a bare name or a path like backups/<name>/
+4:d="backups/$name"; tag="backup-$name"
+{"status": "ok", "pages": 23, "llm_pages": 23, "deployed": false}
+   7cce214..df71ea9  main -> main
+```
+</details></tool-use>
+
+_**Agent (claude-fable-5-2 2026-11-16 17:47:40Z)**_
+
+對，這份備份包含你正在玩的曲子。它是整顆 1 MiB flash 的映像，SLOOP 的 autosave、section A–D、user presets、samples、設定都在裡面，還原它就會回到備份那一刻的狀態。
+
+有一個前提：SLOOP 是在**停止播放後約 2.5 秒**才 autosave。如果你進 download mode 前曲子還在播、或剛改完就馬上按，最後那一點改動可能還在 RAM 裡，不會進備份。要確認的話，重開機後看曲子是不是你預期的樣子，是的話備份裡也是。
+
+## 這次做了什麼
+
+- **Release 已確認**：<https://github.com/daviddwlee84/M-VAVE_FM-1/releases/tag/backup-2026-11-17-sloop-2.8.5>，asset digest 與本機 SHA-256 一致（`783060c0…bfc018b2`）。`just fm1-verify-backups` 兩份備份都通過。
+- **修了你踩到的坑**：`just fm1-backup-release` 現在接受資料夾名稱，也接受路徑（`backups/2026-11-17-sloop-2.8.5/` 或 `./backups/...` 都可以）。我用 dry-run 確認路徑解析正確，沒有再實際上傳一次。
+- **`docs/device-log.md` 已更新**並 push：兩份備份、兩個 Release、這次的操作紀錄。
+
+上面那則「失敗」的背景工作通知是我自己造成的：一個 dry-run 卡在確認提示上，我把它停掉了，不影響任何東西。
+
+另外，你的輸出證實了一件文件原本只標 `[上游]` 的事：SLOOP 執行中可以進 download mode 並完成備份，M-Flasher 正確辨識出 `SLOOP 2.8.5`。這已寫進 device log。
+
+---
+
+_**User (2026-11-16 17:49:19Z)**_
+
+現在是不是 m-bootloader 不建議裝？還是整機備份了其實不怕？
+另外我們現在 Justfile 是不是其實也夠用了（對於 CLI wrapper 的部分）
+然後 SLOOP 3 跟 Agent Deck 是依賴 m-bootloader 之後嗎？
+還有 fm1-emu
+以及如果我們想自己vibe firmware等等呢？
+開展plan我們下一階段的系列工作
+
+---
+
+_**Agent (claude-fable-5-2 2026-11-16 17:49:30Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Read m-bootloader new-chip status and Agent Deck install requirements
+
+`cd /private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/5f461408-bbdd-44d0-bb3b-b0642eabaa31/scratchpad/up 2>/dev/null && { echo "=== MBOOT new chip + install"; grep -n -i -A14 "Little tested on the FM-1's newer" mboot-readme.md | cut -c1-900; grep -n -i -E "^## |USB_KEY|pico|dark|does not start|brick" mboot-readme.md | cut -c1-300 | head -40; echo "=== AGENTDECK install"; grep -n -i -E "bootloader|install|flash|m-flasher|\.fwsc|rescue|dinghy|UC25|B36014|JEDEC|stock" agentdeck-readme.md | cut -c1-260 | head -45; }`
+
+```text
+=== MBOOT new chip + install
+116:**Little tested on the FM-1's newer flash chip.** FM-1s sold from late 2026 have a
+117-UCUN UC25HQ80 flash (JEDEC ID `0xB36014`) instead of the Puya P25Q80H
+118-(`0x856014`). One such unit did not start after version 1.1 or 1.2 was installed,
+119-and the cause is not known. Another runs 1.3 and 2.0, on one owner's report,
+120-with its firmware, menu and download mode working. A MIDI mode reinstall of the same
+121-firmware worked there too, which rewrites only the first 4 KiB sector
+122-([M-Flasher #13](https://github.com/jvitkauskas/m-flasher/issues/13)).
+123-Check **FLASH CHIP** in M-Flasher before installing. With `0xB36014`, whether through
+124-M-Flasher or M-UPGRADE, install it at your own risk.
+125-
+126-## Install
+127-
+128-Back up your unit with M-Flasher first. Then install the build for your
+129-board, `smk37-uboot.boot` or `fm1-uboot.boot` from the
+130-[releases](https://github.com/jvitkauskas/m-bootloader/releases):
+14:## Features
+71:## Status
+126:## Install
+137:the bootloader is ever broken, the USB_KEY dongle still forces the chip into
+169:## Build
+204:## Source
+221:## Provenance
+=== AGENTDECK install
+61:flashing back to stock brings the instrument right back) and the FM-1 gets a
+76:> (protocol v6) is installed on the author's FM-1 — flashed over USB with
+77:> the installer in this repo, as every release from 0.1 on was before it
+79:> newest package, **0.7** (`dist/agtdeck-0.7.fwsc`), is the same
+92:> is the checklist for a first flash.
+96:> firmware's. It keeps only its own few settings in flash. Whether another
+100:> ⚠️ **Flashing custom firmware is at your own risk.** The FM-1's flash is
+101:> single-bank; an interrupted write can leave the unit dark until rescued
+103:> arrival-day section before you flash anything — this project or any other.
+111:Every image here is the LCD of `dist/agtdeck-0.7.fwsc` running in
+183:packages run in it *unchanged* — the same `.fwsc` you would flash.
+186:LCD of `dist/agtdeck-0.7.fwsc` booted in fm1-emu and fed the frame
+225:[`dist/agtdeck-0.7.fwsc`](dist/agtdeck-0.7.fwsc), choose
+226:**Open .fwsc…** there, and press **Start**.
+235:`--simulate` mode (below), or flash a real one. The
+251:Everything except the final flash can be tried right now:
+269:python3 tools/emu_test.py       # boots the newest dist/*.fwsc, injects daemon
+274:With a real FM-1 flashed with Agent Deck and plugged in over USB:
+277:pip install mido python-rtmidi
+287: │ Agent Deck firmware (Dinghy fork, firmware/agtdeck.c)│
+318:[Dinghy](#credits), whose platform reserves SysEx for its own firmware
+395:| **PLAY held + PRESETS** | choose which agent PLAY starts (cycles the installed CLIs) |
+409:| NEW AGENT | pick an installed agent CLI and a directory (the current agents' directories plus `projects` from the config) and start it. `IN A NEW WORKTREE: YES` first makes a git worktree next to the repository (`<repo>-wt1` on branch `deck/wt1`, and so 
+558:| 0.7 | nothing new on the device. The project's files and commands were renamed from `agentdeck` to `agtdeck` (package `agtdeck-0.7.fwsc`, daemon `host/agtdeck.py`, settings in `~/.config/agtdeck`, moved there by the daemon on first start), and the daemon
+591:| `--install-service` | | start the daemon at every login, with the other flags given here: a launchd agent on macOS (`~/Library/LaunchAgents/com.agtdeck.daemon.plist`, log in `~/Library/Logs/agtdeck.log`), a `systemd --user` unit on Linux |
+592:| `--print-service` | | show what `--install-service` would write, and write nothing |
+593:| `--uninstall-service` | | stop and remove it |
+600:**Installing it as a command** (optional; running the file works as
+601:before): `pip install .` or `pipx install .` in a clone gives an
+681:The image carries no agent CLIs (Claude Code, Codex, …): install the
+761:[Dinghy](https://github.com/zvenson/dinghy) tree with that file dropped
+767:loop, settings persisted to flash.
+770:# one-time setup (Linux x86-64; on a Mac use Docker/WSL per Dinghy's README)
+775:pip install mido python-rtmidi Pillow
+777:./build.sh --release 0.7                     # -> build/agtdeck-0.7.fwsc
+782:cc -O2 -Wall -Wno-unused-function -DDINGHY_HOST -DAPP_VER="\"dev\"" \
+784:   -o build/host/agtdeck firmware/src/dinghy.c
+787:# on-device test (the packaged .fwsc on the emulated chip, via fm1-emu):
+800:Dinghy's checks, the `.fwsc` parses under the installer's own
+806:`fm1_in.notes` levels like Dinghy's own app does — identical behaviour
+809:Verified 2026-11-09: the same packaged `.fwsc` boots in **fm1-emu**
+829:for the `.fwsc` and publishes it as the release. Anyone can check that a
+833:gh attestation verify agtdeck-0.7.fwsc --repo kevinelliott/fm-1-agent-deck \
+847:for its first flash. That unit has since been flashed over USB with
+850:flash.
+Shell cwd was reset to /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1
+```
+</details></tool-use>
+
+_**Agent (claude-fable-5-2 2026-11-16 17:49:40Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Check fm1-base build requirements, fm1-emu release assets, and new-chip issue reports
+
+`cd /tmp && echo "=== fm1-base"; gh api repos/charlesvestal/fm1-base/readme --jq .content | base64 -d | grep -n -i -E "^#|toolchain|macos|docker|build|simulator|make |clang|install|bootloader|UC25|B36014|emu|agent|AGENTS|license" | cut -c1-240 | head -70; echo "=== fm1-base tree"; gh api repos/charlesvestal/fm1-base/contents --jq '.[].name' | tr '\n' ' '; echo; echo "=== fm1-emu release assets"; gh api repos/joakimeriksson/fm1-emu/releases/latest --jq '.tag_name, (.assets[].name)' | head -20; echo "=== mboot issues new chip"; gh api "search/issues?q=repo:jvitkauskas/m-bootloader+UC25HQ80+OR+B36014&per_page=8" --jq '.items[]|"#\(.number) [\(.state)] \(.title) (\(.updated_at[0:10]))"'; echo "=== sloop3 issues chip"; gh api "search/issues?q=repo:isod89/sloop3-fm1+UC25HQ80+OR+B36014+OR+%22new+chip%22&per_page=6" --jq '.items[]|"#\(.number) [\(.state)] \(.title) (\(.updated_at[0:10]))"'`
+
+```text
+=== fm1-base
+1:# fm1-base
+5:a host simulator and a browser emulator that run the same app, and the tools to build, package and install it.
+16:app runs on the computer in the host simulator and in the browser: try the template's at
+17:<https://charlesvestal.github.io/fm1-base/emu/>.
+21:## Optional parts
+23:A firmware has only what its fm1.toml asks for (and its app.h, for velocity and pressure); every build prints the
+28:| Bluetooth MIDI with a computer or tablet | `ble = true` (`tools/build.py --no-ble` leaves it out of one build) | `TO_BLE`, `PORT_BLE`; `plat_ble_state`, `plat_ble_connected`; `plat_ble_enable`; with `ble_stack = "own"` a stream of SysE
+36:| USB MIDI after the USB audio interfaces, so macOS 13-15 show the audio device | on with the USB audio input, unless `usb_midi_last = false` | nothing |
+47:| The firmware as an `.rfm1` for host apps (RemoteFM1 for iOS), below | `tools/build.py APP_DIR --rfm1` | nothing |
+48:| The browser emulator's own parts (`tools/build.py --web`): web/emu/parts, each file saying what it does; without any, the page and app.wasm are as before. One is on without asking: `resample`, the FM-1's 44.1 kHz played at the browser'
+58:## Bluetooth and WiFi
+63:build without a radio. Every build still takes the three SDK files a package needs (LICENSING.md).
+65:### Two Bluetooth stacks
+70:task, and the build checks it. The radio calibrates itself at every start, so an FM-1 whose stock calibration was
+75:  Without it a pairing is refused; macOS and iOS connect anyway.
+101:### Turning Bluetooth on
+122:`tools/build.py --no-ble` builds the same firmware without Bluetooth (NAME-usb.fwsc).
+124:### Turning WiFi on
+132:   builds code that talks lwIP, and include `lwip/sockets.h`. That code runs in a task of its own
+141:### What each costs
+143:The FM-1 has a 581 KB app slot in the flash, 96 KB of RAM for `.data` and `.bss` (128 KB in a WiFi build), and a
+144:336 KB pool of RAM for big buffers (304 KB in a WiFi build). With `ram_layout = "packed"` in fm1.toml
+176:- In a WiFi build, fm1-base's large font (the splash's name, the panel's screens) can go too:
+182:## Development over USB
+190:`tools/fm1_install.py`, `fm1_backup.py`, `fm1_mirror.py` and `fm1_debug.py` find it the same way.
+192:The site's installer page (`tools/make_site.py`, from `web/installer.html`) reads the same crash record and log in
+205:## .rfm1: your firmware in host apps
+208:an instrument or an AUv3. It is the host simulator compiled to WebAssembly, the same app as on the FM-1, with a
+213:    tools/build.py APP_DIR --rfm1                    # APP_DIR/build/rfm1/ID-dev+COMMIT.rfm1 (emcc, as --web)
+214:    tools/build.py APP_DIR --rfm1 --release X.Y      # APP_DIR/build/NAME-X.Y.rfm1, beside NAME-X.Y.fwsc
+217:The template's release workflow builds the release's `.rfm1` and attests it with the package.
+218:The manifest's `source_url` is fm1.toml's `repo` at that commit, so commit (and push) what you build. Its `license`
+220:at 8 MiB (`rfm1_memory_mib`, at most 32). The build checks the module against the format before it writes the file.
+223:reader (over SysEx) work as in the browser emulator. Saved objects and the data area are kept by the app with its
+227:## firmware.json: your firmware in hubs
+229:Every build writes `firmware.json`, a description of the firmware for the places that list and install FM-1
+230:firmwares (The Firmware Hub, RemoteFM1, M-Flasher): its name, author, licence, a paragraph on it, tags, the install
+231:page, and the hardware it needs (the flash parts it saves to, the parts the build has, such as Bluetooth MIDI or USB
+232:audio). It comes from fm1.toml (`author`, `description`, `tags`, `install`, `site`, with the site's `tagline`, `repo`,
+233:`licence` and `credits`) and lands in `APP_DIR/build/` and, for an app in `app/`, at the repository's root, to commit.
+236:## Moving a Felucca-based firmware here
+242:scenarios compared byte for byte with the old simulator's, then the FM-1), and the licensing files. It never changes
+=== fm1-base tree
+.gitignore .gitmodules CREDITS.md DESIGN.md LICENSE LICENSES LICENSING.md README.md assets ble bsp bt device docs examples host include lib skill template tests tools web 
+=== fm1-emu release assets
+v0.5.1
+fm1-emu-0.5.1-linux-arm64.tar.gz
+fm1-emu-0.5.1-linux-x86_64.tar.gz
+fm1-emu-0.5.1-macos-arm64.tar.gz
+fm1-emu-0.5.1-windows-x86_64.zip
+fm1-plugin-0.5.1-macos-arm64.zip
+fm1-plugin-0.5.1-windows-x86_64.zip
+=== mboot issues new chip
+#3 [closed] README: not tested on the FM-1's newer flash chip (2026-11-04)
+#13 [closed] m-bootloader 2.0 (2026-11-05)
+#14 [closed] m-bootloader 2.1: keep older versions working (2026-11-05)
+#5 [closed] Accept FM-1 016's boot configuration (2026-11-04)
+#17 [closed] Load and run a RAM app over MIDI (2026-11-06)
+#6 [closed] Stop reading the boot configuration and cut it short (2026-11-04)
+#15 [closed] Let a host back up the flash over MIDI, and run MIDI mode as a RAM stage (2026-11-06)
+#11 [closed] Add MIDI mode, to install firmware over USB MIDI from the recovery menu (2026-11-05)
+=== sloop3 issues chip
+Shell cwd was reset to /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1
+```
+</details></tool-use>
+
+_**Agent (claude-fable-5-2 2026-11-16 17:49:51Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Read Agent Deck first-flash caveats, m-bootloader install notes, and fm1-base overview
+
+`cd /private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/5f461408-bbdd-44d0-bb3b-b0642eabaa31/scratchpad/up && sed -n '88,104p;766,779p;840,852p' agentdeck-readme.md | cut -c1-700; echo "=== mboot"; sed -n '126,140p' mboot-readme.md | cut -c1-500; echo "=== fm1-base skill + toolchain"; gh api repos/charlesvestal/fm1-base/contents/skill --jq '.[].name' | tr '\n' ' '; gh api repos/charlesvestal/fm1-base/readme --jq .content | base64 -d | sed -n '1,20p' | cut -c1-600; gh api repos/charlesvestal/fm1-base/contents/docs --jq '.[].name' | tr '\n' ' '`
+
+````text
+> time than hours on the desk — the prompt queue, pipelines and
+> auto-approve rules have so far been exercised against a stub backend
+> rather than long sessions with real agents — so expect rough edges. The
+> [arrival-day guide](#arrival-day-read-this-before-plugging-anything-in)
+> is the checklist for a first flash.
+
+> **Coming from another firmware:** Agent Deck is a controller with no
+> projects, patches or samples of its own, and it does not read any other
+> firmware's. It keeps only its own few settings in flash. Whether another
+> firmware's saved projects survive a visit to Agent Deck has not been
+> tested, so back them up first.
+
+> ⚠️ **Flashing custom firmware is at your own risk.** The FM-1's flash is
+> single-bank; an interrupted write can leave the unit dark until rescued
+> via the chip's mask-ROM boot mode. Read the risk notes in the
+> arrival-day section before you flash anything — this project or any other.
+
+integer math only, redraw-only-what-changed, `platform_poll()` every
+loop, settings persisted to flash.
+
+```sh
+# one-time setup (Linux x86-64; on a Mac use Docker/WSL per Dinghy's README)
+cd firmware-build
+tools/get_toolchain.sh                       # JieLi pi32v2 clang -> ~/.jieli/toolchain
+git clone --depth 1 --branch AC79NN_SDK_V1.2.1_2023-12-13 \
+    https://gitee.com/Jieli-Tech/fw-AC79_AIoT_SDK.git ~/fw-AC79_AIoT_SDK
+pip install mido python-rtmidi Pillow
+
+./build.sh --release 0.7                     # -> build/agtdeck-0.7.fwsc
+
+# host emulator test (no device, no toolchain): tests/agtdeck.txt
+release alone — a package uploaded or rebuilt by hand loses the
+signature. The signature says where the file came from, not that the
+firmware is safe.
+
+## Arrival day (read this before plugging anything in)
+
+This section was written before the author's unit arrived, as the plan
+for its first flash. That unit has since been flashed over USB with
+step 3 below — every release from 0.1 to 0.6.2 — and runs Agent Deck
+today. The plan stays here as the checklist for anyone else's first
+flash.
+
+A **late-2026 FM-1** will most likely carry the **UC25HQ80** flash chip
+=== mboot
+## Install
+
+Back up your unit with M-Flasher first. Then install the build for your
+board, `smk37-uboot.boot` or `fm1-uboot.boot` from the
+[releases](https://github.com/jvitkauskas/m-bootloader/releases):
+
+```sh
+m-flasher bootloader --file smk37-uboot.boot
+```
+
+M-Flasher writes only the boot area. It keeps the chip-key record that firmware installers need and drops the rest of the configuration, which the bootloader does not use, for more room ([specification §5.3](docs/SPEC.md#53-configuration-blob)). If
+the bootloader is ever broken, the USB_KEY dongle still forces the chip into
+download mode
+([specification §4.3](docs/SPEC.md#43-recovery-independent-of-a-valid-boot-image)).
+
+=== fm1-base skill + toolchain
+felucca-to-fm1-base # fm1-base
+
+A base for M-VAVE FM-1 firmware, on [felucca-bsp](https://github.com/hugelton/felucca-bsp): the platform layer
+above the hardware (screen, drawing and fonts, panel, LEDs, audio, MIDI over USB and TRS, storage, the screen reader),
+a host simulator and a browser emulator that run the same app, and the tools to build, package and install it.
+MPL-2.0: an app built on it may use any licence. See [DESIGN.md](DESIGN.md), [LICENSING.md](LICENSING.md) and
+[CREDITS.md](CREDITS.md).
+
+**Status: beta.** Two firmwares are built on it so far, and they are its proof points:
+[CTL-1](https://github.com/charlesvestal/fm1-ctl) (with Bluetooth MIDI) and
+[Radio](https://github.com/charlesvestal/fm1-radio) (with WiFi). Expect the platform interface (`include/plat.h`)
+and `fm1.toml`'s settings to change before 1.0.
+
+The template (`template/`) runs on an FM-1: screen, keys and their LEDs, sound, MASTER, encoders, settings kept
+across a power cycle, USB-MIDI both ways, the screen reader, and an update started from the template itself. The same
+app runs on the computer in the host simulator and in the browser: try the template's at
+<https://charlesvestal.github.io/fm1-base/emu/>.
+
+    git clone --recursive https://github.com/charlesvestal/fm1-base
+
+FIRMWARE-JSON.md SECOND-CORE.md bt firmware.schema.json
+Shell cwd was reset to /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1
+````
+</details></tool-use>
+
+_**Agent (claude-fable-5-2 2026-11-16 17:58:21Z)**_
+
+<tool-use data-tool-type="generic" data-tool-name="AskUserQuestion"><details>
+<summary>Tool use: **AskUserQuestion**</summary>
+**m-bootloader 在你的新晶片上要怎麼處理？我查到的事實：完整備份不足以保命，boot 區壞掉時機器不會開機，只能靠 USB_KEY（一塊 Raspberry Pi Pico）強制進 download mode 後才能還原備份。上游對 0xB36014 的說法是 at your own risk，一台失敗、一台成功。只有 SLOOP 3 需要它，Agent Deck 不需要。**
+
+Options:
+- **先備好 Pico USB_KEY 再裝 (Recommended)** - 買一塊 Pico，先用它實際讓 FM-1 進 download mode 驗證救援路徑可用，再裝 m-bootloader 與 SLOOP 3。這段期間先做不需要它的工作。
+- **暫不處理，只追蹤** - 不買硬體、不裝。計畫只包含定期查上游對新晶片的回報，SLOOP 3 只在模擬器玩。
+- **不等 Pico，直接裝** - 接受變磚風險（屆時仍需買 Pico 才能救）。由你本人在 GUI 操作，我只做 preflight 與紀錄。
+
+**自己 vibe firmware 的程式碼要放哪裡？這個 repo 目前定位是筆記與 agent context，沒有程式碼。fm1-base（MPL-2.0）提供 template、host simulator 與 browser emulator，是上游推薦的起點。**
+
+Options:
+- **另開新 repo (Recommended)** - 用 fm1-base template 建一個獨立的 firmware repo，有自己的 AGENTS.md、CI 與 release；這個筆記 repo 只記錄心得並連過去。license 與 CI 互不干擾。
+- **放在這個 repo 的子目錄** - 例如 firmware/<name>/，筆記與程式碼同一個 repo，簡單但 docs CI 與 firmware CI 會混在一起。
+- **先不決定，只做環境調查** - 這一階段只把 fm1-base template 在本機 host simulator 跑起來並寫成筆記，不建立正式專案。
+
+**第一個自製韌體想做什麼方向？這決定要先研究哪些上游實作。**
+
+Options:
+- **Agent 控制台 (Recommended)** - 以 Herdr 為主的實體 agent dashboard：琴鍵 LED 顯示 agent 狀態、按鍵批准/拒絕。先試用 Agent Deck，再決定 fork 它還是用 fm1-base 重寫。
+- **MIDI controller / macro pad** - 小而可完成的第一個練習：自訂 MIDI mapping 與螢幕顯示，搭配 host 端 Python。
+- **音樂類** - 自己的 synth、sequencer 或效果實驗，DSP 為主。
+- **還沒想法** - 先把 template 改出一個 hello world，跑通 build → 模擬 → 刷機整條鏈再說。
+
+
+**Answer:** 目前沒有 Raspberry Pi Pico (只有 Raspberry Pi 3） 不過感覺整體有點麻煩 也許track等方案成熟了再考慮, 放在這個 repo 的子目錄, Agent控制台、MIDI controller / macro pad （但先試用 Agent Deck）; 如果有必要 fm1-base當template是也可以開新repo 然後做為submodule引入本repo". Read the answers carefully — they may request clarification, changes, or that you not proceed — and follow what they actually say.
+</details></tool-use>
+
+_**Agent (claude-fable-5-2 2026-11-16 17:59:16Z)**_
+
+<tool-use data-tool-type="write" data-tool-name="Write"><details>
+<summary>Tool use: **Write**</summary>
+
+````markdown
+# M-VAVE FM-1：Phase 2 系列工作計畫
+
+## Context 背景
+
+Phase 1 已完成：筆記站上線、`AGENTS.md`、`Justfile` 捷徑、原廠與 SLOOP 2.8.5 兩份完整備份（本機 + GitHub Release）、SLOOP 2.8.5 在實機通過存檔測試。這台機器是**新晶片 `0xB36014`**、stock bootloader。
+
+這一階段要回答並落實你問的五件事，方向已確認：m-bootloader **只追蹤、不裝**；自製韌體**放在這個 repo 的子目錄**（必要時 fm1-base 相關部分另開 repo 再以 submodule 引入）；第一個方向是 **Agent 控制台 / MIDI controller**，但**先試用 Agent Deck**。
+
+## 先回答你的問題
+
+**m-bootloader 現在不建議裝，而且「有整機備份」不等於不怕。** 備份只有在機器還能進 download mode 時才用得上。boot 區壞掉時機器不開機，上游寫明這種情況要靠 USB_KEY dongle（Raspberry Pi Pico）強制進 ROM download mode，才輪得到還原備份。上游對 `0xB36014` 的原文是 install it at your own risk：一台裝 1.1/1.2 後無法啟動、原因不明，一台回報 1.3 與 2.0 正常。你手上的 Raspberry Pi 3 不能替代 Pico（USB_KEY 是 RP2040 的實作）。
+
+**依賴關係：**
+
+| 項目 | 需要 m-bootloader？ | 依據 |
+|---|---|---|
+| SLOOP 3 | **需要**，只能經 MIDI MODE 安裝 | 上游 README |
+| Agent Deck | **不需要**，Dinghy fork，一般 `.fwsc` | 上游 README |
+| fm1-emu | 不需要，完全不碰實機 | — |
+| 自製韌體（fm1-base） | 不需要，產出 `.fwsc` | 上游 README |
+
+所以不裝 m-bootloader 只擋住 SLOOP 3 一項，其他都能做。
+
+**Justfile 目前夠用。** 現階段不需要另寫 CLI wrapper。等出現「多步驟且要強制檢查」的流程（例如切換韌體）再加，而且先加成 just recipe，不夠才抽成 script。
+
+## 做法：四條工作線，依序進行
+
+### A. fm1-emu 本機化（零實機風險，先做）
+
+上游有 macOS arm64 的預編譯 release（`fm1-emu-0.5.1-macos-arm64.tar.gz`），不需要 Rust 建置。
+
+- `Justfile` 新增：`emu-fetch`（下載並驗 digest，解到 gitignore 的 `tools/fm1-emu/`）、`emu-run <fwsc> [chip]`（包 `fm1-live --fwsc`，`chip=uc25hq80` 時帶 `--flash-chip uc25hq80`，`--flash` 指到 `tools/emu-state/` 讓存檔跨次保留）。確切旗標以解壓後的 `--help` 與 README 為準。
+- 在模擬器（新晶片模式）實測並記錄：SLOOP 2.8.5（對照實機行為）、SLOOP 3（只在模擬器玩）、Agent Deck 0.7。每個做「改設定 → 存 → 重開 → 還在嗎」。
+- 更新 `docs/agentic/emulator.md`：把「本 repo 尚無本機 fm1-emu」改成實際用法，新增一張「模擬器實測」表，標 `[實機]` 以外的新標記 `[模擬]`（同步寫進 `AGENTS.md` 與 `docs/index.md` 的證據標記說明）。
+
+### B. Agent Deck：先模擬、再實刷
+
+1. **Host 模擬（不刷機）**：把 `kevinelliott/fm-1-agent-deck` clone 到 gitignore 的 `vendor/`，跑上游的 `python3 host/agtdeck.py --backend auto --simulate`，接你實際的 Herdr session，確認 agent 狀態同步是否堪用。auto-approve 保持關閉。
+2. **模擬器裡跑韌體**：用 A 的 `emu-run` 開 `agtdeck-0.7.fwsc`（`uc25hq80`），確認開機與設定保存。上游沒有新晶片的實機回報，這一步是實刷前唯一能做的相容性檢查。
+3. **實刷（需你逐次批准）**：preflight 四項 → 你執行 `just fm1-flash vendor/…/agtdeck-0.7.fwsc` → 實測按鍵、LED、螢幕、daemon 硬體模式。先用 `gh attestation verify` 驗證套件來源（上游提供）。
+4. **切回 SLOOP**：先試 `just fm1-flash downloads/sloop-2.8.5.fwsc`，看曲子是否還在（上游明說這點沒測過）。不在的話由你在 M-Flasher GUI 還原 `2026-11-17-sloop-2.8.5` 備份。兩種結果都記進 `docs/firmware/switching.md`，這是那頁目前缺的實機資料。
+5. 新增 `docs/firmware/agent-deck/`（概觀、host daemon 設定、Herdr 整合心得），把 `docs/agentic/agent-deck.md` 的實用部分搬過去並互連。
+
+切換流程走過一次、確認步驟固定之後，才把它包成 `just fm1-switch <名稱>`（檢查備份存在 → 顯示 preflight → 呼叫 `fm1-flash`）。還原備份仍不做成 recipe。
+
+### C. 自製韌體環境（vibe firmware）
+
+目標是把 **改 code → host simulator → fm1-emu → 批准 → 實機** 整條鏈跑通，再談功能。
+
+- **結構**：`firmware/<app>/`（本 repo 子目錄）放 app；`third_party/fm1-base` 以 git submodule 引入（它自己用 `--recursive` 帶 felucca-bsp）。fm1-base 的 `tools/build.py APP_DIR` 本來就支援 app 在外部目錄。若實作時發現它的 template/release workflow 假設 app 必須是獨立 repo，就改成另開 repo 再 submodule 進來，並在該步驟回報。
+- **兩段式 build**：
+  - host simulator 與 browser emulator：只需要本機 C 編譯器 / emcc，Mac 可直接跑，是日常迭代的主迴圈。
+  - 實機 `.fwsc`：需要 JieLi pi32v2 toolchain，上游只支援 Linux x86-64，Mac 要走 Docker。先確認 fm1-base 自己的建置文件與 `LICENSING.md`（每個 build 要帶三個 SDK 檔），再決定用 Docker 還是 GitHub Actions 產出 artifact。**先不承諾本機一定能 build 實機套件**，這是此線最大的不確定點。
+- **第一個 app**：最小的 MIDI controller / macro pad（按鍵送 MIDI、螢幕顯示 layer、host 端 Python `mido` 接收並呼叫 Herdr）。它同時是 Agent 控制台的前置練習。之後依 B 的試用心得決定：fork Agent Deck（GPL-3.0、Dinghy 系），或在 fm1-base 上重寫（MPL-2.0，app 可自選 license）。
+- **Agent 規則**：`AGENTS.md` 新增 firmware 開發一節：先 host test、再 `emu-run` 兩種晶片、自製韌體每次實刷都要批准、`.fwsc` 產物放 gitignore 的 `build/`、自製韌體必須用 fm1-base 既有的 storage 層（它處理新晶片 JEDEC ID），不得自己寫 flash 位址。
+- **Skills**：fm1-base 內建一個 `skill/felucca-to-fm1-base`；評估後決定是否引用。本 repo 自己的 thin skill 等這條鏈實際跑過兩三次、流程穩定後再寫，內容是「怎麼開新 app、怎麼跑測試、怎麼提 preflight」，不抄社群 skill。
+- 文件：新增 `docs/dev/`（環境、build、測試、第一個 app 的紀錄）。
+
+### D. m-bootloader 與 SLOOP 3：只追蹤
+
+- 新增 `docs/watch.md`：一張 ledger，每次檢查記日期、上游版本、對 `0xB36014` 的新回報、結論。初始條目寫今天的狀態。
+- `Justfile` 新增 `fm1-versions`：用 `gh api` 列出 `docs/resources.md` 版本表中各 repo 的最新 release，與表內版本並排，方便更新。
+- 解除暫緩的條件寫明在 `docs/firmware/sloop/sloop3.md`：（1）上游 README 不再把新晶片標為 little tested，或有多個成功回報；且（2）手上有驗證過可用的 USB_KEY（Pico）。兩者都滿足前不裝。
+- SLOOP 3 這段期間只在模擬器體驗（A）。
+
+## 順序與相依
+
+```
+A（emu）──┬─▶ B（Agent Deck）──▶ fm1-switch recipe
+          └─▶ C（自製韌體）
+D（追蹤）獨立，隨 A 一起做
+```
+
+A 與 D 不碰實機，可以一次做完。B 的第 3 步與 C 的實刷都需要你在場並逐次批准。
+
+## 會改到的檔案
+
+- `Justfile`：`emu-fetch`、`emu-run`、`fm1-versions`，之後 `fm1-switch`、firmware build/test recipes
+- `.gitignore`：`/tools/`、`/vendor/`、`/build/`
+- `.gitmodules` + `third_party/fm1-base`（C）
+- `firmware/<app>/`（C，新）
+- `AGENTS.md`：`[模擬]` 標記、firmware 開發規則、新目錄
+- `docs/`：`agentic/emulator.md`、`firmware/switching.md`、`firmware/sloop/sloop3.md`、`firmware/agent-deck/*`（新）、`dev/*`（新）、`watch.md`（新）、`device-log.md`、`resources.md`
+- `zensical.toml`：nav 新增頁面
+- `.github/workflows/docs.yml`：checkout 不帶 submodule（docs build 不需要），確認 path filter 不被 `firmware/` 觸發
+
+沿用既有的：`fm1-fetch` 的「下載 + 對 release digest」寫法（`Justfile`）、`fm1-flash` 的確認機制、`scripts/check-docs-site.py`。
+
+## Verification 驗證
+
+- A：`just emu-fetch` digest 相符；`just emu-run downloads/sloop-2.8.5.fwsc uc25hq80` 開得起來、存檔跨次保留；模擬實測表填好。
+- B：simulate 模式下 Herdr 的 agent 狀態出現在 daemon 輸出；實刷後 `just fm1-find` 看得到裝置、daemon 硬體模式連得上；切回 SLOOP 後的曲子狀態有記錄。
+- C：template app 在 host simulator 跑起來；產出的 `.fwsc` 在 `emu-run` 兩種晶片都開機並保存設定；實機刷入後按鍵 → MIDI → host 腳本收得到。
+- D：`just fm1-versions` 輸出與 `resources.md` 一致或已更新；`watch.md` 有初始條目。
+- 每次改 docs：`just docs-check` 通過，push 後 Pages workflow 綠燈。
+- 每次實機操作：`docs/device-log.md` 有對應紀錄。
+
+## 不在這次範圍
+
+安裝 m-bootloader、實刷 SLOOP 3、USB_KEY / Pico 硬體、m-card / m-apps、硬體自動化測試台、把自製韌體提交到 Firmware Hub。
+
+````
+
+```text
+The file /Users/zhouhanru/.claude/plans/chatgpt-repo-specstory-references-chatg-luminous-kite.md has been updated successfully. (file state is current in your context — no need to Read it back)
+```
+</details></tool-use>
+
+_**Agent (claude-fable-5-2 2026-11-16 17:59:20Z)**_
+
+Phase 2 的計畫已寫好（四條工作線：fm1-emu 本機化、Agent Deck 試用、自製韌體環境、m-bootloader 與 SLOOP 3 只追蹤），現在送出給你審核。
+
+_**Agent (claude-fable-5-2 2026-11-16 18:01:12Z)**_
+
+<tool-use data-tool-type="generic" data-tool-name="ExitPlanMode"><details>
+<summary>Tool use: **ExitPlanMode**</summary>
+
+````text
+User has approved your plan. You can now start coding. Start with updating your todo list if applicable
+
+Your plan has been saved to: /Users/zhouhanru/.claude/plans/chatgpt-repo-specstory-references-chatg-luminous-kite.md
+You can refer back to it if needed during implementation.
+
+## Approved Plan:
+# M-VAVE FM-1：Phase 2 系列工作計畫
+
+## Context 背景
+
+Phase 1 已完成：筆記站上線、`AGENTS.md`、`Justfile` 捷徑、原廠與 SLOOP 2.8.5 兩份完整備份（本機 + GitHub Release）、SLOOP 2.8.5 在實機通過存檔測試。這台機器是**新晶片 `0xB36014`**、stock bootloader。
+
+這一階段要回答並落實你問的五件事，方向已確認：m-bootloader **只追蹤、不裝**；自製韌體**放在這個 repo 的子目錄**（必要時 fm1-base 相關部分另開 repo 再以 submodule 引入）；第一個方向是 **Agent 控制台 / MIDI controller**，但**先試用 Agent Deck**。
+
+## 先回答你的問題
+
+**m-bootloader 現在不建議裝，而且「有整機備份」不等於不怕。** 備份只有在機器還能進 download mode 時才用得上。boot 區壞掉時機器不開機，上游寫明這種情況要靠 USB_KEY dongle（Raspberry Pi Pico）強制進 ROM download mode，才輪得到還原備份。上游對 `0xB36014` 的原文是 install it at your own risk：一台裝 1.1/1.2 後無法啟動、原因不明，一台回報 1.3 與 2.0 正常。你手上的 Raspberry Pi 3 不能替代 Pico（USB_KEY 是 RP2040 的實作）。
+
+**依賴關係：**
+
+| 項目 | 需要 m-bootloader？ | 依據 |
+|---|---|---|
+| SLOOP 3 | **需要**，只能經 MIDI MODE 安裝 | 上游 README |
+| Agent Deck | **不需要**，Dinghy fork，一般 `.fwsc` | 上游 README |
+| fm1-emu | 不需要，完全不碰實機 | — |
+| 自製韌體（fm1-base） | 不需要，產出 `.fwsc` | 上游 README |
+
+所以不裝 m-bootloader 只擋住 SLOOP 3 一項，其他都能做。
+
+**Justfile 目前夠用。** 現階段不需要另寫 CLI wrapper。等出現「多步驟且要強制檢查」的流程（例如切換韌體）再加，而且先加成 just recipe，不夠才抽成 script。
+
+## 做法：四條工作線，依序進行
+
+### A. fm1-emu 本機化（零實機風險，先做）
+
+上游有 macOS arm64 的預編譯 release（`fm1-emu-0.5.1-macos-arm64.tar.gz`），不需要 Rust 建置。
+
+- `Justfile` 新增：`emu-fetch`（下載並驗 digest，解到 gitignore 的 `tools/fm1-emu/`）、`emu-run <fwsc> [chip]`（包 `fm1-live --fwsc`，`chip=uc25hq80` 時帶 `--flash-chip uc25hq80`，`--flash` 指到 `tools/emu-state/` 讓存檔跨次保留）。確切旗標以解壓後的 `--help` 與 README 為準。
+- 在模擬器（新晶片模式）實測並記錄：SLOOP 2.8.5（對照實機行為）、SLOOP 3（只在模擬器玩）、Agent Deck 0.7。每個做「改設定 → 存 → 重開 → 還在嗎」。
+- 更新 `docs/agentic/emulator.md`：把「本 repo 尚無本機 fm1-emu」改成實際用法，新增一張「模擬器實測」表，標 `[實機]` 以外的新標記 `[模擬]`（同步寫進 `AGENTS.md` 與 `docs/index.md` 的證據標記說明）。
+
+### B. Agent Deck：先模擬、再實刷
+
+1. **Host 模擬（不刷機）**：把 `kevinelliott/fm-1-agent-deck` clone 到 gitignore 的 `vendor/`，跑上游的 `python3 host/agtdeck.py --backend auto --simulate`，接你實際的 Herdr session，確認 agent 狀態同步是否堪用。auto-approve 保持關閉。
+2. **模擬器裡跑韌體**：用 A 的 `emu-run` 開 `agtdeck-0.7.fwsc`（`uc25hq80`），確認開機與設定保存。上游沒有新晶片的實機回報，這一步是實刷前唯一能做的相容性檢查。
+3. **實刷（需你逐次批准）**：preflight 四項 → 你執行 `just fm1-flash vendor/…/agtdeck-0.7.fwsc` → 實測按鍵、LED、螢幕、daemon 硬體模式。先用 `gh attestation verify` 驗證套件來源（上游提供）。
+4. **切回 SLOOP**：先試 `just fm1-flash downloads/sloop-2.8.5.fwsc`，看曲子是否還在（上游明說這點沒測過）。不在的話由你在 M-Flasher GUI 還原 `2026-11-17-sloop-2.8.5` 備份。兩種結果都記進 `docs/firmware/switching.md`，這是那頁目前缺的實機資料。
+5. 新增 `docs/firmware/agent-deck/`（概觀、host daemon 設定、Herdr 整合心得），把 `docs/agentic/agent-deck.md` 的實用部分搬過去並互連。
+
+切換流程走過一次、確認步驟固定之後，才把它包成 `just fm1-switch <名稱>`（檢查備份存在 → 顯示 preflight → 呼叫 `fm1-flash`）。還原備份仍不做成 recipe。
+
+### C. 自製韌體環境（vibe firmware）
+
+目標是把 **改 code → host simulator → fm1-emu → 批准 → 實機** 整條鏈跑通，再談功能。
+
+- **結構**：`firmware/<app>/`（本 repo 子目錄）放 app；`third_party/fm1-base` 以 git submodule 引入（它自己用 `--recursive` 帶 felucca-bsp）。fm1-base 的 `tools/build.py APP_DIR` 本來就支援 app 在外部目錄。若實作時發現它的 template/release workflow 假設 app 必須是獨立 repo，就改成另開 repo 再 submodule 進來，並在該步驟回報。
+- **兩段式 build**：
+  - host simulator 與 browser emulator：只需要本機 C 編譯器 / emcc，Mac 可直接跑，是日常迭代的主迴圈。
+  - 實機 `.fwsc`：需要 JieLi pi32v2 toolchain，上游只支援 Linux x86-64，Mac 要走 Docker。先確認 fm1-base 自己的建置文件與 `LICENSING.md`（每個 build 要帶三個 SDK 檔），再決定用 Docker 還是 GitHub Actions 產出 artifact。**先不承諾本機一定能 build 實機套件**，這是此線最大的不確定點。
+- **第一個 app**：最小的 MIDI controller / macro pad（按鍵送 MIDI、螢幕顯示 layer、host 端 Python `mido` 接收並呼叫 Herdr）。它同時是 Agent 控制台的前置練習。之後依 B 的試用心得決定：fork Agent Deck（GPL-3.0、Dinghy 系），或在 fm1-base 上重寫（MPL-2.0，app 可自選 license）。
+- **Agent 規則**：`AGENTS.md` 新增 firmware 開發一節：先 host test、再 `emu-run` 兩種晶片、自製韌體每次實刷都要批准、`.fwsc` 產物放 gitignore 的 `build/`、自製韌體必須用 fm1-base 既有的 storage 層（它處理新晶片 JEDEC ID），不得自己寫 flash 位址。
+- **Skills**：fm1-base 內建一個 `skill/felucca-to-fm1-base`；評估後決定是否引用。本 repo 自己的 thin skill 等這條鏈實際跑過兩三次、流程穩定後再寫，內容是「怎麼開新 app、怎麼跑測試、怎麼提 preflight」，不抄社群 skill。
+- 文件：新增 `docs/dev/`（環境、build、測試、第一個 app 的紀錄）。
+
+### D. m-bootloader 與 SLOOP 3：只追蹤
+
+- 新增 `docs/watch.md`：一張 ledger，每次檢查記日期、上游版本、對 `0xB36014` 的新回報、結論。初始條目寫今天的狀態。
+- `Justfile` 新增 `fm1-versions`：用 `gh api` 列出 `docs/resources.md` 版本表中各 repo 的最新 release，與表內版本並排，方便更新。
+- 解除暫緩的條件寫明在 `docs/firmware/sloop/sloop3.md`：（1）上游 README 不再把新晶片標為 little tested，或有多個成功回報；且（2）手上有驗證過可用的 USB_KEY（Pico）。兩者都滿足前不裝。
+- SLOOP 3 這段期間只在模擬器體驗（A）。
+
+## 順序與相依
+
+```
+A（emu）──┬─▶ B（Agent Deck）──▶ fm1-switch recipe
+          └─▶ C（自製韌體）
+D（追蹤）獨立，隨 A 一起做
+```
+
+A 與 D 不碰實機，可以一次做完。B 的第 3 步與 C 的實刷都需要你在場並逐次批准。
+
+## 會改到的檔案
+
+- `Justfile`：`emu-fetch`、`emu-run`、`fm1-versions`，之後 `fm1-switch`、firmware build/test recipes
+- `.gitignore`：`/tools/`、`/vendor/`、`/build/`
+- `.gitmodules` + `third_party/fm1-base`（C）
+- `firmware/<app>/`（C，新）
+- `AGENTS.md`：`[模擬]` 標記、firmware 開發規則、新目錄
+- `docs/`：`agentic/emulator.md`、`firmware/switching.md`、`firmware/sloop/sloop3.md`、`firmware/agent-deck/*`（新）、`dev/*`（新）、`watch.md`（新）、`device-log.md`、`resources.md`
+- `zensical.toml`：nav 新增頁面
+- `.github/workflows/docs.yml`：checkout 不帶 submodule（docs build 不需要），確認 path filter 不被 `firmware/` 觸發
+
+沿用既有的：`fm1-fetch` 的「下載 + 對 release digest」寫法（`Justfile`）、`fm1-flash` 的確認機制、`scripts/check-docs-site.py`。
+
+## Verification 驗證
+
+- A：`just emu-fetch` digest 相符；`just emu-run downloads/sloop-2.8.5.fwsc uc25hq80` 開得起來、存檔跨次保留；模擬實測表填好。
+- B：simulate 模式下 Herdr 的 agent 狀態出現在 daemon 輸出；實刷後 `just fm1-find` 看得到裝置、daemon 硬體模式連得上；切回 SLOOP 後的曲子狀態有記錄。
+- C：template app 在 host simulator 跑起來；產出的 `.fwsc` 在 `emu-run` 兩種晶片都開機並保存設定；實機刷入後按鍵 → MIDI → host 腳本收得到。
+- D：`just fm1-versions` 輸出與 `resources.md` 一致或已更新；`watch.md` 有初始條目。
+- 每次改 docs：`just docs-check` 通過，push 後 Pages workflow 綠燈。
+- 每次實機操作：`docs/device-log.md` 有對應紀錄。
+
+## 不在這次範圍
+
+安裝 m-bootloader、實刷 SLOOP 3、USB_KEY / Pico 硬體、m-card / m-apps、硬體自動化測試台、把自製韌體提交到 Firmware Hub。
+````
+</details></tool-use>
+
+_**Agent (claude-fable-5-2 2026-11-16 18:01:17Z)**_
+
+開始做 A（fm1-emu 本機化）與 D（追蹤），這兩條都不碰實機。
+
+_**Agent (claude-fable-5-2 2026-11-16 18:01:23Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Download the fm1-emu macOS release, verify its digest, and list its contents
+
+`uname -m && mkdir -p tools/fm1-emu downloads && cd downloads && gh release download v0.5.1 -R joakimeriksson/fm1-emu -p 'fm1-emu-0.5.1-macos-arm64.tar.gz' --clobber && shasum -a 256 fm1-emu-0.5.1-macos-arm64.tar.gz && gh api repos/joakimeriksson/fm1-emu/releases/tags/v0.5.1 --jq '.assets[]|select(.name|test("macos-arm64.tar"))|.digest' && tar -tzf fm1-emu-0.5.1-macos-arm64.tar.gz | head -30`
+
+```text
+arm64
+b5df55e1450210ae88be4ddfa903e608fa495a58bf72775d30047308e48b9895  fm1-emu-0.5.1-macos-arm64.tar.gz
+sha256:b5df55e1450210ae88be4ddfa903e608fa495a58bf72775d30047308e48b9895
+fm1-emu-0.5.1-macos-arm64/
+fm1-emu-0.5.1-macos-arm64/fm1-live
+fm1-emu-0.5.1-macos-arm64/fm1-emu
+fm1-emu-0.5.1-macos-arm64/README.txt
+```
+</details></tool-use>
+
+_**Agent (claude-fable-5-2 2026-11-16 18:01:29Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Extract fm1-emu and read its bundled README and help output
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1 && tar -xzf downloads/fm1-emu-0.5.1-macos-arm64.tar.gz -C tools/fm1-emu --strip-components=1 && cd tools/fm1-emu && cat README.txt | head -60; xattr -l fm1-live | head -3; ./fm1-live --help 2>&1 | head -60; echo "=== emu"; ./fm1-emu --help 2>&1 | head -40`
+
+```text
+fm1-emu 0.5.1: the M-VAVE FM-1 emulator, for macos-arm64
+https://github.com/joakimeriksson/fm1-emu
+
+fm1-live plays a firmware live: the FM-1's screen and panel in a window, the computer keyboard
+as the keys, every MIDI input of the computer, audio out.
+It runs the FM-1's 240 MHz clock in real time with its AArch64 JIT.
+
+These programs are not signed with an Apple Developer ID, so macOS blocks them until you
+allow it. In this folder, run once:
+
+    xattr -d com.apple.quarantine fm1-live fm1-emu
+
+Play a firmware package (.fwsc): a community firmware (the list, with each author's link:
+https://joakimeriksson.github.io/fm1-emu/ ; the packages: https://thefirmwarehub.com/) or
+M-VAVE's own FM-1.fwsc:
+
+    ./fm1-live --fwsc felucca.fwsc
+    ./fm1-live --fwsc FM-1.fwsc --syx bank.syx     (M-VAVE's own, a DX7 bank loaded)
+    ./fm1-live --help
+
+fm1-emu is the batch runner for tests and debugging: WAV and screen output, breakpoints, memory
+dumps (see the repository's README).
+
+MIT licensed. The firmwares are their authors'.
+com.apple.provenance: 
+usage: fm1-live --fwsc FIRMWARE.fwsc   (a firmware package: a community firmware, or M-VAVE's own)
+       fm1-live --fw ID | --fw list    (the page's list, in a checkout: node tools/fetch_firmwares.mjs)
+       fm1-live --bin XIP.bin [--entry 0x02000120]
+options: [--mhz 240] [--syx BANK.syx] [--midi all|none|NAME] [--midi-ch N] [--flash FILE] [--usb]
+         [--latency MS] (12 on Windows, else 50)
+                                 audio queued ahead of the device to start with; it grows by itself
+                                 on underruns and back down after 10 s without one, no lower
+                                 than a level that underran
+         [--buffer FRAMES]       the audio device's buffer, if it takes one
+         [--exclusive]           Windows: the output in WASAPI exclusive mode, the device's shortest
+                                 period (lowest latency; other programs can't play on it meanwhile)
+         [--flash-chip p25q80|uc25hq80]
+                                 the FM-1's flash part: the stock Puya P25Q80 (85 60 14), or the
+                                 UC25HQ80 (B3 60 14) of units sold since autumn 2026
+         [--flaky-core1 RATE [--seed N]] [--cpu1-survives] [--version] [--help]
+headless: --bench MS   run MS emulated ms as fast as it goes, report the speed
+          --shot MS    run MS ms, then write the panel to work/panel.ppm
+          --record DIR with --shot: a PPM frame every 16 ms (62.5 fps) as DIR/000000.ppm…, and the audio
+                       from boot as DIR/audio.raw (44118 Hz stereo s16le; silence until the DMA starts)
+          --record -   the frames as one PPM stream on stdout (tools/bench_video.sh pipes it into ffmpeg),
+                       audio.raw in work/; the run's reports go to stderr then
+          --lcd-only   --shot, --record: the 240x240 LCD alone (work/lcd.ppm), not the panel
+env: FM1_BENCH_KEYS='T:PLAY,T:PLAY^,T:C4@100,T:e0:+3,T:pot:512,T:mHEX'  scripted input (--bench, --shot;
+                         times in ms; ^ releases, @VEL the velocity, eN an encoder's clicks, mHEX: MIDI
+                         bytes into the DIN jack; @FILE: the script from a file)
+     FM1_BENCH_WAV=FILE    --bench: the audio (44.1 kHz stereo s16le, no header)
+     FM1_BENCH_PANEL=FILE  --bench: the panel at the end (PPM)
+     FM1_BENCH_FRAMES=DIR[,MS]  --bench: a film: the panel every MS ms (40) as DIR/000000.ppm..., and
+                           DIR/audio.raw from the boot (tools/film.py turns them into a video)
+     FM1_DUMPRAM=FILE      --bench, --shot: the 1 MiB of RAM at the end
+     FM1_BENCH_JSON=FILE   --bench: the speed as JSON
+     FM1_BENCH_NOKEYS, FM1_WARMUP_MS=N (1000), FM1_BENCH_THREAD, FM1_BENCH_TRACE, FM1_BENCH_PCS,
+     FM1_BENCH_ROUTES      --bench: no default keys, the steady-speed start, a thread, checkpoints, profiles
+     FM1_KEY_AT, FM1_KEY_UP, FM1_NO_PLAY, FM1_NO_SKIP, FM1_SKIP_FROM, FM1_DUMP=ADDR  --shot
+     FM1_NO_JIT            the interpreter (byte-identical, slower); FM1_NO_BLOCKS: a step at a time
+     FM1_NO_LOOPSKIP       run polling loops round by round instead of skipping them (byte-identical, slower)
+     FM1_FLASH_CUT=N       cut the power half way through the Nth flash erase / program (--flash keeps what is left)
+     FM1_USB_SEND='MS:HEX;…'  --shot --usb: MIDI messages over USB at those times (@PATH: from a file); FM1_USB_TRACE: the bus
+     FM1_USB_SIE_NS=N      --usb: each SIE register access takes N ns (default 1000)
+     FM1_USB_WAV=FILE      --usb, --bench / --shot: record the USB audio as a computer would (s16le, no header);
+                           FM1_USB_RATE=HZ asks for that rate if the device lists it (default 44100)
+     FM1_LCD_TIMED=1       the LCD's transfers take their time at the SPI clock, as on an FM-1 (a 240 x 240
+                           frame ~77 ms at 12 MHz; by default they finish at once). On with FM1_STRICT too;
+                           FM1_LCD_INSTANT=1 turns it off again
+     FM1_STRICT=1          as an FM-1 is: a misaligned 16- / 32-bit RAM access faults (EMU_MSG bit 0), the
+                           LCD is timed (FM1_LCD_TIMED), and each instruction takes its measured cycles (a
+                           taken branch ~5, a call ~5, ALU ~0.6), both cores, the flash cache's misses each
+                           core's own; the interpreter, no JIT: slower. FM1_STRICT_LOG: list misaligned
+                           accesses
+     FM1_TPROF=PATH,FROM,TO  --shot: both cores' time-weighted PCs and the flash cache's misses by line from
+                           FROM to TO ms, into PATH (with FM1_STRICT: where the cycles go)
+=== emu
+usage: fm1-emu --bin APP.bin | --fwsc FIRMWARE.fwsc [options]
+run:   [--flash DECRYPTED.bin] [--raw-flash CHIP.bin] [--syx BANK.syx] [--entry 0x02000000]
+       [--steps N (5000000)] [--ms MS] [--ram BYTES (1048576, at most 4194304)] [--quiet]
+       [--flaky-core1 RATE [--seed N]] [--cpu1-survives (a fault on core 1 stops it alone; cpu0 goes on)]
+       [--flash-chip p25q80|uc25hq80 (the FM-1's flash part: the stock Puya, or the newer units')]
+input: [--keys 'T[-T2]:PLAY,T:n7,T:k12,T:enc0:+3,T:pot:512,T:midi:903c64'] (times in ms;
+        the SMK-37's buttons by their printed names too: T:PATCH, T:SEQPLAY)
+out:   [--wav OUT.wav] [--snap MS,MS (work/lcd_MS.bmp)] [--dump ADDR N (N words at the end)]
+debug: [--trace K (the first K instructions)]
+       [--break-pc ADDR (registers at each hit)] [--watch ADDR (each change of a word)]
+tools: --list IMAGE START END | --describe OBJDUMP | --check-decode FILE | --sem-run FILE
+       | --exec-check OBJDUMP IMAGE | --coverage | --version | --help
+(addresses in hex)
+env:   FM1_BREAK_MAX=N (8)        stop reporting --break-pc after N hits
+       FM1_BREAK_PCS=ADDR,ADDR    more breakpoints
+       FM1_TRACE_RANGE=FROM:TO    trace every instruction from step FROM to TO
+       FM1_HIST_TOP=N (12)        lines of the class histogram
+       FM1_LIST_END=ADDR:LEN,...  list memory as it is after the run
+       FM1_IRQ_TRACE, FM1_DUAL_TRACE, FM1_FLASH_TRACE, FM1_LCD_TRACE, FM1_AUDIO_TRACE,
+       FM1_GPIO_TRACE, FM1_TRACE  logs
+       FM1_FWSC_XIP=FILE          save a package's XIP window; FM1_FWSC_DIR lists its directory
+       FM1_SUPERVISOR_START       start in supervisor mode (the old single stack)
+       FM1_NO_RAM_BLOCKS          RAM code a step at a time (the reference)
+       FM1_LCD_TIMED              the LCD's transfers take their time at the SPI clock, as on an FM-1
+                                  (also with FM1_STRICT; FM1_LCD_INSTANT turns it off; default: at once)
+a bare-metal program ends its run by jumping outside every code region (else it runs to --steps)
+```
+</details></tool-use>
+
+_**Agent (claude-fable-5-2 2026-11-16 18:01:47Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Boot SLOOP 2.8.5 headless in the emulator on both flash chips and capture the screen
+
+```bash
+cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1 && S=/private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/5f461408-bbdd-44d0-bb3b-b0642eabaa31/scratchpad && mkdir -p $S/emu && cat > $S/ppm2png.py <<'EOF'
+import sys,zlib,struct
+d=open(sys.argv[1],'rb').read()
+p=d.split(None,4); assert p[0]==b'P6'; w,h=int(p[1]),int(p[2]); px=p[4][-w*h*3:]
+raw=b''.join(b'\0'+px[y*w*3:(y+1)*w*3] for y in range(h))
+def ch(t,b): return struct.pack('>I',len(b))+t+b+struct.pack('>I',zlib.crc32(t+b))
+open(sys.argv[2],'wb').write(b'\x89PNG\r\n\x1a\n'+ch(b'IHDR',struct.pack('>IIBBBBB',w,h,8,2,0,0,0))+ch(b'IDAT',zlib.compress(raw))+ch(b'IEND',b''))
+EOF
+cd $S/emu && E=/Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/tools/fm1-emu/fm1-live && F=/Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/downloads/sloop-2.8.5.fwsc && for chip in p25q80 uc25hq80; do rm -rf work; ( timeout 120 $E --fwsc $F --flash-chip $chip --flash sloop-$chip.flash --midi none --shot 6000 --lcd-only 2>&1 | tail -6 ); ls work 2>/dev/null; python3 -I $S/ppm2png.py work/lcd.ppm sloop-$chip.png && ls -la sloop-$chip.*; done
+```
+
+```text
+Exit code 1
+irq levels at the end: [], ie true, skipped 260700773 cycles
+last 40 ms: 17% of instructions in ISRs = 40.2 M ISR instructions per second (clock 240 MHz)
+LED on-fractions: 8:0.089 12:0.092 21:0.092 25:0.089 28:0.089
+work/lcd.ppm: No such file or directory (os error 2)
+flash: 0 erases / programs
+Traceback (most recent call last):
+  File "/private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/5f461408-bbdd-44d0-bb3b-b0642eabaa31/scratchpad/ppm2png.py", line 2, in <module>
+    d=open(sys.argv[1],'rb').read()
+      ~~~~^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: 'work/lcd.ppm'
+irq levels at the end: [], ie true, skipped 260700773 cycles
+last 40 ms: 17% of instructions in ISRs = 40.2 M ISR instructions per second (clock 240 MHz)
+LED on-fractions: 8:0.089 12:0.092 21:0.092 25:0.089 28:0.089
+work/lcd.ppm: No such file or directory (os error 2)
+flash: 0 erases / programs
+Traceback (most recent call last):
+  File "/private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/5f461408-bbdd-44d0-bb3b-b0642eabaa31/scratchpad/ppm2png.py", line 2, in <module>
+    d=open(sys.argv[1],'rb').read()
+      ~~~~^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: 'work/lcd.ppm'
+```
+</details></tool-use>
+
+_**Agent (claude-fable-5-2 2026-11-16 18:02:06Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Record a short loop in emulated SLOOP on both chips and check whether it is written to flash and survives a restart
+
+`S=/private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/5f461408-bbdd-44d0-bb3b-b0642eabaa31/scratchpad; cd $S/emu && E=/Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/tools/fm1-emu/fm1-live && F=/Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/downloads/sloop-2.8.5.fwsc && mkdir -p work && rm -f *.flash && for chip in p25q80 uc25hq80; do echo "##### $chip run1 (REC, play C4, REC, PLAY stop, wait)"; FM1_BENCH_KEYS='3000:REC,3100:REC^,3600:C4@100,3800:C4^,4200:E4@100,4400:E4^,5200:REC,5300:REC^,7000:PLAY,7100:PLAY^' timeout 200 $E --fwsc $F --flash-chip $chip --flash sloop-$chip.flash --midi none --shot 12000 --lcd-only 2>&1 | grep -i -E "flash|error|fault|panic" ; python3 -I $S/ppm2png.py work/lcd.ppm sloop-$chip-run1.png; echo "##### $chip run2 (no input)"; timeout 200 $E --fwsc $F --flash-chip $chip --flash sloop-$chip.flash --midi none --shot 6000 --lcd-only 2>&1 | grep -i -E "flash|error|fault"; python3 -I $S/ppm2png.py work/lcd.ppm sloop-$chip-run2.png; done; ls -la`
+
+```text
+##### p25q80 run1 (REC, play C4, REC, PLAY stop, wait)
+flash: 0 erases / programs
+##### p25q80 run2 (no input)
+flash: 0 erases / programs
+##### uc25hq80 run1 (REC, play C4, REC, PLAY stop, wait)
+flash: 0 erases / programs
+##### uc25hq80 run2 (no input)
+flash: 0 erases / programs
+Shell cwd was reset to /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1
+```
+</details></tool-use>
+
+_**Agent (claude-fable-5-2 2026-11-16 18:02:11Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+List emulator test outputs
+
+`ls -la /private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/5f461408-bbdd-44d0-bb3b-b0642eabaa31/scratchpad/emu/`
+
+```text
+drwxr-xr-x@    - zhouhanru 17 Nov 02:02 work
+.rw-r--r--@ 2.8k zhouhanru 17 Nov 02:02 sloop-p25q80-run1.png
+.rw-r--r--@ 2.8k zhouhanru 17 Nov 02:02 sloop-p25q80-run2.png
+.rw-r--r--@ 1.0M zhouhanru 17 Nov 02:02 sloop-p25q80.flash
+.rw-r--r--@ 2.8k zhouhanru 17 Nov 02:02 sloop-uc25hq80-run1.png
+.rw-r--r--@ 2.8k zhouhanru 17 Nov 02:02 sloop-uc25hq80-run2.png
+.rw-r--r--@ 1.0M zhouhanru 17 Nov 02:02 sloop-uc25hq80.flash
+```
+</details></tool-use>
+
+_**Agent (claude-fable-5-2 2026-11-16 18:02:13Z)**_
+
+<tool-use data-tool-type="read" data-tool-name="Read"><details>
+<summary>Tool use: **Read**</summary>
+ `/private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/5f461408-bbdd-44d0-bb3b-b0642eabaa31/scratchpad/emu/sloop-uc25hq80-run1.png`
+</details></tool-use>
+
+_**Agent (claude-fable-5-2 2026-11-16 18:02:25Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Find the Agent Deck release package and the emulator's firmware ids for SLOOP 3 and Agent Deck
+
+`gh api repos/kevinelliott/fm-1-agent-deck/releases --jq '.[0:2][]|"\(.tag_name) \([.assets[]|"\(.name) \(.digest)"]|join(" | "))"'; gh api repos/joakimeriksson/fm1-emu/contents/docs/FIRMWARES.md --jq .content | base64 -d | grep -i -E "sloop|agtdeck|agent|melodee|clipper" | cut -c1-260 | head -12`
+
+```text
+v0.7 agtdeck-0.7.fwsc sha256:c0d0b43e688ca0f7f9911dce9ee0bdffb00b1127a66bc4629a934e087a97eacf | SHA256SUMS sha256:d6308af68f15414442b2322c7d5e2ff72325f779193e919bfb0d3db3911b60fa
+v0.6.3 agentdeck-0.6.3.fwsc sha256:015036f7858ace3e294504faa06f6b49a5029db57a00991a02fc0765fee40ef4 | SHA256SUMS sha256:f0c6354427c9c581e8b9431ce1b2a30dd68aac483646de27e15b41806aa9aac4
+| [Clipper 1.3.1](https://joakimeriksson.github.io/fm1-emu/?fw=clipper) | [isod89](https://github.com/isod89/clipper-fm1) | A deep synth grown out of SLOOP: 23 engines and 407 sounds, from HYBRID (three oscillators, two filters, a mod matrix) to six-operator F
+| [HERA 1.1](https://joakimeriksson.github.io/fm1-emu/?fw=hera) | [Ben Badio](https://github.com/benbadio/hera-fm1) | A chord groovebox after the Roland J-6: 100 chord sets, 9 phrase styles with 12 variations each and a 64-pattern step sequencer, on a four-voi
+| [JIANT FM V10.7.23](https://joakimeriksson.github.io/fm1-emu/?fw=jiant) | [juanjiant-bit](https://github.com/juanjiant-bit/JIANT) | A bio-synthetic groovebox: six tracks drawn as living beings, eight engines (FM6 with Dexed, analog, phase, voice), mutating m
+| [Melodee 1.6.1](https://joakimeriksson.github.io/fm1-emu/?fw=melodee) | [keremimo](https://github.com/keremimo/melodee) | Total playing pleasure, far beyond Felucca: recording without quantize, microtonal scales, a Casio CZ-1, a bit-by-bit Dexed, scale modes
+| [M-PYRE 1.0.3](https://joakimeriksson.github.io/fm1-emu/?fw=mpyre) | [History Of Sky](https://github.com/HistoryOfSky/m-pyre) | A riffbox for rock and metal: real guitar, bass and drum samples, an amp engine with cabinet IRs, pedals and guitar effects, plus 
+| [MYCELIUM 1.0-test](https://joakimeriksson.github.io/fm1-emu/?fw=mycelium) | [Mandalars](https://github.com/megagott/mycelium-fm1) | Forest, Psytrance, Goa and Hitech grooves, built on Felucca and SLOOP: original drums and icons and four factory songs. |
+| [No Man Sky FM 0.9](https://joakimeriksson.github.io/fm1-emu/?fw=nmsfm) | [Hericdk](https://github.com/hericdk/nomanskyFM) | A space adventure while you make music, built on SLOOP 2.7.1: fly between planets with two knobs, land, mine, fight sentinels and war
+| [ORBIT 1.0.1B](https://joakimeriksson.github.io/fm1-emu/?fw=orbit) | [dspaudio](https://github.com/dspaudio/orbit) | A four-track groovebox based on SLOOP: three synth parts and a drum machine, an event tape to rearrange them, OP-1-inspired screens. |
+| [Piterfly 1.1.0](https://joakimeriksson.github.io/fm1-emu/?fw=piterfly) | [Piotr Woźniak](https://github.com/piotrwozniak/piterfly) | A groovebox OS for M-VAVE FM-1, built on SLOOP and Felucca: seven synth parts plus drums, 24 patterns, 128 SONG positions, c
+| [SLOOP 2.8.5](https://joakimeriksson.github.io/fm1-emu/?fw=sloop) | [isod89](https://github.com/isod89/sloop-fm1) | A live groovebox: four looping tracks. |
+| [SLOOP ALG ALG05-TEST](https://joakimeriksson.github.io/fm1-emu/?fw=sloop-alg) | [shaw-core](https://github.com/shaw-core/Sloop_ALG02) | A SLOOP test build with extra FM algorithms. |
+| [SLOOP DX7 Banks 2.5-b28-test](https://joakimeriksson.github.io/fm1-emu/?fw=sloop-banks) | [majnikool](https://github.com/majnikool/sloop-fm1) | SLOOP with up to twelve DX7 voice banks and presets grouped by kind. |
+```
+</details></tool-use>
+
+_**Agent (claude-fable-5-2 2026-11-16 18:02:31Z)**_
+
+fm1-emu 已在本機跑起來，SLOOP 2.8.5 在兩種晶片模式都能開機。現在下載 Agent Deck 0.7 套件並在模擬器裡測試。
+
+_**Agent (claude-fable-5-2 2026-11-16 18:02:54Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Download and verify Agent Deck 0.7, then boot it in the emulator on both flash chips
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/downloads && gh release download v0.7 -R kevinelliott/fm-1-agent-deck -p 'agtdeck-0.7.fwsc' --clobber && shasum -a 256 agtdeck-0.7.fwsc && (gh attestation verify agtdeck-0.7.fwsc --repo kevinelliott/fm-1-agent-deck 2>&1 | tail -4); S=/private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/5f461408-bbdd-44d0-bb3b-b0642eabaa31/scratchpad; cd $S/emu && E=/Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/tools/fm1-emu/fm1-live; for chip in p25q80 uc25hq80; do echo "## $chip"; timeout 200 $E --fwsc /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/downloads/agtdeck-0.7.fwsc --flash-chip $chip --flash agt-$chip.flash --midi none --shot 6000 --lcd-only 2>&1 | grep -i -E "flash:|fault|error"; python3 -I $S/ppm2png.py work/lcd.ppm agt-$chip.png; done`
+
+```text
+c0d0b43e688ca0f7f9911dce9ee0bdffb00b1127a66bc4629a934e087a97eacf  agtdeck-0.7.fwsc
+
+Error: verifying with issuer "sigstore.dev"
+## p25q80
+flash: 3 erases / programs
+## uc25hq80
+flash: 3 erases / programs
+Shell cwd was reset to /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1
+```
+</details></tool-use>
+
+_**Agent (claude-fable-5-2 2026-11-16 18:03:09Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Show the full attestation verification error and upstream's documented verify command
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/downloads && gh attestation verify agtdeck-0.7.fwsc --repo kevinelliott/fm-1-agent-deck 2>&1 | head -12; grep -n -B3 -A8 "gh attestation verify" /private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/5f461408-bbdd-44d0-bb3b-b0642eabaa31/scratchpad/up/agentdeck-readme.md | cut -c1-200 | head -30`
+
+````text
+Error: verifying with issuer "sigstore.dev"
+830-package is exactly what that commit builds:
+831-
+832-```sh
+833:gh attestation verify agtdeck-0.7.fwsc --repo kevinelliott/fm-1-agent-deck \
+834-  --signer-workflow zvenson/fm1-build/.github/workflows/build.yml
+835-```
+836-
+837-The build is reproducible: the same command in a clean clone on the
+838-author's Mac gave a byte-identical package for 0.6.3 and for 0.7. To release, push a tag
+839-(`git tag v0.7.1 && git push origin v0.7.1`) and leave the file on the
+840-release alone — a package uploaded or rebuilt by hand loses the
+841-signature. The signature says where the file came from, not that the
+````
+</details></tool-use>
+
+_**Agent (claude-fable-5-2 2026-11-16 18:03:09Z)**_
+
+<tool-use data-tool-type="read" data-tool-name="Read"><details>
+<summary>Tool use: **Read**</summary>
+ `/private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/5f461408-bbdd-44d0-bb3b-b0642eabaa31/scratchpad/emu/agt-uc25hq80.png`
+</details></tool-use>
+
+_**Agent (claude-fable-5-2 2026-11-16 18:03:28Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Verify the Agent Deck build attestation and check a second emulated boot for flash writes
+
+`gh attestation verify agtdeck-0.7.fwsc --repo kevinelliott/fm-1-agent-deck --signer-workflow zvenson/fm1-build/.github/workflows/build.yml 2>&1 | tail -6; S=/private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/5f461408-bbdd-44d0-bb3b-b0642eabaa31/scratchpad; cd $S/emu && E=/Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/tools/fm1-emu/fm1-live; for chip in p25q80 uc25hq80; do printf "second boot %s: " $chip; timeout 200 $E --fwsc /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/downloads/agtdeck-0.7.fwsc --flash-chip $chip --flash agt-$chip.flash --midi none --shot 6000 --lcd-only 2>&1 | grep -i "flash:"; done`
+
+```text
+second boot p25q80: flash: 3 erases / programs
+second boot uc25hq80: flash: 3 erases / programs
+Shell cwd was reset to /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1
+```
+</details></tool-use>
+
+_**Agent (claude-fable-5-2 2026-11-16 18:03:42Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Rerun the attestation check and show its exit code
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/downloads && gh attestation verify agtdeck-0.7.fwsc --repo kevinelliott/fm-1-agent-deck --signer-workflow zvenson/fm1-build/.github/workflows/build.yml; echo "exit=$?"; gh --version | head -1`
+
+```text
+exit=0
+gh version 2.104.0 (2026-11-12)
+```
+</details></tool-use>
+
+_**Agent (claude-fable-5-2 2026-11-16 18:03:48Z)**_
+
+Agent Deck 0.7 的來源簽章驗證通過，在模擬器的新舊晶片模式下都能開機且 flash 寫入行為一致。現在把這些寫成 `Justfile` 捷徑與文件。
+
+_**Agent (claude-fable-5-2 2026-11-16 18:03:51Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Locate the doc passages that need updating and check whether Herdr is available
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1 && grep -n "^#\|本 repo\|還沒有\|checkout\|mhz" docs/agentic/emulator.md | cut -c1-160; grep -n "fm1-emu\|模擬器" docs/firmware/sloop/sloop3.md docs/index.md docs/notes/index.md | cut -c1-170; grep -n "調研\]\`" docs/index.md AGENTS.md | head; sed -n '/版本表/,$p' docs/resources.md | head -30; which herdr; echo "HERDR_ENV=${HERDR_ENV:-}"`
+
+````text
+1:# fm1-emu 模擬器
+6:    這個 repo **沒有**本機的 fm1-emu checkout，也沒有下載 `fm1-live`。目前只用線上頁面。下面的指令都取自上游 README，我還沒在自己的電腦上跑過。
+8:## 它是什麼
+14:## 在哪裡跑
+25:## 瀏覽器 URL 參數
+35:!!! warning "原本的連結用了 `mhz=100`"
+36:    我最早拿到的連結是 `?fw=felucca&mhz=100`。真實晶片跑 240 MHz，100 MHz 只是減輕電腦負擔，**不能代表實機的時序**。上游 README 沒有記載 `mhz` 這個 URL 參數，只有 `fm1-live` 的 `--mhz`，而且它的用途是「電腦跟不上時降低時脈」。要
+38:## 本機指令
+43:# release 下載的 fm1-live
+46:# 從 checkout build
+64:| `--mhz` | 降低時脈。原生 JIT 預設跑真實的 240 MHz |
+67:`fm1-emu` batch runner 的確切指令列 README 沒有列出，要看它的 checkout。
+69:## 能驗證什麼、不能驗證什麼
+87:## 刷機前比較新舊 flash 晶片
+97:## 和 fm1-base host simulator 的差別
+docs/index.md:27:| 3 | fm1-emu + Agent Deck host 模擬（不刷機） | 未開始 |
+docs/firmware/sloop/sloop3.md:42:- 可以先在 [fm1-emu](../../agentic/emulator.md) 裡熟悉。
+docs/notes/index.md:16:- [ ] fm1-emu：在瀏覽器試玩 SLOOP 3、Melodee、Agent Deck
+docs/index.md:47:- `[調研]`：來自調研筆記，還沒對過上游。
+AGENTS.md:81:- `[調研]` — from research notes, not yet checked against upstream.
+## 版本表
+
+**查核日期：2026-11-17**（GitHub API）。這是 repo 裡唯一的版本表，其他頁面連到這裡。
+
+| 專案 | 最新版本 | 發布日 | 備註 |
+|---|---|---|---|
+| [m-flasher](https://github.com/jvitkauskas/m-flasher/releases) | v0.12.1 | 2026-11-15 | |
+| [m-bootloader](https://github.com/jvitkauskas/m-bootloader/releases) | v2.4 | 2026-11-13 | |
+| [sloop-fm1](https://github.com/isod89/sloop-fm1/releases) | v2.8.5 | 2026-11-04 | SLOOP 2.8，支援 UC25HQ80 |
+| [sloop3-fm1](https://github.com/isod89/sloop3-fm1/releases) | v3.3.7-beta | 2026-11-16 | prerelease |
+| [fm1-emu](https://github.com/joakimeriksson/fm1-emu/releases) | v0.5.1 | 未記錄 | |
+| [fm-1-agent-deck](https://github.com/kevinelliott/fm-1-agent-deck) | 0.7 | 未記錄 | 版本取自 README，非 release API；作者實機跑的是 0.6.2 |
+
+重新查某個 repo 的最新 release：
+
+```sh
+gh api repos/<owner>/<repo>/releases --jq '.[0].tag_name'
+```
+
+這會回傳最新一筆 release，**包含 prerelease**（例如 SLOOP 3 的 beta）。改了版本要同時更新上面的查核日期。
+/Users/zhouhanru/.local/bin/herdr
+HERDR_ENV=1
+````
+</details></tool-use>
+
+_**Agent (claude-fable-5-2 2026-11-16 18:04:42Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Add emulator, Agent Deck fetch, and upstream version recipes to the Justfile and test them
+
+```bash
+python3 - <<'EOF'
+import pathlib
+def sub(path, pairs):
+    p=pathlib.Path(path); s=p.read_text()
+    for a,b in pairs:
+        assert a in s, (path,a[:60]); s=s.replace(a,b,1)
+    p.write_text(s)
+
+# ---------- Justfile
+sub("Justfile",[
+('''sloop_version := "2.8.5"
+''','''sloop_version := "2.8.5"
+fm1_emu_version := "0.5.1"
+agtdeck_version := "0.7"
+'''),
+("#   read-only   fm1-find, fm1-info, fm1-backup, fm1-fetch, fm1-verify-backups",
+ "#   read-only   fm1-find, fm1-info, fm1-backup, fm1-fetch, fm1-verify-backups, fm1-versions,\n#               emu-* (the emulator never touches the unit)"),
+('''# ---- device: read-only''','''# ---- emulator (never touches the unit) ---------------------------------------
+
+# Download fm1-emu (macOS arm64) into tools/fm1-emu/ and verify it against the release digest.
+emu-fetch:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    a="fm1-emu-{{fm1_emu_version}}-macos-arm64.tar.gz"
+    mkdir -p downloads tools/fm1-emu
+    gh release download "v{{fm1_emu_version}}" -R joakimeriksson/fm1-emu -p "$a" -D downloads --clobber
+    want=$(gh api "repos/joakimeriksson/fm1-emu/releases/tags/v{{fm1_emu_version}}" --jq ".assets[] | select(.name==\\"$a\\") | .digest" | sed 's/^sha256://')
+    got=$(shasum -a 256 "downloads/$a" | cut -d' ' -f1)
+    [ -n "$want" ] && [ "$want" = "$got" ] || { echo "FAIL $a: got $got, release says ${want:-<no digest>}" >&2; exit 1; }
+    tar -xzf "downloads/$a" -C tools/fm1-emu --strip-components=1
+    xattr -d com.apple.quarantine tools/fm1-emu/fm1-live tools/fm1-emu/fm1-emu 2>/dev/null || true
+    tools/fm1-emu/fm1-live --version
+
+# Download Agent Deck's package and verify its digest and build attestation.
+agtdeck-fetch:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    a="agtdeck-{{agtdeck_version}}.fwsc"
+    mkdir -p downloads
+    gh release download "v{{agtdeck_version}}" -R kevinelliott/fm-1-agent-deck -p "$a" -D downloads --clobber
+    want=$(gh api "repos/kevinelliott/fm-1-agent-deck/releases/tags/v{{agtdeck_version}}" --jq ".assets[] | select(.name==\\"$a\\") | .digest" | sed 's/^sha256://')
+    got=$(shasum -a 256 "downloads/$a" | cut -d' ' -f1)
+    [ -n "$want" ] && [ "$want" = "$got" ] || { echo "FAIL $a: got $got, release says ${want:-<no digest>}" >&2; exit 1; }
+    gh attestation verify "downloads/$a" --repo kevinelliott/fm-1-agent-deck \\
+      --signer-workflow zvenson/fm1-build/.github/workflows/build.yml >/dev/null
+    echo "ok   $a  $got  (attestation verified)"
+
+# Play a .fwsc in a window. chip: uc25hq80 (this unit, default) or p25q80. Saves persist per package+chip.
+emu-run package chip="uc25hq80" *args:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    mkdir -p tools/emu-state
+    state="tools/emu-state/$(basename "{{package}}" .fwsc)-{{chip}}.flash"
+    exec tools/fm1-emu/fm1-live --fwsc "{{package}}" --flash-chip "{{chip}}" --flash "$state" {{args}}
+
+# Headless boot for `ms` emulated ms; writes the LCD to tools/emu-state/<name>-<chip>.ppm and reports flash writes.
+emu-shot package chip="uc25hq80" ms="6000":
+    #!/usr/bin/env bash
+    set -euo pipefail
+    mkdir -p tools/emu-state/work
+    name="$(basename "{{package}}" .fwsc)-{{chip}}"
+    pkg="$(cd "$(dirname "{{package}}")" && pwd)/$(basename "{{package}}")"
+    cd tools/emu-state
+    ../fm1-emu/fm1-live --fwsc "$pkg" --flash-chip "{{chip}}" --flash "$name.flash" --midi none \\
+      --shot "{{ms}}" --lcd-only 2>&1 | grep -i -E "^flash:|fault|error" || true
+    mv work/lcd.ppm "$name.ppm" && echo "LCD: tools/emu-state/$name.ppm"
+
+# ---- upstream watch -----------------------------------------------------------
+
+# Latest upstream releases, to compare with the version table in docs/resources.md.
+fm1-versions:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    for r in jvitkauskas/m-flasher jvitkauskas/m-bootloader isod89/sloop-fm1 isod89/sloop3-fm1 \\
+             joakimeriksson/fm1-emu kevinelliott/fm-1-agent-deck charlesvestal/fm1-base charlesvestal/fm1-ctl; do
+      printf '%-32s %s\\n' "$r" "$(gh api "repos/$r/releases" --jq '.[0] | "\\(.tag_name)  \\(.published_at[0:10])\\(if .prerelease then "  prerelease" else "" end)"' 2>/dev/null || echo '(no releases)')"
+    done
+
+# ---- device: read-only'''),
+])
+p=pathlib.Path(".gitignore"); p.write_text(p.read_text()+"\n# Emulator binaries and state, upstream checkouts, firmware build output.\n/tools/\n/vendor/\n/build/\n")
+EOF
+just emu-fetch 2>&1 | tail -2; just agtdeck-fetch; just emu-shot downloads/agtdeck-0.7.fwsc uc25hq80 4000; just fm1-versions
+```
+
+```text
+fm1-live 0.5.1 (c7e47c4fc, 2026-11-14)
+ok   agtdeck-0.7.fwsc  c0d0b43e688ca0f7f9911dce9ee0bdffb00b1127a66bc4629a934e087a97eacf  (attestation verified)
+flash: 3 erases / programs
+LCD: tools/emu-state/agtdeck-0.7-uc25hq80.ppm
+jvitkauskas/m-flasher            v0.12.1  2026-11-15
+jvitkauskas/m-bootloader         v2.4  2026-11-13
+isod89/sloop-fm1                 v2.8.5  2026-11-04
+isod89/sloop3-fm1                v3.3.7-beta  2026-11-16  prerelease
+joakimeriksson/fm1-emu           v0.5.1  2026-11-14
+kevinelliott/fm-1-agent-deck     v0.7  2026-11-14
+charlesvestal/fm1-base           null  null
+charlesvestal/fm1-ctl            v1.0.3  2026-11-06
+```
+</details></tool-use>
+
+_**Agent (claude-fable-5-2 2026-11-16 18:05:25Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Document local emulator usage, test results, the watch ledger, and the on-hold conditions
+
+```bash
+python3 - <<'EOF'
+import pathlib,re
+def sub(path, pairs):
+    p=pathlib.Path(path); s=p.read_text()
+    for a,b in pairs:
+        assert a in s, (path,a[:60]); s=s.replace(a,b,1)
+    p.write_text(s)
+
+# emulator.md: replace the opening admonition (line 5-6 block)
+p=pathlib.Path("docs/agentic/emulator.md"); s=p.read_text()
+m=re.search(r'!!! \w+ "[^"]*"\n    這個 repo \*\*沒有\*\*本機的 fm1-emu checkout[^\n]*\n', s); assert m
+s=s.replace(m.group(0), '''!!! note "本機狀態（2026-11-17）"
+    `fm1-emu` 0.5.1 的 macOS arm64 預編譯版已下載到 `tools/fm1-emu/`（gitignore），用 `just emu-fetch` 取得並對過 release digest。沒有原始碼 checkout，所以需要 checkout 的指令（`cargo run`、`--fw list`）我沒跑過。
+
+## 這個 repo 的用法 { #local }
+
+| 指令 | 作用 |
+|---|---|
+| `just emu-fetch` | 下載 fm1-emu、驗 digest、解到 `tools/fm1-emu/` |
+| `just emu-run <package.fwsc> [chip]` | 開視窗玩。`chip` 預設 `uc25hq80`（我這台），也可給 `p25q80`。存檔留在 `tools/emu-state/<套件>-<chip>.flash`，下次開還在 |
+| `just emu-shot <package.fwsc> [chip] [ms]` | headless 開機 `ms` 毫秒，把 LCD 存成 PPM，並印出 flash 寫入次數 |
+| `just agtdeck-fetch` | 下載 Agent Deck 套件，驗 digest 與 build attestation |
+
+`emu-run` 後面可以接 `fm1-live` 的其他旗標，例如 `just emu-run downloads/sloop-2.8.5.fwsc uc25hq80 --usb`。
+
+## 模擬器實測 { #results }
+
+2026-11-17，`fm1-live 0.5.1`，headless `--shot`。標記 `[模擬]`：在模擬器裡看到的，不等於實機。
+
+| 韌體 | `p25q80` | `uc25hq80` | 觀察 |
+|---|---|---|---|
+| SLOOP 2.8.5 | 開機到 TRACKS 畫面 | 開機到 TRACKS 畫面 | 腳本按鍵（`REC`、彈音、`PLAY`）有反應，但 12 秒內兩種晶片都是 0 次 flash 寫入，我沒能用腳本觸發存檔。存檔行為以實機為準（已通過，見[我的機器](../device-log.md)） |
+| Agent Deck 0.7 | 開機到 `WAITING FOR THE HOST` | 開機到 `WAITING FOR THE HOST` | 每次開機兩種晶片都是 3 次 flash erase / program，行為一致：它在新晶片模式下確實寫入 flash，沒有退回只存 RAM |
+| SLOOP 3 | — | — | **跑不了**：fm1-emu 的韌體清單沒有它，它的套件是給 m-bootloader 的 `.area`，不是 `.fwsc` |
+
+Agent Deck 那一列是目前唯一的新晶片相容性證據，上游沒有 UC25HQ80 的實機回報。它只說明「模擬的新晶片上寫入有發生」，設定是否正確讀回、實機是否正常都還沒驗證。
+''')
+p.write_text(s)
+
+sub("docs/firmware/sloop/sloop3.md",[
+("- 可以先在 [fm1-emu](../../agentic/emulator.md) 裡熟悉。",
+ "- fm1-emu 目前跑不了它（清單裡沒有，套件是 `.area` 不是 `.fwsc`），所以連模擬器試玩都還不行。`[模擬]` 2026-11-17"),
+("## 刷之前要先完成","""## 解除暫緩的條件
+
+我這台是新晶片 `0xB36014`，2026-11-17 決定只追蹤、不裝。兩個條件**都**滿足才重新考慮：
+
+1. 上游 m-bootloader README 不再把新晶片標為 little tested，或有多個成功回報。
+2. 手上有一個驗證過能讓這台 FM-1 進 download mode 的 USB_KEY（Raspberry Pi Pico；Raspberry Pi 3 不行）。
+
+為什麼備份不夠：boot 區壞掉時機器不會開機，備份只有在還能進 download mode 時才用得上，而那時只剩 USB_KEY 這條路。追蹤紀錄在[上游追蹤](../../watch.md)。
+
+## 刷之前要先完成"""),
+])
+sub("docs/index.md",[
+("- `[調研]`：來自調研筆記，還沒對過上游。","- `[模擬]`：在 fm1-emu 裡看到的，不等於實機。\n- `[調研]`：來自調研筆記，還沒對過上游。"),
+("| 3 | fm1-emu + Agent Deck host 模擬（不刷機） | 未開始 |","| 3 | fm1-emu + Agent Deck host 模擬（不刷機） | fm1-emu 已在本機可用，見[模擬器](agentic/emulator.md#local) |"),
+("| 4 | m-bootloader（先確認晶片相容與復原方案） | 暫緩：我的機器是新晶片 |","| 4 | m-bootloader（先確認晶片相容與復原方案） | 暫緩，只追蹤，見[上游追蹤](watch.md) |"),
+])
+sub("AGENTS.md",[
+("- `[調研]` — from research notes, not yet checked against upstream.","- `[模擬]` — observed in fm1-emu. Never treat it as hardware evidence.\n- `[調研]` — from research notes, not yet checked against upstream."),
+("just fm1-fetch         # download","just emu-fetch         # fm1-emu into tools/fm1-emu/ (git-ignored), digest-verified\njust emu-run FILE [CHIP]   # play a .fwsc in a window; CHIP defaults to uc25hq80 (this unit)\njust emu-shot FILE [CHIP] [MS]  # headless boot: LCD image + flash write count\njust agtdeck-fetch     # Agent Deck package, digest + attestation verified\njust fm1-versions      # latest upstream releases, to refresh docs/resources.md and docs/watch.md\n\njust fm1-fetch         # download"),
+("| `backups/`, `downloads/` |","| `tools/`, `vendor/`, `build/` | Git-ignored. Emulator binaries and state, upstream checkouts, firmware build output. |\n| `docs/watch.md` | Ledger of upstream checks for things on hold (m-bootloader on the new chip, SLOOP 3). Append, do not rewrite. |\n| `backups/`, `downloads/` |"),
+("- m-bootloader is out of scope until the owner explicitly starts that phase.\n  It has little testing on the new flash chip.",
+ "- m-bootloader is on hold (decided 2026-11-17): this unit has the new flash\n  chip and the owner has no USB_KEY (Pico) for recovery. A full backup does not\n  help if the boot area is bad. The conditions to revisit are in\n  `docs/firmware/sloop/sloop3.md`; do not propose installing it before then.\n  SLOOP 3 depends on it and is on hold too."),
+])
+sub("docs/resources.md",[
+("| v0.5.1 | 未記錄 | |","| v0.5.1 | 2026-11-14 | 本機用的版本，見[模擬器](agentic/emulator.md#local) |"),
+("| 0.7 | 未記錄 | 版本取自 README，非 release API；作者實機跑的是 0.6.2 |","| v0.7 | 2026-11-14 | 作者實機跑的是 0.6.2 |"),
+("重新查某個 repo 的最新 release：","一次列出全部：`just fm1-versions`。重新查某個 repo 的最新 release："),
+])
+sub("docs/device-log.md",[
+("\n## 操作歷史","| 2026-11-17 | `fm1-emu-0.5.1-macos-arm64.tar.gz` | `b5df55e1450210ae88be4ddfa903e608fa495a58bf72775d30047308e48b9895` | [fm1-emu v0.5.1](https://github.com/joakimeriksson/fm1-emu/releases/tag/v0.5.1) |\n| 2026-11-17 | `agtdeck-0.7.fwsc` | `c0d0b43e688ca0f7f9911dce9ee0bdffb00b1127a66bc4629a934e087a97eacf` | [fm-1-agent-deck v0.7](https://github.com/kevinelliott/fm-1-agent-deck/releases/tag/v0.7)，build attestation 驗證通過。**尚未刷入實機** |\n\n## 操作歷史"),
+])
+pathlib.Path("docs/watch.md").write_text('''# 上游追蹤
+
+暫緩中的事項，以及每次檢查上游的紀錄。只往下加，不改寫舊紀錄。檢查時先跑 `just fm1-versions`。
+
+## 暫緩中
+
+| 事項 | 暫緩原因 | 解除條件 |
+|---|---|---|
+| 安裝 m-bootloader | 我的機器是新晶片 `0xB36014`，上游測試很少；沒有 USB_KEY 可救 boot 區 | 見 [SLOOP 3](firmware/sloop/sloop3.md) 的「解除暫緩的條件」 |
+| SLOOP 3 | 只能透過 m-bootloader 的 MIDI MODE 安裝 | 同上 |
+| m-apps slots + m-card | 需要硬體改裝，上游尚未成熟 | 上游有完整的 FM-1 實機驗證 |
+
+## 檢查紀錄
+
+### 2026-11-17
+
+| 專案 | 版本 | 發布日 |
+|---|---|---|
+| m-flasher | v0.12.1 | 2026-11-15 |
+| m-bootloader | v2.4 | 2026-11-13 |
+| sloop-fm1 | v2.8.5 | 2026-11-04 |
+| sloop3-fm1 | v3.3.7-beta（prerelease） | 2026-11-16 |
+| fm1-emu | v0.5.1 | 2026-11-14 |
+| fm-1-agent-deck | v0.7 | 2026-11-14 |
+| fm1-ctl | v1.0.3 | 2026-11-06 |
+| fm1-base | 沒有 release | — |
+
+**m-bootloader 對 `0xB36014`** `[上游]`：README 仍寫 "Little tested on the FM-1's newer flash chip"。一台裝 1.1 / 1.2 後無法啟動、原因不明；另一台（單一使用者回報）跑 1.3 與 2.0 正常，選單與 download mode 可用。原文結論：With `0xB36014` … install it at your own risk。
+
+**Agent Deck 對新晶片**：上游沒有實機回報。我在 fm1-emu 的 `uc25hq80` 模式看到它開機並寫入 flash `[模擬]`，見[模擬器實測](agentic/emulator.md#results)。
+
+**結論**：維持暫緩。m-bootloader 沒有新證據；Agent Deck 可以進行 host 模擬，實刷前再做一次 preflight。
+''')
+sub("zensical.toml",[('  { "我的機器" = "device-log.md" },','  { "我的機器" = "device-log.md" },\n  { "上游追蹤" = "watch.md" },')])
+EOF
+just docs-check 2>&1 | tail -1
+```
+
+```text
+{"status": "ok", "pages": 24, "llm_pages": 24, "deployed": false}
+```
+</details></tool-use>

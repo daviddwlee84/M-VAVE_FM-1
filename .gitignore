@@ -7,3 +7,8 @@
 # Full-flash images hold this unit's own data; never publish them.
 /backups/
 /downloads/
+
+# Emulator binaries and state, upstream checkouts, firmware build output.
+/tools/
+/vendor/
+/build/

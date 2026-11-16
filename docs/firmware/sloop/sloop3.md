@@ -39,7 +39,16 @@ SLOOP 3 的 installer 是一個導引精靈，步驟大致是：
 
 - 它必須先裝 m-bootloader，而 m-bootloader 在新款 UC25HQ80 晶片上的實機驗證很少（見[注意事項](../../getting-started/cautions.md)）。SLOOP 3 的精靈推薦它，不代表可以跳過相容性確認。
 - beta 版更新很快，幾天內就有多個修正版。
-- 可以先在 [fm1-emu](../../agentic/emulator.md) 裡熟悉。
+- fm1-emu 目前跑不了它（清單裡沒有，套件是 `.area` 不是 `.fwsc`），所以連模擬器試玩都還不行。`[模擬]` 2026-11-17
+
+## 解除暫緩的條件
+
+我這台是新晶片 `0xB36014`，2026-11-17 決定只追蹤、不裝。兩個條件**都**滿足才重新考慮：
+
+1. 上游 m-bootloader README 不再把新晶片標為 little tested，或有多個成功回報。
+2. 手上有一個驗證過能讓這台 FM-1 進 download mode 的 USB_KEY（Raspberry Pi Pico；Raspberry Pi 3 不行）。
+
+為什麼備份不夠：boot 區壞掉時機器不會開機，備份只有在還能進 download mode 時才用得上，而那時只剩 USB_KEY 這條路。追蹤紀錄在[上游追蹤](../../watch.md)。
 
 ## 刷之前要先完成
 
