@@ -13,6 +13,7 @@
 | `just emu-run <package.fwsc> [chip]` | 開視窗玩。`chip` 預設 `uc25hq80`（我這台），也可給 `p25q80`。存檔留在 `tools/emu-state/<套件>-<chip>.flash`，下次開還在 |
 | `just emu-shot <package.fwsc> [chip] [ms]` | headless 開機 `ms` 毫秒，把 LCD 存成 PPM，並印出 flash 寫入次數 |
 | `just agtdeck-fetch` | 下載 Agent Deck 套件，驗 digest 與 build attestation |
+| `just emu-rehearse <package.fwsc> <backup.bin> [chip]` | 把套件的韌體區蓋在一份實機備份上再開機，預演切換。說明與限制見[多韌體切換](../firmware/switching.md) |
 
 `emu-run` 後面可以接 `fm1-live` 的其他旗標，例如 `just emu-run downloads/sloop-2.8.5.fwsc uc25hq80 --usb`。
 

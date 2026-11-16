@@ -18493,3 +18493,1182 @@ uv run --locked --all-groups python scripts/check-docs-site.py
 1
 ```
 </details></tool-use>
+
+_**Agent (claude-fable-5-2 2026-11-16 19:23:15Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Add iPad controller guidance, push, and confirm the hosted editor is live
+
+```bash
+python3 - <<'EOF'
+import pathlib
+p=pathlib.Path("docs/hardware/mobile.md"); s=p.read_text()
+add='''## C. 當 iPad 上音樂 app 的 MIDI 控制器
+
+想用 FM-1 控制 AUM、GarageBand、GeoShred、Koala、AudioKit Synth One、Quantiloop、StreamByter 這類 app 時，重點不在 app，而在 **FM-1 上裝的韌體送出什麼 MIDI**。FM-1 是 class-compliant 的 USB MIDI 裝置，iPadOS 的 CoreMIDI 不需要 driver，任何吃 MIDI 輸入的 app 都看得到它。各 app 怎麼對應（MIDI learn、channel 設定）要各自設定，我沒有逐一測過。
+
+| FM-1 上的韌體 | 送出什麼 | 適合 |
+|---|---|---|
+| **[CTL-1](https://github.com/charlesvestal/fm1-ctl)** | 專門的 MIDI controller：琴鍵（含 velocity 與 aftertouch、scale、黑鍵和弦）、KNOB 1–4 送 CC（四個 bank，CC 編號可改）、program change、sustain、mod wheel、arp、四軌 Euclidean 鼓 sequencer。USB 與 **Bluetooth MIDI** 都有，自己也有 General MIDI 音色 | **首選。** 旋鈕能對應 app 的參數，藍牙可以免線 |
+| **SLOOP** | 琴鍵一定會送（track 1–3 在 channel 1–3、drum 在 10）；設 GLO → MIDI 2 → OUT = SEQ 後連 sequencer、arp、roll 也送。**旋鈕不送 CC**，沒有 Bluetooth | 把 SLOOP 當 sequencer 去驅動 app 的音源，或單純當鍵盤 |
+| **RemoteFM1**（不接 host） | 內建 MIDI REMOTE 模式（`GLO` + `FX`）：整個面板變成純 MIDI controller，鍵送 note、按鈕與 encoder 送 CC。USB 與 Bluetooth | 已經裝了 RemoteFM1 時順便用 |
+| **原廠韌體** | 有 Bluetooth MIDI；按鍵與旋鈕各送什麼我沒有查 `[調研]` | — |
+
+幾個實際會遇到的點：
+
+- **接線**：USB-C iPad 用 USB-C 資料線直接接。Lightning 的機型要 Lightning to USB camera adapter。
+- **聲音路由**：SLOOP 同時是 USB audio **輸入**裝置（FM-1 的聲音進 iPad）。iPad 接上後可能把它選成錄音來源，這對 AUM、Koala 取樣是好事；但也要確認 iPad 的**輸出**沒有被改掉。這點我沒有實機確認。RemoteFM1 的文件則明說 FM-1 插上 USB 後會自動成為手機的聲音輸出。
+- **雙向**：AUM 或 StreamByter 可以把 MIDI 送回 FM-1。SLOOP 會收 note、CC、clock（channel 對應見[接口與連線](io.md)），所以可以讓 iPad 當 clock master，或用 iPad 上的 sequencer 彈 SLOOP 的音色。
+- **StreamByter** 這類 MIDI 處理器正好補 SLOOP 的不足：把收到的 note 轉 channel、過濾、remap 再送給音源。
+- **GeoShred** 以 MPE 與觸控演奏為主，FM-1 的鍵沒有 MPE，接上去只是一般鍵盤。
+
+如果主要目的是控制 iPad 上的 app，我會刷 CTL-1；如果是讓 SLOOP 和 iPad 一起玩（SLOOP 出鼓與 bass，iPad 出別的音色並錄音），維持 SLOOP 就可以。CTL-1 在 Firmware Hub 的目錄標為認得新晶片，還沒在我的機器上試過。
+
+'''
+marker="## iOS 比較難嗎"; assert marker in s
+s=s.replace(marker, add+marker,1)
+s=s.replace("FM-1 接手機有兩種完全不同的玩法，容易混在一起：","FM-1 接手機有三種不同的玩法，容易混在一起：")
+s=s.replace("| **B. 手機當主機，FM-1 當面板** | 手機（RemoteFM1） | 跑韌體、發聲、大螢幕；FM-1 只負責鍵、旋鈕、LED、小螢幕 |","| **B. 手機當主機，FM-1 當面板** | 手機（RemoteFM1） | 跑韌體、發聲、大螢幕；FM-1 只負責鍵、旋鈕、LED、小螢幕 |\n| **C. FM-1 當 MIDI 控制器** | FM-1（CTL-1 等） | 跑自己的音樂 app（AUM、GarageBand…），FM-1 送 MIDI 給它 |")
+s=s.replace("1. 用 Chrome 連網開一次[線上 editor](https://isod89.github.io/sloop-fm1/webapp/editor/)。","1. 用 Chrome 連網開一次[線上 editor](https://isod89.github.io/sloop-fm1/webapp/editor/)，或這個站[內嵌的 2.8.5](../firmware/sloop/editor.md)。")
+p.write_text(s)
+EOF
+just docs-check 2>&1 | tail -1; git add -A && git commit -q -m "Host the SLOOP 2.8.5 editor on the site, add iPad controller notes
+
+Co-Authored-By: Claude Fable 5.2 <noreply@anthropic.com>" && git push -q origin main && sleep 75 && gh run list --workflow docs.yml -L1 --json conclusion,status --jq '.[0]|"\(.status) \(.conclusion)"' && for u in firmware/sloop/editor/ assets/sloop/sloop-editor-2.8.5.html; do curl -s -o /dev/null -w "$u %{http_code} %{size_download}\n" "https://daviddwlee84.github.io/M-VAVE_FM-1/$u"; done
+```
+
+```text
+{"status": "ok", "pages": 32, "llm_pages": 32, "deployed": false}
+completed success
+firmware/sloop/editor/ 200 36386
+assets/sloop/sloop-editor-2.8.5.html 200 966079
+```
+</details></tool-use>
+
+_**Agent (claude-fable-5-2 2026-11-16 19:23:32Z)**_
+
+Editor 已內嵌到站上並部署完成，iPad 的部分也寫進文件了。
+
+## RemoteFM1 是什麼
+
+是的，它是一個獨立韌體，和 SLOOP、Agent Deck 一樣是刷進 FM-1 的 `.fwsc`，裝了就取代原本的韌體。
+
+它特別的地方是自己幾乎不做事：把每個鍵、按鈕、旋鈕的動作送給主機，再把主機送回來的畫面與燈號顯示出來。真正的韌體在電腦、手機或瀏覽器上跑，FM-1 只是它的面板。好處是換韌體不用重刷，點一下就切。沒接主機時它自己是一台 DX7、MIDI controller 和 looper。
+
+## 控制 iPad 上的 app
+
+**能 work，但關鍵是 FM-1 上裝什麼韌體，不是哪個 app。** FM-1 是 class-compliant 的 USB MIDI 裝置，iPadOS 不需要 driver，吃 MIDI 輸入的 app 都看得到它。你列的那些 app 我沒有逐一測過，各自的 MIDI learn 與 channel 要自己設。
+
+| FM-1 上的韌體 | 送出什麼 | 評價 |
+|---|---|---|
+| **CTL-1** | 琴鍵（含 velocity、aftertouch、scale、和弦）、四個旋鈕送 CC（四個 bank）、program change、sustain、mod wheel。USB 與 Bluetooth 都有 | **首選** |
+| **SLOOP**（你現在裝的） | 只送琴鍵，可選擇連 sequencer 也送。**旋鈕不送 CC**，沒有 Bluetooth | 當鍵盤或 sequencer 可以，當控制器不夠 |
+| **RemoteFM1** | 有 MIDI REMOTE 模式，整個面板變成純 controller | 已經裝了才順便用 |
+
+所以想接 iPad 控制 AUM 那類 app，我會刷 CTL-1。它不需要 m-bootloader，Firmware Hub 標示它認得你的新晶片，但那是從套件判讀的，還沒在你的機器上試過。
+
+幾個要注意的：
+
+- **GeoShred** 以 MPE 和觸控為主，FM-1 的鍵沒有 MPE，接上去只是一般鍵盤。
+- **StreamByter** 正好能補 SLOOP 的不足：把收到的音符轉 channel、過濾、remap。
+- **SLOOP 同時是 USB audio 輸入**，iPad 可以直接錄它的聲音，對 Koala 取樣或 AUM 很方便。但接上後 iPad 的聲音輸出會不會被改掉，我沒有實機確認。
+- Lightning 的 iPad 需要 Lightning to USB camera adapter。
+
+## 內嵌的 SLOOP Editor
+
+可以，而且已經上線：
+
+- 頁面：<https://daviddwlee84.github.io/M-VAVE_FM-1/firmware/sloop/editor/>
+- 直接開 editor：<https://daviddwlee84.github.io/M-VAVE_FM-1/assets/sloop/sloop-editor-2.8.5.html>
+
+頁面裡有內嵌畫面和一個全螢幕按鈕。內嵌的比較窄，實際操作建議用全螢幕。
+
+**我只確認了檔案能載入，沒有實際用它連過機器。** 內嵌畫面裡的 Web MIDI 理論上可以運作（同網域，且已加上 MIDI 權限），但要你接上機器按 Connect 才知道。不行的話用全螢幕那個連結。
+
+自己放一份的好處：
+
+- **版本固定在 2.8.5**，和你機器上的韌體一致。上游的線上版會跟著 SLOOP 更新。之後 SLOOP 升級，這份要一起換。
+- **手機上方便**：它是 https 網頁，Android 的 Chrome 可以直接用。iPad 的 Safari 不行，沒有 Web MIDI。
+
+兩個要知道的：
+
+- editor 的 sound library 存在瀏覽器裡，而且每個網址各一份。在這裡存的音色不會出現在上游的線上版，要搬移得用 Export / Import。
+- 它是 isod89 以 GPL-3.0 釋出的原檔，未修改，頁面上已註明來源與授權。
+
+---
+
+_**User (2026-11-16 19:31:15Z)**_
+
+如果CTL-1比RemoteFM1更全更popular 也許我們也可以試著裝看看？ （RemoteFM1的特點是什麼？）
+（我們有調研過的 特別是有實際安裝使用的firmware也許都可以弄一個小章節？）
+
+然後我們也可以記錄一些比如 iOS App Companion之類的（像我剛剛列的那些）
+如果要下載setup的話就好找
+
+(Bluetooth是機器本身其實有這個能力嗎？）
+
+---
+
+另外我還想嘗試
+
+https://www.youtube.com/watch?v=yfg5VhPiT2c
+https://quixotic7.github.io/ChoralRootFM1/emu/
+
+號稱把 Orchid 的體驗複製到 FM1 上？
+就是可以左手按大小和弦等設置 右手按根音實現直接按和弦演奏？
+
+---
+
+_**Agent (claude-fable-5-2 2026-11-16 19:31:37Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Look up releases, Hub entries, and the ChoralRoot README for the firmwares to try
+
+```bash
+for r in charlesvestal/fm1-ctl Quixotic7/ChoralRootFM1 Quixotic7/RemoteFM1; do echo "== $r"; gh api repos/$r --jq '"★\(.stargazers_count) \(.license.spdx_id) created \(.created_at[0:10])"'; gh api repos/$r/releases --jq '.[0]|"\(.tag_name) \(.published_at[0:10]) pre=\(.prerelease) | \([.assets[]|"\(.name) \(.digest[7:19])"]|join(" , "))"'; done; python3 -c "
+import json; d=json.load(open('/tmp/hub-catalog.json'))
+for i in d['firmwares']:
+    if i['id'] in ('ctl','remotefm1','choralroot','sloop','agtdeck','melodee') or 'choral' in i['name'].lower(): print(i['id'],'|',i['name'],i['version'],'chip='+i['chip'],'installs',i.get('installs'),'kind',i['kind'],'|',(i.get('what') or '')[:150])"; echo "== choralroot readme"; gh api repos/Quixotic7/ChoralRootFM1/readme --jq .content | base64 -d > /tmp/choral.md; cut -c1-520 /tmp/choral.md | head -60
+```
+
+````text
+== charlesvestal/fm1-ctl
+★26 MPL-2.0 created 2026-10-08
+v1.0.3 2026-11-06 pre=false | ctl-1.0.3-app.bin a9e577faa9d9 , ctl-1.0.3.fwsc 1ecf7e3c2af2 , ctl-1.0.3.rfm1 a0bbfefd6ae0 , ctl-usb-1.0.3-app.bin e664de2973ee , ctl-usb-1.0.3.fwsc e7fad235f467 , firmware.json 0575eb2582ca , SHA256SUMS 5caace5c5421
+== Quixotic7/ChoralRootFM1
+★110 GPL-3.0 created 2026-10-06
+v0.41-smk37.1 2026-11-14 pre=false | choralroot-0.41-smk37.1-1core-app.bin d0499855d3a0 , choralroot-0.41-smk37.1-1core.fwsc ef8be9fd6660 , choralroot-0.41-smk37.1-app.bin 21cf10024e00 , choralroot-0.41-smk37.1-elite-1core-app.bin 1644746235f3 , choralroot-0.41-smk37.1-elite-1core.fwsc 2338d58fc1e3 , choralroot-0.41-smk37.1-elite-app.bin 533cb782a5f7 , choralroot-0.41-smk37.1-elite.fwsc 25bde08b2e92 , choralroot-0.41-smk37.1-mke-1core-app.bin 26f56cd07f94 , choralroot-0.41-smk37.1-mke-1core.fwsc d4e5d6d1be94 , choralroot-0.41-smk37.1-mke-app.bin e36990bfe258 , choralroot-0.41-smk37.1-mke.fwsc de6907d129ce , choralroot-0.41-smk37.1.fwsc a5b2ceddcc9f , LICENSE 3972dc9744f6 , LICENSES.zip 7584f1d4379b , LICENSING.md 8dc21bf67eb4 , SHA256SUMS c240c2aa3407 , SMK37.md 526146cc7eb3
+== Quixotic7/RemoteFM1
+★47 GPL-3.0 created 2026-10-18
+v0.3.6 2026-11-09 pre=false | LICENSE 3972dc9744f6 , LICENSES.zip 70852114862c , LICENSING.md 26c11de5fcf2 , remote-0.3.6.fwsc 5c712b1402a3 , remote-usb-0.3.6.fwsc 9a3ace505de2 , SHA256SUMS 5903e82b4384
+melodee | Melodee 1.6.1 chip=new installs 3408 kind groove | Total playing pleasure, far beyond Felucca: recording without quantize, microtonal scales, a Casio CZ-1, a bit-by-bit Dexed, scale modes made for an M
+sloop | SLOOP 2.8.5 chip=new installs 11556 kind groove | A live groovebox: tracks, layers, a step sequencer, song mode, punch-in effects and samples, played on the FM-1 in real time.
+choralroot | ChoralRoot 0.41 chip=new installs 2071 kind chords | A Telepathic Orchid-style chord instrument: one hand plays roots, the other shapes chords; voicings, performance modes, bass and a looper.
+ctl | CTL-1 1.0.3 chip=new installs 63 kind other | A MIDI controller: notes in any scale with its chords on the black keys, four banks of knobs, an arpeggiator and Euclidean drums, with General MIDI so
+remotefm1 | RemoteFM1 0.3.6 chip=new installs 24 kind synth | A firmware for your firmwares when using the app or a high quality 24bit DX7 rompler with 16 user carts and MIDI Controller when using the FM-1 by its
+agtdeck | AGTDECK 0.6.3 chip=new installs None kind other | A control surface for coding agents, not an instrument: the keys and screen show which of your Claude Code, Codex or other command-line agents are wor
+== choralroot readme
+# ChoralRoot FM-1
+
+A Telepathic Orchid-style chord instrument as a firmware for the **M-VAVE FM-1**: one hand plays
+roots, the other shapes chords; voicing, Key Mode, performance modes, bass, a looper — with the
+FM-1's own sound engines, a colour screen, USB and TRS MIDI. Built on
+[Felucca](https://github.com/hugelton/Felucca) (Leo Kuroshita, Hügelton Instruments) for the
+platform and the engines, and on [choralroot](https://github.com/Quixotic7/choralroot) (the monome
+grid version) for the musical engine. Independent of and unaffiliated with Telepathic Instruments
+and M-VAVE.
+
+**The manual:** [docs/MANUAL.md](docs/MANUAL.md) (the first five minutes, every button, knob and Options entry, the
+looper, the sound editor, MIDI and USB, updating and recovery, a quick-reference table).
+
+**M-Vave SMK-37:** ChoralRoot also runs on the SMK-37 Pro, SMK-37 Elite and MKE-P37 (and the Starrykey 37 Play):
+genkigenki's port, tested by SMK-37 owners. Install it from the
+[SMK-37 installer](https://quixotic7.github.io/ChoralRootFM1/webapp/smk37/) (Chrome or Edge), try it first in the
+[SMK-37 emulator](https://quixotic7.github.io/ChoralRootFM1/webapp/smk37/emu/), and see the
+[SMK-37 instructions](SMK37.md).
+
+## Install
+
+Try it in the browser first: <https://quixotic7.github.io/ChoralRootFM1/emu/> (the same firmware, with sound, no
+FM-1 needed).
+
+**From the browser:** open the web installer at <https://quixotic7.github.io/ChoralRootFM1/webapp/installer/> in
+Chrome or Edge, connect the FM-1 and press Install. The button names the version it writes (the newest), and the
+page lists what is new in it beside the button. "Other versions" under the button offers the older ones from 0.16
+on, each with its notes and a sentence on what going back means (0.15 and older are only on
+[Releases](https://github.com/Quixotic7/ChoralRootFM1/releases): no protected update path). Beta releases
+(`0.22-beta1`) are opt-in: tick "Show beta releases" under the versions to see them (the page remembers it in that
+browser). A beta may have bugs and the latest stable release can replace it at any time; Install's default is
+always the newest stable release, also when the FM-1 runs a beta. Nothing is
+installed on the computer: the page talks to the FM-1 over Web MIDI, and the firmware files come from the site
+itself (`firmware/`, with their SHA-256, which the page checks before it writes). Do not unplug while it writes; an
+interrupted install is resumed by pressing Install again (after a power loss too, from 0.16 on: see "If an install
+was interrupted"). An update keeps your saved sounds, loops and settings.
+Afterwards the FM-1 restarts and reports the identity `FM-1_920`. Before installing, the page saves a backup of what
+is stored on the FM-1 (settings, user sounds, loops, FM6 patches) to a file, and after installing over
+Felucca it offers that backup back; its Back up and Restore buttons do the same at any time.
+
+**Before any install:** charge the FM-1 fully (it updates on its battery), connect it straight to the computer with a
+data cable (no hub), keep the computer awake, and leave the cable alone until the installer prints "done". Up to 0.15
+an update interrupted mid-write could leave the FM-1 dark with no USB device at all (docs/INSTALL-COMPAT.md, "Before
+an install"); from 0.16 on it comes back in update mode (below), except during the first second of the install of
+0.16 itself over an older version.
+
+**From the command line:** download `choralroot-X.Y.fwsc` from
+[Releases](https://github.com/Quixotic7/ChoralRootFM1/releases) (`SHA256SUMS` next to it), then
+
+```
+pip3 install python-rtmidi
+python3 tools/fm1_install.py choralroot-X.Y.fwsc --backup .   # back up to ./choralroot-backup-YYYYMMDD.json, install
+python3 tools/fm1_install.py --info          # identity of the connected FM-1 (FM-1_920 after the install)
+python3 tools/fm1_install.py --restore FILE  # a backup back onto the FM-1
+python3 tools/fm1_install.py --sounds        # the 32 user sounds; --export-sound N FILE / --import-sound N FILE /
+                                             # --rename-sound N NAME / --delete-sound N (docs/SOUNDS.md)
+```
+
+**Single sounds as files:** the installer page's Sounds section and the commands above export, import, rename and
+delete one user sound at a time (its record and its VA / FM6 / CZ-1 patch) as a small JSON file, without a restart.
+````
+</details></tool-use>
+
+_**Agent (claude-fable-5-2 2026-11-16 19:32:25Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Download and verify CTL-1, ChoralRoot, and RemoteFM1, then boot each in the emulator on both flash chips
+
+```bash
+python3 - <<'EOF'
+import pathlib
+p=pathlib.Path("Justfile"); s=p.read_text()
+s=s.replace('agtdeck_version := "0.7"\n','agtdeck_version := "0.7"\nctl_version := "1.0.3"\nchoralroot_tag := "v0.41-smk37.1"\nchoralroot_pkg := "choralroot-0.41-smk37.1.fwsc"\nremote_version := "0.3.6"\n',1)
+old_fetch_end='''    fetch isod89/sloop-fm1 "v{{sloop_version}}" "sloop-editor-{{sloop_version}}.html"
+'''
+assert old_fetch_end in s
+s=s.replace(old_fetch_end, old_fetch_end+'''
+# Download the other firmwares I try (CTL-1, ChoralRoot, RemoteFM1) and verify them against the release digests.
+fm1-fetch-more:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    mkdir -p downloads && cd downloads
+    fetch() { # repo tag asset
+      gh release download "$2" -R "$1" -p "$3" --clobber
+      want=$(gh api "repos/$1/releases/tags/$2" --jq ".assets[] | select(.name==\\"$3\\") | .digest" | sed 's/^sha256://')
+      got=$(shasum -a 256 "$3" | cut -d' ' -f1)
+      if [ -n "$want" ] && [ "$want" = "$got" ]; then echo "ok   $3  $got"; else echo "FAIL $3: got $got, release says ${want:-<no digest>}" >&2; exit 1; fi
+    }
+    fetch charlesvestal/fm1-ctl "v{{ctl_version}}" "ctl-{{ctl_version}}.fwsc"
+    fetch Quixotic7/ChoralRootFM1 "{{choralroot_tag}}" "{{choralroot_pkg}}"
+    fetch Quixotic7/RemoteFM1 "v{{remote_version}}" "remote-{{remote_version}}.fwsc"
+''',1)
+s=s.replace('''        for t in "sloop=downloads/sloop-{{sloop_version}}.fwsc" "agtdeck=downloads/agtdeck-{{agtdeck_version}}.fwsc"; do''',
+'''        for t in "sloop=downloads/sloop-{{sloop_version}}.fwsc" "agtdeck=downloads/agtdeck-{{agtdeck_version}}.fwsc" \\
+                 "ctl=downloads/ctl-{{ctl_version}}.fwsc" "choralroot=downloads/{{choralroot_pkg}}" \\
+                 "remote=downloads/remote-{{remote_version}}.fwsc"; do''',1)
+s=s.replace('''          printf '  %-9s %s  (%s)\\n' "${t%%=*}" "$f" "$st"''','''          printf '  %-11s %s  (%s)\\n' "${t%%=*}" "$f" "$st"''',1)
+s=s.replace('''      agtdeck) pkg="downloads/agtdeck-{{agtdeck_version}}.fwsc" ;;
+      *)       pkg="{{target}}" ;;''','''      agtdeck) pkg="downloads/agtdeck-{{agtdeck_version}}.fwsc" ;;
+      ctl)        pkg="downloads/ctl-{{ctl_version}}.fwsc" ;;
+      choralroot) pkg="downloads/{{choralroot_pkg}}" ;;
+      remote)     pkg="downloads/remote-{{remote_version}}.fwsc" ;;
+      *)       pkg="{{target}}" ;;''',1)
+p.write_text(s)
+EOF
+just fm1-fetch-more && for f in ctl-1.0.3 choralroot-0.41-smk37.1 remote-0.3.6; do for c in uc25hq80 p25q80; do printf "%s %s: " $f $c; just emu-shot downloads/$f.fwsc $c 6000 2>&1 | grep flash; done; done; S=/private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/5f461408-bbdd-44d0-bb3b-b0642eabaa31/scratchpad; for f in ctl-1.0.3 choralroot-0.41-smk37.1 remote-0.3.6; do python3 -I $S/ppm2png.py tools/emu-state/$f-uc25hq80.ppm $S/$f.png; done
+```
+
+```text
+ok   ctl-1.0.3.fwsc  1ecf7e3c2af255c7f404fa6232e9a55cdbaaf3e60cc1c549e14ecd310f7d5104
+ok   choralroot-0.41-smk37.1.fwsc  a5b2ceddcc9f21d6aded36d4c66b64ec490d73f88edf93344399cd44816382f4
+ok   remote-0.3.6.fwsc  5c712b1402a31a33b2c3227f771a5603a0facf8162933e699c5d29f1c762017e
+ctl-1.0.3 uc25hq80: flash: 12 erases / programs
+ctl-1.0.3 p25q80: flash: 12 erases / programs
+choralroot-0.41-smk37.1 uc25hq80: flash: 66 erases / programs
+choralroot-0.41-smk37.1 p25q80: flash: 66 erases / programs
+remote-0.3.6 uc25hq80: flash: 9 erases / programs
+remote-0.3.6 p25q80: flash: 9 erases / programs
+```
+</details></tool-use>
+
+_**Agent (claude-fable-5-2 2026-11-16 19:32:32Z)**_
+
+<think><details><summary>Thought Process</summary>
+三個韌體都已下載驗證，在模擬器新舊晶片模式下開機與寫入行為一致；接下來我看開機畫面，再查 iOS app 與各韌體的小章節。
+
+</details></think>
+
+_**Agent (claude-fable-5-2 2026-11-16 19:32:32Z)**_
+
+<tool-use data-tool-type="read" data-tool-name="Read"><details>
+<summary>Tool use: **Read**</summary>
+ `/private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/5f461408-bbdd-44d0-bb3b-b0642eabaa31/scratchpad/ctl-1.0.3.png`
+</details></tool-use>
+
+_**Agent (claude-fable-5-2 2026-11-16 19:32:34Z)**_
+
+<tool-use data-tool-type="read" data-tool-name="Read"><details>
+<summary>Tool use: **Read**</summary>
+ `/private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/5f461408-bbdd-44d0-bb3b-b0642eabaa31/scratchpad/choralroot-0.41-smk37.1.png`
+</details></tool-use>
+
+_**Agent (claude-fable-5-2 2026-11-16 19:32:49Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Look up the iOS apps in the App Store search API and outline the ChoralRoot manual
+
+```bash
+cd /tmp && for t in "AUM Audio Mixer" "GarageBand" "GeoShred" "Koala Sampler" "AudioKit Synth One" "Quantiloop Pro" "StreamByter" "Loopy Pro" "MIDIWeb"; do curl -s -m 15 -G "https://itunes.apple.com/search" --data-urlencode "term=$t" --data-urlencode "entity=software" --data-urlencode "limit=3" --data-urlencode "country=us" | python3 -c "
+import json,sys
+try: r=json.load(sys.stdin)['results']
+except Exception as e: print('ERR',e); sys.exit()
+for a in r[:2]: print('$t =>', a['trackName'],'|',a['sellerName'],'|',a.get('formattedPrice'),'|',a['trackViewUrl'].split('?')[0],'|',','.join(a.get('genres',[])[:2]))"; done; echo "== choral manual"; gh api repos/Quixotic7/ChoralRootFM1/contents/docs/MANUAL.md --jq .content | base64 -d > /tmp/choral-manual.md; grep -n "^## \|^### " /tmp/choral-manual.md | head -40
+```
+
+```text
+AUM Audio Mixer => AUM - Audio Mixer | Kymatica AB | $24.99 | https://apps.apple.com/us/app/aum-audio-mixer/id1055636344 | Music,Productivity
+AUM Audio Mixer => Audiobus: Mixer for Music Apps | Audiobus Pty. Ltd. | Free | https://apps.apple.com/us/app/audiobus-mixer-for-music-apps/id1129130361 | Music,Utilities
+GarageBand => GarageBand | Apple Inc. | Free | https://apps.apple.com/us/app/garageband/id408709785 | Music,Lifestyle
+GarageBand => Ringtones Maker - the ring app | Beijing Shangtang Technology Co., Ltd. | Free | https://apps.apple.com/us/app/ringtones-maker-the-ring-app/id1358107315 | Productivity,Utilities
+GeoShred => GeoShred | Wizdom Music LLC | $16.49 | https://apps.apple.com/us/app/geoshred/id1064769019 | Music,Entertainment
+GeoShred => GeoShred Control | Wizdom Music LLC | Free | https://apps.apple.com/us/app/geoshred-control/id1336247116 | Music,Entertainment
+Koala Sampler => Koala Sampler • Beat Maker | Mazbox Limited | $4.99 | https://apps.apple.com/us/app/koala-sampler-beat-maker/id1449584007 | Music,Entertainment
+Koala Sampler => BandLab – Music Maker & Beats | BandLab Singapore Pte Ltd | Free | https://apps.apple.com/us/app/bandlab-music-maker-beats/id968585775 | Music,Social Networking
+AudioKit Synth One => AudioKit Synth One Synthesizer | AudioKit Pro, LLC | Free | https://apps.apple.com/us/app/audiokit-synth-one-synthesizer/id1371050497 | Music,Education
+AudioKit Synth One => AudioKit Synth One J6 + AUv3 | AudioKit Pro, LLC | Free | https://apps.apple.com/us/app/audiokit-synth-one-j6-auv3/id6741535277 | Music,Education
+Quantiloop Pro => Quantiloop Pro - Live Looper | Stephan Marx | $14.99 | https://apps.apple.com/us/app/quantiloop-pro-live-looper/id1156213359 | Music
+Quantiloop Pro => Quantiloop - Live Looper | Stephan Marx | Free | https://apps.apple.com/us/app/quantiloop-live-looper/id1268082518 | Music,Entertainment
+StreamByter => StreamByter | Soft Audio | Free | https://apps.apple.com/us/app/streambyter/id1398712641 | Music,Utilities
+StreamByter => MUBI: Stream Great Cinema | MUBI, Inc. | Free | https://apps.apple.com/us/app/mubi-stream-great-cinema/id626148774 | Entertainment,Photo & Video
+Loopy Pro => Loopy Pro: Looper DAW Sampler | A Tasty Pixel | Free | https://apps.apple.com/us/app/loopy-pro-looper-daw-sampler/id1492670451 | Music,Education
+Loopy Pro => Sekai: Create · Remix · Play | Versa AI, Inc. | Free | https://apps.apple.com/us/app/sekai-create-remix-play/id6504506653 | Developer Tools,Entertainment
+MIDIWeb => MIDIWeb Browser | 5of12 LLP | Free | https://apps.apple.com/us/app/midiweb-browser/id6757226617 | Music,Utilities
+MIDIWeb => Web MIDI Browser | Takashi Mizuhiki | Free | https://apps.apple.com/us/app/web-midi-browser/id953846217 | Music,Utilities
+== choral manual
+19:## Contents
+41:## 1. What ChoralRoot is, and is not
+66:## 2. The first five minutes
+118:## 3. The panel
+120:### The keybed
+149:### The buttons
+172:### The knobs
+189:### The screen
+211:### The lights
+253:## 4. Chords
+255:### Types and extensions
+295:### Chord names
+337:### LOCK
+382:### Voicing and octave
+391:### Play styles
+412:### Secret chords
+425:### The FM-1 chord keys
+463:### The Classic chord keys
+488:### Key Mode
+679:### LATCH
+690:### PANIC
+696:## 5. Layers
+733:## 6. Bass
+785:## 7. Performance modes
+824:### Chord and Bass Perform (new in 0.34)
+864:## 8. FX
+933:### The Filter page
+970:### Routing
+1001:### FM TONE's Drive
+1023:### The reverb
+1039:### The delay
+1061:### After the last note
+1072:## 9. Tempo and metronome
+1089:### The drums
+1147:## 10. The looper
+1166:### Recording and playing
+1191:### The PLAY menu
+1238:### Record modes
+1282:### The loop editor
+1399:### Slots and saving
+Shell cwd was reset to /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1
+```
+</details></tool-use>
+
+_**Agent (claude-fable-5-2 2026-11-16 19:32:57Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Read ChoralRoot's first-five-minutes and panel sections, plus what each firmware says about its flash storage
+
+`sed -n '41,117p;118,172p' /tmp/choral-manual.md | cut -c1-600; echo "== storage/compat"; grep -n -i -E "felucca|sloop|other firmware|overwrit|flash layout|0x[0-9A-F]{5}|going back|returning|coming from" /tmp/choral.md | cut -c1-320 | head -14; echo "== ctl storage"; gh api repos/charlesvestal/fm1-ctl/contents/app/app.h --jq .content 2>/dev/null | base64 -d | grep -n -i "STORE\|0x" | head -12`
+
+````text
+## 1. What ChoralRoot is, and is not
+
+ChoralRoot turns the FM-1 into a chord instrument in the manner of the Telepathic Instruments Orchid. The left end of
+the keybed says what kind of chord you want, the rest of the keybed plays its root, and the instrument builds the
+chord, voices it and writes its name on the screen. Around that it has a bass part that follows the chords,
+performance modes (strum, arpeggio, patterns), effects, a looper that records chords, seven synth engines with a deep
+sound editor, MIDI out on three channels and USB audio recording.
+
+What it is not:
+
+- **Not the stock firmware with additions.** ChoralRoot replaces the FM-1's firmware while it is installed. The stock
+  sequencer, sampler and drum sounds are not in it; every sound is synthesised. You can switch to another firmware,
+  or put the stock one back, whenever you want ([Switching firmwares](#switching-firmwares)).
+- **Not what the panel says.** Most printed labels have another job (SEL is KEY, ARP is PERF, ENV is BASS, and so on),
+  and in the sound editor the buttons change again. A sticker sheet would carry the table of the
+  [quick reference](#18-quick-reference).
+- **No velocity.** The FM-1's keys do not sense it. One fixed velocity is set in Options.
+- **No audio from the computer.** The computer cannot play audio through the FM-1. USB MIDI works both ways, the TRS
+  jack is a MIDI input, the computer can record the FM-1 over USB, and the FM-1 (not the SMK-37) does MIDI over
+  Bluetooth too, Off until you turn it on ([Bluetooth MIDI](#bluetooth-midi)).
+- **Not affiliated** with Telepathic Instruments or M-VAVE.
+
+You can try everything in this manual without the hardware: the firmware runs in the browser at
+<https://quixotic7.github.io/ChoralRootFM1/emu/>.
+
+## 2. The first five minutes
+
+**Switch on.** The screen shows `choralroot` over three stripes, with the version under them for a moment. The logo
+stays until you touch something.
+
+**Play a note.** Press D4, the sixth white key from the left. Every key from C4 up to G5 is a **root key**. On its own
+a root key plays one note; the screen shows `D` and under it `D4`.
+
+**Play a chord.** The lowest four white keys and the three black keys between them are the **chord block**. Hold MAJ
+(the black key A#3) and press D4: D major. The screen shows `DM` (a major chord has a capital `M` after its root, so
+that it cannot be taken for the single note `D`) and the notes `D4 F#4 A4` under it, and the
+three root keys where those notes sound light up. Now hold MIN (G#3) and m7 (the white key G3) together and press D4:
+
+<img src="manual/chord.png" width="240" alt="The chord view: Dm with a small orange 7, the notes D4 F4 A4 C5 under it, C5 in orange">
+
+The chord keys have to be down when the root goes down. The name stays on the screen after you let go.
+
+**Free a hand with LOCK.** Tap the button printed **LFO** (LOCK, in ChoralRoot). It lights, and `lock` appears at the
+top right. Hold MIN and let go: MIN stays lit and every root you play is now minor. Tap 9 (the white
+key B3) to add a ninth, tap it again to take it away. Tap MAJ: major, with the extensions cleared. Tap LFO again to
+switch LOCK off.
+
+**Change the voicing.** Hold a chord and turn KNOB 1. Each click moves the lowest note up an octave (or, the other
+way, the highest note down); the screen reads `voicing +2`.
+
+**Open a layer.** Hold **FX** for about half a second. Its layer opens and stays open after you let go; the FX button
+blinks.
+
+<img src="manual/layer-fx-sends.png" width="240" alt="The FX layer on its first page, Sends: four cells Drive, Chorus, Delay, Reverb in the knob colours">
+
+It opens on **Sends**: how much of the chords goes into each effect. SELECT steps on to the effects themselves, KNOB 1
+to KNOB 4 turn the four cells under the name, and the root keys still play so you hear the
+change. **OCT-** closes the layer (so do OCT+, HOME, and holding FX again). All the layer buttons work this way: a tap is the button's on / off,
+a hold opens its layer. [Layers](#5-layers) has the rules.
+
+**Change the sound.** Turn PRESETS: the next sound of the same engine loads at once, and the screen shows its place:
+the engine in orange (`FM6`), the number big (`02`), the name (`FM BELL`), a stripe for every preset of the engine,
+and `Hold OPT to change engine`. To change the engine, hold **OPT** (printed GLO) and turn PRESETS: the engines pass by
+(FM6, FM TONE, VA, CZ-1, P5, WHEEL and, from 0.24-beta2, GRAIN). Let go of OPT and the engine you stopped on is loaded.
+
+**Add the bass.** Tap **BASS** (printed ENV). A bass note now plays under every chord, and `Bass` shows at the top
+right. ALGORITHM changes the bass sound. Tap BASS again to switch it off.
+
+**Record a loop.** Tap **REC**. The REC light comes on, the top line reads `Rec · Overwrite` and a message says
+`rec: play to start`. Play a few chords: recording starts with the first one. Tap REC again: `loop recorded`, and the
+loop plays straight away. **LOOP** (printed PLAY) stops and starts it. Play over it, change the sound, turn KNOB 1:
+the loop holds chords, not audio, so it follows. [The looper](#10-the-looper) has the rest.
+
+**If anything hangs.** Press OCT- and OCT+ together: `PANIC`, every note off. (Holding the two does nothing more.
+Holding them **with HOME** for five seconds is the way into update mode, see
+[Power-on and held gestures](#power-on-and-held-gestures).)
+
+## 3. The panel
+
+### The keybed
+
+27 keys, F3 to G5. The left end is the chord block (seven keys); the other 20 keys are the roots.
+
+| Keys | ChoralRoot | Job |
+| --- | --- | --- |
+| F#3 G#3 A#3 (black) | **DIM MIN MAJ** | the chord type, while held |
+| G#3 + A#3 together | **SUS** | both small black keys at once (one finger on both) |
+| F3 G3 A3 B3 (white) | **6 m7 M7 9** | extensions, while held; they stack |
+| C4 to G5 (20 keys) | **roots** | a single note alone, a chord with a chord key held or latched; OCT- / OCT+ shift them by octaves |
+
+LOCK, which latches the chord block, is the **LFO** button (below).
+
+```
+black      DIM   MIN   MAJ         C#4   D#4         F#4   ...
+           F#3   G#3   A#3
+                 \__ SUS __/   (G#3 + A#3 together)
+white    6     m7    M7    9     C4    D4    E4    F4   ...   G5
+         F3    G3    A3    B3    |---------- roots: C4 .. G5 ---------|
+```
+
+In a layer, a menu or a dialog the root keys may take another job (they pick a slot, type a letter, choose an
+engine). The chord block keeps its job everywhere but in the KEY layer, where MAJ and MIN pick the scale.
+
+This is the **FM-1** layout, made for this keybed and the default since 0.25.1 (a unit updated from an older version
+is moved to it once). **Options > Chord Keys** switches to **Classic**, the Orchid's layout: SUS on C#4, the 9 on C4,
+LOCK on B3, the roots D4 to G5. See [The FM-1 chord keys](#the-fm-1-chord-keys) and
+[The Classic chord keys](#the-classic-chord-keys).
+
+### The buttons
+
+Two rows of six, and the two octave buttons.
+
+| Printed | ChoralRoot | Tap | Hold |
+| --- | --- | --- | --- |
+| FX | **FX** | the effects on / off | the FX layer |
+| SEL | **KEY** | Key Mode on / off | the KEY layer |
+| ENV | **BASS** | the bass on / off | the BASS layer |
+| LFO | **LOCK** (Classic chord keys: **LATCH**) | LOCK on / off; GLO held, then LFO: LATCH on / off (Classic: LATCH on / off) | the LOCK layer (Classic: nothing) |
+| EDIT | **EDIT** | the sound editor | the engine picker |
+| GLO | **OPT** | the Options | with a knob: the knob's second job |
+| HOME | **HOME** | back to the view; on the view: the next view | 0.6 s: the view menu |
+| SAVE | **SAVE** | save the sound | held: **save everything** (`saved`). GLO + SAVE held 1 s: back to the last save (`reverted`) |
+| ARP | **PERF** | performance on / off | the PERF layer; with BASS (ENV) held: the Bass PERF layer |
+| SEQ | **SEQ** | the loop editor, then the PLAY menu, then back to the view ([The loop editor](#the-loop-editor)). With OPT (GLO) held: the beat (metronome or drums) on / off | the SEQ key's hold menu: the beat, Metronome or Drums ([The drums](#the-drums)) |
+| PLAY | **LOOP** | play / stop the loop | the PLAY menu |
+| REC | **REC** | record | undo the last layer |
+| OCT- / OCT+ | octave | the roots an octave down / up; in layers, menus and dialogs: back / OK | both together: PANIC |
+
+In the sound editor seven of the buttons become the editor's groups; see
+[The sound editor](#12-the-sound-editor).
+
+### The knobs
+== storage/compat
+6:[Felucca](https://github.com/hugelton/Felucca) (Leo Kuroshita, Hügelton Instruments) for the
+28:on, each with its notes and a sentence on what going back means (0.15 and older are only on
+39:Felucca it offers that backup back; its Back up and Restore buttons do the same at any time.
+67:**Switching firmwares:** to go from ChoralRoot to another firmware or back, use [M-Flasher](https://github.com/jvitkauskas/m-flasher) with the [M-Bootloader](https://github.com/jvitkauskas/m-bootloader)
+77:without the presets.) Backups move between firmwares too: a Felucca backup restores its settings,
+80:**Over which firmware:** the stock firmware, Felucca 1.0 or later, Melodee and ChoralRoot. The installers refuse
+81:Sloop, the Felucca 0.x betas and firmwares they cannot identify: an FM-1 has been bricked by an install over Sloop,
+82:and Felucca 0.9-beta to 1.0 bricked several (the loader wrote correctly both times; the cause is still open;
+85:(above): M-Flasher writes through the chip's download mode, not through the other firmware's updater.
+130:- **The looper**: it records chords, ten slots, five record modes (Overwrite, Advance, Overdub, Replace, Step), the
+139:  (PHASE, LOFI, VOICE, TRIO, NOISE and PHYS, Felucca's, are retired since 0.18: a sound saved on one stays in its
+140:  slot and plays as a stand-in on the VA.) (Felucca's ANALOG is retired since 0.14: the VA replaces it; an ANALOG sound
+148:  In**: the master, the CHORD part and the BASS part as three stereo pairs, at 44.1 kHz, and (0.19, after SLOOP 2.5
+149:  and Felucca 1.1.5) at 48 kHz too when Options > USB Rate offers it; Options > USB Record switches it (Off:
+== ctl storage
+14:/* the store: the settings at 0xFC000 (Felucca's FL_GLOB), the panel calibration at 0xDC000, the Bluetooth stack's
+15: * syscfg (its address) at 0xDE000 */
+17:#define APP_STORE_MAP {0xFC000u, 0xDC000u, 0xDE000u}
+24:#define PROJ_MAGIC 0x4C544331u           /* "CTL1" */
+````
+</details></tool-use>
+
+_**Agent (claude-fable-5-2 2026-11-16 19:33:09Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Read ChoralRoot's firmware-switching warnings and check whether CTL-1's storage addresses overlap SLOOP data on my unit
+
+```bash
+sed -n '60,92p' /tmp/choral.md | cut -c1-1100; cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1 && python3 - <<'EOF'
+import glob
+f=sorted(glob.glob('backups/*pre-agtdeck/*.bin'))[0]; a=open(f,'rb').read(); S=4096
+for addr in (0xDC000,0xDE000,0xFC000,0xFD000):
+    sec=a[addr:addr+S]; print(hex(addr),'blank' if sec==b'\xff'*S else f'in use ({sum(1 for x in sec if x!=0xff)} non-FF bytes)')
+used=[i for i in range(256) if a[i*S:(i+1)*S]!=b'\xff'*S and i>=0x93]
+print('SLOOP-era non-blank sectors >=0x93:',len(used), 'first',hex(used[0]*S),'last',hex(used[-1]*S))
+EOF
+```
+
+```text
+delete one user sound at a time (its record and its VA / FM6 / CZ-1 patch) as a small JSON file, without a restart.
+
+**The device manager** (`webapp/installer/manager.html` on the site, [docs/DEVICE-MANAGER.md](docs/DEVICE-MANAGER.md)):
+the FM-1's pools per engine and its ten loop slots next to a library (this browser, files, the factory packs); Place,
+Keep, Swap, Rename, Delete, Undo, a back-up, and an on-screen keyboard over Web MIDI. `manager.html?sim=1` runs it
+against a simulated FM-1, no device needed.
+
+**Switching firmwares:** to go from ChoralRoot to another firmware or back, use [M-Flasher](https://github.com/jvitkauskas/m-flasher) with the [M-Bootloader](https://github.com/jvitkauskas/m-bootloader)
+(Windows, macOS, Linux): M-Flasher works through the chip's USB download mode whatever runs on the FM-1, backs up the
+whole flash first and installs any firmware's `.fwsc` package, ChoralRoot's included; the M-Bootloader adds download
+mode from the keys (REC while switching on) and a recovery menu. Back up in ChoralRoot's installer first: no other
+firmware can use ChoralRoot's user sounds, loops or settings; reinstall ChoralRoot and press Restore to bring them
+back. No detour through the stock firmware is needed ([the manual](docs/MANUAL.md#switching-firmwares)).
+
+**Back to the stock firmware completely:** M-VAVE's own updater, M-Updater, from M-VAVE's
+[downloads page](https://www.m-vave.com/download): it reflashes the firmware and its factory presets. (The installer's
+"Return to official V15" section, or `python3 tools/fm1_install.py FM-1.fwsc --backup .`, writes the V15 firmware
+without the presets.) Backups move between firmwares too: a Felucca backup restores its settings,
+user sounds and FM6 patches on ChoralRoot (its samples stay in the file: ChoralRoot is all-synth), and back (BUILDING.md, "Backup and restore").
+
+**Over which firmware:** the stock firmware, Felucca 1.0 or later, Melodee and ChoralRoot. The installers refuse
+Sloop, the Felucca 0.x betas and firmwares they cannot identify: an FM-1 has been bricked by an install over Sloop,
+and Felucca 0.9-beta to 1.0 bricked several (the loader wrote correctly both times; the cause is still open;
+[docs/INSTALL-COMPAT.md](docs/INSTALL-COMPAT.md)). **Bubba Machine** takes only M-VAVE's own package, so the
+installers cannot go over it either. Over any of these, install ChoralRoot with M-Flasher and the M-Bootloader
+(above): M-Flasher writes through the chip's download mode, not through the other firmware's updater.
+
+**SAFE MODE.** If ChoralRoot crashes twice in a row within 30 s of starting (switching it off and on does not count),
+it starts in SAFE MODE (a yellow screen, "Safe mode" on the top line): it plays its factory sounds and ignores what is
+stored in the flash (settings, user sounds, FM6 bank, loops), which stays untouched. Options > Flash Data (OCT+ twice)
+erases that data and restarts; switching off and on tries the stored data again. Installing and Backup still work in
+SAFE MODE, so you can save a backup first. Only if SAFE MODE itself crashes twice does the unit go to update mode
+(ROM boot).
+0xdc000 blank
+0xde000 blank
+0xfc000 in use (1624 non-FF bytes)
+0xfd000 in use (1624 non-FF bytes)
+SLOOP-era non-blank sectors >=0x93: 18 first 0x93000 last 0xfe000
+```
+</details></tool-use>
+
+_**Agent (claude-fable-5-2 2026-11-16 19:33:21Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Compare the shared settings sector across all backups to see what Agent Deck changed and what SLOOP did afterwards
+
+```bash
+python3 - <<'EOF'
+import glob
+S=4096
+def rd(p): return open(sorted(glob.glob(p))[0],'rb').read()
+B={'stock':rd('backups/2026-11-17-stock/*.bin'),'sloop(01:41)':rd('backups/2026-11-17-sloop-2.8.5/*.bin'),'pre-agtdeck':rd('backups/2026-11-17-pre-agtdeck/*.bin'),'agtdeck':rd('backups/2026-11-17-agtdeck-0.7/*.bin'),'back-on-sloop(03:03)':rd('backups/2026-11-17-0303-pre-sloop-2.8.5/*.bin')}
+import hashlib
+for addr in (0xFC000,0xFD000,0xFE000):
+    print(hex(addr),{k:hashlib.sha1(v[addr:addr+S]).hexdigest()[:8]+('(blank)' if v[addr:addr+S]==b'\xff'*S else '') for k,v in B.items()})
+a,b=B['pre-agtdeck'],B['back-on-sloop(03:03)']
+d=[hex(i*S) for i in range(256) if a[i*S:(i+1)*S]!=b[i*S:(i+1)*S]]
+print('pre-agtdeck vs back-on-sloop differing sectors:',d)
+x=B['pre-agtdeck'][0xFC000:0xFC000+64]; y=B['agtdeck'][0xFC000:0xFC000+64]; z=b[0xFC000:0xFC000+64]
+print(x[:32].hex()); print(y[:32].hex()); print(z[:32].hex())
+EOF
+```
+
+```text
+0xfc000 {'stock': 'e0c66649(blank)', 'sloop(01:41)': '8b054d40', 'pre-agtdeck': '8b054d40', 'agtdeck': 'd7ae5b53', 'back-on-sloop(03:03)': 'd7ae5b53'}
+0xfd000 {'stock': 'e0c66649(blank)', 'sloop(01:41)': '7c6b9acb', 'pre-agtdeck': '7c6b9acb', 'agtdeck': '7c6b9acb', 'back-on-sloop(03:03)': '7c6b9acb'}
+0xfe000 {'stock': 'e0c66649(blank)', 'sloop(01:41)': '654dbf42', 'pre-agtdeck': '654dbf42', 'agtdeck': '654dbf42', 'back-on-sloop(03:03)': 'db2ba400'}
+pre-agtdeck vs back-on-sloop differing sectors: ['0xfc000', '0xfe000']
+46454c550000000003000000100600006f8e24ecffffffffffffffffb3c44189
+4b44474104000000f270f13303000000ffffffffffffffffffffffffffffffff
+4b44474104000000f270f13303000000ffffffffffffffffffffffffffffffff
+```
+</details></tool-use>
+
+_**Agent (claude-fable-5-2 2026-11-16 19:33:40Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Check whether the emulator's flash file uses the same data layout as a real backup
+
+```bash
+python3 - <<'EOF'
+import glob
+S=4096
+e=open('tools/emu-state/agtdeck-0.7-uc25hq80.flash','rb').read()
+r=open(glob.glob('backups/2026-11-17-agtdeck-0.7/*.bin')[0],'rb').read()
+print(len(e),len(r)); print('emu  0xFC000:',e[0xFC000:0xFC010].hex()); print('real 0xFC000:',r[0xFC000:0xFC010].hex())
+print('fw area equal?', e[0x4000:0x90000]==r[0x4000:0x90000], '| first bytes emu',e[0x4000:0x4008].hex(),'real',r[0x4000:0x4008].hex())
+EOF
+```
+
+```text
+1048576 1048576
+emu  0xFC000: 4b44474104000000a5e793bc07000000
+real 0xFC000: 4b44474104000000f270f13303000000
+fw area equal? True | first bytes emu fcacb5e0f9b364ca real fcacb5e0f9b364ca
+```
+</details></tool-use>
+
+_**Agent (claude-fable-5-2 2026-11-16 19:33:49Z)**_
+
+<think><details><summary>Thought Process</summary>
+我發現模擬器的 flash 檔和實機備份格式相同，因此打算用你真實的 SLOOP 備份做起點，先在模擬器裡預演裝上 ChoralRoot / CTL-1 的結果，現在開始執行。
+
+</details></think>
+
+_**Agent (claude-fable-5-2 2026-11-16 19:34:03Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Rehearse installing CTL-1 and ChoralRoot over my real SLOOP flash image in the emulator and list which data sectors change
+
+```bash
+S=/private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/5f461408-bbdd-44d0-bb3b-b0642eabaa31/scratchpad && SEED=$(ls backups/2026-11-17-0303-pre-sloop-2.8.5/*.bin) && cd tools/emu-state && mkdir -p work && for f in ctl-1.0.3 choralroot-0.41-smk37.1 sloop-2.8.5; do cp "../../$SEED" "rehearse-$f.flash"; printf "%s: " $f; ../fm1-emu/fm1-live --fwsc ../../downloads/$f.fwsc --flash-chip uc25hq80 --flash rehearse-$f.flash --midi none --shot 8000 --lcd-only 2>&1 | grep -i -E "^flash:|fault|safe|crash" | tr '\n' ' '; echo; python3 -I $S/ppm2png.py work/lcd.ppm $S/rehearse-$f.png; done; cd ../.. && python3 - <<'EOF'
+import glob
+S=4096
+seed=open(glob.glob('backups/2026-11-17-0303-pre-sloop-2.8.5/*.bin')[0],'rb').read()
+def rng(x):
+    out=[];s=p=None
+    for i in x:
+        if s is None: s=p=i
+        elif i==p+1: p=i
+        else: out.append((s,p)); s=p=i
+    if s is not None: out.append((s,p))
+    return [f"0x{a*S:05X}" + (f"-0x{(b+1)*S-1:05X}" if b>a else "") for a,b in out]
+for f in ('ctl-1.0.3','choralroot-0.41-smk37.1','sloop-2.8.5'):
+    e=open(f'tools/emu-state/rehearse-{f}.flash','rb').read()
+    d=[i for i in range(256) if e[i*S:(i+1)*S]!=seed[i*S:(i+1)*S]]
+    print(f, 'changed outside firmware area:', rng([i for i in d if i>=0x93 or i<4]), '| fw sectors changed:', len([i for i in d if 4<=i<0x93]))
+EOF
+```
+
+```text
+ctl-1.0.3: flash: 0 erases / programs 
+choralroot-0.41-smk37.1: flash: 0 erases / programs 
+sloop-2.8.5: flash: 0 erases / programs 
+ctl-1.0.3 changed outside firmware area: [] | fw sectors changed: 0
+choralroot-0.41-smk37.1 changed outside firmware area: [] | fw sectors changed: 0
+sloop-2.8.5 changed outside firmware area: [] | fw sectors changed: 0
+```
+</details></tool-use>
+
+_**Agent (claude-fable-5-2 2026-11-16 19:34:09Z)**_
+
+<tool-use data-tool-type="read" data-tool-name="Read"><details>
+<summary>Tool use: **Read**</summary>
+ `/private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/5f461408-bbdd-44d0-bb3b-b0642eabaa31/scratchpad/rehearse-ctl-1.0.3.png`
+</details></tool-use>
+
+_**Agent (claude-fable-5-2 2026-11-16 19:34:11Z)**_
+
+<tool-use data-tool-type="read" data-tool-name="Read"><details>
+<summary>Tool use: **Read**</summary>
+ `/private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/5f461408-bbdd-44d0-bb3b-b0642eabaa31/scratchpad/rehearse-choralroot-0.41-smk37.1.png`
+</details></tool-use>
+
+_**Agent (claude-fable-5-2 2026-11-16 19:34:30Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Splice each firmware into my real SLOOP flash image, boot it in the emulator, and list which data sectors it rewrites
+
+```bash
+S=/private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/5f461408-bbdd-44d0-bb3b-b0642eabaa31/scratchpad && python3 - <<'EOF'
+import glob
+seed=open(glob.glob('backups/2026-11-17-0303-pre-sloop-2.8.5/*.bin')[0],'rb').read()
+for f in ('ctl-1.0.3','choralroot-0.41-smk37.1','remote-0.3.6'):
+    fw=open(f'tools/emu-state/{f}-uc25hq80.flash','rb').read()
+    img=seed[:0x4000]+fw[0x4000:0x93000]+seed[0x93000:]
+    open(f'tools/emu-state/rehearse-{f}.flash','wb').write(img); open(f'tools/emu-state/rehearse-{f}.seed','wb').write(img)
+print('spliced')
+EOF
+cd tools/emu-state && for f in ctl-1.0.3 choralroot-0.41-smk37.1 remote-0.3.6; do printf "%s: " $f; ../fm1-emu/fm1-live --fwsc ../../downloads/$f.fwsc --flash-chip uc25hq80 --flash rehearse-$f.flash --midi none --shot 9000 --lcd-only 2>&1 | grep -i -E "^flash:|fault|safe|crash" | tr '\n' ' '; echo; python3 -I $S/ppm2png.py work/lcd.ppm $S/rehearse-$f.png; done; cd ../.. && python3 - <<'EOF'
+S=4096
+def rng(x):
+    out=[];s=p=None
+    for i in x:
+        if s is None: s=p=i
+        elif i==p+1: p=i
+        else: out.append((s,p)); s=p=i
+    if s is not None: out.append((s,p))
+    return [f"0x{a*S:05X}" + (f"-0x{(b+1)*S-1:05X}" if b>a else "") for a,b in out]
+for f in ('ctl-1.0.3','choralroot-0.41-smk37.1','remote-0.3.6'):
+    e=open(f'tools/emu-state/rehearse-{f}.flash','rb').read(); seed=open(f'tools/emu-state/rehearse-{f}.seed','rb').read()
+    d=[i for i in range(256) if e[i*S:(i+1)*S]!=seed[i*S:(i+1)*S]]
+    print(f,'-> sectors the firmware changed on first boot over SLOOP data:', rng(d))
+EOF
+```
+
+```text
+spliced
+ctl-1.0.3: flash: 12 erases / programs 
+choralroot-0.41-smk37.1: flash: 66 erases / programs 
+remote-0.3.6: flash: 9 erases / programs 
+ctl-1.0.3 -> sectors the firmware changed on first boot over SLOOP data: ['0xDE000-0xDFFFF']
+choralroot-0.41-smk37.1 -> sectors the firmware changed on first boot over SLOOP data: ['0xAF000', '0xE9000', '0xEB000-0xF1FFF']
+remote-0.3.6 -> sectors the firmware changed on first boot over SLOOP data: ['0xF2000-0xF3FFF']
+```
+</details></tool-use>
+
+_**Agent (claude-fable-5-2 2026-11-16 19:34:41Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Check whether the sectors each firmware rewrites overlap SLOOP's data or factory data in my image
+
+```bash
+python3 - <<'EOF'
+import glob
+S=4096
+seed=open(glob.glob('backups/2026-11-17-0303-pre-sloop-2.8.5/*.bin')[0],'rb').read()
+stock=open(glob.glob('backups/2026-11-17-stock/*.bin')[0],'rb').read()
+used=[i for i in range(0x93,256) if seed[i*S:(i+1)*S]!=b'\xff'*S]
+print('non-blank data sectors in my SLOOP image:',[hex(i*S) for i in used])
+sloop_changed=[i for i in range(0x93,256) if seed[i*S:(i+1)*S]!=stock[i*S:(i+1)*S]]
+print('sectors SLOOP changed vs stock:',[hex(i*S) for i in sloop_changed])
+for name,secs in {'ctl':[0xDE,0xDF],'choralroot':[0xAF,0xE9]+list(range(0xEB,0xF2)),'remote':[0xF2,0xF3]}.items():
+    print(name,'overlap with SLOOP-written:',[hex(i*S) for i in secs if i in sloop_changed],'| overlap with factory data (non-blank, untouched by SLOOP):',[hex(i*S) for i in secs if i in used and i not in sloop_changed])
+EOF
+```
+
+```text
+non-blank data sectors in my SLOOP image: ['0x93000', '0x97000', '0x9f000', '0xe9000', '0xea000', '0xeb000', '0xec000', '0xed000', '0xee000', '0xef000', '0xf0000', '0xf1000', '0xf2000', '0xfa000', '0xfb000', '0xfc000', '0xfd000', '0xfe000']
+sectors SLOOP changed vs stock: ['0x97000', '0x9f000', '0xfc000', '0xfd000', '0xfe000']
+ctl overlap with SLOOP-written: [] | overlap with factory data (non-blank, untouched by SLOOP): []
+choralroot overlap with SLOOP-written: [] | overlap with factory data (non-blank, untouched by SLOOP): ['0xe9000', '0xeb000', '0xec000', '0xed000', '0xee000', '0xef000', '0xf0000', '0xf1000']
+remote overlap with SLOOP-written: [] | overlap with factory data (non-blank, untouched by SLOOP): ['0xf2000']
+```
+</details></tool-use>
+
+_**Agent (claude-fable-5-2 2026-11-16 19:34:43Z)**_
+
+<tool-use data-tool-type="read" data-tool-name="Read"><details>
+<summary>Tool use: **Read**</summary>
+ `/private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/5f461408-bbdd-44d0-bb3b-b0642eabaa31/scratchpad/rehearse-choralroot-0.41-smk37.1.png`
+</details></tool-use>
+
+_**Agent (claude-fable-5-2 2026-11-16 19:35:03Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Boot ChoralRoot over the SLOOP image for different durations and a second time to see whether it comes up
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/tools/emu-state && S=/private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/5f461408-bbdd-44d0-bb3b-b0642eabaa31/scratchpad && cp rehearse-choralroot-0.41-smk37.1.seed r2.flash && for ms in 3000 20000; do cp rehearse-choralroot-0.41-smk37.1.seed r2.flash; printf "%sms: " $ms; ../fm1-emu/fm1-live --fwsc ../../downloads/choralroot-0.41-smk37.1.fwsc --flash-chip uc25hq80 --flash r2.flash --midi none --shot $ms --lcd-only 2>&1 | grep -i -E "^flash:|LEDs lit|fault" | tr '\n' ' '; echo; python3 -I $S/ppm2png.py work/lcd.ppm $S/cr-$ms.png; done; echo "second boot (state kept):"; ../fm1-emu/fm1-live --fwsc ../../downloads/choralroot-0.41-smk37.1.fwsc --flash-chip uc25hq80 --flash r2.flash --midi none --shot 8000 --lcd-only 2>&1 | grep -i -E "^flash:|LEDs lit"; python3 -I $S/ppm2png.py work/lcd.ppm $S/cr-second.png; FM1_BENCH_NOKEYS=1 ../fm1-emu/fm1-live --fwsc ../../downloads/ctl-1.0.3.fwsc --flash-chip uc25hq80 --flash rehearse-ctl-1.0.3.flash --midi none --shot 6000 --lcd-only 2>&1 | grep -i "^flash:"; python3 -I $S/ppm2png.py work/lcd.ppm $S/ctl-second.png`
+
+```text
+3000ms: work/lcd.ppm at 3385 ms; LEDs lit: []; audio peak over the last 0.5 s: 0 flash: 66 erases / programs 
+20000ms: work/lcd.ppm at 20000 ms; LEDs lit: []; audio peak over the last 0.5 s: 0 flash: 66 erases / programs 
+second boot (state kept):
+work/lcd.ppm at 8000 ms; LEDs lit: []; audio peak over the last 0.5 s: 421
+flash: 0 erases / programs
+flash: 0 erases / programs
+```
+</details></tool-use>
+
+_**Agent (claude-fable-5-2 2026-11-16 19:35:03Z)**_
+
+<tool-use data-tool-type="read" data-tool-name="Read"><details>
+<summary>Tool use: **Read**</summary>
+ `/private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/5f461408-bbdd-44d0-bb3b-b0642eabaa31/scratchpad/cr-20000.png`
+</details></tool-use>
+
+_**Agent (claude-fable-5-2 2026-11-16 19:35:03Z)**_
+
+<tool-use data-tool-type="read" data-tool-name="Read"><details>
+<summary>Tool use: **Read**</summary>
+ `/private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/5f461408-bbdd-44d0-bb3b-b0642eabaa31/scratchpad/cr-3000.png`
+</details></tool-use>
+
+_**Agent (claude-fable-5-2 2026-11-16 19:35:13Z)**_
+
+<think><details><summary>Thought Process</summary>
+ChoralRoot 在我拼接的映像上報了「FONTS MISSING」，我懷疑是拼接方式造成的，因為它的套件除了韌體區還包含字型資源。我接著檢查它的套件實際寫入哪些區域，以判斷這是假警報還是真問題。
+
+</details></think>
+
+_**Agent (claude-fable-5-2 2026-11-16 19:35:19Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+List which flash regions each package occupies in the emulator and read ChoralRoot's install compatibility notes
+
+```bash
+cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1 && python3 - <<'EOF'
+import glob
+S=4096
+def rng(x):
+    out=[];s=p=None
+    for i in x:
+        if s is None: s=p=i
+        elif i==p+1: p=i
+        else: out.append((s,p)); s=p=i
+    if s is not None: out.append((s,p))
+    return [f"0x{a*S:05X}" + (f"-0x{(b+1)*S-1:05X}" if b>a else "") for a,b in out]
+for f in ('sloop-2.8.5','agtdeck-0.7','ctl-1.0.3','choralroot-0.41-smk37.1','remote-0.3.6','template'):
+    e=open(f'tools/emu-state/{f}-uc25hq80.flash','rb').read()
+    nb=[i for i in range(256) if e[i*S:(i+1)*S]!=b'\xff'*S]
+    print(f'{f:26s} fw {rng([i for i in nb if 4<=i<0x93])}  data {rng([i for i in nb if i>=0x93])}')
+EOF
+grep -n -i -E "fonts missing|font|resource|0xE[9A-F]|0xF[0-9]" /tmp/choral.md | cut -c1-260 | head -12; gh api repos/Quixotic7/ChoralRootFM1/contents/docs/INSTALL-COMPAT.md --jq .content | base64 -d > /tmp/choral-compat.md; grep -n -i -E "font|m-flasher|sloop|0xE|0xF|resource|second|after the app" /tmp/choral-compat.md | cut -c1-330 | head -30
+```
+
+```text
+Traceback (most recent call last):
+  File "<stdin>", line 12, in <module>
+FileNotFoundError: [Errno 2] No such file or directory: 'tools/emu-state/sloop-2.8.5-uc25hq80.flash'
+222:| `assets/`, `LICENSES/` | the UI font, icons, CC0 samples and their licences |
+227:Python 3 with Pillow and fontTools, and SDL2; the device build needs Docker and the JieLi toolchain
+237:SAMPLE engine and its CC0 instruments by Versilian Studios stay in the tree for Felucca builds); the package carries three JieLi AC79 SDK files under Apache-2.0. The bundled font, icons,
+3:An FM-1 that ran **Sloop** (a fork of Felucca 0.9-beta) ended in the chip's ROM boot mode (black screen, the
+6:byte for byte, and the device came back once the old data (0x97000.., 0xFC000..) was erased. This page is what the
+20:| Sloop | INFO `FELUCCA SLOOP 2.2` (dev build), `FELUCCA 2.2 BETA` (release build) | **refused** |
+21:| Sloop's rescue mode | `FM-1_000` | **refused** |
+27:number (Felucca 0.9-beta `FM-1_909`, Felucca 1.0 `FM-1_910`, Sloop 2.0 `FM-1_920`, which is ChoralRoot's own), and
+39:appears only after a refusal, then a second confirm. The return to the official V15 (the page's "Return to official
+52:## A second flash chip: 0xB36014 (2026-11-02, HISTORY 3y222)
+67:**From 0.29.1 on** `FL_JEDEC_OK` accepts 0xB36014 beside 0x856014 (and the SMK-37's 0xEB6014). The RAM flash driver
+95:M-VAVE's own (`usb_hid_ota.bin`, header CRC 0xEBAA, data CRC 0x5881, 0x4DE1 bytes) and whose `flash.bin` head
+114:Host evidence (2026-10-07; Sloop f2b44c2 built from a scratch copy with this repo's `tools/sdk`, ChoralRoot 0.12 dev):
+117:   `ota_stage` (identical in Sloop, Felucca 0.9-beta, 1.0, Melodee and here, apart from identity text) reads the
+119:   stages *that* loader at 0xE0000. So Sloop -> ChoralRoot was written by ChoralRoot's (= Felucca 1.0's) loader, and
+120:   Felucca 0.9-beta -> 1.0.1 by 1.0.1's. Harness A (Sloop's step 1 with our package): `ota test passed`,
+122:2. **The write is correct.** B (our loader, Sloop installed -> ChoralRoot): `rc 0, 1148 requests, 133 sector
+124:   C (Sloop's own loader with our package, the hypothetical path): all 14 checks ok incl. Sloop's added CRC pass.
+125:   D (our loader writing Sloop) and E (our step 1 with Sloop's package): passed.
+128:   [0, 0x4000) (SDK SPL + isd_config), which the Felucca loader never writes anyway. Sloop's fm1pkg_make.py differs only
+131:   comments only, `fm1pkg_make.py` docstring and one assertion. Sloop's loader is *newer* than 1.0's: it adds a CRC
+135:   a `.noinit` boot guard counts boots that crash or hang (watchdog) within 30 s; at the second it calls
+136:   `fm1_enter_uboot()`, i.e. "WL82 UBOOT1.00". Unlike Sloop's guard it is not cleared on power-on, so a firmware that
+138:   0xFC000+0x2000, then 1.0.2 boots; later traced to 1.0.x converting 0.9 DIGITAL sounds to FM6 at boot) fits this.
+139:6. **The data that stays.** Neither loader touches 0x93000.. (data). Sloop's store has the same layout as Felucca's
+140:   (settings 0xFC000, projects 0x97000.., user preset banks 0xDC000.., samples 0xA0000..) plus its own
+141:   `OBJ_AUTOSAVE` = object 7 at 0x9F000 / 0xFE000, which is exactly ChoralRoot's `OBJ_FM6BANK` (object 7, same
+143:   FM6 conversion inherited from Felucca 1.0, the FM6 bank; `cr_settings_boot`) reads Sloop's objects. The FM6 bank
+148:   v0.11 tag, HEAD and the working tree), booted for 33 s on 1 MiB images filled by Sloop's own code (32 user records
+149:   on every Sloop engine including DIGITAL, PER3 settings, 4 FUN4 projects, the OBJ 7 autosave, samples in all 3
+150:   slots) and by Felucca 0.9-beta's. It also ran 61 s of preset and algorithm browsing, and a second power-on. Every run
+152:   - Sloop's autosave as the FM6 bank: rejected (magic). Its PER3 settings: no size match, defaults used.
+158:**Conclusion.** Not the loader: Sloop's loader handles our package correctly (and is not the one used), the write
+```
+</details></tool-use>
+
+_**Agent (claude-fable-5-2 2026-11-16 19:35:53Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Add an emulator rehearsal tool that lays a package over a real backup, and run it for ChoralRoot, CTL-1, and RemoteFM1
+
+```bash
+mkdir -p scripts && cat > scripts/emu_rehearse.py <<'EOF'
+#!/usr/bin/env python3
+"""Build an emulator flash image that rehearses installing a package over a real backup.
+
+M-Flasher writes the sectors a package holds and leaves the rest of the flash as it
+was. This does the same on a copy: take a full-flash backup of the unit, lay the
+package's own sectors over it, and write the result as an fm1-live --flash file.
+Booting that in the emulator shows how the new firmware reacts to the data the old
+one left behind, without touching the unit.
+
+usage: emu_rehearse.py PRISTINE.flash BACKUP.bin OUT.flash
+  PRISTINE.flash  what fm1-live writes for the package on an empty flash, before it boots
+"""
+import sys
+
+SECTOR = 4096
+BLANK = b"\xff" * SECTOR
+
+
+def main():
+    pristine, backup, out = (open(p, "rb").read() for p in sys.argv[1:3]) + (sys.argv[3],)
+    if len(pristine) != len(backup) or len(backup) % SECTOR:
+        sys.exit("images differ in size or are not whole sectors")
+    image = bytearray(backup)
+    laid = []
+    for i in range(len(backup) // SECTOR):
+        s = slice(i * SECTOR, (i + 1) * SECTOR)
+        if i >= 4 and pristine[s] != BLANK:  # never the boot area (first 16 KiB)
+            image[s] = pristine[s]
+            laid.append(i)
+    open(out, "wb").write(image)
+    spans, start, prev = [], None, None
+    for i in laid:
+        if start is None:
+            start = prev = i
+        elif i == prev + 1:
+            prev = i
+        else:
+            spans.append((start, prev)); start = prev = i
+    if start is not None:
+        spans.append((start, prev))
+    print("package sectors laid over the backup:",
+          ", ".join(f"0x{a * SECTOR:05X}-0x{(b + 1) * SECTOR - 1:05X}" for a, b in spans))
+
+
+if __name__ == "__main__":
+    main()
+EOF
+python3 - <<'EOF'
+import pathlib
+p=pathlib.Path("Justfile"); s=p.read_text()
+add='''# Rehearse a switch in the emulator: lay PACKAGE over a real BACKUP (.bin) as M-Flasher would, then boot it.
+# Shows how the new firmware copes with the data the old one left behind. Extra args go to fm1-live.
+emu-rehearse package backup chip="uc25hq80" *args:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    mkdir -p tools/emu-state/work
+    name="$(basename "{{package}}" .fwsc)"
+    pkg="$(cd "$(dirname "{{package}}")" && pwd)/$(basename "{{package}}")"
+    bak="$(cd "$(dirname "{{backup}}")" && pwd)/$(basename "{{backup}}")"
+    cd tools/emu-state
+    rm -f "pristine-$name.flash"
+    ../fm1-emu/fm1-live --fwsc "$pkg" --flash-chip "{{chip}}" --flash "pristine-$name.flash" --midi none --shot 1 --lcd-only >/dev/null 2>&1
+    python3 ../../scripts/emu_rehearse.py "pristine-$name.flash" "$bak" "rehearse-$name.flash"
+    cp "rehearse-$name.flash" "rehearse-$name.before"
+    echo "booting $name over $(basename "$bak") (window; Esc quits). State: tools/emu-state/rehearse-$name.flash"
+    ../fm1-emu/fm1-live --fwsc "$pkg" --flash-chip "{{chip}}" --flash "rehearse-$name.flash" {{args}}
+
+'''
+m="# ---- Agent Deck host daemon"; assert m in s; p.write_text(s.replace(m,add+m,1))
+EOF
+S=/private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/5f461408-bbdd-44d0-bb3b-b0642eabaa31/scratchpad; BK=$(ls backups/2026-11-17-0303-pre-sloop-2.8.5/*.bin); for f in choralroot-0.41-smk37.1 ctl-1.0.3 remote-0.3.6; do echo "### $f"; just emu-rehearse downloads/$f.fwsc "$BK" uc25hq80 --midi none --shot 12000 --lcd-only 2>&1 | grep -E "package sectors|^flash:|fault" ; python3 -I $S/ppm2png.py tools/emu-state/work/lcd.ppm $S/rh-$f.png; python3 - "$f" <<'EOF'
+import sys
+S=4096; f=sys.argv[1]
+a=open(f'tools/emu-state/rehearse-{f}.before','rb').read(); b=open(f'tools/emu-state/rehearse-{f}.flash','rb').read()
+print('  rewritten on first boot:',[hex(i*S) for i in range(256) if a[i*S:(i+1)*S]!=b[i*S:(i+1)*S]])
+EOF
+done
+```
+
+```text
+Exit code 1
+### choralroot-0.41-smk37.1
+Traceback (most recent call last):
+  File "<stdin>", line 3, in <module>
+FileNotFoundError: [Errno 2] No such file or directory: 'tools/emu-state/rehearse-choralroot-0.41-smk37.1.before'
+### ctl-1.0.3
+Traceback (most recent call last):
+  File "<stdin>", line 3, in <module>
+FileNotFoundError: [Errno 2] No such file or directory: 'tools/emu-state/rehearse-ctl-1.0.3.before'
+### remote-0.3.6
+Traceback (most recent call last):
+  File "<stdin>", line 3, in <module>
+FileNotFoundError: [Errno 2] No such file or directory: 'tools/emu-state/rehearse-remote-0.3.6.before'
+```
+</details></tool-use>
+
+_**Agent (claude-fable-5-2 2026-11-16 19:36:00Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Run the rehearsal recipe once and show its error output
+
+`BK=$(ls backups/2026-11-17-0303-pre-sloop-2.8.5/*.bin) && just emu-rehearse downloads/ctl-1.0.3.fwsc "$BK" uc25hq80 --midi none --shot 3000 --lcd-only 2>&1 | tail -8; ls -la tools/emu-state | grep -i "pristine\|rehearse-ctl" | head`
+
+```text
+  File "/Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/tools/emu-state/../../scripts/emu_rehearse.py", line 46, in <module>
+    main()
+    ~~~~^^
+  File "/Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/tools/emu-state/../../scripts/emu_rehearse.py", line 20, in main
+    pristine, backup, out = (open(p, "rb").read() for p in sys.argv[1:3]) + (sys.argv[3],)
+                            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~
+TypeError: unsupported operand type(s) for +: 'generator' and 'tuple'
+error: recipe `emu-rehearse` failed with exit code 1
+.rw-r--r--@ 1.0M zhouhanru 17 Nov 03:35 pristine-choralroot-0.41-smk37.1.flash
+.rw-r--r--@ 1.0M zhouhanru 17 Nov 03:35 pristine-ctl-1.0.3.flash
+.rw-r--r--@ 1.0M zhouhanru 17 Nov 03:35 pristine-remote-0.3.6.flash
+.rw-r--r--@ 1.0M zhouhanru 17 Nov 03:35 rehearse-ctl-1.0.3.flash
+.rw-r--r--@ 1.0M zhouhanru 17 Nov 03:34 rehearse-ctl-1.0.3.seed
+```
+</details></tool-use>
+
+_**Agent (claude-fable-5-2 2026-11-16 19:36:16Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Fix the rehearsal script and rerun it for ChoralRoot, CTL-1, and RemoteFM1 over my SLOOP backup
+
+```bash
+python3 - <<'EOF'
+import pathlib
+p=pathlib.Path("scripts/emu_rehearse.py"); s=p.read_text()
+old='    pristine, backup, out = (open(p, "rb").read() for p in sys.argv[1:3]) + (sys.argv[3],)\n'
+assert old in s
+p.write_text(s.replace(old,'    pristine = open(sys.argv[1], "rb").read()\n    backup = open(sys.argv[2], "rb").read()\n    out = sys.argv[3]\n'))
+EOF
+S=/private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/5f461408-bbdd-44d0-bb3b-b0642eabaa31/scratchpad; BK=$(ls backups/2026-11-17-0303-pre-sloop-2.8.5/*.bin); for f in choralroot-0.41-smk37.1 ctl-1.0.3 remote-0.3.6; do echo "### $f"; just emu-rehearse downloads/$f.fwsc "$BK" uc25hq80 --midi none --shot 12000 --lcd-only 2>&1 | grep -E "package sectors|^flash:|fault" ; python3 -I $S/ppm2png.py tools/emu-state/work/lcd.ppm $S/rh-$f.png; python3 - "$f" <<'EOF'
+import sys
+S=4096; f=sys.argv[1]
+a=open(f'tools/emu-state/rehearse-{f}.before','rb').read(); b=open(f'tools/emu-state/rehearse-{f}.flash','rb').read()
+print('  rewritten on first boot:',[hex(i*S) for i in range(256) if a[i*S:(i+1)*S]!=b[i*S:(i+1)*S]])
+EOF
+done
+```
+
+```text
+### choralroot-0.41-smk37.1
+package sectors laid over the backup: 0x04000-0x92FFF, 0x9D000-0xA6FFF, 0xC1000-0xC1FFF, 0xF4000-0xFDFFF
+flash: 66 erases / programs
+  rewritten on first boot: ['0xaf000', '0xe9000', '0xeb000', '0xec000', '0xed000', '0xee000', '0xef000', '0xf0000', '0xf1000']
+### ctl-1.0.3
+package sectors laid over the backup: 0x04000-0x92FFF, 0xEE000-0xF1FFF, 0xFA000-0xFBFFF
+flash: 12 erases / programs
+  rewritten on first boot: ['0xde000', '0xdf000']
+### remote-0.3.6
+package sectors laid over the backup: 0x04000-0x92FFF, 0xEE000-0xF1FFF, 0xFA000-0xFBFFF
+flash: 9 erases / programs
+  rewritten on first boot: ['0xf2000', '0xf3000']
+```
+</details></tool-use>
+
+_**Agent (claude-fable-5-2 2026-11-16 19:36:32Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Check which flash regions the emulator lays down for each package before boot, to separate package content from emulator defaults
+
+```bash
+cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/tools/emu-state && for f in sloop-2.8.5 agtdeck-0.7; do rm -f p-$f.flash; ../fm1-emu/fm1-live --fwsc ../../downloads/$f.fwsc --flash-chip uc25hq80 --flash p-$f.flash --midi none --shot 1 --lcd-only >/dev/null 2>&1; done; python3 - <<'EOF'
+S=4096
+def rng(x):
+    out=[];s=p=None
+    for i in x:
+        if s is None: s=p=i
+        elif i==p+1: p=i
+        else: out.append((s,p)); s=p=i
+    if s is not None: out.append((s,p))
+    return [f"0x{a*S:05X}-0x{(b+1)*S-1:05X}" for a,b in out]
+import hashlib
+imgs={}
+for f in ('p-sloop-2.8.5','p-agtdeck-0.7','pristine-ctl-1.0.3','pristine-remote-0.3.6','pristine-choralroot-0.41-smk37.1'):
+    e=open(f+'.flash','rb').read(); imgs[f]=e
+    print(f'{f:36s}', rng([i for i in range(256) if e[i*S:(i+1)*S]!=b"\xff"*S]))
+a,b=imgs['pristine-ctl-1.0.3'],imgs['pristine-remote-0.3.6']
+print('ctl vs remote extra regions identical?', a[0xEE000:0xF2000]==b[0xEE000:0xF2000], a[0xFA000:0xFC000]==b[0xFA000:0xFC000])
+print('ctl 0xEE000 head:',a[0xEE000:0xEE010].hex(), '| 0xFA000 head:',a[0xFA000:0xFA010].hex())
+EOF
+```
+
+```text
+p-sloop-2.8.5                        ['0x00000-0x92FFF', '0xEE000-0xF1FFF', '0xFA000-0xFBFFF']
+p-agtdeck-0.7                        ['0x00000-0x92FFF', '0xEE000-0xF1FFF', '0xFA000-0xFBFFF']
+pristine-ctl-1.0.3                   ['0x00000-0x92FFF', '0xEE000-0xF1FFF', '0xFA000-0xFBFFF']
+pristine-remote-0.3.6                ['0x00000-0x92FFF', '0xEE000-0xF1FFF', '0xFA000-0xFBFFF']
+pristine-choralroot-0.41-smk37.1     ['0x00000-0x92FFF', '0x9D000-0xA6FFF', '0xC1000-0xC1FFF', '0xF4000-0xFDFFF']
+ctl vs remote extra regions identical? True True
+ctl 0xEE000 head: 63636363636363002700000038000002 | 0xFA000 head: 00000000000000000000000000000000
+```
+</details></tool-use>
+
+_**Agent (claude-fable-5-2 2026-11-16 19:36:47Z)**_
+
+<think><details><summary>Thought Process</summary>
+模擬器預演已足夠：CTL-1 預演乾淨可用，ChoralRoot 則不可靠，所以我把工具限制在可信的部分，接著一次寫入各韌體章節、iOS app 與官方資源。
+
+</details></think>
+
+_**Agent (claude-fable-5-2 2026-11-16 19:36:57Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Narrow the rehearsal script to the firmware area and rerun the CTL-1 rehearsal over my SLOOP backup
+
+```bash
+cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1 && rm -f tools/emu-state/p-*.flash tools/emu-state/r2.flash && python3 - <<'EOF'
+import pathlib
+pathlib.Path("scripts/emu_rehearse.py").write_text('''#!/usr/bin/env python3
+"""Build an emulator flash image that rehearses installing a firmware over a real backup.
+
+For SLOOP and Agent Deck, M-Flasher wrote only the firmware area (0x04000-0x92FFF) on
+my unit and left everything else as it was. This does the same on a copy: take a
+full-flash backup, replace the firmware area with the package's, and write the result
+as an fm1-live --flash file. Booting it in the emulator shows how the new firmware
+reacts to the data the old one left behind, without touching the unit.
+
+Limits: only the firmware area is taken from the package. A package that carries
+more than that (ChoralRoot shows FONTS MISSING this way) cannot be rehearsed
+faithfully, and the emulator is not the hardware.
+
+usage: emu_rehearse.py PRISTINE.flash BACKUP.bin OUT.flash
+  PRISTINE.flash  what fm1-live writes for the package on an empty flash
+"""
+import sys
+
+FW_START, FW_END = 0x04000, 0x93000
+
+
+def main():
+    pristine = open(sys.argv[1], "rb").read()
+    backup = open(sys.argv[2], "rb").read()
+    if len(pristine) != len(backup) or len(backup) != 1 << 20:
+        sys.exit("both images must be 1 MiB")
+    image = backup[:FW_START] + pristine[FW_START:FW_END] + backup[FW_END:]
+    open(sys.argv[3], "wb").write(image)
+    print(f"firmware area 0x{FW_START:05X}-0x{FW_END - 1:05X} from the package, the rest from the backup")
+
+
+if __name__ == "__main__":
+    main()
+''')
+EOF
+S=/private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/5f461408-bbdd-44d0-bb3b-b0642eabaa31/scratchpad; BK=$(ls backups/2026-11-17-0303-pre-sloop-2.8.5/*.bin); just emu-rehearse downloads/ctl-1.0.3.fwsc "$BK" uc25hq80 --midi none --shot 8000 --lcd-only 2>&1 | grep -E "firmware area|^flash:"; python3 -I $S/ppm2png.py tools/emu-state/work/lcd.ppm $S/rh-ctl.png; python3 -c "
+S=4096; a=open('tools/emu-state/rehearse-ctl-1.0.3.before','rb').read(); b=open('tools/emu-state/rehearse-ctl-1.0.3.flash','rb').read()
+print('rewritten:',[hex(i*S) for i in range(256) if a[i*S:(i+1)*S]!=b[i*S:(i+1)*S]])"
+```
+
+```text
+firmware area 0x04000-0x92FFF from the package, the rest from the backup
+flash: 12 erases / programs
+rewritten: ['0xde000', '0xdf000']
+```
+</details></tool-use>
+
+_**Agent (claude-fable-5-2 2026-11-16 19:36:57Z)**_
+
+<tool-use data-tool-type="read" data-tool-name="Read"><details>
+<summary>Tool use: **Read**</summary>
+ `/private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/5f461408-bbdd-44d0-bb3b-b0642eabaa31/scratchpad/rh-ctl.png`
+</details></tool-use>

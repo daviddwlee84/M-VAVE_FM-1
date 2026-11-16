@@ -12,6 +12,10 @@ m_flasher_version := "0.12.1"
 sloop_version := "2.8.5"
 fm1_emu_version := "0.5.1"
 agtdeck_version := "0.7"
+ctl_version := "1.0.3"
+choralroot_tag := "v0.41-smk37.1"
+choralroot_pkg := "choralroot-0.41-smk37.1.fwsc"
+remote_version := "0.3.6"
 
 default:
     @just --list
@@ -46,6 +50,21 @@ fm1-fetch:
     fetch jvitkauskas/m-flasher "v{{m_flasher_version}}" "M-Flasher-{{m_flasher_version}}-macos.dmg"
     fetch isod89/sloop-fm1 "v{{sloop_version}}" "sloop-{{sloop_version}}.fwsc"
     fetch isod89/sloop-fm1 "v{{sloop_version}}" "sloop-editor-{{sloop_version}}.html"
+
+# Download the other firmwares I try (CTL-1, ChoralRoot, RemoteFM1) and verify them against the release digests.
+fm1-fetch-more:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    mkdir -p downloads && cd downloads
+    fetch() { # repo tag asset
+      gh release download "$2" -R "$1" -p "$3" --clobber
+      want=$(gh api "repos/$1/releases/tags/$2" --jq ".assets[] | select(.name==\"$3\") | .digest" | sed 's/^sha256://')
+      got=$(shasum -a 256 "$3" | cut -d' ' -f1)
+      if [ -n "$want" ] && [ "$want" = "$got" ]; then echo "ok   $3  $got"; else echo "FAIL $3: got $got, release says ${want:-<no digest>}" >&2; exit 1; fi
+    }
+    fetch charlesvestal/fm1-ctl "v{{ctl_version}}" "ctl-{{ctl_version}}.fwsc"
+    fetch Quixotic7/ChoralRootFM1 "{{choralroot_tag}}" "{{choralroot_pkg}}"
+    fetch Quixotic7/RemoteFM1 "v{{remote_version}}" "remote-{{remote_version}}.fwsc"
 
 # Open the M-Flasher disk image (drag the app to Applications yourself).
 fm1-install-flasher: fm1-fetch
@@ -108,6 +127,23 @@ emu-shot package chip="uc25hq80" ms="6000":
     ../fm1-emu/fm1-live --fwsc "$pkg" --flash-chip "{{chip}}" --flash "$name.flash" --midi none \
       --shot "{{ms}}" --lcd-only 2>&1 | grep -i -E "^flash:|fault|error" || true
     mv work/lcd.ppm "$name.ppm" && echo "LCD: tools/emu-state/$name.ppm"
+
+# Rehearse a switch in the emulator: lay PACKAGE over a real BACKUP (.bin) as M-Flasher would, then boot it.
+# Shows how the new firmware copes with the data the old one left behind. Extra args go to fm1-live.
+emu-rehearse package backup chip="uc25hq80" *args:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    mkdir -p tools/emu-state/work
+    name="$(basename "{{package}}" .fwsc)"
+    pkg="$(cd "$(dirname "{{package}}")" && pwd)/$(basename "{{package}}")"
+    bak="$(cd "$(dirname "{{backup}}")" && pwd)/$(basename "{{backup}}")"
+    cd tools/emu-state
+    rm -f "pristine-$name.flash"
+    ../fm1-emu/fm1-live --fwsc "$pkg" --flash-chip "{{chip}}" --flash "pristine-$name.flash" --midi none --shot 1 --lcd-only >/dev/null 2>&1
+    python3 ../../scripts/emu_rehearse.py "pristine-$name.flash" "$bak" "rehearse-$name.flash"
+    cp "rehearse-$name.flash" "rehearse-$name.before"
+    echo "booting $name over $(basename "$bak") (window; Esc quits). State: tools/emu-state/rehearse-$name.flash"
+    ../fm1-emu/fm1-live --fwsc "$pkg" --flash-chip "{{chip}}" --flash "rehearse-$name.flash" {{args}}
 
 # ---- Agent Deck host daemon (no flashing) ------------------------------------
 
@@ -235,9 +271,11 @@ fm1-switch target="":
         echo "usage: just fm1-switch TARGET"
         echo
         echo "named targets:"
-        for t in "sloop=downloads/sloop-{{sloop_version}}.fwsc" "agtdeck=downloads/agtdeck-{{agtdeck_version}}.fwsc"; do
+        for t in "sloop=downloads/sloop-{{sloop_version}}.fwsc" "agtdeck=downloads/agtdeck-{{agtdeck_version}}.fwsc" \
+                 "ctl=downloads/ctl-{{ctl_version}}.fwsc" "choralroot=downloads/{{choralroot_pkg}}" \
+                 "remote=downloads/remote-{{remote_version}}.fwsc"; do
           f="${t#*=}"; if [ -f "$f" ]; then st="ready"; else st="not downloaded"; fi
-          printf '  %-9s %s  (%s)\n' "${t%%=*}" "$f" "$st"
+          printf '  %-11s %s  (%s)\n' "${t%%=*}" "$f" "$st"
         done
         echo
         echo "packages on disk (pass the path):"
@@ -249,6 +287,9 @@ fm1-switch target="":
         exit 0 ;;
       sloop)   pkg="downloads/sloop-{{sloop_version}}.fwsc" ;;
       agtdeck) pkg="downloads/agtdeck-{{agtdeck_version}}.fwsc" ;;
+      ctl)        pkg="downloads/ctl-{{ctl_version}}.fwsc" ;;
+      choralroot) pkg="downloads/{{choralroot_pkg}}" ;;
+      remote)     pkg="downloads/remote-{{remote_version}}.fwsc" ;;
       *)       pkg="{{target}}" ;;
     esac
     test -f "$pkg" || { echo "no such package: $pkg (try: just fm1-fetch / just agtdeck-fetch)" >&2; exit 1; }

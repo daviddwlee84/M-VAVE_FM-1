@@ -67,6 +67,8 @@ M-Flasher 在兩次寫入前各自動存了一份：`~/Documents/M-Flasher/backu
 | 2026-11-17 | 刷回 SLOOP 後，之前的曲子是否還在 | **還在。** 只重裝韌體、沒有還原備份 |
 | 2026-11-17 | 比對 `pre-agtdeck` 與 `agtdeck-0.7` 兩份映像（4 KiB sector） | 141 個 sector 不同：韌體區 `0x04000`–`0x8FFFF` 的 140 個，加上 `0xFC000` 一個（Agent Deck 自己的設定）。SLOOP 存資料的區域完全沒被動到 |
 | 2026-11-17 | 測試 `just fm1-switch sloop`（SLOOP 已安裝） | 切 download mode、備份、M-Flasher 回報 `Nothing to write`、重開，全程沒有寫入 |
+| 2026-11-17 | 更正先前的紀錄 | `0xFC000` 不是空的：它是 SLOOP 的設定 sector，被 Agent Deck 覆寫，刷回 SLOOP 後尚未寫回。曲子所在的 `0x97000`、`0x9F000` 沒變。詳見[多韌體切換](firmware/switching.md) |
+| 2026-11-17 | 下載並驗證 `ctl-1.0.3.fwsc`、`choralroot-0.41-smk37.1.fwsc`、`remote-0.3.6.fwsc` | digest 相符；模擬器兩種晶片都開機。都還沒刷進實機 |
 
 ## Phase 1 驗收
 

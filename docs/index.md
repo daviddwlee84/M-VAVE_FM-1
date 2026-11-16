@@ -21,7 +21,8 @@
 | 找某個 repo 或目前版本 | [資源地圖](resources.md) |
 | 查我這台現在的狀態 | [我的機器](device-log.md) |
 | 看同晶片的機器、VIBE FM、救援硬體 | [相關硬體](hardware/related.md) |
-| 接 Android 或 iPhone | [搭配手機與平板](hardware/mobile.md) |
+| 接 Android 或 iPhone | [搭配手機與平板](hardware/mobile.md)、[iOS 音樂 app](hardware/ios-apps.md) |
+| 找官方的韌體與工具 | [官方資源](official.md) |
 
 ## 路線圖
 

@@ -41,18 +41,55 @@ downloads/
 | 2026-11-17 | SLOOP 2.8.5 → Agent Deck 0.7 | `fm1-download-mode` → `fm1-backup` → `fm1-flash` → `fm1-restart`，全程不需要按機器上的鍵 | 成功 |
 | 2026-11-17 | Agent Deck 0.7 → SLOOP 2.8.5 | 同上，只裝韌體、不還原備份 | 寫入成功、能開機，**SLOOP 的曲子都還在** |
 
-### SLOOP ↔ Agent Deck 互切不會丟曲子（在我的機器上）
+### SLOOP ↔ Agent Deck 互切不會丟曲子，但設定 sector 是共用的
 
 比對刷 Agent Deck 前後的兩份完整映像，只有這些 sector 不同：
 
 | 區域 | 位址 | 數量 | 內容 |
 |---|---|---|---|
 | 韌體區 | `0x04000`–`0x8FFFF` | 140 | 韌體本身 |
-| 原本空著的區域 | `0xFC000` | 1 | Agent Deck 自己的設定 |
+| 設定 sector | `0xFC000` | 1 | Agent Deck 把自己的設定寫在這裡，**蓋掉了 SLOOP 原本存在這裡的設定** |
 
-M-Flasher 的 flash map 把 `0x93000` 以後標為 SETTINGS、PAIRINGS、SOUNDS，SLOOP 的 project、preset、sample 都在那裡，Agent Deck 一個 byte 都沒碰。所以刷回 SLOOP 只需要重裝 `.fwsc`，不必還原備份。
+!!! warning "更正（2026-11-17）"
+    我原本寫 `0xFC000` 是「原本空著的區域」，那是錯的。M-Flasher 的 flash map 把它標為 free，但比對備份後發現 SLOOP 把設定存在那裡（開頭是 `FELU`），Agent Deck 寫入後變成自己的資料（`KDGA`），刷回 SLOOP 之後那個 sector 仍是 Agent Deck 的內容。
 
-這個結論只對這兩個韌體、這兩個版本成立。別的韌體可能把資料寫在和 SLOOP 重疊的位置，切換前還是要備份；想確認的話，用同樣的方法比對前後兩份備份。`[實機]`
+SLOOP 在我的機器上實際寫過的 sector（和原廠備份比對）：
+
+| 位址 | 內容 | Agent Deck 來回之後 |
+|---|---|---|
+| `0x97000` | project | 沒變 |
+| `0x9F000` | autosave | 沒變 |
+| `0xFC000` | 設定 | **被 Agent Deck 蓋掉，尚未被 SLOOP 寫回** |
+| `0xFD000` | 另一份設定（內容與 `0xFC000` 大小相同） | 沒變 |
+| `0xFE000` | autosave 的另一份 | SLOOP 回來後有更新 |
+
+曲子在 `0x97000` 與 `0x9F000`，所以都還在。設定有兩份，我推測 SLOOP 是讀到 `0xFD000` 那份才沒有明顯異狀，但這是推測。如果發現 SLOOP 的某些全域設定（燈光、SYNC、MIDI channel）跑掉了，原因就在這裡。
+
+結論不變：SLOOP ↔ Agent Deck 來回只需要重裝 `.fwsc`，曲子不會丟。但「一個 byte 都沒碰」不成立，設定 sector 是共用的。
+
+這個結論只對這兩個韌體、這兩個版本成立。`[實機]`
+
+### 其他韌體會動到哪裡
+
+Felucca 系的韌體（SLOOP、ChoralRoot、Dinghy 系的 Agent Deck）與 fm1-base 系的（CTL-1）大多沿用同一套儲存位址，所以會互相踩到。以下是把韌體蓋在我真實的 SLOOP 備份上、在模擬器裡第一次開機後改寫的 sector `[模擬]`：
+
+| 韌體 | 第一次開機改寫 | 對我的影響 |
+|---|---|---|
+| CTL-1 1.0.3 | `0xDE000`–`0xDFFFF` | 在我的映像裡原本是空的。存設定時還會寫 `0xFC000` |
+| RemoteFM1 0.3.6 | `0xF2000`–`0xF3FFF` | `0xF2000` 有原廠留下的資料，會被蓋掉 |
+| ChoralRoot 0.41 | 預演不可靠 | 上游記載過在 SLOOP 資料上開機後掉進 ROM boot mode，見 [ChoralRoot](choralroot/index.md) |
+
+### 先在模擬器預演
+
+```sh
+just emu-rehearse downloads/ctl-1.0.3.fwsc backups/<目錄>/<檔名>.bin
+```
+
+它把套件的韌體區蓋在一份真實備份上（和 M-Flasher 對 SLOOP、Agent Deck 做的事一樣），在模擬器裡開機。可以看新韌體遇到舊資料時會不會正常啟動；結束後比對 `tools/emu-state/rehearse-<名稱>.before` 與 `.flash` 就知道它改寫了哪些 sector。
+
+限制：只取套件的韌體區。套件若還帶別的內容（ChoralRoot 會顯示 `FONTS MISSING`）就不準；模擬器也不是實機。
+
+順帶一提：模擬器直接吃實機備份的格式。把備份複製成 `--flash` 檔再開，跑的就是那份備份裡的韌體與資料，我的 SLOOP 曲子在模擬器裡照樣出現。`[模擬]`
 
 SLOOP 與 Agent Deck 執行中都能由 M-Flasher 透過 USB MIDI 切進 download mode（兩者在 `fm1-find` 都顯示為 `Felucca … download-mode switches it`）。`[實機]`
 
@@ -82,7 +119,7 @@ just fm1-switch             # 不帶參數：列出可用的目標與目前連�
 just fm1-switch sloop       # 或 agtdeck，或任何 .fwsc 的路徑
 ```
 
-具名目標目前只有 `sloop` 與 `agtdeck`，其他韌體把 `.fwsc` 的路徑傳進去。清單也會列出 `downloads/` 與 `firmware/*/build/` 裡現有的套件。
+具名目標：`sloop`、`agtdeck`、`ctl`、`choralroot`、`remote`，其他韌體把 `.fwsc` 的路徑傳進去。後三個用 `just fm1-fetch-more` 下載。清單也會列出 `downloads/` 與 `firmware/*/build/` 裡現有的套件。
 
 它依序做：確認沒有模擬器佔著 USB MIDI → 切 download mode → 備份到 `backups/<日期時間>-pre-<套件名>/` → 呼叫 M-Flasher 安裝（列出變更，等你輸入 `yes`）→ 重開機。屬於寫入等級，由本人執行。
 

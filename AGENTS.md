@@ -43,6 +43,8 @@ just emu-fetch         # fm1-emu into tools/fm1-emu/ (git-ignored), digest-verif
 just emu-run FILE [CHIP]   # play a .fwsc in a window; CHIP defaults to uc25hq80 (this unit)
 just emu-shot FILE [CHIP] [MS]  # headless boot: LCD image + flash write count
 just agtdeck-fetch     # Agent Deck package, digest + attestation verified
+just fm1-fetch-more    # CTL-1, ChoralRoot, RemoteFM1 packages, digest-verified
+just emu-rehearse PKG BACKUP.bin  # boot PKG's firmware over a real backup in the emulator
 just agtdeck-doctor    # Agent Deck host daemon self-check (clones upstream into vendor/)
 just agtdeck-sim       # Agent Deck daemon without an FM-1 (interactive; prints frames)
 just agtdeck-run       # daemon against a MIDI device: real unit, or `just emu-run … --usb`
@@ -130,6 +132,12 @@ Preflight before proposing a firmware write — show all of it to the owner:
 
 Other rules:
 
+- Firmwares share flash sectors (Felucca-family layout: settings at `0xFC000`,
+  projects from `0x97000`). Before proposing a switch to a firmware not yet in
+  the table in `docs/firmware/switching.md`, run `just emu-rehearse` against
+  the latest backup and report which sectors it rewrites. ChoralRoot over
+  SLOOP data has an upstream-documented failure; do not propose it without
+  restoring stock first.
 - Stop and report if the device reports anything unexpected (unknown chip ID,
   uncertain model, CRC mismatch). Do not work around a tool's refusal.
 - Do not downgrade stock 016 to 015: 016 overwrites the preset area and only a
