@@ -19672,3 +19672,650 @@ _**Agent (claude-fable-5-2 2026-11-16 19:36:57Z)**_
 <summary>Tool use: **Read**</summary>
  `/private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/5f461408-bbdd-44d0-bb3b-b0642eabaa31/scratchpad/rh-ctl.png`
 </details></tool-use>
+
+_**Agent (claude-fable-5-2 2026-11-16 19:39:24Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Write the firmware chapters, iOS apps and official resources pages, correct the earlier flash-sector note, then commit and push
+
+````bash
+mkdir -p docs/firmware/ctl-1 docs/firmware/choralroot docs/firmware/remotefm1 && python3 - <<'EOF'
+import pathlib
+def sub(path, pairs):
+    p=pathlib.Path(path); s=p.read_text()
+    for a,b in pairs:
+        assert a in s, (path,a[:70]); s=s.replace(a,b,1)
+    p.write_text(s)
+W=pathlib.Path
+
+W("docs/firmware/ctl-1/index.md").write_text('''# CTL-1
+
+[CTL-1](https://github.com/charlesvestal/fm1-ctl)（Charles Vestal，MPL-2.0）把 FM-1 變成 MIDI controller：琴鍵送音符，旋鈕送 CC，另有 arpeggiator 與四軌 Euclidean 鼓 sequencer。USB 與 Bluetooth 都送，TRS 進來的 MIDI 會轉送出去，機器自己也用 General MIDI 音色發聲，所以什麼都不接也能彈。它建立在 [fm1-base](../../dev/index.md) 上。
+
+**狀態（2026-11-17）：套件已下載驗證，模擬器預演通過，還沒刷進實機。**
+
+## 為什麼想試
+
+想接 iPad 控制音樂 app 時它是首選：SLOOP 的旋鈕不送 CC、也沒有 Bluetooth，CTL-1 兩者都有。見[搭配手機與平板](../../hardware/mobile.md)與 [iOS 音樂 app](../../hardware/ios-apps.md)。
+
+## 控制項 `[上游]`
+
+| 控制 | 作用 |
+|---|---|
+| 琴鍵 | 音符，含 velocity 與 aftertouch（從鍵本身讀）；設了 scale 時白鍵是音階、黑鍵是該音階的和弦 |
+| KNOB 1–4 | 該頁的四個值；在 Play 頁是四個 CC，共四個 bank |
+| `HOME` `SEL` `ARP` `SEQ` `EDIT` `GLO` | 六個頁面：Play、Keys、Arp、Sequencer、Sound、Setup |
+| SELECT | 頁面內的子頁：Play 的 bank、Sequencer 的 track |
+| ALGORITHM / PRESETS / MASTER | MIDI channel / program change（音色跟著換）/ 音量 |
+| `FX` | 下一個 bank；按住時 KNOB 1–4 設定該 bank 的 CC 編號 |
+| `ENV` / `LFO` | sustain（點兩下鎖定）/ mod wheel |
+| `PLAY` / `REC` / `SAVE` | start / stop、panic、儲存 |
+| `OCT-` / `OCT+` | 八度 |
+
+開機畫面顯示 Bank A 預設是 CC 74、CC 71、CC 1、CC 7。`[模擬]`
+
+完整說明：[上游手冊](https://charlesvestal.github.io/fm1-ctl/manual/)。[瀏覽器試玩](https://charlesvestal.github.io/fm1-ctl/emu/)。
+
+## 兩個套件
+
+| 檔案 | 內容 |
+|---|---|
+| `ctl-1.0.3.fwsc` | USB、TRS、Bluetooth MIDI。我下載的是這個 |
+| `ctl-usb-1.0.3.fwsc` | 同上但沒有 Bluetooth |
+
+## 在我的機器上會動到什麼
+
+| 來源 | 結果 |
+|---|---|
+| Firmware Hub 目錄 | 標為認得新晶片（從套件判讀） |
+| `just emu-shot`，兩種晶片 | 都開機，各 12 次 flash 寫入 `[模擬]` |
+| `just emu-rehearse`，蓋在我真實的 SLOOP 備份上 | 開到 Play 頁。第一次開機只改寫 `0xDE000`–`0xDFFFF`，在我的映像裡原本是空的 `[模擬]` |
+| 原始碼 `app.h` | 設定存在 `0xFC000`，面板校正 `0xDC000`，Bluetooth 設定 `0xDE000` `[上游]` |
+
+`0xFC000` 是 SLOOP 也在用的設定 sector（見[多韌體切換](../switching.md)），CTL-1 存設定時會覆寫它。SLOOP 的曲子在 `0x97000` 與 `0x9F000`，不受影響。
+
+## 安裝
+
+```sh
+just fm1-fetch-more      # 已做過：下載並驗證
+just fm1-switch ctl      # download mode → 備份 → 安裝（輸入 yes）→ 重開
+```
+
+M-Flasher 列出的寫入範圍如果超出韌體區，先不要輸入 `yes`。
+
+## 裝了之後要確認的
+
+- [ ] 螢幕、琴鍵、旋鈕正常；電腦上看得到 USB MIDI 裝置
+- [ ] 旋鈕送出 CC（用 `mido` 或任何 MIDI monitor 看）
+- [ ] Bluetooth MIDI 能被 Mac 或 iPad 找到
+- [ ] `SAVE` 後關機再開，設定還在（新晶片必做）
+- [ ] 切回 SLOOP 後曲子與設定的狀況
+''')
+
+W("docs/firmware/choralroot/index.md").write_text('''# ChoralRoot
+
+[ChoralRoot FM-1](https://github.com/Quixotic7/ChoralRootFM1)（Quixotic7，GPL-3.0）是仿 Telepathic Instruments Orchid 的和弦樂器：鍵盤左端決定「要哪種和弦」，其餘的鍵彈根音，機器幫你組和弦、配置聲部，並把和弦名稱顯示在螢幕上。另有跟著和弦走的 bass、演奏模式（strum、arpeggio、pattern）、效果、錄和弦的 looper、七個合成引擎。建立在 Felucca 之上，與 Telepathic Instruments 及 M-VAVE 無關。
+
+**狀態（2026-11-17）：只在瀏覽器試玩。暫時不刷進實機，原因見下。**
+
+- **先在瀏覽器玩**：<https://quixotic7.github.io/ChoralRootFM1/emu/>（同一份韌體，有聲音，不需要 FM-1）
+- 手冊：[docs/MANUAL.md](https://github.com/Quixotic7/ChoralRootFM1/blob/main/docs/MANUAL.md)
+
+## 怎麼彈 `[上游]`
+
+27 個鍵，F3 到 G5。左邊七個是 **chord block**，其餘 20 個（C4 到 G5）是根音。
+
+| 鍵 | ChoralRoot 的功能 | 用法 |
+|---|---|---|
+| 黑鍵 F#3、G#3、A#3 | **DIM、MIN、MAJ** | 按住時決定和弦種類 |
+| G#3 + A#3 一起按 | **SUS** | 一根手指按兩個黑鍵 |
+| 白鍵 F3、G3、A3、B3 | **6、m7、M7、9** | 延伸音，按住時加上，可以疊 |
+| C4 到 G5 | 根音 | 單按是單音；chord block 有鍵按著時是和弦 |
+
+所以就是你說的：左手按和弦性質，右手按根音。chord 鍵要在根音按下去**之前**就按著。
+
+五分鐘上手：
+
+1. 按住 MAJ（A#3）再按 D4：D 大三和弦。螢幕顯示 `DM` 與組成音。
+2. 按住 MIN（G#3）加 m7（G3）再按 D4：Dm7。
+3. **LOCK**（面板印的是 `LFO`）：把 chord block 鎖住，空出左手。鎖住後點 MIN 就一直是小和弦，點 9 加九音。
+4. 按住和弦轉 **KNOB 1**：改 voicing（最低音上移八度，或最高音下移）。
+5. 轉 **PRESETS** 換音色；按住 `GLO`（OPT）轉 PRESETS 換引擎（FM6、FM TONE、VA、CZ-1、P5、WHEEL、GRAIN）。
+6. 點 `ENV`（BASS）：每個和弦下面加 bass。
+7. 點 `REC` 錄 loop，彈幾個和弦，再點 `REC` 結束。loop 記的是和弦不是聲音，所以換音色會跟著變。
+8. 卡住時同時按 `OCT-` + `OCT+`：PANIC，所有音關掉。
+
+面板上印的標示多半換了工作：`SEL` 是 KEY、`ARP` 是 PERF、`ENV` 是 BASS、`LFO` 是 LOCK、`GLO` 是 OPT、`PLAY` 是 LOOP。琴鍵沒有 velocity（FM-1 的鍵感測不到），用固定值。
+
+## 為什麼暫時不刷
+
+ChoralRoot 本身支援新晶片（上游 0.29.1 起接受 `0xB36014`，Hub 也這樣標）。問題在**從 SLOOP 切過去**：
+
+- 上游文件記載過一台跑過 Sloop 的 FM-1 裝 ChoralRoot 後掉進晶片的 ROM boot mode（黑畫面），把舊資料（`0x97000…`、`0xFC000…`）清掉才回來。它的 installer 因此**拒絕**在 Sloop 上安裝。`[上游]`
+- 那兩個位址正是我這台 SLOOP 存曲子與設定的地方（見[多韌體切換](../switching.md)）。
+- 原因是兩者都源自 Felucca、共用同一套儲存格式與位址，ChoralRoot 開機時會去讀 SLOOP 留下的資料。上游的調查認為新版已處理，但結論仍標為未完全釐清。
+- 上游建議的切換方式是 M-Flasher **加 m-bootloader**。我沒有 m-bootloader。
+- 我用 `just emu-rehearse` 試著預演，但 ChoralRoot 的套件帶了韌體區以外的內容，預演出來是 `FONTS MISSING`，不能當證據。`[模擬]`
+
+掉進 ROM boot mode 本身救得回來（M-Flasher 還看得到機器，可以還原備份），所以不是變磚的風險，但需要我在 GUI 手動還原。
+
+**想刷的話比較穩的路徑**：先還原原廠 015 的備份（原廠 → ChoralRoot 是上游支援的路徑），再裝 ChoralRoot。代價是 SLOOP 的曲子要靠 `pre-…` 備份還原回來。這要等我決定之後再做。
+
+## 已準備好的
+
+`downloads/choralroot-0.41-smk37.1.fwsc` 已下載並驗證（這個 release 的 tag 帶 `smk37` 是因為同時發布了 SMK-37 版，這個檔案是 FM-1 用的）。在 fm1-emu 的空白 flash 上兩種晶片都能開機，各 66 次寫入。`[模擬]`
+''')
+
+W("docs/firmware/remotefm1/index.md").write_text('''# RemoteFM1
+
+[RemoteFM1](https://github.com/Quixotic7/RemoteFM1)（Quixotic7，GPL-3.0）是一個「自己幾乎什麼都不做」的韌體。它把每個鍵、按鈕、encoder 與 MASTER 旋鈕送給主機，再把主機送回來的東西顯示在 LED 與 240×240 螢幕上。真正的 FM-1 韌體在電腦、手機或瀏覽器上用全速執行，把實機當成面板。
+
+**狀態（2026-11-17）：套件已下載驗證，模擬器裡開得起來，還沒刷。**
+
+## 和其他韌體比的特點
+
+| | 一般韌體（SLOOP、CTL-1…） | RemoteFM1 |
+|---|---|---|
+| 韌體在哪裡跑 | FM-1 上 | 主機上（瀏覽器、手機 app、VST） |
+| 換韌體 | 重刷 | 在主機上點一下 |
+| 受限於 FM-1 的 CPU 與記憶體 | 是 | 否 |
+| 不接主機 | 完整功能 | 仍是一台 DX7、MIDI controller 與 looper |
+| 聲音從哪出 | FM-1 | 主機（或經 USB audio 回到 FM-1） |
+
+所以它不是 CTL-1 的替代品，兩者目的不同：**CTL-1 是把 FM-1 當成別的音源的控制器；RemoteFM1 是把 FM-1 當成「在主機上跑的 FM-1 韌體」的面板。** 想在不重刷的情況下試很多韌體，或想用手機當主機時才需要它。
+
+## 主機 `[上游]`
+
+| 主機 | 取得 |
+|---|---|
+| 瀏覽器 | [remotefm1.com](https://remotefm1.com/)，列了約 160 個韌體 |
+| Android | [APK](https://github.com/Quixotic7/RemoteFM1Android/releases/latest)，自行安裝 |
+| iPhone / iPad | [TestFlight beta](https://testflight.apple.com/join/e6A47Xap)，也是 AUv3 |
+| Mac | [FM1VST](https://github.com/Quixotic7/FM1VST)（VST3 / AU） |
+
+連線走 USB 或 Bluetooth MIDI。Bluetooth 頻寬有限，上游說螢幕與聲音只能擇一。更多見[搭配手機與平板](../../hardware/mobile.md)。
+
+## 不接主機時
+
+螢幕顯示 `REMOTE FM1 / WAITING FOR HOST`。此時它是：
+
+- 一台 DX7（24-bit，Yamaha 的 256 個 ROM 音色加自己的 cartridge）。
+- **MIDI REMOTE**：`GLO` + `FX` 把整個面板變成純 MIDI controller，鍵送 note、按鈕與 encoder 送 CC。再按一次離開，關機後不保留。
+- 一個 looper。
+
+## 兩個套件
+
+| 檔案 | 內容 |
+|---|---|
+| `remote-0.3.6.fwsc` | USB + Bluetooth。我下載的是這個 |
+| `remote-usb-0.3.6.fwsc` | 沒有無線電 |
+
+## 在我的機器上會動到什麼
+
+- Hub 目錄標為認得新晶片。fm1-emu 兩種晶片都開機，各 9 次寫入。`[模擬]`
+- 蓋在我的 SLOOP 備份上預演時，第一次開機改寫 `0xF2000`–`0xF3FFF`。其中 `0xF2000` 在我的映像裡有資料，是原廠留下的、SLOOP 沒動過的區域。SLOOP 的曲子不受影響，但那塊原廠資料之後只能從原廠備份還原。`[模擬]`
+
+## 安裝
+
+```sh
+just fm1-switch remote
+```
+
+上游的救援方式：按住 `REC` 開機進晶片的 update mode。
+''')
+
+W("docs/hardware/ios-apps.md").write_text('''# iOS 音樂 app
+
+把 FM-1 接到 iPad 或 iPhone 時會用到的 app。連結與價格取自 App Store 的搜尋 API（美國區，2026-11-17），價格會變。每個 app 的用途說明是我的一般認識，沒有逐一和 FM-1 實測。要用哪個韌體去控制它們，見[搭配手機與平板](mobile.md)。
+
+## 主機與路由
+
+| App | 開發者 | 價格 | 用途 |
+|---|---|---|---|
+| [AUM - Audio Mixer](https://apps.apple.com/us/app/aum-audio-mixer/id1055636344) | Kymatica AB | $24.99 | AUv3 主機、mixer、音訊與 MIDI 路由。把 FM-1 的 MIDI 分送給各個音源、同時錄 FM-1 的 USB audio，通常就靠它 |
+| [Loopy Pro](https://apps.apple.com/us/app/loopy-pro-looper-daw-sampler/id1492670451) | A Tasty Pixel | 免費（內購） | looper、sampler、AUv3 主機 |
+| [GarageBand](https://apps.apple.com/us/app/garageband/id408709785) | Apple | 免費 | 入門 DAW，內建音源可以用外接鍵盤彈 |
+| [StreamByter](https://apps.apple.com/us/app/streambyter/id1398712641) | Soft Audio | 免費 | MIDI 處理器：改 channel、過濾、remap。補 SLOOP 送出的 MIDI 不夠彈性的地方 |
+
+## 音源與取樣
+
+| App | 開發者 | 價格 | 用途 |
+|---|---|---|---|
+| [AudioKit Synth One](https://apps.apple.com/us/app/audiokit-synth-one-synthesizer/id1371050497) | AudioKit Pro | 免費 | 合成器 |
+| [GeoShred](https://apps.apple.com/us/app/geoshred/id1064769019) | Wizdom Music | $16.49 | 物理建模吉他等音色，主打觸控與 MPE。FM-1 沒有 MPE，接上去只是一般鍵盤 |
+| [Koala Sampler](https://apps.apple.com/us/app/koala-sampler-beat-maker/id1449584007) | Mazbox | $4.99 | 取樣與做 beat。可以直接取 FM-1 的 USB audio |
+
+## Looper
+
+| App | 開發者 | 價格 | 用途 |
+|---|---|---|---|
+| [Quantiloop Pro](https://apps.apple.com/us/app/quantiloop-pro-live-looper/id1156213359) | Stephan Marx | $14.99 | 現場 looper，可用 MIDI 控制。另有[免費版](https://apps.apple.com/us/app/quantiloop-live-looper/id1268082518) |
+
+## 讓網頁工具在 iOS 上能用
+
+Safari 沒有 Web MIDI，所以 SLOOP Web Editor、各家瀏覽器 installer 在 iOS 上不能直接開。需要帶 Web MIDI 的瀏覽器 app：
+
+| App | 開發者 | 價格 | 備註 |
+|---|---|---|---|
+| [MIDIWeb Browser](https://apps.apple.com/us/app/midiweb-browser/id6757226617) | 5of12 LLP | 免費 | m-bootloader 的文件提到用 MIDIWeb app 從 iOS 安裝韌體 `[上游]` |
+| [Web MIDI Browser](https://apps.apple.com/us/app/web-midi-browser/id953846217) | Takashi Mizuhiki | 免費 | 較早的同類 app |
+
+我沒有確認這兩個 app 對 SysEx 的支援程度，而 editor 與 installer 都需要 SysEx。
+
+## FM-1 專用
+
+| App | 取得 | 用途 |
+|---|---|---|
+| RemoteFM1 | [TestFlight beta](https://testflight.apple.com/join/e6A47Xap) | 在 iOS 上跑 FM-1 韌體，FM-1 當面板；也是 AUv3。需要 FM-1 上裝 [RemoteFM1](../firmware/remotefm1/index.md) |
+
+## 接線
+
+- USB-C 的 iPad / iPhone：USB-C 資料線直連。
+- Lightning 機型：Lightning to USB camera adapter。
+- 免線：FM-1 上的韌體要有 Bluetooth MIDI（CTL-1、RemoteFM1、Melodee、原廠）。SLOOP 沒有。
+
+## 還沒試
+
+我還沒把 FM-1 接上任何 iOS 裝置。試過之後把實際可用的組合記在[使用心得](../notes/index.md)。
+''')
+
+W("docs/official.md").write_text('''# 官方資源
+
+M-VAVE 官方提供的東西。**我目前一個都沒用**：備份、刷機、切換全部走社群的 M-Flasher，韌體也都是社群的。這頁是為了知道官方有什麼、什麼時候會需要它。
+
+連結多數取自上游 repo 的 README 與 Firmware Hub（2026-11-17），我沒有逐一開啟確認內容，官方網站的頁面是動態載入的。
+
+## 清單
+
+| 資源 | 是什麼 | 我用到了嗎 |
+|---|---|---|
+| [產品頁](https://www.cuvave.com/product?id=fm-1)（cuvave.com）、[m-vave.com 下載頁](https://www.m-vave.com/download) | 產品資訊、官方韌體與工具的下載 | 沒有 |
+| 原廠韌體 `FM-1.fwsc` | 出廠與官方更新的韌體。我的機器出廠是 **015**；官方較新的是 016（8-part multitimbral 等） | 015 只存在我的原廠備份裡。沒裝過 016 |
+| **M-UPGRADE**（又稱 M-Updater） | 官方的更新工具，PC 與 Mac。會重寫韌體與原廠 preset | 沒有。M-Flasher 可以直接安裝官方的 `.fwsc` |
+| [fm1_open](https://github.com/m-vave/fm1_open) | 官方的**開放韌體** FM1 Open V14：8 軌、8 個 sample slot、16 個效果示範。app 是 GPL-3.0 加 SDK linking exception；Firmware Hub 註明它的聲音引擎是閉源的 binary SDK。build 需要 Windows 與 JieLi 的 Windows toolchain | 沒有 |
+| [Workbench](https://open.m-vave.com/fm1-workbench) | 官方的網頁工具：更新韌體、瀏覽器內預覽、管理 project、sample 與 DX7 音色、下載 Source + SDK | 沒有 |
+| [官方論壇](https://forum.m-vave.com) | 公告與討論 | 沒有 |
+
+原廠韌體和 FM1 Open 是兩個不同的東西：前者是機器出廠的閉源韌體，後者是官方後來釋出原始碼的另一套韌體。
+
+## 什麼時候會需要官方的東西
+
+- **想完整回到原廠**：我會還原自己的 015 備份（M-Flasher GUI 的 RESTORE FULL FLASH），不需要官方工具。沒有備份的人才需要 M-UPGRADE。
+- **想試官方的新功能**：016 或 FM1 Open V14。注意 016 一執行就會覆寫 preset 區，之後降回 015 會有亂碼與音高錯誤，見[注意事項](getting-started/cautions.md)。
+- **某個社群韌體要求先回原廠**：有些 installer 只接受從原廠或特定韌體安裝（例如 ChoralRoot 的 installer 拒絕在 SLOOP 上安裝）。用 M-Flasher 走 download mode 可以繞過這個限制，但繞過不等於安全，見 [ChoralRoot](firmware/choralroot/index.md)。
+- **保固或送修**：還原原廠備份。
+
+## 官方更新會做的事
+
+- 官方更新與 M-UPGRADE 會把**原廠 bootloader** 寫回去。裝了 m-bootloader 的人更新後要重裝。
+- M-UPGRADE 只接受和機器自報型號相符的套件。
+- 社群韌體把 USB 裝置名稱改掉之後，M-UPGRADE 可能找不到機器。SLOOP 的文件建議這時用 Clipper installer 頁面上的 Return to the official firmware。
+
+## 為什麼都用社群方案
+
+- M-Flasher 能做完整 flash 備份與還原，M-UPGRADE 不能。
+- M-Flasher 走晶片 ROM 的 download mode，韌體壞了也能用。
+- 我的機器是新晶片，社群工具與 Firmware Hub 對新晶片的標示比官方資料清楚。
+- 我要的功能（groovebox、agent 控制台、MIDI controller）都在社群韌體裡。
+
+背景見[生態是怎麼來的](ecosystem.md)。
+''')
+
+sub("docs/firmware/switching.md",[
+("| 原本空著的區域 | `0xFC000` | 1 | Agent Deck 自己的設定 |","| 設定 sector | `0xFC000` | 1 | Agent Deck 把自己的設定寫在這裡，**蓋掉了 SLOOP 原本存在這裡的設定** |"),
+("M-Flasher 的 flash map 把 `0x93000` 以後標為 SETTINGS、PAIRINGS、SOUNDS，SLOOP 的 project、preset、sample 都在那裡，Agent Deck 一個 byte 都沒碰。所以刷回 SLOOP 只需要重裝 `.fwsc`，不必還原備份。",
+ """!!! warning "更正（2026-11-17）"
+    我原本寫 `0xFC000` 是「原本空著的區域」，那是錯的。M-Flasher 的 flash map 把它標為 free，但比對備份後發現 SLOOP 把設定存在那裡（開頭是 `FELU`），Agent Deck 寫入後變成自己的資料（`KDGA`），刷回 SLOOP 之後那個 sector 仍是 Agent Deck 的內容。
+
+SLOOP 在我的機器上實際寫過的 sector（和原廠備份比對）：
+
+| 位址 | 內容 | Agent Deck 來回之後 |
+|---|---|---|
+| `0x97000` | project | 沒變 |
+| `0x9F000` | autosave | 沒變 |
+| `0xFC000` | 設定 | **被 Agent Deck 蓋掉，尚未被 SLOOP 寫回** |
+| `0xFD000` | 另一份設定（內容與 `0xFC000` 大小相同） | 沒變 |
+| `0xFE000` | autosave 的另一份 | SLOOP 回來後有更新 |
+
+曲子在 `0x97000` 與 `0x9F000`，所以都還在。設定有兩份，我推測 SLOOP 是讀到 `0xFD000` 那份才沒有明顯異狀，但這是推測。如果發現 SLOOP 的某些全域設定（燈光、SYNC、MIDI channel）跑掉了，原因就在這裡。
+
+結論不變：SLOOP ↔ Agent Deck 來回只需要重裝 `.fwsc`，曲子不會丟。但「一個 byte 都沒碰」不成立，設定 sector 是共用的。"""),
+("這個結論只對這兩個韌體、這兩個版本成立。別的韌體可能把資料寫在和 SLOOP 重疊的位置，切換前還是要備份；想確認的話，用同樣的方法比對前後兩份備份。`[實機]`",
+ """這個結論只對這兩個韌體、這兩個版本成立。`[實機]`
+
+### 其他韌體會動到哪裡
+
+Felucca 系的韌體（SLOOP、ChoralRoot、Dinghy 系的 Agent Deck）與 fm1-base 系的（CTL-1）大多沿用同一套儲存位址，所以會互相踩到。以下是把韌體蓋在我真實的 SLOOP 備份上、在模擬器裡第一次開機後改寫的 sector `[模擬]`：
+
+| 韌體 | 第一次開機改寫 | 對我的影響 |
+|---|---|---|
+| CTL-1 1.0.3 | `0xDE000`–`0xDFFFF` | 在我的映像裡原本是空的。存設定時還會寫 `0xFC000` |
+| RemoteFM1 0.3.6 | `0xF2000`–`0xF3FFF` | `0xF2000` 有原廠留下的資料，會被蓋掉 |
+| ChoralRoot 0.41 | 預演不可靠 | 上游記載過在 SLOOP 資料上開機後掉進 ROM boot mode，見 [ChoralRoot](choralroot/index.md) |
+
+### 先在模擬器預演
+
+```sh
+just emu-rehearse downloads/ctl-1.0.3.fwsc backups/<目錄>/<檔名>.bin
+```
+
+它把套件的韌體區蓋在一份真實備份上（和 M-Flasher 對 SLOOP、Agent Deck 做的事一樣），在模擬器裡開機。可以看新韌體遇到舊資料時會不會正常啟動；結束後比對 `tools/emu-state/rehearse-<名稱>.before` 與 `.flash` 就知道它改寫了哪些 sector。
+
+限制：只取套件的韌體區。套件若還帶別的內容（ChoralRoot 會顯示 `FONTS MISSING`）就不準；模擬器也不是實機。
+
+順帶一提：模擬器直接吃實機備份的格式。把備份複製成 `--flash` 檔再開，跑的就是那份備份裡的韌體與資料，我的 SLOOP 曲子在模擬器裡照樣出現。`[模擬]`"""),
+("### SLOOP ↔ Agent Deck 互切不會丟曲子（在我的機器上）","### SLOOP ↔ Agent Deck 互切不會丟曲子，但設定 sector 是共用的"),
+("具名目標目前只有 `sloop` 與 `agtdeck`，其他韌體把 `.fwsc` 的路徑傳進去。","具名目標：`sloop`、`agtdeck`、`ctl`、`choralroot`、`remote`，其他韌體把 `.fwsc` 的路徑傳進去。後三個用 `just fm1-fetch-more` 下載。"),
+])
+sub("docs/device-log.md",[("\n## Phase 1 驗收","| 2026-11-17 | 更正先前的紀錄 | `0xFC000` 不是空的：它是 SLOOP 的設定 sector，被 Agent Deck 覆寫，刷回 SLOOP 後尚未寫回。曲子所在的 `0x97000`、`0x9F000` 沒變。詳見[多韌體切換](firmware/switching.md) |\n| 2026-11-17 | 下載並驗證 `ctl-1.0.3.fwsc`、`choralroot-0.41-smk37.1.fwsc`、`remote-0.3.6.fwsc` | digest 相符；模擬器兩種晶片都開機。都還沒刷進實機 |\n\n## Phase 1 驗收")])
+sub("docs/firmware/agent-deck/index.md",[("曲子都還在，原因見[多韌體切換](../switching.md)。","曲子都還在；但 Agent Deck 會覆寫 SLOOP 的設定 sector `0xFC000`，見[多韌體切換](../switching.md)。")])
+sub("docs/agentic/emulator.md",[("| `just agtdeck-fetch` | 下載 Agent Deck 套件，驗 digest 與 build attestation |","| `just agtdeck-fetch` | 下載 Agent Deck 套件，驗 digest 與 build attestation |\n| `just emu-rehearse <package.fwsc> <backup.bin> [chip]` | 把套件的韌體區蓋在一份實機備份上再開機，預演切換。說明與限制見[多韌體切換](../firmware/switching.md) |")])
+sub("zensical.toml",[
+('    { "The Firmware Hub" = "firmware/hub.md" },','    { "CTL-1" = "firmware/ctl-1/index.md" },\n    { "ChoralRoot" = "firmware/choralroot/index.md" },\n    { "RemoteFM1" = "firmware/remotefm1/index.md" },\n    { "The Firmware Hub" = "firmware/hub.md" },'),
+('    { "搭配手機與平板" = "hardware/mobile.md" },','    { "搭配手機與平板" = "hardware/mobile.md" },\n    { "iOS 音樂 app" = "hardware/ios-apps.md" },'),
+('  { "生態是怎麼來的" = "ecosystem.md" },','  { "生態是怎麼來的" = "ecosystem.md" },\n  { "官方資源" = "official.md" },'),
+])
+sub("docs/firmware/index.md",[
+("| [CTL-1](https://github.com/charlesvestal/fm1-ctl) | MIDI controller，自帶 General MIDI 音色 | 控制 DAW、外部合成器；也適合 FM-1 MIDI → Python → 任意 API |","| [CTL-1](https://github.com/charlesvestal/fm1-ctl) | MIDI controller，自帶 General MIDI 音色 | 控制 DAW、外部合成器、iPad app。見 [CTL-1](ctl-1/index.md) |"),
+("| [RemoteFM1](https://github.com/Quixotic7/RemoteFM1) | 把 FM-1 變成面板，韌體在電腦、手機或瀏覽器上跑 | 不重刷就換韌體；見[搭配手機與平板](../hardware/mobile.md) |","| [RemoteFM1](https://github.com/Quixotic7/RemoteFM1) | 把 FM-1 變成面板，韌體在電腦、手機或瀏覽器上跑 | 不重刷就換韌體。見 [RemoteFM1](remotefm1/index.md) |"),
+("| [Felucca](https://github.com/hugelton/Felucca) |","| [ChoralRoot](https://github.com/Quixotic7/ChoralRootFM1) | Orchid 風格的和弦樂器：左手選和弦性質，右手彈根音 | 見 [ChoralRoot](choralroot/index.md)。從 SLOOP 切過去有已知風險 |\n| [Felucca](https://github.com/hugelton/Felucca) |"),
+])
+sub("docs/index.md",[("| 接 Android 或 iPhone | [搭配手機與平板](hardware/mobile.md) |","| 接 Android 或 iPhone | [搭配手機與平板](hardware/mobile.md)、[iOS 音樂 app](hardware/ios-apps.md) |\n| 找官方的韌體與工具 | [官方資源](official.md) |")])
+sub("docs/hardware/io.md",[("| **Bluetooth MIDI** | 原廠與部分韌體（CTL-1、Melodee）支援 | SLOOP 不支援，它不開無線電 |","| **Bluetooth MIDI** | 硬體本身有無線電（SoC 內建 Bluetooth 與 WiFi）。原廠、CTL-1、Melodee、RemoteFM1、ChoralRoot 會用 | 要韌體開啟才有。SLOOP 不支援，它不開無線電 |")])
+sub("AGENTS.md",[("just agtdeck-fetch     # Agent Deck package, digest + attestation verified","just agtdeck-fetch     # Agent Deck package, digest + attestation verified\njust fm1-fetch-more    # CTL-1, ChoralRoot, RemoteFM1 packages, digest-verified\njust emu-rehearse PKG BACKUP.bin  # boot PKG's firmware over a real backup in the emulator"),
+("- Stop and report if the device reports anything unexpected","- Firmwares share flash sectors (Felucca-family layout: settings at `0xFC000`,\n  projects from `0x97000`). Before proposing a switch to a firmware not yet in\n  the table in `docs/firmware/switching.md`, run `just emu-rehearse` against\n  the latest backup and report which sectors it rewrites. ChoralRoot over\n  SLOOP data has an upstream-documented failure; do not propose it without\n  restoring stock first.\n- Stop and report if the device reports anything unexpected")])
+EOF
+just docs-check 2>&1 | tail -1; git add -A && git commit -q -m "Add CTL-1, ChoralRoot, RemoteFM1 chapters, iOS apps, official resources; correct the 0xFC000 note
+
+emu-rehearse boots a package's firmware over a real backup in the emulator.
+fm1-fetch-more and three more fm1-switch targets. The shared settings sector
+at 0xFC000 was SLOOP's, not free space: Agent Deck overwrote it.
+
+Co-Authored-By: Claude Fable 5.2 <noreply@anthropic.com>" && git push -q origin main && echo pushed
+````
+
+```text
+{"status": "ok", "pages": 37, "llm_pages": 37, "deployed": false}
+pushed
+```
+</details></tool-use>
+
+_**Agent (claude-fable-5-2 2026-11-16 19:39:42Z)**_
+
+CTL-1 可以裝了，ChoralRoot 我建議先只在瀏覽器玩。另外我要更正上一輪說錯的一件事。
+
+## 更正：Agent Deck 其實蓋掉了 SLOOP 的設定
+
+上一輪我說 Agent Deck 寫的 `0xFC000` 是「原本空著的區域」，這是錯的。這次比對所有備份才發現：
+
+- `0xFC000` 是 **SLOOP 存設定的地方**，Agent Deck 把自己的設定寫了進去。
+- 刷回 SLOOP 之後，那個 sector 到現在還是 Agent Deck 的內容。
+- 曲子在 `0x97000` 和 `0x9F000`，完全沒被動到，所以都還在。
+
+SLOOP 有另一份設定在 `0xFD000`，我推測它是讀到那份才沒有異狀，但這是推測。如果你發現 SLOOP 的全域設定（燈光亮度、SYNC、MIDI channel）跑掉了，原因就是這個。文件已更正。
+
+## CTL-1：可以試
+
+```sh
+just fm1-switch ctl
+```
+
+我做了一個新工具 `just emu-rehearse`：把套件的韌體蓋在你**真實的 SLOOP 備份**上，在模擬器裡開機。CTL-1 的結果是正常開到 Play 頁，第一次開機只改寫 `0xDE000`–`0xDFFFF`，在你的機器上原本是空的。它存設定時也會寫 `0xFC000`，和 Agent Deck 一樣。這些都是模擬結果，實機還沒試過。
+
+M-Flasher 列出的寫入範圍如果超出 `0x04000`–`0x92FFF`，先不要輸入 `yes`。
+
+## ChoralRoot：先不要刷
+
+你的理解正確：左手按和弦性質（大、小、減、sus，加上 6、m7、M7、9），右手按根音，直接彈出和弦。Hub 上約 2,000 次安裝，也支援你的新晶片。
+
+但**從 SLOOP 切過去有上游記載的事故**：一台跑過 Sloop 的 FM-1 裝了 ChoralRoot 後掉進黑畫面，清掉舊資料才回來，而那些舊資料的位址正是你 SLOOP 存曲子與設定的地方。它的官方 installer 因此拒絕在 SLOOP 上安裝。我的預演工具對 ChoralRoot 不可靠，沒辦法幫你排除這個風險。
+
+這種狀況救得回來（M-Flasher 仍看得到機器，可還原備份），但要你手動還原。比較穩的路徑是先還原原廠 015 再裝 ChoralRoot，代價是 SLOOP 的曲子要靠備份還原。要不要走這條路由你決定，現在先用你貼的瀏覽器連結玩。
+
+## RemoteFM1 的特點
+
+它不是 CTL-1 的替代品，目的不同：
+
+- **CTL-1**：FM-1 當**別的音源**的控制器。
+- **RemoteFM1**：FM-1 當**在主機上跑的 FM-1 韌體**的面板。換韌體不用重刷，也不受 FM-1 的 CPU 限制。
+
+Hub 上 CTL-1 有 63 次安裝、RemoteFM1 有 24 次，兩個都算小眾。
+
+## Bluetooth
+
+是的，硬體本身有。晶片內建 Bluetooth 和 WiFi 無線電，只是要韌體去開啟。SLOOP 選擇不開，CTL-1、RemoteFM1、Melodee、ChoralRoot 和原廠韌體都會用。
+
+## 新增的文件
+
+- **CTL-1**、**ChoralRoot**、**RemoteFM1** 各一個章節。
+- **iOS 音樂 app**：你列的那些加上幾個相關的，連結與價格取自 App Store 的搜尋 API。用途說明是我的一般認識，沒有和 FM-1 實測。
+- **官方資源**：產品頁、原廠韌體、M-UPGRADE、`fm1_open`、Workbench、論壇，並註明目前全部沒用到、什麼情況才會需要。多數連結取自上游 README，我沒有逐一開啟確認。
+- 「多韌體切換」頁新增各韌體會動到哪些 flash 區域的對照表。
+
+新指令：`just fm1-fetch-more`（下載這三個韌體）、`just emu-rehearse <套件> <備份>`。
+
+---
+
+_**User (2026-11-16 19:47:20Z)**_
+
+```
+
+
+<pasted_content id="fec1">
+M-VAVE_FM-1 on  main [!?] via  v3.15.1
+❯ just fm1-switch ctl
+midi    Felucca (running; download-mode switches it)
+Sent the Felucca the download-mode message over USB MIDI; waiting for it
+In download mode: usb:2-4       WL82 UBOOT1.00 (USB bus 2, device 4)
+  100%
+  firmware    SLOOP 2.8.5
+  app         OK
+    - the firmware uses the FM-1 flash layout
+Backup saved: backups/2026-11-17-0341-pre-ctl-1.0.3/fm1-20261117-034125.bin
+8c9267e87a320a1e4cd592a9261907d978b8f3fdb94eaf15e685afae267b4451  backups/2026-11-17-0341-pre-ctl-1.0.3/fm1-20261117-034125.bin
+Backup before the switch: backups/2026-11-17-0341-pre-ctl-1.0.3 (not uploaded; just fm1-backup-release 2026-11-17-0341-pre-ctl-1.0.3 if you want it off this machine)
+Connecting to usb:2-4
+M-Flasher loader 1.3 already running
+Flash chip 0xB36014 (new)
+Reading the flash
+  100%
+Read in 1.3 s (809 KB/s)
+Checked: the chip's CRC32 of the flash matches the read
+  model       FM-1
+  bootloader  stock (M-VAVE)
+  firmware    SLOOP 2.8.5
+  app         OK
+  chip key    0x980F
+  flash       0xB36014
+  unit id     55227286a0cb022a
+  loader      M-Flasher 1.3, CPU at 96 MHz
+    - the firmware uses the FM-1 flash layout
+    - flash chip 0xB36014 (new)
+
+Install firmware FM-1_6010003
+Writes 140 sectors (560 KiB): 0x04000-0x8FFFF
+Installs FM-1_6010003 (0x04000-0x92FFF).
+Type "yes" to write: yes
+Backup saved: /Users/zhouhanru/Documents/M-Flasher/backups/fm1-20261117-034132.bin
+Writing 0x04000-0x8FFFF
+  100%
+Done: everything written is verified (the chip's CRC32 matches)
+Sent the restart (a 34-byte program at 0x01C28000); waiting for the unit to reset
+Running: the Felucca is on USB MIDI
+</pasted_content id="fec1">
+
+```
+
+測試了 CTL-1 好像還可以 不過好像 iPad的聲音output by default會route到FM1的speaker
+但是不確定怎麽關閉 CTL-1 自己的聲音 （它自己也有音色獨立運作 但這樣會跟 iPad的聲音重疊）
+
+---
+
+_**Agent (claude-fable-5-2 2026-11-16 19:47:30Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Search the CTL-1 manual for how to silence its own sound and how USB audio is routed
+
+`cd /tmp && gh api repos/charlesvestal/fm1-ctl/contents/docs/MANUAL.md --jq .content | base64 -d > ctl-manual.md; wc -l ctl-manual.md; grep -n "^## \|^### " ctl-manual.md | head -50; grep -n -i -E "local|silent|mute|its own sound|sound off|USB audio|audio out|speaker|computer.s sound|iPad|iPhone|volume|Sound: |General MIDI" ctl-manual.md | cut -c1-330 | head -45`
+
+```text
+     553 ctl-manual.md
+13:## Contents
+35:## 1. Install
+66:## 2. Getting started
+87:## 3. Controls
+117:## 4. The screen
+143:## 5. Playing
+168:## 6. Knobs and banks
+191:## 7. Scales and chords
+215:## 8. Sound
+240:## 9. Arpeggiator
+264:## 10. Sequencer
+305:## 11. Clock and transport
+322:## 12. Setup
+337:### Touch
+371:### Bluetooth
+389:## 13. MIDI
+427:## 14. Saving
+438:## 15. Troubleshooting
+469:### Recovering an FM-1 that won't start
+501:## 16. Parameters
+533:## 17. Credits
+6:jack is passed along. The FM-1 also plays it all on its own General MIDI sounds, so it works with nothing
+74:   volume. Press FX for the next of four banks.
+99:| MASTER | Sets the volume of the FM-1's sound, or sends a controller (Sound page) |
+176:| A | 74 cutoff | 71 resonance | 1 modulation | 7 volume |
+217:CTL-1 has the 128 General MIDI sounds and the drum kit (on channel 10), from Sonivox EAS. They play
+218:whatever CTL-1 plays, from the keys, the arpeggiator and the sequencer, through the FM-1's speaker and
+224:![The Sound page: Acoustic Grand, GM program 1, voices 1, CPU 0%; Sound On, MIDI in Plays, MASTER Volume](img/screen-sound.png "The Sound page")
+230:| KNOB 3 MASTER | Volume, or a controller number for the MASTER knob to send |
+232:**MASTER** has a fixed range, unlike KNOB 1–4, which turn endlessly. When it's set to Volume (the
+233:default), it sets the volume of the FM-1's sounds. When you give it a controller number, it sends 0 to
+234:127 across its travel, only when it moves, and the sounds play at full volume.
+294:- Press **black keys 5–8** to mute or unmute tracks 1–4.
+402:the Bluetooth button, then click Connect next to FM-1. On an iPad or iPhone, connect from a music app's
+505:| Play | KNOB 1–4 | 0–127, per bank | 64 (modulation 0, volume 100) |
+518:| Sound | MASTER | Volume, CC 1–119 | Volume |
+544:- The General MIDI sounds are **Sonivox EAS** and its 200 KB sound set (Apache-2.0, Sonic Network and
+Shell cwd was reset to /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1
+```
+</details></tool-use>
+
+_**Agent (claude-fable-5-2 2026-11-16 19:47:36Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Read CTL-1's Sound, MIDI, and troubleshooting sections and check its USB audio build settings
+
+`sed -n '215,238p;389,426p;438,468p' /tmp/ctl-manual.md | cut -c1-700; grep -n -i -E "usb_audio|audio" /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/tools/../third_party/fm1-base/README.md | cut -c1-260 | head -8; gh api repos/charlesvestal/fm1-ctl/contents/app/fm1.toml --jq .content 2>/dev/null | base64 -d | grep -i -E "audio|usb" `
+
+```text
+## 8. Sound
+
+CTL-1 has the 128 General MIDI sounds and the drum kit (on channel 10), from Sonivox EAS. They play
+whatever CTL-1 plays, from the keys, the arpeggiator and the sequencer, through the FM-1's speaker and
+headphone jack. Turn PRESETS to pick the sound on the keyboard's channel.
+
+Press EDIT to open the Sound page. It shows the sound that's playing, how many voices are sounding and
+how busy the processor is.
+
+![The Sound page: Acoustic Grand, GM program 1, voices 1, CPU 0%; Sound On, MIDI in Plays, MASTER Volume](img/screen-sound.png "The Sound page")
+
+| Knob | Sets |
+|---|---|
+| KNOB 1 Sound | On or Off |
+| KNOB 2 MIDI in | Plays or Ignored: whether MIDI coming in plays the sounds too |
+| KNOB 3 MASTER | Volume, or a controller number for the MASTER knob to send |
+
+**MASTER** has a fixed range, unlike KNOB 1–4, which turn endlessly. When it's set to Volume (the
+default), it sets the volume of the FM-1's sounds. When you give it a controller number, it sends 0 to
+127 across its travel, only when it moves, and the sounds play at full volume.
+
+Up to 24 notes can sound at once.
+
+---
+## 13. MIDI
+
+- Over **USB**, CTL-1 is a class-compliant MIDI device called "CTL-1 FM-1". Everything CTL-1 plays goes
+  out here, and MIDI comes in.
+- Over **Bluetooth**, it's a Bluetooth MIDI device called "FM-1", on from the moment CTL-1 starts.
+  Everything CTL-1 plays goes out here too, and MIDI comes in. What arrives over USB is passed on to
+  Bluetooth, and what arrives over Bluetooth is passed on to USB.
+- The **TRS jack** is MIDI in only, since the FM-1 has no MIDI out jack. What arrives is passed on to
+  USB and Bluetooth.
+- **MIDI in**, from any of them, lights the keys and drives the clock when it's set to Ext. It also
+  plays the FM-1's sounds, unless the Sound page says Ignored.
+
+To connect over Bluetooth on a Mac, open Audio MIDI Setup and choose Window > Show MIDI Studio. Click
+the Bluetooth button, then click Connect next to FM-1. On an iPad or iPhone, connect from a music app's
+Bluetooth MIDI settings (in GarageBand, Settings > Advanced > Bluetooth MIDI Devices). The top bar says
+COMPUTER CONNECTED, the Play page's BLE port says "connected", and the Setup page counts what has passed.
+
+CTL-1 sends these messages, on the keyboard's channel unless noted:
+
+| Action | Message |
+|---|---|
+| Key | Note on (velocity from the Keys page, or from the key with Touch on), note off |
+| Pressing a held key (Touch) | Poly aftertouch for each of its notes, or channel aftertouch |
+| KNOB 1–4 on Play | Control change: the bank's controller |
+| MASTER | Control change: the Sound page's controller (when it has one) |
+| PRESETS | Program change |
+| ENV | Control change 64: 127, then 0 |
+| LFO | Control change 1, rising to 127 over a sixteenth, then back to 0 |
+| REC | Note offs, control change 64 = 0 and 123 = 0 (also on the sequencer's channel) |
+| Arpeggiator | Note on and off |
+| Sequencer | Note on and off on the sequencer's channel |
+| Clock (Int) | MIDI clock, 24 a beat |
+| PLAY (Int, Int quiet) | MIDI start / stop |
+
+CTL-1 passes on channel messages and real-time messages (clock, start, stop), but not SysEx.
+
+---
+
+## 15. Troubleshooting
+
+To put the FM-1 in update mode, hold REC while you switch it on. If you installed m-bootloader with the
+web installer, the installer can reach the FM-1 from there, and holding PLAY instead opens
+m-bootloader's recovery menu. Without m-bootloader, REC starts the chip's own update mode, which only
+the rescue below can reach.
+
+If a button or knob does the wrong thing, calibrate the panel. Hold OCT− and OCT+ while you switch the
+FM-1 on, and the screen asks you to press each button and turn each knob in turn.
+
+If CTL-1 crashes, it shows a red CRASH screen and restarts by itself a few seconds later. If you report
+the problem, include the numbers on that screen (a photo is easiest) and what you were doing.
+
+If CTL-1 crashes twice in a row while starting, it starts in SAFE MODE instead. There's no sound, but
+USB works, so the web installer can reach it. Reinstall CTL-1, or put the stock firmware back from the
+same page. Press PLAY to try starting CTL-1 normally again. If even safe mode fails twice, the FM-1
+drops into the chip's own update mode, and only the rescue below can reach it.
+
+If CTL-1 ever crashes while Bluetooth is running, the next start leaves Bluetooth off and says
+"BLUETOOTH OFF AFTER A CRASH". Everything else works. To start Bluetooth again, press SAVE on the
+Bluetooth page, or hold SAVE on the Setup page. It starts by itself again at the next restart.
+
+If a Mac won't connect over Bluetooth, check Audio MIDI Setup's Bluetooth window after you click
+Connect. If it doesn't show FM-1 as connected, quit Audio MIDI Setup (⌘Q), open it again and click
+Connect once more. Audio MIDI Setup can lose touch with the Mac's MIDI service, and then it links to the
+FM-1 without starting its MIDI. When that happens, the Bluetooth page says "connected", with "No MIDI
+yet" in red under it. While it lasts, no other computer or tablet can find the FM-1.
+
+If the computer shows another name, it may be a Mac that knew the FM-1 with other firmware and kept the
+old name. Remove the FM-1 in Audio MIDI Setup (Window > Show MIDI Studio) and plug it in again.
+
+4:above the hardware (screen, drawing and fonts, panel, LEDs, audio, MIDI over USB and TRS, storage, the screen reader),
+33:| Bluetooth audio to headphones and speakers (A2DP) | `bt_audio = true`, with `ble_stack = "own"`; `bt_log = true` puts its set-up on the radio's log | `plat_bta_on`, `plat_bta_scan`, `plat_bta_found`, `plat_bta_known`, `plat_bta_pick`, `plat_bta_reconnect`
+34:| USB audio: the FM-1 recorded over the cable | on unless `usb_audio_in = false` | nothing: the app's output at MASTER, without the computer's audio (taken before it is mixed in) |
+35:| USB audio: a computer plays through the FM-1 | on unless `usb_audio_out = false` (needs the input too) | nothing: mixed after the app and after the recording's tap, at MASTER; `plat_usb_play_gain` (0 muted .. 4096, the default) for the app's own setting |
+36:| USB MIDI after the USB audio interfaces, so macOS 13-15 show the audio device | on with the USB audio input, unless `usb_midi_last = false` | nothing |
+40:| USB audio at full level, MASTER for the speaker and headphones only | with the USB audio input | `plat_usb_audio_full` (the app's setting) |
+48:| The browser emulator's own parts (`tools/build.py --web`): web/emu/parts, each file saying what it does; without any, the page and app.wasm are as before. One is on without asking: `resample`, the FM-1's 44.1 kHz played at the browser's rate (many compute
+83:- With `bt_audio = true` it sends its sound to headphones and speakers (A2DP, SBC), beside Bluetooth MIDI on the
+name = "CTL"                   # the build's files: ctl.fwsc, ctl-usb.fwsc (--no-ble), ctl-X.Y.fwsc
+usb_manufacturer = "CTL-1"
+usb_product = "CTL-1 FM-1"
+description = "CTL-1 turns the M-VAVE FM-1 into a MIDI controller. The keys play notes, with velocity and aftertouch read from the keys themselves, in any scale with its chords under the black keys; the knobs send controllers in four banks; an arpeggiator and a four-track Euclidean drum sequencer run on its clock. Everything goes out over USB and Bluetooth, MIDI from the TRS jack is passed along, and the FM-1 plays it all on its own General MIDI sounds too, so it works with nothing connected."
+```
+</details></tool-use>

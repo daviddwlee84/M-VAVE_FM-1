@@ -32,7 +32,7 @@
 | 2 | SLOOP 2.8.5 + Web Editor，正常玩音樂 | SLOOP 已刷入，開始玩 |
 | 3 | fm1-emu + Agent Deck host 模擬（不刷機） | fm1-emu 已在本機可用，見[模擬器](agentic/emulator.md#local) |
 | 4 | m-bootloader（先確認晶片相容與復原方案） | 暫緩，只追蹤，見[上游追蹤](watch.md) |
-| 5 | SLOOP 3 / Agent Deck / Melodee 輪流刷入 | Agent Deck 0.7 已刷入（2026-11-17），見[操作速查](firmware/agent-deck/usage.md) |
+| 5 | 輪流刷不同韌體 | 已試過 Agent Deck 0.7 與 CTL-1 1.0.3，用 `just fm1-switch` 切換，見[多韌體切換](firmware/switching.md) |
 | 6 | m-apps + m-card 多系統切換（需硬體改裝） | 觀望 |
 
 階段 1、2 做完就可以正常玩，後面都是選配。SLOOP 3 必須透過 m-bootloader 的 MIDI MODE 安裝，所以階段 4 是階段 5 的前置條件。
