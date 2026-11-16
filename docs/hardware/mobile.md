@@ -1,11 +1,12 @@
 # 搭配手機與平板
 
-FM-1 接手機有兩種完全不同的玩法，容易混在一起：
+FM-1 接手機有三種不同的玩法，容易混在一起：
 
 | 玩法 | 誰在跑韌體 | 手機的角色 |
 |---|---|---|
 | **A. 手機當 editor / 錄音機** | FM-1 自己（例如 SLOOP） | 觸控螢幕上的編輯器、mixer、錄音 |
 | **B. 手機當主機，FM-1 當面板** | 手機（RemoteFM1） | 跑韌體、發聲、大螢幕；FM-1 只負責鍵、旋鈕、LED、小螢幕 |
+| **C. FM-1 當 MIDI 控制器** | FM-1（CTL-1 等） | 跑自己的音樂 app（AUM、GarageBand…），FM-1 送 MIDI 給它 |
 
 你看到的「FM-1 + Android」組合多半是其中一種。這頁都是 `[上游]`，我自己還沒接過手機。查核於 2026-11-17。
 
@@ -26,7 +27,7 @@ SLOOP 的 [Web Editor](../firmware/sloop/web-editor.md) 在手機上能做的事
 
 Android 的用法：
 
-1. 用 Chrome 連網開一次[線上 editor](https://isod89.github.io/sloop-fm1/webapp/editor/)。
+1. 用 Chrome 連網開一次[線上 editor](https://isod89.github.io/sloop-fm1/webapp/editor/)，或這個站[內嵌的 2.8.5](../firmware/sloop/editor.md)。
 2. 選 **Install the app**（或 Chrome 選單 → Install app / Add to Home screen）。之後不需要網路。
 3. FM-1 用 USB 接上，按 Connect，允許 MIDI。
 
@@ -59,6 +60,27 @@ Android 的用法：
 - **Android 側載**：Samsung 要先暫時關掉 Auto Blocker。
 - 並非所有韌體都有 `.rfm1` 版本。上游說約 70 多個以 `.rfm1` 執行，其餘在模擬器裡跑。
 - Firmware Hub 的目錄把 RemoteFM1 0.3.6 標為認得新晶片（從套件判讀，不是實機測試）。
+
+## C. 當 iPad 上音樂 app 的 MIDI 控制器
+
+想用 FM-1 控制 AUM、GarageBand、GeoShred、Koala、AudioKit Synth One、Quantiloop、StreamByter 這類 app 時，重點不在 app，而在 **FM-1 上裝的韌體送出什麼 MIDI**。FM-1 是 class-compliant 的 USB MIDI 裝置，iPadOS 的 CoreMIDI 不需要 driver，任何吃 MIDI 輸入的 app 都看得到它。各 app 怎麼對應（MIDI learn、channel 設定）要各自設定，我沒有逐一測過。
+
+| FM-1 上的韌體 | 送出什麼 | 適合 |
+|---|---|---|
+| **[CTL-1](https://github.com/charlesvestal/fm1-ctl)** | 專門的 MIDI controller：琴鍵（含 velocity 與 aftertouch、scale、黑鍵和弦）、KNOB 1–4 送 CC（四個 bank，CC 編號可改）、program change、sustain、mod wheel、arp、四軌 Euclidean 鼓 sequencer。USB 與 **Bluetooth MIDI** 都有，自己也有 General MIDI 音色 | **首選。** 旋鈕能對應 app 的參數，藍牙可以免線 |
+| **SLOOP** | 琴鍵一定會送（track 1–3 在 channel 1–3、drum 在 10）；設 GLO → MIDI 2 → OUT = SEQ 後連 sequencer、arp、roll 也送。**旋鈕不送 CC**，沒有 Bluetooth | 把 SLOOP 當 sequencer 去驅動 app 的音源，或單純當鍵盤 |
+| **RemoteFM1**（不接 host） | 內建 MIDI REMOTE 模式（`GLO` + `FX`）：整個面板變成純 MIDI controller，鍵送 note、按鈕與 encoder 送 CC。USB 與 Bluetooth | 已經裝了 RemoteFM1 時順便用 |
+| **原廠韌體** | 有 Bluetooth MIDI；按鍵與旋鈕各送什麼我沒有查 `[調研]` | — |
+
+幾個實際會遇到的點：
+
+- **接線**：USB-C iPad 用 USB-C 資料線直接接。Lightning 的機型要 Lightning to USB camera adapter。
+- **聲音路由**：SLOOP 同時是 USB audio **輸入**裝置（FM-1 的聲音進 iPad）。iPad 接上後可能把它選成錄音來源，這對 AUM、Koala 取樣是好事；但也要確認 iPad 的**輸出**沒有被改掉。這點我沒有實機確認。RemoteFM1 的文件則明說 FM-1 插上 USB 後會自動成為手機的聲音輸出。
+- **雙向**：AUM 或 StreamByter 可以把 MIDI 送回 FM-1。SLOOP 會收 note、CC、clock（channel 對應見[接口與連線](io.md)），所以可以讓 iPad 當 clock master，或用 iPad 上的 sequencer 彈 SLOOP 的音色。
+- **StreamByter** 這類 MIDI 處理器正好補 SLOOP 的不足：把收到的 note 轉 channel、過濾、remap 再送給音源。
+- **GeoShred** 以 MPE 與觸控演奏為主，FM-1 的鍵沒有 MPE，接上去只是一般鍵盤。
+
+如果主要目的是控制 iPad 上的 app，我會刷 CTL-1；如果是讓 SLOOP 和 iPad 一起玩（SLOOP 出鼓與 bass，iPad 出別的音色並錄音），維持 SLOOP 就可以。CTL-1 在 Firmware Hub 的目錄標為認得新晶片，還沒在我的機器上試過。
 
 ## iOS 比較難嗎
 

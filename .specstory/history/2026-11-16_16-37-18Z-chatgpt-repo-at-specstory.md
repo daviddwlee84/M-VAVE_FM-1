@@ -18172,3 +18172,324 @@ no such package: nope (try: just fm1-fetch / just agtdeck-fetch)
 error: recipe `fm1-switch` failed with exit code 1
 ```
 </details></tool-use>
+
+_**Agent (claude-fable-5-2 2026-11-16 19:10:37Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Add a phones and tablets page, document the target listing, commit and push
+
+````bash
+python3 - <<'EOF'
+import pathlib
+def sub(path, pairs):
+    p=pathlib.Path(path); s=p.read_text()
+    for a,b in pairs:
+        assert a in s, (path,a[:60]); s=s.replace(a,b,1)
+    p.write_text(s)
+pathlib.Path("docs/hardware/mobile.md").write_text('''# 搭配手機與平板
+
+FM-1 接手機有兩種完全不同的玩法，容易混在一起：
+
+| 玩法 | 誰在跑韌體 | 手機的角色 |
+|---|---|---|
+| **A. 手機當 editor / 錄音機** | FM-1 自己（例如 SLOOP） | 觸控螢幕上的編輯器、mixer、錄音 |
+| **B. 手機當主機，FM-1 當面板** | 手機（RemoteFM1） | 跑韌體、發聲、大螢幕；FM-1 只負責鍵、旋鈕、LED、小螢幕 |
+
+你看到的「FM-1 + Android」組合多半是其中一種。這頁都是 `[上游]`，我自己還沒接過手機。查核於 2026-11-17。
+
+## 連線的基本事實
+
+- FM-1 是 USB **device**，手機當 **host**。USB-C 對 USB-C 的資料線，或 OTG 轉接頭。
+- Bluetooth MIDI 要看韌體：原廠、CTL-1、Melodee、RemoteFM1 有；**SLOOP 沒有**，只能走 USB。
+- SLOOP 的 USB audio 支援 48 kHz，是為了手機（很多手機與 app 只收 48 kHz）。手機錄起來失真時，把選單裡的 **USB RATE** 設成 44.1 kHz 試試。
+
+## A. SLOOP + 手機：把 Web Editor 當觸控螢幕
+
+SLOOP 的 [Web Editor](../firmware/sloop/web-editor.md) 在手機上能做的事：
+
+- **LIVE 頁**：為了從電腦、平板或手機控制整場演出而設計。PLAY / REC、BPM、section A–D 切換、mixer（音量、mute、solo、filter、pan、send）、27 個 punch-in effect 做成 pad、琴鍵與鼓 pad、scene、playlist。這最接近「多了一塊觸控螢幕」。
+- **編輯**：Sound、Sequencer（含 piano roll）、Samples、Drum synth 等所有頁面。
+- **備份**：把整台機器上的東西存成一個檔案、或放回去。
+- **錄音**：FM-1 是 class-compliant 的 USB audio 輸入，手機上的 sampler 或錄音 app 可以直接錄 master 輸出，和 editor 共用同一條線。
+
+Android 的用法：
+
+1. 用 Chrome 連網開一次[線上 editor](https://isod89.github.io/sloop-fm1/webapp/editor/)。
+2. 選 **Install the app**（或 Chrome 選單 → Install app / Add to Home screen）。之後不需要網路。
+3. FM-1 用 USB 接上，按 Connect，允許 MIDI。
+
+!!! warning "Android 上不要用下載的單一 HTML 檔"
+    Android 的 Chrome 不允許下載的檔案使用 MIDI。用上面的 app（PWA）方式。離線 HTML 檔是給電腦用的。
+
+## B. RemoteFM1：手機跑韌體，FM-1 當面板
+
+[RemoteFM1](https://github.com/Quixotic7/RemoteFM1) 是一個「自己幾乎什麼都不做」的 FM-1 韌體：它把每個鍵、按鈕、encoder、MASTER 旋鈕送給主機，再把主機送回來的東西顯示在 LED 與 240×240 螢幕上。主機（電腦、手機、瀏覽器）用全速跑一個 FM-1 韌體，把真的 FM-1 當成它的面板。
+
+這帶來幾件事：
+
+- **不用重刷就能換韌體**，點一下就切。
+- 可以跑 FM-1 自己的 CPU 與記憶體裝不下的東西。
+- 手機的大螢幕與喇叭 / 耳機，加上實體的鍵與旋鈕。
+
+| 主機 | 取得方式 |
+|---|---|
+| 瀏覽器 | [remotefm1.com](https://remotefm1.com/)（FM-1 Player，列了約 160 個韌體） |
+| Android | 從 GitHub Releases 下載 [APK](https://github.com/Quixotic7/RemoteFM1Android/releases/latest) 自行安裝（不在 Play Store）。需要 Android 10 以上、arm64 |
+| iPhone / iPad | [TestFlight beta](https://testflight.apple.com/join/e6A47Xap)，也是 AUv3 plugin |
+| Mac | [FM1VST](https://github.com/Quixotic7/FM1VST)（VST3 / AU 與桌面 app） |
+
+連線走 USB 或 Bluetooth MIDI。沒接主機時它自己也是一台樂器：DX7、MIDI controller、looper。
+
+要知道的限制：
+
+- **Bluetooth 的頻寬有限**：上游說螢幕與聲音只能擇一。走 USB 比較完整。
+- **已知問題**：部分 Samsung / Qualcomm 裝置（上游舉 Galaxy Tab A9+）透過 FM-1 的 USB audio 發聲會失敗，還可能讓 FM-1 從 USB 掉線。改用手機自己的喇叭、耳機或藍牙。
+- **Android 側載**：Samsung 要先暫時關掉 Auto Blocker。
+- 並非所有韌體都有 `.rfm1` 版本。上游說約 70 多個以 `.rfm1` 執行，其餘在模擬器裡跑。
+- Firmware Hub 的目錄把 RemoteFM1 0.3.6 標為認得新晶片（從套件判讀，不是實機測試）。
+
+## iOS 比較難嗎
+
+比我原本以為的好，但確實分兩種情況：
+
+| | Android | iOS / iPadOS |
+|---|---|---|
+| 瀏覽器裡的 Web MIDI | Chrome 支援，所以 SLOOP Web Editor、各家瀏覽器 installer 都能用 | Safari **不支援 Web MIDI**。網頁版的 editor 與 installer 不能直接用 |
+| 繞過的方法 | 不需要 | 用帶 Web MIDI 的第三方瀏覽器 app。m-bootloader 的文件提到用 MIDIWeb app 從 iOS 安裝韌體；RemoteFM1 的文件說在這類 app 裡整個網站都能跑，並在 iPhone 13 Pro Max 上測過 |
+| 原生 app | RemoteFM1 APK（側載） | RemoteFM1（TestFlight），還多了 AUv3，可以放進 iOS 的 DAW |
+| USB audio | 視機型，有已知問題 | 插上 USB 後 FM-1 會自動成為手機的聲音輸出；Lightning 機型需要 Lightning to USB camera adapter |
+| 自己寫 app | — | [FM1Kit](https://github.com/ocean/FM1Kit)：Swift + CoreMIDI 的工具包 |
+
+所以：**走網頁的玩法（A）在 iOS 比較麻煩，走原生 app 的玩法（B）iOS 反而有 AUv3 這個優勢。**
+
+## 對我的機器
+
+- 目前裝的是 SLOOP，所以玩法 A 現在就能試，不用刷任何東西。
+- 玩法 B 要先刷 RemoteFM1。它不需要 m-bootloader，流程和刷 Agent Deck 一樣：先在 fm1-emu 的新晶片模式跑過，再 `just fm1-switch <檔案>`。
+- 還沒試過的都標在[使用心得](../notes/index.md)的待辦裡。
+''')
+sub("zensical.toml",[('    { "相關硬體" = "hardware/related.md" },','    { "搭配手機與平板" = "hardware/mobile.md" },\n    { "相關硬體" = "hardware/related.md" },')])
+sub("docs/notes/index.md",[("- [ ] CTL-1 + `mido`：把琴鍵事件轉成 Herdr API 呼叫","- [ ] CTL-1 + `mido`：把琴鍵事件轉成 Herdr API 呼叫\n- [ ] SLOOP Web Editor 裝成 Android app，用 LIVE 頁當觸控面板（見[搭配手機與平板](../hardware/mobile.md)）\n- [ ] RemoteFM1：先在模擬器試，再決定要不要刷")])
+sub("docs/firmware/index.md",[("| [Macropad Patch]","| [RemoteFM1](https://github.com/Quixotic7/RemoteFM1) | 把 FM-1 變成面板，韌體在電腦、手機或瀏覽器上跑 | 不重刷就換韌體；見[搭配手機與平板](../hardware/mobile.md) |\n| [Macropad Patch]")])
+sub("docs/firmware/switching.md",[("```sh\njust fm1-switch sloop       # 或 agtdeck，或任何 .fwsc 的路徑\n```","```sh\njust fm1-switch             # 不帶參數：列出可用的目標與目前連著的裝置\njust fm1-switch sloop       # 或 agtdeck，或任何 .fwsc 的路徑\n```\n\n具名目標目前只有 `sloop` 與 `agtdeck`，其他韌體把 `.fwsc` 的路徑傳進去。清單也會列出 `downloads/` 與 `firmware/*/build/` 裡現有的套件。"),
+("| **m-apps `slots` + m-card** |","| **RemoteFM1** | 刷一次 RemoteFM1，之後韌體在電腦或手機上跑，FM-1 當面板，點一下就換 | 否 | 另一種思路，見[搭配手機與平板](../hardware/mobile.md)。我還沒試 |\n| **m-apps `slots` + m-card** |"),
+("FM-1 沒有像 GRUB 那樣的開機選單可以選 SLOOP、Melodee 或 Agent Deck。目前有三條路：","FM-1 沒有像 GRUB 那樣的開機選單可以選 SLOOP、Melodee 或 Agent Deck。目前有幾條路：")])
+sub("docs/index.md",[("| 看同晶片的機器、VIBE FM、救援硬體 | [相關硬體](hardware/related.md) |","| 看同晶片的機器、VIBE FM、救援硬體 | [相關硬體](hardware/related.md) |\n| 接 Android 或 iPhone | [搭配手機與平板](hardware/mobile.md) |")])
+EOF
+just docs-check 2>&1 | tail -1; git add -A && git commit -q -m "List fm1-switch targets, add a page on phones and tablets
+
+Co-Authored-By: Claude Fable 5.2 <noreply@anthropic.com>" && git push -q origin main && echo pushed
+````
+
+```text
+{"status": "ok", "pages": 31, "llm_pages": 31, "deployed": false}
+pushed
+```
+</details></tool-use>
+
+_**Agent (claude-fable-5-2 2026-11-16 19:10:54Z)**_
+
+三件事都處理好了，已 push。
+
+## `fm1-switch` 現在會列出目標
+
+不帶參數（或 `-h`、`list`）就會列出來：
+
+```
+❯ just fm1-switch
+named targets:
+  sloop     downloads/sloop-2.8.5.fwsc  (ready)
+  agtdeck   downloads/agtdeck-0.7.fwsc  (ready)
+
+packages on disk (pass the path):
+  downloads/agtdeck-0.7.fwsc
+  downloads/sloop-2.8.5.fwsc
+  firmware/hello/build/template.fwsc
+
+now installed:
+  midi  Felucca (running; download-mode switches it)
+```
+
+具名目標只有 `sloop` 和 `agtdeck`，其他韌體把 `.fwsc` 路徑傳進去。有個限制：SLOOP 和 Agent Deck 在 USB MIDI 上都顯示成 `Felucca`，所以它沒辦法告訴你目前裝的是哪一個，要看 `docs/device-log.md` 或機器螢幕。
+
+## SLOOP 的歌曲備份
+
+有，就是 SLOOP 的 Web Editor，不需要另外裝軟體：
+
+- **線上版**：<https://isod89.github.io/sloop-fm1/webapp/editor/>，Chrome 或 Edge，接上 USB 按 Connect。
+- **離線版**：`just sloop-editor`，開啟已下載在 `downloads/` 的單檔版本。
+
+在 **Song & sections → Backup**：Save a backup 把機器上所有東西存成一個檔案（進行中的音樂、4 個 section、user presets、samples、設定、FM6 bank），Restore from a file 放回去。機器上只放一首歌，多首歌就是靠這個存成多個檔案。
+
+它和 M-Flasher 的完整備份不同：這份只含 SLOOP 的內容、檔案小、可以跨機器；M-Flasher 那份是整顆 flash。這部分我沒有實際操作過，是整理自上游文件。
+
+## FM-1 + 手機
+
+新增「搭配手機與平板」頁：<https://daviddwlee84.github.io/M-VAVE_FM-1/hardware/mobile/>
+
+你看到的組合其實有兩種完全不同的玩法：
+
+- **手機當 editor**：FM-1 自己跑 SLOOP，手機開 Web Editor。它的 LIVE 頁就是為手機與平板設計的，有 mixer、punch-in effect pad、section 切換，最接近「多一塊觸控螢幕」。Android 上要用 Chrome 把 editor 裝成 app，不能用下載的單一 HTML 檔。
+- **手機當主機，FM-1 當面板**：刷一個叫 RemoteFM1 的韌體，之後韌體在手機上跑，FM-1 只負責鍵、旋鈕、LED 和小螢幕。好處是不用重刷就能換韌體。Android 是側載 APK，iOS 是 TestFlight。
+
+**iOS 沒有你想的那麼難，但分情況：**
+
+- 走網頁的玩法在 iOS 比較麻煩，因為 Safari 不支援 Web MIDI，要用帶 Web MIDI 的第三方瀏覽器 app。
+- 走原生 app 的玩法 iOS 反而有優勢：RemoteFM1 的 iOS 版同時是 AUv3 plugin，可以放進 iOS 的 DAW。
+
+你現在裝的是 SLOOP，所以第一種玩法不用刷任何東西就能試。SLOOP 沒有 Bluetooth MIDI，只能走 USB 線。第二種要先刷 RemoteFM1，流程和 Agent Deck 一樣，不需要 m-bootloader。
+
+這頁全部整理自上游文件，我沒有接過手機，也沒試過 RemoteFM1。兩項都加進了「使用心得」的待辦。
+
+---
+
+_**User (2026-11-16 19:20:13Z)**_
+
+所以 https://github.com/Quixotic7/RemoteFM1 是什麼 也是一個獨立firmware嗎？
+然後如果要控制iOS DAW e.g. Quantiloop Pro, GeoShred, Garage Band, AUM, Symth One, koala, StreamByter 等等是能work的嗎？（可以的話會想接iPad）
+
+（是不是也能在我們GitHub Page裡面嵌入一個 sloop-editor-2.8.5.html ?)
+
+---
+
+_**Agent (claude-fable-5-2 2026-11-16 19:20:37Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Read CTL-1's controller features, RemoteFM1's standalone controller mode, and check how the docs checker treats HTML files
+
+`gh api repos/charlesvestal/fm1-ctl/readme --jq .content | base64 -d | cut -c1-420 | sed -n '1,45p'; echo "=== remote controller mode"; sed -n '140,150p' /private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/5f461408-bbdd-44d0-bb3b-b0642eabaa31/scratchpad/up/remotefm1.md | cut -c1-500; gh api repos/isod89/sloop-fm1 --jq '.license.spdx_id'; grep -n -i "iframe\|html" scripts/check-docs-site.py | head -8`
+
+```text
+# CTL-1 for the M-VAVE FM-1
+
+CTL-1 turns the M-VAVE FM-1 into a MIDI controller. The keys play notes, with velocity and aftertouch read
+from the keys themselves, in any scale with its chords under the black keys; the knobs send controllers in four banks; an arpeggiator and a four-track
+Euclidean drum sequencer run on its clock. Everything goes out over USB and Bluetooth, MIDI from the TRS jack
+is passed along, and the FM-1 plays it all on its own General MIDI sounds too, so it works with nothing connected.
+
+![The Play page](docs/img/screen-play.png) ![The Keys page](docs/img/screen-keys.png) ![The Sequencer page](docs/img/screen-seq.png)
+
+- **Try it in your browser** (no FM-1 needed): <https://charlesvestal.github.io/fm1-ctl/emu/>
+- **Install it** (Chrome or Edge, with the FM-1 plugged in): <https://charlesvestal.github.io/fm1-ctl/install/>
+- **Read the manual**: <https://charlesvestal.github.io/fm1-ctl/manual/> (source: [docs/MANUAL.md](docs/MANUAL.md))
+- **Download the firmware file**: [releases](https://github.com/charlesvestal/fm1-ctl/releases): `ctl-X.Y.fwsc` has
+  USB, TRS and Bluetooth MIDI, `ctl-usb-X.Y.fwsc` the same without Bluetooth
+
+Installing it is at your own risk, though it's hard to get stuck: the web installer can put
+M-VAVE's own firmware back, and an FM-1 that fails to start twice comes up in a safe mode the
+installer can reach.
+
+## In short
+
+| | |
+|---|---|
+| Keys | Notes; with a scale, its notes on the white keys and its chords on the black keys |
+| KNOB 1–4 | The page's four values; on Play, four controllers in four banks |
+| HOME · SEL · ARP · SEQ · EDIT · GLO | The pages: Play, Keys, Arp, Sequencer, Sound, Setup |
+| SELECT | The page's own pages: the banks on Play, the tracks on the Sequencer |
+| ALGORITHM · PRESETS · MASTER | MIDI channel · program change (the sound follows) · volume |
+| FX | The next bank; held, KNOB 1–4 set its controller numbers |
+| ENV · LFO | Sustain (tap twice to lock) · mod wheel |
+| PLAY · REC · SAVE | Start / stop · panic · save |
+| OCT− / OCT+ | An octave down or up |
+
+The [manual](https://charlesvestal.github.io/fm1-ctl/manual/) has the rest.
+
+### Screen reader
+
+CTL-1 tells the [FM-1 Screen Reader](https://charlesvestal.github.io/fm1-reader/) what its screen shows,
+over USB: the page and its knobs, a knob's value as it turns (a controller with its name, "CC 74 cutoff
+64"), the channel and the program, the Sequencer's steps and mutes, the Touch settings, play and stop,
+and what each button did (the notes you play are not read out). Open the
+page in Chrome with the FM-1 plugged in; it speaks with its own voice, or hands the text to your
+computer's screen reader. The reader's messages stay between it and CTL-1: they are never passed on to
+Bluetooth.
+
+=== remote controller mode
+and a start (with song position 0) when the looper starts playing or recording (PLAY, or the first note of a REC
+take), a stop when it stops (PLAY again); over USB (to a computer, or USB HOST's device) and Bluetooth, with the
+notes. The arp alone sends no start or stop. While a clock comes in, the FM-1 follows it and sends none, and a start
+or stop that came in is not sent back. Nothing in MIDI REMOTE or while a host has the FM-1.
+**MIDI REMOTE**: GLO + FX turns the whole panel into a plain MIDI controller (GLO + FX again leaves; not kept across a
+power cycle); the DX7 is silent and every control sends MIDI on the channels of the settings page (HOME held):
+
+| Control | Message (CC CH: the settings' channel for buttons, encoders and MASTER; KEY CH: the keys') |
+|---|---|
+| Keys (27) | notes on KEY CH, F3..G5 shifted by the octave as it was when the mode came on, with velocity; note off velocity 64 |
+| FX SEL ENV LFO EDIT | CC 20, 21, 22, 23, 24 on CC CH: 127 pressed, 0 let go |
+GPL-3.0
+5:from html.parser import HTMLParser
+14:class Page(HTMLParser):
+70:            path /= "index.html"
+84:        html = site / directory / "index.html"
+86:        require(markdown.is_file() and html.is_file(), f"missing HTML/Markdown pair for {relative}")
+89:        page = Page(html.read_text())
+90:        html_url = urljoin(base, html.relative_to(site).as_posix())
+93:            require(local_file(urljoin(html_url, url)) == markdown.resolve(),
+```
+</details></tool-use>
+
+_**Agent (claude-fable-5-2 2026-11-16 19:21:03Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Add the SLOOP editor file and an embed page to the site, then build and check
+
+```bash
+mkdir -p docs/assets/sloop && cp downloads/sloop-editor-2.8.5.html docs/assets/sloop/ && shasum -a 256 docs/assets/sloop/sloop-editor-2.8.5.html | cut -c1-16 && grep -o -i -E "GPL[^<\"]{0,40}|mock=1|requestMIDIAccess\([^)]*\)" docs/assets/sloop/sloop-editor-2.8.5.html | sort | uniq -c | head -8 && python3 - <<'EOF'
+import pathlib
+def sub(path, pairs):
+    p=pathlib.Path(path); s=p.read_text()
+    for a,b in pairs:
+        assert a in s, (path,a[:60]); s=s.replace(a,b,1)
+    p.write_text(s)
+pathlib.Path("docs/firmware/sloop/editor.md").write_text('''# SLOOP Editor（內嵌 2.8.5）
+
+這個站自帶一份 **SLOOP Web Editor 2.8.5**，版本和我機器上的 SLOOP 相同。FM-1 用 USB 接上，用 **Chrome 或 Edge** 開，按 **Connect** 並允許 MIDI。
+
+[全螢幕開啟 Editor](../../assets/sloop/sloop-editor-2.8.5.html){ .md-button .md-button--primary }
+
+<iframe src="../../assets/sloop/sloop-editor-2.8.5.html" title="SLOOP Web Editor 2.8.5" allow="midi" loading="lazy" style="width:100%;height:78vh;border:1px solid var(--md-default-fg-color--lightest);border-radius:6px;"></iframe>
+
+內嵌的畫面比較窄，實際操作建議用上面的按鈕全螢幕開。各頁的用途見 [Web Editor](web-editor.md)，接手機的用法見[搭配手機與平板](../../hardware/mobile.md)。
+
+## 為什麼自己放一份
+
+- **版本固定。** 上游的[線上 editor](https://isod89.github.io/sloop-fm1/webapp/editor/) 會跟著 SLOOP 更新。這份固定在 2.8.5，和機器上的韌體一致。SLOOP 升級後要一起換。
+- **手機上方便。** 它是 https 的網頁，Android 的 Chrome 可以直接用 Web MIDI。下載到手機本機的 HTML 檔不行。
+- 檔案和 `downloads/sloop-editor-2.8.5.html` 相同，就是 SLOOP 2.8.5 release 附的那個（SHA-256 `25fe6043…dabb76f03`，已對過 release digest）。
+
+## 要知道的事
+
+- **不能用 Safari / iOS 的一般瀏覽器**，它們沒有 Web MIDI。
+- **同時只能有一個東西用 MIDI。** 關掉 DAW、M-Flasher、其他 editor 分頁，否則 Connect 找不到機器。Agent Deck 的 daemon 也要停掉。
+- **sound library 存在瀏覽器裡，而且每個網址各一份。** 這裡存的音色不會出現在上游的線上 editor 或本機離線檔裡，反之亦然。要搬移用 Export / Import 或 backup 檔。
+- 清除瀏覽器資料會清掉那份 library。重要的東西存成檔案。
+- 我還沒有實際用這一頁連過機器，只確認檔案能載入。`[調研]` 等級，用過再更新。
+
+## 授權
+
+SLOOP 與它的 editor 由 isod89 以 **GPL-3.0** 釋出，原始碼在 [isod89/sloop-fm1](https://github.com/isod89/sloop-fm1)（v2.8.5）。這裡是未修改的原檔，僅為了自己使用方便而重新散布。
+''')
+sub("zensical.toml",[('      { "Web Editor" = "firmware/sloop/web-editor.md" },','      { "Web Editor" = "firmware/sloop/web-editor.md" },\n      { "Editor（內嵌）" = "firmware/sloop/editor.md" },')])
+sub("docs/firmware/sloop/web-editor.md",[("# SLOOP Web Editor\n","# SLOOP Web Editor\n\n這個站內嵌了一份和我的韌體同版本的 editor：[SLOOP Editor（內嵌 2.8.5）](editor.md)。\n")])
+EOF
+just docs-check 2>&1 | tail -2; ls -la site/assets/sloop/ 2>/dev/null; grep -c "<iframe" site/firmware/sloop/editor/index.html
+```
+
+```text
+25fe6043084b6d6b
+   1 GPL-3.0-only
+   1 GPL-3.0.
+   1 GpLLzYhMDhEXW8CwBEYIihNXXqRFh8BshQbXFCOZ31C
+   1 gpLYnMAbAAAuwEBKwAGLwVUdjAoEBIAIhlVAAAAAH8B
+   2 mock=1
+   1 requestMIDIAccess({ sysex: true })
+uv run --locked --all-groups python scripts/check-docs-site.py
+{"status": "ok", "pages": 32, "llm_pages": 32, "deployed": false}
+.rw-r--r--@ 966k zhouhanru 17 Nov 03:21 sloop-editor-2.8.5.html
+1
+```
+</details></tool-use>

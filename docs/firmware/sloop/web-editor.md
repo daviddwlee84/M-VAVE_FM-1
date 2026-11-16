@@ -1,5 +1,7 @@
 # SLOOP Web Editor
 
+這個站內嵌了一份和我的韌體同版本的 editor：[SLOOP Editor（內嵌 2.8.5）](editor.md)。
+
 [Web Editor](https://isod89.github.io/sloop-fm1/webapp/editor/) 在 **Chrome 或 Edge** 開啟，FM-1 接上 USB 後按 **Connect**。它會即時跟著機器：轉機器上的旋鈕，editor 也跟著動。
 
 ## 頁面
