@@ -38,7 +38,20 @@ downloads/
 |---|---|---|---|
 | 2026-11-17 | 原廠 015 → SLOOP 2.8.5 | M-Flasher GUI 安裝 `.fwsc` | 成功，存檔正常 |
 | 2026-11-17 | SLOOP 2.8.5 → Agent Deck 0.7 | `fm1-download-mode` → `fm1-backup` → `fm1-flash` → `fm1-restart`，全程不需要按機器上的鍵 | 成功 |
-| 2026-11-17 | Agent Deck 0.7 → SLOOP 2.8.5 | 同上，只裝韌體、不還原備份 | 寫入成功、能開機。曲子是否還在**待確認** |
+| 2026-11-17 | Agent Deck 0.7 → SLOOP 2.8.5 | 同上，只裝韌體、不還原備份 | 寫入成功、能開機，**SLOOP 的曲子都還在** |
+
+### SLOOP ↔ Agent Deck 互切不會丟曲子（在我的機器上）
+
+比對刷 Agent Deck 前後的兩份完整映像，只有這些 sector 不同：
+
+| 區域 | 位址 | 數量 | 內容 |
+|---|---|---|---|
+| 韌體區 | `0x04000`–`0x8FFFF` | 140 | 韌體本身 |
+| 原本空著的區域 | `0xFC000` | 1 | Agent Deck 自己的設定 |
+
+M-Flasher 的 flash map 把 `0x93000` 以後標為 SETTINGS、PAIRINGS、SOUNDS，SLOOP 的 project、preset、sample 都在那裡，Agent Deck 一個 byte 都沒碰。所以刷回 SLOOP 只需要重裝 `.fwsc`，不必還原備份。
+
+這個結論只對這兩個韌體、這兩個版本成立。別的韌體可能把資料寫在和 SLOOP 重疊的位置，切換前還是要備份；想確認的話，用同樣的方法比對前後兩份備份。`[實機]`
 
 SLOOP 與 Agent Deck 執行中都能由 M-Flasher 透過 USB MIDI 切進 download mode（兩者在 `fm1-find` 都顯示為 `Felucca … download-mode switches it`）。`[實機]`
 
