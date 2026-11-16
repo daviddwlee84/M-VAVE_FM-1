@@ -76,6 +76,7 @@ Android 的用法：
 
 - **接線**：USB-C iPad 用 USB-C 資料線直接接。Lightning 的機型要 Lightning to USB camera adapter。
 - **CTL-1 的聲音路由** `[實機]`：接上 USB 後 iPad 的聲音輸出會自動改到 FM-1，而且 CTL-1 自己的 GM 音色會疊上去。關掉內建音色、或改用 Bluetooth 避開 USB audio 的做法見 [CTL-1](../firmware/ctl-1/index.md#ipad-audio)。
+- **ChoralRoot 的聲音路由** `[實機]`（Mac 上確認）：只有輸入（`ChoralRoot In`，6 channel），沒有輸出，所以 iPad 的聲音不可能從 FM-1 出來。見 [ChoralRoot](../firmware/choralroot/index.md#midi-out)。
 - **SLOOP 的聲音路由**：SLOOP 同時是 USB audio **輸入**裝置（FM-1 的聲音進 iPad）。iPad 接上後可能把它選成錄音來源，這對 AUM、Koala 取樣是好事；但也要確認 iPad 的**輸出**沒有被改掉。這點我沒有實機確認。RemoteFM1 的文件則明說 FM-1 插上 USB 後會自動成為手機的聲音輸出。
 - **雙向**：AUM 或 StreamByter 可以把 MIDI 送回 FM-1。SLOOP 會收 note、CC、clock（channel 對應見[接口與連線](io.md)），所以可以讓 iPad 當 clock master，或用 iPad 上的 sequencer 彈 SLOOP 的音色。
 - **StreamByter** 這類 MIDI 處理器正好補 SLOOP 的不足：把收到的 note 轉 channel、過濾、remap 再送給音源。

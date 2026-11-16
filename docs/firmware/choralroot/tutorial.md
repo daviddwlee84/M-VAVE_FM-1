@@ -2,6 +2,20 @@
 
 ChoralRoot 仿的是 Telepathic Instruments 的 Orchid。它的操作邏輯和一般鍵盤不同，這頁照「先懂觀念、再一步步加東西」的順序走一遍。內容整理自[上游手冊](https://github.com/Quixotic7/ChoralRootFM1/blob/main/docs/MANUAL.md)（0.41）`[上游]`；我的機器已刷入 ChoralRoot，但這些步驟我還沒逐一在機器上確認。
 
+!!! note "螢幕上說的鍵名和面板印的不一樣"
+    ChoralRoot 的螢幕用它自己的鍵名。最常遇到的是 **`Hold OPT to change engine`：OPT 就是面板上印著 `GLO` 的那顆鍵。**
+
+    | 螢幕 / 手冊說 | 面板上印的 |
+    |---|---|
+    | **OPT** | **`GLO`** |
+    | KEY | `SEL` |
+    | BASS | `ENV` |
+    | LOCK | `LFO` |
+    | PERF | `ARP` |
+    | LOOP | `PLAY` |
+
+    `FX`、`EDIT`、`HOME`、`SAVE`、`SEQ`、`REC` 名稱不變。完整對照在本頁最下面的「面板對照」。
+
 ## 觀念：一隻手決定「什麼和弦」，另一隻手決定「哪個音」
 
 一般鍵盤上，彈 Dm7 要同時按 D、F、A、C 四個鍵，換和弦就要換一組指型。Orchid 式的樂器把這件事拆開：

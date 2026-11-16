@@ -22606,3 +22606,289 @@ dark ambient above all.
 **It is not a groovebox.** There is no tempo, no step sequencer, no pattern, no drum kit. Instead there
 ```
 </details></tool-use>
+
+_**Agent (claude-fable-5-2 2026-11-16 20:33:20Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Document ChoralRoot's engines and MIDI-out use, add a looper firmware comparison, commit and push
+
+```bash
+python3 - <<'EOF'
+import pathlib
+def sub(path, pairs):
+    p=pathlib.Path(path); s=p.read_text()
+    for a,b in pairs:
+        assert a in s, (path,a[:70]); s=s.replace(a,b,1)
+    p.write_text(s)
+sub("docs/firmware/choralroot/index.md",[("## 刷之前要知道的","""## 音色：七個引擎，不只一種 { #sounds }
+
+剛裝好時會覺得音色單一，是因為 **PRESETS 只在目前這個引擎裡轉**。換引擎要**按住 `GLO`（OPT）再轉 PRESETS**，轉到想要的引擎後放開。`[上游]`
+
+| 引擎 | 是什麼 | 內建音色數 |
+|---|---|---|
+| **FM6** | 六運算子 FM，能載入 DX7 音色。開機預設是這個（`TINE EP`） | 25 |
+| **FM TONE** | 四運算子 FM，Digitone 風格 | 16 |
+| **VA** | virtual analog：四個振盪器、可變形濾波器、四組 envelope 與 LFO | 25 |
+| **CZ-1** | Casio CZ-1 的 phase distortion，含原廠 64 個音色 | 64 |
+| **P5** | Prophet-5 模型 | 115 |
+| **WHEEL** | 九支 drawbar 的 tonewheel 風琴 | 5 |
+| **GRAIN** | granular 合成 | 8 |
+
+合計 258 個內建音色。bass 是另一個獨立聲部：**ALGORITHM** 換 bass 音色，**按住 `GLO` 轉 ALGORITHM** 換 bass 的引擎。每個引擎還能存自己做的音色，`EDIT` 進編輯器。
+
+## 當成 MIDI 和弦控制器：送 MIDI 出去、自己不發聲 { #midi-out }
+
+可以。ChoralRoot 彈出的和弦會從 USB MIDI（開了的話還有 Bluetooth）送出去，所以能拿它的和弦邏輯去驅動 iPad 或電腦上的任何音源。`[上游]`
+
+| 送出的東西 | Options 裡的設定 | 預設 channel | 內容 |
+|---|---|---|---|
+| Perform | MIDI Perform | ch 1 | 和弦聲部實際彈的音：整個和弦，或 performance mode 拆出來的琶音 |
+| Bass | MIDI Bass | ch 2 | bass 線 |
+| Raw Chord | MIDI Raw Chord | Off | 不經 performance mode 的原始和弦塊。Orchid 用 ch 3 |
+
+另外預設會送 MIDI clock，loop 開始與停止時送 start / stop。
+
+**讓它自己不發聲**：手冊裡沒有像 CTL-1 那樣的 Sound On/Off 或 local off 選項。最直接的做法是把 **MASTER 旋鈕轉到底**，MIDI 照常送出。我還沒在機器上確認轉到底是否完全無聲。`[調研]`
+
+接 iPad 時和 CTL-1 的差別：
+
+| | CTL-1 | ChoralRoot |
+|---|---|---|
+| 送的 MIDI | 你按的音、旋鈕的 CC | **組好的和弦**、bass、clock |
+| 關掉自己的聲音 | Sound 頁有開關 | 沒有開關，用 MASTER |
+| iPad 的聲音會不會被導到 FM-1 | 會（它是 USB audio 輸出） | 手冊說電腦**不能**透過 FM-1 播放聲音，所以應該不會。未實測 |
+| Bluetooth MIDI | 開機就開 | 預設關，Options → Bluetooth 設 On，下次開機生效 |
+| 旋鈕送 CC | 四個 bank | Options → MIDI CC 設成 Out 或 In + Out 後，轉音色參數時會送 |
+
+在接收端：把一個音源放在 ch 1 收和弦、另一個放 ch 2 收 bass（AUM 可以分別路由）。很多 DAW 把 MIDI note 60 叫 C3，ChoralRoot 叫 C4，所以看起來會差一個八度，音其實一樣。
+
+也可以反過來：Options → **MIDI Roots** 指定一個 channel，外接鍵盤上的每個音都當成根音，chord block 仍在 FM-1 上按。這樣就有一整排鍵盤可以彈和弦。
+
+## 刷之前要知道的""")])
+sub("docs/firmware/choralroot/tutorial.md",[("## 換音色\n\n- **PRESETS**：同一個引擎的下一個音色。\n- **按住 OPT（`GLO`）轉 PRESETS**：換引擎。有 FM6、FM TONE、VA、CZ-1、P5、WHEEL、GRAIN。",
+ "## 換音色\n\n- **PRESETS**：同一個引擎的下一個音色。只轉這個會覺得音色很單一，因為它不會跨引擎。\n- **按住 OPT（`GLO`）轉 PRESETS**：換引擎。有 FM6、FM TONE、VA、CZ-1、P5、WHEEL、GRAIN，合計 258 個內建音色，見[七個引擎](index.md#sounds)。\n- 想用機器上沒有的音色：把它當 MIDI 和弦控制器，見[送 MIDI 出去](index.md#midi-out)。")])
+sub("docs/firmware/index.md",[("## 控制器與工具類","""## 想要 looper 的話
+
+先講限制：**FM-1 沒有音訊輸入**，所以做不到 Quantiloop 那種「錄進來的聲音疊錄」的 audio looper。FM-1 上的 looper 錄的都是它自己彈的音符或和弦，再重新發聲。要 loop 外部聲音（吉他、人聲），還是得用 iPad 上的 Quantiloop / Loopy Pro，FM-1 當音源或控制器。
+
+| 韌體 | looper 的性質 | 新晶片（Hub 標示） | 備註 |
+|---|---|---|---|
+| [SLOOP](sloop/index.md) | 即興疊錄的四軌 groovebox：free take 模式下不用節拍器，loop 的長度決定 tempo，可一直 overdub | 認得 | 最接近「現場 loop 一首歌」。我用過 |
+| [ChoralRoot](choralroot/index.md) | 錄和弦的 looper：十個 slot，Overwrite / Overdub / Replace / Step 等錄音模式，播放中可換音色與 voicing | 認得 | 我現在裝的 |
+| [Tonitor](https://github.com/nzimas/tonitor) | 六軌、**沒有 tempo 與格線**的自由長度 loop，每軌最多十層 overdub，另有 granulator。走 ambient / 實驗路線 | 認得 | Hub 上約 1,300 次安裝。作者強調它不是 groovebox。我沒試過 |
+| [RemoteFM1](remotefm1/index.md) | 不接主機時內建一個 looper | 認得 | 附帶功能 |
+| [fm1-chord](https://github.com/math0ne/fm1-chord) | 和弦機加 looper | **只認舊晶片** | 不要裝在我的機器上 |
+| [PT/FM](https://github.com/hitosu/ptfm) | tracker 式的口袋工作站，含 loop station | **只認舊晶片** | 同上 |
+
+清單來自 Firmware Hub 目錄的描述（2026-11-17），除了 SLOOP 與 ChoralRoot 以外我都沒有實際用過。
+
+用法上的建議：要「打一段鼓、疊 bass、再疊和弦」這種 looper 手感，SLOOP 最合適；要自由、沒有節拍的聲音疊層，看 Tonitor；要 loop 真的聲音，用 iPad。
+
+## 控制器與工具類""")])
+EOF
+just docs-check 2>&1 | tail -1; git add -A && git commit -q -m "ChoralRoot: engines and using it as a MIDI chord controller; looper firmwares
+
+Co-Authored-By: Claude Fable 5.2 <noreply@anthropic.com>" && git push -q origin main && echo pushed
+```
+
+```text
+{"status": "ok", "pages": 40, "llm_pages": 40, "deployed": false}
+pushed
+```
+</details></tool-use>
+
+_**Agent (claude-fable-5-2 2026-11-16 20:33:38Z)**_
+
+可以，ChoralRoot 會把組好的和弦當成 MIDI 送出去，而且它其實有七種引擎共 258 個音色，只是預設的旋鈕不會跨引擎。以下都來自上游手冊，我沒有在機器上試過。
+
+## 換音色
+
+你覺得單一，是因為 **PRESETS 只在目前這個引擎裡轉**。換引擎要**按住 `GLO` 再轉 PRESETS**，轉到想要的放開。
+
+| 引擎 | 是什麼 | 內建音色數 |
+|---|---|---|
+| FM6 | 六運算子 FM，可載入 DX7 音色（開機預設） | 25 |
+| FM TONE | 四運算子 FM | 16 |
+| VA | virtual analog | 25 |
+| CZ-1 | Casio CZ-1，含原廠音色 | 64 |
+| P5 | Prophet-5 模型 | 115 |
+| WHEEL | 風琴 | 5 |
+| GRAIN | granular | 8 |
+
+bass 是另一個獨立聲部：ALGORITHM 換 bass 音色，按住 `GLO` 轉 ALGORITHM 換 bass 的引擎。
+
+## 當 MIDI 和弦控制器
+
+它送三路 MIDI，在 Options 的 MIDI 群組裡設定：
+
+- **Perform**（預設 ch 1）：和弦聲部實際彈的音，包含琶音模式拆出來的音。
+- **Bass**（預設 ch 2）：bass 線。
+- **Raw Chord**（預設關）：不經琶音模式的原始和弦塊。
+
+所以在 iPad 上可以把一個音源放 ch 1 收和弦、另一個放 ch 2 收 bass。
+
+**和 CTL-1 不同的地方**：
+
+- **沒有「關掉自己聲音」的開關。** 手冊裡找不到 local off 之類的選項，最直接的做法是把 MASTER 旋鈕轉到底，MIDI 照常送出。轉到底是否完全無聲我沒確認。
+- **iPad 的聲音應該不會被搶走。** 手冊寫電腦不能透過 FM-1 播放聲音，它只是錄音用的輸入裝置。所以 CTL-1 那個問題在這裡應該不會發生，但我沒實測。
+- **Bluetooth 預設是關的。** Options → Bluetooth 設 On，下次開機才生效。
+
+還有一個反過來的玩法：Options 裡的 **MIDI Roots** 指定一個 channel 後，外接鍵盤上的每個音都當成根音，和弦性質仍在 FM-1 上按。這樣就有一整排鍵盤可以彈和弦。
+
+## Looper 韌體
+
+先講限制：**FM-1 沒有音訊輸入**，所以做不到 Quantiloop 那種把外部聲音錄進來疊的 looper。FM-1 上的 looper 錄的都是它自己彈的音符，再重新發聲。要 loop 吉他或人聲，還是得用 iPad 上的 Quantiloop，FM-1 當音源。
+
+在這個前提下：
+
+| 韌體 | 性質 | 支援你的晶片 |
+|---|---|---|
+| **SLOOP** | 即興疊錄的四軌 groovebox。不用節拍器，loop 的長度決定速度，可一直疊 | 是 |
+| **ChoralRoot** | 錄和弦的 looper，十個 slot，播放中可換音色 | 是（你現在裝的） |
+| **Tonitor** | 六軌、沒有節拍與格線的自由長度 loop，每軌最多十層，走 ambient 與實驗路線 | 是（Hub 標示） |
+| fm1-chord、PT/FM | 也有 looper | **否**，只認舊晶片，不要裝 |
+
+要「打一段鼓、疊 bass、再疊和弦」的手感，你用過的 SLOOP 就是最接近的。Tonitor 是另一個方向，Hub 上約 1,300 次安裝，我沒試過。
+
+## 更新的文件
+
+- **ChoralRoot** 頁：新增「音色：七個引擎」與「當成 MIDI 和弦控制器」兩節。
+- **ChoralRoot 教學**：換音色那段補上跨引擎的做法。
+- **韌體地圖**：新增「想要 looper 的話」。
+
+---
+
+_**User (2026-11-16 20:37:19Z)**_
+
+它會寫Hold OPT to change engine 但我不知道甚麼是OPT鍵（有寫嗎？）
+
+FM-1 我看好像我USB接iPad的時候iPad的聲音會跑到它上面輸出？（但可能純bypass 機器其實讀不到？）
+
+另外幫我整理一下線上試玩的網站們（剛剛有貼過一些 但不好找感覺）
+
+---
+
+_**Agent (claude-fable-5-2 2026-11-16 20:37:28Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Read ChoralRoot's USB audio section for how it appears to a phone or tablet
+
+`sed -n '2422,2456p' /tmp/choral-manual.md | cut -c1-700; grep -n -i -E "phone|ipad|iphone|android|output device|speaker.*computer|plays? (its|the computer)" /tmp/choral-manual.md | cut -c1-300 | head -12`
+
+```text
+### USB audio recording
+
+**ChoralRoot In** is a class-compliant audio input: no driver is needed. It has six channels, 16 bit, at 44.1 kHz;
+with Options > USB Rate set to `44.1 + 48 kHz` the computer can also run it at 48 kHz.
+
+| Channels | Signal |
+| --- | --- |
+| 1-2 | Master: what you hear, without the metronome click |
+| 3-4 | the chord sound alone, before the reverb, chorus and delay, at half level |
+| 5-6 | the bass sound alone, the same way |
+
+The three pairs line up to the sample. With Options > Output on Clean all three are 0.7 ms later than with Classic
+(Clean's limiter looks ahead), together. Set Output before a take, not during one: the master pair fades over, but
+the chord and bass pairs jump by those 0.7 ms at the switch.
+
+- **44.1 kHz** is the FM-1's own rate: the recording is exactly what the FM-1 made. As the FM-1 comes, it is the
+  only rate ChoralRoot In offers (Options > USB Rate: `44.1 kHz`), exactly as in 0.18.
+- **48 kHz** (from 0.19) is for phones, tablets, apps and projects that only take 48 kHz. Set **Options > USB Rate**
+  to `44.1 + 48 kHz`: the FM-1 reconnects (`USB RECONNECTING`, about a second), and the computer, phone or app
+  can then choose either rate. At 48 kHz the FM-1 converts on the way out. The top of the treble is a little softer
+  (1 dB down at 16 kHz), and the conversion takes about 6 % of the processor while a recording runs: in the very
+  heaviest sounds (CZ-1 chords with both effects) a voice may drop sooner. That is why it is off until you ask for
+  it: a Mac chooses 48 kHz by itself as soon as it is offered.
+- With USB Rate at `44.1 + 48 kHz`, on a Mac the rate is ChoralRoot In's Format in Audio MIDI Setup; on Windows,
+  Sound settings > ChoralRoot In > Properties > Advanced. A DAW usually sets it from the project's rate. Choose
+  44 100 there when you do not need 48 kHz.
+- Options > USB Level = Fixed records at full level while MASTER only turns the speaker and headphones down.
+- Options > USB Record = Off removes the audio input. When you change it, or USB Rate, the FM-1 leaves USB for
+  about a second (`USB RECONNECTING`); the MIDI port goes with it and comes back. It waits for a backup, a restore
+  or an update that is under way, so do not be surprised if the message comes a moment later. Do not change either
+  during a take: the computer sees the FM-1 unplugged and plugged in again.
+- The computer cannot play audio through the FM-1.
+
+More: [USB-AUDIO.md](USB-AUDIO.md).
+
+44:the keybed says what kind of chord you want, the rest of the keybed plays its root, and the instrument builds the
+566:D, F, G# and B play the diminished seventh on them. A key outside the scale plays its **7b9 chord**: the key in the
+643:A key inside the scale always plays itself. The snapped key behaves exactly as if you had pressed the key it was
+843:  shows `follows chord`). With the chords on Off the bass plays its plain note. The bass's own settings are kept for
+870:moved by the same sweep a quarter turn apart, so on headphones it spreads out instead of sitting in the middle. Its
+2000:| **Output** | Classic, Clean | Clean | the last stage before the headphones, the speaker and the USB recording. Classic: as 0.18 and before. Clean: 0.19's, with less distortion on chords and at low MASTER settings; a single note is a little quieter, a full chord with the bass a little louder, 
+2374:The FM-1 (not the SMK-37) can be a Bluetooth MIDI device for a Mac, an iPad, an iPhone or anything else that speaks
+2381:   iPad or iPhone in the music app's Bluetooth MIDI page. The first time, the two pair (no code to type); afterwards
+2439:- **48 kHz** (from 0.19) is for phones, tablets, apps and projects that only take 48 kHz. Set **Options > USB Rate**
+2440:  to `44.1 + 48 kHz`: the FM-1 reconnects (`USB RECONNECTING`, about a second), and the computer, phone or app
+2448:- Options > USB Level = Fixed records at full level while MASTER only turns the speaker and headphones down.
+2509:two minutes. Safari and Firefox cannot install (the page says so); Chrome on Android has what it takes but is not
+```
+</details></tool-use>
+
+_**Agent (claude-fable-5-2 2026-11-16 20:37:38Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Check whether the connected FM-1 presents audio input channels, output channels, or both to the Mac
+
+`system_profiler SPAudioDataType 2>/dev/null | grep -i -B2 -A12 -E "choral|FM-1|felucca|CTL" | head -40; ioreg -p IOUSB -l -w0 2>/dev/null | grep '"USB Product Name"' | grep -i -E "choral|FM-1|CTL|felucca"`
+
+```text
+    Devices:
+
+        ChoralRoot In:
+
+          Default Input Device: Yes
+          Input Channels: 6
+          Manufacturer: ChoralRoot
+          Current SampleRate: 44100
+          Transport: USB
+          Input Source: Default
+
+        Microsoft® LifeCam Cinema(TM):
+
+          Input Channels: 1
+          Manufacturer: Microsoft
+          Current SampleRate: 48000
+          Transport: USB
+          Input Source: Default
+
+  |         "USB Product Name" = "ChoralRoot FM-1"
+```
+</details></tool-use>
+
+_**Agent (claude-fable-5-2 2026-11-16 20:38:20Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Check that each online emulator and player URL responds
+
+`for u in "https://joakimeriksson.github.io/fm1-emu/" "https://joakimeriksson.github.io/fm1-emu/?fw=sloop&chip=uc25hq80" "https://joakimeriksson.github.io/fm1-emu/smk37/" "https://joakimeriksson.github.io/fm1-emu/fm1-sid/" "https://thefirmwarehub.com/" "https://play.thefirmwarehub.com/" "https://thefirmwarehub.com/platform/" "https://remotefm1.com/" "https://quixotic7.github.io/ChoralRootFM1/emu/" "https://quixotic7.github.io/ChoralRootFM1/webapp/installer/manager.html?sim=1" "https://charlesvestal.github.io/fm1-ctl/emu/" "https://charlesvestal.github.io/fm1-base/emu/" "https://charlesvestal.github.io/fm1-x0x/emu/" "https://kevinelliott.github.io/fm-1-agent-deck/play/?fw=agtdeck&script=demo.txt" "https://kevinelliott.github.io/fm-1-agent-deck/cheatsheet.html" "https://isod89.github.io/sloop-fm1/webapp/editor/" "https://isod89.github.io/sloop-fm1/webapp/editor/?mock=1" "https://open.m-vave.com/fm1-workbench" "https://hugelton.github.io/Felucca/" "https://keremimo.github.io/melodee/" "https://isod89.github.io/clipper-fm1/webapp/installer/"; do printf "%s %s\n" "$(curl -s -o /dev/null -m 15 -L -A 'Mozilla/5.0' -w '%{http_code}' "$u")" "$u"; done`
+
+```text
+200 https://joakimeriksson.github.io/fm1-emu/
+200 https://joakimeriksson.github.io/fm1-emu/?fw=sloop&chip=uc25hq80
+200 https://joakimeriksson.github.io/fm1-emu/smk37/
+200 https://joakimeriksson.github.io/fm1-emu/fm1-sid/
+200 https://thefirmwarehub.com/
+200 https://play.thefirmwarehub.com/
+200 https://thefirmwarehub.com/platform/
+200 https://remotefm1.com/
+200 https://quixotic7.github.io/ChoralRootFM1/emu/
+200 https://quixotic7.github.io/ChoralRootFM1/webapp/installer/manager.html?sim=1
+200 https://charlesvestal.github.io/fm1-ctl/emu/
+200 https://charlesvestal.github.io/fm1-base/emu/
+200 https://charlesvestal.github.io/fm1-x0x/emu/
+200 https://kevinelliott.github.io/fm-1-agent-deck/play/?fw=agtdeck&script=demo.txt
+200 https://kevinelliott.github.io/fm-1-agent-deck/cheatsheet.html
+200 https://isod89.github.io/sloop-fm1/webapp/editor/
+200 https://isod89.github.io/sloop-fm1/webapp/editor/?mock=1
+200 https://open.m-vave.com/fm1-workbench
+200 https://hugelton.github.io/Felucca/
+200 https://keremimo.github.io/melodee/
+200 https://isod89.github.io/clipper-fm1/webapp/installer/
+```
+</details></tool-use>

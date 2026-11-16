@@ -59,7 +59,7 @@
 
 ## 音色：七個引擎，不只一種 { #sounds }
 
-剛裝好時會覺得音色單一，是因為 **PRESETS 只在目前這個引擎裡轉**。換引擎要**按住 `GLO`（OPT）再轉 PRESETS**，轉到想要的引擎後放開。`[上游]`
+剛裝好時會覺得音色單一，是因為 **PRESETS 只在目前這個引擎裡轉**。螢幕下方那行 `Hold OPT to change engine` 的 **OPT 是面板上印著 `GLO` 的鍵**：按住 `GLO` 再轉 PRESETS，轉到想要的引擎後放開。`[上游]`
 
 | 引擎 | 是什麼 | 內建音色數 |
 |---|---|---|
@@ -93,9 +93,13 @@
 |---|---|---|
 | 送的 MIDI | 你按的音、旋鈕的 CC | **組好的和弦**、bass、clock |
 | 關掉自己的聲音 | Sound 頁有開關 | 沒有開關，用 MASTER |
-| iPad 的聲音會不會被導到 FM-1 | 會（它是 USB audio 輸出） | 手冊說電腦**不能**透過 FM-1 播放聲音，所以應該不會。未實測 |
+| iPad 的聲音會不會從 FM-1 出來 | 會（它是 USB audio 輸出） | **不會。** 它只有輸入：我在 Mac 上看到的裝置是 `ChoralRoot In`，6 個輸入 channel、0 個輸出 `[實機]` |
 | Bluetooth MIDI | 開機就開 | 預設關，Options → Bluetooth 設 On，下次開機生效 |
 | 旋鈕送 CC | 四個 bank | Options → MIDI CC 設成 Out 或 In + Out 後，轉音色參數時會送 |
+
+**iPad 把 FM-1 當成什麼**：ChoralRoot 對主機來說是一支「六軌麥克風」（1–2 是 master、3–4 是和弦聲部、5–6 是 bass），不是喇叭。所以 iPad 的聲音沒有路可以進到 FM-1，FM-1 也讀不到 iPad 播的東西。接上之後 iPad（和 Mac）可能會把它設成**預設的錄音輸入**，我的 Mac 就自動把它選成 Default Input Device `[實機]`。如果接上後 iPad 沒聲音，是 iPadOS 在切換音訊路由，不是聲音跑進了 FM-1；確切行為我沒在 iPad 上確認。
+
+如果你在 iPad 上真的聽到聲音從 FM-1 的喇叭出來，那是裝著 [CTL-1](../ctl-1/index.md#ipad-audio) 的時候：CTL-1 同時是輸出裝置。
 
 在接收端：把一個音源放在 ch 1 收和弦、另一個放 ch 2 收 bass（AUM 可以分別路由）。很多 DAW 把 MIDI note 60 叫 C3，ChoralRoot 叫 C4，所以看起來會差一個八度，音其實一樣。
 
