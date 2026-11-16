@@ -103,6 +103,18 @@ Felucca 系的韌體（Felucca、SLOOP、ChoralRoot…）把曲子、音色、�
 
 Transporter 的韌體拒絕寫 boot head，所以 boot head 壞掉時它只能把機器帶進 ROM boot，實際寫回 boot head 仍要靠 M-Flasher 或 Unbricker 的 `full-restore`。
 
+## Unbricker 怎麼看替代 bootloader
+
+Unbricker 的 README 沒有反對 m-bootloader，但它把「換掉 boot head」明確列為一種會出事的情況 `[上游]`：
+
+- 它舉的例子就是「用 M-Flasher 裝了一個替代 bootloader，結果開不起來」：韌體可以完全正確，機器仍然是黑的。
+- 它的 `restore` **從不寫 boot head**（`0x00000`–`0x03FFF`），所以救不了這種情況。要用 `full-restore`，它會把原廠的 boot head 連同韌體一起寫回去。
+- `full-restore` 預設只接受原廠 V15 或 V16 的 boot head（比對 sha256）。要寫回 m-bootloader 得加 `--other-head`，而且來源是你自己的備份。
+- 前提是機器還能以 `WL82 UBOOT1.00` 出現。**Transporter 這條硬體路線不能寫 boot head**，它的韌體會拒絕。
+- 如果寫 boot head 的途中被打斷，機器在重新執行同一個指令之前都開不了機。
+
+這和我暫緩 m-bootloader 的理由一致：boot head 是唯一一個「寫壞了就可能需要額外硬體」的區域，而我的新晶片在這方面的實測資料最少。
+
 ## 我的機器目前在哪
 
 沒有變過磚。每次切換都經 ROM boot mode、寫入前後都有備份、boot head 從沒動過（原廠）。最接近出事的一次是差點把 SMK-37 版的 ChoralRoot 當成 FM-1 版，見 [ChoralRoot](../firmware/choralroot/index.md)。`[實機]`

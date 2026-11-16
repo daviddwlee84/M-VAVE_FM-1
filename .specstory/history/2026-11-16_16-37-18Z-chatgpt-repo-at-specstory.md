@@ -21604,3 +21604,464 @@ fm1-20261117-041838.json
 2026-11-17-stock
 ```
 </details></tool-use>
+
+_**Agent (claude-fable-5-2 2026-11-16 20:19:56Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Record the ChoralRoot install and its consequences, commit and push
+
+```bash
+python3 - <<'EOF'
+import pathlib
+def sub(path, pairs):
+    p=pathlib.Path(path); s=p.read_text()
+    for a,b in pairs:
+        assert a in s, (path,a[:70]); s=s.replace(a,b,1)
+    p.write_text(s)
+sub("docs/device-log.md",[
+("| 目前韌體 | **CTL-1 1.0.3**（2026-11-17 03:41 刷入，套件識別 `FM-1_6010003`）。之前依序是原廠 015 → SLOOP 2.8.5 → Agent Deck 0.7 → SLOOP 2.8.5 |","| 目前韌體 | **ChoralRoot 0.41**（2026-11-17 約 04:18 刷入，套件識別 `FM-1_920`，USB 產品名 `ChoralRoot FM-1`）。之前依序是原廠 015 → SLOOP 2.8.5 → Agent Deck 0.7 → SLOOP 2.8.5 → CTL-1 1.0.3 |\n| SLOOP 的曲子 | **已不在機器上**（`0x97000` 被 ChoralRoot 的韌體蓋掉）。完整保存在 `2026-11-17-0341-pre-ctl-1.0.3` 備份裡；回 SLOOP 要在 M-Flasher GUI 還原那份備份 |"),
+("\n## 下載的檔案","| 2026-11-17 | 刷 ChoralRoot 之前的 CTL-1（仍含 SLOOP 的 project sector） | `backups/2026-11-17-0413-pre-choralroot-0.41/fm1-20261117-041350.bin` + `.json` | `8834d0188eb309c7229fb3ad9e89a76a349eca546accb666b8a741509a66eb10` | 尚未上傳 |\n\n## 下載的檔案"),
+("\n## Phase 1 驗收","| 2026-11-17 | 本人執行 `just fm1-switch downloads/choralroot-0.41.fwsc` | M-Flasher 的計畫：`Writes 152 sectors (608 KiB): 0x04000-0x8EFFF, 0x91000-0x91FFF, 0x93000-0x9EFFF`。寫入後機器重開，USB 產品名 `ChoralRoot FM-1`。M-Flasher 自動備份 `fm1-20261117-041838.bin` |\n| 2026-11-17 | ChoralRoot 在新晶片實機、且 flash 裡有 SLOOP 與 CTL-1 殘留資料的狀態下 | 開得起來、USB MIDI 正常。上游記載的「在 Sloop 資料上掉進 ROM boot」在這台、這個版本沒有發生 |\n\n## Phase 1 驗收"),
+])
+sub("docs/firmware/choralroot/index.md",[
+("**狀態（2026-11-17）：只模擬、不刷進實機，原因見「為什麼暫時不刷」。**","**狀態（2026-11-17）：已刷進實機（新晶片 `0xB36014`），開機正常。** 代價如預期：SLOOP 的曲子已不在機器上，要回 SLOOP 得還原備份，見「刷之前要知道的」。"),
+("## 為什麼暫時不刷","## 刷之前要知道的"),
+("**結論**：風險比我一開始以為的低，但確定的代價是 SLOOP 的曲子會被蓋掉。真的要刷的話：先確認 `pre-…` 備份在、照常 `just fm1-switch choralroot`，看 M-Flasher 列出的寫入範圍是否真的超過 `0x92FFF`；之後回 SLOOP 時由我在 GUI 還原備份，而不是只重裝韌體。",
+ "**實機結果（2026-11-17）** `[實機]`：我照常 `just fm1-switch` 刷入，機器正常開機，USB 產品名變成 `ChoralRoot FM-1`。當時 flash 裡同時有 SLOOP 的 autosave、CTL-1 的設定等殘留，上游記載的事故在這台、這個版本沒有發生。\n\n**回 SLOOP 的方式**：不能用 `just fm1-switch sloop`，那只會得到沒有曲子的 SLOOP。要在 M-Flasher 的 GUI 用 **RESTORE FULL FLASH** 還原 `backups/2026-11-17-0341-pre-ctl-1.0.3/`（SLOOP 加上最新的曲子）。"),
+])
+sub("docs/firmware/switching.md",[("| 2026-11-17 | SLOOP 2.8.5 → CTL-1 1.0.3 | `just fm1-switch ctl` | 成功。切回 SLOOP 還沒做 |","| 2026-11-17 | CTL-1 1.0.3 → ChoralRoot 0.41 | `just fm1-switch <檔案>` | 成功。寫入 152 個 sector 到 `0x9EFFF`，**蓋掉了 SLOOP 的 project sector** |\n| 2026-11-17 | SLOOP 2.8.5 → CTL-1 1.0.3 | `just fm1-switch ctl` | 成功 |")])
+sub("docs/hardware/flash-map.md",[("| → ChoralRoot（計畫） | `0x04000`–`0x9EFFF`，會蓋掉 `0x97000` 的 SLOOP project |","| → ChoralRoot | `0x04000`–`0x9EFFF`，蓋掉了 `0x97000` 的 SLOOP project（已執行，尚未用備份比對確認其他 sector） |")])
+sub("docs/index.md",[("| 5 | 輪流刷不同韌體 | 已試過 Agent Deck 0.7 與 CTL-1 1.0.3，","| 5 | 輪流刷不同韌體 | 已試過 Agent Deck 0.7、CTL-1 1.0.3、ChoralRoot 0.41，")])
+EOF
+just docs-check 2>&1 | tail -1; git add -A && git commit -q -m "Record ChoralRoot on hardware
+
+Co-Authored-By: Claude Fable 5.2 <noreply@anthropic.com>" && git push -q origin main && echo pushed
+```
+
+```text
+{"status": "ok", "pages": 39, "llm_pages": 39, "deployed": false}
+pushed
+```
+</details></tool-use>
+
+_**Agent (claude-fable-5-2 2026-11-16 20:20:12Z)**_
+
+Unbricker 的內容整理成兩頁新文件了。另外我看到你已經把 ChoralRoot 刷進去：機器現在的 USB 產品名是 `ChoralRoot FM-1`，開機正常。
+
+## ChoralRoot 已在實機上
+
+- 寫入範圍和預測一致：`0x04000`–`0x9EFFF`，152 個 sector。
+- 上游記載的「在 Sloop 資料上掉進黑畫面」沒有發生。當時 flash 裡還有 SLOOP 與 CTL-1 的殘留資料，它照樣開得起來。
+- **SLOOP 的曲子現在不在機器上了**，如預期被蓋掉。完整保存在 `backups/2026-11-17-0341-pre-ctl-1.0.3/`。
+- 回 SLOOP 時**不要用** `just fm1-switch sloop`，那只會得到空的 SLOOP。要在 M-Flasher 的 GUI 用 **RESTORE FULL FLASH** 還原那份備份。
+- 那份備份和 04:13 的刷前備份都還只在這台 Mac 上。建議上傳：`just fm1-backup-release 2026-11-17-0341-pre-ctl-1.0.3`。
+
+我沒確認的是機器本身的表現：按鍵、聲音、和弦功能要你實際彈才知道。
+
+## V15 和 V16 的差別
+
+你的理解正確，差別主要在韌體大小：
+
+| | V15 | V16 |
+|---|---|---|
+| 韌體佔用範圍 | `0x04000`–`0x92FFF` | 到 `0xA8FFF` |
+| M-VAVE 目前提供 | 已不提供 | 只提供這版 |
+| 多數社群工具與教學假設的基礎 | 是 | 不是 |
+
+V16 的韌體超出一般工具寫入的範圍，所以 Unbricker 的 `restore` 直接拒絕 V16，因為寫一半的韌體更糟。加上 V16 一執行就覆寫 preset 區，降回 V15 會出現亂碼與音高錯誤。
+
+你的機器出廠是 015，又有自己的完整備份，這兩個問題都碰不到。官方已不提供 V15，沒備份的人要去社群的 FM1Backups 找。
+
+## 新增的兩頁
+
+**變磚的原理與分級**：<https://daviddwlee84.github.io/M-VAVE_FM-1/getting-started/bricking/>
+
+把「磚」分成六級，重點是機器還進不進得了晶片內建的 ROM boot mode（任何更新都擦不掉它）：
+
+- 0 級：新晶片被鎖在只認舊晶片的韌體裡。機器其實是好的。
+- 1 級：前一個韌體留下的資料讓新韌體出問題。
+- 2 級：黑畫面，但電腦看得到 `WL82 UBOOT1.00`。一條 USB 線就救得回來。
+- 3 級：黑畫面，還沒退回 ROM boot。有幾招可以讓它掉進去。
+- 4、5 級：boot 區壞了，或寫入中途沒電。需要額外硬體。
+
+你今天的每次切換都只在 0 到 2 級的範圍內活動，boot 區從沒動過。
+
+**Flash 配置圖**：<https://daviddwlee84.github.io/M-VAVE_FM-1/hardware/flash-map/>
+
+誰把什麼放在 flash 的哪裡，合併了上游的說法和你這台各階段備份的實際比對。這頁解釋了為什麼 SLOOP 與 Agent Deck 來回曲子還在，而 ChoralRoot 會把它蓋掉。
+
+## 順手補的
+
+- 注意事項加了一條：**充飽電再刷**。Unbricker 的作者指出，最難救的情況就是寫入中途電池沒電，那種只有硬體救得回來。
+- 你第一次用 `just fm1-flash` 被拒絕是正常的：它不會自己切 download mode，`fm1-switch` 才會。
+
+---
+
+_**User (2026-11-16 20:22:18Z)**_
+
+Orchid好像有自己一套很獨特的workflow？ （也許可以有個教學？）
+
+```
+
+
+<pasted_content id="fec1">
+Type "yes" to write: yes
+Backup saved: /Users/zhouhanru/Documents/M-Flasher/backups/fm1-20261117-041838.bin
+Writing 0x04000-0x8EFFF
+   91%
+Writing 0x91000-0x91FFF
+   92%
+Writing 0x93000-0x9EFFF
+  100%
+Done: everything written is verified (the chip's CRC32 matches)
+Sent the restart (a 34-byte program at 0x01C28000); waiting for the unit to reset
+Running: the Felucca is on USB MIDI
+</pasted_content id="fec1">
+
+```
+燒進去成功能跑了
+
+
+---
+
+Unbricker有提到m-bootloader相關資訊嗎？
+
+---
+
+_**Agent (claude-fable-5-2 2026-11-16 20:22:27Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Find what the Unbricker README says about m-bootloader and its full-restore command
+
+`grep -n -i -E "bootloader|m-flasher" /tmp/unbricker.md | cut -c1-420 | head -20; echo "=== full-restore"; sed -n '294,338p' /tmp/unbricker.md | cut -c1-700`
+
+````text
+34:bootloader included ([full-restore](#full-restore-everything-boot-head-included)).
+69:**Boot head replaced or damaged** (`0x0000`-`0x3FFF`, for example by a replacement bootloader
+70:installed with M-Flasher that does not start)? `restore` never writes the head, but
+72:(stock bootloader + firmware) or from a full backup. It needs the unit to show up as
+175:the disk driver needs root, as for M-Flasher, so the commands that open the FM-1 run with `sudo`;
+183:half a minute (M-Flasher reports the same): start soon. The easy way is one line that asks for the
+296:For a unit whose **boot head** (`0x0000`-`0x3FFF`, the stock bootloader and its configuration)
+297:was replaced or damaged, typically by installing a replacement bootloader that then does not
+310:  `0x0..0x92FFF` (the stock V15 bootloader and firmware), for V16 `0x0..0xA8FFF` (V16's own,
+311:  larger stock bootloader and its longer firmware). Everything past the package's image stays as it
+312:  is. Both official packages are recognised by sha256 (V16: file `d017fb65…`, the same M-Flasher
+314:- **From a full backup** (`--image FULL.bin`, exactly 1 MiB, for example the backup M-Flasher or
+329:  V15 head), unless you pass `--other-head`, for example to put back m-bootloader from your own
+417:  stock one (M-Flasher can replace it with m-bootloader, for example). `restore` never writes
+=== full-restore
+## full-restore: everything, boot head included
+
+For a unit whose **boot head** (`0x0000`-`0x3FFF`, the stock bootloader and its configuration)
+was replaced or damaged, typically by installing a replacement bootloader that then does not
+start. The firmware can be perfect and the unit still stays dark, and `restore` cannot help
+because it never writes the head.
+
+```sh
+python fm1_unbrick.py full-restore FM-1.fwsc --plan-only    # back up, show what would change, stop
+python fm1_unbrick.py full-restore FM-1.fwsc                # write it (type FULL)
+python fm1_unbrick.py full-restore --image my-backup.bin    # or: everything from a full backup
+```
+
+(Windows: `py` in an administrator PowerShell; Linux and macOS: `sudo .venv/bin/python`.)
+
+- **From the package** (`FM-1.fwsc`): writes its whole flash image from `0x0`: for V15
+  `0x0..0x92FFF` (the stock V15 bootloader and firmware), for V16 `0x0..0xA8FFF` (V16's own,
+  larger stock bootloader and its longer firmware). Everything past the package's image stays as it
+  is. Both official packages are recognised by sha256 (V16: file `d017fb65…`, the same M-Flasher
+  documents).
+- **From a full backup** (`--image FULL.bin`, exactly 1 MiB, for example the backup M-Flasher or
+  this tool made before the change): writes all of it, including the factory voices
+  (`0xEA000..0xFBFFF`), which only a backup can bring back. This unit's own Bluetooth data
+  (`0xE9000..0xE9FFF`) and key_mac area (`0xFF000..0xFFFFF`) are kept, so another unit's backup
+  does not clone its Bluetooth identity; `--include-unit-data` writes them too (your own
+  backup).
+
+What it checks:
+
+- the usual: chip key and flash ID, the double-read backup before anything is written, the typed
+  confirmation;
+- **the head it writes must have valid JieLi headers**: header CRC, file-table CRCs, a
+  `uboot.boot` inside the head, the `isd_config.ini` data CRC. No override. The body of
+  `uboot.boot` itself has no checksum this tool can verify, which is why the next rule exists;
+- **the head must be the stock V15 or V16 one** (by sha256; two real V15 units carry exactly the
+  V15 head), unless you pass `--other-head`, for example to put back m-bootloader from your own
+  backup;
+- an image must not be blank or have torn firmware sectors;
+- only the 4 KiB sectors that differ are erased (sector erases only, never block or chip) and
+  written, each read back and retried once, **the head last**, then the whole flash is read and
+  compared with the expected image. `full-restore-result.json` in the run's folder records it.
+
+If it is interrupted while the head is written, the FM-1 will not start until the command has
+run again: keep it plugged in and run the same command again.
+````
+</details></tool-use>
+
+_**Agent (claude-fable-5-2 2026-11-16 20:22:27Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Read ChoralRoot's manual sections on chord types, LOCK, voicing, play styles, and Key Mode
+
+`sed -n '253,300p;337,345p;382,424p;488,520p' /tmp/choral-manual.md | cut -c1-520`
+
+```text
+## 4. Chords
+
+### Types and extensions
+
+Hold one chord type and any extensions, then press a root.
+
+| Key | Name | Notes above the root (semitones) | On the screen (root D; the extensions on D major) |
+| --- | --- | --- | --- |
+| F#3 | DIM | 3, 6 | `Ddim` |
+| G#3 | MIN | 3, 7 | `Dm` |
+| A#3 | MAJ | 4, 7 | `DM` |
+| G#3 + A#3 | SUS | 5, 7 | `Dsus` |
+| F3 | 6 | adds 9 | `D` with a small `6` |
+| G3 | m7 | adds 10 | `D` with a small `7` (on a sus chord: `m7`) |
+| A3 | M7 | adds 11 | `D` with a small `M7` |
+| B3 | 9 | adds 14 | `D` with a small `9` |
+
+The keys are the FM-1 layout's, the default ([The Classic chord keys](#the-classic-chord-keys) has the other one: SUS
+on C#4, the 9 on C4).
+
+- **SUS is G#3 and A#3 together**, always: press both small black keys with one finger. A root pressed while the pair
+  is still landing waits for it ([the SUS Window](#the-fm-1-chord-keys)), so a minor chord never turns into a sus
+  chord under your fingers.
+- With two types held, the one pressed last counts (unless it is a [secret chord](#secret-chords); G#3 + A#3 is
+  always SUS).
+- Extensions stack: MAJ + 6 + 9 reads `D` `6 9`. Three extensions read `JAZZ`, all four `WTF`.
+- **A major chord on its own reads with a capital `M`: `DM`.** A minor chord has a small `m` (`Dm`). With an
+  extension the major chord's `M` is left out, as chord names are usually written: `D` with a small `7`, `6`, `9` or
+  `M7` (the major seventh, not "D major" plus a 7). The name is the same on every screen: the views, the PERF layer,
+  the sequencer.
+- A root with no chord key is a single note (unless Key Mode is on): it reads as the note's name alone, `D`.
+- Under the name the screen lists the notes as they are voiced. Extension notes are orange.
+- The name of the last chord stays on the screen until the next one.
+- **The 6 with a seventh.** The 6 key adds the note 9 semitones above the root, right under a seventh (on D: B4
+  under C5 or C#5). That is how the Orchid plays it and it is the default. **Options > 6th with 7th** set to
+  **Octave up** plays that 6th an octave higher whenever the chord also has the 7 or the M7 (or both): D + 7 + 6 is
+  then D F# A C and the B above them, a 13th chord. Chords without a seventh (`D` `6`, `D` `6 9`) and single notes do
+  not change, on every chord type; the name on the screen does not change either. KNOB 1 voices the raised note as
+  the top note it is (one step down brings it back inside). A recorded loop holds chords, not notes, so it plays by
+  whichever value is set while it plays. The option acts from the next chord on: one that is sounding keeps its
+  notes.
+
+### Chord names
+
+The names above are the Orchid's: they say which keys you hold. **Options > Chord Names** chooses between them and
+the names a lead sheet would use for the notes that sound. Only the name on the screen changes: the notes, the
+MIDI and a recorded loop are the same under either, and you can switch at any time.
+
+### LOCK
+
+The **LFO** button switches LOCK on and off; LFO is lit and `lock` shows at the top right while it is on (with the
+Classic chord keys LOCK is the key B3). A chord key pressed while LFO is down switches LOCK at that moment. With LOCK
+on:
+
+- the chord keys you are holding stay on when you let go (they stay lit);
+- then, with no chord key held, a **type** key replaces the latched chord with that type alone, and an **extension**
+  key switches its extension on or off without touching the type.
+### Voicing and octave
+
+- **KNOB 1** revoices the chord: one click up moves the lowest note up an octave, one click down moves the highest
+  note down, from -12 to +12. The screen adds `voicing +2` under the notes. The voicing applies to every chord that
+  follows, and to a playing loop. On the Full keyboard too (since 0.24: chords play there, Key plays Chords and
+  G5's chords); its octave is OCT- / OCT+'s.
+- **OCT-** and **OCT+** shift the root keys by octaves, from -2 to +2 (`Oct +1` at the top right). A low voicing can
+  put chord notes below D4, where no key can light for them; the notes line on the screen always has them.
+
+### Play styles
+
+Options > Play Style decides what the chord keys do while a root is already down.
+
+| Style | A chord key pressed while a root is held | A chord key pressed with no root held |
+| --- | --- | --- |
+| **Simple** (default) | nothing: the chord was fixed when the root went down | nothing |
+| **Advanced** | a type key replays the held chord as that type; an extension key switches its extension on or off | nothing |
+| **Free** | as Advanced | the last root sounds again as that chord, for as long as a chord key is held |
+
+Options > Extension Addition matters in Advanced and Free: **Add Note** (default) adds or removes just the
+extension's note while the rest of the chord rings on; **Play Chord** strikes the whole chord again.
+
+**With LOCK on** the chord keys mean the same in all three styles: the lit keys are the chord, and the LOCK layer's
+`Type key` and `Ext keys` settings decide what a press does to them. The styles only differ in what follows the lit
+keys. Simple: the next root you play. Advanced: also the roots you are holding, at once (a key that goes off leaves
+the held chord, a new set replaces the old one, no type lit leaves a single note). Free: the same, and while you
+hold a chord key with no root down, the last root sounds again as the lit chord; it stops when you let go of the
+chord key, lit or not. A key that will go off when you let go (the one lit type or extension pressed again) still
+sounds in that chord until then.
+
+### Secret chords
+
+Options > Secret Chords: Off (default), Simple (only while Play Style is Simple) or All. When it applies, type keys
+held together make a third chord:
+
+| Held (FM-1 keys) | Classic keys | Chord | On the screen |
+| --- | --- | --- | --- |
+| F#3 + G#3 + A#3 (DIM + SUS) | DIM + SUS | power chord (root, fifth, octave) | `D` with a small `5` |
+| F#3 + A#3 | MAJ + SUS | augmented | `D+` |
+| F#3 + G#3 | MIN + SUS | minor with a fourth instead of a fifth | `Dm` with a small `add4` |
+
+The small `5` and `add4` are red. Extensions stack on top as usual.
+
+### Key Mode
+
+Tap **KEY** (printed SEL): the KEY light comes on and `Key: C` shows at the top left. Now a root key on its own plays
+the chord that belongs on that note of the scale. In C major: D gives `Dm`, E `Em`, F `F`, G `G`, A `Am`, B `Bdim`.
+A key outside the scale plays a sus chord on a neighbouring scale note (C# in C gives `Csus`). A chord key held
+overrides the scale's choice of type. Besides Major and Minor there are 21 more scales (new in 0.36): the modes,
+pentatonics, blues, bebop, whole tone, diminished, some eastern scales and Barry Harris's 6th-diminished
+([Scales](#scales)). The root keys light the key: the scale's notes glow, the tonic's keys are
+brighter, the keys outside the scale are dark ([The lights](#the-lights)).
+
+Hold KEY to open the **KEY layer**:
+
+<img src="manual/layer-key.png" width="240" alt="The KEY layer: a keyboard with the tonic lit yellow, and four cells Tonic, Scale, Transpose, Single">
+
+| Control | In the KEY layer |
+| --- | --- |
+| any root key | that note becomes the tonic and Key Mode switches on. The scale stays as it is, unless MIN is held with the root while the scale is a major one (then Minor), or MAJ while it is a minor one (then Major) |
+| MAJ, MIN (the chord keys) | the scale, with LOCK on or off. MIN picks Minor (`Key: E minor`) at the press when the scale is a major one; when it is already a minor one, MIN tapped steps to the next minor scale (Dorian, Phrygian ..). MAJ does the same with Major and the major scales ([Scales](#scales)). In this layer they are not chord keys: the chord you have latched with LOCK is untouched and is back when the layer closes. The other chord keys do nothing here; LFO is still LOCK (Classic: B3) |
+| KNOB 1 | Tonic, step by step (Key Mode switches on) |
+| KNOB 2 | Scale: all 23, in the order of the table in [Scales](#scales) |
+| KNOB 3 | Transpose, -24 to +24 semitones. It moves everything you play from then on, in or out of Key Mode |
+| KNOB 4 | Single: Full, Split Oct or Split Bass (below) |
+| SELECT | turns the layer's page: page 1 is the four settings above, page 2 has Key plays, Keyboard, Snap and Numerals (below). The top line says `1/2` or `2/2`. SELECT does not change the tempo in this layer |
+| KNOB 1, page 2 | **Key plays**: Chords or Notes |
+| KNOB 2, page 2 | **Keyboard**: Chords or Full |
+| KNOB 3, page 2 | **Snap**: Off, Scale or Chord |
+| KNOB 4, page 2 | **Numerals**: Off, On or Solfège |
+| OPT (printed GLO) tap | switches the keys between **pick** and **play** (below). It does not open the Options from here |
+| OCT-, OCT+, HOME, KEY held again | close the layer |
+
+A quick way to set a key: hold KEY and press a root at once (the layer opens straight away), then OCT- to close it.
+For a minor key press MIN as well, before or after the root.
+```
+</details></tool-use>
+
+_**Agent (claude-fable-5-2 2026-11-16 20:22:32Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Read ChoralRoot's bass, performance mode, and looper sections
+
+`sed -n '733,760p;785,823p;1147,1190p' /tmp/choral-manual.md | cut -c1-430`
+
+```text
+## 6. Bass
+
+The bass is a second, monophonic part with its own sound. On a new unit it is off; from then on it is **on or
+off as it was at your last save** (SAVE held) when you switch on (until 0.17 it was off at every power-on).
+
+- **BASS** tap switches it on and off. The screen shows the bass sound's place, in orange (`VA` over `17`, then
+  `DEEP SUB`; with Bass Behaviour Solo the top line reads `VA · solo`), or `00 / off`. Its bottom line,
+  `Hold OPT to change engine`, is the way to another bass engine (below).
+- **ALGORITHM** turns through off (`00 off`) and then the sounds of the bass part's engine. Its first sound is
+  `00 INIT`, the engine's plain starting sound.
+- **KNOB 2** moves the bass register, -2 to +4 octaves.
+- **OPT + ALGORITHM** changes the bass sound's engine, exactly as OPT + PRESETS does for the chord sound: hold OPT
+  (printed GLO), turn ALGORITHM until the engine you want is in the middle, let go. You land on the sound you last
+  used in that engine. A bass that is off stays off. From 0.19 this works **wherever ALGORITHM alone is the bass
+  sound**: on the main screen, in the Options, in every layer but the PLAY menu, and in the sound editor (in 0.18 it
+  worked on the main screen only). Where ALGORITHM has another job, OPT does not change it into the engine picker:
+  in the PLAY menu it stays the record mode, and in the loop editor OPT + ALGORITHM sets the step's Voicing to
+  `Follow` or `0`. The table is in [Sounds](#11-sounds).
+- **BASS held + ALGORITHM** is the bass level: hold BASS (printed ENV / BASS), turn ALGORITHM, let go. The screen
+  shows `bass level`, and the bass stays on or off as it was. (Until 0.18 this was OPT + ALGORITHM.) If you have held
+  BASS long enough for its layer to open, or the layer is open already, the same turn changes the layer's Level
+  cell, and the layer stays open.
+
+Hold BASS for the **BASS layer**:
+
+| Control | In the BASS layer |
+| --- | --- |
+| SELECT, KNOB 1, or the white keys D4 E4 F4 G4 (after a GLO tap) | Behaviour (below) |
+## 7. Performance modes
+
+A performance mode plays the notes of your chord for you. **PERF** (printed ARP) tap switches the chosen mode on and
+off; the top right names it. Hold PERF for the **PERF layer**: SELECT picks the mode (picking one switches the
+performance on), the root keys play so you hear it, KNOB 1 to KNOB 4 are the mode's parameters, and a PERF tap is
+still on / off. OCT-, OCT+ or HOME closes the layer; holding PERF again switches to the Bass PERF layer and back
+([below](#chord-and-bass-perform-new-in-034)).
+
+While an arpeggio or a pattern is playing, the top half of the PERF layer shows it: the chord's name, its notes on a
+line and the sounding note hopping along, with the mode's name small at the top left (`Arpeggiate · on`). The four
+cells under it stay as they are, and turning KNOB 1 to KNOB 4 does not disturb it. The mode picker always comes
+first: for two seconds after the layer opens, and for two seconds after every turn of SELECT, the top half is the
+picker with the mode's name large, so you can read what you switched to even while LATCH keeps the notes going.
+When nothing is being stepped (no keys held, or Strum, Slop, Harp) the picker stays.
+
+| Mode in the picker | What it does | KNOB 1 | KNOB 2 | KNOB 3 | KNOB 4 |
+| --- | --- | --- | --- | --- | --- |
+| **Strum**, **Strum 2 Octaves** | the notes one after another | Rate (ms) | Direction | Range (octaves) | Hold |
+| **Slop** | a strum with uneven timing | Rate | Direction | Range | Amount (%) |
+| **Arpeggiate**, **Arp 2 Octaves** | the notes in turn, in time with the tempo | Division | Direction | Gate (%) | Swing (%) |
+| **Pattern** | one of twelve rhythmic figures over the chord's notes | Division | Pattern | Gate | Swing |
+| **Harp** | a fast run over several octaves | Rate | Direction | Gate | Range |
+
+- A parameter two modes share is on the same knob in each, in that knob's colour: KNOB 1 is the timing (Rate or
+  Division), KNOB 2 the order (Direction; Pattern's figure), KNOB 3 Range in Strum and Slop and Gate in Arpeggiate,
+  Pattern and Harp, KNOB 4 the mode's own (Harp: its Range). New in 0.37: until 0.36 Slop and Pattern had theirs in another order
+  (GitHub issue 26); the values you set are kept as they were.
+- Direction: Up, Down, Up-down, Down-up, Played or Random.
+- Division: 2/1, 1/1, 1/2, 1/4, 1/8, 1/16, 1/32 and the triplets of 1/2 to 1/32.
+- Rate is in milliseconds at 120 BPM and follows the tempo.
+- The two "2 Octaves" entries are the same modes with the range set to two octaves.
+- The twelve patterns: pulse, alberti, waltz, cascade, updown, syncopate, gallop, skip, ballad, stride, drive, ladder.
+  The layer shows the number; KNOB 3 outside the layer shows the name too.
+- Strum's Hold keeps the strummed chord sounding after you let go, as LATCH does, and lights LATCH; LATCH's gesture
+  (GLO held + LFO; Classic: a tap on LFO) turns it off again (0.22).
+
+Outside the layer **KNOB 3** turns the mode's main parameter (the strum rate, the slop amount, the arp division,
+the pattern, the harp rate). An arpeggio stops when you let go of the keys; switch LATCH on to keep it running.
+
+## 10. The looper
+
+The looper records **what you play on the root keys, as chords**: which root, which chord, when and for how long. It
+does not record audio. When the loop plays, the chords go through the instrument again, so the loop follows the sound
+you choose now, the voicing on KNOB 1, the performance mode and the bass. The tempo changes its speed, never its
+pitch.
+
+**Bass notes played by hand.** With Single = `Split Bass` the keys below the split play the bass part, and the looper
+records them as bass notes: the loop plays them back with the bass sound, and on the bass channel of MIDI out. Which
+side a note is on is decided when you record it and kept with the loop: you can set Single back to Full, move the
+split point or change the keyboard layout while the loop plays, and its bass line stays on the bass and its other
+notes stay on the chord sound. That holds in every record mode, for steps entered in Step mode, after an undo, in a
+saved slot and in a backup. The bass register (KNOB 2 on the view) still moves a looped bass line by octaves, as it
+moves the bass keys; the chord voicing does not touch it. You can play bass by hand over a looped bass line: the
+bass part is one voice, so the note played last is the one you hear. If you turn Split Bass off and switch the bass
+on while such a loop plays, the bass follows the loop's chords and the recorded bass notes play as well, on the
+same single voice. Loops recorded before 0.18 are unchanged: bass-side notes in them were stored as ordinary notes
+and keep the chord sound.
+
+### Recording and playing
+
+| Button | What it does |
+| --- | --- |
+| **REC** tap | record, in the way the record mode says (below). While recording: ends the take. While armed or counting in: cancels |
+| **LOOP** (PLAY) tap | play / stop. While recording: ends the take |
+| **REC** held | undo the last layer (the screen shows how many layers are left); the first layer stays: `nothing to undo` |
+| **GLO** held + **REC** | the next record mode (`Rec: Overdub`); it records nothing |
+| **LOOP** held | the PLAY menu |
+
+With the settings a new FM-1 has (length Free, mode Overwrite):
+
+1. Tap REC. REC lights, the top line reads `Rec · Overwrite`, the message says `rec: play to start`.
+2. Play. The first chord starts the take; REC blinks and the top line counts bars and beats (`Rec 2.3`).
+3. Tap REC or LOOP. `loop recorded`: the loop plays at once, at the length you played.
+4. LOOP stops and starts it. The loop is in memory now; **hold SAVE** to keep it over a power-off
+   ([Slots and saving](#slots-and-saving)).
+
+Tapping REC again starts over: the loop stops and REC is armed, and the old loop is replaced only when you play the
+first chord. Tap REC once more before that and it is `cancelled`, the old loop intact.
+
+The lights and the top line tell you where you are: REC lit is armed, REC blinking is recording, LOOP lit means the
+slot holds a loop, its green light means it plays. The small dial at the right of the top line fills once per loop;
+it carries a red dot while REC is armed (steady) or recording (blinking).
+```
+</details></tool-use>

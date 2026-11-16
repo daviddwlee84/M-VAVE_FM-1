@@ -4,6 +4,8 @@
 
 **狀態（2026-11-17）：已刷進實機（新晶片 `0xB36014`），開機正常。** 代價如預期：SLOOP 的曲子已不在機器上，要回 SLOOP 得還原備份，見「刷之前要知道的」。 手冊：[docs/MANUAL.md](https://github.com/Quixotic7/ChoralRootFM1/blob/main/docs/MANUAL.md)
 
+完整的上手教學見 [ChoralRoot 教學](tutorial.md)。
+
 ## 不刷機怎麼玩 { #emulate }
 
 由簡單到接近實機：

@@ -41,7 +41,10 @@ nav = [
       { "操作速查" = "firmware/agent-deck/usage.md" },
     ] },
     { "CTL-1" = "firmware/ctl-1/index.md" },
-    { "ChoralRoot" = "firmware/choralroot/index.md" },
+    { "ChoralRoot" = [
+      { "概觀與安裝紀錄" = "firmware/choralroot/index.md" },
+      { "教學" = "firmware/choralroot/tutorial.md" },
+    ] },
     { "RemoteFM1" = "firmware/remotefm1/index.md" },
     { "The Firmware Hub" = "firmware/hub.md" },
     { "多韌體切換" = "firmware/switching.md" },
