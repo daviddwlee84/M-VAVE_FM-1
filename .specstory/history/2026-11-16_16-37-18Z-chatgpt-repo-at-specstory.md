@@ -20496,3 +20496,356 @@ A part whose channel is Off ignores MIDI in.
 137:on, and OCT− or OCT+ while the octave is shifted. PLAY flashes green on each beat while playing. The
 ```
 </details></tool-use>
+
+_**Agent (claude-fable-5-2 2026-11-16 19:57:19Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Add a section on playing ChoralRoot without flashing and a standing rule to capture knowledge, then commit and push
+
+```bash
+python3 - <<'EOF'
+import pathlib
+def sub(path, pairs):
+    p=pathlib.Path(path); s=p.read_text()
+    for a,b in pairs:
+        assert a in s, (path,a[:70]); s=s.replace(a,b,1)
+    p.write_text(s)
+sub("docs/firmware/choralroot/index.md",[
+("**狀態（2026-11-17）：只在瀏覽器試玩。暫時不刷進實機，原因見下。**\n\n- **先在瀏覽器玩**：<https://quixotic7.github.io/ChoralRootFM1/emu/>（同一份韌體，有聲音，不需要 FM-1）\n- 手冊：[docs/MANUAL.md](https://github.com/Quixotic7/ChoralRootFM1/blob/main/docs/MANUAL.md)",
+ "**狀態（2026-11-17）：只模擬、不刷進實機，原因見「為什麼暫時不刷」。** 手冊：[docs/MANUAL.md](https://github.com/Quixotic7/ChoralRootFM1/blob/main/docs/MANUAL.md)"),
+("## 怎麼彈 `[上游]`","""## 不刷機怎麼玩 { #emulate }
+
+由簡單到接近實機：
+
+| 方式 | 怎麼做 | 手感 |
+|---|---|---|
+| **1. 上游的瀏覽器模擬器** | <https://quixotic7.github.io/ChoralRootFM1/emu/> | 滑鼠與電腦鍵盤。零設定，有聲音 |
+| **2. 本機 fm1-emu** | `just emu-run downloads/choralroot-0.41-smk37.1.fwsc` | 同上，但用真實的 240 MHz 時脈、延遲較低，存檔留在本機 |
+| **3. 本機 fm1-emu + 實機當鍵盤** | 實機裝著 [CTL-1](../ctl-1/index.md) 接 USB，再開方式 2 | **實機的 27 個鍵一對一對應 ChoralRoot 的鍵。** 最接近實際演奏，不用刷 ChoralRoot |
+| **4. RemoteFM1 的播放器** | [remotefm1.com](https://remotefm1.com/)，它的韌體庫裡有 `choralroot-0.41.rfm1` | 瀏覽器裡用原生速度跑（不是模擬晶片） |
+| **5. RemoteFM1 + 實機當面板** | 實機刷 [RemoteFM1](../remotefm1/index.md)，在播放器選 Play on my FM-1 | 鍵、旋鈕、LED、螢幕全部是實機的。要刷 RemoteFM1 |
+
+### 方式 3 的設定
+
+原理 `[上游]`：`fm1-live` 會把電腦上所有 MIDI 輸入送進模擬機器的 MIDI IN；ChoralRoot 的 **Options → MIDI Keys** 可以指定一個 channel，該 channel 上的音符 53–79 會「按下」機器的 F3–G5 這 27 個鍵。CTL-1 八度為 0 時最低鍵正好是 F3，channel 預設是 1。
+
+1. 實機裝 CTL-1，USB 接 Mac。在 CTL-1 上按 `EDIT`，把 KNOB 1（Sound）關掉，避免它自己的音色疊上去。
+2. `just emu-run downloads/choralroot-0.41-smk37.1.fwsc`。啟動訊息的 `MIDI in:` 那一行應該列出實機（macOS 可能仍顯示舊名稱 `Felucca`）。
+3. 在模擬器視窗裡進 ChoralRoot 的 Options（`GLO`，電腦鍵盤的數字鍵之一），把 **MIDI Keys** 設成 **ch 1**。
+4. 在實機上按住 A#3（MAJ）再按 D4，模擬器應該彈出 D 大三和弦。
+
+限制：只有琴鍵會對應過去。旋鈕與功能鍵（LOCK、BASS、REC…）仍要在模擬器視窗裡用滑鼠或電腦鍵盤操作。CTL-1 的八度要維持在 0，否則音符範圍對不上。
+
+這個組合我還沒實際接起來試，以上是依兩邊文件推出來的設定。`[調研]`
+
+## 怎麼彈 `[上游]`"""),
+])
+sub("AGENTS.md",[("## Sources and evidence","""## Capture what we learn
+
+When a question in the session produces an answer worth keeping — how to do
+something on the device, why something behaves a certain way, a pitfall, a
+working setup — add it to the relevant page under `docs/` in the same turn,
+without being asked. Put it where a reader would look for it (the firmware's
+own chapter, `hardware/`, `getting-started/`), tag it (`[實機]`, `[上游]`,
+`[模擬]`, `[調研]`), and mention in the reply which page changed. Do not record
+one-off chatter or things already written down.
+
+## Sources and evidence""")])
+EOF
+just docs-check 2>&1 | tail -1; git add -A && git commit -q -m "Document ways to play ChoralRoot without flashing it; add a capture-what-we-learn rule
+
+Co-Authored-By: Claude Fable 5.2 <noreply@anthropic.com>" && git push -q origin main && echo pushed; ls /Users/zhouhanru/.claude/projects/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/memory/ 2>/dev/null
+```
+
+```text
+{"status": "ok", "pages": 37, "llm_pages": 37, "deployed": false}
+pushed
+```
+</details></tool-use>
+
+_**Agent (claude-fable-5-2 2026-11-16 19:57:19Z)**_
+
+<tool-use data-tool-type="write" data-tool-name="Write"><details>
+<summary>Tool use: **Write**</summary>
+
+```markdown
+---
+name: auto-capture-knowledge-in-docs
+description: In the M-VAVE FM-1 notes repo, add knowledge-worthy Q&A to docs/ in the same turn without being asked
+metadata:
+  type: feedback
+---
+
+In the M-VAVE_FM-1 repo, when a question in the session yields an answer worth keeping (how to do something on the device, why it behaves a certain way, a pitfall, a working setup), write it into the relevant page under `docs/` in the same turn, without waiting to be asked, then say which page changed.
+
+**Why:** On 2026-11-17 the user asked for the CTL-1 / iPad audio answer to be added to the CTL-1 page and said (in Chinese) that from now on, questions that can become knowledge may be added automatically. The repo exists to be their FM-1 knowledge base.
+
+**How to apply:** Put it where a reader would look (the firmware's own chapter, `hardware/`, `getting-started/`), tag the evidence level (`[實機]`, `[上游]`, `[模擬]`, `[調研]`), run `just docs-check`, commit and push (the user has had every docs change pushed to `main` this way). Skip one-off chatter and things already recorded. The same rule is written in the repo's `AGENTS.md` under "Capture what we learn". My reading: this covers docs content only, not device operations, which still follow the hardware safety tiers.
+
+```
+
+```text
+File created successfully at: /Users/zhouhanru/.claude/projects/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/memory/auto-capture-knowledge-in-docs.md
+```
+</details></tool-use>
+
+_**Agent (claude-fable-5-2 2026-11-16 19:57:24Z)**_
+
+<tool-use data-tool-type="write" data-tool-name="Write"><details>
+<summary>Tool use: **Write**</summary>
+
+```markdown
+- [Auto-capture knowledge in docs](auto-capture-knowledge-in-docs.md) — add knowledge-worthy answers to docs/ in the same turn, unasked
+
+```
+
+```text
+File created successfully at: /Users/zhouhanru/.claude/projects/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/memory/MEMORY.md (file state is current in your context — no need to Read it back)
+```
+</details></tool-use>
+
+_**Agent (claude-fable-5-2 2026-11-16 19:57:38Z)**_
+
+CTL-1 那部分上一輪已經寫進去了，在 CTL-1 頁的「接 iPad 時聲音重疊的處理」一節：<https://daviddwlee84.github.io/M-VAVE_FM-1/firmware/ctl-1/#ipad-audio>
+
+之後遇到值得留下的問答，我會直接寫進對應的頁面並告訴你改了哪一頁。這條規則已寫進 `AGENTS.md`，也存成記憶，新的 session 也會照做。
+
+## 模擬 ChoralRoot 的方式
+
+有五種，由簡單到接近實機。我推薦第 3 種，因為你現在的機器狀態剛好適合。
+
+| 方式 | 怎麼做 | 手感 |
+|---|---|---|
+| 1. 上游的瀏覽器模擬器 | 你貼的那個連結 | 滑鼠與電腦鍵盤，零設定 |
+| 2. 本機模擬器 | `just emu-run downloads/choralroot-0.41-smk37.1.fwsc` | 同上，延遲較低，存檔留在本機 |
+| **3. 本機模擬器 + 實機當鍵盤** | 實機裝著 CTL-1 接 USB，再開方式 2 | **實機的 27 個鍵一對一對應 ChoralRoot 的鍵** |
+| 4. RemoteFM1 的網頁播放器 | remotefm1.com，韌體庫裡有 ChoralRoot | 瀏覽器裡原生速度執行 |
+| 5. RemoteFM1 + 實機當面板 | 實機刷 RemoteFM1 | 鍵、旋鈕、LED、螢幕全是實機的，但要再刷一次 |
+
+### 第 3 種為什麼剛好
+
+ChoralRoot 的 Options 裡有一項 **MIDI Keys**：指定一個 channel 後，該 channel 上的音符 53–79 會「按下」機器的 F3–G5 這 27 個鍵。CTL-1 八度為 0 時最低鍵正好是 F3，預設 channel 是 1。所以你的實機現在送出的音符，剛好對得上 ChoralRoot 的整排鍵，左手按和弦性質、右手按根音的手感可以直接試。
+
+步驟：
+
+1. 實機（CTL-1）USB 接 Mac。按 `EDIT`，把 KNOB 1（Sound）關掉，避免它自己的音色疊上去。
+2. `just emu-run downloads/choralroot-0.41-smk37.1.fwsc`。啟動訊息的 `MIDI in:` 那行應該列出實機，名稱可能還是 `Felucca`。
+3. 在模擬器視窗裡進 ChoralRoot 的 Options，把 **MIDI Keys** 設成 **ch 1**。
+4. 在實機上按住 A#3（MAJ）再按 D4，應該彈出 D 大三和弦。
+
+**這個組合我沒有實際接起來試過**，是依兩邊的文件推出來的。限制是只有琴鍵會對應過去，旋鈕與功能鍵（LOCK、BASS、REC）仍要在模擬器視窗裡操作，而且 CTL-1 的八度要維持在 0。
+
+如果試了覺得 ChoralRoot 值得常駐，再來決定要不要走「先還原原廠再刷」那條路。
+
+這些都寫進了 ChoralRoot 頁的「不刷機怎麼玩」一節：<https://daviddwlee84.github.io/M-VAVE_FM-1/firmware/choralroot/#emulate>
+
+---
+
+_**User (2026-11-16 20:08:10Z)**_
+
+[Image #25]
+```
+
+
+<pasted_content id="fec1">
+❯ just emu-run downloads/choralroot-0.41-smk37.1.fwsc
+audio: Mac mini Speakers at 48000 Hz, 2 channels, buffer Default
+MIDI in: no inputs
+SMK-37: click the keys (lower = harder), pads, buttons; drag faders, wheels, knobs. A..' C4..F5, Z/X OCTAVE, Space SEQ PLAY, R SEQ REC, 1..8 pads, arrows K1/K2; Esc quits
+2026-11-17 03:59:43.988 fm1-live[47436:249573927] error messaging the mach port for IMKCFRunLoopWakeUpReliable
+[  2.1 s] 1.00x real time | 240 MHz | audio 51 ms queued (target 50), 0 underruns
+[  4.1 s] 1.00x real time | 240 MHz | audio 51 ms queued (target 50), 0 underruns
+[  6.1 s] 0.99x real time | 240 MHz | audio 43 ms queued (target 50), 0 underruns
+[  8.1 s] 1.00x real time | 240 MHz | audio 51 ms queued (target 50), 0 underruns
+[ 10.1 s] 1.00x real time | 240 MHz | audio 51 ms queued (target 50), 0 underruns
+[ 12.1 s] 0.99x real time | 240 MHz | audio 50 ms queued (target 50), 0 underruns
+flash: 0 erases / programs
+</pasted_content id="fec1">
+
+```
+發現好像emulator run的不是FM1？
+
+https://remotefm1.com/installer/
+[Image #27]
+然後看起來這個網站跟 Firmware Hub好像 也有emulator然後也可以載入各種firmware？ [Image #28] （還是source其實就是從那邊過來的）
+
+然後 ch1 好像MIDI信號沒有傳到emulator裡面
+
+---
+
+_**User (2026-11-16 20:08:10Z)**_
+
+[Image: source: /private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/5f461408-bbdd-44d0-bb3b-b0642eabaa31/images/25.png]
+
+[Image: source: /private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/5f461408-bbdd-44d0-bb3b-b0642eabaa31/images/27.png]
+
+[Image: source: /private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/5f461408-bbdd-44d0-bb3b-b0642eabaa31/images/28.png]
+
+---
+
+_**Agent (claude-fable-5-2 2026-11-16 20:08:29Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+List ChoralRoot releases to find the FM-1 package, and check which MIDI inputs the Mac currently sees
+
+`gh api repos/Quixotic7/ChoralRootFM1/releases --jq '.[0:6][]|"\(.tag_name) \(.published_at[0:10]) pre=\(.prerelease) | \([.assets[].name|select(test("fwsc"))]|join(", "))"'; echo; uv run -q --locked --all-groups python -c "import mido; print('MIDI in:',mido.get_input_names())"; just fm1-find 2>&1 | tail -2`
+
+```text
+v0.41-smk37.1 2026-11-14 pre=false | choralroot-0.41-smk37.1-1core.fwsc, choralroot-0.41-smk37.1-elite-1core.fwsc, choralroot-0.41-smk37.1-elite.fwsc, choralroot-0.41-smk37.1-mke-1core.fwsc, choralroot-0.41-smk37.1-mke.fwsc, choralroot-0.41-smk37.1.fwsc
+v0.41 2026-11-12 pre=false | choralroot-0.41-1core.fwsc, choralroot-0.41.fwsc
+v0.41-smk37 2026-11-12 pre=false | choralroot-0.41-smk37-1core.fwsc, choralroot-0.41-smk37-elite-1core.fwsc, choralroot-0.41-smk37-elite.fwsc, choralroot-0.41-smk37-mke-1core.fwsc, choralroot-0.41-smk37-mke.fwsc, choralroot-0.41-smk37.fwsc
+v0.40 2026-11-11 pre=false | choralroot-0.40-1core.fwsc, choralroot-0.40.fwsc
+v0.39 2026-11-11 pre=false | choralroot-0.39-1core.fwsc, choralroot-0.39.fwsc
+v0.40-smk37 2026-11-11 pre=false | choralroot-0.40-smk37-1core.fwsc, choralroot-0.40-smk37-elite-1core.fwsc, choralroot-0.40-smk37-elite.fwsc, choralroot-0.40-smk37-mke-1core.fwsc, choralroot-0.40-smk37-mke.fwsc, choralroot-0.40-smk37.fwsc
+
+MIDI in: ['Felucca']
+"/Applications/M-Flasher.app/Contents/MacOS/M-Flasher" find
+midi	Felucca (running; download-mode switches it)
+```
+</details></tool-use>
+
+_**Agent (claude-fable-5-2 2026-11-16 20:09:02Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Replace the wrong ChoralRoot package with the FM-1 one, then redo the emulator boot and the rehearsal over my SLOOP backup
+
+```bash
+sed -i '' 's/^choralroot_tag := .*/choralroot_tag := "v0.41"/; s/^choralroot_pkg := .*/choralroot_pkg := "choralroot-0.41.fwsc"/' Justfile && rm -f downloads/choralroot-0.41-smk37.1.fwsc tools/emu-state/*choralroot-0.41-smk37.1* && just fm1-fetch-more 2>&1 | grep choral && S=/private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/5f461408-bbdd-44d0-bb3b-b0642eabaa31/scratchpad && for c in uc25hq80 p25q80; do printf "blank flash %s: " $c; just emu-shot downloads/choralroot-0.41.fwsc $c 7000 2>&1 | grep flash; done; python3 -I $S/ppm2png.py tools/emu-state/choralroot-0.41-uc25hq80.ppm $S/cr-fm1.png; BK=$(ls backups/2026-11-17-0341-pre-ctl-1.0.3/*.bin); echo "rehearse over my SLOOP backup:"; just emu-rehearse downloads/choralroot-0.41.fwsc "$BK" uc25hq80 --midi none --shot 15000 --lcd-only 2>&1 | grep -E "firmware area|^flash:|fault|LEDs"; python3 -I $S/ppm2png.py tools/emu-state/work/lcd.ppm $S/cr-fm1-rehearse.png; python3 - <<'EOF'
+S=4096
+a=open('tools/emu-state/rehearse-choralroot-0.41.before','rb').read(); b=open('tools/emu-state/rehearse-choralroot-0.41.flash','rb').read()
+print('rewritten on first boot over SLOOP data:',[hex(i*S) for i in range(256) if a[i*S:(i+1)*S]!=b[i*S:(i+1)*S]])
+p=open('tools/emu-state/pristine-choralroot-0.41.flash','rb').read()
+nb=[i for i in range(4,256) if p[i*S:(i+1)*S]!=b'\xff'*S]; print('pristine non-blank beyond boot: first',hex(nb[0]*S),'last fw',hex(max(i for i in nb if i<0x93)*S),'extra',[hex(i*S) for i in nb if i>=0x93][:12])
+EOF
+```
+
+```text
+ok   choralroot-0.41.fwsc  8da570760712796eef54aa840f7acdaaf5fc5939bb8d46e8432efd1cd1ce0652
+blank flash uc25hq80: flash: 0 erases / programs
+blank flash p25q80: flash: 0 erases / programs
+rehearse over my SLOOP backup:
+firmware area 0x04000-0x92FFF from the package, the rest from the backup
+work/lcd.ppm at 15000 ms; LEDs lit: [2, 28, 40]; audio peak over the last 0.5 s: 4578
+flash: 3 erases / programs
+rewritten on first boot over SLOOP data: ['0xa0000']
+pristine non-blank beyond boot: first 0x4000 last fw 0x92000 extra ['0x93000', '0x94000', '0x95000', '0x96000', '0x97000', '0x98000', '0x99000', '0x9a000', '0x9b000', '0x9c000', '0x9d000', '0x9e000']
+```
+</details></tool-use>
+
+_**Agent (claude-fable-5-2 2026-11-16 20:09:12Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Show the full extent of the ChoralRoot FM-1 package image compared with CTL-1
+
+```bash
+python3 - <<'EOF'
+S=4096
+def rng(x):
+    out=[];s=p=None
+    for i in x:
+        if s is None: s=p=i
+        elif i==p+1: p=i
+        else: out.append((s,p)); s=p=i
+    if s is not None: out.append((s,p))
+    return [f"0x{a*S:05X}-0x{(b+1)*S-1:05X}" for a,b in out]
+for f in ('pristine-choralroot-0.41','pristine-ctl-1.0.3'):
+    p=open(f'tools/emu-state/{f}.flash','rb').read()
+    print(f, rng([i for i in range(256) if p[i*S:(i+1)*S]!=b'\xff'*S]))
+EOF
+ls -la downloads/*.fwsc | awk '{print $5, $NF}'
+```
+
+```text
+pristine-choralroot-0.41 ['0x00000-0x9EFFF', '0xEE000-0xF1FFF', '0xFA000-0xFBFFF']
+pristine-ctl-1.0.3 ['0x00000-0x92FFF', '0xEE000-0xF1FFF', '0xFA000-0xFBFFF']
+Nov downloads/agtdeck-0.7.fwsc
+Nov downloads/choralroot-0.41.fwsc
+Nov downloads/ctl-1.0.3.fwsc
+Nov downloads/remote-0.3.6.fwsc
+Nov downloads/sloop-2.8.5.fwsc
+```
+</details></tool-use>
+
+_**Agent (claude-fable-5-2 2026-11-16 20:09:13Z)**_
+
+<tool-use data-tool-type="read" data-tool-name="Read"><details>
+<summary>Tool use: **Read**</summary>
+ `/private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/5f461408-bbdd-44d0-bb3b-b0642eabaa31/scratchpad/cr-fm1-rehearse.png`
+</details></tool-use>
+
+_**Agent (claude-fable-5-2 2026-11-16 20:09:22Z)**_
+
+<think><details><summary>Thought Process</summary>
+我發現自己之前下載的是 SMK-37 版 ChoralRoot，難怪模擬器會開成 SMK-37。已改用 FM-1 版，並注意到它的韌體較大、可能覆蓋 SLOOP 存曲子的位置；我正在修正預演工具，之後再重跑。
+
+</details></think>
+
+_**Agent (claude-fable-5-2 2026-11-16 20:09:37Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Fix the rehearsal script to take the whole package image and rerun ChoralRoot over my SLOOP backup
+
+```bash
+python3 - <<'EOF'
+import pathlib
+p=pathlib.Path("scripts/emu_rehearse.py"); s=p.read_text()
+a=s.index('FW_START, FW_END'); 
+new='''FW_START = 0x04000
+SECTOR = 4096
+BLANK = b"\\xff" * SECTOR
+
+
+def main():
+    pristine = open(sys.argv[1], "rb").read()
+    backup = open(sys.argv[2], "rb").read()
+    if len(pristine) != len(backup) or len(backup) != 1 << 20:
+        sys.exit("both images must be 1 MiB")
+    # the package's image: the contiguous run from the start of the firmware area
+    # (0x92FFF for most firmwares, further for larger ones such as ChoralRoot)
+    end = FW_START
+    while end < len(pristine) and pristine[end:end + SECTOR] != BLANK:
+        end += SECTOR
+    image = backup[:FW_START] + pristine[FW_START:end] + backup[end:]
+    open(sys.argv[3], "wb").write(image)
+    lost = [a for a in range(0x93000, end, SECTOR) if backup[a:a + SECTOR] != BLANK]
+    print(f"package image 0x{FW_START:05X}-0x{end - 1:05X} laid over the backup")
+    if lost:
+        print("it covers data the installed firmware had stored at:", ", ".join(f"0x{a:05X}" for a in lost))
+
+
+if __name__ == "__main__":
+    main()
+'''
+s=s[:a]+new
+s=s.replace("Limits: only the firmware area is taken from the package. A package that carries\nmore than that (ChoralRoot shows FONTS MISSING this way) cannot be rehearsed\nfaithfully, and the emulator is not the hardware.",
+"Limits: the package image is taken as the contiguous run from 0x04000 in what the\nemulator lays down; whether M-Flasher writes exactly that range for a given\npackage is only known from its own plan. The emulator is not the hardware.")
+s=s.replace("For SLOOP and Agent Deck, M-Flasher wrote only the firmware area (0x04000-0x92FFF) on\nmy unit and left everything else as it was. This does the same on a copy: take a\nfull-flash backup, replace the firmware area with the package's, and write the result\nas an fm1-live --flash file.","M-Flasher writes a package's image and leaves the rest of the flash as it was (for\nSLOOP, Agent Deck and CTL-1 on my unit: 0x04000-0x92FFF). This does the same on a\ncopy: take a full-flash backup, lay the package's image over it, and write the result\nas an fm1-live --flash file.")
+p.write_text(s)
+EOF
+S=/private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/5f461408-bbdd-44d0-bb3b-b0642eabaa31/scratchpad; BK=$(ls backups/2026-11-17-0341-pre-ctl-1.0.3/*.bin); just emu-rehearse downloads/choralroot-0.41.fwsc "$BK" uc25hq80 --midi none --shot 15000 --lcd-only 2>&1 | grep -E "package image|it covers|^flash:|fault|LEDs"; python3 -I $S/ppm2png.py tools/emu-state/work/lcd.ppm $S/cr-fm1-rehearse.png; python3 -c "
+S=4096
+a=open('tools/emu-state/rehearse-choralroot-0.41.before','rb').read(); b=open('tools/emu-state/rehearse-choralroot-0.41.flash','rb').read()
+print('rewritten on first boot:',[hex(i*S) for i in range(256) if a[i*S:(i+1)*S]!=b[i*S:(i+1)*S]])"; just emu-rehearse downloads/ctl-1.0.3.fwsc "$BK" uc25hq80 --midi none --shot 3000 --lcd-only 2>&1 | grep -E "package image|it covers"
+```
+
+```text
+package image 0x04000-0x9EFFF laid over the backup
+it covers data the installed firmware had stored at: 0x93000, 0x97000
+work/lcd.ppm at 15000 ms; LEDs lit: [2, 28, 40]; audio peak over the last 0.5 s: 0
+flash: 0 erases / programs
+rewritten on first boot: []
+package image 0x04000-0x92FFF laid over the backup
+```
+</details></tool-use>
+
+_**Agent (claude-fable-5-2 2026-11-16 20:09:37Z)**_
+
+<tool-use data-tool-type="read" data-tool-name="Read"><details>
+<summary>Tool use: **Read**</summary>
+ `/private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/5f461408-bbdd-44d0-bb3b-b0642eabaa31/scratchpad/cr-fm1-rehearse.png`
+</details></tool-use>

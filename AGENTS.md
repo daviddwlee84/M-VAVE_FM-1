@@ -142,6 +142,10 @@ Preflight before proposing a firmware write — show all of it to the owner:
 
 Other rules:
 
+- Check the package is for the FM-1 before anything else. Several projects
+  publish SMK-37 builds under similar names and tags (ChoralRoot's newest
+  release is SMK-37 only). `just emu-shot` or the emulator's window title
+  shows the board it detected.
 - Firmwares share flash sectors (Felucca-family layout: settings at `0xFC000`,
   projects from `0x97000`). Before proposing a switch to a firmware not yet in
   the table in `docs/firmware/switching.md`, run `just emu-rehearse` against

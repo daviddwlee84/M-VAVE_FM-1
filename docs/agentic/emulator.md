@@ -15,6 +15,11 @@
 | `just agtdeck-fetch` | 下載 Agent Deck 套件，驗 digest 與 build attestation |
 | `just emu-rehearse <package.fwsc> <backup.bin> [chip]` | 把套件的韌體區蓋在一份實機備份上再開機，預演切換。說明與限制見[多韌體切換](../firmware/switching.md) |
 
+**開起來先看兩件事** `[實機]`：
+
+- 視窗標題要以 `FM-1 ·` 開頭。如果是 `SMK-37 ·`，表示套件是 SMK-37 版，下載錯了。
+- 啟動訊息的 `MIDI in:` 列出的是啟動當下電腦上的 MIDI 輸入。`no inputs` 表示沒有裝置；要用實機或 MIDI 鍵盤彈，先接好再開。
+
 `emu-run` 後面可以接 `fm1-live` 的其他旗標，例如 `just emu-run downloads/sloop-2.8.5.fwsc uc25hq80 --usb`。
 
 ## 模擬器實測 { #results }

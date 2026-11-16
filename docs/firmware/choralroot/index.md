@@ -11,7 +11,7 @@
 | 方式 | 怎麼做 | 手感 |
 |---|---|---|
 | **1. 上游的瀏覽器模擬器** | <https://quixotic7.github.io/ChoralRootFM1/emu/> | 滑鼠與電腦鍵盤。零設定，有聲音 |
-| **2. 本機 fm1-emu** | `just emu-run downloads/choralroot-0.41-smk37.1.fwsc` | 同上，但用真實的 240 MHz 時脈、延遲較低，存檔留在本機 |
+| **2. 本機 fm1-emu** | `just emu-run downloads/choralroot-0.41.fwsc`。視窗標題要是 `FM-1 · choralroot-0.41` | 同上，但用真實的 240 MHz 時脈、延遲較低，存檔留在本機 |
 | **3. 本機 fm1-emu + 實機當鍵盤** | 實機裝著 [CTL-1](../ctl-1/index.md) 接 USB，再開方式 2 | **實機的 27 個鍵一對一對應 ChoralRoot 的鍵。** 最接近實際演奏，不用刷 ChoralRoot |
 | **4. RemoteFM1 的播放器** | [remotefm1.com](https://remotefm1.com/)，它的韌體庫裡有 `choralroot-0.41.rfm1` | 瀏覽器裡用原生速度跑（不是模擬晶片） |
 | **5. RemoteFM1 + 實機當面板** | 實機刷 [RemoteFM1](../remotefm1/index.md)，在播放器選 Play on my FM-1 | 鍵、旋鈕、LED、螢幕全部是實機的。要刷 RemoteFM1 |
@@ -21,7 +21,7 @@
 原理 `[上游]`：`fm1-live` 會把電腦上所有 MIDI 輸入送進模擬機器的 MIDI IN；ChoralRoot 的 **Options → MIDI Keys** 可以指定一個 channel，該 channel 上的音符 53–79 會「按下」機器的 F3–G5 這 27 個鍵。CTL-1 八度為 0 時最低鍵正好是 F3，channel 預設是 1。
 
 1. 實機裝 CTL-1，USB 接 Mac。在 CTL-1 上按 `EDIT`，把 KNOB 1（Sound）關掉，避免它自己的音色疊上去。
-2. `just emu-run downloads/choralroot-0.41-smk37.1.fwsc`。啟動訊息的 `MIDI in:` 那一行應該列出實機（macOS 可能仍顯示舊名稱 `Felucca`）。
+2. **先確認實機已接上這台 Mac 的 USB**，再執行 `just emu-run downloads/choralroot-0.41.fwsc`。啟動訊息的 `MIDI in:` 那一行要列出實機（macOS 可能仍顯示舊名稱 `Felucca`）。如果是 `MIDI in: no inputs`，表示啟動當下電腦上沒有 MIDI 裝置（例如機器接在 iPad 上、或走藍牙），按 Esc 關掉、接好再開。`[實機]`
 3. 在模擬器視窗裡進 ChoralRoot 的 Options（`GLO`，電腦鍵盤的數字鍵之一），把 **MIDI Keys** 設成 **ch 1**。
 4. 在實機上按住 A#3（MAJ）再按 D4，模擬器應該彈出 D 大三和弦。
 
@@ -59,16 +59,21 @@
 
 ChoralRoot 本身支援新晶片（上游 0.29.1 起接受 `0xB36014`，Hub 也這樣標）。問題在**從 SLOOP 切過去**：
 
-- 上游文件記載過一台跑過 Sloop 的 FM-1 裝 ChoralRoot 後掉進晶片的 ROM boot mode（黑畫面），把舊資料（`0x97000…`、`0xFC000…`）清掉才回來。它的 installer 因此**拒絕**在 Sloop 上安裝。`[上游]`
-- 那兩個位址正是我這台 SLOOP 存曲子與設定的地方（見[多韌體切換](../switching.md)）。
-- 原因是兩者都源自 Felucca、共用同一套儲存格式與位址，ChoralRoot 開機時會去讀 SLOOP 留下的資料。上游的調查認為新版已處理，但結論仍標為未完全釐清。
+- **它會蓋掉 SLOOP 的曲子。** ChoralRoot 的韌體映像比其他韌體大：模擬器顯示它佔 `0x04000`–`0x9EFFF`，其他韌體只到 `0x92FFF`。多出來的部分蓋到 `0x97000`，那正是我這台 SLOOP 存 project 的 sector（見[多韌體切換](../switching.md)）。裝了 ChoralRoot 再切回 SLOOP，曲子要從備份還原。`[模擬]`
+- 上游文件記載過一台跑過 Sloop 的 FM-1 裝 ChoralRoot 後掉進晶片的 ROM boot mode（黑畫面），把舊資料（`0x97000…`、`0xFC000…`）清掉才回來。它的 installer 因此**拒絕**在 Sloop 上安裝。兩者都源自 Felucca、共用儲存位址，ChoralRoot 開機時會讀到 SLOOP 留下的資料。`[上游]`
 - 上游建議的切換方式是 M-Flasher **加 m-bootloader**。我沒有 m-bootloader。
-- 我用 `just emu-rehearse` 試著預演，但 ChoralRoot 的套件帶了韌體區以外的內容，預演出來是 `FONTS MISSING`，不能當證據。`[模擬]`
+
+我的預演結果 `[模擬]`：用 `just emu-rehearse` 把 ChoralRoot 0.41 蓋在我真實的 SLOOP 備份上，在新晶片模式下**正常開到演奏畫面**，15 秒內沒有任何 flash 寫入，也沒有進 safe mode。這和上游的事故不矛盾（那是較舊的版本），但它只是模擬，而且只測了開機。
 
 掉進 ROM boot mode 本身救得回來（M-Flasher 還看得到機器，可以還原備份），所以不是變磚的風險，但需要我在 GUI 手動還原。
 
-**想刷的話比較穩的路徑**：先還原原廠 015 的備份（原廠 → ChoralRoot 是上游支援的路徑），再裝 ChoralRoot。代價是 SLOOP 的曲子要靠 `pre-…` 備份還原回來。這要等我決定之後再做。
+**結論**：風險比我一開始以為的低，但確定的代價是 SLOOP 的曲子會被蓋掉。真的要刷的話：先確認 `pre-…` 備份在、照常 `just fm1-switch choralroot`，看 M-Flasher 列出的寫入範圍是否真的超過 `0x92FFF`；之後回 SLOOP 時由我在 GUI 還原備份，而不是只重裝韌體。
 
 ## 已準備好的
 
-`downloads/choralroot-0.41-smk37.1.fwsc` 已下載並驗證（這個 release 的 tag 帶 `smk37` 是因為同時發布了 SMK-37 版，這個檔案是 FM-1 用的）。在 fm1-emu 的空白 flash 上兩種晶片都能開機，各 66 次寫入。`[模擬]`
+`downloads/choralroot-0.41.fwsc`（release `v0.41`）已下載並驗證。在 fm1-emu 的空白 flash 上兩種晶片都能開機。`[模擬]`
+
+!!! warning "更正（2026-11-17）：我一開始下載錯了套件"
+    ChoralRoot 的最新 release 是 `v0.41-smk37.1`，那是 **SMK-37** 版；FM-1 版在 `v0.41`。我先前下載了 SMK-37 的檔案，所以 `just emu-run` 開出來的是 SMK-37 的面板（標題列寫 `SMK-37 · …`），先前記錄的「66 次寫入」與 `FONTS MISSING` 也都是那個錯的套件造成的。已換成正確的檔案並重做所有測試。
+
+    教訓：模擬器視窗的標題列會顯示它認出的機型，是 `FM-1` 才對。M-Flasher 也會拒絕型號不符的套件，所以即使沒發現也不會刷進去，但不該靠最後一道防線。

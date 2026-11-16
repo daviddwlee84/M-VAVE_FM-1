@@ -13,8 +13,8 @@ sloop_version := "2.8.5"
 fm1_emu_version := "0.5.1"
 agtdeck_version := "0.7"
 ctl_version := "1.0.3"
-choralroot_tag := "v0.41-smk37.1"
-choralroot_pkg := "choralroot-0.41-smk37.1.fwsc"
+choralroot_tag := "v0.41"
+choralroot_pkg := "choralroot-0.41.fwsc"
 remote_version := "0.3.6"
 
 default:
