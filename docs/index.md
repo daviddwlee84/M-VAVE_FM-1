@@ -11,7 +11,8 @@
 |---|---|
 | 第一次拿到機器，照順序做 | [Getting Started](getting-started/index.md) |
 | 知道哪些事絕對不要做 | [注意事項](getting-started/cautions.md) |
-| 機器開不了 | [救援](getting-started/recovery.md) |
+| 機器開不了 | [救援](getting-started/recovery.md)、[變磚的原理與分級](getting-started/bricking.md) |
+| 知道換韌體會蓋掉什麼 | [Flash 配置圖](hardware/flash-map.md) |
 | 選一套韌體來玩 | [韌體地圖](firmware/index.md)、[The Firmware Hub](firmware/hub.md) |
 | 學 SLOOP 怎麼操作 | [SLOOP](firmware/sloop/index.md) |
 | 讓 agent 幫忙刷機或開發 | [Agentic 工作流](agentic/index.md) |

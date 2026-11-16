@@ -20849,3 +20849,507 @@ _**Agent (claude-fable-5-2 2026-11-16 20:09:37Z)**_
 <summary>Tool use: **Read**</summary>
  `/private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/5f461408-bbdd-44d0-bb3b-b0642eabaa31/scratchpad/cr-fm1-rehearse.png`
 </details></tool-use>
+
+_**Agent (claude-fable-5-2 2026-11-16 20:10:44Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Correct the ChoralRoot docs, record the new rehearsal results and site relationships, then commit and push
+
+```bash
+python3 - <<'EOF'
+import pathlib,re
+def sub(path, pairs):
+    p=pathlib.Path(path); s=p.read_text()
+    for a,b in pairs:
+        assert a in s, (path,a[:70]); s=s.replace(a,b,1)
+    p.write_text(s)
+p=pathlib.Path("docs/firmware/choralroot/index.md"); s=p.read_text()
+s=s.replace("choralroot-0.41-smk37.1.fwsc","choralroot-0.41.fwsc")
+a=s.index("## 為什麼暫時不刷"); 
+s=s[:a]+'''## 為什麼暫時不刷
+
+ChoralRoot 本身支援新晶片（上游 0.29.1 起接受 `0xB36014`，Hub 也這樣標）。問題在**從 SLOOP 切過去**：
+
+- **它會蓋掉 SLOOP 的曲子。** ChoralRoot 的韌體映像比其他韌體大：模擬器顯示它佔 `0x04000`–`0x9EFFF`，其他韌體只到 `0x92FFF`。多出來的部分蓋到 `0x97000`，那正是我這台 SLOOP 存 project 的 sector（見[多韌體切換](../switching.md)）。裝了 ChoralRoot 再切回 SLOOP，曲子要從備份還原。`[模擬]`
+- 上游文件記載過一台跑過 Sloop 的 FM-1 裝 ChoralRoot 後掉進晶片的 ROM boot mode（黑畫面），把舊資料（`0x97000…`、`0xFC000…`）清掉才回來。它的 installer 因此**拒絕**在 Sloop 上安裝。兩者都源自 Felucca、共用儲存位址，ChoralRoot 開機時會讀到 SLOOP 留下的資料。`[上游]`
+- 上游建議的切換方式是 M-Flasher **加 m-bootloader**。我沒有 m-bootloader。
+
+我的預演結果 `[模擬]`：用 `just emu-rehearse` 把 ChoralRoot 0.41 蓋在我真實的 SLOOP 備份上，在新晶片模式下**正常開到演奏畫面**，15 秒內沒有任何 flash 寫入，也沒有進 safe mode。這和上游的事故不矛盾（那是較舊的版本），但它只是模擬，而且只測了開機。
+
+掉進 ROM boot mode 本身救得回來（M-Flasher 還看得到機器，可以還原備份），所以不是變磚的風險，但需要我在 GUI 手動還原。
+
+**結論**：風險比我一開始以為的低，但確定的代價是 SLOOP 的曲子會被蓋掉。真的要刷的話：先確認 `pre-…` 備份在、照常 `just fm1-switch choralroot`，看 M-Flasher 列出的寫入範圍是否真的超過 `0x92FFF`；之後回 SLOOP 時由我在 GUI 還原備份，而不是只重裝韌體。
+
+## 已準備好的
+
+`downloads/choralroot-0.41.fwsc`（release `v0.41`）已下載並驗證。在 fm1-emu 的空白 flash 上兩種晶片都能開機。`[模擬]`
+
+!!! warning "更正（2026-11-17）：我一開始下載錯了套件"
+    ChoralRoot 的最新 release 是 `v0.41-smk37.1`，那是 **SMK-37** 版；FM-1 版在 `v0.41`。我先前下載了 SMK-37 的檔案，所以 `just emu-run` 開出來的是 SMK-37 的面板（標題列寫 `SMK-37 · …`），先前記錄的「66 次寫入」與 `FONTS MISSING` 也都是那個錯的套件造成的。已換成正確的檔案並重做所有測試。
+
+    教訓：模擬器視窗的標題列會顯示它認出的機型，是 `FM-1` 才對。M-Flasher 也會拒絕型號不符的套件，所以即使沒發現也不會刷進去，但不該靠最後一道防線。
+'''
+s=s.replace("| **2. 本機 fm1-emu** | `just emu-run downloads/choralroot-0.41.fwsc` | 同上，但用真實的 240 MHz 時脈、延遲較低，存檔留在本機 |","| **2. 本機 fm1-emu** | `just emu-run downloads/choralroot-0.41.fwsc`。視窗標題要是 `FM-1 · choralroot-0.41` | 同上，但用真實的 240 MHz 時脈、延遲較低，存檔留在本機 |")
+s=s.replace("2. `just emu-run downloads/choralroot-0.41.fwsc`。啟動訊息的 `MIDI in:` 那一行應該列出實機（macOS 可能仍顯示舊名稱 `Felucca`）。","2. **先確認實機已接上這台 Mac 的 USB**，再執行 `just emu-run downloads/choralroot-0.41.fwsc`。啟動訊息的 `MIDI in:` 那一行要列出實機（macOS 可能仍顯示舊名稱 `Felucca`）。如果是 `MIDI in: no inputs`，表示啟動當下電腦上沒有 MIDI 裝置（例如機器接在 iPad 上、或走藍牙），按 Esc 關掉、接好再開。`[實機]`")
+p.write_text(s)
+sub("docs/firmware/switching.md",[
+("| ChoralRoot 0.41 | 預演不可靠 | 上游記載過在 SLOOP 資料上開機後掉進 ROM boot mode，見 [ChoralRoot](choralroot/index.md) |","| ChoralRoot 0.41 | 沒有改寫；正常開機 | **韌體映像本身較大（到 `0x9EFFF`），安裝時就會蓋掉 SLOOP 在 `0x97000` 的 project。** 上游另記載過舊版在 SLOOP 資料上掉進 ROM boot mode，見 [ChoralRoot](choralroot/index.md) |"),
+("限制：只取套件的韌體區。套件若還帶別的內容（ChoralRoot 會顯示 `FONTS MISSING`）就不準；模擬器也不是實機。","它會印出套件映像的範圍，以及這個範圍蓋到了目前韌體的哪些資料 sector。大多數韌體是 `0x04000`–`0x92FFF`，ChoralRoot 到 `0x9EFFF`。\n\n限制：套件映像的範圍取自模擬器鋪出來的內容；M-Flasher 對某個套件實際寫多大，要看它自己列的計畫。模擬器也不是實機。"),
+])
+sub("docs/device-log.md",[("\n## Phase 1 驗收","| 2026-11-17 | 更正：ChoralRoot 套件下載錯誤 | 先前下載的是 SMK-37 版（`v0.41-smk37.1`），已刪除並改下載 FM-1 版 `choralroot-0.41.fwsc`（`8da57076…1ce0652`，digest 相符）。錯的檔案從未刷進機器 |\n\n## Phase 1 驗收")])
+sub("docs/firmware/hub.md",[("## 官方網站","""## 和 remotefm1.com、fm1-emu 的關係
+
+三個網站看起來功能重疊，其實是三層：
+
+| 東西 | 角色 | 誰做的 |
+|---|---|---|
+| **The Firmware Hub** | **目錄**：有哪些韌體、套件在哪、認不認得新晶片 | zvenson / Designburg |
+| **[fm1-emu](../agentic/emulator.md)** | **模擬器引擎**：模擬 FM-1 的晶片，原封不動地跑 `.fwsc` | joakimeriksson |
+| **[remotefm1.com](https://remotefm1.com/)（FM-1 Player）** | **播放器**：用上面兩者，再加上自己的原生執行方式與「把實機當面板」 | Quixotic7 |
+
+FM-1 Player 的頁面自己寫明：韌體清單來自 Firmware Hub 的即時目錄（我看到時列了 243 個）；帶圓點的韌體以 `.rfm1` 原生執行（韌體的原始碼編成 WebAssembly）；其餘每一個都能用 fm1-emu 模擬執行，套件從 Hub 指向的位置抓。`[上游]`
+
+所以來源確實是 Hub，模擬的部分是 fm1-emu。Hub 自己的 Try、Agent Deck 的線上展示頁、我本機的 `just emu-run` 用的也都是 fm1-emu。差別在 FM-1 Player 多了原生核心（比較快、延遲低）以及搭配 [RemoteFM1](remotefm1/index.md) 把實機當面板。
+
+## 官方網站""")])
+sub("docs/agentic/emulator.md",[("`emu-run` 後面可以接 `fm1-live` 的其他旗標","**開起來先看兩件事** `[實機]`：\n\n- 視窗標題要以 `FM-1 ·` 開頭。如果是 `SMK-37 ·`，表示套件是 SMK-37 版，下載錯了。\n- 啟動訊息的 `MIDI in:` 列出的是啟動當下電腦上的 MIDI 輸入。`no inputs` 表示沒有裝置；要用實機或 MIDI 鍵盤彈，先接好再開。\n\n`emu-run` 後面可以接 `fm1-live` 的其他旗標")])
+sub("AGENTS.md",[("- Firmwares share flash sectors","- Check the package is for the FM-1 before anything else. Several projects\n  publish SMK-37 builds under similar names and tags (ChoralRoot's newest\n  release is SMK-37 only). `just emu-shot` or the emulator's window title\n  shows the board it detected.\n- Firmwares share flash sectors")])
+EOF
+just docs-check 2>&1 | tail -1; git add -A && git commit -q -m "Fix ChoralRoot package (was the SMK-37 build), rehearse the FM-1 one, explain Hub vs RemoteFM1 vs fm1-emu
+
+Co-Authored-By: Claude Fable 5.2 <noreply@anthropic.com>" && git push -q origin main && echo pushed
+```
+
+```text
+{"status": "ok", "pages": 37, "llm_pages": 37, "deployed": false}
+pushed
+```
+</details></tool-use>
+
+_**Agent (claude-fable-5-2 2026-11-16 20:11:03Z)**_
+
+你看到的沒錯，模擬器跑的確實不是 FM-1：我下載錯了套件。已修正，請重開一次。
+
+## 我的錯：下載的是 SMK-37 版
+
+ChoralRoot 最新的 release 是 `v0.41-smk37.1`，那是 SMK-37 用的；FM-1 版在 `v0.41`。我上一輪拿了最新的那個，還跟你說「這個檔案是 FM-1 用的」，那句話是錯的。
+
+- 錯的檔案已刪除，換成 `downloads/choralroot-0.41.fwsc`，digest 已驗證。
+- 它從來沒刷進機器。M-Flasher 也會拒絕型號不符的套件。
+- 上一輪記錄的「66 次寫入」和 `FONTS MISSING` 都是那個錯套件造成的，已重做並更正文件。
+
+之後判斷方式：模擬器視窗的標題要以 `FM-1 ·` 開頭，你截圖的是 `SMK-37 ·`。
+
+## MIDI 沒進模擬器
+
+和上面是兩個獨立的問題。你的啟動訊息寫 `MIDI in: no inputs`，表示模擬器啟動當下 Mac 上沒有任何 MIDI 輸入。它只在啟動時抓一次，所以之後再接也收不到。
+
+我剛才檢查，Mac 現在看得到實機（顯示為 `Felucca`）。所以順序是：
+
+1. 實機先用 USB 接到 Mac（不是 iPad）。
+2. `just emu-run downloads/choralroot-0.41.fwsc`
+3. 確認標題是 `FM-1 · choralroot-0.41`，啟動訊息的 `MIDI in:` 有列出 `Felucca`。
+4. 在模擬器裡進 Options，把 **MIDI Keys** 設成 ch 1。
+
+SMK-37 版本身不支援 MIDI Roots 這類設定，所以你剛才即使 MIDI 有進去也可能對不上。換成 FM-1 版後這條路我仍然沒有實際驗證過。
+
+## 換成正確套件後的新發現
+
+重做預演後，對 ChoralRoot 的判斷要修正：
+
+- **好消息**：把 FM-1 版蓋在你真實的 SLOOP 備份上，在模擬器的新晶片模式下正常開到演奏畫面，沒有進 safe mode，也沒有任何 flash 寫入。風險比我之前說的低。
+- **確定的代價**：ChoralRoot 的韌體比別人大，模擬器顯示它佔到 `0x9EFFF`，其他韌體只到 `0x92FFF`。多出來的部分會蓋掉 `0x97000`，那正是 SLOOP 存曲子的地方。所以裝了它再回 SLOOP，曲子要從備份還原，不能只重裝韌體。
+
+這是模擬結果。實際會寫多大，要看 M-Flasher 在你輸入 `yes` 之前列出的範圍。
+
+## remotefm1.com 和 Firmware Hub 的關係
+
+你猜對了，來源是 Hub。它們是三層，不是三個競爭的東西：
+
+| 東西 | 角色 |
+|---|---|
+| **Firmware Hub** | 目錄：有哪些韌體、套件在哪 |
+| **fm1-emu** | 模擬器引擎：模擬 FM-1 的晶片來跑韌體 |
+| **remotefm1.com** | 播放器：用上面兩者，再加自己的東西 |
+
+你截圖的那段文字就是這個意思：清單來自 Hub 的即時目錄；帶圓點的韌體是把原始碼編成網頁原生版本直接跑，比較快；其他每一個都用 fm1-emu 模擬，套件從 Hub 指的位置抓。Hub 自己的試玩、你本機的 `just emu-run` 用的也是同一個 fm1-emu。
+
+remotefm1.com 多出來的是那些原生版本，以及搭配 RemoteFM1 韌體把實機當面板。所以要試 ChoralRoot，直接在那個網站選它也可以，而且它的 ChoralRoot 是原生版本。
+
+## 更新的文件
+
+- **ChoralRoot** 頁：更正套件、新的預演結果、MIDI 沒進來的排查方式。
+- **The Firmware Hub** 頁：新增「和 remotefm1.com、fm1-emu 的關係」。
+- **fm1-emu 模擬器** 頁：開起來先看標題列的機型與 `MIDI in:` 那一行。
+- **多韌體切換** 頁：ChoralRoot 那一列改成新結果。
+- `AGENTS.md`：新增一條，動手前先確認套件是 FM-1 版。
+
+---
+
+_**User (2026-11-16 20:16:31Z)**_
+
+另外我發現還有這個 看起來對於變磚有很詳細的說明 （看看能不能有docs）
+https://github.com/Quixotic7/MvaveFM1Unbricker
+https://quixotic7.github.io/MvaveFM1Unbricker/
+好像說 v15, v16 layout區別比較大？
+
+
+
+```
+
+
+<pasted_content id="fec1">
+M-VAVE_FM-1 on  main [!] via  v3.15.1 took 1m6s
+❯ just fm1-flash downloads/choralroot-0.41.fwsc
+This writes firmware to the FM-1. A verified backup exists and the package supports this flash chip? yes
+"/Applications/M-Flasher.app/Contents/MacOS/M-Flasher" firmware "downloads/choralroot-0.41.fwsc"
+Refused: the unit is running, not in download mode: `m-flasher download-mode` switches it
+error: recipe `fm1-flash` failed on line 262 with exit code 1
+
+M-VAVE_FM-1 on  main [!] via  v3.15.1 took 3s
+❯ just fm1-switch  downloads/choralroot-0.41.fwsc
+midi    Felucca (running; download-mode switches it)
+Sent the Felucca the download-mode message over USB MIDI; waiting for it
+In download mode: usb:2-4       WL82 UBOOT1.00 (USB bus 2, device 4)
+  100%
+  firmware    FM-1 601
+  app         OK
+    - the firmware uses the FM-1 flash layout
+Backup saved: backups/2026-11-17-0413-pre-choralroot-0.41/fm1-20261117-041350.bin
+8834d0188eb309c7229fb3ad9e89a76a349eca546accb666b8a741509a66eb10  backups/2026-11-17-0413-pre-choralroot-0.41/fm1-20261117-041350.bin
+Backup before the switch: backups/2026-11-17-0413-pre-choralroot-0.41 (not uploaded; just fm1-backup-release 2026-11-17-0413-pre-choralroot-0.41 if you want it off this machine)
+Connecting to usb:2-4
+M-Flasher loader 1.3 already running
+Flash chip 0xB36014 (new)
+Reading the flash
+  100%
+Read in 1.3 s (811 KB/s)
+Checked: the chip's CRC32 of the flash matches the read
+  model       FM-1
+  bootloader  stock (M-VAVE)
+  firmware    FM-1 601
+  app         OK
+  chip key    0x980F
+  flash       0xB36014
+  unit id     55227286a0cb022a
+  loader      M-Flasher 1.3, CPU at 96 MHz
+    - the firmware uses the FM-1 flash layout
+    - flash chip 0xB36014 (new)
+
+Install firmware FM-1_920
+Writes 152 sectors (608 KiB): 0x04000-0x8EFFF, 0x91000-0x91FFF, 0x93000-0x9EFFF
+Installs FM-1_920 (0x04000-0x9EFFF).
+Type "yes" to write:
+</pasted_content id="fec1">
+
+```
+然後我實驗了一下寫入範圍 （還沒yes）
+
+---
+
+_**Agent (claude-fable-5-2 2026-11-16 20:16:54Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Rehearse ChoralRoot over the backup just taken and confirm the SLOOP songs are safe in existing backups
+
+```bash
+BK=$(ls backups/2026-11-17-0413-pre-choralroot-0.41/*.bin) && just emu-rehearse downloads/choralroot-0.41.fwsc "$BK" uc25hq80 --midi none --shot 15000 --lcd-only 2>&1 | grep -E "package image|it covers|^flash:|fault|LEDs"; S=/private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/5f461408-bbdd-44d0-bb3b-b0642eabaa31/scratchpad; python3 -I $S/ppm2png.py tools/emu-state/work/lcd.ppm $S/cr-over-ctl.png; python3 - <<'EOF'
+import glob
+S=4096
+a=open('tools/emu-state/rehearse-choralroot-0.41.before','rb').read(); b=open('tools/emu-state/rehearse-choralroot-0.41.flash','rb').read()
+print('rewritten on first boot:',[hex(i*S) for i in range(256) if a[i*S:(i+1)*S]!=b[i*S:(i+1)*S]])
+x=open(glob.glob('backups/2026-11-17-0341-pre-ctl-1.0.3/*.bin')[0],'rb').read(); y=open(glob.glob('backups/2026-11-17-0413-pre-choralroot-0.41/*.bin')[0],'rb').read()
+print('SLOOP project 0x97000 / autosave 0x9F000 still intact in the CTL-1-era backup:', x[0x97000:0x98000]==y[0x97000:0x98000], x[0x9F000:0xA0000]==y[0x9F000:0xA0000])
+print('data sectors CTL-1 changed since:',[hex(i*S) for i in range(0x93,256) if x[i*S:(i+1)*S]!=y[i*S:(i+1)*S]])
+EOF
+just fm1-verify-backups | tail -3
+```
+
+```text
+package image 0x04000-0x9EFFF laid over the backup
+it covers data the installed firmware had stored at: 0x93000, 0x97000
+work/lcd.ppm at 15000 ms; LEDs lit: [2, 28, 40]; audio peak over the last 0.5 s: 0
+flash: 0 erases / programs
+rewritten on first boot: []
+SLOOP project 0x97000 / autosave 0x9F000 still intact in the CTL-1-era backup: True True
+data sectors CTL-1 changed since: ['0xde000', '0xdf000', '0xfc000', '0xfd000']
+ok   backups/2026-11-17-pre-agtdeck/fm1-20261117-023458.bin
+ok   backups/2026-11-17-sloop-2.8.5/fm1-20261117-014153.bin
+ok   backups/2026-11-17-stock/fm1-20261117-011632.bin
+```
+</details></tool-use>
+
+_**Agent (claude-fable-5-2 2026-11-16 20:16:54Z)**_
+
+<tool-use data-tool-type="read" data-tool-name="Read"><details>
+<summary>Tool use: **Read**</summary>
+ `/private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/5f461408-bbdd-44d0-bb3b-b0642eabaa31/scratchpad/cr-over-ctl.png`
+</details></tool-use>
+
+_**Agent (claude-fable-5-2 2026-11-16 20:17:09Z)**_
+
+<think><details><summary>Thought Process</summary>
+模擬顯示寫入範圍會蓋掉 SLOOP 的曲子 sector，但我已用 04:13 的備份預演過，ChoralRoot 能正常開機。若你要輸入 `yes`，請先另開 terminal 執行 `just fm1-backup-release 2026-11-17-0341-pre-ctl-1.0.3`，日後曲子要用 M-Flasher 的 RESTORE FULL FLASH 還原；不想承擔就按 Ctrl-C，機器停在 download mode，執行 `just fm1-restart` 即可回到 CTL-1。
+
+</details></think>
+
+_**Agent (claude-fable-5-2 2026-11-16 20:17:11Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Fetch the Unbricker README and list its sections and docs
+
+`cd /tmp && gh api repos/Quixotic7/MvaveFM1Unbricker/readme --jq .content | base64 -d > unbricker.md; wc -l unbricker.md; grep -n "^#" unbricker.md | head -50; gh api repos/Quixotic7/MvaveFM1Unbricker/contents/docs --jq '.[].name' 2>/dev/null | tr '\n' ' '`
+
+```text
+     464 unbricker.md
+4:# Alternative Guides
+12:# Recover from firmware lock
+36:# MvaveFM1Unbricker
+48:## Is my FM-1 soft-bricked?
+76:## What it does
+110:### Commands
+133:### The Transporter route: `fm1_transporter_recover.py`
+159:## Requirements
+190:## Getting the official V15 package
+205:## The 5-minute recipe
+210:### Windows (administrator PowerShell: right-click Start > Terminal (Admin))
+218:### Linux / Raspberry Pi
+228:### macOS (Terminal)
+253:## Manual fallback (reference)
+277:## Safety rules
+294:## full-restore: everything, boot head included
+339:## Settings corrupted after going back to stock
+366:## Troubleshooting
+368:### The FM-1 does not show up as "WL82 UBOOT1.00" at all
+423:## Tests
+442:## Credits
+460:## Licence
+.nojekyll app.js index.html style.css
+Shell cwd was reset to /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1
+```
+</details></tool-use>
+
+_**Agent (claude-fable-5-2 2026-11-16 20:17:16Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Read the Unbricker README's lock recovery, soft-brick diagnosis, safety rules, settings corruption, and troubleshooting sections
+
+`sed -n '1,110p;277,293p;339,422p' /tmp/unbricker.md | cut -c1-900`
+
+````text
+**New to this? Start with the illustrated guide: <https://quixotic7.github.io/MvaveFM1Unbricker/>**
+(why FM-1s get bricked, a "find my fix" wizard, and step-by-step instructions in plain language).
+
+# Alternative Guides
+
+If you have two FM-1's try this: https://jvitkauskas.github.io/m-unbricker/
+
+Another easy guide: https://github.com/GoodPerson42/FM1-Unbricking-For-Dummies
+
+Unbricking using a cardputer https://github.com/jvitkauskas/cardputer-synth-rescue
+
+# Recover from firmware lock
+
+Newer FM-1's have different flash chips (0xB36014) that are locking users into firmwares they can't flash out of. 
+
+Use to confirm your flash chip info. 
+
+```sh
+python3 fm1_unbrick.py info
+```
+
+Too get your unit back from this: put it in ROM boot (hold OCT-, OCT+ and HOME for 5 s, power on + OCT-, might be different depending on the firmware; or `python3 fm1_unbrick.py softkey`, or the Rescue box on https://thefirmwarehub.com/#rescue), then run
+
+```sh
+python3 fm1_unbrick.py restore V15-FM-1.fwsc
+```
+
+with the official V15 in the same folder: https://github.com/Quixotic7/FM1Backups (V15, V16, and a full dump of a
+factory-fresh unit on the older flash chip). Both flash chips are accepted since 1.2.1, so `--i-know` is not needed.
+
+**Use V15 for `restore`.** M-VAVE now only distributes V16, whose firmware runs to `0xA8FFF`, past the
+`0x4000..0x92FFF` that `restore` (and the Transporter) writes. `restore` refuses it rather than write half a firmware.
+To put V16 on directly, use `full-restore V16-FM-1.fwsc`: it writes all of V16's flash image, its own stock
+bootloader included ([full-restore](#full-restore-everything-boot-head-included)).
+
+# MvaveFM1Unbricker
+
+Restore a soft-bricked **M-VAVE FM-1** over a plain USB cable, without extra hardware.
+
+`fm1_unbrick.py` automates the recovery procedure that the r/MVaveFM1 community confirmed
+working (see [Credits](#credits)). It talks to the FM-1's chip through
+[jl-uboot-tool](https://github.com/kagaimiq/jl-uboot-tool) by kagaimiq, takes a verified
+backup of the whole flash, writes the firmware region at `0x4000`, and checks every byte.
+
+> Unofficial. Not affiliated with or endorsed by M-VAVE. At your own risk; read the
+> [safety rules](#safety-rules) first.
+
+## Is my FM-1 soft-bricked?
+
+This tool is for you if **all** of these are true:
+
+- the screen stays **black** when you switch the FM-1 on (typically right after a firmware update);
+- the firmware installers (M-VAVE's, Felucca's, ChoralRoot's) say **"FM-1 not found"**;
+- the computer sees a **USB disk called `WL82 UBOOT1.00`** (USB `VID_4C4A PID_8057`).
+  On Windows: `Get-CimInstance Win32_DiskDrive | Format-Table Index, Model, InterfaceType`
+  shows `WL82 UBOOT1.00 USB Device`. On Linux: `lsscsi -g` or `dmesg` shows `WL82 UBOOT1.00`.
+  On macOS it appears as an unreadable disk.
+
+`WL82 UBOOT1.00` is the boot mode built into the chip's mask ROM (the FM-1 is a JieLi WL82 /
+AC791N). An update cannot erase it, and from it the flash can be read and rewritten.
+
+**If your FM-1 never shows up as `WL82 UBOOT1.00`** (nothing on USB at all, in any mode), this
+tool cannot reach it. The hardware route is the **FM-1 Transporter** (a Seeed XIAO RP2040 on the
+USB data lines that forces the chip into that mode): <https://github.com/kurogedelic/FM-1-transporter>.
+This repository has the step-by-step procedure for it, the parts, the wiring and a script that
+automates it: **[TRANSPORTER-GUIDE.md](TRANSPORTER-GUIDE.md)** and `fm1_transporter_recover.py`
+(it works on macOS, Linux and Windows: the Transporter is a serial port, no SCSI needed). That is
+how the author's own unit came back on 2026-10-09 after an interrupted update.
+**Boot head replaced or damaged** (`0x0000`-`0x3FFF`, for example by a replacement bootloader
+installed with M-Flasher that does not start)? `restore` never writes the head, but
+[`full-restore`](#full-restore-everything-boot-head-included) does: from the official package
+(stock bootloader + firmware) or from a full backup. It needs the unit to show up as
+`WL82 UBOOT1.00` (Windows, Linux or macOS). The Transporter route cannot write the head: its
+firmware refuses it.
+
+## What it does
+
+`python fm1_unbrick.py restore FM-1.fwsc` runs these steps, and stops at the first problem:
+
+1. **Package**: reads the `.fwsc`, prints its identity (`FM-1_015` = official V15), extracts the
+   firmware region `0x4000..0x92FFF` (`0x8F000` bytes) of the package's flash.bin (found through
+   the UFW entry list) and checks the official V15 hash `6edf3c37…58a8255686` of that region. A file that says it is V15 but has another hash is refused.
+2. **Device**: finds exactly one `WL82 UBOOT1.00` USB disk (it refuses if there are none or
+   several), checks that it answers as `WL82`, uploads jl-uboot-tool's wl82 USB loader, and
+   requires chip key `0x980F` and flash ID `0x856014` or `0xB36014` (the 1 MiB chip of the
+   2026 units with the logo on the front). Just before the loader starts it also
+   reads 512 bytes of RAM at `0x1C7C000` (where Melodee leaves its crash record) and saves
+   them as `retained-ram.bin` in this run's folder (see step 3). This is read-only and
+   optional: if the read fails the tool carries on.
+3. **Backup** (mandatory): reads the whole 1 MiB flash **twice**, compares the two reads,
+   saves `backups/fm1-recovery-YYYYMMDD-HHMMSS/full-flash-before.bin`, and prints its sha256
+   and what it found (for example "firmware sectors identical 143/143" against the package).
+   That folder collects everything from the run: `full-flash-before.bin`, `retained-ram.bin`,
+   `backup.json`, `recovery-result.json` (after a write) and `unbrick.log`. They are the same
+   files Melodee's `fm1-recover` produces: if your unit was bricked by Melodee, zip the folder
+   and send it to the Melodee developer. It contains your whole flash, on-device songs and
+   sounds included.
+4. **Confirmation**: shows device, identity, size and address, and asks you to type `WRITE`.
+5. **Write**: erases and writes exactly `0x4000..0x92FFF`, then reads it back and compares
+   byte for byte. On a mismatch it rewrites once; if that fails too it stops and tells you
+   **not** to power off.
+6. Tells you to unplug, switch off, wait 5 s, switch on.
+
+Every step and hash is logged to `logs/unbrick-YYYYMMDD-HHMMSS.log`.
+
+It works with the official `FM-1.fwsc` (recommended, hash-verified) or with any
+Felucca-family package such as ChoralRoot's (`FM-1_920`); then the FM-1 boots straight into that
+firmware.
+
+### Commands
+## Safety rules
+
+- **Nothing below `0x4000` is ever written or erased, except by `full-restore`.** `0x0000`-`0x3FFF`
+  is the boot head that starts the firmware. In the script every erase and write of `restore`
+  and `repair-settings` goes through a single gate that refuses addresses below `0x4000`,
+  unaligned erases, and anything past the end of the flash. `full-restore` has its own gate
+  (whole 4 KiB sectors only, this unit's Bluetooth data and key_mac kept unless asked) and only
+  writes a head that passes the checks below.
+- **Never `erasechip`.** The script has no way to send it.
+- **Always back up first.** `restore` cannot write without a double-read, compared, saved backup.
+- **Write the extracted firmware region, never the `.fwsc` itself, and only at `0x4000`.**
+- **One device only.** With two `WL82 UBOOT1.00` disks connected the script refuses to guess.
+  It never opens any disk that is not reported as `WL82 UBOOT1.00`, and the device must answer
+  the SCSI inquiry as `WL82` before anything else is sent.
+- **Cancel Windows' "format disk" dialog.** Never format the `WL82 UBOOT1.00` disk.
+- If verification fails: **do not power off**. Run `restore` again (another cable or port helps).
+
+## Settings corrupted after going back to stock
+
+Felucca-family firmwares (Felucca, ChoralRoot) keep their songs, sounds and settings at
+`0x97000..0xDFFFF`, stage their update loader at `0xE0000`, and keep globals at `0xFC000`. The
+first two are inside stock V15's own settings store (`0x93000..0xE8FFF`), and the installers only
+rewrite the firmware (`0x4000..0x92FFF`). Back on V15, stock reads those leftovers as its own
+settings, and the presets come out corrupted.
+
+1. First try stock's own **System > Reset Patches**.
+2. If that does not help: `python fm1_unbrick.py softkey` (any OS, the FM-1 on its normal
+   screen) drops the unit into ROM boot mode. On a Mac, start the next step at once (it leaves
+   ROM boot mode after about half a minute): `sudo -v && .venv/bin/python fm1_unbrick.py softkey
+   --yes && sudo .venv/bin/python fm1_unbrick.py repair-settings --factory DUMP.bin`.
+3. `python fm1_unbrick.py repair-settings --factory DUMP.bin` (administrator PowerShell / sudo).
+   It takes the usual double-read backup, then makes `0x93000..0xE8FFF` and `0xFC000..0xFEFFF`
+   look like a factory unit: the factory settings sector `0x93000` from `DUMP.bin`, everything
+   else there erased. Everything else stays bit for bit as it is: the firmware, the Bluetooth
+   data (`0xE9000`), the factory voices (`0xEA000..0xFBFFF`) and `0xFF000..0xFFFFF` are never
+   written (the tool's write gate refuses them). Songs, sounds and settings in those areas are
+   deleted; the backup keeps them.
+4. Unplug, switch off, wait 5 s, switch on, then reload the banks with System > Reset Patches.
+
+`DUMP.bin` is the `backup` (`full-flash-before.bin`) of a factory-fresh FM-1, taken before any
+custom firmware was installed on it. The tool refuses a dump that is not clean (its sector
+`0x93000` must start with `55 AA AA 55`, and `0x94000..0xE8FFF` and `0xFC000..0xFEFFF` must be
+erased). **Not yet tested on a real corrupted unit**: only against a mock FM-1.
+
+## Troubleshooting
+
+### The FM-1 does not show up as "WL82 UBOOT1.00" at all
+
+The chip only exposes the UBOOT disk once it has fallen back to ROM boot. A black screen alone
+does not mean it has. In order, with the FM-1 plugged straight into the PC (no hub) with a cable
+known to carry data:
+
+1. **Look everywhere, not only at disk drives.** In PowerShell:
+   `Get-PnpDevice | Where-Object { $_.InstanceId -like '*VID_4C4A*' } | Format-Table Status, Class, FriendlyName`
+   (the JieLi vendor id is 4C4A; the ROM boot disk is PID 8057). A device listed with an error
+   status still counts: note it. On Linux: `lsusb | grep -i 4c4a` and `dmesg | tail`.
+2. **Leave it switched on for two full minutes.** Felucca-family firmware arms a watchdog and a
+   boot-loop guard: a firmware that hangs or crashes at boot is reset by the watchdog, and after
+   two failed boots in a row the guard itself enters ROM boot. Then check again.
+3. **The update-mode hold.** Switch the FM-1 off. Hold OCT- and OCT+ together, switch it on, and
+   keep holding for 10 seconds. If the firmware reaches its main loop at all, this enters update
+   mode (the screen may stay black). Check again.
+4. **Three quick restarts.** Switch on, wait 10 s, off; on, wait 10 s, off; on. If each boot was
+   a crash, the third one lands in ROM boot. (This is also how a unit can get there by accident.)
+5. If after all that nothing with vendor id 4C4A ever appears, the chip is not reaching ROM boot
+   over USB and `fm1_unbrick.py` cannot help. The hardware route is the
+   [FM-1 Transporter](https://github.com/kurogedelic/FM-1-transporter): see
+   [TRANSPORTER-GUIDE.md](TRANSPORTER-GUIDE.md) (parts, wiring, `fm1_transporter_recover.py`).
+   This is exactly what an update interrupted mid-write by the FM-1 itself (a flat battery) looks
+   like: the half-written firmware hangs before any of its own safety code runs, and the chip's
+   SPL does not fall back to the update loader on a power-on. Holds and restarts cannot help there.
+
+
+- **"No WL82 UBOOT1.00 device found"**: switch the FM-1 on, use a data cable, plug in directly.
+  Windows: run from an administrator PowerShell. Linux: `sudo modprobe sg`, run with `sudo`.
+  Check `Get-CimInstance Win32_DiskDrive` / `lsscsi -g`. jl-uboot-tool's own `jldevfind.py`
+  usually reports "No devices found" on Windows (it scans volumes, not disks); that is expected,
+  this script uses `Win32_DiskDrive` instead.
+- **The disk number changes** after replugging. The script re-scans every time; with the manual
+  procedure, check it again every session.
+- **"Unknown syntax: Get-FileHash"** (manual procedure): you are still inside jl-uboot-tool.
+  Type `exit` and wait for `Bye!`.
+- **SyntaxWarning about `\s`** from `jldevfind.py`: harmless.
+- **The two backup reads differ**: the connection is unreliable. Nothing was written. Another
+  cable, another port, no hub.
+- **"already holds exactly this firmware"**: the firmware region is intact, so rewriting it will
+  not help. This was the case for the guide's author: Felucca 1.0.1 had been written perfectly
+  but would not start because of data left by Felucca 0.9-beta. The guide's update and thread
+  describe erasing Felucca's data areas in UBOOT mode (`erase 0x97000 0x8000`,
+  `erase 0xFC000 0x2000`, and for old user presets `erase 0xDC000 0x4000`), which deletes the
+  songs and settings stored on the device. This script deliberately does not do that; if you
+  try it by hand, back up first. Restoring official V15 instead is the safer step: the guide
+  reports that V15 boots even with old Felucca data present. (`--force-write` rewrites a region
+  that already matches, which only helps if you suspect the flash itself.)
+- **"boot head DIFFERS from the official V15 package's head"**: your boot head is not the
+  stock one (M-Flasher can replace it with m-bootloader, for example). `restore` never writes
+  it. If the FM-1 stays black after a verified `restore`, put the stock head back with
+  `full-restore FM-1.fwsc` ([above](#full-restore-everything-boot-head-included)).
+- **On-device songs**: stock firmware may overwrite the area where Felucca keeps projects;
+  they are in your backup.
+````
+</details></tool-use>

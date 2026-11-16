@@ -6,6 +6,7 @@
 
 - **先備份再做任何寫入。** 完整 flash 備份、SHA-256、兩份副本。見[備份](backup-and-chip.md)。
 - **先確認 flash 晶片，再選韌體。** 新晶片（`0xB36014`）上，舊韌體可能只把設定留在 RAM。裝之前確認該韌體有寫明支援新晶片。見[兩種 Flash 晶片](../hardware/flash-chips.md)。
+- **充飽電再刷。** FM-1 更新時用自己的電池；寫入中途沒電是最難救的狀況，需要硬體才救得回來。見[變磚的原理與分級](bricking.md)。
 - **用資料線，直接接電腦，不經 hub。**
 - **從上游 release 下載，核對 hash。** [The Firmware Hub](https://thefirmwarehub.com/) 的一鍵安裝很方便，但它自己聲明只檢查套件格式，不逐一測試硬體相容性或品質。
 - **刷完做存檔測試：** Save → 關機 → 開機 → Load。

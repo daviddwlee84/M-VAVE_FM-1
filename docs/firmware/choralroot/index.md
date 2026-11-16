@@ -59,7 +59,7 @@
 
 ChoralRoot 本身支援新晶片（上游 0.29.1 起接受 `0xB36014`，Hub 也這樣標）。問題在**從 SLOOP 切過去**：
 
-- **它會蓋掉 SLOOP 的曲子。** ChoralRoot 的韌體映像比其他韌體大：模擬器顯示它佔 `0x04000`–`0x9EFFF`，其他韌體只到 `0x92FFF`。多出來的部分蓋到 `0x97000`，那正是我這台 SLOOP 存 project 的 sector（見[多韌體切換](../switching.md)）。裝了 ChoralRoot 再切回 SLOOP，曲子要從備份還原。`[模擬]`
+- **它會蓋掉 SLOOP 的曲子。** ChoralRoot 的韌體映像比其他韌體大：佔 `0x04000`–`0x9EFFF`，其他韌體只到 `0x92FFF`。模擬器先預測到這點，2026-11-17 M-Flasher 在實機上列出的寫入計畫證實了：`Writes 152 sectors (608 KiB): 0x04000-0x8EFFF, 0x91000-0x91FFF, 0x93000-0x9EFFF` `[實機]`。多出來的部分蓋到 `0x97000`，那正是我這台 SLOOP 存 project 的 sector（見[多韌體切換](../switching.md)）。裝了 ChoralRoot 再切回 SLOOP，曲子要從備份還原。`[模擬]`
 - 上游文件記載過一台跑過 Sloop 的 FM-1 裝 ChoralRoot 後掉進晶片的 ROM boot mode（黑畫面），把舊資料（`0x97000…`、`0xFC000…`）清掉才回來。它的 installer 因此**拒絕**在 Sloop 上安裝。兩者都源自 Felucca、共用儲存位址，ChoralRoot 開機時會讀到 SLOOP 留下的資料。`[上游]`
 - 上游建議的切換方式是 M-Flasher **加 m-bootloader**。我沒有 m-bootloader。
 
