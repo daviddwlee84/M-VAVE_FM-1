@@ -2,10 +2,32 @@
 
 [ChoralRoot FM-1](https://github.com/Quixotic7/ChoralRootFM1)（Quixotic7，GPL-3.0）是仿 Telepathic Instruments Orchid 的和弦樂器：鍵盤左端決定「要哪種和弦」，其餘的鍵彈根音，機器幫你組和弦、配置聲部，並把和弦名稱顯示在螢幕上。另有跟著和弦走的 bass、演奏模式（strum、arpeggio、pattern）、效果、錄和弦的 looper、七個合成引擎。建立在 Felucca 之上，與 Telepathic Instruments 及 M-VAVE 無關。
 
-**狀態（2026-11-17）：只在瀏覽器試玩。暫時不刷進實機，原因見下。**
+**狀態（2026-11-17）：只模擬、不刷進實機，原因見「為什麼暫時不刷」。** 手冊：[docs/MANUAL.md](https://github.com/Quixotic7/ChoralRootFM1/blob/main/docs/MANUAL.md)
 
-- **先在瀏覽器玩**：<https://quixotic7.github.io/ChoralRootFM1/emu/>（同一份韌體，有聲音，不需要 FM-1）
-- 手冊：[docs/MANUAL.md](https://github.com/Quixotic7/ChoralRootFM1/blob/main/docs/MANUAL.md)
+## 不刷機怎麼玩 { #emulate }
+
+由簡單到接近實機：
+
+| 方式 | 怎麼做 | 手感 |
+|---|---|---|
+| **1. 上游的瀏覽器模擬器** | <https://quixotic7.github.io/ChoralRootFM1/emu/> | 滑鼠與電腦鍵盤。零設定，有聲音 |
+| **2. 本機 fm1-emu** | `just emu-run downloads/choralroot-0.41-smk37.1.fwsc` | 同上，但用真實的 240 MHz 時脈、延遲較低，存檔留在本機 |
+| **3. 本機 fm1-emu + 實機當鍵盤** | 實機裝著 [CTL-1](../ctl-1/index.md) 接 USB，再開方式 2 | **實機的 27 個鍵一對一對應 ChoralRoot 的鍵。** 最接近實際演奏，不用刷 ChoralRoot |
+| **4. RemoteFM1 的播放器** | [remotefm1.com](https://remotefm1.com/)，它的韌體庫裡有 `choralroot-0.41.rfm1` | 瀏覽器裡用原生速度跑（不是模擬晶片） |
+| **5. RemoteFM1 + 實機當面板** | 實機刷 [RemoteFM1](../remotefm1/index.md)，在播放器選 Play on my FM-1 | 鍵、旋鈕、LED、螢幕全部是實機的。要刷 RemoteFM1 |
+
+### 方式 3 的設定
+
+原理 `[上游]`：`fm1-live` 會把電腦上所有 MIDI 輸入送進模擬機器的 MIDI IN；ChoralRoot 的 **Options → MIDI Keys** 可以指定一個 channel，該 channel 上的音符 53–79 會「按下」機器的 F3–G5 這 27 個鍵。CTL-1 八度為 0 時最低鍵正好是 F3，channel 預設是 1。
+
+1. 實機裝 CTL-1，USB 接 Mac。在 CTL-1 上按 `EDIT`，把 KNOB 1（Sound）關掉，避免它自己的音色疊上去。
+2. `just emu-run downloads/choralroot-0.41-smk37.1.fwsc`。啟動訊息的 `MIDI in:` 那一行應該列出實機（macOS 可能仍顯示舊名稱 `Felucca`）。
+3. 在模擬器視窗裡進 ChoralRoot 的 Options（`GLO`，電腦鍵盤的數字鍵之一），把 **MIDI Keys** 設成 **ch 1**。
+4. 在實機上按住 A#3（MAJ）再按 D4，模擬器應該彈出 D 大三和弦。
+
+限制：只有琴鍵會對應過去。旋鈕與功能鍵（LOCK、BASS、REC…）仍要在模擬器視窗裡用滑鼠或電腦鍵盤操作。CTL-1 的八度要維持在 0，否則音符範圍對不上。
+
+這個組合我還沒實際接起來試，以上是依兩邊文件推出來的設定。`[調研]`
 
 ## 怎麼彈 `[上游]`
 

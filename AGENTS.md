@@ -84,6 +84,16 @@ Run `just docs-check` before committing any change under `docs/` or to
   repeating them, except where a procedure pins a specific version.
 - Dated facts use absolute dates (`2026-11-17`), never "recently".
 
+## Capture what we learn
+
+When a question in the session produces an answer worth keeping — how to do
+something on the device, why something behaves a certain way, a pitfall, a
+working setup — add it to the relevant page under `docs/` in the same turn,
+without being asked. Put it where a reader would look for it (the firmware's
+own chapter, `hardware/`, `getting-started/`), tag it (`[實機]`, `[上游]`,
+`[模擬]`, `[調研]`), and mention in the reply which page changed. Do not record
+one-off chatter or things already written down.
+
 ## Sources and evidence
 
 This ecosystem moves weekly. Trust, in order:

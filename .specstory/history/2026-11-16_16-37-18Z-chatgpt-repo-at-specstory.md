@@ -20319,3 +20319,180 @@ usb_product = "CTL-1 FM-1"
 description = "CTL-1 turns the M-VAVE FM-1 into a MIDI controller. The keys play notes, with velocity and aftertouch read from the keys themselves, in any scale with its chords under the black keys; the knobs send controllers in four banks; an arpeggiator and a four-track Euclidean drum sequencer run on its clock. Everything goes out over USB and Bluetooth, MIDI from the TRS jack is passed along, and the FM-1 plays it all on its own General MIDI sounds too, so it works with nothing connected."
 ```
 </details></tool-use>
+
+_**Agent (claude-fable-5-2 2026-11-16 19:48:35Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Record the CTL-1 install and document the iPad audio handling, then commit and push
+
+```bash
+python3 - <<'EOF'
+import pathlib
+def sub(path, pairs):
+    p=pathlib.Path(path); s=p.read_text()
+    for a,b in pairs:
+        assert a in s, (path,a[:70]); s=s.replace(a,b,1)
+    p.write_text(s)
+sub("docs/firmware/ctl-1/index.md",[
+("**狀態（2026-11-17）：套件已下載驗證，模擬器預演通過，還沒刷進實機。**","**狀態（2026-11-17）：已刷進實機（新晶片 `0xB36014`），接 iPad 試過，能用。**"),
+("## 兩個套件","""## 接 iPad 時聲音重疊的處理 { #ipad-audio }
+
+我接 iPad 時遇到兩件事 `[實機]`，原因與解法來自上游手冊與 fm1-base 的文件 `[上游]`：
+
+**1. CTL-1 自己的音色和 iPad 的聲音疊在一起。** CTL-1 內建 128 個 General MIDI 音色，你彈什麼它就跟著發聲。關掉它：
+
+1. 按 **`EDIT`** 開 Sound 頁。
+2. **KNOB 1（Sound）** 轉到 **Off**。
+3. 順便把 **KNOB 2（MIDI in）** 設成 **Ignored**，這樣 iPad 送回來的 MIDI 也不會觸發它的音色。
+4. 按 **`SAVE`** 存起來，否則重開機會回到 On。
+
+**2. iPad 的聲音輸出自動跑到 FM-1 的喇叭。** 這是設計如此：fm1-base 的韌體預設同時是 USB audio 的輸入與**輸出**裝置（「a computer plays through the FM-1」），iPadOS 一看到 USB 音訊輸出就會切過去。iPad 的聲音會從 FM-1 的喇叭與耳機孔出來，音量由 **MASTER** 控制。
+
+怎麼處理看你要哪一種：
+
+| 想要 | 做法 |
+|---|---|
+| 聲音就從 FM-1 出（接耳機到 FM-1） | 維持現狀，只把上面的 Sound 關掉。這其實是最簡單的單線配置 |
+| 聲音留在 iPad 的喇叭或 iPad 接的音響 | **改用 Bluetooth MIDI，不接 USB。** CTL-1 一開機 Bluetooth 就開著，裝置名稱是 `FM-1`，從音樂 app 的 Bluetooth MIDI 設定連線（GarageBand：Settings → Advanced → Bluetooth MIDI Devices）。沒有 USB 就沒有 USB audio，iPad 的輸出不會被搶走 |
+| 用 USB 但不要 USB audio | CTL-1 沒有這個選項。上游只提供「有無 Bluetooth」兩個套件，USB audio 都是開的。要關得自己用 fm1-base 重新 build（`usb_audio_out = false`） |
+
+iPadOS 接著 USB 音訊裝置時能不能手動把輸出切回內建喇叭，我沒有確認，各 app 的行為也不同（AUM 可以自己選硬體輸出）。
+
+**MASTER 旋鈕**：設成 Volume（預設）時控制 FM-1 發出的音量，包含 iPad 經 USB 送過來的聲音。也可以在 Sound 頁用 KNOB 3 把它改成送某個 CC。
+
+## 兩個套件"""),
+("| 原始碼 `app.h` | 設定存在 `0xFC000`，面板校正 `0xDC000`，Bluetooth 設定 `0xDE000` `[上游]` |","| 原始碼 `app.h` | 設定存在 `0xFC000`，面板校正 `0xDC000`，Bluetooth 設定 `0xDE000` `[上游]` |\n| **實機**，2026-11-17 03:41 | `just fm1-switch ctl`：寫入 140 個 sector（`0x04000`–`0x8FFFF`），驗證通過，自動重開，USB MIDI 正常 `[實機]` |"),
+("- [ ] 螢幕、琴鍵、旋鈕正常；電腦上看得到 USB MIDI 裝置","- [x] 螢幕、琴鍵正常；電腦上看得到 USB MIDI 裝置；接 iPad 能用"),
+])
+sub("docs/device-log.md",[
+("| 目前韌體 | **SLOOP 2.8.5**（2026-11-17 02:47 從 Agent Deck 刷回）。Agent Deck 0.7 在 02:35–02:47 之間裝過 |","| 目前韌體 | **CTL-1 1.0.3**（2026-11-17 03:41 刷入，套件識別 `FM-1_6010003`）。之前依序是原廠 015 → SLOOP 2.8.5 → Agent Deck 0.7 → SLOOP 2.8.5 |"),
+("\n## 下載的檔案","| 2026-11-17 | 刷 CTL-1 之前的 SLOOP 2.8.5 | `backups/2026-11-17-0341-pre-ctl-1.0.3/fm1-20261117-034125.bin` + `.json` | `8c9267e87a320a1e4cd592a9261907d978b8f3fdb94eaf15e685afae267b4451` | 尚未上傳 |\n\n## 下載的檔案"),
+("\n## Phase 1 驗收","| 2026-11-17 | 本人執行 `just fm1-switch ctl` | 第一次用這個捷徑實際寫入。download mode → 備份 → 140 sectors（`0x04000`–`0x8FFFF`）→ CRC32 相符 → 自動重開，全程只輸入一次 `yes` |\n| 2026-11-17 | CTL-1 接 iPad | 能用。iPad 的聲音輸出自動改到 FM-1（USB audio out），且 CTL-1 自己的 GM 音色會疊上去；處理方式見 [CTL-1](firmware/ctl-1/index.md#ipad-audio) |\n\n## Phase 1 驗收"),
+])
+sub("docs/firmware/switching.md",[("| — | Agent Deck → SLOOP |","| — | Agent Deck → SLOOP |") if False else ("| 2026-11-17 | Agent Deck 0.7 → SLOOP 2.8.5 |","| 2026-11-17 | SLOOP 2.8.5 → CTL-1 1.0.3 | `just fm1-switch ctl` | 成功。切回 SLOOP 還沒做 |\n| 2026-11-17 | Agent Deck 0.7 → SLOOP 2.8.5 |")])
+sub("docs/hardware/mobile.md",[("- **聲音路由**：SLOOP 同時是 USB audio **輸入**裝置","- **CTL-1 的聲音路由** `[實機]`：接上 USB 後 iPad 的聲音輸出會自動改到 FM-1，而且 CTL-1 自己的 GM 音色會疊上去。關掉內建音色、或改用 Bluetooth 避開 USB audio 的做法見 [CTL-1](../firmware/ctl-1/index.md#ipad-audio)。\n- **SLOOP 的聲音路由**：SLOOP 同時是 USB audio **輸入**裝置")])
+sub("docs/index.md",[("| 5 | SLOOP 3 / Agent Deck / Melodee 輪流刷入 | Agent Deck 0.7 已刷入（2026-11-17），見[操作速查](firmware/agent-deck/usage.md) |","| 5 | 輪流刷不同韌體 | 已試過 Agent Deck 0.7 與 CTL-1 1.0.3，用 `just fm1-switch` 切換，見[多韌體切換](firmware/switching.md) |")])
+EOF
+just docs-check 2>&1 | tail -1; git add -A && git commit -q -m "Record CTL-1 on hardware and how to handle iPad audio overlap
+
+Co-Authored-By: Claude Fable 5.2 <noreply@anthropic.com>" && git push -q origin main && echo pushed
+```
+
+```text
+{"status": "ok", "pages": 37, "llm_pages": 37, "deployed": false}
+pushed
+```
+</details></tool-use>
+
+_**Agent (claude-fable-5-2 2026-11-16 19:48:48Z)**_
+
+CTL-1 刷入成功，`fm1-switch` 第一次實際寫入也順利。你遇到的兩個聲音問題都有解法，答案來自上游手冊，我沒有在機器上操作過。
+
+## 關掉 CTL-1 自己的聲音
+
+1. 按 **`EDIT`** 開 Sound 頁。
+2. **KNOB 1（Sound）** 轉到 **Off**。
+3. **KNOB 2（MIDI in）** 設成 **Ignored**，這樣 iPad 送回來的 MIDI 也不會觸發它的音色。
+4. 按 **`SAVE`**，否則重開機會回到 On。
+
+## iPad 的聲音為什麼跑到 FM-1
+
+這是設計如此，不是設定錯了。CTL-1 用的底層預設讓 FM-1 同時是 USB 音訊的輸入與**輸出**裝置，iPadOS 一看到 USB 音訊輸出就會自動切過去。iPad 的聲音會從 FM-1 的喇叭和耳機孔出來，音量由 MASTER 旋鈕控制。
+
+看你要哪一種：
+
+| 想要 | 做法 |
+|---|---|
+| 聲音從 FM-1 出 | 維持現狀，只關掉上面的 Sound。耳機接 FM-1 就是最簡單的單線配置 |
+| 聲音留在 iPad | **改用 Bluetooth MIDI，不接 USB 線。** CTL-1 開機後 Bluetooth 就開著，裝置名稱是 `FM-1`，從音樂 app 的 Bluetooth MIDI 設定連線。沒有 USB 就沒有 USB 音訊，iPad 的輸出不會被搶走 |
+| 用 USB 線但不要 USB 音訊 | CTL-1 沒有這個選項，得自己重新 build |
+
+我的建議是第二種：你想接 iPad 控制 AUM 那類 app，藍牙免線又不會搶輸出，剛好是 CTL-1 相對 SLOOP 的優勢。
+
+iPadOS 接著 USB 音訊裝置時能不能手動把輸出切回內建喇叭，我沒有確認。AUM 這類 app 可以自己選硬體輸出，其他 app 不一定。
+
+## 這次記錄的
+
+- `docs/device-log.md`：目前韌體是 CTL-1 1.0.3，寫入 140 個 sector，驗證通過。
+- CTL-1 頁新增「接 iPad 時聲音重疊的處理」一節。
+- 刷前備份在 `backups/2026-11-17-0341-pre-ctl-1.0.3/`，含你最新的 SLOOP 狀態，還沒上傳到 Release。
+
+## 還沒確認的
+
+- CTL-1 的設定在新晶片上能不能保存：改個設定、`SAVE`、關機再開，看還在不在。
+- 切回 SLOOP 後曲子與設定的狀況。模擬預演顯示 CTL-1 不會動到曲子，但它存設定時會寫 SLOOP 也在用的 `0xFC000`，和 Agent Deck 一樣。切回去是 `just fm1-switch sloop`。
+
+---
+
+_**User (2026-11-16 19:55:42Z)**_
+
+可以補一下這部分到 CTL-1的docs中？（以後如果感覺可以落成知識的問題可以自動加進去）
+然後有什麼比較好的方式 emulate 模擬一下 ChoralRoot
+
+---
+
+_**Agent (claude-fable-5-2 2026-11-16 19:56:13Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Check how ChoralRoot handles incoming MIDI and whether RemoteFM1 hosts can run it
+
+`grep -n -i -E "MIDI in\b|incoming|external keyboard|MIDI keyboard|chord channel|plays the roots|from a keyboard" /tmp/choral-manual.md | cut -c1-360 | head -16; echo ==; grep -n -i -E "choralroot" /private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/5f461408-bbdd-44d0-bb3b-b0642eabaa31/scratchpad/up/remotefm1.md | cut -c1-260 | head -6; gh api repos/Quixotic7/RemoteFM1FW/releases/latest --jq '[.assets[].name]|map(select(test("horal";"i")))|join(", ")' 2>&1 | head -3`
+
+```text
+3:For ChoralRoot 0.41 on the M-VAVE FM-1 (what is new since 0.22 is marked so; what 0.41 brought, each drum's own Chorus, Delay and Reverb sends, Level, Drive and Filter on the Kick, Snare and Hats Mix pages, and the drums on the second core: [releases/0.41.md](releases/0.41.md); what 0.40 brought, drums on the metronome's keys (a Grids beat you morph, six k
+206:After three minutes without a key, button, knob or incoming MIDI message the logo comes back, and after ten the
+1143:With Options > MIDI Clock set to In, the tempo follows the incoming clock instead ([MIDI and USB](#15-midi-and-usb)),
+1424:Incoming start, continue and stop (USB, Bluetooth, and the FM-1's TRS jack) do what the LOOP (PLAY) button does,
+1427:that came in: it is not sent back. Set to In, the tempo follows the incoming clock too, and the loop keeps time with
+1979:| **MIDI Keys** | Off, ch 1 to ch 16 | Off | the channel whose notes 53 to 79 press the FM-1's keys F3 to G5, and notes 36 to 44 (a pad controller's first pads) the chord keys F3 to C#4 ([MIDI in](#midi-in-usb-bluetooth-and-the-trs-jack)); the MIDI Perform, MIDI Bass and MIDI Roots channels are skipped |
+1980:| **MIDI Roots** | Off, ch 1 to ch 16 | Off | the channel whose every note is a root at its own pitch: a whole keyboard plays chords, with the chord keys held on the FM-1 or over MIDI Keys ([MIDI in](#midi-in-usb-bluetooth-and-the-trs-jack)); the MIDI Perform, MIDI Bass and MIDI Keys channels are skipped. Not on the SMK-37. New in 0.39 |
+1981:| **MIDI Clock** | Off, Out, In | Out | Out: sends clock, and start / stop with the loop; incoming start / stop work as LOOP. In: follows the clock and start / stop |
+1985:| **USB Host** | Off, On | Off | the FM-1 only: the USB-C port hosts a USB MIDI keyboard, controller or second FM-1 instead of talking to a computer ([USB Host](#usb-host-a-midi-device-on-the-fm-1s-usb-c)). Never saved: every start-up is a USB device again |
+2151:### MIDI in (USB, Bluetooth and the TRS jack)
+2165:A part whose channel is Off ignores MIDI in.
+2400:The FM-1 (not the SMK-37) can host a USB MIDI device on its USB-C port: a USB MIDI keyboard or controller, or a second
+==
+112:   host/build/fm1remote --device --port FM-1 --stats                  # ChoralRoot
+199:  (tested 2026-11-08 with the second one on ChoralRoot 0.31).
+205:macOS keeps the MIDI port name of the first firmware it saw on the unit (for example "ChoralRoot FM-1"). The host
+301:0xF2000..0xF3FFF, written at its first Bluetooth start (free in ChoralRoot's map and the stock firmware's); OCT- + OCT+
+303:and its loops in 0x97000..0xD8FFF, part of the data area where ChoralRoot and FIZZ keep theirs (the owner's choice,
+choralroot-0.41.rfm1
+```
+</details></tool-use>
+
+_**Agent (claude-fable-5-2 2026-11-16 19:56:27Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Read ChoralRoot's MIDI-in rules and CTL-1's key range
+
+`sed -n '2151,2166p' /tmp/choral-manual.md | cut -c1-900; grep -n -i "Lowest\|octave" /tmp/ctl-manual.md | cut -c1-200 | head -6`
+
+```text
+### MIDI in (USB, Bluetooth and the TRS jack)
+
+| Message | Effect |
+| --- | --- |
+| notes on the MIDI Perform channel | play the chord sound directly, as an ordinary synth (no chords are built) |
+| notes on the MIDI Bass channel | play the bass sound |
+| program change | the sound's place in its engine's pool (chord: 0 = INIT; bass: 0 = off, 1 = INIT, and so on) |
+| CC 7 | the part's level |
+| CC 91, 93, 94 | the part's reverb, chorus and delay sends (they stay until changed: a program change does not reset them), quietly, with no popup: controller value 127 is 100 % |
+| CC 64, pitch bend, CC 1, aftertouch | sustain, bend, and the modulation sources of the engines that use them |
+| CC 10, 92, 16 to 63, 71 to 77, 79, 80 to 90, 102 to 113 | with Options > MIDI CC In (the default): the sound's parameters, below |
+| start, continue, stop | with MIDI Clock set to Out or In: as the LOOP (PLAY) button; start also restarts the Arp / Pattern from its first step |
+| clock | with MIDI Clock set to In: the tempo follows it |
+
+A part whose channel is Off ignores MIDI in.
+
+72:   move the keys an octave.
+94:| OCT− / OCT+ | Move the keys an octave down or up, from −3 to +3 |
+119:![The Play page on MIDI channel 1: Note E4 100; a chord lit on the keys; USB, Bluetooth (ready) and TRS (in only); lowest key F3, sound Acoustic Grand; bank A: CC 74 at 52, CC 71 at 70 (highlighte
+120:![SUSTAIN LOCKED across the top, CC 64 = 127 below it, and SUS LOCK beside the lowest key, D3; bank A's four controllers at the bottom](img/screen-sus.png "Sustain locked: ENV tapped twice")
+128:- The status line shows the lowest key's note, then "ARP" or "LATCH" while the arpeggiator is on,
+137:on, and OCT− or OCT+ while the octave is shifted. PLAY flashes green on each beat while playing. The
+```
+</details></tool-use>
