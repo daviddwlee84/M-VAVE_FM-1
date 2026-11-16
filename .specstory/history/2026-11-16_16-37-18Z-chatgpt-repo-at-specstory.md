@@ -11275,3 +11275,208 @@ fm1-20261117-011632.bin sha256:c6a4790266bdb9e97500c20f50a98b80f0d334d8a219e1744
 fm1-20261117-011632.json sha256:5762cf83ba2beb9eaf25f01c0111eade7c8d36f56ba46017c848c348d8475f08
 ```
 </details></tool-use>
+
+_**Agent (claude-fable-5-2 2026-11-16 17:39:35Z)**_
+
+備份已上傳到 Release，digest 與本機 SHA-256 一致。現在把文件和 `AGENTS.md` 的相關規則同步更新後 push。
+
+_**Agent (claude-fable-5-2 2026-11-16 17:40:59Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Update docs and agent rules for the release backup, push, and check the deploy
+
+```bash
+python3 - <<'EOF'
+import pathlib
+def sub(path, pairs):
+    p=pathlib.Path(path); s=p.read_text()
+    for a,b in pairs:
+        assert a in s, (path,a); s=s.replace(a,b,1)
+    p.write_text(s)
+REL="https://github.com/daviddwlee84/M-VAVE_FM-1/releases/tag/backup-2026-11-17-stock"
+sub("docs/device-log.md",[
+("| **尚未做** |",f"| [GitHub Release]({REL})（2026-11-17，digest 相符） |"),
+("- [ ] 備份另存一份到這台電腦以外的地方","- [x] 備份另存一份到這台電腦以外的地方（GitHub Release）"),
+("備份檔放在本機的 `backups/`（gitignore，不進 repo），另存一份到別處。","備份檔放在本機的 `backups/`（gitignore，不進 git），異地副本用 `just fm1-backup-release <目錄>` 上傳成這個 repo 的 Release 附件。這個 repo 是 public，所以附件任何人都能下載；這是我自己的決定，映像只適用於這台機器。"),
+("\n## Phase 1 驗收",f"| 2026-11-17 | `just fm1-backup-release 2026-11-17-stock` | 原廠備份上傳為 Release `backup-2026-11-17-stock`，asset digest 與本機 SHA-256 一致 |\n\n## Phase 1 驗收"),
+])
+sub("docs/getting-started/index.md",[
+("| `just fm1-verify-backups` |","| `just fm1-backup-release <目錄>` | 把 `backups/<目錄>` 上傳成 GitHub Release 附件（public，會先確認） | 對外發佈，本人執行 |\n| `just fm1-verify-backups` |"),
+])
+sub("docs/getting-started/backup-and-chip.md",[
+("    - **不要放進這個 public repo。** 完整映像包含這台機器自己的資料。repo 裡的 `backups/` 已被 gitignore。",
+ "    - **不要 commit 進 git。** repo 裡的 `backups/` 已被 gitignore。\n    - 完整映像包含這台機器自己的資料（Bluetooth 位址、配對、unit id）。要不要公開是自己的決定：我選擇用 `just fm1-backup-release` 放到這個 public repo 的 Release 當異地副本；不想公開就放 private repo 或其他儲存空間。"),
+])
+sub("docs/getting-started/cautions.md",[
+("- **不要把完整備份 commit 進 public repo。**","- **不要把完整備份 commit 進 git。** 要放 GitHub 就用 Release 附件，而且要清楚 public repo 的附件是公開的。"),
+])
+sub("AGENTS.md",[
+("| `backups/`, `downloads/` | Git-ignored. Flash backups and downloaded installers/firmware. Never commit. |",
+ "| `backups/`, `downloads/` | Git-ignored. Flash backups and downloaded installers/firmware. Never commit. Off-machine copies of backups go to GitHub Release assets (`just fm1-backup-release`). |"),
+("- The repo is public. Never commit flash backups, device-unique data, or\n  credentials. `.specstory/` is tracked by the owner's choice.",
+ "- The repo is public. Never commit flash backups or credentials to git.\n  `.specstory/` is tracked by the owner's choice.\n- The owner publishes full-flash backups as **public** release assets, knowing\n  they hold device-unique data. That is a per-backup decision: run\n  `just fm1-backup-release` only when the owner asks for that specific backup,\n  never as an automatic step after `fm1-backup`."),
+("just fm1-flash FILE    # WRITE: owner runs this, never an agent without approval","just fm1-flash FILE    # WRITE: owner runs this, never an agent without approval\njust fm1-backup-release DIR  # PUBLISH a backup as a public release asset: only on request"),
+])
+EOF
+just docs-check 2>&1 | tail -1 && git add -A && git commit -q -m "Publish stock backup as a release asset, document the shortcut
+
+Co-Authored-By: Claude Fable 5.2 <noreply@anthropic.com>" && git push origin main 2>&1 | tail -1 && sleep 45 && gh run list --workflow docs.yml -L2 --json status,conclusion,headSha --jq '.[]|"\(.headSha[0:7]) \(.status) \(.conclusion)"'
+```
+
+```text
+{"status": "ok", "pages": 23, "llm_pages": 23, "deployed": false}
+   637461a..7cce214  main -> main
+7cce214 completed success
+637461a completed success
+```
+</details></tool-use>
+
+_**Agent (claude-fable-5-2 2026-11-16 17:41:11Z)**_
+
+Phase 1 驗收完成：M-Flasher 已裝、原廠已備份、SLOOP 2.8.5 已刷入並通過存檔測試。
+
+## 你這次要的三件事
+
+**備份上傳到 Release**
+- 原廠備份（`.bin` + `.json`）已上傳：<https://github.com/daviddwlee84/M-VAVE_FM-1/releases/tag/backup-2026-11-17-stock>
+- Release asset 的 digest 與本機 SHA-256 一致（`c6a47902…a44fd38`）。
+- 依你的選擇未加密、公開。
+
+**Setup 捷徑（`Justfile`）**
+
+| 指令 | 作用 |
+|---|---|
+| `just fm1-fetch` | 下載 M-Flasher 與 SLOOP，並與 release digest 比對 |
+| `just fm1-install-flasher` | 下載後開啟 dmg |
+| `just fm1-gui` / `just sloop-editor` | 開 M-Flasher 視窗 / 離線版 SLOOP Web Editor |
+| `just fm1-find` / `just fm1-info` | 找機器 / 讀機器資訊 |
+| `just fm1-backup <label>` | 完整備份到 `backups/<日期>-<label>/` 並印出 SHA-256 |
+| `just fm1-verify-backups` | 用 `.json` 裡的 SHA-256 檢查所有備份 |
+| `just fm1-download-mode` / `just fm1-restart` | 進 / 離開 download mode |
+| `just fm1-flash <package.fwsc>` | 安裝韌體，會先問一次，M-Flasher 再要求輸入 `yes` |
+| `just fm1-backup-release <目錄>` | 把備份上傳成 Release 附件，會先確認 |
+
+我實際跑過 `fm1-fetch`、`fm1-find`、`fm1-verify-backups`、`fm1-backup-release`。`fm1-info`、`fm1-backup`、`fm1-download-mode`、`fm1-restart`、`fm1-flash` 還沒在機器上跑過。刻意沒有做 bootloader、restore、`run-ram` 的捷徑。
+
+**`.specstory/history`** 已 commit 並 push。
+
+## 刷機紀錄
+
+- 寫入 143 個 sector（`0x04000`–`0x92FFF`），全在 FIRMWARE 區，BOOT 區沒動，寫完逐區驗證通過。
+- SLOOP 執行時 `just fm1-find` 回報 `Felucca (running; download-mode switches it)`：SLOOP 在 USB MIDI 上叫 Felucca，M-Flasher 認得它。這是在你機器上看到的，已記進 `docs/device-log.md`。
+- 站台已重新部署，首頁路線圖與「我的機器」都是最新狀態。
+
+## 建議下一步
+
+現在的 SLOOP 還沒有自己的備份。等你把設定調到順手之後，按住 `OCT-` + `OCT+` 5 秒進 download mode，跑 `just fm1-backup sloop-2.8.5`。之後要在 SLOOP 與其他韌體之間切換時，就能連同設定與 project 一起還原。
+
+---
+
+_**User (2026-11-16 17:44:48Z)**_
+
+```
+
+
+<pasted_content id="fec1">
+M-VAVE_FM-1 on  main [?] via  v3.15.1
+❯ just fm1-backup sloop-2.8.5
+Connecting to usb:2-4
+M-Flasher loader 1.3 already running
+Flash chip 0xB36014 (new)
+Reading the flash
+  100%
+Read in 1.3 s (801 KB/s)
+Checked: the chip's CRC32 of the flash matches the read
+  model       FM-1
+  bootloader  stock (M-VAVE)
+  firmware    SLOOP 2.8.5
+  app         OK
+  chip key    0x980F
+  flash       0xB36014
+  unit id     55227286a0cb022a
+  loader      M-Flasher 1.3, CPU at 96 MHz
+    - the firmware uses the FM-1 flash layout
+    - flash chip 0xB36014 (new)
+Backup saved: backups/2026-11-17-sloop-2.8.5/fm1-20261117-014153.bin
+783060c08ac0727916e997dfc0b295a7469a45afe0ab4d460a4d5bc9bfc018b2  backups/2026-11-17-sloop-2.8.5/fm1-20261117-014153.bin
+Record this in docs/device-log.md and keep a copy off this machine.
+</pasted_content id="fec1">
+
+```
+成功了 這個是備份之後包含我在玩的曲子是嘛
+
+```
+
+
+<pasted_content id="fec1">
+M-VAVE_FM-1 on  main [!] via  v3.15.1 took 2s
+❯ ls backups
+ 2026-11-17-sloop-2.8.5   2026-11-17-stock
+
+M-VAVE_FM-1 on  main [!] via  v3.15.1
+❯ just fm1-backup-release backups/2026-11-17-sloop-2.8.5/
+Publish this full-flash backup as a PUBLIC release asset?
+error: recipe `fm1-backup-release` was not confirmed
+
+M-VAVE_FM-1 on  main [!] via  v3.15.1 took 3s
+❯ just fm1-backup-release backups/2026-11-17-sloop-2.8.5/
+Publish this full-flash backup as a PUBLIC release asset? y
+no such directory: backups/backups/2026-11-17-sloop-2.8.5/
+error: recipe `fm1-backup-release` failed with exit code 1
+
+M-VAVE_FM-1 on  main [!] via  v3.15.1
+❯ just fm1-backup-release ./backups/2026-11-17-sloop-2.8.5/
+Publish this full-flash backup as a PUBLIC release asset? y
+no such directory: backups/./backups/2026-11-17-sloop-2.8.5/
+error: recipe `fm1-backup-release` failed with exit code 1
+
+M-VAVE_FM-1 on  main [!] via  v3.15.1
+❯ just fm1-backup-release 2026-11-17-sloop-2.8.5
+Publish this full-flash backup as a PUBLIC release asset? y
+https://github.com/daviddwlee84/M-VAVE_FM-1/releases/tag/backup-2026-11-17-sloop-2.8.5
+</pasted_content id="fec1">
+
+```
+
+---
+
+_**Agent (claude-fable-5-2 2026-11-16 17:47:00Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Verify the new release, fix the shortcut to accept paths, and record the SLOOP backup
+
+```bash
+git status --short && gh release view backup-2026-11-17-sloop-2.8.5 --json assets --jq '.assets[]|"\(.name) \(.digest)"' && just fm1-verify-backups && python3 - <<'EOF'
+import pathlib
+def sub(path, pairs):
+    p=pathlib.Path(path); s=p.read_text()
+    for a,b in pairs:
+        assert a in s, (path,a); s=s.replace(a,b,1)
+    p.write_text(s)
+sub("Justfile",[
+('''    d="backups/{{dir}}"; tag="backup-{{dir}}"''','''    name=$(basename "{{dir}}")   # accept a bare name or a path like backups/<name>/
+    d="backups/$name"; tag="backup-$name"'''),
+('--title "Backup {{dir}}"','--title "Backup $name"'),
+("# Upload one backups/<dir> (.bin + .json)","# `dir` is the folder name under backups/ (a path to it also works).\n# Upload one backups/<dir> (.bin + .json)"),
+])
+R="https://github.com/daviddwlee84/M-VAVE_FM-1/releases/tag/backup-2026-11-17-sloop-2.8.5"
+sub("docs/device-log.md",[
+("\n## 下載的檔案",f"| 2026-11-17 | SLOOP 2.8.5 裝好並玩過之後的完整 flash（含當時的曲子與設定） | `backups/2026-11-17-sloop-2.8.5/fm1-20261117-014153.bin` + `.json` | `783060c08ac0727916e997dfc0b295a7469a45afe0ab4d460a4d5bc9bfc018b2` | [GitHub Release]({R})（2026-11-17，digest 相符） |\n\n## 下載的檔案"),
+("\n## Phase 1 驗收","| 2026-11-17 | SLOOP 執行中進 download mode，`just fm1-backup sloop-2.8.5` | 成功。讀取 1.3 s（801 KB/s），CRC32 相符；M-Flasher 回報 firmware `SLOOP 2.8.5`、app OK、bootloader stock |\n| 2026-11-17 | `just fm1-backup-release 2026-11-17-sloop-2.8.5` | 上傳為 Release `backup-2026-11-17-sloop-2.8.5`，digest 相符 |\n\n## Phase 1 驗收"),
+])
+EOF
+just --dry-run fm1-backup-release backups/2026-11-17-sloop-2.8.5/ 2>&1 | grep -n 'name=\|d=' ; bash -c 'name=$(basename "./backups/2026-11-17-sloop-2.8.5/"); echo $name'
+```
+
+```text
+ M .specstory/history/2026-11-16_16-37-18Z-chatgpt-repo-at-specstory.md
+ M .specstory/statistics.json
+fm1-20261117-014153.bin sha256:783060c08ac0727916e997dfc0b295a7469a45afe0ab4d460a4d5bc9bfc018b2
+fm1-20261117-014153.json sha256:6293f8908c977635b3a2da17d221aad14b67438030a89918b536a001c6bdf909
+ok   backups/2026-11-17-sloop-2.8.5/fm1-20261117-014153.bin
+ok   backups/2026-11-17-stock/fm1-20261117-011632.bin
+Command did not complete within its 120s timeout and was moved to the background (ID: b8l1y2cl8). Output is being written to: /private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/5f461408-bbdd-44d0-bb3b-b0642eabaa31/tasks/b8l1y2cl8.output. You will be notified when it completes. It is running now: do not start a second copy while it runs. If it is no longer needed, stop it with TaskStop. To check interim output, use Read on that file path.
+```
+</details></tool-use>
