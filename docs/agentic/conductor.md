@@ -2,7 +2,7 @@
 
 Conductor 是我在 [fm1-base](../dev/index.md) 上寫的 agent 控制台：韌體在 `firmware/conductor/`，電腦端的 daemon 在 `host/conductor/`。用過 [Agent Deck](agent-deck.md) 之後，有兩件事想改：shell pane 佔掉大半琴鍵，而且它只接 classic Herdr / tmux。
 
-**狀態（2026-11-17）：設計與原型完成。host simulator、fm1-emu 兩種晶片、daemon 對 hc 的端到端都跑通 `[模擬]`；還沒刷進實機。**
+**狀態（2026-11-17）：已刷進實機（新晶片 `0xB36014`），開機正常，daemon 連得上 `[實機]`。按鍵、LED、批准流程還沒逐項在實機確認。**
 
 ## 一句話的設計
 
@@ -159,6 +159,12 @@ just cond-run herdr         # 只接 classic Herdr（hc、fake 同理）
 
 `--backend` 預設是 **`auto`**：hc 與 classic Herdr 哪個在跑就接哪個，兩邊的 agent 合在一起放上琴鍵（標頭顯示 `hc+herdr`）。兩個 runtime 不共享 agent，agent 可能在任一邊。
 
+### MIDI port 叫 `Felucca` { #port-name }
+
+macOS 會記住這台機器之前的 MIDI 名稱，刷了 Conductor 之後 port 仍可能叫 `Felucca`（USB 產品名其實是 `CONDUCTOR FM-1`）`[實機]`。daemon 先找名字含 `CONDUCTOR` 的 port，找不到就聽所有 MIDI 輸入 2.5 秒，誰送出 Conductor 的 HELLO / HEARTBEAT 就用誰。也可以直接指定：`just cond-run hc --port Felucca`。
+
+**同一時間只開一個 daemon。** 兩個 daemon 對著同一台機器時，裝置會收到兩邊的表；daemon 每 30 秒重送一次完整的表，最多 30 秒就會恢復。
+
 ### 螢幕顯示 `NO AGENTS` { #no-agents }
 
 daemon 已經連上（標頭有 backend 名稱），但那個 backend 裡沒有 agent。2026-11-17 我第一次用 `just cond-run hc` 就是這樣：我的 hc 裡只有兩個 `zsh`，shell 不佔琴鍵，agent 全在 classic Herdr `[實機]` host 端。daemon 啟動時會印出每個 backend 看到什麼：
@@ -197,7 +203,7 @@ daemon 的設定檔是 `~/.config/conductor/config.json`（可省略），可以
 
 ## 實刷準備 { #flash }
 
-**狀態（2026-11-17 18:38）：`AGENTS.md` 要求的檢查全部做完，等我本人刷寫。**
+**2026-11-17 18:40 已由我本人刷寫，結果見[我的機器](../device-log.md)。** 以下是刷之前做的檢查。
 
 要刷的套件：
 
@@ -248,4 +254,5 @@ Preflight：
 - [ ] Bluetooth：先確認 BLE 收 SysEx 的路徑，再照上面的設計實作。
 - [ ] `codex app-server` backend。
 - [ ] 語音鍵（`ARP`）對真的 Wispr Flow 試一次：host 單元測試確認了送出的按鍵與一定會放開，**還沒在有輔助使用權限的 terminal 裡實際觸發過** Wispr Flow。
-- [ ] 實刷：preflight 只差接上實機的兩項，見[實刷準備](#flash)。
+- [x] 實刷（2026-11-17），見[實刷準備](#flash)。
+- [ ] 在實機逐項確認：琴鍵燈的各種狀態、`REC` / `FX` / `ENV` 對 `cond-it` 的假 agent、提示音、`ARP` 語音鍵。

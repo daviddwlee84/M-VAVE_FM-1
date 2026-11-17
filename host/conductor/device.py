@@ -6,11 +6,34 @@ from __future__ import annotations
 import queue
 import sys
 import threading
+import time
 
 from . import protocol as P
 from .model import KIND_SHORT, STATE_NAMES
 
 PORT_HINTS = ("CONDUCTOR",)
+
+
+def sniff_port(mido, names: list[str], seconds: float = 2.5) -> str | None:
+    """The input that speaks our protocol: the device says HELLO or HEARTBEAT every
+    second, whatever macOS calls the port (it keeps a firmware's old name, e.g.
+    "Felucca", after a switch)."""
+    found: list[str] = []
+    ports = []
+    for n in names:
+        def hear(msg, n=n):
+            if msg.type == "sysex" and bytes(msg.data[:3]) == P.HEADER and n not in found:
+                found.append(n)
+        try:
+            ports.append(mido.open_input(n, callback=hear))
+        except (OSError, IOError):
+            continue
+    end = time.time() + seconds
+    while time.time() < end and not found:
+        time.sleep(0.05)
+    for p in ports:
+        p.close()
+    return found[0] if found else None
 
 
 def find_port(names: list[str], want: str | None) -> str | None:
@@ -29,8 +52,11 @@ class MidiLink:
 
         ins, outs = mido.get_input_names(), mido.get_output_names()
         name_in, name_out = find_port(ins, port), find_port(outs, port)
+        if not name_in and not port:
+            name_in = sniff_port(mido, ins)  # not by name: by what it says
+            name_out = name_in if name_in in outs else None
         if not name_in or not name_out:
-            raise RuntimeError(f"no Conductor MIDI port (inputs: {ins})")
+            raise RuntimeError(f"no Conductor on MIDI: no port named CONDUCTOR and none saying HELLO (inputs: {ins})")
         self.name = name_in
         self.q: queue.Queue[bytes] = queue.Queue()
         self.out = mido.open_output(name_out)

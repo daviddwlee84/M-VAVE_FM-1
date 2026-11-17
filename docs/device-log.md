@@ -10,7 +10,7 @@
 | Flash 晶片 / JEDEC ID | **`0xB36014` (new)**，UCUN UC25HQ80，1 MiB |
 | Bootloader | stock (M-VAVE) |
 | 出廠韌體版本 | FM-1 015 (stock)，firmware check OK |
-| 目前韌體 | **ChoralRoot 0.41**（2026-11-17 約 04:18 刷入，套件識別 `FM-1_920`，USB 產品名 `ChoralRoot FM-1`）。之前依序是原廠 015 → SLOOP 2.8.5 → Agent Deck 0.7 → SLOOP 2.8.5 → CTL-1 1.0.3 |
+| 目前韌體 | **Conductor 0.1（自製）**（2026-11-17 18:40 刷入，套件識別 `FM-1_1200`，USB 產品名 `CONDUCTOR FM-1`；macOS 的 MIDI port 仍顯示 `Felucca`）。之前依序是原廠 015 → SLOOP 2.8.5 → Agent Deck 0.7 → SLOOP 2.8.5 → CTL-1 1.0.3 → ChoralRoot 0.41 |
 | SLOOP 的曲子 | **已不在機器上**（`0x97000` 被 ChoralRoot 的韌體蓋掉）。完整保存在 `2026-11-17-0341-pre-ctl-1.0.3` 備份裡；回 SLOOP 要在 M-Flasher GUI 還原那份備份 |
 | m-bootloader | 未安裝 |
 | 主機 | macOS，M-Flasher 0.12.1 |
@@ -35,7 +35,7 @@
 M-Flasher 在兩次寫入前各自動存了一份：`~/Documents/M-Flasher/backups/fm1-20261117-023538.bin`、`fm1-20261117-024717.bin`。`pre-agtdeck` 已上傳到 [GitHub Release](https://github.com/daviddwlee84/M-VAVE_FM-1/releases/tag/backup-2026-11-17-pre-agtdeck)（digest 相符）。
 | 2026-11-17 | 刷 CTL-1 之前的 SLOOP 2.8.5 | `backups/2026-11-17-0341-pre-ctl-1.0.3/fm1-20261117-034125.bin` + `.json` | `8c9267e87a320a1e4cd592a9261907d978b8f3fdb94eaf15e685afae267b4451` | 尚未上傳 |
 | 2026-11-17 | 刷 ChoralRoot 之前的 CTL-1（仍含 SLOOP 的 project sector） | `backups/2026-11-17-0413-pre-choralroot-0.41/fm1-20261117-041350.bin` + `.json` | `8834d0188eb309c7229fb3ad9e89a76a349eca546accb666b8a741509a66eb10` | 尚未上傳 |
-| 2026-11-17 | 刷 Conductor 之前的 ChoralRoot 0.41（目前狀態） | `backups/2026-11-17-pre-conductor/fm1-20261117-183840.bin` + `.json` | `81f048bb0e8bea174ccb84df4de2555c891b087651083710c41c428a0e7ba1e1` | 尚未上傳 |
+| 2026-11-17 | 刷 Conductor 之前的 ChoralRoot 0.41 | `backups/2026-11-17-pre-conductor/fm1-20261117-183840.bin` + `.json` | `81f048bb0e8bea174ccb84df4de2555c891b087651083710c41c428a0e7ba1e1` | 尚未上傳 |
 
 ## 下載的檔案
 
@@ -79,6 +79,8 @@ M-Flasher 在兩次寫入前各自動存了一份：`~/Documents/M-Flasher/backu
 | 2026-11-17 | 本人執行 `just fm1-switch downloads/choralroot-0.41.fwsc` | M-Flasher 的計畫：`Writes 152 sectors (608 KiB): 0x04000-0x8EFFF, 0x91000-0x91FFF, 0x93000-0x9EFFF`。寫入後機器重開，USB 產品名 `ChoralRoot FM-1`。M-Flasher 自動備份 `fm1-20261117-041838.bin` |
 | 2026-11-17 | ChoralRoot 在新晶片實機、且 flash 裡有 SLOOP 與 CTL-1 殘留資料的狀態下 | 開得起來、USB MIDI 正常。上游記載的「在 Sloop 資料上掉進 ROM boot」在這台、這個版本沒有發生 |
 | 2026-11-17 18:38 | agent 執行 `just fm1-download-mode`、`fm1-info`、`fm1-backup pre-conductor`（刷 Conductor 前的 preflight） | 切換成功（`WL82 UBOOT1.00`）。`info`：model FM-1、bootloader stock (M-VAVE)、firmware Felucca、app OK、flash `0xB36014`，晶片 CRC32 與讀取相符。備份 SHA-256 `81f048bb…7ba1e1`，`fm1-verify-backups` ok。機器停在下載模式，等本人刷寫 |
+| 2026-11-17 18:40 | 本人執行 `just fm1-switch firmware/conductor/build/conductor.fwsc`（SHA-256 `de182723…0502f3`，commit `d45ce67`） | 先自動備份 `backups/2026-11-17-1839-pre-conductor/fm1-20261117-184005.bin`（SHA-256 與 18:38 那份相同，`81f048bb…7ba1e1`）。M-Flasher 的計畫：`Writes 140 sectors (560 KiB): 0x04000-0x8EFFF, 0x91000-0x91FFF`，安裝範圍 `0x04000-0x92FFF`。寫入後全部驗證通過（晶片 CRC32 相符），M-Flasher 自動備份 `fm1-20261117-184013.bin`，機器重開 |
+| 2026-11-17 | Conductor 在實機開機 | 螢幕正常；macOS 的 MIDI port 名稱沿用 `Felucca`，daemon 照名字找不到 → 改成聽協定找 port。裝置 0.4 秒內送出 Conductor 的 HELLO，本人的 daemon 連上，裝置改送 HEARTBEAT，SELECT 有回傳。Conductor 不寫 flash，資料區沒有變動（模擬器預演結果，實機尚未用備份比對） |
 
 ## Phase 1 驗收
 

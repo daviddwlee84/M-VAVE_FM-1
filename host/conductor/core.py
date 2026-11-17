@@ -27,6 +27,7 @@ DEFAULT_CONFIG = {
     "continue_text": "continue",
     "detail_every": 2.0,
     "meta_every": 3.0,
+    "full_every": 30.0,  # resend every slot now and then: heals a device that missed or got other frames
     # the dictation hotkey ARP holds down (Wispr Flow, Handy, ...): keys as macOS names
     "voice_keys": ["ctrl", "option"],
     "voice_mode": "hold",  # hold: push-to-talk; toggle: one press and release per button press
@@ -63,12 +64,16 @@ class Conductor:
     _detail_at: float = 0.0
     _meta_at: float = 0.0
     _meta: bytes = b""
+    _full_at: float = 0.0
     device_seen: float = 0.0
     voice: object = None  # a VoiceKey, or None: the button does nothing
 
     # ------------------------------------------------------------ backend -> device
     def refresh(self) -> None:
         now = time.time()
+        if now - self._full_at >= self.config.get("full_every", 30.0):
+            self._full_at = now
+            self._slot_frames.clear()
         fresh = {a.id: a for a in self.backend.list_agents()}
         for a in fresh.values():
             old = self.agents.get(a.id)
