@@ -26362,3 +26362,49 @@ bb5ffeb Voice lab: on-device TTS for a vocabulary app, researched and heard
 ?? .claude/plans/edge-computing-text-to-speech-moose-abstract-thacker.md
 ```
 </details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 20:17:56Z)**_
+
+Next, the chore commit for this session's plan and chat history. Files from the other session (`squishy-riding-flute.md`, the ascii-firmware history, `statistics.json`) stay out:
+
+_**Agent (claude-opus-5-5 2026-11-17 20:17:58Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Commit this session's plan and chat history
+
+```bash
+git add .claude/plans/edge-computing-text-to-speech-moose-abstract-thacker.md .specstory/history/2026-11-17_17-51-27Z-edge-computing-text-to.md && git commit -q -F - <<'EOF'
+chore: backup plan and chat history (voice lab)
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+EOF
+git log --oneline -3 && git status --short
+```
+
+```text
+78aa8fe chore: backup plan and chat history (voice lab)
+bb5ffeb Voice lab: on-device TTS for a vocabulary app, researched and heard
+baefbb6 chore: backup plan and chat history
+ M .claude/plans/squishy-riding-flute.md
+ M .specstory/history/2026-11-17_13-42-11Z-ascii-firmware-focus-host.md
+ M .specstory/statistics.json
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 20:18:06Z)**_
+
+已經 commit 好了，照這個 repo 的慣例分成兩個。沒有 push，因為 push 到 `main` 就會發佈網站。
+
+1. **`bb5ffeb` Voice lab: on-device TTS for a vocabulary app, researched and heard**
+   - `docs/dev/tts.md`、`docs/dev/vocab.md`，以及 nav、版本表、韌體地圖、開發環境頁的更新
+   - `host/voicelab/`：試聽實驗室和它的單元測試
+   - `firmware/common/` 的 `lpc`、`adpcm` 解碼器和測試
+   - `firmware/voicelab/`：驗證用的小韌體
+   - `Justfile` 的 `voice-*` recipes、`AGENTS.md`、`.gitignore`
+2. **`78aa8fe` chore: backup plan and chat history (voice lab)**：這次的 plan 和這個 session 的對話紀錄。
+
+**沒進 git 的：**
+- 生成的語音（`build/voicelab/`、`firmware/voicelab/gen/`），因為 macOS `say` 的聲音只能自用。
+- `vendor/` 裡的 GPL 引擎。
+- 另一個 session 的 `.claude/plans/squishy-riding-flute.md`、`.specstory/history/2026-11-17_13-42-11Z-ascii-firmware-focus-host.md` 和共用的 `.specstory/statistics.json`，這三個我沒碰，還是未 commit 狀態。

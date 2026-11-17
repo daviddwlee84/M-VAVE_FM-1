@@ -17,10 +17,23 @@
 
 ## 1. 練習判定輔助
 
+**原則：PRACTICE 不再用絕對速度判長短。** SEND SPEED 是全域設定，目前同時管三件事：KEY 頁的 keyer、KEY 頁解碼器的起點、PRACTICE 判定。0.4 起它只管 KEY 頁。PRACTICE 改成看你自己打出來的長短比例（劃約為點的 3 倍），快慢都可以：
+- HEAR_KEY（聽了照打）：解碼器起點用 HEAR 的字元速度，因為你在模仿聽到的節奏。
+- SEE_KEY（看字打碼）：起點用延續下來的手速，沒有的話用 SEND。
+- 起點只是第一筆猜測，後面靠相對長短和手速延續修正，所以打得比聽到的慢也能判對。
+
 **手速延續**
 - `morse.c` 新增 `mo_dec_restart(d)`：只清掉 `pat`、`prev` 和統計，保留 `dit_avg`、`dah_avg`、`cgap`。
-- 練習中換卡改用 `mo_dec_restart`，學到的手速就會帶到下一張卡。只有開始新回合、或改了 SEND SPEED 時，才用 `own_reset()` 整個重設。
-- 回合的第一張卡，起始 dit 取 SEND 和 HEAR 兩個速度 dit 的中間值。理由：使用者會模仿聽到的速度。
+- 練習中換卡改用 `mo_dec_restart`，學到的手速就會帶到下一張卡。只有開始新回合、或改了速度時，才用 `own_reset()` 整個重設。
+
+**相似度評級**（每張打碼卡都給）
+- `mo_judge` 另外算一個 0–100 的節奏分數：
+  - 劃點比和 3.0 差多少；
+  - 字內 gap 和 1 個點差多少；
+  - 同一種元素之間長短是否一致。
+- 結果頁顯示評級：`GREAT`（≥85）、`GOOD`（≥65）、`CLOSE`、`OFF`。
+- 評級和對錯分開：碼型對了就算對，評級只是告訴你節奏有多標準。
+- **差一點（CLOSE MISS）**：元素數對，但有一個元素長短判反，而且差距在界線 ±20% 以內。這種情況不升盒也不歸零，同一張卡在回合末再出一次，畫面顯示「ALMOST」加對照圖。
 
 **寬鬆判定**
 - `morse.c` 新增純函式 `mo_judge(mark[], gap[], n, want_code, dit_est) → MJ_OK / MJ_COUNT / MJ_DAH_SHORT / MJ_DIT_LONG / MJ_SPLIT / MJ_OTHER`。
@@ -132,6 +145,7 @@ CHART 頁按 `REC` 進入 **EDIT**。所有改動先存在 RAM 裡的草稿 `ln_
 
 1. `just morse-unit`：
    - `mo_judge`：M 用 180/180 ms 判對；I 用 60/60 ms 判對；dit 和 dah 對比不足判錯；切開、元素數不對時給出對的 reason。
+   - 評級：標準 1:3:1 得 GREAT；劃點比 2:1 得 CLOSE；判反但在 ±20% 內算 CLOSE MISS。慢手（SEND 5 WPM 的節奏）回答 20 WPM 的題目也判對。
    - `mo_dec_restart` 保留平均值。
    - `ln_*` 的編輯函式做完後 `ln_valid` 都成立；`ln_open_to` 往前開、往回縮都正確；`LN_PLACE` 的回合只出未開放的字。
 2. `just fw-test morse`：
