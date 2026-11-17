@@ -26,7 +26,7 @@ experimental firmware apps under `firmware/`, built on the `fm1-base` submodule.
 | `tools/`, `vendor/`, `build/` | Git-ignored. Emulator binaries and state, upstream checkouts, firmware build output. |
 | `firmware/<app>/` | Own firmware apps (fm1-base template layout: `app.c`, `app.h`, `fm1.toml`, `tests/`). `firmware/hello` is the unmodified template, kept as the toolchain smoke test. |
 | `firmware/conductor/` | Own agent-console firmware (MIT). Design: `docs/agentic/conductor.md`. |
-| `firmware/morse/` | Own pocket Morse code machine (MIT): keyer, decoder, flash cards. Design: `docs/dev/morse.md`. |
+| `firmware/morse/` | Submodule: [fm1-morse](https://github.com/daviddwlee84/fm1-morse), own pocket Morse code machine (MIT, its own repo for The Firmware Hub, with `LICENSE` and `fmhub.json`). Built here with `third_party/fm1-base`; commit inside it, then bump the pointer here. Design: `docs/dev/morse.md`. |
 | `firmware/common/` | Modules shared by own apps (`hostlink`, `ledfx`, `chime`; MIT). Apps add `include = ["../common"]`. |
 | `host/conductor/` | Conductor's host daemon (Python, MIT): backends `hc`, `herdr`, `fake`. Protocol spec in `PROTOCOL.md`; tests in `host/tests/`. |
 | `host/morse/` | Morse's host (Python, MIT): types what the FM-1 reads into the Mac, sends text for it to play. Protocol in `PROTOCOL.md` (keying is Vail-format MIDI note 0). |
@@ -63,7 +63,8 @@ just cond-emu [CHIP]   # Conductor firmware in fm1-emu with the virtual USB cabl
 just cond-run [BACKEND]    # daemon against a CONDUCTOR MIDI device (emulator or real unit)
 just fw-common-test    # firmware/common unit tests on this computer (hostlink BLE packets)
 
-just morse-unit        # firmware/morse platform-free parts (morse.c, learn.c) on this computer
+just morse-unit        # firmware/morse platform-free parts (morse.c, learn.c, content.c) on this computer
+just morse-release X.Y # Morse's release package (identity FM-1_41 + XXYYZZ)
 just morse-test        # Morse host unit tests (protocol vectors shared with tests/basic.txt)
 just morse-emu [CHIP]  # Morse firmware in fm1-emu with the virtual USB cable
 just morse-type [--dry-run]  # what the FM-1 reads, typed into the focused Mac app

@@ -75,3 +75,28 @@ FM-1 Player 的頁面自己寫明：韌體清單來自 Firmware Hub 的即時目
 ## 官方網站
 
 M-VAVE 官方的產品頁與下載在 [cuvave.com](https://www.cuvave.com/product?id=fm-1)（Cuvave 是 M-VAVE 的公司網站）。官方韌體 `FM-1.fwsc` 與更新工具 M-UPGRADE 從那裡的 Download 取得。頁面內容是 JavaScript 動態載入的，我沒有逐項核對上面目前列的版本。
+
+## 自己的韌體怎麼上架 { #listing }
+
+2026-11-18 為了 [Morse](../dev/morse.md) 查的。只讀，沒有送出任何東西。`[上游]`（來源：[submit](https://thefirmwarehub.com/submit/)、[KB](https://thefirmwarehub.com/kb/)、[fmhub.md](https://thefirmwarehub.com/fmhub.md)、`catalog.json`）
+
+- **送審**：填 [submit](https://thefirmwarehub.com/submit/) 頁的表單，不用附檔案，Hub 會自己去讀 repo。每一筆都由 Sven 本人看過，先上 test site 再上正式站。舊文件還寫「寄 email」，表單看起來是比較新的路徑。上架後，Hub 會在三小時內自動抓那個 repo 最新一個附有 `.fwsc` 的 GitHub release；版本是 0.x 或帶 beta 的會標成 beta。
+- **六個必要條件**：
+  - 開源：source 在 tag 上可以瀏覽，repo 根目錄要有 `LICENSE`。
+  - GitHub release 附上 `.fwsc`。
+  - identity 要是自己的：送出前用 [#check](https://thefirmwarehub.com/submit/#check) 檢查。
+  - 套件裡要有 update loader。
+  - repo 根目錄要有 `fmhub.json`。
+  - **在實機上測過**："'It builds' or 'it runs in the emulator' is not enough"。要測的有：從原廠 V15 安裝、從另一個韌體安裝、從自己的韌體再裝別的韌體、USB 回應自己的 `FM-1_` identity、刻意中斷一次寫入再繼續；如果會覆寫或讀不了別人的 project，要在 README 寫明。
+- **`fmhub.json`**：只允許 9 個欄位（`what`、`author`、`kinds`、`play`、`editor`、`cheat`、`image`、`color`、`sounds`，外加 `smk37`），多一個欄位整個檔案就不採用。新韌體至少要有：
+  - `what`：英文，20–300 字元，不能有連結。
+  - `kinds`：synth / groove / drums / chords / tracker / other 擇一。
+  - `image`：repo 裡的正方形圖，240–1024 px、≤ 300 KB。
+- **晶片欄**（new / old / any）由 Hub 自己從套件讀出來，作者不用申報。同樣用 fm1-base 的 CTL-1 被標為 new。
+- **收什麼**：KB 寫「It makes music… Games and tools without sound are not listed」，但 AGTDECK、MIDIMON 都以 `other` 上架了。
+- **Hub 讀的是 `fmhub.json`**：fm1-base build 出來的 `firmware.json`，在 Hub 的文件裡完全沒提到。
+- **一個 repo 一張卡**：圖片路徑、`fmhub.json` 都以 repo 根目錄為準，所以要上架的韌體應該放在獨立 repo（見[自製韌體環境](../dev/index.md)）。
+
+上架之後，fm1-emu 和 RemoteFM1 的清單會自動從 Hub 帶進去。awesome-fm-1（每個 PR 一筆）、aroum/fm1-custom-fw、fm1-editor.com（開 issue）、FM-1 Firmware Atlas（PR 改 `data/firmwares.json`）則要另外提交。公告通常發在 r/MVaveFM1。
+
+**注意同名**：Hub 上的 CONDUCTOR 是 MammothCheese 的 groovebox（`MammothCheese/conductor`，GPL-3.0，identity `FM-1_1812`），不是本 repo 的 [Conductor](../agentic/conductor.md)。Hub 和 fm1-emu 上的 id `conductor` 已經被它用了。

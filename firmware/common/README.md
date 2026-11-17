@@ -30,4 +30,5 @@ They keep no flash state.
 
 `just fw-common-test` builds and runs `tests/` on the computer (hostlink's packet
 cutting and reassembly). `firmware/conductor` is the first user; its `tests/basic.txt` exercises all three
-in the host simulator. `firmware/morse` uses `hostlink` (its own `7D 4D 4F` frames) and `ledfx`.
+in the host simulator. `firmware/morse` (now its own repo, a submodule) carries a copy of `hostlink` and `ledfx` in its `common/`; change
+them here and copy them there, or the other way round.

@@ -1,3 +1,6 @@
 [submodule "third_party/fm1-base"]
 	path = third_party/fm1-base
 	url = https://github.com/charlesvestal/fm1-base.git
+[submodule "firmware/morse"]
+	path = firmware/morse
+	url = https://github.com/daviddwlee84/fm1-morse.git

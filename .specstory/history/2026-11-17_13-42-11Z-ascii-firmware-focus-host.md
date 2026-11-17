@@ -45968,3 +45968,1847 @@ README.md:27:| **Conductor** | The FM-1 as a desk console for coding agents: one
 _**User (2026-11-17 18:11:14Z)**_
 
 先 commit 然後刷 0.3
+
+---
+
+_**Agent (claude-opus-5-5 2026-11-17 18:11:19Z)**_
+
+先 commit。
+
+_**Agent (claude-opus-5-5 2026-11-17 18:11:24Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Commit Morse 0.3 and the docs updates
+
+```bash
+for f in firmware/morse/*.c firmware/morse/*.h firmware/morse/fm1.toml firmware/morse/words.tsv firmware/common/*.c firmware/common/*.h; do [ "$f" -nt firmware/morse/build/morse.fwsc ] && echo "NEWER THAN PACKAGE: $f"; done; git add -A && git commit -q -F - <<'EOF'
+Morse 0.3: TYPE's code on the keys fits; 0.2 on the unit
+
+TYPE with the code on the keys (SEQ): the keyboard grows from 86 to
+126 px and the line shrinks to its last row, so each key holds its code
+down the key and its letter under it. In 0.2 the black keys lost their
+letters and the white keys' codes ran into theirs; the digits page's 0
+(-----) did not fit. Host 0.3.0 knows firmware 0.3.
+
+Docs: Morse 0.2 flashed 2026-11-18 00:14 (32 sectors, as rehearsed; the
+learning record at 0xDA000 kept, ROUND 4 on the unit), the owner's tries
+of the 0.2 pages, the preflight and backups in the device log.
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+EOF
+git log --oneline -1; git status --short | head -3; shasum -a 256 firmware/morse/build/morse.fwsc
+```
+
+```text
+02b0ea2 Morse 0.3: TYPE's code on the keys fits; 0.2 on the unit
+64bfa57d9a3a6f433291ead9665167c39018e158bc556e7b4c0b096fadf8d4ea  firmware/morse/build/morse.fwsc
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 18:11:28Z)**_
+
+已 commit 為 `02b0ea2`。接著做 preflight：先用唯讀方式找機器、確認它回報的版本。
+
+_**Agent - sidechain (claude-opus-5-5 2026-11-17 18:11:30Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Check docs deploy method and fm1-base site publishing
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1; grep -n -E "pages|gh-pages|deploy|upload" .github/workflows/docs.yml | head; grep -n -E "gh-pages|push|git " third_party/fm1-base/tools/publish_site.sh | head -12; grep -n -i "url" firmware/morse/words.tsv | head -3`
+
+```text
+32:        uses: actions/upload-pages-artifact@v3
+36:  deploy:
+42:      pages: write
+45:      name: github-pages
+46:      url: ${{ steps.deployment.outputs.page_url }}
+48:      - id: deployment
+49:        uses: actions/deploy-pages@v4
+4:# Build a firmware's release VERSION, its emulator and its site (tools/make_site.py), and push the site to the
+5:# gh-pages branch of the app's repository, replacing what was there (the branch holds only the generated site).
+24:REMOTE="$(git -C "$APP" remote get-url origin)"
+25:SHA="$(git -C "$APP" rev-parse --short HEAD)"
+28:git init -q -b gh-pages
+29:git add -A
+30:git commit -q -m "Site for $NAME $V (from $SHA)"
+31:git push -q -f "$REMOTE" gh-pages
+33:# ask GitHub Pages to build it now: a push alone has left the first deploy stuck on "building"
+36:echo "pushed the site for $NAME $V to gh-pages"
+3:# url: https://daviddwlee84.github.io/M-VAVE_FM-1/dev/morse/
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 18:11:33Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Find the unit and read its HELLO (read-only)
+
+```bash
+pgrep -fl fm1-live || echo "no emulator running"; just fm1-find 2>&1 | tail -1; PYTHONPATH=host timeout 15 uv run --locked --all-groups python -c "
+import mido, time
+from morse import protocol as P
+seen=[]
+def cb(m):
+    if m.type=='sysex':
+        x=P.parse(bytes(m.data))
+        if x and x.type in (P.T_HELLO, P.T_HEARTBEAT): seen.append((x.type, P.firmware_of(x)))
+i=mido.open_input('Felucca', callback=cb); time.sleep(2.5); i.close()
+print('frames:', seen[:3])"
+```
+
+```text
+no emulator running
+midi	Felucca (running; download-mode switches it)
+frames: [(65, (0, 2)), (65, (0, 2)), (65, (0, 2))]
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 18:11:38Z)**_
+
+機器回報 Morse 0.2。接著要**切到 download mode**（模式切換，不寫 flash），讀資訊並做完整備份。
+
+_**Agent (claude-opus-5-5 2026-11-17 18:11:48Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Switch to download mode and read the unit's info
+
+`timeout 60 just fm1-download-mode < /dev/null 2>&1 | tail -1; timeout 60 /Applications/M-Flasher.app/Contents/MacOS/M-Flasher info < /dev/null 2>&1 | tr '\r' '\n' | grep -v "^ *[0-9]*%" | grep -E "firmware|bootloader|flash  |app |Checked|model"`
+
+```text
+In download mode: usb:2-4	WL82 UBOOT1.00 (USB bus 2, device 4)
+Checked: the chip's CRC32 of the flash matches the read
+  model       FM-1
+  bootloader  stock (M-VAVE)
+  firmware    FM-1 130
+  app         OK
+  flash       0xB36014
+    - the firmware uses the FM-1 flash layout
+```
+</details></tool-use>
+
+_**Agent - sidechain (claude-opus-5-5 2026-11-17 18:11:43Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Check for sample or sound files the Hub would flag
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1; find firmware/morse firmware/common -type f \( -iname "*.wav" -o -iname "*.aif*" -o -iname "*.flac" -o -iname "*.mp3" -o -iname "*.ogg" -o -iname "*.syx" -o -iname "*.sf2" \) -not -path "*/build/*" | head; head -5 firmware/morse/tone.c; find . -path ./third_party -prune -o -path ./.venv -prune -o -path ./vendor -prune -o -path ./tools -prune -o -path ./backups -prune -o -path ./downloads -prune -o -type f \( -iname "*.wav" -o -iname "*.syx" -o -iname "*.sf2" -o -iname "*.mp3" \) -print | head`
+
+```text
+/* SPDX-License-Identifier: MIT */
+/* tone: see tone.h */
+#include "tone.h"
+
+#define TONE_RATE 44100.0f
+./firmware/hello/build/host/master.wav
+./firmware/hello/build/host/note.wav
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 18:12:06Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Back up the unit, rehearse 0.3 over it, boot it in the emulator
+
+```bash
+timeout 90 just fm1-backup pre-morse-0.3 < /dev/null 2>&1 | tr '\r' '\n' | grep -E "Backup saved|^[0-9a-f]{64}"; B=$(ls backups/*pre-morse-0.3*/*.bin | tail -1); echo "backup: $B"; cd tools/emu-state && python3 ../../scripts/emu_rehearse.py pristine03-uc25hq80.flash "../../$B" rehearse-hw03.flash && python3 - "../../$B" <<'PY'
+import sys
+S=4096
+bak=open(sys.argv[1],'rb').read(); new=open('rehearse-hw03.flash','rb').read()
+d=[i for i in range(256) if bak[i*S:(i+1)*S]!=new[i*S:(i+1)*S]]
+print("sectors that differ:", len(d), f"0x{d[0]*S:05X}-0x{(d[-1]+1)*S-1:05X}" if d else "")
+print("outside 0x04000-0x92FFF:", [hex(i*S) for i in d if not (0x04000 <= i*S <= 0x92FFF)])
+print("record at 0xDA000/0xDB000:", [hex(a) for a in (0xDA000,0xDB000) if bak[a:a+S]!=b'\xff'*S])
+PY
+S=/private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/0a574306-469e-4a59-9622-5701a42aee59/scratchpad; FM1_NO_PLAY=1 ../fm1-emu/fm1-live --fwsc ../../firmware/morse/build/morse.fwsc --flash-chip uc25hq80 --flash rehearse-hw03.flash --midi none --shot 2500 --lcd-only 2>&1 | grep -iE "^flash:|fault|error"; mv work/lcd.ppm $S/hw03.ppm; cd ../.. && uv run --locked --all-groups python -c "
+from PIL import Image; Image.open('$S/hw03.ppm').save('$S/hw03.png')"
+```
+
+```text
+Backup saved: backups/2026-11-18-pre-morse-0.3/fm1-20261118-021205.bin
+64e28fc9f9219abbcc8453d62f0f5132d980c27664c4626dd49f2424c06cc60f  backups/2026-11-18-pre-morse-0.3/fm1-20261118-021205.bin
+backup: backups/2026-11-18-pre-morse-0.3/fm1-20261118-021205.bin
+package image 0x04000-0x92FFF laid over the backup
+sectors that differ: 32 0x04000-0x23FFF
+outside 0x04000-0x92FFF: []
+record at 0xDA000/0xDB000: ['0xda000', '0xdb000']
+flash: 0 erases / programs
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 18:12:14Z)**_
+
+<tool-use data-tool-type="read" data-tool-name="Read"><details>
+<summary>Tool use: **Read**</summary>
+ `/private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/0a574306-469e-4a59-9622-5701a42aee59/scratchpad/hw03.png`
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 18:12:22Z)**_
+
+<think><details><summary>Thought Process</summary>
+預演顯示只會改寫韌體區的 32 個 sector（0x04000–0x23FFF），開機時不寫 flash，所以你目前的紀錄（ROUND 5、聽 20/8）在 0.3 開機後仍會保留。接下來我把這段寫進 device log。
+
+</details></think>
+
+_**Agent (claude-opus-5-5 2026-11-17 18:12:27Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Record the 0.3 preflight; confirm download mode
+
+```bash
+python3 - <<'PY'
+p='docs/device-log.md'
+s=open(p).read()
+a="| 2026-11-18 00:12 | 刷 Morse 0.2 之前的 Morse 0.1（含學習紀錄：玩過 3 回合、聽 15/14 WPM） | `backups/2026-11-18-pre-morse-0.2/fm1-20261118-001247.bin` + `.json` | `35457c78575749cdaed88cea833f5f8a45dd7cbabd79a6e8762f8677a338ada4` | 尚未上傳 |\n"
+assert a in s
+s=s.replace(a, a+"| 2026-11-18 02:12 | 刷 Morse 0.3 之前的 Morse 0.2（含學習紀錄：ROUND 5、聽 20/8） | `backups/2026-11-18-pre-morse-0.3/fm1-20261118-021205.bin` + `.json` | `64e28fc9f9219abbcc8453d62f0f5132d980c27664c4626dd49f2424c06cc60f` | 尚未上傳 |\n",1)
+i=s.index("\n## Phase 1 驗收")
+row="| 2026-11-18 02:11 | agent 執行 `just fm1-download-mode`、`fm1-info`、`fm1-backup pre-morse-0.3`（刷 Morse 0.3 前的 preflight） | 切換前機器送出 Morse 0.2 的 HELLO。`info`：model FM-1、bootloader stock、firmware `FM-1 130`、app OK、flash `0xB36014`，CRC32 相符。備份 SHA-256 `64e28fc9…c06cc60f`。用這份備份預演 0.3：不同的是 `0x04000`–`0x23FFF` 的 32 個 sector，全在韌體區；紀錄（ROUND 5）升級後保留 `[模擬]` |\n"
+s=s[:i].rstrip("\n")+"\n"+row+s[i:]
+open(p,'w').write(s)
+PY
+just fm1-find 2>&1 | tail -1
+```
+
+```text
+usb:2-4	WL82 UBOOT1.00 (USB bus 2, device 4)
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 18:12:36Z)**_
+
+Preflight 準備好了，機器停在 download mode。
+
+**Preflight**
+
+| 項目 | 狀態 |
+|---|---|
+| 1. 完整備份 | `backups/2026-11-18-pre-morse-0.3/fm1-20261118-021205.bin`，SHA-256 `64e28fc9f9219abbcc8453d62f0f5132d980c27664c4626dd49f2424c06cc60f`。內容是 Morse 0.2 和你的紀錄（ROUND 5），已記進 device log。`fm1-switch` 寫入前還會再自動備份一份 |
+| 2. 晶片 | `0xB36014`（new）。同一個 fm1-base 的 0.1、0.2 都已經在這台機器上跑過 |
+| 3. 套件 | `firmware/morse/build/morse.fwsc`，SHA-256 `64bfa57d9a3a6f433291ead9665167c39018e158bc556e7b4c0b096fadf8d4ea`，commit `02b0ea2`，identity `FM-1_1300`。兩種晶片上從 0.2 升級、存檔、重開、讀回都通過 `[模擬]` |
+| 4. 目前狀態和這次的改變 | 現在是 Morse 0.2、stock bootloader。預演會改寫 `0x04000`–`0x23FFF` 共 32 個 sector，全在韌體區，boot 區不動，學習紀錄（`0xDA000`）不會被寫入 |
+
+請輸入：
+
+```
+! just fm1-switch firmware/morse/build/morse.fwsc
+```
+
+**輸入 `yes` 之前先看 M-Flasher 印的計畫**：應該是 `Writes 32 sectors (128 KiB): 0x04000-0x23FFF`。範圍要在 `0x04000`–`0x92FFF` 之內，而且不能碰到 `0x00000`–`0x03FFF`。如果不一樣，就不要輸入 `yes`，把輸出貼給我。
+
+刷完後機器會重開，PRACTICE 頁應該仍是 ROUND 5。
+
+另外，上架 Hub 的研究 agent 還在跑，結果回來我會一起整理給你。
+
+_**Agent - sidechain (claude-opus-5-5 2026-11-17 18:13:21Z)**_
+
+**FM-1 韌體上架管道調查（唯讀，2026-11-18）**
+
+整個過程沒有提交、發 PR、開 issue 或寫信，也沒有改 repo 內任何檔案。Hub 的 `catalog.json` 只抓了一次，存在 `/private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/0a574306-469e-4a59-9622-5701a42aee59/scratchpad/web/catalog.json`。
+
+## 先講三個重點
+
+1. **Hub 上的 CONDUCTOR 不是我們的。** 那筆是 `MammothCheese/conductor`：一台交響樂 groovebox，以 Dinghy 為底，GPL-3.0，identity `FM-1_1812`，v1.0 於 2026-11-17 發布，同日 `"added": "2026-11-17"`。Hub 的 disclaimer 也寫 "Quartet, SPLITMILK, Clavioline and CONDUCTOR by MammothCheese"。我們的 Conductor 不在 Hub 上：repo 沒有 `.fwsc` release（GitHub releases 只有 4 個 backup），也沒有 `fmhub.json`。所以沒有「Hub 自動收錄我們韌體」的前例可以參考。另外 Hub id `conductor` 和 fm1-emu 的 `?fw=conductor` 都已經被它占用；fm1-editor.com 列的 "CONDUCTOR 1.0" 也是它。
+2. **Hub 讀的是 `fmhub.json`，不是 `firmware.json`。** Hub 首頁、`/submit/`、`/kb/`、`/fmhub.md` 和 `catalog.json` 裡 "firmware.json" 一次都沒出現。fm1-base 的 `docs/FIRMWARE-JSON.md` 說 firmware.json 是給 "The Firmware Hub, RemoteFM1 and M-Flasher" 用的，但 Hub 現在是否讀它無法證實。
+3. **Hub 只會自動追蹤已上架專案的新 release，新韌體要人工送審並在實機測過。**
+
+## 1. The Firmware Hub
+
+**提交路徑**
+- 送審走 https://thefirmwarehub.com/submit/ 的表單："Everything goes through the form below: no attachments needed, the hub reads your repository." 送出後表單會立刻檢查 "source, licence, fmhub.json, the package, its identity and flash chip"。之後 "Sven looks at every firmware himself – nothing goes on the hub without him."，先上 test site 再上正式站。
+- 文件之間不一致：`/fmhub.md` §5 和 KB #listed 還寫「寄信到 zven@thefirmwarehub.com」。表單看起來是比較新的版本（這是推論）。
+- 上架後的 release："within three hours: the newest GitHub release with a .fwsc attached, pre-releases too. A version with beta, alpha, rc or a 0.x number gets a beta tag." 同一個 repo 再送一次表單，"it updates your submission, no duplicate"。
+- 文件只描述 "every listed project's GitHub repository"，沒有看到 Hub 會主動發現新 repo。
+
+**必要條件**（`/submit/` 列 "Six things, all of them needed – and a seventh if your firmware carries sounds"）
+- **開源**：source 要完整放在 repo 裡、在 tag 上可瀏覽，source zip 不算。`/fmhub.md` 另外要求 "A `LICENSE` file in the repository root"。MIT 算 "another open licence"。
+- **GitHub release 要附 `.fwsc`**。附多個 `.fwsc` 時要告訴他們哪個是韌體。
+- **identity 要是自己的**：用 https://thefirmwarehub.com/submit/#check 檢查。原話是 "Keep the part before the version yours"。
+- **package 裡要有 update loader**。
+- **實機測試**："Installed from V15 and from another firmware, and you can leave it again. Untested firmwares are not listed." 以及 "'It builds' or 'it runs in the emulator' is not enough"。KB #listed 的完整清單：
+  - 從 V15 裝、從另一個自製韌體裝；
+  - 從本韌體再裝別的韌體（要能啟動下一個 package 的 update loader）；
+  - USB 回應自己的 `FM-1_` identity，port 名稱是 Hub 認得的（"FM-1, or your firmware's name: tell us"）；
+  - 刻意中斷一次 Writing 再續裝；
+  - 讀不了或會覆寫別人的 project 時，要在 README 說明。
+- **repo 根目錄、default branch 上要有 `fmhub.json`**："No file, no listing."
+- **聲音來源**：有帶 sample 才需要 `sounds`。
+- **KB 另一條**："It makes music… Games and tools without sound are not listed." 不過 AGTDECK（"not an instrument"）和 MIDIMON 都以 `other` 上架了，算是先例。
+
+**`fmhub.json` 格式**
+- 只允許 9 個欄位：`what`、`author`、`kinds`、`play`、`editor`、`cheat`、`image`、`color`、`sounds`，外加 `smk37`。"any other field makes the whole file unused"。新韌體至少要 `what`、`kinds`、`image`。
+- `what`：英文，20–300 字元，不能有連結、HTML、`<>{}` 或 backtick，也不能有廣告。
+- `kinds`：從 synth / groove / drums / chords / tracker / other 中選一個。
+- `image`：repo 內路徑；正方形，240–1024 px；PNG / WebP / JPEG；≤300 KB。
+- `sounds`："Ask the maker – never guess this line for them."
+- Hub 每 3 小時讀一次。送出後可以在 https://thefirmwarehub.com/kb/#fmhub 用 "Check your file" 檢查。
+
+**`chip` 欄位（new / old / any）**
+- 由 Hub 自己從 package 判讀，作者不用申報。頁面寫 "read from each package"，原始碼註解寫 `catalog.json "chip", tools/fm1_chip.py: read from the package`。
+- `any` 的說明是 "it does not check the chip / Not tried by us on the newer chip"。
+- 目前目錄：new 168、old 71、any 6。同樣以 fm1-base 為底的 CTL-1 是 `new`。
+
+**審查與「Built from source」標章**
+- 每個 release 檢查 identity、loader、checksum。Hub 不測功能。新卡片文字由人讀過。
+- "Built from source on GitHub" 是選用的，而且只認 `zvenson/fm1-build/.github/workflows/build.yml@v1`。MammothCheese 用的是自己的 workflow，catalog 標 "present, not verified … not a trusted one"。
+
+## 2. fm1-emu
+
+- 清單是從 Hub 自動帶進來的。README："every one on the FM-1 Firmware Hub that runs here (its packages, fetched from the Hub; `tools/hub_catalog.mjs` follows its catalog)"，而且 Hub 的新韌體會即時列在頁面最後，標 "not yet run here"。
+- 實際更新看起來是維護者手動跑：commit 如 "Catalog: the Hub's day (2026-11-14)"。`catalog_refresh.py` 的 docstring 說有一個每天跑的 `catalog-refresh.yml`，但 `.github/workflows/` 裡沒有這支。
+- Hub 沒收的韌體放在 `web/firmwares-own.json`："Edit this file to add one"。換句話說要發 PR，但我沒看到外部人士新增韌體的先例。
+- 不必上架也能玩：`?package=URL`（https，且要開 CORS）。
+
+## 3. FM1 Developers' Wiki
+
+- 沒有韌體清單。Known-Projects 只收 "Projects that hold developer knowledge"，完整清單轉介到 awesome-fm-1、aroum、FMDB、Atlas。
+- 修改方式：fork 後發 PR，"each change is reviewed"；新頁面要先開 issue（`docs/Contributing.md`）。Morse 不適合放這裡。
+
+## 4. 社群清單
+
+- **awesome-fm-1**：`CONTRIBUTING.md` 規定格式是 `- [Name](url) - Description.`，"Mention the license for software."，"One entry per pull request"。近期外部的 "Add X" PR 大多有被 merge。我判斷 Morse 適合放 "Not a synth" 段（Threadboard、Trireme 在那裡）。
+- **aroum/fm1-custom-fw**：沒有 CONTRIBUTING，也沒有貢獻說明。外部 PR 有的被 merge（#31、#27、#24），有的被關掉後由維護者自己加（#35）。格式是表格；1.3 段是 Non-Audio。
+
+## 5. 其他清單與公告管道（只點名，沒有深挖）
+
+- **fm1-editor.com/firmware/**：頁尾寫 "Know of a firmware missing here? Open an issue"，連到 `benny-sparra/fm1-dx7-patch-importer/issues`。另有一個 watch list，收還沒 release 的韌體。
+- **FM-1 Firmware Atlas**（`wero1414/atlas-fm-1`）："Add a row to data/firmwares.json … commit"。
+- **FMDB**：Wiki 連到的 repo 現在 404，網站只寫 "join the DISCORD"。
+- **Octo-Vave**、**altstrument.org**：沒查。
+- **RemoteFM1 FM-1 Player**：清單取自 Hub 的即時目錄（依 repo 的 `docs/firmware/hub.md`，今天沒有重新確認）。
+- **公告**：r/MVaveFM1（"much of the custom firmware … is announced"）、FM-1 Discord（Hub KB 有提，但我沒找到連結）、KVR、Elektronauts、Gearspace 討論串、forum.m-vave.com。
+
+## Morse 還缺什麼（以 Hub 為準）
+
+1. **獨立 repo**（推論，Hub 沒有明說）。理由有四個：
+   - `fmhub.json` 和 image 路徑都以 repo 根目錄為準，一個 repo 只有一張卡（唯一的例外 Hortator 是同一個 release 裡的兩個 asset）。
+   - fm1-base 的 `repo_root()` 對 `firmware/morse` 會回傳 `firmware/morse` 本身，和 Hub 從 raw URL 抓圖的路徑對不上。
+   - release tag 會和 Conductor、備份 release 混在一起。
+   - `publish_site.sh` 會 force-push origin 的 `gh-pages`，而這個 repo 的 Pages 是用 Actions 部署的。不要在這個 repo 跑它。
+
+   `docs/dev/index.md` 早就寫了「要 release 時搬到獨立 repo」。另外 `firmware/common` 要一起帶過去。
+2. **根目錄放 `LICENSE`（MIT）。** 目前整個 repo 沒有 LICENSE，GitHub 偵測到的 licence 是 null。
+3. **`fmhub.json`**：
+   - `what`：現在的 description 270 字元，符合規則，可以直接用。
+   - `kinds`：`["other"]`。
+   - `image`：要 commit 一張圖。例如 `build/host/key.png`，240×240、173 KB，符合 Hub ≤300 KB 和 fm1-base ≤2 MiB 兩邊的限制，但它目前在 git-ignored 的 `build/` 裡。
+   - `sounds`：要由你決定。我沒在 Morse 原始碼裡找到任何音檔，`tone.c` 是程式合成的。
+4. **`firmware/morse/fm1.toml`**：
+   - 加 `install` 和 `screenshot`。少了這兩個，fm1-base 的 `--release` build 會拒絕執行。
+   - 加 `title = "MORSE"`。現在 `firmware.json` 的 `"name"` 是 `"fm1-base"`，因為它退回去用 `usb_manufacturer`；Conductor 也有同樣的問題。
+5. **Release**：
+   - tag 用 `vX.Y`；asset 是 `morse-X.Y.fwsc`，檔名主幹保持不變。0.x 版在 Hub 會標 beta。
+   - identity 是 `FM-1_13` 加 XXYYZZ，例如 0.3 是 `FM-1_13000300`。今天的目錄裡沒有完全相同的，但 fm1midimania 的 `FM-1_137090/137092` 共用 `FM-1_13` 前綴，送審前要到 #check 確認。
+   - 選用：template 的 `release.yml` 搭配 `zvenson/fm1-build@v1`，可以拿到 Built from source 標章，同時附上 `firmware.json` 和 `.rfm1`。
+6. **Install page**：只有 fm1-base 的 release 檢查需要。Hub 自己負責安裝，`fmhub.json` 裡沒有 install 欄位。
+7. **實機測試**：每一次寫入都要你依 AGENTS.md 逐次批准。
+   - Morse 每次安裝都是 M-Flasher 走 download mode（`device-log.md` 2026-11-17 22:54、2026-11-18 00:14），**從來沒走過 USB-MIDI 更新路徑**：沒有從 V15 或另一個韌體用網頁安裝過，也沒有從 Morse 離開過。
+   - device-log 記錄 macOS 的 port 名稱顯示成 `Felucca`，Hub 的 Connect 認不認得要實際測。
+   - 「中斷 Writing」這一項，在新晶片、又沒有 USB_KEY 的這台機器上有風險，要你自己判斷做不做。
+8. **晶片**：不用申報。fm1-base 兩種 ID 都接受，照 CTL-1 的前例應該會判成 `new`，但要等 Hub 實際讀了 package 才算數。
+9. **送表單**：填 repo、名稱、作者、email、一句話描述，勾「實機測過」並說明怎麼測的。上架之後，fm1-emu、FM-1 Player 應該會跟著出現；awesome-fm-1、aroum、fm1-editor、Atlas 則要另外發 PR 或開 issue，這些都要你本人決定。
+
+## 無法證實的部分
+
+- Hub 會不會讀 `firmware.json`。
+- `mail` 和表單哪一條才是現行路徑。
+- 同一個 repo 裡兩個韌體輪流發 release 時，Hub 怎麼處理。
+- Morse 這種「有聲音的工具」是否符合 "makes music"。
+- fm1-emu 收不收外部的 own-list PR。
+- FMDB、Octo-Vave、altstrument 的收錄方式。
+
+依「Capture what we learn」規則，這次的發現應該補進 `docs/firmware/hub.md`（上架流程、`fmhub.json`、CONDUCTOR 同名）和 `docs/dev/index.md`（release 檢查清單）。這次任務是唯讀，所以我沒有改，交給你決定。
+
+---
+
+_**User (2026-11-17 18:13:22Z)**_
+
+<task-notification>
+<task-id>aeaa6bd8f760590a8</task-id>
+<tool-use-id>toolu_01GLPi831SvAqXyNYo9u9RDu</tool-use-id>
+<output-file>/private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/5f461408-bbdd-44d0-bb3b-b0642eabaa31/tasks/aeaa6bd8f760590a8.output</output-file>
+<status>completed</status>
+<summary>Agent "Research FM-1 firmware hub listing" finished</summary>
+<note>A task-notification fires each time this agent stops with no live background children of its own. The user can send it another message and resume it, so the same task-id may notify more than once.</note>
+<result>**FM-1 韌體上架管道調查（唯讀，2026-11-18）**
+
+整個過程沒有提交、發 PR、開 issue 或寫信，也沒有改 repo 內任何檔案。Hub 的 `catalog.json` 只抓了一次，存在 `/private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/0a574306-469e-4a59-9622-5701a42aee59/scratchpad/web/catalog.json`。
+
+## 先講三個重點
+
+1. **Hub 上的 CONDUCTOR 不是我們的。** 那筆是 `MammothCheese/conductor`：一台交響樂 groovebox，以 Dinghy 為底，GPL-3.0，identity `FM-1_1812`，v1.0 於 2026-11-17 發布，同日 `"added": "2026-11-17"`。Hub 的 disclaimer 也寫 "Quartet, SPLITMILK, Clavioline and CONDUCTOR by MammothCheese"。我們的 Conductor 不在 Hub 上：repo 沒有 `.fwsc` release（GitHub releases 只有 4 個 backup），也沒有 `fmhub.json`。所以沒有「Hub 自動收錄我們韌體」的前例可以參考。另外 Hub id `conductor` 和 fm1-emu 的 `?fw=conductor` 都已經被它占用；fm1-editor.com 列的 "CONDUCTOR 1.0" 也是它。
+2. **Hub 讀的是 `fmhub.json`，不是 `firmware.json`。** Hub 首頁、`/submit/`、`/kb/`、`/fmhub.md` 和 `catalog.json` 裡 "firmware.json" 一次都沒出現。fm1-base 的 `docs/FIRMWARE-JSON.md` 說 firmware.json 是給 "The Firmware Hub, RemoteFM1 and M-Flasher" 用的，但 Hub 現在是否讀它無法證實。
+3. **Hub 只會自動追蹤已上架專案的新 release，新韌體要人工送審並在實機測過。**
+
+## 1. The Firmware Hub
+
+**提交路徑**
+- 送審走 https://thefirmwarehub.com/submit/ 的表單："Everything goes through the form below: no attachments needed, the hub reads your repository." 送出後表單會立刻檢查 "source, licence, fmhub.json, the package, its identity and flash chip"。之後 "Sven looks at every firmware himself – nothing goes on the hub without him."，先上 test site 再上正式站。
+- 文件之間不一致：`/fmhub.md` §5 和 KB #listed 還寫「寄信到 zven@thefirmwarehub.com」。表單看起來是比較新的版本（這是推論）。
+- 上架後的 release："within three hours: the newest GitHub release with a .fwsc attached, pre-releases too. A version with beta, alpha, rc or a 0.x number gets a beta tag." 同一個 repo 再送一次表單，"it updates your submission, no duplicate"。
+- 文件只描述 "every listed project's GitHub repository"，沒有看到 Hub 會主動發現新 repo。
+
+**必要條件**（`/submit/` 列 "Six things, all of them needed – and a seventh if your firmware carries sounds"）
+- **開源**：source 要完整放在 repo 裡、在 tag 上可瀏覽，source zip 不算。`/fmhub.md` 另外要求 "A `LICENSE` file in the repository root"。MIT 算 "another open licence"。
+- **GitHub release 要附 `.fwsc`**。附多個 `.fwsc` 時要告訴他們哪個是韌體。
+- **identity 要是自己的**：用 https://thefirmwarehub.com/submit/#check 檢查。原話是 "Keep the part before the version yours"。
+- **package 裡要有 update loader**。
+- **實機測試**："Installed from V15 and from another firmware, and you can leave it again. Untested firmwares are not listed." 以及 "'It builds' or 'it runs in the emulator' is not enough"。KB #listed 的完整清單：
+  - 從 V15 裝、從另一個自製韌體裝；
+  - 從本韌體再裝別的韌體（要能啟動下一個 package 的 update loader）；
+  - USB 回應自己的 `FM-1_` identity，port 名稱是 Hub 認得的（"FM-1, or your firmware's name: tell us"）；
+  - 刻意中斷一次 Writing 再續裝；
+  - 讀不了或會覆寫別人的 project 時，要在 README 說明。
+- **repo 根目錄、default branch 上要有 `fmhub.json`**："No file, no listing."
+- **聲音來源**：有帶 sample 才需要 `sounds`。
+- **KB 另一條**："It makes music… Games and tools without sound are not listed." 不過 AGTDECK（"not an instrument"）和 MIDIMON 都以 `other` 上架了，算是先例。
+
+**`fmhub.json` 格式**
+- 只允許 9 個欄位：`what`、`author`、`kinds`、`play`、`editor`、`cheat`、`image`、`color`、`sounds`，外加 `smk37`。"any other field makes the whole file unused"。新韌體至少要 `what`、`kinds`、`image`。
+- `what`：英文，20–300 字元，不能有連結、HTML、`&lt;&gt;{}` 或 backtick，也不能有廣告。
+- `kinds`：從 synth / groove / drums / chords / tracker / other 中選一個。
+- `image`：repo 內路徑；正方形，240–1024 px；PNG / WebP / JPEG；≤300 KB。
+- `sounds`："Ask the maker – never guess this line for them."
+- Hub 每 3 小時讀一次。送出後可以在 https://thefirmwarehub.com/kb/#fmhub 用 "Check your file" 檢查。
+
+**`chip` 欄位（new / old / any）**
+- 由 Hub 自己從 package 判讀，作者不用申報。頁面寫 "read from each package"，原始碼註解寫 `catalog.json "chip", tools/fm1_chip.py: read from the package`。
+- `any` 的說明是 "it does not check the chip / Not tried by us on the newer chip"。
+- 目前目錄：new 168、old 71、any 6。同樣以 fm1-base 為底的 CTL-1 是 `new`。
+
+**審查與「Built from source」標章**
+- 每個 release 檢查 identity、loader、checksum。Hub 不測功能。新卡片文字由人讀過。
+- "Built from source on GitHub" 是選用的，而且只認 `zvenson/fm1-build/.github/workflows/build.yml@v1`。MammothCheese 用的是自己的 workflow，catalog 標 "present, not verified … not a trusted one"。
+
+## 2. fm1-emu
+
+- 清單是從 Hub 自動帶進來的。README："every one on the FM-1 Firmware Hub that runs here (its packages, fetched from the Hub; `tools/hub_catalog.mjs` follows its catalog)"，而且 Hub 的新韌體會即時列在頁面最後，標 "not yet run here"。
+- 實際更新看起來是維護者手動跑：commit 如 "Catalog: the Hub's day (2026-11-14)"。`catalog_refresh.py` 的 docstring 說有一個每天跑的 `catalog-refresh.yml`，但 `.github/workflows/` 裡沒有這支。
+- Hub 沒收的韌體放在 `web/firmwares-own.json`："Edit this file to add one"。換句話說要發 PR，但我沒看到外部人士新增韌體的先例。
+- 不必上架也能玩：`?package=URL`（https，且要開 CORS）。
+
+## 3. FM1 Developers' Wiki
+
+- 沒有韌體清單。Known-Projects 只收 "Projects that hold developer knowledge"，完整清單轉介到 awesome-fm-1、aroum、FMDB、Atlas。
+- 修改方式：fork 後發 PR，"each change is reviewed"；新頁面要先開 issue（`docs/Contributing.md`）。Morse 不適合放這裡。
+
+## 4. 社群清單
+
+- **awesome-fm-1**：`CONTRIBUTING.md` 規定格式是 `- [Name](url) - Description.`，"Mention the license for software."，"One entry per pull request"。近期外部的 "Add X" PR 大多有被 merge。我判斷 Morse 適合放 "Not a synth" 段（Threadboard、Trireme 在那裡）。
+- **aroum/fm1-custom-fw**：沒有 CONTRIBUTING，也沒有貢獻說明。外部 PR 有的被 merge（#31、#27、#24），有的被關掉後由維護者自己加（#35）。格式是表格；1.3 段是 Non-Audio。
+
+## 5. 其他清單與公告管道（只點名，沒有深挖）
+
+- **fm1-editor.com/firmware/**：頁尾寫 "Know of a firmware missing here? Open an issue"，連到 `benny-sparra/fm1-dx7-patch-importer/issues`。另有一個 watch list，收還沒 release 的韌體。
+- **FM-1 Firmware Atlas**（`wero1414/atlas-fm-1`）："Add a row to data/firmwares.json … commit"。
+- **FMDB**：Wiki 連到的 repo 現在 404，網站只寫 "join the DISCORD"。
+- **Octo-Vave**、**altstrument.org**：沒查。
+- **RemoteFM1 FM-1 Player**：清單取自 Hub 的即時目錄（依 repo 的 `docs/firmware/hub.md`，今天沒有重新確認）。
+- **公告**：r/MVaveFM1（"much of the custom firmware … is announced"）、FM-1 Discord（Hub KB 有提，但我沒找到連結）、KVR、Elektronauts、Gearspace 討論串、forum.m-vave.com。
+
+## Morse 還缺什麼（以 Hub 為準）
+
+1. **獨立 repo**（推論，Hub 沒有明說）。理由有四個：
+   - `fmhub.json` 和 image 路徑都以 repo 根目錄為準，一個 repo 只有一張卡（唯一的例外 Hortator 是同一個 release 裡的兩個 asset）。
+   - fm1-base 的 `repo_root()` 對 `firmware/morse` 會回傳 `firmware/morse` 本身，和 Hub 從 raw URL 抓圖的路徑對不上。
+   - release tag 會和 Conductor、備份 release 混在一起。
+   - `publish_site.sh` 會 force-push origin 的 `gh-pages`，而這個 repo 的 Pages 是用 Actions 部署的。不要在這個 repo 跑它。
+
+   `docs/dev/index.md` 早就寫了「要 release 時搬到獨立 repo」。另外 `firmware/common` 要一起帶過去。
+2. **根目錄放 `LICENSE`（MIT）。** 目前整個 repo 沒有 LICENSE，GitHub 偵測到的 licence 是 null。
+3. **`fmhub.json`**：
+   - `what`：現在的 description 270 字元，符合規則，可以直接用。
+   - `kinds`：`["other"]`。
+   - `image`：要 commit 一張圖。例如 `build/host/key.png`，240×240、173 KB，符合 Hub ≤300 KB 和 fm1-base ≤2 MiB 兩邊的限制，但它目前在 git-ignored 的 `build/` 裡。
+   - `sounds`：要由你決定。我沒在 Morse 原始碼裡找到任何音檔，`tone.c` 是程式合成的。
+4. **`firmware/morse/fm1.toml`**：
+   - 加 `install` 和 `screenshot`。少了這兩個，fm1-base 的 `--release` build 會拒絕執行。
+   - 加 `title = "MORSE"`。現在 `firmware.json` 的 `"name"` 是 `"fm1-base"`，因為它退回去用 `usb_manufacturer`；Conductor 也有同樣的問題。
+5. **Release**：
+   - tag 用 `vX.Y`；asset 是 `morse-X.Y.fwsc`，檔名主幹保持不變。0.x 版在 Hub 會標 beta。
+   - identity 是 `FM-1_13` 加 XXYYZZ，例如 0.3 是 `FM-1_13000300`。今天的目錄裡沒有完全相同的，但 fm1midimania 的 `FM-1_137090/137092` 共用 `FM-1_13` 前綴，送審前要到 #check 確認。
+   - 選用：template 的 `release.yml` 搭配 `zvenson/fm1-build@v1`，可以拿到 Built from source 標章，同時附上 `firmware.json` 和 `.rfm1`。
+6. **Install page**：只有 fm1-base 的 release 檢查需要。Hub 自己負責安裝，`fmhub.json` 裡沒有 install 欄位。
+7. **實機測試**：每一次寫入都要你依 AGENTS.md 逐次批准。
+   - Morse 每次安裝都是 M-Flasher 走 download mode（`device-log.md` 2026-11-17 22:54、2026-11-18 00:14），**從來沒走過 USB-MIDI 更新路徑**：沒有從 V15 或另一個韌體用網頁安裝過，也沒有從 Morse 離開過。
+   - device-log 記錄 macOS 的 port 名稱顯示成 `Felucca`，Hub 的 Connect 認不認得要實際測。
+   - 「中斷 Writing」這一項，在新晶片、又沒有 USB_KEY 的這台機器上有風險，要你自己判斷做不做。
+8. **晶片**：不用申報。fm1-base 兩種 ID 都接受，照 CTL-1 的前例應該會判成 `new`，但要等 Hub 實際讀了 package 才算數。
+9. **送表單**：填 repo、名稱、作者、email、一句話描述，勾「實機測過」並說明怎麼測的。上架之後，fm1-emu、FM-1 Player 應該會跟著出現；awesome-fm-1、aroum、fm1-editor、Atlas 則要另外發 PR 或開 issue，這些都要你本人決定。
+
+## 無法證實的部分
+
+- Hub 會不會讀 `firmware.json`。
+- `mail` 和表單哪一條才是現行路徑。
+- 同一個 repo 裡兩個韌體輪流發 release 時，Hub 怎麼處理。
+- Morse 這種「有聲音的工具」是否符合 "makes music"。
+- fm1-emu 收不收外部的 own-list PR。
+- FMDB、Octo-Vave、altstrument 的收錄方式。
+
+依「Capture what we learn」規則，這次的發現應該補進 `docs/firmware/hub.md`（上架流程、`fmhub.json`、CONDUCTOR 同名）和 `docs/dev/index.md`（release 檢查清單）。這次任務是唯讀，所以我沒有改，交給你決定。</result>
+<usage><subagent_tokens>204790</subagent_tokens><tool_uses>56</tool_uses><duration_ms>580532</duration_ms></usage>
+</task-notification>
+
+---
+
+_**Agent (claude-opus-5-5 2026-11-17 18:13:39Z)**_
+
+上架 Hub 的研究回來了。你那邊的刷機還在等你執行（機器停在 download mode），我先把研究結果整理進文件。順便查一下現有文件有沒有把 Hub 上同名的 CONDUCTOR 誤認成我們的。
+
+_**Agent (claude-opus-5-5 2026-11-17 18:13:41Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Check hub docs for Conductor mentions and release notes
+
+`grep -rn "CONDUCTOR\|Conductor" docs/firmware/hub.md docs/firmware/index.md 2>/dev/null | head; sed -n 1,40p docs/firmware/hub.md; grep -n "release\|獨立 repo" docs/dev/index.md | head`
+
+```text
+# The Firmware Hub
+
+[The Firmware Hub](https://thefirmwarehub.com/) 是目前最大的 FM-1 社群韌體目錄：列出韌體、在瀏覽器裡一鍵安裝（Chrome / Edge，Web MIDI）、連到模擬器試玩，並附救援教學。安裝不需要帳號。
+
+以下數字來自它的 `catalog.json`，查核於 **2026-11-17**（目錄自己標的更新時間是 2026-11-16 18:01 UTC）。`[上游]`
+
+## 有什麼
+
+FM-1 共 **228** 個韌體：
+
+| 類別 | 數量 |
+|---|---|
+| synth | 89 |
+| groove（groovebox） | 76 |
+| other（控制器、工具、遊戲等） | 26 |
+| drums | 16 |
+| tracker | 11 |
+| chords | 8 |
+
+安裝次數最多的幾個：SLOOP（約 11,500）、JIANT FM、Skiff、Felucca、Melodee、OberVave、FMini-1、Clipper。很多條目是這幾個主幹的衍生版。
+
+除了 FM-1，Hub 也收 M-VAVE SMK-37、Elektron Model:Cycles、Erica Synths LXR-02 的韌體，並有工具區（模擬器、editor、備份與救援、自己 build）、Knowledge Base 與 creator 名單。
+
+## 新晶片篩選：對我這台最重要的功能
+
+Hub 會從每個套件裡讀出它認得哪些 flash 晶片，並提供篩選 **Saves on newer FM-1s**。我的機器是新晶片 `0xB36014`，裝東西前先看這一欄。
+
+| Hub 的標示 | 意思 | 數量 |
+|---|---|---|
+| Every FM-1, the newer chip too | 套件認得新晶片 | 152 |
+| The first FM-1s only | 只認得舊晶片：在新機上存檔只留在 RAM，更新也可能失敗 | 71 |
+| Every FM-1: it does not check the chip | 不檢查晶片；Hub 註明他們沒在新晶片上試過 | 5 |
+
+我在用或考慮過的：
+
+| 韌體 | Hub 版本 | 新晶片 |
+|---|---|---|
+| SLOOP | 2.8.5 | 認得 |
+| Felucca | 1.8.2 | 認得 |
+| Melodee | 1.6.1 | 認得 |
+70:fm1-base template 附的 release workflow（透過共用的 [zvenson/fm1-build](https://github.com/zvenson/fm1-build) 產生 build attestation，Firmware Hub 才會標 built from source）假設的是**獨立的 firmware repo**：app 在 `app/`、fm1-base 在 `base/`、根目錄有 `./build.sh`。放在這個筆記 repo 的子目錄不符合那個配置，所以我把複本裡的 `.github/` 拿掉了。
+72:結論：在本機迭代、刷自己的機器，子目錄就夠。**等某個 app 要正式 release 時，再把它搬到獨立 repo，並以 submodule 引回這裡。**
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 18:13:47Z)**_
+
+<think><details><summary>Thought Process</summary>
+文件沒有把 Hub 上的 CONDUCTOR 誤記為我們的，且 index.md 已寫明要搬到獨立 repo。我接下來會把上架流程補進 docs/firmware/hub.md。
+
+</details></think>
+
+_**Agent (claude-opus-5-5 2026-11-17 18:14:01Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Add the Hub listing process to the Hub docs page
+
+```bash
+cat >> docs/firmware/hub.md <<'EOF'
+
+## 自己的韌體怎麼上架 { #listing }
+
+2026-11-18 為了 [Morse](../dev/morse.md) 查的。只讀，沒有送出任何東西。`[上游]`（來源：[submit](https://thefirmwarehub.com/submit/)、[KB](https://thefirmwarehub.com/kb/)、[fmhub.md](https://thefirmwarehub.com/fmhub.md)、`catalog.json`）
+
+- **送審**：填 [submit](https://thefirmwarehub.com/submit/) 頁的表單，不用附檔案，Hub 會自己去讀 repo。每一筆都由 Sven 本人看過，先上 test site 再上正式站。舊文件還寫「寄 email」，表單看起來是比較新的路徑。上架後，Hub 會在三小時內自動抓那個 repo 最新一個附有 `.fwsc` 的 GitHub release；版本是 0.x 或帶 beta 的會標成 beta。
+- **六個必要條件**：
+  - 開源：source 在 tag 上可以瀏覽，repo 根目錄要有 `LICENSE`。
+  - GitHub release 附上 `.fwsc`。
+  - identity 要是自己的：送出前用 [#check](https://thefirmwarehub.com/submit/#check) 檢查。
+  - 套件裡要有 update loader。
+  - repo 根目錄要有 `fmhub.json`。
+  - **在實機上測過**："'It builds' or 'it runs in the emulator' is not enough"。要測的有：從原廠 V15 安裝、從另一個韌體安裝、從自己的韌體再裝別的韌體、USB 回應自己的 `FM-1_` identity、刻意中斷一次寫入再繼續；如果會覆寫或讀不了別人的 project，要在 README 寫明。
+- **`fmhub.json`**：只允許 9 個欄位（`what`、`author`、`kinds`、`play`、`editor`、`cheat`、`image`、`color`、`sounds`，外加 `smk37`），多一個欄位整個檔案就不採用。新韌體至少要有：
+  - `what`：英文，20–300 字元，不能有連結。
+  - `kinds`：synth / groove / drums / chords / tracker / other 擇一。
+  - `image`：repo 裡的正方形圖，240–1024 px、≤ 300 KB。
+- **晶片欄**（new / old / any）由 Hub 自己從套件讀出來，作者不用申報。同樣用 fm1-base 的 CTL-1 被標為 new。
+- **收什麼**：KB 寫「It makes music… Games and tools without sound are not listed」，但 AGTDECK、MIDIMON 都以 `other` 上架了。
+- **Hub 讀的是 `fmhub.json`**：fm1-base build 出來的 `firmware.json`，在 Hub 的文件裡完全沒提到。
+- **一個 repo 一張卡**：圖片路徑、`fmhub.json` 都以 repo 根目錄為準，所以要上架的韌體應該放在獨立 repo（見[自製韌體環境](../dev/index.md)）。
+
+上架之後，fm1-emu 和 RemoteFM1 的清單會自動從 Hub 帶進去。awesome-fm-1（每個 PR 一筆）、aroum/fm1-custom-fw、fm1-editor.com（開 issue）、FM-1 Firmware Atlas（PR 改 `data/firmwares.json`）則要另外提交。公告通常發在 r/MVaveFM1。
+
+**注意同名**：Hub 上的 CONDUCTOR 是 MammothCheese 的 groovebox（`MammothCheese/conductor`，GPL-3.0，identity `FM-1_1812`），不是本 repo 的 [Conductor](../agentic/conductor.md)。Hub 和 fm1-emu 上的 id `conductor` 已經被它用了。
+EOF
+just docs-check 2>&1 | tail -1
+```
+
+```text
+{"status": "ok", "pages": 46, "llm_pages": 46, "deployed": false}
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 18:14:28Z)**_
+
+上架 Hub 的研究回來了，已經整理進 `docs/firmware/hub.md`。重點如下。
+
+**The Firmware Hub 怎麼收**
+- **送審方式**：在 thefirmwarehub.com/submit/ 填表單，Hub 會自己去讀 repo，由維護者本人審核後才上架。上架後，新的 GitHub release 三小時內會被自動抓到。0.x 版會標成 beta。
+- **六個必要條件**：
+  1. 開源，repo 根目錄要有 `LICENSE`；
+  2. GitHub release 附 `.fwsc`；
+  3. identity 要是自己的；
+  4. 套件含 update loader（fm1-base 的套件已經有）；
+  5. repo 根目錄要有 `fmhub.json`；
+  6. **在實機上測過**，模擬器跑過不算。
+- **實機要測的項目**：
+  - 從原廠 V15 安裝；
+  - 從另一個韌體安裝；
+  - 從 Morse 再換成別的韌體；
+  - 刻意中斷一次寫入再繼續。
+- **收錄範圍**：KB 寫「會出聲的樂器才收，沒聲音的遊戲和工具不收」，但 AGTDECK、MIDIMON 都以 `other` 類別上架了。Morse 有 sidetone，能不能收要看審核的判斷。
+
+**Morse 目前還缺的**
+1. **獨立 repo**：Hub 一個 repo 只對應一張卡，圖片和 `fmhub.json` 都以 repo 根目錄為準。`docs/dev/index.md` 本來就寫了「要正式 release 時搬到獨立 repo」。
+2. **`LICENSE`**：這個 repo 目前根本沒有，GitHub 判讀不到授權。Morse 和 Conductor 的程式碼裡都寫 MIT，但缺正式的授權檔。
+3. **`fmhub.json`**：`what` 可以直接用現在 `fm1.toml` 的英文描述（270 字元，符合規定），`kinds` 填 `other`，再 commit 一張截圖。
+4. **`fm1.toml` 補三個欄位**：`install`、`screenshot`（少了這兩個，fm1-base 的正式 release build 會拒絕執行）和 `title`（目前 `firmware.json` 的名稱會變成 "fm1-base"）。
+5. **identity 撞號風險**：我們的前綴 `FM-1_13` 和另一個韌體 fm1midimania 的 `FM-1_1370xx` 開頭相同，送審前要用 Hub 的 #check 頁確認。
+6. **實機測試**：到目前為止都是用 M-Flasher 走 download mode 安裝，**從沒走過 Hub 網頁安裝用的 USB-MIDI 更新路徑**，也沒從 Morse 換回別的韌體過。「中斷寫入」這項在新晶片、又沒有救援用 Pico 的這台機器上有風險，要你自己判斷。
+
+**另外確認一件事**：Hub 上那個 CONDUCTOR 是別人（MammothCheese）的 groovebox，不是我們的。我們的 Conductor 從來沒上架過。
+
+**需要你決定的**
+- 要不要開一個獨立的公開 repo 放 Morse，例如 `fm1-morse`？
+- 要不要幫這個 repo（和之後的 Morse repo）加上 MIT `LICENSE`？
+- Hub 要求的那幾項實機安裝測試，要不要做、做哪幾項？每一次寫入都會照規矩先給你 preflight。
+
+不需要對外動作的準備（`fmhub.json` 草稿、截圖、`fm1.toml` 欄位、說明 Morse 會用到哪些 flash 區域的 README）我可以先在這個 repo 做好。
+
+**別忘了 0.3 還沒刷**：機器還停在 download mode，等你輸入：
+
+```
+! just fm1-switch firmware/morse/build/morse.fwsc
+```
+
+計畫應該是 `Writes 32 sectors (128 KiB): 0x04000-0x23FFF`。想先不刷的話，`just fm1-restart` 會讓機器回到 0.2。
+
+---
+
+_**User (2026-11-17 18:18:24Z)**_
+
+```
+
+
+<pasted_content id="cc4a">
+❯ just fm1-switch firmware/morse/build/morse.fwsc
+usb:2-4 WL82 UBOOT1.00 (USB bus 2, device 4)
+  100%
+  firmware    FM-1 130
+  app         OK
+    - the firmware uses the FM-1 flash layout
+Backup saved: backups/2026-11-18-0212-pre-morse/fm1-20261118-021248.bin
+64e28fc9f9219abbcc8453d62f0f5132d980c27664c4626dd49f2424c06cc60f  backups/2026-11-18-0212-pre-morse/fm1-20261118-021248.bin
+Backup before the switch: backups/2026-11-18-0212-pre-morse (not uploaded; just fm1-backup-release 2026-11-18-0212-pre-morse if you want it off this machine)
+Connecting to usb:2-4
+M-Flasher loader 1.3 already running
+Flash chip 0xB36014 (new)
+Reading the flash
+  100%
+Read in 1.5 s (695 KB/s)
+Checked: the chip's CRC32 of the flash matches the read
+  model       FM-1
+  bootloader  stock (M-VAVE)
+  firmware    FM-1 130
+  app         OK
+  chip key    0x980F
+  flash       0xB36014
+  unit id     55227286a0cb022a
+  loader      M-Flasher 1.3, CPU at 96 MHz
+    - the firmware uses the FM-1 flash layout
+    - flash chip 0xB36014 (new)
+
+Install firmware FM-1_1300
+Writes 32 sectors (128 KiB): 0x04000-0x23FFF
+Installs FM-1_1300 (0x04000-0x92FFF).
+Type "yes" to write: yes
+Backup saved: /Users/zhouhanru/Documents/M-Flasher/backups/fm1-20261118-021254.bin
+Writing 0x04000-0x23FFF
+  100%
+Done: everything written is verified (the chip's CRC32 matches)
+Sent the restart (a 34-byte program at 0x01C28000); waiting for the unit to reset
+Running: the Felucca is on USB MIDI
+</pasted_content id="cc4a">
+
+```
+
+其實也可以 可以為此創一個 repo 然後再用submodule加回來本repo？
+也可以弄MIT LICENSE
+然後Hub要求的測試也可以做一下（但那個路徑需要改bootloader嗎？）
+
+---
+
+_**Agent (claude-opus-5-5 2026-11-17 18:18:49Z)**_
+
+0.3 寫入成功，和預演一樣是 32 個 sector。先確認機器回報的版本。
+
+_**Agent (claude-opus-5-5 2026-11-17 18:18:55Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Confirm the unit runs Morse 0.3
+
+```bash
+sleep 1; just fm1-find 2>&1 | tail -1; PYTHONPATH=host timeout 15 uv run --locked --all-groups python -c "
+import mido, time
+from morse import protocol as P
+seen=[]
+def cb(m):
+    if m.type=='sysex':
+        x=P.parse(bytes(m.data))
+        if x and x.type in (P.T_HELLO, P.T_HEARTBEAT): seen.append(P.firmware_of(x))
+i=mido.open_input('Felucca', callback=cb); time.sleep(2.5); i.close()
+print('HELLO firmware:', seen[:2])"
+```
+
+```text
+midi	Felucca (running; download-mode switches it)
+HELLO firmware: [(0, 3), (0, 3)]
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 18:19:01Z)**_
+
+機器回報 **Morse 0.3** `[實機]`。接著查 fm1-base 怎麼透過 USB MIDI 更新韌體，好回答「需不需要改 bootloader」。
+
+_**Agent (claude-opus-5-5 2026-11-17 18:19:02Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Find fm1-base's update tooling and README notes
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/third_party/fm1-base && ls tools | head -50; grep -n -i "update\|install" README.md | head -30`
+
+```text
+__pycache__
+bt
+boot_pack.py
+build.py
+firmware_json.py
+fit_fastmath.py
+fm1_backup.py
+fm1_debug.py
+fm1_install.py
+fm1_mirror.py
+fm1_remote.py
+fm1_resources.py
+fm1pkg_make.py
+fm1ports.py
+gen_font.py
+gen_words.py
+get_toolchain.sh
+lz4blk.py
+make_site.py
+manual_html.py
+provenance.py
+publish_site.sh
+ram_run.py
+ramcode.py
+rfm1_pack.py
+romref.py
+stack_depth.py
+stack_ir.py
+5:a host simulator and a browser emulator that run the same app, and the tools to build, package and install it.
+15:across a power cycle, USB-MIDI both ways, the screen reader, and an update started from the template itself. The same
+43:| The app's own commands over USB, in the update's framing, data pulled from the host | `#define APP_USB_CMD` in app.h | `app_usb_cmd`; `plat_host_read`, `plat_host_patience` |
+178:- An app with fonts of its own can give them to fm1-base's screens (crash, safe mode, update, restore,
+190:`tools/fm1_install.py`, `fm1_backup.py`, `fm1_mirror.py` and `fm1_debug.py` find it the same way.
+192:The site's installer page (`tools/make_site.py`, from `web/installer.html`) reads the same crash record and log in
+229:Every build writes `firmware.json`, a description of the firmware for the places that list and install FM-1
+230:firmwares (The Firmware Hub, RemoteFM1, M-Flasher): its name, author, licence, a paragraph on it, tags, the install
+232:audio). It comes from fm1.toml (`author`, `description`, `tags`, `install`, `site`, with the site's `tagline`, `repo`,
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 18:19:07Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Read fm1_install.py header and related README lines
+
+`sed -n 1,60p tools/fm1_install.py; sed -n 10,20p README.md; sed -n 185,195p README.md`
+
+```text
+#!/usr/bin/env python3
+# SPDX-License-Identifier: MPL-2.0
+# Copyright (C) 2026 Charles Vestal
+# Copyright (C) 2026 Leo Kuroshita (@kurogedelic), Hügelton Instruments
+"""Install a Felucca package (.fwsc) on an FM-1 over USB-MIDI.
+
+The same update as the web installer (web/fm1ota.js): step 1, the
+running firmware reads parts of the package and starts the update loader;
+step 2, the loader reads the whole package and writes it. In both steps the
+device asks (SysEx read requests on the logical image) and we answer. Then
+the FM-1 restarts and the installed identity is checked.
+
+Step 2 is the fast install when the loader can (felucca-bsp loader/ldr_core.c,
+LDR_FAST_CHUNK): before the upgrade command we say cmd 0x31 [1, 4096]; a
+loader that answers it reads a table of flash.bin's 4 KiB sectors (CRC16,
+CRC-32), checks it against the package before anything is erased, and asks
+only for the sectors that differ, 4 KiB at a time (a cut-off install resumes:
+what was written is skipped). A loader that does not answer within 0.5 s
+gets the classic protocol, unchanged; --classic never asks, nor does a
+package without a Felucca loader (M-VAVE's firmware: M-VAVE's loader).
+
+  fm1_install.py PACKAGE.fwsc [--port NAME] [--yes] [--force] [--classic]
+  fm1_install.py --info [--port NAME]
+
+If the FM-1 is still in update mode (an earlier install was cut off), the
+install finishes the write. The FM-1 is found by its port's name (--port: only
+that one), or else by its answer to the screen reader's HELLO, which every
+fm1-base firmware gives (tools/fm1ports.py). Needs mido with python-rtmidi.
+
+Exit codes: 0 done, 1 cancelled or other error, 2 bad arguments or package,
+3 FM-1 not found, 4 connection lost or the device stopped, 5 timeout (no
+loader / no restart), 6 wrong model, or another identity after the install.
+"""
+import argparse
+import binascii
+import hashlib
+import os
+import queue
+import re
+import sys
+import time
+import zlib
+
+import fm1ports
+from fm1ports import PORT_RE, pair_output  # noqa: F401 (the usual port names; an input's output: fm1ports.py)
+
+HS_QUERY = bytes([0xF0, 0x00, 0x32, 0x45, 0x00, 0x00, 0x00, 0x40, 0x7F, 0xF7])
+# the handshake with the one-byte body 01 (00 59 11, length 1, 01, checksum FE): a firmware on felucca-bsp's chip/ota.c
+# answers HS_QUERY with its name, '_' and three digits only ("FM-1_601": M-UPGRADE 3.11 refuses more) and this one
+# with its whole identity ("FM-1_6010000"). M-VAVE's firmware, the update loaders and older builds don't answer it.
+# (PERF-1's scheme: its installers and ours ask the same way)
+HS_FULL = bytes([0xF0, 0x00, 0x32, 0x45, 0x08, 0x00, 0x00, 0x40, 0x00, 0x7E, 0x01, 0xF7])
+UPGRADE = bytes([0xF0, 0x22, 0x24, 0x35, 0x7F, 0xF7])
+FINISH_CHECK, FINISH_WRITE = 0xE0000000, 0xF0000000
+MAXDATA = 512
+# the fast install (loader/ldr_core.c): the hello and the loader's answer (cmd 0x31 [version 1, read size 16-bit LE]),
+# the loader's progress (cmd 0x32 [sectors compared, all sectors: 16-bit LE each]), its reads of one 4 KiB sector and
+# of the sector table at TABLE + flash.bin's offset (per 4 KiB sector of flash.bin: CRC16 and CRC-32, little-endian)
+FAST_CMD, CHECK_CMD = 0x31, 0x32
+FAST_CHUNK = 4096
+[CTL-1](https://github.com/charlesvestal/fm1-ctl) (with Bluetooth MIDI) and
+[Radio](https://github.com/charlesvestal/fm1-radio) (with WiFi). Expect the platform interface (`include/plat.h`)
+and `fm1.toml`'s settings to change before 1.0.
+
+The template (`template/`) runs on an FM-1: screen, keys and their LEDs, sound, MASTER, encoders, settings kept
+across a power cycle, USB-MIDI both ways, the screen reader, and an update started from the template itself. The same
+app runs on the computer in the host simulator and in the browser: try the template's at
+<https://charlesvestal.github.io/fm1-base/emu/>.
+
+    git clone --recursive https://github.com/charlesvestal/fm1-base
+
+MASTER, and reads back what the screen says (the screen reader's channel), the last crash and the radio's log; with
+WiFi, it turns it on and off, joins networks and reads its state (`wifi ...`).
+For example, `tools/fm1_remote.py listen tap REC wait 3000 screen log`.
+It finds the FM-1 as the web pages do (`tools/fm1ports.py`, the same rules as `web/fm1ports.js`): a port with an
+FM-1's usual name, or else one that answers the screen reader's HELLO, whatever it is called; `--port NAME` picks one.
+`tools/fm1_install.py`, `fm1_backup.py`, `fm1_mirror.py` and `fm1_debug.py` find it the same way.
+
+The site's installer page (`tools/make_site.py`, from `web/installer.html`) reads the same crash record and log in
+Chrome or Edge: "Report a problem" shows them, ready to copy, so a player can send them without Python. The record
+survives a restart, not switching off.
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 18:19:39Z)**_
+
+<think><details><summary>Thought Process</summary>
+結論是不需要改 bootloader：fm1-base 的 `tools/fm1_install.py` 就用 Hub 同一套 USB-MIDI 更新流程，原廠 bootloader 維持不動。接下來我先唯讀查詢機器 identity，並檢查 catalog 裡 `FM-1_13` 前綴是否已被占用。
+
+</details></think>
+
+_**Agent (claude-opus-5-5 2026-11-17 18:19:44Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Read the unit's identity over USB-MIDI; check prefixes in the saved catalog
+
+```bash
+cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1 && timeout 30 uv run --locked --all-groups python third_party/fm1-base/tools/fm1_install.py --info < /dev/null 2>&1 | tail -15; echo "---"; python3 - <<'PY'
+import json, re
+c=json.load(open('/private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/0a574306-469e-4a59-9622-5701a42aee59/scratchpad/web/catalog.json'))
+fws=c.get('firmwares', c if isinstance(c,list) else [])
+ids=[]
+for f in fws:
+    s=json.dumps(f)
+    for m in re.findall(r'FM-1_\d+', s):
+        ids.append((m, f.get('name') or f.get('title') or f.get('id')))
+pref={}
+for m,n in ids:
+    pref.setdefault(m[:8], set()).add(n)   # FM-1_ + 3 digits
+for k in sorted(pref):
+    if k.startswith('FM-1_13') or k.startswith('FM-1_12'):
+        print(k, sorted(x for x in pref[k] if x))
+used=sorted({m[5:8] for m,_ in ids if len(m)>=8})
+free=[f"{i:02d}" for i in range(10,100) if not any(u.startswith(f"{i:02d}") for u in used)]
+print("two-digit prefixes with no 3-digit id under them:", free[:30])
+PY
+```
+
+```text
+FM-1_1300  [running]  port: Felucca
+---
+FM-1_123 ['M-PYRE']
+FM-1_137 ['FM-1 Midi-Mania']
+two-digit prefixes with no 3-digit id under them: ['17', '31', '34', '40', '41', '49', '54', '55', '56', '58', '59', '68', '69', '84', '85', '89']
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 18:19:54Z)**_
+
+<think><details><summary>Thought Process</summary>
+機器 identity 回應正常（FM-1_1300）。但目錄中 FM-1 Midi-Mania 的 FM-1_137 與我們的 FM-1_13 前綴重疊，Conductor 的 FM-1_12 也與 M-PYRE 的 FM-1_123 重疊，接下來我會檢查 fm1-base 的 identity 前綴規則。
+
+</details></think>
+
+_**Agent (claude-opus-5-5 2026-11-17 18:19:54Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Read fm1-base's id_prefix documentation
+
+`grep -n "id_prefix" -A6 third_party/fm1-base/tools/build.py | head -30`
+
+```text
+19:  id_prefix = "FM-1_0"       package identity: dev builds are the prefix + "00", releases the prefix + XXYYZZ
+20-  usb_manufacturer = "..."   the USB names (felucca-bsp FELUCCA_USB_MANUFACTURER / FELUCCA_USB_PRODUCT)
+21-  usb_product = "..."
+22-  o2 = ["dsp/engine.c"]      separate units compiled at -O2 (the app's DSP), relative to APP_DIR (globs too); each with
+23-                             its own directory on the include path
+24-  unity_opt = "z"            the unity build (the platform, the app but its o2 units) at -Oz instead of -Os: smaller,
+25-                             a little slower (what runs in the audio interrupt outside the o2 units, too)
+--
+316:PRODUCT = None                      # package identity (fm1.toml id_prefix; see main)
+317-VERSION = None                      # APP_VERSION for release builds (default: "DEV", device/unity.c)
+318-RELEASE = None                      # --release X.Y as given: the release's file names (NAME-X.Y.fwsc, NAME-X.Y.rfm1)
+319-BLE = False                         # fm1.toml ble = true, unless --no-ble
+320-OWN = False                         # with BLE: fm1.toml ble_stack = "own" (bt/, no JieLi library)
+321-WIFI = False                        # fm1.toml wifi = true
+322-CPU2 = False                        # fm1.toml cpu2 = true (FM1B_CPU2=0 / 1 in the environment: without / with)
+--
+1690:    ap.add_argument("--release", metavar="X.Y[.Z]", help="release build: identity id_prefix + XXYYZZ, version string X.Y[.Z]")
+1691-    ap.add_argument("--no-ble", action="store_true", help="without Bluetooth (fm1.toml ble = true): NAME-usb.fwsc")
+1692-    ap.add_argument("--sdk", type=Path, help="JieLi AC79 SDK checkout (default: $AC79_SDK)")
+1693-    ap.add_argument("--host", action="store_true", help="build the host simulator instead of the firmware")
+1694-    ap.add_argument("--web", action="store_true", help="build the browser emulator instead of the firmware")
+1695-    ap.add_argument("--rfm1", action="store_true", help="build an .rfm1 (host apps) instead of the firmware")
+1696-    a = ap.parse_args()
+--
+1712:    prefix = CONF.get("id_prefix", "FM-1_0")
+1713-    if not re.fullmatch(r"FM-1_\d+", prefix):
+1714:        raise SystemExit(f"fm1.toml id_prefix {prefix!r}: FM-1_ and digits only (the update tools parse it)")
+1715-    PRODUCT = prefix + "00"
+1716-    name = STEM + ".fwsc"
+1717-    if a.release:
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 18:20:09Z)**_
+
+<think><details><summary>Thought Process</summary>
+Release 版 identity 是前綴加 XXYYZZ（如 `FM-1_13` 接 `000300`），USB 短 identity 則是 `FM-1_` 加前三位數字，兩者開頭相同，Hub 若把前綴當名字就會誤判重疊。接下來先把 0.3 刷機記錄進文件，再問你幾個需要決定的事。
+
+</details></think>
+
+_**Agent (claude-opus-5-5 2026-11-17 18:20:18Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Record the 0.3 flash in docs
+
+```bash
+python3 - <<'PY'
+def sub(p,a,b):
+    s=open(p).read(); assert a in s,(p,a[:60]); s=s.replace(a,b,1); open(p,'w').write(s)
+p='docs/device-log.md'
+s=open(p).read()
+old=[l for l in s.splitlines() if l.startswith("| 目前韌體 |")][0]
+s=s.replace(old,"| 目前韌體 | **Morse 0.3（自製）**（2026-11-18 02:12 刷入，套件識別 `FM-1_1300`，USB 產品名 `MORSE FM-1`；macOS 的 MIDI port 仍顯示 `Felucca`）。之前依序是原廠 015 → SLOOP 2.8.5 → Agent Deck 0.7 → SLOOP 2.8.5 → CTL-1 1.0.3 → ChoralRoot 0.41 → Conductor 0.1 → 0.2 → 0.3 → Morse 0.1 → 0.2 |",1)
+i=s.index("\n## Phase 1 驗收")
+row="| 2026-11-18 02:12 | 本人執行 `just fm1-switch firmware/morse/build/morse.fwsc`（Morse 0.3，SHA-256 `64bfa57d…f8d4ea`，commit `02b0ea2`） | 先自動備份 `backups/2026-11-18-0212-pre-morse/`（SHA-256 同 02:12 那份）。M-Flasher 的計畫：`Writes 32 sectors (128 KiB): 0x04000-0x23FFF`，和預演一致；寫入後 CRC32 相符，自動重開，M-Flasher 另存 `fm1-20261118-021254.bin`。重開後 HELLO 回報 0.3；`fm1_install.py --info`（USB-MIDI 唯讀詢問）回答 `FM-1_1300 [running]` |\n"
+s=s[:i].rstrip("\n")+"\n"+row+s[i:]
+open(p,'w').write(s)
+p='docs/dev/morse.md'
+sub(p,"**狀態（2026-11-18）：機器上是韌體 0.2（00:14 刷入）。","**狀態（2026-11-18）：機器上是韌體 0.3（02:12 刷入）。")
+sub(p,"韌體 0.3（修 TYPE 鍵上點劃的排版）、host 0.3.0 已在模擬器驗證，還沒刷。**","0.3 修了 TYPE 鍵上點劃的排版。**")
+sub(p,"| 韌體 0.3、host 0.3.0 | 2026-11-18 | 是（還沒刷） |","| 韌體 0.3、host 0.3.0 | 2026-11-18 | 是（02:12 刷入，`02b0ea2`） |")
+sub('docs/firmware/switching.md',"| 2026-11-18 | Morse 0.1 → 0.2（自製） |","| 2026-11-18 | Morse 0.2 → 0.3（自製） | `just fm1-switch firmware/morse/build/morse.fwsc` | 成功。寫入 32 個 sector（`0x04000`–`0x23FFF`），和預演一致 |\n| 2026-11-18 | Morse 0.1 → 0.2（自製） |")
+sub('docs/index.md',"韌體 0.2、host 0.2.0；2026-11-17 起在我的機器上","韌體 0.3、host 0.3.0；2026-11-17 起在我的機器上")
+sub('README.md',"| Firmware 0.2, host 0.2.0; on my unit since 2026-11-17 |","| Firmware 0.3, host 0.3.0; on my unit since 2026-11-17 |")
+PY
+just docs-check 2>&1 | tail -1
+```
+
+```text
+{"status": "ok", "pages": 46, "llm_pages": 46, "deployed": false}
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 18:23:32Z)**_
+
+<tool-use data-tool-type="generic" data-tool-name="AskUserQuestion"><details>
+<summary>Tool use: **AskUserQuestion**</summary>
+**要上架 Hub，Morse 要搬到一個新的公開 GitHub repo（根目錄放 MIT LICENSE 和 fmhub.json），再用 submodule 加回這個 repo。新 repo 叫什麼名字？（建立後就是公開的）**
+
+Options:
+- **fm1-morse (Recommended)** - 跟 fm1-base 作者的 fm1-ctl、fm1-radio 同一種命名：daviddwlee84/fm1-morse
+- **morse-fm1** - daviddwlee84/morse-fm1
+- **fm1-morse-trainer** - 名字就說明是練習器：daviddwlee84/fm1-morse-trainer
+
+**目前的 identity 前綴 FM-1_13 和 Hub 上的 FM-1 Midi-Mania（FM-1_137）開頭相同，Hub 要求「版本之前的部分要是自己的」。上架版要不要換成沒人用的前綴？（換了之後 M-Flasher 會把它當成另一個韌體安裝，存檔位置不變、進度保留）**
+
+Options:
+- **換成 FM-1_41 (Recommended)** - 目錄裡沒有任何 FM-1_41x；送審前再用 Hub 的 #check 確認
+- **保留 FM-1_13** - 不換，送審時用 #check 看 Hub 怎麼判斷
+
+**Hub 要求的實機測試要做哪些？都走 USB-MIDI 更新路徑，不改 bootloader；每一次寫入都會先給你 preflight、由你執行。可以複選** _(select multiple)_
+
+Options:
+- **從 Morse 換到別的韌體** - 例如用 fm1_install.py 從 Morse 裝 SLOOP 2.8.5，證明「裝了還離得開」。低風險
+- **從別的韌體裝回 Morse** - 接著從 SLOOP 用同一套 USB-MIDI 流程裝回 Morse（Hub 網頁安裝就是這樣）。低風險
+- **從原廠 V15 裝 Morse** - 要先把機器換回原廠 015，再從原廠裝 Morse。原廠可能會改寫自己的設定區、清掉 Morse 的進度（有備份）
+- **刻意中斷一次寫入** - 寫到一半拔線再續裝。fm1-base 說會從中斷處續寫，但這台是新晶片又沒有 USB_KEY，起不來時沒有救援手段。有風險
+
+
+```text
+The user doesn't want to proceed with this tool use. The tool use was rejected (eg. if it was a file edit, the new_string was NOT written to the file). STOP what you are doing and wait for the user to tell you how to proceed.
+
+Note: The user's next message may contain a correction or preference. Pay close attention — if they explain what went wrong or how they'd prefer you to work, consider saving that to memory for future sessions.
+```
+</details></tool-use>
+
+---
+
+_**User (2026-11-17 18:23:32Z)**_
+
+[Request interrupted by user for tool use]
+
+---
+
+_**User (2026-11-17 18:25:19Z)**_
+
+I accidentally declined the questions.
+Please ask the same questions again using AskUserQuestion,
+then continue where we left off.
+
+---
+
+_**Agent (claude-opus-5-5 2026-11-17 18:26:11Z)**_
+
+<tool-use data-tool-type="generic" data-tool-name="AskUserQuestion"><details>
+<summary>Tool use: **AskUserQuestion**</summary>
+**要上架 Hub，Morse 要搬到一個新的公開 GitHub repo（根目錄放 MIT LICENSE 和 fmhub.json），再用 submodule 加回這個 repo。新 repo 叫什麼名字？（建立後就是公開的）**
+
+Options:
+- **fm1-morse (Recommended)** - 跟 fm1-base 作者的 fm1-ctl、fm1-radio 同一種命名：daviddwlee84/fm1-morse
+- **morse-fm1** - daviddwlee84/morse-fm1
+- **fm1-morse-trainer** - 名字就說明是練習器：daviddwlee84/fm1-morse-trainer
+
+**目前的 identity 前綴 FM-1_13 和 Hub 上的 FM-1 Midi-Mania（FM-1_137）開頭相同，Hub 要求「版本之前的部分要是自己的」。上架版要不要換成沒人用的前綴？（換了之後 M-Flasher 會把它當成另一個韌體安裝，存檔位置不變、進度保留）**
+
+Options:
+- **換成 FM-1_41 (Recommended)** - 目錄裡沒有任何 FM-1_41x；送審前再用 Hub 的 #check 確認
+- **保留 FM-1_13** - 不換，送審時用 #check 看 Hub 怎麼判斷
+
+**Hub 要求的實機測試要做哪些？都走 USB-MIDI 更新路徑，不改 bootloader；每一次寫入都會先給你 preflight、由你執行。可以複選** _(select multiple)_
+
+Options:
+- **從 Morse 換到別的韌體** - 例如用 fm1_install.py 從 Morse 裝 SLOOP 2.8.5，證明「裝了還離得開」。低風險
+- **從別的韌體裝回 Morse** - 接著從 SLOOP 用同一套 USB-MIDI 流程裝回 Morse（Hub 網頁安裝就是這樣）。低風險
+- **從原廠 V15 裝 Morse** - 要先把機器換回原廠 015，再從原廠裝 Morse。原廠可能會改寫自己的設定區、清掉 Morse 的進度（有備份）
+- **刻意中斷一次寫入** - 寫到一半拔線再續裝。fm1-base 說會從中斷處續寫，但這台是新晶片又沒有 USB_KEY，起不來時沒有救援手段。有風險
+
+
+**Answer:** fm1-morse (Recommended), 換成 FM-1_41 (Recommended), 這個是硬性規定一定要做嗎？還是只是建議？（因為我感覺我們燒了這麼多次都沒事 估計普通情況也不會有什麼問題？）". Read the answers carefully — they may request clarification, changes, or that you not proceed — and follow what they actually say.
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 18:27:05Z)**_
+
+<think><details><summary>Thought Process</summary>
+repo 已改名為 `fm1-morse`，identity 為 `FM-1_41`。Hub 送審規定六項都要通過，其中包含實機測試，但我們目前只用 M-Flasher 測過，還沒走過一般使用者從 Hub 網頁安裝的路徑，接下來先開始準備獨立 repo，並查 `fmhub.json` 的格式。
+
+</details></think>
+
+_**Agent (claude-opus-5-5 2026-11-17 18:27:20Z)**_
+
+<tool-use data-tool-type="read" data-tool-name="WebFetch"><details>
+<summary>Tool use: **WebFetch**</summary>
+ `https://thefirmwarehub.com/fmhub.md`
+
+````text
+## fmhub.json format
+
+The file goes in the repository root on the default branch. The hub reads it every three hours. Any field outside the allowed list makes the whole file unused, and a missing file means no listing. Its contents are checked against the rules below.
+
+| Field | Type | Rules |
+|---|---|---|
+| `what` | string | English, plain text. No HTML, code, links, or web addresses. 20 to 300 characters (aim for 150 to 280). Describe what the firmware does in this version. No advertising or hostile content. |
+| `author` | string | 2 to 60 characters. Plain text, no links, nothing hostile. |
+| `kinds` | array of strings | One of `synth`, `groove`, `drums`, `chords`, `tracker`, `other`. Only the first entry counts. |
+| `play` | string | `https://` address of a browser version (emulator), if one exists. |
+| `editor` | string | `https://` address of a web editor for sounds or settings, if one exists. |
+| `cheat` | string | `https://` address of a cheat sheet (web page or PDF). |
+| `image` | string | Path inside the repository, not a URL (e.g. a path under `docs/`). |
+| `color` | string | `#RRGGBB` format. Must be bright enough for a dark page. |
+| `sounds` | string | Required if the firmware carries any sounds. Leave it out or use `""` if it carries none. Details below. |
+| `smk37` | object | Optional. Only for SMK-37 builds in a shared repository. Details below. |
+
+**The `sounds` field:** It must state where every sample, bank, ROM, and recording in the repository and package comes from, including converted C arrays. Accepted values:
+- `""` or `"none"` (everything is generated in code)
+- `"own"` or `"own: <what>"` (made or recorded by the maker)
+- `"CC0: <source>"`
+- `"public domain: <source>"`
+- `"licensed: <source>, <licence>"`
+
+It is plain text, 300 characters maximum, with no links. Using this line means the maker confirms they may share everything and answers for it. Commercial instrument samples, sample CDs, game audio, and records are not "own." Ask the maker which value applies. Do not guess.
+
+**The `smk37` block:** It accepts only `what`, `image`, `install`, and `guide`. `what` and `image` follow the same rules as above. `install` and `guide` must be `https://` addresses. A repository used only for the SMK-37 needs no `smk37` block, since the top-level fields apply.
+
+**Example (illustrative values only):**
+
+```json
+{
+  "what": "A four-voice subtractive synth with a built-in arpeggiator, a simple step sequencer, and patch storage in eight slots.",
+  "author": "Jane Example",
+  "kinds": ["synth"],
+  "play": "https://example-user.github.io/myfirmware/play/",
+  "editor": "https://example-user.github.io/myfirmware/editor/",
+  "cheat": "https://example-user.github.io/myfirmware/cheatsheet.pdf",
+  "image": "docs/card.png",
+  "color": "#3A8FFF",
+  "sounds": "none"
+}
+```
+
+Use valid JSON: double quotes, commas between fields, no trailing comma, no comments.
+
+## Repository rules
+
+- **Licence:** GPL-3.0, MPL-2.0, or another open licence. The complete source must be public on GitHub. A zip file is not enough. A `LICENSE` file goes in the root.
+- **Release:** Publish a GitHub release with the `.fwsc` package attached as a release asset. The hub detects new releases within three hours. Versions containing beta, alpha, rc, or a 0.x number receive a beta tag. The source does not define an exact `.fwsc` naming pattern, so check the knowledge base before choosing one.
+- **Identity:** Use an `FM-1_<number>` product name that no other firmware uses. Check availability at the submit page's check section. Do not keep the number of the firmware you started from. Longer numbers with your own part are safer.
+- **Update loader:** Include it in the package so players can install other firmware later. Details are in the knowledge base under the loader section.
+- **README:** If the firmware cannot read other firmwares' projects or samples, the README must say so.
+
+## Testing required before listing
+
+Test on a real FM-1:
+1. Install from the stock V15 firmware.
+2. Install from another firmware.
+3. Confirm that another firmware can be installed from this one.
+
+"Untested firmwares are not listed."
+
+## Submitting
+
+Send one short email to zven@thefirmwarehub.com, containing:
+- the firmware name and the maker's name as it should appear
+- the repository link
+- the `FM-1_` identity and the licence
+- confirmation that it was tested on a real FM-1 and that reinstalling another firmware works
+
+Card text, picture, cheat sheet, and links do not go in the email. They come from `fmhub.json`.
+
+## Checking before you push
+
+1. Validate the JSON, e.g. with `python3 -m json.tool fmhub.json`.
+2. Count `what` (300 characters maximum), and check for links and forbidden characters (`<`, `>`, `{`, `}`, backticks).
+3. Check the image: square, 240 to 1024 px, 300 KB maximum, PNG, WebP, or JPEG. A 240 × 240 PNG screen capture is best.
+4. Check `sounds` against the repository. A `"none"` value conflicts with any `.wav`, `.syx`, or `.sf2` files or sample arrays.
+5. After pushing, open the knowledge base's "Check your file" section to see exactly what the card will display, or what is wrong.
+
+## After listing
+
+- **New versions:** publish a new GitHub release with the `.fwsc` attached.
+- **Card changes** (text, image, links): edit `fmhub.json` and the image file, push, and wait up to three hours. Do not email text changes.
+
+[Binary content (application/octet-stream, 8.2KB) also saved to /Users/zhouhanru/.claude/projects/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/0a574306-469e-4a59-9622-5701a42aee59/tool-results/webfetch-1794940027057-4k9f20.bin]
+````
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 18:27:48Z)**_
+
+<think><details><summary>Thought Process</summary>
+格式和送審的步驟都確認了，接下來我會檢查 `fm1.toml` 裡 release 需要的欄位名稱。送審要寄信到 zven@thefirmwarehub.com，附上 repo、identity 與授權，並確認實機測試三項都已完成。
+
+</details></think>
+
+_**Agent (claude-opus-5-5 2026-11-17 18:27:49Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Read firmware.json field sources and fm1.toml keys
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/third_party/fm1-base && sed -n 44,64p docs/FIRMWARE-JSON.md; grep -n '"title"\|install =\|screenshot =\|  title' tools/build.py | head`
+
+```text
+## Fields
+
+| Field | Type | From (fm1.toml) | Meaning |
+|---|---|---|---|
+| `schema` | number | | The format's version: 1. |
+| `id` | string | `name`, in lower case | The firmware's short name, the same as its package's file name (`ctl`). |
+| `name` | string | `title`, else `usb_manufacturer`, else app.h's `APP_NAME` | The name people see (`CTL-1`). |
+| `author` | string | `author`, else `authors` joined | Who made it. |
+| `license` | string | `licence` | Its licence, an SPDX expression (`MPL-2.0`). |
+| `tagline` | string | `tagline` | One line on what it is. |
+| `description` | string | `description` | One paragraph, at most 600 characters. |
+| `tags` | list of strings | `tags` | What it is, from the tag vocabulary. |
+| `install` | URL | `install` | The page that installs it. |
+| `site` | URL | `site` | Its site. |
+| `source` | URL | `repo` | Its source code. |
+| `screenshot` | path | `screenshot` | A picture of its screen for a hub's card: a PNG in its repository, relative to the repository's root (`docs/img/screen.png`). |
+| `hardware.models` | list of strings | | The models it runs on. A firmware on fm1-base says `FM-1`. |
+| `hardware.flash` | list of strings | device/fm1_flash_ok.h | The flash parts it can save to and update on, as their JEDEC IDs in upper-case hex. |
+| `hardware.features` | list of strings | the build's parts | What the build has, from the feature vocabulary. |
+| `credits` | string | `credits` | A sentence on what it is built from. |
+257:  install = "https://..."    the page that installs it
+259:  title = "..."              the name people see, when it is not usb_manufacturer (Radio's is fm1-radio)
+260:  screenshot = "docs/img/x.png"  a picture for the hubs' cards: a square PNG, at least 240 x 240, at most 2 MiB,
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 18:27:58Z)**_
+
+<think><details><summary>Thought Process</summary>
+欄位都確認無誤（release build 缺少後兩個欄位會拒絕執行）。接下來我會用 `git subtree split` 把 `firmware/morse` 的提交歷史拆出來，讓新 repo 保留開發紀錄。
+
+</details></think>
+
+_**Agent (claude-opus-5-5 2026-11-17 18:27:59Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Split firmware/morse history into its own branch
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1 && git status --short | head; git subtree split --prefix=firmware/morse -b morse-split 2>&1 | tail -2 && git log --oneline morse-split | head`
+
+```text
+ M .specstory/history/2026-11-17_13-42-11Z-ascii-firmware-focus-host.md
+ M .specstory/history/2026-11-17_17-51-27Z-edge-computing-text-to.md
+ M .specstory/statistics.json
+ M README.md
+ M docs/dev/morse.md
+ M docs/device-log.md
+ M docs/firmware/hub.md
+ M docs/firmware/switching.md
+ M docs/index.md
+1/      50 (0) [0]2/      50 (1) [0]3/      50 (2) [0]4/      50 (3) [0]5/      50 (4) [0]6/      50 (5) [0]7/      50 (6) [0]8/      50 (7) [0]9/      50 (8) [0]10/      50 (9) [0]11/      50 (10) [0]12/      50 (11) [0]13/      50 (12) [0]14/      50 (13) [0]15/      50 (14) [0]16/      50 (15) [0]17/      50 (16) [0]18/      50 (17) [0]19/      50 (18) [0]20/      50 (19) [0]21/      50 (20) [0]22/      50 (21) [0]23/      50 (22) [0]24/      50 (23) [0]25/      50 (24) [0]26/      50 (25) [0]27/      50 (26) [0]28/      50 (27) [0]29/      50 (28) [0]30/      50 (29) [0]31/      50 (30) [0]32/      50 (31) [0]33/      50 (32) [0]34/      50 (33) [0]35/      50 (34) [0]36/      50 (35) [0]37/      50 (36) [0]38/      50 (37) [0]39/      50 (38) [0]40/      50 (39) [0]41/      50 (40) [0]42/      50 (41) [0]43/      50 (42) [0]44/      50 (43) [0]45/      50 (44) [0]46/      50 (45) [0]47/      50 (46) [0]48/      50 (47) [0]49/      50 (48) [0]50/      50 (49) [0]Created branch 'morse-split'
+ea5c8174a17ad9ba0513bd9e41e3ad791147b4f0
+ea5c817 Morse 0.3: TYPE's code on the keys fits; 0.2 on the unit
+f62e0d3 Morse 0.2: rhythm drills, listening, two speeds, KEY views, TYPE pages
+f5f5be4 Morse 0.1: pocket Morse code machine (firmware + host)
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 18:28:08Z)**_
+
+<think><details><summary>Thought Process</summary>
+三個 commit 的歷史已拆出，接著我在暫存目錄組裝新 repo 的內容，包括 LICENSE、自帶的 common/、鎖定版本的 fm1-base submodule、fmhub.json、截圖、英文 README，以及更新後的 fm1.toml。
+
+</details></think>
+
+_**Agent (claude-opus-5-5 2026-11-17 18:28:16Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Start the fm1-morse repo from the split history; add common and fm1-base
+
+```bash
+set -e; R=/Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1; W=/private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/0a574306-469e-4a59-9622-5701a42aee59/scratchpad/fm1-morse; rm -rf "$W"; git clone -q --branch morse-split "$R" "$W"; cd "$W"; git checkout -q -b main; git branch -D morse-split >/dev/null; git remote remove origin; mkdir -p common docs; cp "$R"/firmware/common/hostlink.c "$R"/firmware/common/hostlink.h "$R"/firmware/common/ledfx.c "$R"/firmware/common/ledfx.h common/; mkdir -p common/tests && cp "$R"/firmware/common/tests/hostlink_test.c common/tests/; cp "$R"/firmware/morse/build/host/key_code.png docs/screen.png; python3 -c "
+from PIL import Image" 2>/dev/null || true; ls; file docs/screen.png; wc -c docs/screen.png; git -c protocol.file.allow=always submodule add -q https://github.com/charlesvestal/fm1-base.git fm1-base; cd fm1-base && git checkout -q c8e05997ce970875038156d2bbd69e712eac1543 && cd .. && git submodule status
+```
+
+```text
+docs/screen.png: PNG image data, 240 x 240, 8-bit/color RGB, non-interlaced
+  173118 docs/screen.png
+ c8e05997ce970875038156d2bbd69e712eac1543 fm1-base (heads/main)
+Shell cwd was reset to /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 18:28:31Z)**_
+
+<think><details><summary>Thought Process</summary>
+新 repo 的骨架已完成，歷史保留，截圖為 173 KB，符合 Hub 的 300 KB 上限。接下來我會撰寫 LICENSE、fmhub.json 和 README，並修改 fm1.toml。
+
+</details></think>
+
+_**Agent (claude-opus-5-5 2026-11-17 18:28:41Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Write LICENSE and update fm1.toml, words URL, gitignore
+
+```bash
+set -e; W=/private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/0a574306-469e-4a59-9622-5701a42aee59/scratchpad/fm1-morse; cd "$W"; cat > LICENSE <<'EOF'
+MIT License
+
+Copyright (c) 2026 Da-Wei Lee
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+fm1-base (the fm1-base/ submodule) is the work of Charles Vestal and others,
+under the Mozilla Public License 2.0; see fm1-base/LICENSE.
+EOF
+python3 - <<'PY'
+import re
+s=open('fm1.toml').read()
+s=s.replace('id_prefix = "FM-1_13"          # package identity: dev FM-1_1300','id_prefix = "FM-1_41"          # package identity: dev FM-1_4100, release 0.3 FM-1_41000300')
+s=s.replace('include = ["../common"]        # hostlink, ledfx: shared with Conductor','include = ["common"]           # hostlink, ledfx (from M-VAVE_FM-1 firmware/common, MIT)')
+s=s.replace('name = "MORSE"\n','name = "MORSE"\ntitle = "MORSE"\n')
+s=s.replace('repo = "https://github.com/daviddwlee84/M-VAVE_FM-1"','repo = "https://github.com/daviddwlee84/fm1-morse"\nsite = "https://daviddwlee84.github.io/M-VAVE_FM-1/dev/morse/"\ninstall = "https://github.com/daviddwlee84/fm1-morse#install"\nscreenshot = "docs/screen.png"')
+open('fm1.toml','w').write(s)
+w=open('words.tsv').read()
+w=w.replace('# url: https://daviddwlee84.github.io/M-VAVE_FM-1/dev/morse/','# url: https://raw.githubusercontent.com/daviddwlee84/fm1-morse/main/web/words/')
+open('words.tsv','w').write(w)
+g=open('.gitignore').read().replace('web/words/\n','')
+open('.gitignore','w').write(g)
+for f in ('app.c','app.h'):
+    t=open(f).read()
+    t=t.replace('host/morse/PROTOCOL.md','PROTOCOL.md in github.com/daviddwlee84/M-VAVE_FM-1 host/morse')
+    t=t.replace('(the numbers below match host/morse/protocol.py)','(the numbers below match its host/morse/protocol.py)')
+    open(f,'w').write(t)
+PY
+cat fm1.toml; cat .gitignore; head -3 words.tsv
+```
+
+```text
+# Morse's build settings (fm1-base tools/build.py)
+name = "MORSE"
+title = "MORSE"
+id_prefix = "FM-1_41"          # package identity: dev FM-1_4100, release 0.3 FM-1_41000300
+usb_manufacturer = "fm1-base"
+usb_product = "MORSE FM-1"     # host/morse finds the MIDI port by "MORSE"
+o2 = []
+include = ["common"]           # hostlink, ledfx (from M-VAVE_FM-1 firmware/common, MIT)
+tagline = "a pocket Morse code machine"
+repo = "https://github.com/daviddwlee84/fm1-morse"
+site = "https://daviddwlee84.github.io/M-VAVE_FM-1/dev/morse/"
+install = "https://github.com/daviddwlee84/fm1-morse#install"
+screenshot = "docs/screen.png"
+licence = "MIT"
+credits = "Built on fm1-base by Charles Vestal. Koch order from LCWO; MIDI keying in the Vail adapter's format."
+author = "daviddwlee84"
+description = "Key Morse on the piano keys (straight key or iambic paddles) and read what you sent; type letters on the keys and hear them; learn the code with flash cards a few minutes a day, by sound, or silently by the lights. Keying goes over USB-MIDI in the Vail adapter's format."
+tags = ["utility"]
+build/
+# SPDX-License-Identifier: MIT
+# Morse's words for a screen reader (fm1-reader): the text on the screen <TAB> what to say.
+# url: https://raw.githubusercontent.com/daviddwlee84/fm1-morse/main/web/words/
+Shell cwd was reset to /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 18:28:55Z)**_
+
+接著依 0.3 的功能更新描述，寫 `fmhub.json` 和英文 README（含 Hub 要求的「會不會讀或覆寫別人的資料」說明）。
+
+_**Agent (claude-opus-5-5 2026-11-17 18:29:00Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Write fmhub.json and update the firmware description
+
+```bash
+set -e; W=/private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/0a574306-469e-4a59-9622-5701a42aee59/scratchpad/fm1-morse; cd "$W"; python3 - <<'PY'
+import json
+what=("Learn and use Morse code. Key on the piano keys (straight key or iambic paddles) and see what you sent, "
+      "drill short and long presses, learn by sound with flash cards, listen to endless practice, type letters and CW "
+      "phrases on the keys. Keying goes out over USB-MIDI in the Vail format.")
+print(len(what))
+assert 20 <= len(what) <= 300 and not any(c in what for c in '<>{}`')
+hub={"what": what, "author": "daviddwlee84", "kinds": ["other"],
+     "cheat": "https://github.com/daviddwlee84/fm1-morse#controls",
+     "image": "docs/screen.png", "color": "#5AC8FF", "sounds": "none"}
+open('fmhub.json','w').write(json.dumps(hub, indent=2) + "\n")
+s=open('fm1.toml').read()
+old=[l for l in s.splitlines() if l.startswith('description = ')][0]
+desc=what+" Settings and progress are kept; Koch order, Farnsworth spacing, a decoder that follows a beginner's hand."
+assert len(desc) <= 600
+s=s.replace(old,'description = '+json.dumps(desc))
+open('fm1.toml','w').write(s)
+PY
+python3 -m json.tool fmhub.json >/dev/null && cat fmhub.json
+```
+
+```text
+285
+{
+  "what": "Learn and use Morse code. Key on the piano keys (straight key or iambic paddles) and see what you sent, drill short and long presses, learn by sound with flash cards, listen to endless practice, type letters and CW phrases on the keys. Keying goes out over USB-MIDI in the Vail format.",
+  "author": "daviddwlee84",
+  "kinds": [
+    "other"
+  ],
+  "cheat": "https://github.com/daviddwlee84/fm1-morse#controls",
+  "image": "docs/screen.png",
+  "color": "#5AC8FF",
+  "sounds": "none"
+}
+Shell cwd was reset to /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 18:29:28Z)**_
+
+<tool-use data-tool-type="write" data-tool-name="Write"><details>
+<summary>Tool use: **Write**</summary>
+
+````markdown
+# MORSE for the M-VAVE FM-1
+
+A pocket Morse code machine for the [M-VAVE FM-1](https://www.m-vave.com/), built on
+[fm1-base](https://github.com/charlesvestal/fm1-base). Key on the piano keys and read what you
+sent, drill short and long presses, learn the code by sound with flash cards, listen to endless
+practice, type letters and CW phrases on the keys. MIT.
+
+![MORSE on the FM-1](docs/screen.png)
+
+## What it does
+
+| Page | What |
+|---|---|
+| **PRACTICE** | Flash cards a few minutes at a time. Two cards per letter (recognise it, send it), each in a Leitner box; new letters five at a time in Koch order. The schedule counts rounds, not days (the FM-1 keeps no clock through a power-off). Learning **by sound** is the default: no dots and dashes on the screen. |
+| **LISTEN** | Plays on and on: Koch groups of the letters you have, common words, a made-up QSO, CW abbreviations with their meaning, sayings. Shown as it plays, or hidden for copying. |
+| **KEY** | Key freely and read what you sent: as text, as each letter over the dits and dahs you keyed, or as bars to scale. Your speed, dah:dit ratio and the gaps inside letters. |
+| **RHYTHM** | Drills of short and long presses against the target length, a judgement for each press, a hint, and a send speed that fits your hand. |
+| **TYPE** | The keys are letters, digits and signs, or CW phrases and prosigns (`CQ`, `<SK>`, `73`...). Each key plays at once, or compose a line and send it. |
+| **CHART** | The course as a grid, coloured by how well you know each letter. |
+
+A straight key (any key) or iambic A/B paddles (left half dit, right half dah). A sidetone at your
+pitch, received signals a third higher, or silence and the key lights. Hearing and sending have
+their own speeds: Koch wants the characters heard fast, a beginner's hand is slow.
+
+Keying goes out and comes in over USB-MIDI as note 0 on channel 1, the
+[Vail adapter's format](https://github.com/Vail-CW/vail-adapter/blob/master/docs/MIDI_INTEGRATION_SPEC.md),
+so [Vail](https://vailmorse.com/) and its training tools take it. A host program
+([`host/morse`](https://github.com/daviddwlee84/M-VAVE_FM-1/tree/main/host/morse)) types what you
+send into the computer and sends text for the FM-1 to play.
+
+## Controls
+
+| Control | Anywhere |
+|---|---|
+| `HOME` | the menu (again: back) |
+| `ALGO` | the next page |
+| `FX` | sound on / off (off: read the key lights) |
+| `K1`, `K2` | hearing speed, and the spacing between letters (Farnsworth) |
+| `K3` | pitch |
+| `K4` | sending speed: the keyer, the decoder's start, the RHYTHM target |
+| `MASTER` | volume |
+
+| Page | Controls |
+|---|---|
+| PRACTICE | `PLAY` start / again; `E4` `F4` `G4` `A4` (lit) pick one of four, or `SELECT` + `SEL`; key the cards that ask for it; `SEL` don't know |
+| LISTEN | `PLAY` start / stop; `SELECT` program; `SEQ` show / hide; `SEL` peek |
+| KEY | `SEQ` view (text, code, timing); `OCT-` clear |
+| RHYTHM | `SELECT` drill; `PLAY` start again |
+| TYPE | `OCT-` / `OCT+` page (letters, digits and signs, phrases); `REC` delete, held: clear; `PLAY` play / stop; `SEL` live / compose; `SEQ` the code on the keys |
+| CHART | `SELECT` move; `PLAY` hear it |
+| SETTINGS | `SELECT` item; `OCT-` / `OCT+` change. PRESET sets the speeds together: START (hear 20/8, send 10), BUILDING, QSO, FAST |
+
+A longer guide (Traditional Chinese):
+[design](https://daviddwlee84.github.io/M-VAVE_FM-1/dev/morse/),
+[cheatsheet](https://daviddwlee84.github.io/M-VAVE_FM-1/dev/morse-cheatsheet/).
+
+## Install
+
+Back up your FM-1's flash first ([M-Flasher](https://github.com/jvitkauskas/m-flasher)).
+
+- From a release: download `morse-X.Y.fwsc` from
+  [Releases](https://github.com/daviddwlee84/fm1-morse/releases) and install it with M-Flasher, or
+  over USB-MIDI with fm1-base's `tools/fm1_install.py morse-X.Y.fwsc`.
+- The package carries fm1-base's update loader, so another firmware can be installed from MORSE
+  the usual way.
+- Flash chips: the build saves to and updates on both the first FM-1s' (`856014`) and the newer
+  ones' (`B36014`). Tested on a unit with the newer chip.
+
+## Other firmwares' data
+
+MORSE does not read other firmwares' projects or samples. It keeps one record, its settings and
+progress (about 300 bytes), at `0xDA000`-`0xDBFFF`, written when a round ends and a few seconds
+after a setting changes. On Felucca-family firmwares (SLOOP and others) that range is inside the
+area for samples: if you keep many samples there, back up before switching. It writes nothing else
+outside its own firmware area, and does not touch the global settings at `0xFC000`.
+
+## Build
+
+```sh
+git clone --recursive https://github.com/daviddwlee84/fm1-morse
+cd fm1-morse
+python3 fm1-base/tools/build.py . --host          # the host simulator (see fm1-base's README for its tools)
+cd build/host && ./morse_host ../../tests/basic.txt .
+cc -Wall -Wextra -o /tmp/morse_test tests/morse_test.c && /tmp/morse_test   # the platform-free parts
+python3 fm1-base/tools/build.py .                 # the device package (JieLi toolchain: fm1-base's README)
+```
+
+| File | What |
+|---|---|
+| `morse.c` | code table, PARIS / Farnsworth timing, text player with prosigns, iambic keyer, adaptive decoder |
+| `learn.c` | flash cards: Leitner boxes, rounds, Koch groups, the four choices |
+| `content.c` | what LISTEN plays and TYPE's phrases |
+| `tone.c` | two sine voices with 5 ms ramps, mute |
+| `app.c` | the pages, the 1 kHz tick (key, keyer, players, MIDI), storage, drawing |
+| `common/` | hostlink (SysEx with a host over USB / BLE) and ledfx (LED patterns) |
+| `tests/` | `morse_test.c` for the platform-free parts, `basic.txt` for fm1-base's host simulator |
+
+Development and the host program live in
+[M-VAVE_FM-1](https://github.com/daviddwlee84/M-VAVE_FM-1), which has this repository as a
+submodule.
+
+## License
+
+MIT (see `LICENSE`). fm1-base, in `fm1-base/`, is MPL-2.0. The Koch order is LCWO's; the MIDI
+keying follows the Vail adapter's published format. Everything you hear is generated in code: no
+samples.
+
+````
+
+```text
+The file /private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/0a574306-469e-4a59-9622-5701a42aee59/scratchpad/fm1-morse/README.md has been updated successfully. (file state is current in your context — no need to Read it back)
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 18:29:40Z)**_
+
+<think><details><summary>Thought Process</summary>
+README 要補上一句：更新時所有 fm1-base 韌體都會把 update loader 暫放在 `0xE0000`。我會在新 repo 裡跑一次模擬器加 release 套件的 build，確認搬家後一切正常。
+
+</details></think>
+
+_**Agent (claude-opus-5-5 2026-11-17 18:29:46Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Build and test the fm1-morse tree with the host simulator
+
+```bash
+set -e; R=/Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1; W=/private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/0a574306-469e-4a59-9622-5701a42aee59/scratchpad/fm1-morse; cd "$W"; python3 - <<'PY'
+s=open('README.md').read()
+a="outside its own firmware area, and does not touch the global settings at `0xFC000`."
+assert a in s
+s=s.replace(a,"outside its own firmware area, and does not touch the global settings at `0xFC000`. (An update to\nanother firmware, as with every fm1-base firmware, stages its loader at `0xE0000`.)")
+open('README.md','w').write(s)
+PY
+cd "$R"; uv run --locked --all-groups python third_party/fm1-base/tools/build.py "$W" --host 2>&1 | grep -E "error|warning: [^/]|^host|^words" | head; cd "$W" && build/host/morse_host tests/basic.txt build/host 2>&1 | grep -E "FAIL|^host:" | tail -3; cc -Wall -Wextra -o build/morse_test tests/morse_test.c && build/morse_test | tail -1
+```
+
+```text
+words: 10 own + 51 common -> /private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/0a574306-469e-4a59-9622-5701a42aee59/scratchpad/fm1-morse/web/words/d25d9228e2.json (1319 B)
+host     /private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/0a574306-469e-4a59-9622-5701a42aee59/scratchpad/fm1-morse/build/host/morse_host
+host: 196659 ms simulated, 1388 blits, render 0.0% of real time (host CPU)
+2932 checks, 0 failed
+Shell cwd was reset to /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 18:29:52Z)**_
+
+搬到新 repo 之後，模擬器測試和單元測試都照樣通過。接著 build release 套件，identity 會是 `FM-1_41000300`。
+
+_**Agent (claude-opus-5-5 2026-11-17 18:29:56Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Build the 0.3 release package with the new identity
+
+`R=/Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1; W=/private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/0a574306-469e-4a59-9622-5701a42aee59/scratchpad/fm1-morse; cd "$R" && JIELI_TOOLCHAIN="$R/tools/jieli/toolchain" AC79_SDK="$R/tools/fw-AC79_AIoT_SDK" uv run --locked --all-groups python third_party/fm1-base/tools/build.py "$W" --release 0.3 2>&1 | grep -vE "^font|^  ok    (\.ram|no 64|no soft|register)" | tail -15; ls -la "$W"/build/*.fwsc 2>/dev/null; shasum -a 256 "$W"/build/*.fwsc 2>/dev/null; python3 -c "import json;d=json.load(open('$W/build/firmware.json'));print({k:d.get(k) for k in ('id','name','version','install','screenshot','source','license')})"`
+
+```text
+clang: error: no such file or directory: 'Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/third_party/fm1-base/bsp/loader/crt0_ldr.S'
+clang: error: no input files
+clang: error: no such file or directory: 'Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/third_party/fm1-base/bsp/loader/loader.c'
+clang: error: no input files
+words: 10 own + 51 common -> /private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/0a574306-469e-4a59-9622-5701a42aee59/scratchpad/fm1-morse/web/words/d25d9228e2.json (1319 B)
+build: pi32v2/bin/clang failed
+(eval):1: no matches found: /private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/0a574306-469e-4a59-9622-5701a42aee59/scratchpad/fm1-morse/build/*.fwsc
+(eval):1: no matches found: /private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/0a574306-469e-4a59-9622-5701a42aee59/scratchpad/fm1-morse/build/*.fwsc
+{'id': 'morse', 'name': 'MORSE', 'version': None, 'install': 'https://github.com/daviddwlee84/fm1-morse#install', 'screenshot': 'docs/screen.png', 'source': 'https://github.com/daviddwlee84/fm1-morse', 'license': 'MIT'}
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 18:30:09Z)**_
+
+<think><details><summary>Thought Process</summary>
+release 套件在暫存目錄無法建置，因為 JieLi 工具鏈在 Docker 裡只掛載了專案目錄；release build 會等 submodule 放進專案後再處理。接下來我會先在新 repo commit，再建立並推送到 GitHub 的 `fm1-morse`。
+
+</details></think>
+
+_**Agent (claude-opus-5-5 2026-11-17 18:30:11Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Stage the fm1-morse files and check the GitHub account
+
+`W=/private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/0a574306-469e-4a59-9622-5701a42aee59/scratchpad/fm1-morse; cd "$W" && git add -A && git status --short && gh api user --jq .login`
+
+```text
+M  .gitignore
+A  .gitmodules
+A  LICENSE
+M  README.md
+M  app.c
+M  app.h
+A  common/hostlink.c
+A  common/hostlink.h
+A  common/ledfx.c
+A  common/ledfx.h
+A  common/tests/hostlink_test.c
+A  docs/screen.png
+A  fm1-base
+M  fm1.toml
+A  fmhub.json
+A  web/words/d25d9228e2.json
+M  words.tsv
+daviddwlee84
+Shell cwd was reset to /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 18:30:17Z)**_
+
+<think><details><summary>Thought Process</summary>
+我已確認上傳內容只包含 Morse 原始碼、`common/`、文件、截圖與 `fmhub.json`，沒有備份或私人檔案。接下來我會提交並建立公開 repo `daviddwlee84/fm1-morse`。
+
+</details></think>
+
+_**Agent (claude-opus-5-5 2026-11-17 18:30:39Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Commit fm1-morse and create the public GitHub repo
+
+```bash
+W=/private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/0a574306-469e-4a59-9622-5701a42aee59/scratchpad/fm1-morse; cd "$W" && git commit -q -F - <<'EOF'
+Its own repository: MIT licence, fmhub.json, identity FM-1_41
+
+Morse moves out of M-VAVE_FM-1 (firmware/morse, history kept) to stand
+alone for The Firmware Hub, which reads fmhub.json and LICENSE from a
+repository's root: fm1-base pinned as a submodule (c8e0599), hostlink
+and ledfx carried in common/, the card's picture in docs/screen.png.
+
+fm1.toml: identity prefix FM-1_41 (FM-1_13 shared its start with
+another firmware's FM-1_137), title, install, screenshot, the new repo;
+the screen reader's words served from this repository (web/words).
+README in English: pages, controls, install, other firmwares' data
+(MORSE's record at 0xDA000-0xDBFFF, inside Felucca-family sample space),
+build.
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+EOF
+git log --oneline | head -5 && gh repo create daviddwlee84/fm1-morse --public --description "MORSE: a pocket Morse code machine for the M-VAVE FM-1 (keyer, decoder, rhythm drills, flash cards, listening), on fm1-base" --source . --remote origin --push 2>&1 | tail -3
+```
+
+```text
+57ea786 Its own repository: MIT licence, fmhub.json, identity FM-1_41
+ea5c817 Morse 0.3: TYPE's code on the keys fits; 0.2 on the unit
+f62e0d3 Morse 0.2: rhythm drills, listening, two speeds, KEY views, TYPE pages
+f5f5be4 Morse 0.1: pocket Morse code machine (firmware + host)
+To https://github.com/daviddwlee84/fm1-morse.git
+ * [new branch]      HEAD -> main
+branch 'main' set up to track 'origin/main'.
+Shell cwd was reset to /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 18:31:06Z)**_
+
+<think><details><summary>Thought Process</summary>
+已建立公開 repo，三個版本的開發歷史都保留了。接下來我會把上架流程走完後的實際步驟、踩到的坑和檢查清單，整理成這個 repo 的 agent skill。
+
+</details></think>
+
+_**Agent (claude-opus-5-5 2026-11-17 18:31:09Z)**_
+
+<tool-use data-tool-type="write" data-tool-name="Write"><details>
+<summary>Tool use: **Write**</summary>
+
+```markdown
+---
+name: hub-listing-skill-todo
+description: Owner wants the Firmware Hub listing experience for Morse (fm1-morse) written up as an agent skill once the listing is done
+metadata:
+  type: project
+---
+
+After Morse (github.com/daviddwlee84/fm1-morse, submodule at firmware/morse) is listed on The Firmware Hub, write the
+listing process up as a repo-owned agent skill (under .agents/skills/): the steps actually taken, pitfalls hit, and a
+checklist (own repo with LICENSE + fmhub.json at root, unique FM-1_ identity checked at the Hub's #check, release with
+.fwsc, the three required hardware tests over the USB-MIDI update path, the email to the Hub).
+
+**Why:** the owner asked for it on 2026-11-18 ("把上架過程的經驗整理成一個agent skill"), to reuse for later firmwares.
+
+**How to apply:** when the Hub listing finishes (or the owner asks), draft the skill from docs/firmware/hub.md#listing and
+docs/device-log.md; keep it in sync with [[auto-capture-knowledge-in-docs]].
+
+```
+
+```text
+File created successfully at: /Users/zhouhanru/.claude/projects/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/memory/hub-listing-skill-todo.md
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 18:31:14Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Save the skill to-do; replace firmware/morse with the fm1-morse submodule
+
+`echo "- [Hub listing → agent skill](hub-listing-skill-todo.md) — after Morse is on the Firmware Hub, write the listing process up as a repo skill" >> /Users/zhouhanru/.claude/projects/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/memory/MEMORY.md && git rm -r -q firmware/morse && rm -rf firmware/morse && git submodule add -q https://github.com/daviddwlee84/fm1-morse.git firmware/morse && git submodule status firmware/morse && ls firmware/morse | head -20`
+
+```text
+ 57ea786f0e5a71bf74a4a97b4e4f669f0517ead5 firmware/morse (heads/main)
+common
+docs
+fm1-base
+tests
+web
+app.c
+app.h
+content.c
+content.h
+fm1.toml
+fmhub.json
+learn.c
+learn.h
+LICENSE
+morse.c
+morse.h
+README.md
+tone.c
+tone.h
+words.tsv
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 18:31:21Z)**_
+
+<think><details><summary>Thought Process</summary>
+我已把 submodule 放回 `firmware/morse`，接下來會調整 `fw-setup` 改用 `third_party/fm1-base`、更新 `AGENTS.md`，然後在原位建置 release 套件。
+
+</details></think>
+
+_**Agent (claude-opus-5-5 2026-11-17 18:31:34Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Adjust Justfile/AGENTS for the submodule; build the 0.3 release
+
+```bash
+python3 - <<'PY'
+def sub(p,a,b):
+    s=open(p).read(); assert a in s,(p,a[:60]); s=s.replace(a,b,1); open(p,'w').write(s)
+sub('Justfile',"""fw-setup:
+    git submodule update --init --recursive
+    uv sync --locked --all-groups""","""fw-setup:
+    git submodule update --init --recursive third_party/fm1-base
+    git submodule update --init firmware/morse
+    uv sync --locked --all-groups""")
+sub('Justfile',"""# morse.c and learn.c on this computer: code table, timing, player, keyer, decoder, flash cards.""","""# Morse's firmware is its own repo (github.com/daviddwlee84/fm1-morse), a submodule at firmware/morse; it is built
+# here with third_party/fm1-base (its own fm1-base submodule is for building it alone, and is not fetched here).
+# Release package (identity FM-1_41 + XXYYZZ): just morse-release 0.3
+morse-release version: fw-setup fw-toolchain
+    JIELI_TOOLCHAIN="$PWD/tools/jieli/toolchain" AC79_SDK="$PWD/tools/fw-AC79_AIoT_SDK" \\
+      uv run --locked --all-groups python "{{fm1_base}}/tools/build.py" firmware/morse --release "{{version}}"
+
+# morse.c, learn.c and content.c on this computer: code table, timing, player, keyer, decoder, flash cards, content.""")
+sub('AGENTS.md',"| `firmware/morse/` | Own pocket Morse code machine (MIT): keyer, decoder, flash cards. Design: `docs/dev/morse.md`. |",
+"| `firmware/morse/` | Submodule: [fm1-morse](https://github.com/daviddwlee84/fm1-morse), own pocket Morse code machine (MIT, its own repo for The Firmware Hub, with `LICENSE` and `fmhub.json`). Built here with `third_party/fm1-base`; commit inside it, then bump the pointer here. Design: `docs/dev/morse.md`. |")
+sub('AGENTS.md',"just morse-unit        # firmware/morse platform-free parts (morse.c, learn.c) on this computer",
+"just morse-unit        # firmware/morse platform-free parts (morse.c, learn.c, content.c) on this computer\njust morse-release X.Y # Morse's release package (identity FM-1_41 + XXYYZZ)")
+sub('firmware/common/README.md',"`firmware/morse` uses `hostlink` (its own `7D 4D 4F` frames) and `ledfx`.",
+"`firmware/morse` (now its own repo, a submodule) carries a copy of `hostlink` and `ledfx` in its `common/`; change\nthem here and copy them there, or the other way round.")
+PY
+just morse-release 0.3 2>&1 | grep -E "^  ok    image|FAIL|error|^package|^app" ; shasum -a 256 firmware/morse/build/morse-0.3.fwsc
+```
+
+```text
+  ok    image 127900 B; RAM code .ram_text 5100 B of 32768; RAM .data+.bss 28444 B of 98304; pool 69384 B of 344064
+app      /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/firmware/morse/build/morse.bin  127900 B
+package  /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/firmware/morse/build/morse-0.3.fwsc  616003 B, identity FM-1_41000300
+1c563fdaeca50b95a782eac6252049564fbabb608b5859960e7d0f2470c0f1b3  firmware/morse/build/morse-0.3.fwsc
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 18:31:43Z)**_
+
+release 套件 build 成功：`morse-0.3.fwsc`，identity `FM-1_41000300`，SHA-256 `1c563fda…`。跑一遍測試，並在模擬器兩種晶片上驗證這個 release 套件。
+
+_**Agent (claude-opus-5-5 2026-11-17 18:32:01Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Run all tests and check the release package on both emulated chips
+
+```bash
+just morse-unit 2>&1 | tail -1 && uv run --locked --all-groups pytest -q 2>&1 | tail -1 && just fw-test morse 2>&1 | grep -E "^host:|FAIL" | tail -2; cd tools/emu-state && S=/private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/0a574306-469e-4a59-9622-5701a42aee59/scratchpad && pkg=/Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/firmware/morse/build/morse-0.3.fwsc && for chip in uc25hq80 p25q80; do rm -f pristine-rel-$chip.flash; ../fm1-emu/fm1-live --fwsc "$pkg" --flash-chip $chip --flash pristine-rel-$chip.flash --midi none --shot 1 --lcd-only >/dev/null 2>&1; python3 ../../scripts/emu_rehearse.py pristine-rel-$chip.flash morse03-$chip.flash rel-$chip.flash >/dev/null; FM1_NO_PLAY=1 FM1_BENCH_KEYS="1000:e5:-1" ../fm1-emu/fm1-live --fwsc "$pkg" --flash-chip $chip --flash rel-$chip.flash --midi none --shot 6000 --lcd-only 2>&1 | grep -iE "^flash:|fault|error"; FM1_NO_PLAY=1 FM1_BENCH_KEYS="1000:HOME,1060:HOME^,1500:e0:+6,2000:SCL,2060:SCL^" ../fm1-emu/fm1-live --fwsc "$pkg" --flash-chip $chip --flash rel-$chip.flash --midi none --shot 3000 --lcd-only 2>&1 | grep -iE "^flash:|fault|error"; mv work/lcd.ppm $S/rel-$chip.ppm; done; cd ../.. && uv run --locked --all-groups python -c "
+from PIL import Image
+S='$S'
+ims=[Image.open(f'{S}/rel-{c}.ppm') for c in ('uc25hq80','p25q80')]
+out=Image.new('RGB',(2*248,240),(60,60,60))
+for i,im in enumerate(ims): out.paste(im,(i*248,0))
+out.save(f'{S}/rel.png')"
+```
+
+```text
+2932 checks, 0 failed
+45 passed in 0.08s
+host: 196659 ms simulated, 1388 blits, render 0.0% of real time (host CPU)
+flash: 4 erases / programs
+flash: 0 erases / programs
+flash: 4 erases / programs
+flash: 0 erases / programs
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 18:32:07Z)**_
+
+<tool-use data-tool-type="read" data-tool-name="Read"><details>
+<summary>Tool use: **Read**</summary>
+ `/private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/0a574306-469e-4a59-9622-5701a42aee59/scratchpad/rel.png`
+</details></tool-use>

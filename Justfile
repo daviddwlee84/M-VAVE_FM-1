@@ -165,7 +165,8 @@ fm1_base := "third_party/fm1-base"
 
 # One-time: submodules and the Python tools. Needs `brew install libraqm` (Pillow is built against it).
 fw-setup:
-    git submodule update --init --recursive
+    git submodule update --init --recursive third_party/fm1-base
+    git submodule update --init firmware/morse
     uv sync --locked --all-groups
 
 # Build an app's host simulator (no toolchain needed) and run its test script.
@@ -237,7 +238,14 @@ agtdeck-run backend="herdr" *args: agtdeck-clone
 
 # ---- Morse: pocket Morse code machine (firmware/morse + host/morse) ----------
 
-# morse.c and learn.c on this computer: code table, timing, player, keyer, decoder, flash cards.
+# Morse's firmware is its own repo (github.com/daviddwlee84/fm1-morse), a submodule at firmware/morse; it is built
+# here with third_party/fm1-base (its own fm1-base submodule is for building it alone, and is not fetched here).
+# Release package (identity FM-1_41 + XXYYZZ): just morse-release 0.3
+morse-release version: fw-setup fw-toolchain
+    JIELI_TOOLCHAIN="$PWD/tools/jieli/toolchain" AC79_SDK="$PWD/tools/fw-AC79_AIoT_SDK" \
+      uv run --locked --all-groups python "{{fm1_base}}/tools/build.py" firmware/morse --release "{{version}}"
+
+# morse.c, learn.c and content.c on this computer: code table, timing, player, keyer, decoder, flash cards, content.
 morse-unit:
     #!/usr/bin/env bash
     set -euo pipefail

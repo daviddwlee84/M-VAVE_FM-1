@@ -1,8 +1,8 @@
 # 摩斯電碼機（Morse）
 
-把 FM-1 變成隨身的摩斯電碼機：琴鍵當電鍵發報、即時解碼成文字、琴鍵當字母鍵盤把文字播成摩斯、用閃卡隨身練習，也能接電腦和 [Vail](https://vailmorse.com/) 跟網路上的人互傳。韌體在 `firmware/morse/`，電腦端在 `host/morse/`，都是 MIT。
+把 FM-1 變成隨身的摩斯電碼機：琴鍵當電鍵發報、即時解碼成文字、琴鍵當字母鍵盤把文字播成摩斯、用閃卡隨身練習，也能接電腦和 [Vail](https://vailmorse.com/) 跟網路上的人互傳。韌體在獨立的 repo [fm1-morse](https://github.com/daviddwlee84/fm1-morse)（MIT，以 submodule 放在本 repo 的 `firmware/morse/`），電腦端在本 repo 的 `host/morse/`。
 
-**狀態（2026-11-18）：機器上是韌體 0.2（00:14 刷入）。0.1 時已在實機確認發報、解碼、TYPE、PRACTICE、和電腦連線；0.2 的 RHYTHM、KEY 三種顯示、TYPE、LISTEN、PRESET 本人試過覺得不錯，升級後學習進度也還在 `[實機]`。韌體 0.3（修 TYPE 鍵上點劃的排版）、host 0.3.0 已在模擬器驗證，還沒刷。** 操作方式見[操作速查](morse-cheatsheet.md)。
+**狀態（2026-11-18）：機器上是韌體 0.3（02:12 刷入）。0.1 時已在實機確認發報、解碼、TYPE、PRACTICE、和電腦連線；0.2 的 RHYTHM、KEY 三種顯示、TYPE、LISTEN、PRESET 本人試過覺得不錯，升級後學習進度也還在 `[實機]`。0.3 修了 TYPE 鍵上點劃的排版。** 操作方式見[操作速查](morse-cheatsheet.md)。
 
 ## 有沒有人做過 { #prior-art }
 
@@ -249,8 +249,24 @@ TYPE 頁的 LIVE 對應「打一個送一個」，COMPOSE 對應「先打好再�
 | 版本 | 日期 | 要刷機 | 內容 |
 |---|---|---|---|
 | 韌體 0.1、host 0.1.0 | 2026-11-17 | 是（22:54 刷入，`c3b5cd6`） | 第一版：KEY、TYPE、PRACTICE、CHART、SETTINGS，兩種學習方式，Vail 格式的 MIDI，host 的 `type`／`send`／`listen`。原本規劃分成 0.1（核心）和 0.2（閃卡），因為一起做完、都還沒刷，合併成 0.1 |
-| 韌體 0.3、host 0.3.0 | 2026-11-18 | 是（還沒刷） | TYPE 打開鍵上點劃時，鍵盤從 86 px 拉高到 126 px、上方輸入行縮成一行，黑鍵和白鍵都同時放得下碼和字母（0.2 黑鍵只剩碼、白鍵的碼壓到字母，數字頁的 `0` 放不下）。藍牙順延到 0.4 |
+| 韌體 0.3、host 0.3.0 | 2026-11-18 | 是（02:12 刷入，`02b0ea2`） | TYPE 打開鍵上點劃時，鍵盤從 86 px 拉高到 126 px、上方輸入行縮成一行，黑鍵和白鍵都同時放得下碼和字母（0.2 黑鍵只剩碼、白鍵的碼壓到字母，數字頁的 `0` 放不下）。藍牙順延到 0.4 |
 | 韌體 0.2、host 0.2.0 | 2026-11-18 | 是（00:14 刷入，`54ff440`） | 實機試用後的回饋：發報速度和聽的速度分開（K4），PRESET 推薦組合，轉速度時顯示 dit／dah 毫秒；KEY 頁 TEXT／CODE／TIMING 三種顯示；RHYTHM 頁（練長短、提示、建議速度）；LISTEN 頁（連續播放五種節目）；TYPE 頁翻三頁（字母、數字符號、片語）、三種排列、鍵上點劃、LIVE／COMPOSE、`PLAY` 可停止、`REC` 刪字和清空；prosign `<SK>`；解碼器遇到長短差 2 倍時回頭修正；靜音和改音高不再重設解碼器。藍牙順延到 0.3 |
+
+## 獨立 repo 和上架 { #release }
+
+2026-11-18 為了上架 [The Firmware Hub](../firmware/hub.md#listing)，韌體搬到 [daviddwlee84/fm1-morse](https://github.com/daviddwlee84/fm1-morse)（用 `git subtree split` 保留歷史），在本 repo 以 submodule 引回 `firmware/morse`。
+
+- **新 repo 的內容**：根目錄有 MIT `LICENSE`、`fmhub.json`（`kinds: other`、`sounds: none`，卡片圖是 `docs/screen.png`）、英文 README（含 Hub 要求說明的「其他韌體的資料」）、鎖定版本的 fm1-base submodule，以及自帶一份 `common/`（hostlink、ledfx）。
+- **identity 前綴改成 `FM-1_41`**：原本的 `FM-1_13` 和 Hub 上 FM-1 Midi-Mania 的 `FM-1_137` 開頭相同。目錄裡沒有任何 `FM-1_41x`，但送審前仍要用 Hub 的 #check 確認。開發版是 `FM-1_4100`，release 版是 `FM-1_41` 加 XXYYZZ（0.3 是 `FM-1_41000300`）。存檔位置不變，進度會保留。
+- **build**：在本 repo 用 `third_party/fm1-base` build（`just fw-test morse`、`just morse-release 0.3`）。子 repo 裡的那份 fm1-base 是給它單獨 build 用的，`fw-setup` 不會去抓。
+- **改程式的流程**：在 `firmware/morse` 裡 commit 並推到 fm1-morse，再到本 repo commit 新的 submodule 指標。
+
+上架還要做的：
+
+1. 在實機上走 USB-MIDI 更新路徑測三件事：從 Morse 換到別的韌體、從別的韌體裝 Morse、從原廠 V15 裝 Morse。
+2. 發一個附 `morse-0.3.fwsc` 的 GitHub release。
+3. 用 #check 確認 identity。
+4. 寄信給 Hub。
 
 ## 路線圖 { #roadmap }
 
