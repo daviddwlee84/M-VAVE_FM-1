@@ -98,6 +98,8 @@ def check(root):
             url = urljoin(html_url, href)
             parsed = urlsplit(url)
             if (parsed.scheme, parsed.netloc) == (origin.scheme, origin.netloc):
+                if href.startswith(("http://", "https://")) and not parsed.path.startswith(origin.path):
+                    continue             # another project's site on the same host (github.io/fm1-morse/)
                 local_file(url)
     require(set(exported) == expected, "llms.txt does not cover exactly the intended Markdown pages")
     search = json.loads((site / "search.json").read_text())
