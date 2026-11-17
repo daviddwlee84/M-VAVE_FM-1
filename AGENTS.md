@@ -25,6 +25,9 @@ experimental firmware apps under `firmware/`, built on the `fm1-base` submodule.
 | `.specstory/history/` | Agent session transcripts. Never edit. |
 | `tools/`, `vendor/`, `build/` | Git-ignored. Emulator binaries and state, upstream checkouts, firmware build output. |
 | `firmware/<app>/` | Own firmware apps (fm1-base template layout: `app.c`, `app.h`, `fm1.toml`, `tests/`). `firmware/hello` is the unmodified template, kept as the toolchain smoke test. |
+| `firmware/conductor/` | Own agent-console firmware (MIT). Design: `docs/agentic/conductor.md`. |
+| `firmware/common/` | Modules shared by own apps (`hostlink`, `ledfx`, `chime`; MIT). Apps add `include = ["../common"]`. |
+| `host/conductor/` | Conductor's host daemon (Python, MIT): backends `hc`, `herdr`, `fake`. Protocol spec in `PROTOCOL.md`; tests in `host/tests/`. |
 | `third_party/fm1-base` | Git submodule (MPL-2.0, beta). Do not edit; bump deliberately. |
 | `docs/dev/` | Firmware development environment and its current state. |
 | `docs/hardware/flash-map.md` | Who stores what where in the 1 MiB flash, with sector diffs from this unit's backups. Update it when a new firmware is tried. |
@@ -50,6 +53,12 @@ just agtdeck-doctor    # Agent Deck host daemon self-check (clones upstream into
 just agtdeck-sim       # Agent Deck daemon without an FM-1 (interactive; prints frames)
 just agtdeck-run       # daemon against a MIDI device: real unit, or `just emu-run … --usb`
 just fm1-versions      # latest upstream releases, to refresh docs/resources.md and docs/watch.md
+
+just cond-test         # Conductor daemon unit tests
+just cond-sim [BACKEND]    # daemon with a text stand-in for the FM-1 (fake, hc, herdr)
+just cond-it           # hc end to end with two fake agents (label conductor-test=1), cleaned up after
+just cond-emu [CHIP]   # Conductor firmware in fm1-emu with the virtual USB cable
+just cond-run [BACKEND]    # daemon against a CONDUCTOR MIDI device (emulator or real unit)
 
 just fw-setup          # submodules + Python tools (needs `brew install libraqm`)
 just fw-test [APP]     # host simulator build + tests/basic.txt; no toolchain, no hardware
@@ -195,6 +204,13 @@ Other rules:
 - Commit or push only when the owner asks.
 - CI builds on pull requests and deploys `main` to GitHub Pages
   (`.github/workflows/docs.yml`).
+
+## Conductor and live agents
+
+The daemon presses keys in real agent sessions. When testing, send keys only to
+terminals the test started itself (`just cond-it` labels them `conductor-test=1`
+and kills them after). Never approve, deny or interrupt the owner's own agents
+from a test. There is no auto-approve; do not add one without the owner asking.
 
 ## Not set up yet
 

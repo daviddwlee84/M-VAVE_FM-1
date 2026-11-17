@@ -6,6 +6,11 @@ dependencies = []
 
 [dependency-groups]
 docs = ["zensical==0.0.73"]
+host = [
+    "mido>=1.3.3",
+    "python-rtmidi>=1.5.8",
+    "pytest>=8.0",
+]
 fw = [
     "mido>=1.3.3",
     "pillow>=13.0.0",
@@ -18,3 +23,10 @@ package = false
 # the macOS wheels are built without it, so build Pillow from source against
 # Homebrew's libraqm (`brew install libraqm`).
 no-binary-package = ["pillow"]
+
+[tool.pyright]
+extraPaths = ["host"]
+
+[tool.pytest.ini_options]
+testpaths = ["host/tests"]
+pythonpath = ["host"]

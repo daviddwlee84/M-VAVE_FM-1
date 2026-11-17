@@ -9,6 +9,8 @@
 ```text
 third_party/fm1-base/      git submodule（它自己再帶 felucca-bsp 於 bsp/）
 firmware/hello/            fm1-base template 的原樣複本，用來驗證整條鏈
+firmware/conductor/        agent 控制台（見 Conductor 頁）
+firmware/common/           app 之間共用的模組（hostlink、ledfx、chime）
 firmware/<app>/            之後的 app
 tools/jieli/               JieLi toolchain（gitignore）
 tools/fw-AC79_AIoT_SDK/    JieLi AC79 SDK，固定 tag（gitignore）
@@ -84,4 +86,4 @@ fm1-base template 附的 release workflow（透過共用的 [zvenson/fm1-build](
 - [ ] `just emu-run firmware/hello/build/template.fwsc` 兩種晶片各一次，改設定、重開、確認保存
 - [ ] 批准後刷進實機，按鍵 → USB MIDI → host 端 `mido` 腳本收得到
 - [ ] 開第一個自己的 app：最小的 MIDI controller / macro pad（按鍵送 MIDI、螢幕顯示 layer）
-- [ ] 依 [Agent Deck 試用](../firmware/agent-deck/index.md)的心得，決定 agent 控制台是 fork Agent Deck 還是在 fm1-base 上重寫
+- [x] 依 [Agent Deck 試用](../firmware/agent-deck/index.md)的心得，決定 agent 控制台是 fork Agent Deck 還是在 fm1-base 上重寫：**在 fm1-base 上重寫**，見 [Conductor](../agentic/conductor.md)（`firmware/conductor`，共用模組在 `firmware/common`）

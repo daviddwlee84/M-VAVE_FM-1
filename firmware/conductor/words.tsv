@@ -1,0 +1,7 @@
+# SPDX-License-Identifier: MIT
+# Conductor's words for a screen reader (fm1-reader): the text on the screen <TAB> what to say.
+# url: https://daviddwlee84.github.io/M-VAVE_FM-1/agentic/conductor/
+CONDUCTOR	conductor
+NO HOST	no host
+NOT WAITING	not waiting
+ALL CLEAR	all clear

@@ -85,6 +85,15 @@ README 說它的 base（Dinghy 0.5）在程式碼裡同時接受舊 Puya（`0x85
 | [CTL-1](https://github.com/charlesvestal/fm1-ctl) + Python `mido` | FM-1 送 MIDI，自己寫 script 轉成任意 agent API 呼叫 | 最彈性，CTL-1 還有自己的 GM 音色；狀態回顯要自己做 `[調研]` |
 | 保留音樂韌體，用它的 MIDI 輸出 | SLOOP 等韌體照常發聲，host daemon 接它的 MIDI | 不必換韌體；能拿到哪些按鍵、旋鈕、螢幕回饋，取決於該韌體的 MIDI protocol `[調研]` |
 
+## 自己寫一個：Conductor
+
+在 fm1-base 上重寫的版本：預設只讓 agent 佔琴鍵、hc 與 classic Herdr 兩個 backend、真正的 SysEx 協定、提示音。見[自己的 agent 控制台](conductor.md)。
+
+那頁也記錄了另外兩條路的調研：
+
+- **偽裝成 Codex Micro**（[scf4/codex-midi](https://github.com/scf4/codex-midi)）：要注入 ChatGPT.app、協定是逆向工程、狀態只以 RGB 顏色傳來，不適合單色 LED。見[為什麼不走 Codex Micro](conductor.md#codex-micro)。
+- **hc（herdr-core）vs classic Herdr**：兩個獨立的 runtime；hc 的狀態由 agent 自己回報（OSC 7501）。見[對照表](conductor.md#backends)。
+
 ## agent 操作 FM-1 做音樂
 
 SLOOP 的 [web editor](../firmware/sloop/web-editor.md) 透過 USB MIDI 和機器即時同步，protocol 記在 SLOOP repo 的 `web/EDITOR_PROTOCOL.md` `[上游]`。這是讓 agent 寫入音色與 pattern 最直接的介面，但目前沒有針對 2.8.x 的現成 agent 工具。

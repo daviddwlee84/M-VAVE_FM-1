@@ -12,3 +12,7 @@
 /tools/
 /vendor/
 /build/
+
+# Python caches (host/conductor)
+__pycache__/
+/.pytest_cache/

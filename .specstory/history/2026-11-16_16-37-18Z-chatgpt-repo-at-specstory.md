@@ -22892,3 +22892,2412 @@ Check that each online emulator and player URL responds
 200 https://isod89.github.io/clipper-fm1/webapp/installer/
 ```
 </details></tool-use>
+
+_**Agent (claude-fable-5-2 2026-11-16 20:38:24Z)**_
+
+所有線上試玩網址都有回應。現在把它們整理成一頁，並補上 OPT 鍵的說明與 iPad 聲音的實測結果。
+
+_**Agent (claude-fable-5-2 2026-11-16 20:39:23Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Add the online playground page, the OPT key note, and the measured USB audio behavior, then commit and push
+
+````bash
+python3 - <<'EOF'
+import pathlib
+def sub(path, pairs):
+    p=pathlib.Path(path); s=p.read_text()
+    for a,b in pairs:
+        assert a in s, (path,a[:70]); s=s.replace(a,b,1)
+    p.write_text(s)
+pathlib.Path("docs/playground.md").write_text('''# 線上試玩
+
+不用刷機、不用安裝，在瀏覽器裡就能玩的地方。用 Chrome 或 Edge；要接 MIDI 鍵盤或實機時瀏覽器會要求 MIDI 權限。網址都在 2026-11-17 確認有回應，我實際玩過的只有標 `[實機]` 的。
+
+## 通用的：一個網站玩很多韌體
+
+| 網站 | 是什麼 | 特點 |
+|---|---|---|
+| [fm1-emu](https://joakimeriksson.github.io/fm1-emu/) | 晶片層級的 FM-1 模擬器，選一個韌體按 Start | 原封不動地跑 `.fwsc`。Firmware Hub 的 Try、RemoteFM1 的 Emulated 模式用的都是它 |
+| [FM-1 Player（remotefm1.com）](https://remotefm1.com/) | 列了 240 多個韌體的播放器 | 帶圓點的是原生版本（較快、延遲低），其餘用 fm1-emu。可搭配 [RemoteFM1](firmware/remotefm1/index.md) 把實機當面板 |
+| [The Firmware Hub](https://thefirmwarehub.com/) | 韌體目錄，每張卡片有 Try | 可篩選「Saves on newer FM-1s」。見 [The Firmware Hub](firmware/hub.md) |
+| [VIBE FM Playground](https://play.thefirmwarehub.com/) | VIBE FM 的網頁版 | **不是 FM-1**，是另一台尚未上市的機器的面板；跑的是為它轉換過的 FM-1 韌體。見[相關硬體](hardware/related.md) |
+| [fm1-emu：SMK-37](https://joakimeriksson.github.io/fm1-emu/smk37/) | SMK-37 鍵盤的模擬器 | 同晶片的另一台機器 |
+
+fm1-emu 的網址參數：
+
+| 參數 | 作用 | 範例 |
+|---|---|---|
+| `?fw=<id>` | 直接開某個韌體 | [`?fw=sloop`](https://joakimeriksson.github.io/fm1-emu/?fw=sloop)、`felucca`、`melodee`、`clipper`、`orbit` |
+| `&chip=uc25hq80` | 用新款 flash 晶片（和我的機器一樣） | [`?fw=sloop&chip=uc25hq80`](https://joakimeriksson.github.io/fm1-emu/?fw=sloop&chip=uc25hq80) |
+| `?package=<URL>` | 開清單上沒有的套件 | 需要 https 與 CORS |
+| `&embed=1` | 只顯示機器，適合嵌入 | — |
+
+## 各韌體自己的試玩頁
+
+| 韌體 | 試玩 | 相關頁面 |
+|---|---|---|
+| **ChoralRoot** | [模擬器](https://quixotic7.github.io/ChoralRootFM1/emu/)；[device manager 模擬模式](https://quixotic7.github.io/ChoralRootFM1/webapp/installer/manager.html?sim=1) | [ChoralRoot](firmware/choralroot/index.md)、[教學](firmware/choralroot/tutorial.md) |
+| **CTL-1** | [模擬器](https://charlesvestal.github.io/fm1-ctl/emu/) | [CTL-1](firmware/ctl-1/index.md) |
+| **Agent Deck** | [自動播放的展示](https://kevinelliott.github.io/fm-1-agent-deck/play/?fw=agtdeck&script=demo.txt)；[cheat sheet](https://kevinelliott.github.io/fm-1-agent-deck/cheatsheet.html) | [Agent Deck](firmware/agent-deck/index.md) |
+| **SLOOP** | [fm1-emu 裡的 SLOOP](https://joakimeriksson.github.io/fm1-emu/?fw=sloop&chip=uc25hq80)；[Web Editor](https://isod89.github.io/sloop-fm1/webapp/editor/)（要接實機）；[Editor 的 mock 模式](https://isod89.github.io/sloop-fm1/webapp/editor/?mock=1)（模擬一台機器，我沒試過） | [SLOOP](firmware/sloop/index.md)、[站內的 Editor 2.8.5](firmware/sloop/editor.md) |
+| **X0X** | [模擬器](https://charlesvestal.github.io/fm1-x0x/emu/) | [韌體地圖](firmware/index.md) |
+| **FM-1 SID** | [C64 SID 播放頁](https://joakimeriksson.github.io/fm1-emu/fm1-sid/) | — |
+| **fm1-base template** | [模擬器](https://charlesvestal.github.io/fm1-base/emu/) | [自製韌體環境](dev/index.md) |
+| Felucca、Melodee、Clipper | 用 fm1-emu 的 `?fw=felucca`、`melodee`、`clipper` | — |
+
+## 官方的
+
+| 網站 | 是什麼 |
+|---|---|
+| [FM1 Workbench](https://open.m-vave.com/fm1-workbench) | M-VAVE 官方的網頁工具，含官方開放韌體的瀏覽器預覽。見[官方資源](official.md) |
+
+## 本機的對應
+
+線上模擬器有延遲、存檔留在瀏覽器裡。想要低延遲、或想用實機備份當起點，用本機的 fm1-emu：
+
+```sh
+just emu-run downloads/choralroot-0.41.fwsc          # 開視窗玩，預設新晶片模式
+just emu-rehearse <套件> <備份.bin>                   # 把套件蓋在實機備份上開機
+```
+
+見 [fm1-emu 模擬器](agentic/emulator.md)。
+
+## 怎麼選
+
+- 只是想聽聽某個韌體：**remotefm1.com**，韌體最多，原生版本的反應最好。
+- 想確認某個韌體在新晶片上會不會存檔：**fm1-emu** 加 `&chip=uc25hq80`，或本機 `just emu-run`。
+- 想用實機的鍵去彈模擬器裡的韌體：見 [ChoralRoot：不刷機怎麼玩](firmware/choralroot/index.md#emulate)。
+- VIBE FM Playground 看起來最漂亮，但它模擬的不是我這台機器。
+''')
+sub("zensical.toml",[('  { "生態是怎麼來的" = "ecosystem.md" },','  { "線上試玩" = "playground.md" },\n  { "生態是怎麼來的" = "ecosystem.md" },')])
+sub("docs/index.md",[("| 選一套韌體來玩 |","| 不刷機先試玩 | [線上試玩](playground.md) |\n| 選一套韌體來玩 |")])
+sub("docs/firmware/choralroot/tutorial.md",[("## 觀念：一隻手決定","""!!! note "螢幕上說的鍵名和面板印的不一樣"
+    ChoralRoot 的螢幕用它自己的鍵名。最常遇到的是 **`Hold OPT to change engine`：OPT 就是面板上印著 `GLO` 的那顆鍵。**
+
+    | 螢幕 / 手冊說 | 面板上印的 |
+    |---|---|
+    | **OPT** | **`GLO`** |
+    | KEY | `SEL` |
+    | BASS | `ENV` |
+    | LOCK | `LFO` |
+    | PERF | `ARP` |
+    | LOOP | `PLAY` |
+
+    `FX`、`EDIT`、`HOME`、`SAVE`、`SEQ`、`REC` 名稱不變。完整對照在本頁最下面的「面板對照」。
+
+## 觀念：一隻手決定""")])
+sub("docs/firmware/choralroot/index.md",[
+("剛裝好時會覺得音色單一，是因為 **PRESETS 只在目前這個引擎裡轉**。換引擎要**按住 `GLO`（OPT）再轉 PRESETS**，轉到想要的引擎後放開。`[上游]`",
+ "剛裝好時會覺得音色單一，是因為 **PRESETS 只在目前這個引擎裡轉**。螢幕下方那行 `Hold OPT to change engine` 的 **OPT 是面板上印著 `GLO` 的鍵**：按住 `GLO` 再轉 PRESETS，轉到想要的引擎後放開。`[上游]`"),
+("| iPad 的聲音會不會被導到 FM-1 | 會（它是 USB audio 輸出） | 手冊說電腦**不能**透過 FM-1 播放聲音，所以應該不會。未實測 |",
+ "| iPad 的聲音會不會從 FM-1 出來 | 會（它是 USB audio 輸出） | **不會。** 它只有輸入：我在 Mac 上看到的裝置是 `ChoralRoot In`，6 個輸入 channel、0 個輸出 `[實機]` |"),
+("在接收端：把一個音源放在 ch 1","""**iPad 把 FM-1 當成什麼**：ChoralRoot 對主機來說是一支「六軌麥克風」（1–2 是 master、3–4 是和弦聲部、5–6 是 bass），不是喇叭。所以 iPad 的聲音沒有路可以進到 FM-1，FM-1 也讀不到 iPad 播的東西。接上之後 iPad（和 Mac）可能會把它設成**預設的錄音輸入**，我的 Mac 就自動把它選成 Default Input Device `[實機]`。如果接上後 iPad 沒聲音，是 iPadOS 在切換音訊路由，不是聲音跑進了 FM-1；確切行為我沒在 iPad 上確認。
+
+如果你在 iPad 上真的聽到聲音從 FM-1 的喇叭出來，那是裝著 [CTL-1](../ctl-1/index.md#ipad-audio) 的時候：CTL-1 同時是輸出裝置。
+
+在接收端：把一個音源放在 ch 1"""),
+])
+sub("docs/hardware/mobile.md",[("- **SLOOP 的聲音路由**：","- **ChoralRoot 的聲音路由** `[實機]`（Mac 上確認）：只有輸入（`ChoralRoot In`，6 channel），沒有輸出，所以 iPad 的聲音不可能從 FM-1 出來。見 [ChoralRoot](../firmware/choralroot/index.md#midi-out)。\n- **SLOOP 的聲音路由**：")])
+EOF
+just docs-check 2>&1 | tail -1; git add -A && git commit -q -m "Add an online playground index; clarify OPT = GLO and ChoralRoot's input-only USB audio
+
+Co-Authored-By: Claude Fable 5.2 <noreply@anthropic.com>" && git push -q origin main && echo pushed
+````
+
+```text
+{"status": "ok", "pages": 41, "llm_pages": 41, "deployed": false}
+pushed
+```
+</details></tool-use>
+
+_**Agent (claude-fable-5-2 2026-11-16 20:39:38Z)**_
+
+**OPT 就是面板上印著 `GLO` 的那顆鍵。** 之前只寫在教學最下面的對照表，不夠顯眼，現在放到教學最上方了。
+
+## ChoralRoot 的鍵名對照
+
+| 螢幕 / 手冊說 | 面板上印的 |
+|---|---|
+| **OPT** | **`GLO`** |
+| KEY | `SEL` |
+| BASS | `ENV` |
+| LOCK | `LFO` |
+| PERF | `ARP` |
+| LOOP | `PLAY` |
+
+所以換引擎是：按住 `GLO`，轉 PRESETS，放開。
+
+## iPad 的聲音
+
+你的猜測方向是對的：**裝著 ChoralRoot 時，iPad 的聲音不可能從 FM-1 出來，FM-1 也讀不到。**
+
+我在 Mac 上檢查了它現在呈現的 USB 音訊裝置：名稱是 `ChoralRoot In`，6 個輸入 channel，0 個輸出。對主機來說它是一支六軌麥克風（master、和弦聲部、bass 各一對），不是喇叭，iPad 的聲音沒有路可以進去。
+
+接上後可能發生的是 iPad 把它設成**預設的錄音輸入**。我的 Mac 就自動這樣做了。如果你接上後 iPad 變得沒聲音，那是 iPadOS 在切換音訊路由。iPad 上的確切行為我沒辦法確認。
+
+你先前真的聽到 iPad 的聲音從 FM-1 喇叭出來，那是裝著 CTL-1 的時候：CTL-1 同時是輸出裝置，那時聲音確實會經過 FM-1 播出來。
+
+## 線上試玩
+
+整理成一頁：<https://daviddwlee84.github.io/M-VAVE_FM-1/playground/>
+
+所有網址我都確認有回應，但實際玩過的很少。
+
+**一個網站玩很多韌體**
+
+| 網站 | 特點 |
+|---|---|
+| [remotefm1.com](https://remotefm1.com/) | 韌體最多（240 多個），帶圓點的是原生版本，反應最好 |
+| [fm1-emu](https://joakimeriksson.github.io/fm1-emu/) | 模擬晶片，原封不動地跑韌體。網址加 `&chip=uc25hq80` 可模擬你的新晶片 |
+| [The Firmware Hub](https://thefirmwarehub.com/) | 目錄，每張卡片有 Try |
+| [VIBE FM Playground](https://play.thefirmwarehub.com/) | 不是 FM-1，是另一台未上市機器的面板 |
+
+**各韌體自己的試玩頁**
+
+- ChoralRoot：<https://quixotic7.github.io/ChoralRootFM1/emu/>
+- CTL-1：<https://charlesvestal.github.io/fm1-ctl/emu/>
+- Agent Deck（自動播放的展示）：<https://kevinelliott.github.io/fm-1-agent-deck/play/?fw=agtdeck&script=demo.txt>
+- SLOOP：<https://joakimeriksson.github.io/fm1-emu/?fw=sloop&chip=uc25hq80>
+- X0X：<https://charlesvestal.github.io/fm1-x0x/emu/>
+
+頁面裡還有 fm1-emu 的網址參數、官方的 Workbench，以及什麼情況該用哪一個。首頁的「從哪裡開始」表格也加了入口。
+
+---
+
+_**User (2026-11-16 20:42:58Z)**_
+
+<local-command-caveat>The command below was run directly in Claude Code, not sent to you as a request, and its output goes straight to the user. It's recorded here as context for later messages.</local-command-caveat>
+
+---
+
+_**User (2026-11-16 20:42:58Z)**_
+
+<command-name>/compact</command-name>
+            <command-message>compact</command-message>
+            <command-args></command-args>
+
+---
+
+_**User (2026-11-16 20:44:55Z)**_
+
+This session is being continued from a previous conversation that ran out of context. The summary below covers the earlier portion of the conversation.
+
+<system-reminder>
+<tools-used-before-summary>Agent, AskUserQuestion, Bash, Edit, ExitPlanMode, Read, ToolSearch, Write</tools-used-before-summary>
+</system-reminder>
+Summary:
+1. Primary Request and Intent:
+   - Build the repo `daviddwlee84/M-VAVE_FM-1` (public, `/Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1`) into a personal knowledge base for the M-VAVE FM-1 pocket synth: resources, usage notes, flashing/getting-started/cautions, per-firmware sections (SLOOP first), agentic context (`AGENTS.md`), and a Zensical notes site on GitHub Pages. Source material: ChatGPT/Gemini research exports under `.specstory/references/` (the user asked they be read in detail; many of their stated needs there were to be recorded in the repo).
+   - Phase 1 acceptance: "裝 M-Flasher、備份原廠、刷 SLOOP 2.8.5" (done on real hardware, agent-led).
+   - Phase 2 (approved plan): fm1-emu local workflow, Agent Deck trial (simulate → flash), own-firmware ("vibe firmware") environment in a repo subdirectory on fm1-base, m-bootloader/SLOOP 3 tracking only.
+   - Ongoing: answer questions as they come and capture knowledge-worthy answers into `docs/` automatically; add Justfile shortcuts for setup/switching; add docs chapters for every firmware researched/installed; docs for Firmware Hub, ecosystem, related hardware, phones/tablets, iOS apps, official resources, bricking, flash map, online playgrounds, ChoralRoot tutorial.
+   - Standing user instructions/constraints (preserve):
+     - Language policy (user global rule): conversation, questions, summaries in **Traditional Chinese (Taiwan usage)**; long-lived artifacts follow repo convention (docs/** in zh-TW with technical terms/identifiers/button names in English; AGENTS.md, README, commit messages, code comments in English). Use 程式/檔案/設定/資料.
+     - Treat the user's email and personal details as private; never send to external services.
+     - Commit attribution: end commit messages with `Co-Authored-By: Claude Fable 5.2 <noreply@anthropic.com>`.
+     - User decisions: docs in zh-TW; Pages published live; `.specstory/` fully tracked ("`.specstory/history` 可以備份", after being told it contains their email and home path); full-flash backups published **unencrypted as public GitHub Release assets** (explicit informed choice), per-backup, only when the owner asks; m-bootloader "track等方案成熟了再考慮" (no Pico, only a Raspberry Pi 3); firmware code in this repo's subdirectory, fm1-base may be a submodule/new repo if needed.
+     - "以後如果感覺可以落成知識的問題可以自動加進去" → auto-add knowledge to docs in the same turn (saved in memory and AGENTS.md).
+     - Hardware safety rules (in AGENTS.md, user-approved): read-only ops (`find`/`info`/`backup`, downloads, emulator) free; mode switch (`download-mode`, `restart`) allowed after saying so; firmware writes only with owner approval in-session, never `--yes`, owner types M-Flasher's `yes`; never initiate `bootloader`, `restore`, `run-ram`, erase.
+
+2. Key Technical Concepts:
+   - M-VAVE FM-1: JieLi AC791N (WL82) SoC, 1 MiB SPI NOR flash (256 × 4 KiB sectors), radio (BLE/WiFi) on chip, USB device only, TRS MIDI IN, no audio input.
+   - Flash chips: old Puya P25Q80H `0x856014` vs new UCUN UC25HQ80 `0xB36014` (user's unit is **new**); firmware must whitelist JEDEC ID or saves stay in RAM.
+   - M-Flasher 0.12.1 (GUI + CLI at `/Applications/M-Flasher.app/Contents/MacOS/M-Flasher`): `find`, `download-mode`, `restart`, `info`, `backup [DIR]`, `restore`, `firmware PKG.fwsc [--restart]`, `bootloader`, `run-ram`; ROM download mode shows `WL82 UBOOT1.00`.
+   - m-bootloader 2.4 (replaces boot head 0x00000–0x03FFF; little tested on new chip; on hold). SLOOP 3 requires it (on hold; not runnable in fm1-emu: `.area` package).
+   - Flash layout: boot 0x00000–0x03FFF; firmware 0x04000–0x92FFF (ChoralRoot to 0x9EFFF, stock V16 to 0xA8FFF); stock settings 0x93000–0xE8FFF; BT 0xE9000; factory voices 0xEA000–0xFBFFF; 0xFC000–0xFEFFF used by Felucca-family for globals; 0xFF000 key/MAC. Felucca-family data: projects 0x97000, SLOOP autosave 0x9F000/0xFE000, samples 0xA0000, user presets 0xDC000, loader staging 0xE0000, globals 0xFC000.
+   - fm1-emu 0.5.1 (`fm1-live`, `fm1-emu`): chip-level emulator; `--flash-chip uc25hq80`, `--flash FILE` (same format as real 1 MiB backup), `--usb` (virtual MIDI device only in windowed mode), `--shot MS --lcd-only`, `FM1_BENCH_KEYS`; window title shows detected board (`FM-1 ·` vs `SMK-37 ·`); MIDI inputs captured only at start.
+   - Firmwares: SLOOP 2.8.5 (Felucca-based groovebox, GPL-3.0), Agent Deck 0.7 (Dinghy fork; host daemon `host/agtdeck.py`, Herdr/tmux backends), CTL-1 1.0.3 (fm1-base MIDI controller, USB audio in+out, BLE), ChoralRoot 0.41 (Orchid-style chord instrument; FM-1 package is tag `v0.41`, `v0.41-smk37.1` is SMK-37), RemoteFM1 0.3.6, Tonitor, etc.
+   - Firmware Hub `catalog.json` (228 firmwares; `chip` field new/old/any = 152/71/5), remotefm1.com FM-1 Player, VIBE FM Mk1 (planned 2027 hardware by Designburg, unaffiliated with M-VAVE), official `m-vave/fm1_open`, Workbench, M-UPGRADE.
+   - Zensical 0.0.73 docs site, uv dependency groups (`docs`, `fw`), GitHub Actions Pages deploy, `just` task runner, fm1-base submodule (MPL-2.0), JieLi pi32v2 toolchain in linux/amd64 Docker, Pillow built from source against Homebrew `libraqm`.
+   - Evidence tags in docs: `[實機]`, `[上游]`, `[模擬]`, `[調研]`.
+
+3. Files and Code Sections:
+   - `AGENTS.md` (English, canonical; `CLAUDE.md` is `@AGENTS.md`): repo purpose, layout table, commands list, writing conventions, "Capture what we learn" rule, sources/evidence tags, hardware safety tier table + preflight, rules (check package is for FM-1; firmwares share flash sectors → run `just emu-rehearse` before new switches; ChoralRoot over SLOOP caution; m-bootloader on hold; no 016→015 downgrade), firmware development rules, publishing/git (backups never in git; public release assets only on request).
+   - `Justfile`: variables `m_flasher`, `m_flasher_version="0.12.1"`, `sloop_version="2.8.5"`, `fm1_emu_version="0.5.1"`, `agtdeck_version="0.7"`, `ctl_version="1.0.3"`, `choralroot_tag="v0.41"`, `choralroot_pkg="choralroot-0.41.fwsc"`, `remote_version="0.3.6"`, `fm1_base`. Recipes: `docs-build`, `docs-check`, `docs-serve` (all `uv run --locked --all-groups`), `fm1-fetch`, `fm1-fetch-more`, `fm1-install-flasher`, `fm1-gui`, `sloop-editor`, `emu-fetch`, `agtdeck-fetch` (digest + `gh attestation verify --signer-workflow zvenson/fm1-build/.github/workflows/build.yml`), `emu-run package chip="uc25hq80" *args`, `emu-shot package chip ms`, `emu-rehearse package backup chip *args`, `agtdeck-clone`, `agtdeck-doctor`, `agtdeck-sim`, `agtdeck-emu`, `agtdeck-run`, `fw-setup`, `fw-test app`, `fw-toolchain`, `fw-build app`, `fm1-versions`, `fm1-find`, `fm1-info`, `fm1-backup label`, `fm1-verify-backups`, `fm1-download-mode`, `fm1-restart`, `fm1-flash package` ([confirm]), `fm1-switch target=""` (no arg/-h/list prints targets; named: sloop, agtdeck, ctl, choralroot, remote, or path; refuses if `(emu)` device present; download-mode → backup to `backups/<date-HHMM>-pre-<name>/` → `firmware PKG --restart`), `fm1-backup-release dir` ([confirm]; accepts name or path via basename; creates/updates release `backup-<name>`).
+   - `scripts/emu_rehearse.py`: builds emulator flash = backup with package image (contiguous non-blank run from 0x04000 in the pristine emulator flash) laid over it; prints range and which data sectors ≥0x93000 it covers.
+   - `scripts/check-docs-site.py`: modified to require `language == "zh-TW"` (was "en").
+   - `zensical.toml`: zh-TW, explicit `nav` (首頁; Getting Started incl. 變磚的原理與分級; 硬體 incl. Flash 配置圖, 搭配手機與平板, iOS 音樂 app, 相關硬體; Firmware incl. SLOOP ×5, Agent Deck ×2, CTL-1, ChoralRoot ×2, RemoteFM1, The Firmware Hub, 多韌體切換; Agentic ×5; 自製韌體; 線上試玩; 生態是怎麼來的; 官方資源; 資源地圖; 我的機器; 上游追蹤; 使用心得).
+   - `.github/workflows/docs.yml`: build+check on PR; deploy to Pages on push to main.
+   - `pyproject.toml`: groups `docs` (zensical==0.0.73), `fw` (mido, pillow, python-rtmidi); `[tool.uv] no-binary-package = ["pillow"]`.
+   - `.gitignore`: `/site/ /.cache/ /.venv/ /backups/ /downloads/ /tools/ /vendor/ /build/`.
+   - `third_party/fm1-base` (submodule), `firmware/hello/` (unmodified template; host tests pass; `fw-build` produced `template.fwsc`).
+   - Docs (41 pages): `docs/index.md`, `getting-started/{index,install-m-flasher,backup-and-chip,flash-sloop,bricking,recovery,cautions}.md`, `hardware/{io,flash-chips,flash-map,mobile,ios-apps,related}.md`, `firmware/{index,hub,switching}.md`, `firmware/sloop/{index,usage,web-editor,editor,sloop3}.md`, `firmware/agent-deck/{index,usage}.md`, `firmware/ctl-1/index.md`, `firmware/choralroot/{index,tutorial}.md`, `firmware/remotefm1/index.md`, `agentic/{index,m-flasher-cli,emulator,skills,agent-deck}.md`, `dev/index.md`, `playground.md`, `ecosystem.md`, `official.md`, `resources.md`, `device-log.md`, `watch.md`, `notes/index.md`; `docs/assets/sloop/sloop-editor-2.8.5.html` (hosted GPL-3.0 editor, embedded via iframe `allow="midi"`).
+   - Memory: `~/.claude/projects/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/memory/auto-capture-knowledge-in-docs.md` + `MEMORY.md` index.
+   - Local, git-ignored: `downloads/` (M-Flasher dmg, sloop-2.8.5.fwsc + editor html, fm1-emu tarball, agtdeck-0.7.fwsc, ctl-1.0.3.fwsc, choralroot-0.41.fwsc, remote-0.3.6.fwsc), `tools/` (fm1-emu, emu-state, jieli toolchain, AC79 SDK ~1 GB), `vendor/fm-1-agent-deck` (v0.7), `backups/`: `2026-11-17-stock` (sha c6a47902…, released), `2026-11-17-sloop-2.8.5` (783060c0…, released), `2026-11-17-pre-agtdeck` (074cf360…, released), `2026-11-17-agtdeck-0.7` (8345795a…, not uploaded), `2026-11-17-0303-pre-sloop-2.8.5` (test leftover), `2026-11-17-0341-pre-ctl-1.0.3` (8c9267e8…, SLOOP + latest songs, **not uploaded**), `2026-11-17-0413-pre-choralroot-0.41` (8834d018…, not uploaded).
+   - Site: https://daviddwlee84.github.io/M-VAVE_FM-1/ ; all work committed and pushed to `main` (last commit: "Add an online playground index; clarify OPT = GLO and ChoralRoot's input-only USB audio").
+
+4. Errors and fixes:
+   - ChatGPT export lost all code blocks → re-derived every command from upstream docs.
+   - Checker rejected non-English site → changed check to zh-TW.
+   - `fm1-backup-release` failed with paths (`backups/backups/...`) → use `basename`; user hit this.
+   - A `just --dry-run` hung on the confirm prompt → killed it; use `--yes`.
+   - Docker couldn't pull base image (proxy refused) → reported, did not touch config; user fixed, `fw-build` then worked.
+   - Pillow wheel lacked raqm → `brew install libraqm` + `no-binary-package = ["pillow"]`.
+   - `uv sync --group fw` uninstalled docs packages → all recipes use `--all-groups`.
+   - My `pkill -f` pattern killed the user's running emulator, and the daemon briefly connected to my test instance → apologised; added `agtdeck-emu`; fm1-switch refuses when an `(emu)` device is present.
+   - Wrong claim: said 0xFC000 was "原本空著"; actually SLOOP's settings sector overwritten by Agent Deck (and later CTL-1 also wrote 0xFD000) → corrected docs and told user.
+   - Downloaded the SMK-37 ChoralRoot package (`v0.41-smk37.1`) and told user it was FM-1's → user noticed emulator showed SMK-37; replaced with `v0.41` `choralroot-0.41.fwsc`, redid tests, corrected docs, added AGENTS rule.
+   - `emu_rehearse.py` bugs: generator+tuple TypeError; splice only to 0x92FFF truncated ChoralRoot (FONTS MISSING/black screen artifacts) → now takes contiguous package image.
+   - Emulator "MIDI in: no inputs": inputs captured only at launch → documented.
+   - `just fm1-flash` refused when unit running (expected; `fm1-switch` handles download mode).
+   - Planned "SLOOP 3 in emulator" impossible → corrected.
+
+5. Problem Solving:
+   - Verified on hardware: stock 015 backup; SLOOP 2.8.5; Agent Deck 0.7 (first known new-chip report); back to SLOOP (songs survived); CTL-1 1.0.3 via `fm1-switch`; ChoralRoot 0.41 via `fm1-switch` (M-Flasher plan `0x04000-0x8EFFF, 0x91000-0x91FFF, 0x93000-0x9EFFF`, 152 sectors) — boots, USB product `ChoralRoot FM-1`.
+   - Current device state: **ChoralRoot 0.41**, stock bootloader, new chip. SLOOP songs no longer on device (0x97000 overwritten); to return to SLOOP with songs the owner must use M-Flasher GUI **RESTORE FULL FLASH** of `backups/2026-11-17-0341-pre-ctl-1.0.3/` (not `fm1-switch sloop`).
+   - ChoralRoot presents as input-only USB audio (`ChoralRoot In`, 6 in / 0 out, verified on Mac) so iPad audio cannot play through it; CTL-1 is both in and out (iPad audio routes to FM-1; fix: Sound Off on EDIT page + SAVE, or use Bluetooth MIDI).
+   - Unverified items flagged in docs: embedded SLOOP editor MIDI connect; CTL-1 settings persistence on new chip; ChoralRoot MIDI Keys with real FM-1 driving emulator; ChoralRoot MASTER-to-zero silence; iPad behaviours; RemoteFM1, Tonitor untested.
+
+6. All user messages:
+   - Initial: "這是我跟ChatGPT的調研 請務必詳細閱讀 包括我提過的一些需求其實很多都是我想要記錄到本repo中的 @.specstory/references/chatgpt-FM1刷機建議-20261117-0058.md 這個repo是我要記錄 M-VAVE FM-1 的各種事情 包括資源、使用心得 整理最關鍵的東西 以及可以能夠有各種agentic setup所需的context 然後有一個 documents （Zensical 搭的 GitHub Page）可以用來自己看的筆記 我可能會想要針對特地的firmware e.g. SLOOP 會有專門的section介紹使用 然後起始getting started如何刷機等等 注意事項等等 也幫忙setup一下 AGENTS.md 然後第一階段最好setup完後能夠驗收：「裝 M-Flasher、備份原廠、刷 SLOOP 2.8.5」"
+   - Answers: docs 繁體中文（術語保留英文）; Pages 一路做到上線; Agent 陪跑實機; .specstory 全部追蹤.
+   - "是不是documents可以開subagents Opus 5.5來併行去寫？ 我們可以接著做硬體相關進度"
+   - Screenshot: installed M-Flasher, asks whether to install m-bootloader; triggered download mode via UI.
+   - Screenshots: chip 0xB36014 (new), backup saved.
+   - "要不你幫我把我的機器備份備份到我的GitHub repo Release裡面？ 後面如果要做 Justfile或是 CLI wrapper的話 也幫我把這些setup相關的做一個shortcut .specstory/history 可以備份 … 機器重開機後能成功進入 SLOOP 存檔也work"
+   - Answer: 照原樣放 public repo 的 Release.
+   - Pasted `just fm1-backup sloop-2.8.5` output; "這個是備份之後包含我在玩的曲子是嘛"; pasted fm1-backup-release path errors.
+   - "現在是不是 m-bootloader 不建議裝？還是整機備份了其實不怕？ 另外我們現在 Justfile 是不是其實也夠用了（對於 CLI wrapper 的部分） 然後 SLOOP 3 跟 Agent Deck 是依賴 m-bootloader 之後嗎？ 還有 fm1-emu 以及如果我們想自己vibe firmware等等呢？ 開展plan我們下一階段的系列工作"
+   - Answers: no Pico (only Raspberry Pi 3), track m-bootloader until mature; firmware in this repo's subdirectory; direction Agent控制台、MIDI controller/macro pad (try Agent Deck first); fm1-base may be new repo + submodule if needed.
+   - Pasted `just fw-build hello` success, `just agtdeck-sim` output, emulator NO HOST screenshot.
+   - Pasted daemon/emulator logs: "好像emulator不一定能找到host？… 不過用你的方式是成功了 … (不過emulator不知道為什麼 好像沒辦法mouse click？ 不確定怎麽觸發它的鍵盤）"
+   - "所以帶了 --usb 的話我就能用我的硬體操控 emulator的意思？… 然後可以幫我燒錄一下 agent deck firmware嗎？然後直接備份一個？（我需要先手動切近download mode？）"
+   - "關了模擬器與daemon了 SLOOP也停了 可以繼續"
+   - "M-Flasher有CLI嗎？跟它自帶的GUI App比呢？" + flash output (Agent Deck written).
+   - (mid-turn) "然後我們是不是能夠有docs來介紹一下 Agent Deck那個怎麽用"
+   - Gemini video summary reference: asks whether "Flash Bootloader 能有效防止變磚" matches our conclusion; asks about Firmware Hub and cuvave.com; "我備份完了 … 是不是能幫我刷回 SLOOP"
+   - "FM MK1 是什麼？… 另外 官方韌體與 M-UPGRADE 這部分我們是不是都沒有用到？… 帶我理解一下" + SLOOP flash-back output.
+   - (mid-turn) "然後剛剛 `just fm1-flash downloads/sloop-2.8.5.fwsc` 確實曲子都還在 （是因為中間刷Agent Deck沒有影響到那部分的存儲？）"
+   - "好啊 可以做成切換 另外 FM-1 算是第一個這樣成系統的被逆向的機器嗎？… 看起來是這個商業模式被驗證了？ 我們是不是也可以收錄相關硬體？" (+ ChatGPT VIBE reference)
+   - "BTW SLOOP是不是有配套的software還是web可以對歌曲備份之類的？ 另外我也有見過 FM1 搭配Android phone的combo？… （iOS根據我的理解應該比較難達到類似效果？） … 然後我是否能夠知道到底有哪些目標可以switch之類的？"
+   - "所以 RemoteFM1 是什麼 也是一個獨立firmware嗎？ 然後如果要控制iOS DAW e.g. Quantiloop Pro, GeoShred, Garage Band, AUM, Symth One, koala, StreamByter 等等是能work的嗎？（可以的話會想接iPad） （是不是也能在我們GitHub Page裡面嵌入一個 sloop-editor-2.8.5.html ?)"
+   - "如果CTL-1比RemoteFM1更全更popular 也許我們也可以試著裝看看？ （RemoteFM1的特點是什麼？） （我們有調研過的 特別是有實際安裝使用的firmware也許都可以弄一個小章節？） 然後我們也可以記錄一些比如 iOS App Companion之類的… (Bluetooth是機器本身其實有這個能力嗎？） … 另外我還想嘗試 ChoralRoot … 號稱把 Orchid 的體驗複製到 FM1 上？"
+   - (mid-turn) "是說 我們是不是也能列出官方資源？寫在doc中 （雖然目前應該都還是用社群方案？備注一下？）"
+   - CTL-1 flash output; "測試了 CTL-1 好像還可以 不過好像 iPad的聲音output by default會route到FM1的speaker 但是不確定怎麽關閉 CTL-1 自己的聲音"
+   - "可以補一下這部分到 CTL-1的docs中？（以後如果感覺可以落成知識的問題可以自動加進去） 然後有什麼比較好的方式 emulate 模擬一下 ChoralRoot"
+   - Emulator showed SMK-37; "發現好像emulator run的不是FM1？… 然後看起來這個網站跟 Firmware Hub好像 也有emulator… 然後 ch1 好像MIDI信號沒有傳到emulator裡面"
+   - "另外我發現還有這個 看起來對於變磚有很詳細的說明 （看看能不能有docs） MvaveFM1Unbricker … 好像說 v15, v16 layout區別比較大？" + ChoralRoot switch output at the `yes` prompt ("還沒yes").
+   - "Orchid好像有自己一套很獨特的workflow？ （也許可以有個教學？） … 燒進去成功能跑了 … Unbricker有提到m-bootloader相關資訊嗎？"
+   - "是說 ChoralRoot 是不是可以類似 CTR-1 一樣 傳midi出去然後自己不發音？ 這樣可以用到上面沒有的音色？（是說上面能切什麼音色嗎？現在感覺比較單一） 另外有沒有類似Quantiloop Pro之類的looper firmware推薦的？"
+   - "它會寫Hold OPT to change engine 但我不知道甚麼是OPT鍵（有寫嗎？） FM-1 我看好像我USB接iPad的時候iPad的聲音會跑到它上面輸出？（但可能純bypass 機器其實讀不到？） 另外幫我整理一下線上試玩的網站們（剛剛有貼過一些 但不好找感覺）"
+
+7. Pending Tasks:
+   - Deliver the user-facing reply (zh-TW) for the last message; the work is done and pushed but the answer text was not yet sent.
+   - Suggested, not yet done by user: upload `2026-11-17-0341-pre-ctl-1.0.3` (and optionally `0413-pre-choralroot-0.41`, `agtdeck-0.7`) via `just fm1-backup-release`; verify items listed as unverified; returning to SLOOP requires owner's GUI restore.
+   - Not started / later: first own app (MIDI controller/macro pad) on fm1-base, flashing `firmware/hello` to hardware, RemoteFM1 trial, thin repo skill, watch-ledger updates.
+
+8. Current Work:
+   Answering the last user message. Completed and pushed: new `docs/playground.md` (線上試玩: fm1-emu with `?fw=`/`&chip=uc25hq80`, remotefm1.com, Firmware Hub, VIBE FM Playground, SMK-37 page, per-firmware emulators for ChoralRoot/CTL-1/Agent Deck/SLOOP/X0X/FM-1 SID/fm1-base template, official Workbench; all URLs returned HTTP 200), nav + index links; a prominent note at the top of `docs/firmware/choralroot/tutorial.md` and in `choralroot/index.md` that **OPT = the button printed `GLO`** (plus KEY=`SEL`, BASS=`ENV`, LOCK=`LFO`, PERF=`ARP`, LOOP=`PLAY`); and the measured result that ChoralRoot is input-only USB audio (`system_profiler` on the Mac: `ChoralRoot In`, Input Channels 6, no outputs, set as Default Input Device), recorded in `choralroot/index.md` and `hardware/mobile.md`. `just docs-check` passed (41 pages); commit "Add an online playground index; clarify OPT = GLO and ChoralRoot's input-only USB audio" pushed.
+
+9. Optional Next Step:
+   Send the reply (in Traditional Chinese) to the last message — "它會寫Hold OPT to change engine 但我不知道甚麼是OPT鍵（有寫嗎？） FM-1 我看好像我USB接iPad的時候iPad的聲音會跑到它上面輸出？（但可能純bypass 機器其實讀不到？） 另外幫我整理一下線上試玩的網站們" — stating: OPT is the `GLO` key (it was in the tutorial's table at the bottom, now also a note at the top); with ChoralRoot the FM-1 is an input-only device (6 input channels, 0 outputs, verified on the Mac), so iPad audio cannot come out of it and the FM-1 cannot read it — if sound did come from the FM-1 that was with CTL-1, and the iPad may just have switched its recording input (iPad behaviour itself unverified); and point to the new page https://daviddwlee84.github.io/M-VAVE_FM-1/playground/ with which pages changed.
+
+If you need specific details from before compaction (like exact code snippets, error messages, or content you generated), read the full transcript at: /Users/zhouhanru/.claude/projects/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/5f461408-bbdd-44d0-bb3b-b0642eabaa31.jsonl
+Continue the conversation from where it left off without asking the user any further questions. Resume directly — do not acknowledge the summary, do not recap what was happening, do not preface with "I'll continue" or similar. Pick up the last task as if the break never happened.
+
+The messages after this summary are the most recent messages from before compaction, kept verbatim. The summary was written without seeing them, so something it says has not happened yet may already have happened in them.
+
+---
+
+_**User (2026-11-16 20:44:56Z)**_
+
+<local-command-stdout>[2mCompacted (ctrl+o to see full summary)[22m
+[2mPreCompact [[ -x "$HOME/.claude/hooks/peon-ping/peon.sh" ] && "$HOME/.claude/hooks/peon-ping/peon.sh" || true] completed successfully[22m</local-command-stdout>
+
+---
+
+_**User (2026-11-17 06:59:06Z)**_
+
+是說除了M-Flasher 是否也有那種用網頁來讀硬體連接燒錄的？ （還是說還是建議M-Flasher？）
+
+另外我看到 ChoralRoot 有 transpose 跟 tonic 兩者可以分開選 但有沒有快捷的 比如我想用C的去彈F （i.e. C代表一級和弦）
+但這種情況就是 我同時要設置tonic到F 還要設transpose +5？
+
+然後為什麼它要用鍵名映射 是因為是原本其他硬體的配置照搬的嗎？
+
+另外它如果沒有輸入的話是不是也就不能做為sampler？ （不過感覺如果用那種手機cjicombo
+
+---
+
+_**User (2026-11-17 07:05:37Z)**_
+
+是說除了M-Flasher 是否也有那種用網頁來讀硬體連接燒錄的？ （還是說還是建議M-Flasher？）
+
+--
+
+另外我看到 ChoralRoot 有 transpose 跟 tonic 兩者可以分開選 但有沒有快捷的 比如我想用C的去彈F （i.e. C代表一級和弦）
+但這種情況就是 我同時要設置tonic到F 還要設transpose +5？
+
+左邊chord block我測試同時按6個會變JASS 然後7個全按會變WTF 這個算是彩蛋嗎？ 有沒有所有排列組合
+
+然後為什麼它要用鍵名映射 是因為是原本其他硬體的配置照搬的嗎？
+
+--
+
+另外它如果沒有輸入的話是不是也就不能做為sampler？ （不過感覺如果用那種手機或網頁combo其實能做到？）
+
+--
+
+然後它有Bluetooth嘛 是不是 Agent Deck其實也不用插著USB才能用？
+
+然後我發現有些情況它是會send "continue"之類的到herder session
+
+---
+
+_**Agent (claude-opus-5-5 2026-11-17 07:05:45Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1; ls vendor tools; wc -l docs/firmware/choralroot/*.md docs/firmware/agent-deck/*.md docs/getting-started/install-m-flasher.md; grep -rn -i "web\|browser\|瀏覽器" docs/getting-started/install-m-flasher.md docs/official.md | head -30`
+
+```text
+vendor:
+fm-1-agent-deck
+
+tools:
+emu-state
+fm1-emu
+fw-AC79_AIoT_SDK
+jieli
+     131 docs/firmware/choralroot/index.md
+     217 docs/firmware/choralroot/tutorial.md
+      75 docs/firmware/agent-deck/index.md
+     134 docs/firmware/agent-deck/usage.md
+      64 docs/getting-started/install-m-flasher.md
+     621 total
+docs/official.md:15:| [Workbench](https://open.m-vave.com/fm1-workbench) | 官方的網頁工具：更新韌體、瀏覽器內預覽、管理 project、sample 與 DX7 音色、下載 Source + SDK | 沒有 |
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 07:05:48Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1; cat docs/firmware/choralroot/tutorial.md; sed -n 1,131p docs/firmware/choralroot/index.md`
+
+````text
+# ChoralRoot 教學：和弦樂器的玩法
+
+ChoralRoot 仿的是 Telepathic Instruments 的 Orchid。它的操作邏輯和一般鍵盤不同，這頁照「先懂觀念、再一步步加東西」的順序走一遍。內容整理自[上游手冊](https://github.com/Quixotic7/ChoralRootFM1/blob/main/docs/MANUAL.md)（0.41）`[上游]`；我的機器已刷入 ChoralRoot，但這些步驟我還沒逐一在機器上確認。
+
+!!! note "螢幕上說的鍵名和面板印的不一樣"
+    ChoralRoot 的螢幕用它自己的鍵名。最常遇到的是 **`Hold OPT to change engine`：OPT 就是面板上印著 `GLO` 的那顆鍵。**
+
+    | 螢幕 / 手冊說 | 面板上印的 |
+    |---|---|
+    | **OPT** | **`GLO`** |
+    | KEY | `SEL` |
+    | BASS | `ENV` |
+    | LOCK | `LFO` |
+    | PERF | `ARP` |
+    | LOOP | `PLAY` |
+
+    `FX`、`EDIT`、`HOME`、`SAVE`、`SEQ`、`REC` 名稱不變。完整對照在本頁最下面的「面板對照」。
+
+## 觀念：一隻手決定「什麼和弦」，另一隻手決定「哪個音」
+
+一般鍵盤上，彈 Dm7 要同時按 D、F、A、C 四個鍵，換和弦就要換一組指型。Orchid 式的樂器把這件事拆開：
+
+- **和弦性質**（大、小、減、掛留，加不加七音、九音）用一組固定的鍵決定。
+- **根音**用另一組鍵彈，一次只要一根手指。
+- 機器負責組出和弦、安排聲部，並把和弦名稱顯示在螢幕上。
+
+好處是不需要會指型就能彈出完整的和弦進行，而且換調、換 voicing 都是轉一個旋鈕的事。它是用來找和弦、寫歌、做和聲鋪底的工具，不是用來彈旋律的鍵盤。（關於 Orchid 本身的這段是我的一般認識，沒有查證。）
+
+## 鍵盤配置
+
+27 個鍵，F3 到 G5。**左邊七個是 chord block，其餘 20 個是根音。**
+
+```
+黑鍵      DIM   MIN   MAJ         C#4   D#4         F#4  ...
+          F#3   G#3   A#3
+                \_ SUS _/   （G#3 + A#3 一起按）
+白鍵    6     m7    M7    9     C4    D4    E4    F4  ...  G5
+        F3    G3    A3    B3    |------- 根音：C4 到 G5 -------|
+```
+
+| 鍵 | 名稱 | 加在根音上面的音（半音數） |
+|---|---|---|
+| F#3 | DIM 減 | 3、6 |
+| G#3 | MIN 小 | 3、7 |
+| A#3 | MAJ 大 | 4、7 |
+| G#3 + A#3 | SUS 掛留 | 5、7 |
+| F3 | 6 | 再加 9 |
+| G3 | m7（小七度） | 再加 10 |
+| A3 | M7（大七度） | 再加 11 |
+| B3 | 9 | 再加 14 |
+
+兩條規則：
+
+- **chord 鍵要在根音按下去之前就按著。** 預設的 Play Style 是 Simple，和弦在根音落下的那一刻就定了。
+- **延伸音可以疊。** MAJ + 6 + 9 會顯示 `D` `6 9`。疊三個顯示 `JAZZ`，四個全按顯示 `WTF`。
+
+螢幕上：大三和弦單獨出現時寫成大寫 M（`DM`），小三和弦是小寫 m（`Dm`）；加了延伸音後大和弦的 M 省略（`D` 加一個小的 `7`）。延伸音用橘色顯示。
+
+## 第一課：彈出和弦
+
+| 想彈 | 按住 | 再按 | 螢幕 |
+|---|---|---|---|
+| D（單音） | 什麼都不按 | D4 | `D` |
+| D 大三和弦 | MAJ（A#3） | D4 | `DM` |
+| D 小三和弦 | MIN（G#3） | D4 | `Dm` |
+| Dm7 | MIN + m7（G#3 + G3） | D4 | `Dm` 加小 `7` |
+| G7（屬七） | MAJ + m7（A#3 + G3） | G4 | `G` 加小 `7` |
+| CM7（大七） | MAJ + M7（A#3 + A3） | C4 | `C` 加小 `M7` |
+| Dsus | G#3 + A#3（一指按兩鍵） | D4 | `Dsus` |
+
+注意 **m7 鍵加的是小七度**，所以 MAJ + m7 是屬七和弦（G7），不是大七和弦。大七要用 M7 鍵。
+
+**練習：ii–V–I（C 大調）**
+
+1. 按住 MIN + m7，彈 D4 → Dm7
+2. 換成 MAJ + m7，彈 G4 → G7
+3. 換成 MAJ + M7，彈 C4 → CM7
+
+## 第二課：LOCK，把左手空出來
+
+每次都要按住 chord 鍵很累。**LOCK**（面板上印的是 **`LFO`**）會把 chord block 鎖住：
+
+1. 點 `LFO`，燈亮，螢幕右上出現 `lock`。
+2. 按住 MIN 再放開：MIN 保持亮著，接下來彈的每個根音都是小和弦。
+3. 沒按住任何 chord 鍵時：
+    - 點一個**種類鍵**（DIM / MIN / MAJ）：換成那個種類，延伸音清掉。
+    - 點一個**延伸鍵**（6 / m7 / M7 / 9）：開或關那個延伸音，種類不變。
+4. 再點 `LFO` 關掉 LOCK。
+
+鎖住之後左手可以去轉旋鈕、按其他功能鍵。
+
+## 第三課：Key Mode，一根手指彈整首歌
+
+這是最省事的模式。點 **KEY**（面板印的是 **`SEL`**），燈亮，螢幕左上顯示 `Key: C`。
+
+現在**單獨按一個根音，機器會彈出那個音在這個調裡該有的和弦**。C 大調下：
+
+| 按 | 得到 |
+|---|---|
+| C | C |
+| D | Dm |
+| E | Em |
+| F | F |
+| G | G |
+| A | Am |
+| B | Bdim |
+
+- 調外的音會彈成鄰近音階音上的 sus 和弦。
+- 按住 chord 鍵可以**臨時覆蓋**音階的選擇（例如在 C 大調裡硬彈一個 D 大三和弦）。
+- 琴鍵的燈會顯示這個調：音階內的音微亮，主音較亮，調外的音不亮。
+
+**換調**：按住 KEY 並同時按一個根音，那個音就成為主音。要小調就同時按 MIN。然後 `OCT-` 關閉 layer。
+
+按住 KEY 會開 **KEY layer**：KNOB 1 選主音、KNOB 2 選音階（共 23 種：大小調、各種 mode、五聲、藍調…）、KNOB 3 移調（±24 半音）。
+
+**練習：流行進行 I–V–vi–IV（C 大調）**
+
+開 Key Mode，依序按 C4、G4、A4、F4。四根手指，四個和弦。
+
+## 第四課：Voicing
+
+同一個和弦可以有不同的排列。**按住和弦轉 KNOB 1**：
+
+- 往上一格：最低音上移八度。
+- 往下一格：最高音下移八度。
+- 範圍 -12 到 +12，螢幕顯示 `voicing +2`。
+
+這個設定會套用到之後所有的和弦，包括正在播放的 loop。`OCT-` / `OCT+` 則是把根音整組移八度（-2 到 +2）。
+
+## 第五課：加 bass
+
+點 **BASS**（面板印的是 **`ENV`**）。每個和弦下面會自動加一個 bass 音，螢幕右上顯示 `Bass`。
+
+- **ALGORITHM**：換 bass 的音色（轉到底是 off）。
+- **KNOB 2**：bass 的音域，-2 到 +4 八度。
+- 按住 BASS 轉 ALGORITHM：bass 的音量。
+- bass 是單音的獨立聲部，有自己的引擎。
+
+## 第六課：Performance mode，讓它幫你彈
+
+點 **PERF**（面板印的是 **`ARP`**）開關。按住 PERF 開 PERF layer，用 **SELECT** 選模式：
+
+| 模式 | 效果 |
+|---|---|
+| **Strum** | 和弦音一個接一個掃出來，像刷吉他 |
+| **Slop** | 時間不整齊的 strum |
+| **Arpeggiate** | 依 tempo 輪流彈和弦音 |
+| **Pattern** | 12 種節奏型（pulse、alberti、waltz、stride…） |
+| **Harp** | 跨好幾個八度的快速琶音 |
+
+在 layer 裡 KNOB 1 是速度（Rate 或 Division）、KNOB 2 是順序（上、下、上下、照彈的順序、隨機）、KNOB 3 與 KNOB 4 依模式而定。layer 外面 KNOB 3 直接調該模式的主要參數。
+
+琶音在放開鍵時會停。要讓它持續：**LATCH**（按住 `GLO` 再點 `LFO`）。
+
+## 第七課：Looper，錄的是和弦不是聲音
+
+1. 點 **`REC`**。燈亮，訊息顯示 `rec: play to start`。
+2. 彈幾個和弦。第一個和弦落下時開始錄。
+3. 再點 `REC`（或 `PLAY`）：`loop recorded`，立刻開始循環。
+4. **LOOP**（面板印的是 **`PLAY`**）：停止 / 播放。
+5. **按住 `SAVE`**：存起來，否則關機就沒了。
+
+重點：loop 記的是「哪個根音、哪種和弦、什麼時候、多長」，播放時重新經過樂器。所以 loop 播放中你可以：
+
+- 轉 PRESETS 換音色，loop 跟著變。
+- 轉 KNOB 1 改 voicing。
+- 開關 bass、換 performance mode。
+- 改 tempo：只改速度，不改音高。
+
+按住 `REC`：undo 最後一層。按住 `GLO` 再點 `REC`：切換錄音模式（Overwrite、Overdub…）。
+
+## 換音色
+
+- **PRESETS**：同一個引擎的下一個音色。只轉這個會覺得音色很單一，因為它不會跨引擎。
+- **按住 OPT（`GLO`）轉 PRESETS**：換引擎。有 FM6、FM TONE、VA、CZ-1、P5、WHEEL、GRAIN，合計 258 個內建音色，見[七個引擎](index.md#sounds)。
+- 想用機器上沒有的音色：把它當 MIDI 和弦控制器，見[送 MIDI 出去](index.md#midi-out)。
+- **`EDIT`**：進音色編輯器。
+
+## 面板對照
+
+面板上印的字大多換了工作：
+
+| 印的 | ChoralRoot | 點一下 | 按住 |
+|---|---|---|---|
+| `FX` | FX | 效果開關 | FX layer |
+| `SEL` | **KEY** | Key Mode 開關 | KEY layer |
+| `ENV` | **BASS** | bass 開關 | BASS layer |
+| `LFO` | **LOCK** | LOCK 開關 | LOCK layer |
+| `EDIT` | EDIT | 音色編輯器 | 引擎選擇 |
+| `GLO` | **OPT** | Options | 搭配旋鈕：第二功能 |
+| `HOME` | HOME | 回主畫面 / 下一個畫面 | 畫面選單 |
+| `SAVE` | SAVE | 存音色 | **存全部** |
+| `ARP` | **PERF** | performance 開關 | PERF layer |
+| `SEQ` | SEQ | loop 編輯器 | 節拍器 / 鼓 |
+| `PLAY` | **LOOP** | 播放 / 停止 loop | PLAY 選單 |
+| `REC` | REC | 錄音 | undo 一層 |
+
+layer 的通則：點一下是開關，按住約半秒是打開 layer（放開後仍開著，按鈕會閃）。`OCT-`、`OCT+` 或 `HOME` 關閉 layer。
+
+## 卡住的時候
+
+- **`OCT-` + `OCT+` 同時按**：PANIC，所有音關掉。
+- 這兩個鍵**加 `HOME` 按住 5 秒**：進 update mode。平常不要按這個組合。
+- 琴鍵沒有力度感應，音量是固定值（在 Options 裡設）。
+
+## 建議的練習順序
+
+1. 第一課的 ii–V–I，確認看得懂螢幕上的和弦名稱。
+2. 開 LOCK，鎖住 MIN + m7，隨便彈根音，聽小七和弦的平行移動。
+3. 開 Key Mode，彈 I–V–vi–IV；換一個調再彈一次。
+4. 加 bass，轉 KNOB 1 聽 voicing 的差別。
+5. PERF 選 Strum，再換 Arpeggiate。
+6. 錄一個四小節的 loop，播放中換音色與 performance mode。
+
+## 沒寫到的
+
+手冊還有很多：三種 Play Style（Simple、Advanced、Free）、Secret Chords（同時按兩三個種類鍵得到 power chord、augmented、add4）、Classic 配置（Orchid 原本的鍵位）、鼓、loop 編輯器、音色編輯器、MIDI out 三個 channel、USB audio 三組立體聲。需要時查[上游手冊](https://github.com/Quixotic7/ChoralRootFM1/blob/main/docs/MANUAL.md)。
+# ChoralRoot
+
+[ChoralRoot FM-1](https://github.com/Quixotic7/ChoralRootFM1)（Quixotic7，GPL-3.0）是仿 Telepathic Instruments Orchid 的和弦樂器：鍵盤左端決定「要哪種和弦」，其餘的鍵彈根音，機器幫你組和弦、配置聲部，並把和弦名稱顯示在螢幕上。另有跟著和弦走的 bass、演奏模式（strum、arpeggio、pattern）、效果、錄和弦的 looper、七個合成引擎。建立在 Felucca 之上，與 Telepathic Instruments 及 M-VAVE 無關。
+
+**狀態（2026-11-17）：已刷進實機（新晶片 `0xB36014`），開機正常。** 代價如預期：SLOOP 的曲子已不在機器上，要回 SLOOP 得還原備份，見「刷之前要知道的」。 手冊：[docs/MANUAL.md](https://github.com/Quixotic7/ChoralRootFM1/blob/main/docs/MANUAL.md)
+
+完整的上手教學見 [ChoralRoot 教學](tutorial.md)。
+
+## 不刷機怎麼玩 { #emulate }
+
+由簡單到接近實機：
+
+| 方式 | 怎麼做 | 手感 |
+|---|---|---|
+| **1. 上游的瀏覽器模擬器** | <https://quixotic7.github.io/ChoralRootFM1/emu/> | 滑鼠與電腦鍵盤。零設定，有聲音 |
+| **2. 本機 fm1-emu** | `just emu-run downloads/choralroot-0.41.fwsc`。視窗標題要是 `FM-1 · choralroot-0.41` | 同上，但用真實的 240 MHz 時脈、延遲較低，存檔留在本機 |
+| **3. 本機 fm1-emu + 實機當鍵盤** | 實機裝著 [CTL-1](../ctl-1/index.md) 接 USB，再開方式 2 | **實機的 27 個鍵一對一對應 ChoralRoot 的鍵。** 最接近實際演奏，不用刷 ChoralRoot |
+| **4. RemoteFM1 的播放器** | [remotefm1.com](https://remotefm1.com/)，它的韌體庫裡有 `choralroot-0.41.rfm1` | 瀏覽器裡用原生速度跑（不是模擬晶片） |
+| **5. RemoteFM1 + 實機當面板** | 實機刷 [RemoteFM1](../remotefm1/index.md)，在播放器選 Play on my FM-1 | 鍵、旋鈕、LED、螢幕全部是實機的。要刷 RemoteFM1 |
+
+### 方式 3 的設定
+
+原理 `[上游]`：`fm1-live` 會把電腦上所有 MIDI 輸入送進模擬機器的 MIDI IN；ChoralRoot 的 **Options → MIDI Keys** 可以指定一個 channel，該 channel 上的音符 53–79 會「按下」機器的 F3–G5 這 27 個鍵。CTL-1 八度為 0 時最低鍵正好是 F3，channel 預設是 1。
+
+1. 實機裝 CTL-1，USB 接 Mac。在 CTL-1 上按 `EDIT`，把 KNOB 1（Sound）關掉，避免它自己的音色疊上去。
+2. **先確認實機已接上這台 Mac 的 USB**，再執行 `just emu-run downloads/choralroot-0.41.fwsc`。啟動訊息的 `MIDI in:` 那一行要列出實機（macOS 可能仍顯示舊名稱 `Felucca`）。如果是 `MIDI in: no inputs`，表示啟動當下電腦上沒有 MIDI 裝置（例如機器接在 iPad 上、或走藍牙），按 Esc 關掉、接好再開。`[實機]`
+3. 在模擬器視窗裡進 ChoralRoot 的 Options（`GLO`，電腦鍵盤的數字鍵之一），把 **MIDI Keys** 設成 **ch 1**。
+4. 在實機上按住 A#3（MAJ）再按 D4，模擬器應該彈出 D 大三和弦。
+
+限制：只有琴鍵會對應過去。旋鈕與功能鍵（LOCK、BASS、REC…）仍要在模擬器視窗裡用滑鼠或電腦鍵盤操作。CTL-1 的八度要維持在 0，否則音符範圍對不上。
+
+這個組合我還沒實際接起來試，以上是依兩邊文件推出來的設定。`[調研]`
+
+## 怎麼彈 `[上游]`
+
+27 個鍵，F3 到 G5。左邊七個是 **chord block**，其餘 20 個（C4 到 G5）是根音。
+
+| 鍵 | ChoralRoot 的功能 | 用法 |
+|---|---|---|
+| 黑鍵 F#3、G#3、A#3 | **DIM、MIN、MAJ** | 按住時決定和弦種類 |
+| G#3 + A#3 一起按 | **SUS** | 一根手指按兩個黑鍵 |
+| 白鍵 F3、G3、A3、B3 | **6、m7、M7、9** | 延伸音，按住時加上，可以疊 |
+| C4 到 G5 | 根音 | 單按是單音；chord block 有鍵按著時是和弦 |
+
+所以就是你說的：左手按和弦性質，右手按根音。chord 鍵要在根音按下去**之前**就按著。
+
+五分鐘上手：
+
+1. 按住 MAJ（A#3）再按 D4：D 大三和弦。螢幕顯示 `DM` 與組成音。
+2. 按住 MIN（G#3）加 m7（G3）再按 D4：Dm7。
+3. **LOCK**（面板印的是 `LFO`）：把 chord block 鎖住，空出左手。鎖住後點 MIN 就一直是小和弦，點 9 加九音。
+4. 按住和弦轉 **KNOB 1**：改 voicing（最低音上移八度，或最高音下移）。
+5. 轉 **PRESETS** 換音色；按住 `GLO`（OPT）轉 PRESETS 換引擎（FM6、FM TONE、VA、CZ-1、P5、WHEEL、GRAIN）。
+6. 點 `ENV`（BASS）：每個和弦下面加 bass。
+7. 點 `REC` 錄 loop，彈幾個和弦，再點 `REC` 結束。loop 記的是和弦不是聲音，所以換音色會跟著變。
+8. 卡住時同時按 `OCT-` + `OCT+`：PANIC，所有音關掉。
+
+面板上印的標示多半換了工作：`SEL` 是 KEY、`ARP` 是 PERF、`ENV` 是 BASS、`LFO` 是 LOCK、`GLO` 是 OPT、`PLAY` 是 LOOP。琴鍵沒有 velocity（FM-1 的鍵感測不到），用固定值。
+
+## 音色：七個引擎，不只一種 { #sounds }
+
+剛裝好時會覺得音色單一，是因為 **PRESETS 只在目前這個引擎裡轉**。螢幕下方那行 `Hold OPT to change engine` 的 **OPT 是面板上印著 `GLO` 的鍵**：按住 `GLO` 再轉 PRESETS，轉到想要的引擎後放開。`[上游]`
+
+| 引擎 | 是什麼 | 內建音色數 |
+|---|---|---|
+| **FM6** | 六運算子 FM，能載入 DX7 音色。開機預設是這個（`TINE EP`） | 25 |
+| **FM TONE** | 四運算子 FM，Digitone 風格 | 16 |
+| **VA** | virtual analog：四個振盪器、可變形濾波器、四組 envelope 與 LFO | 25 |
+| **CZ-1** | Casio CZ-1 的 phase distortion，含原廠 64 個音色 | 64 |
+| **P5** | Prophet-5 模型 | 115 |
+| **WHEEL** | 九支 drawbar 的 tonewheel 風琴 | 5 |
+| **GRAIN** | granular 合成 | 8 |
+
+合計 258 個內建音色。bass 是另一個獨立聲部：**ALGORITHM** 換 bass 音色，**按住 `GLO` 轉 ALGORITHM** 換 bass 的引擎。每個引擎還能存自己做的音色，`EDIT` 進編輯器。
+
+## 當成 MIDI 和弦控制器：送 MIDI 出去、自己不發聲 { #midi-out }
+
+可以。ChoralRoot 彈出的和弦會從 USB MIDI（開了的話還有 Bluetooth）送出去，所以能拿它的和弦邏輯去驅動 iPad 或電腦上的任何音源。`[上游]`
+
+| 送出的東西 | Options 裡的設定 | 預設 channel | 內容 |
+|---|---|---|---|
+| Perform | MIDI Perform | ch 1 | 和弦聲部實際彈的音：整個和弦，或 performance mode 拆出來的琶音 |
+| Bass | MIDI Bass | ch 2 | bass 線 |
+| Raw Chord | MIDI Raw Chord | Off | 不經 performance mode 的原始和弦塊。Orchid 用 ch 3 |
+
+另外預設會送 MIDI clock，loop 開始與停止時送 start / stop。
+
+**讓它自己不發聲**：手冊裡沒有像 CTL-1 那樣的 Sound On/Off 或 local off 選項。最直接的做法是把 **MASTER 旋鈕轉到底**，MIDI 照常送出。我還沒在機器上確認轉到底是否完全無聲。`[調研]`
+
+接 iPad 時和 CTL-1 的差別：
+
+| | CTL-1 | ChoralRoot |
+|---|---|---|
+| 送的 MIDI | 你按的音、旋鈕的 CC | **組好的和弦**、bass、clock |
+| 關掉自己的聲音 | Sound 頁有開關 | 沒有開關，用 MASTER |
+| iPad 的聲音會不會從 FM-1 出來 | 會（它是 USB audio 輸出） | **不會。** 它只有輸入：我在 Mac 上看到的裝置是 `ChoralRoot In`，6 個輸入 channel、0 個輸出 `[實機]` |
+| Bluetooth MIDI | 開機就開 | 預設關，Options → Bluetooth 設 On，下次開機生效 |
+| 旋鈕送 CC | 四個 bank | Options → MIDI CC 設成 Out 或 In + Out 後，轉音色參數時會送 |
+
+**iPad 把 FM-1 當成什麼**：ChoralRoot 對主機來說是一支「六軌麥克風」（1–2 是 master、3–4 是和弦聲部、5–6 是 bass），不是喇叭。所以 iPad 的聲音沒有路可以進到 FM-1，FM-1 也讀不到 iPad 播的東西。接上之後 iPad（和 Mac）可能會把它設成**預設的錄音輸入**，我的 Mac 就自動把它選成 Default Input Device `[實機]`。如果接上後 iPad 沒聲音，是 iPadOS 在切換音訊路由，不是聲音跑進了 FM-1；確切行為我沒在 iPad 上確認。
+
+如果你在 iPad 上真的聽到聲音從 FM-1 的喇叭出來，那是裝著 [CTL-1](../ctl-1/index.md#ipad-audio) 的時候：CTL-1 同時是輸出裝置。
+
+在接收端：把一個音源放在 ch 1 收和弦、另一個放 ch 2 收 bass（AUM 可以分別路由）。很多 DAW 把 MIDI note 60 叫 C3，ChoralRoot 叫 C4，所以看起來會差一個八度，音其實一樣。
+
+也可以反過來：Options → **MIDI Roots** 指定一個 channel，外接鍵盤上的每個音都當成根音，chord block 仍在 FM-1 上按。這樣就有一整排鍵盤可以彈和弦。
+
+## 刷之前要知道的
+
+ChoralRoot 本身支援新晶片（上游 0.29.1 起接受 `0xB36014`，Hub 也這樣標）。問題在**從 SLOOP 切過去**：
+
+- **它會蓋掉 SLOOP 的曲子。** ChoralRoot 的韌體映像比其他韌體大：佔 `0x04000`–`0x9EFFF`，其他韌體只到 `0x92FFF`。模擬器先預測到這點，2026-11-17 M-Flasher 在實機上列出的寫入計畫證實了：`Writes 152 sectors (608 KiB): 0x04000-0x8EFFF, 0x91000-0x91FFF, 0x93000-0x9EFFF` `[實機]`。多出來的部分蓋到 `0x97000`，那正是我這台 SLOOP 存 project 的 sector（見[多韌體切換](../switching.md)）。裝了 ChoralRoot 再切回 SLOOP，曲子要從備份還原。`[模擬]`
+- 上游文件記載過一台跑過 Sloop 的 FM-1 裝 ChoralRoot 後掉進晶片的 ROM boot mode（黑畫面），把舊資料（`0x97000…`、`0xFC000…`）清掉才回來。它的 installer 因此**拒絕**在 Sloop 上安裝。兩者都源自 Felucca、共用儲存位址，ChoralRoot 開機時會讀到 SLOOP 留下的資料。`[上游]`
+- 上游建議的切換方式是 M-Flasher **加 m-bootloader**。我沒有 m-bootloader。
+
+我的預演結果 `[模擬]`：用 `just emu-rehearse` 把 ChoralRoot 0.41 蓋在我真實的 SLOOP 備份上，在新晶片模式下**正常開到演奏畫面**，15 秒內沒有任何 flash 寫入，也沒有進 safe mode。這和上游的事故不矛盾（那是較舊的版本），但它只是模擬，而且只測了開機。
+
+掉進 ROM boot mode 本身救得回來（M-Flasher 還看得到機器，可以還原備份），所以不是變磚的風險，但需要我在 GUI 手動還原。
+
+**實機結果（2026-11-17）** `[實機]`：我照常 `just fm1-switch` 刷入，機器正常開機，USB 產品名變成 `ChoralRoot FM-1`。當時 flash 裡同時有 SLOOP 的 autosave、CTL-1 的設定等殘留，上游記載的事故在這台、這個版本沒有發生。
+
+**回 SLOOP 的方式**：不能用 `just fm1-switch sloop`，那只會得到沒有曲子的 SLOOP。要在 M-Flasher 的 GUI 用 **RESTORE FULL FLASH** 還原 `backups/2026-11-17-0341-pre-ctl-1.0.3/`（SLOOP 加上最新的曲子）。
+
+## 已準備好的
+
+`downloads/choralroot-0.41.fwsc`（release `v0.41`）已下載並驗證。在 fm1-emu 的空白 flash 上兩種晶片都能開機。`[模擬]`
+
+!!! warning "更正（2026-11-17）：我一開始下載錯了套件"
+    ChoralRoot 的最新 release 是 `v0.41-smk37.1`，那是 **SMK-37** 版；FM-1 版在 `v0.41`。我先前下載了 SMK-37 的檔案，所以 `just emu-run` 開出來的是 SMK-37 的面板（標題列寫 `SMK-37 · …`），先前記錄的「66 次寫入」與 `FONTS MISSING` 也都是那個錯的套件造成的。已換成正確的檔案並重做所有測試。
+
+    教訓：模擬器視窗的標題列會顯示它認出的機型，是 `FM-1` 才對。M-Flasher 也會拒絕型號不符的套件，所以即使沒發現也不會刷進去，但不該靠最後一道防線。
+````
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 07:06:04Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/vendor; [ -d ChoralRootFM1 ] || git clone -q --depth 1 --branch v0.41 https://github.com/Quixotic7/ChoralRootFM1 2>&1 | tail -2; cd ChoralRootFM1; ls; grep -n -i "transpose\|tonic" docs/MANUAL.md | head -40; grep -rn -i "\"WTF\"\|JAZZ\|JASS" --include=*.c --include=*.h . | head -20`
+
+```text
+Turn off this advice by setting config variable advice.detachedHead to false
+
+3:For ChoralRoot 0.41 on the M-VAVE FM-1 (what is new since 0.22 is marked so; what 0.41 brought, each drum's own Chorus, Delay and Reverb sends, Level, Drive and Filter on the Kick, Snare and Hats Mix pages, and the drums on the second core: [releases/0.41.md](releases/0.41.md); what 0.40 brought, drums on the metronome's keys (a Grids beat you morph, six kits, following your loop), the click following MASTER and the beat off at power-on: [releases/0.40.md](releases/0.40.md); what 0.39 brought, MIDI Roots (a whole keyboard plays the chords, shown on the home screen), pads holding the chord keys and the Options in groups that reopen where you left them: [releases/0.39.md](releases/0.39.md); what 0.38 brought, chords that glide into each other in POLY and a Glide of up to 30 s that shows the time it takes: [releases/0.38.md](releases/0.38.md); what 0.37 brought, Bass Solo in the octave you play, loops locked to MIDI Clock In however the pulses arrive and the PERF knobs in the same places across modes: [releases/0.37.md](releases/0.37.md); what 0.36 brought, 21 more Key Mode scales (the modes, pentatonics, blues, bebop, whole tone, diminished, eastern scales and Barry Harris's 6th-diminished): [releases/0.36.md](releases/0.36.md); what 0.35 brought, the bass Following the chords' performance and PERF held switching between the two PERF layers: [releases/0.35.md](releases/0.35.md); what 0.34 brought, Chord and Bass Perform, each part with its own performance mode: [releases/0.34.md](releases/0.34.md); what 0.33 brought, no pop at power-on, MIDI CC on the sounds' parameters and the filter on the chords or the bass alone: [releases/0.33.md](releases/0.33.md); 0.32 is 0.31 with a flash driver that waits out a slow erase or write, for the newer FM-1s' slower flash chip, [releases/0.32.md](releases/0.32.md); what 0.31 brought, USB Host and two FM-1s on one cable: [releases/0.31.md](releases/0.31.md); what 0.30 brought, Bluetooth MIDI and incoming start and stop with MIDI Clock Out: [releases/0.30.md](releases/0.30.md); 0.29.2 is 0.29.1 with loops that stay in time with an incoming MIDI clock, [releases/0.29.2.md](releases/0.29.2.md); 0.29.1 is 0.29 for the newer FM-1s with the second flash chip, [releases/0.29.1.md](releases/0.29.1.md); what 0.29 brought, FIZZ's engine in FM TONE and Digitone II sounds: [releases/0.29.md](releases/0.29.md); 0.28 is 0.27's firmware with the Digitone importing of the web pages, [releases/0.28.md](releases/0.28.md); what 0.27 brought, the FX routing: [releases/0.27.md](releases/0.27.md)). It is written for someone who owns an
+231:the scale, an idle button), middle (the tonic) and fully lit. With Key Mode off the root keys are dark: only the notes
+234:layers, in the KEY layer too): the notes of the scale glow at the low level, the tonic's keys at a middle level, the
+237:you that Key Mode is on, which key it is, and where the tonic sits. The layers that use the root keys for something
+244:moved by OCT- / OCT+. The lights show what sounds, not what you press: with Transpose at +5 in the KEY layer, D4
+251:with Key Mode on, the keys of the scale are lit, the tonic like the rest, and the keys outside it are dark.
+457:- **Picking keys** are on D4 to G5 in both layouts: the loop slots, the naming letters and the KEY layer's tonic;
+494:pentatonics, blues, bebop, whole tone, diminished, some eastern scales and Barry Harris's 6th-diminished
+495:([Scales](#scales)). The root keys light the key: the scale's notes glow, the tonic's keys are
+500:<img src="manual/layer-key.png" width="240" alt="The KEY layer: a keyboard with the tonic lit yellow, and four cells Tonic, Scale, Transpose, Single">
+504:| any root key | that note becomes the tonic and Key Mode switches on. The scale stays as it is, unless MIN is held with the root while the scale is a major one (then Minor), or MAJ while it is a minor one (then Major) |
+506:| KNOB 1 | Tonic, step by step (Key Mode switches on) |
+508:| KNOB 3 | Transpose, -24 to +24 semitones. It moves everything you play from then on, in or out of Key Mode |
+559:The pentatonics, Blues and Hirajoshi have five or six notes. The lights, Key plays `Notes` and Snap use just those
+564:raised 5th added, eight notes, each with one of two chords. The tonic's 6th chord sits on C, E, G and A, always with
+574:**Keys: pick or play.** The layer opens with its keys on **pick**: the root keys set the tonic, MAJ and MIN the
+577:the tonic, the scale, the transposition and Single. The top of the layer says which it is (`key · keys pick`,
+627:- In the KEY layer with its keys on pick, the keys still pick: a root sets the tonic, MAJ and MIN the scale (the
+659:The numeral counts from the tonic to the root **as you played it**: Transpose is left out. With Transpose +1 in C
+661:degree you played). So the tonic chord always reads `I`. A chord played back by a loop is counted with the Transpose
+666:**Solfège** shows the same degree as a solfège syllable in the numeral's place, with Do on the tonic whatever the
+671:(`#FA`, `bTI`), and the tonic chord is `DO` at any Transpose. Fixed do, where Do is always the note C (the note
+718:| KEY | KEY (SEL) | a keyboard with the tonic lit | set the tonic (OPT tap: they play instead) | Key Mode on / off | close |
+1293:<img src="manual/loop-editor-trig.png" width="240" alt="The loop editor, page Trig: the same row, the second step with two ticks at its top and a blue strip at its right; Am +2 under the grid; cells Ratchet x2, Condition 1:2, Voicing +2, Transpose A4">
+1335:| KNOB 4 | **Transpose**: moves the selected step's notes up or down, a semitone a click. A C major chord one click up is C# major. The cell shows the step's root note (`C#4`), and while you turn, how far you have moved it (`+1`) |
+1352:- **Transpose.** It changes the notes stored in the step: every chord and note that starts in it, the bass note too,
+1691:| transposes and coarse tunings in semitones | octaves |
+1871:  the grains at random and plays some of them in reverse; **PITCH** transposes, -24 to +24 semitones. **SCAN** moves
+2024:  clock, USB Record, USB Level and USB Rate, Dual Core and the rest), Key Mode with its tonic, scale and Transpose, Single
+2089:| Key Mode, the tonic, the scale, Transpose; **Single Notes and the split point**; the KEY layer's keys (pick or play), Key plays, Keyboard and Numerals | **Options:** Play Style, Extension Addition, Secret Chords, 6th with 7th, Velocity | notes that were sounding, a chord LATCH was holding |
+2637:| Chords come out in the wrong key | Transpose is set (Geek Out shows `Trans`) | KEY layer, KNOB 3 back to 0 |
+2695:| SEL | KEY | Key Mode on / off | KEY layer: a root = tonic · MAJ / MIN = scale (again: the next of its kind) · KNOB 1 Tonic · 2 Scale (23) · 3 Transpose · 4 Single (Full / Split Oct / Split Bass) · SELECT: page 2: KNOB 1 Key plays (Chords / Notes) · 2 Keyboard (Chords / Full) · 4 Numerals (Off / On / Solfège) · GLO: the keys pick / play |
+(eval):1: no matches found: --include=*.c
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 07:06:08Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/vendor/ChoralRootFM1; sed -n 240,250p docs/MANUAL.md; sed -n 655,665p docs/MANUAL.md; grep -n -i "wtf\|jazz\|secret chord\|power chord\|aug" docs/MANUAL.md | head -40`
+
+```text
+**The notes that sound.** While a chord sounds, every root key that carries the name of one of its notes is lit: D
+major lights the D, F# and A keys in both octaves (there is one A). The octave does not matter, so a chord that
+KNOB 1 has voiced far up or down, beyond the two octaves of the root keys, still shows on them, and so does a chord
+moved by OCT- / OCT+. The lights show what sounds, not what you press: with Transpose at +5 in the KEY layer, D4
+alone lights the two G keys. The chord keys never light for a note; they keep showing the chord type and LOCK. On
+the Full keyboard all 27 keys are note keys, so every key of that name lights there. The bass part's own note does
+not light the keys.
+
+Options > LEDs chooses between Glow (idle keys glow dim, active ones are bright) and Stock (the other way round).
+Stock has two levels only and is as it always was: idle chord keys and, with Key Mode off, every root key are lit;
+diminished chord, `+` after an augmented one. When nothing sounds there is no numeral, and the name stays where it
+is. While an arpeggio or another performance mode steps through the chord, the name sits a little lower to make room
+for the numeral. The other views (Keyboard, Notes, Geek Out, Scope, Geek Out 2) and the layers show no numeral.
+
+The numeral counts from the tonic to the root **as you played it**: Transpose is left out. With Transpose +1 in C
+major, the chord on C sounds as C sharp major; the name says `C#M` (what you hear) and the numeral says `I` (the
+degree you played). So the tonic chord always reads `I`. A chord played back by a loop is counted with the Transpose
+that is set now. A root that is not a note of the scale gets a `b` or a `#` (`bVII`); in Key Mode the keys cannot
+play one, because a key outside the scale plays a chord on a scale note, so you will see one only when the key is
+changed under a sounding chord or under a loop. Numerals changes nothing you hear.
+
+276:- With two types held, the one pressed last counts (unless it is a [secret chord](#secret-chords); G#3 + A#3 is
+278:- Extensions stack: MAJ + 6 + 9 reads `D` `6 9`. Three extensions read `JAZZ`, all four `WTF`.
+308:| MAJ + 7 + 6 + 9 | `D` `JAZZ` | `D13` |
+329:- The [secret chords](#secret-chords): `D+` and `D5` as before; the power chord with a 9 is `Dsus2`, with a 7
+332:- With **both sevenths** held (7 + M7) there is no such name: those chords keep the Orchid's (`7 M7`, `JAZZ`,
+333:  `WTF`). Nothing else reads `JAZZ` or `WTF` in Standard.
+412:### Secret chords
+414:Options > Secret Chords: Off (default), Simple (only while Play Style is Simple) or All. When it applies, type keys
+419:| F#3 + G#3 + A#3 (DIM + SUS) | DIM + SUS | power chord (root, fifth, octave) | `D` with a small `5` |
+420:| F#3 + A#3 | MAJ + SUS | augmented | `D+` |
+446:- **Secret chords** (only with Secret Chords on): F#3 + G#3 is m add4, F#3 + A#3 augmented, all three the power
+447:  chord. With Secret Chords on, a pair waits for the window's close (F#3 could still join). With them off, those
+485:There is no SUS Window in Classic (SUS has its own key), and the secret chords are two types held together (DIM +
+550:| Whole Tone | MAJ | C+7 D+7 E+7 F#+7 G#+7 A#+7 | an augmented chord |
+654:with a major third (and for sus chords, power chords and single notes), small letters for a minor third; `°` after a
+655:diminished chord, `+` after an augmented one. When nothing sounds there is no numeral, and the name stays where it
+670:diminished chord (`ti°`), `+` after an augmented one, a `b` or `#` before a root that is not a note of the scale
+1949:| **Secret Chords** | Off, Simple, All | Off | two chord types together make a third chord ([Secret chords](#secret-chords)) |
+1993:| **Chord Names** | Orchid, Standard | Orchid | how a chord is named on every screen. Orchid: by the keys held, as the Orchid does (`A` `7 9`, `JAZZ`). Standard: as a lead sheet names the notes that sound (`A9`, `Aadd9`, `A13`). Only the name changes, never the notes ([Chord names](#chord-names)) |
+2089:| Key Mode, the tonic, the scale, Transpose; **Single Notes and the split point**; the KEY layer's keys (pick or play), Key plays, Keyboard and Numerals | **Options:** Play Style, Extension Addition, Secret Chords, 6th with 7th, Velocity | notes that were sounding, a chord LATCH was holding |
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 07:06:13Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/vendor/ChoralRootFM1; sed -n 262,340p docs/MANUAL.md; sed -n 410,425p docs/MANUAL.md; sed -n 440,450p docs/MANUAL.md; sed -n 470,490p docs/MANUAL.md`
+
+````text
+| G#3 | MIN | 3, 7 | `Dm` |
+| A#3 | MAJ | 4, 7 | `DM` |
+| G#3 + A#3 | SUS | 5, 7 | `Dsus` |
+| F3 | 6 | adds 9 | `D` with a small `6` |
+| G3 | m7 | adds 10 | `D` with a small `7` (on a sus chord: `m7`) |
+| A3 | M7 | adds 11 | `D` with a small `M7` |
+| B3 | 9 | adds 14 | `D` with a small `9` |
+
+The keys are the FM-1 layout's, the default ([The Classic chord keys](#the-classic-chord-keys) has the other one: SUS
+on C#4, the 9 on C4).
+
+- **SUS is G#3 and A#3 together**, always: press both small black keys with one finger. A root pressed while the pair
+  is still landing waits for it ([the SUS Window](#the-fm-1-chord-keys)), so a minor chord never turns into a sus
+  chord under your fingers.
+- With two types held, the one pressed last counts (unless it is a [secret chord](#secret-chords); G#3 + A#3 is
+  always SUS).
+- Extensions stack: MAJ + 6 + 9 reads `D` `6 9`. Three extensions read `JAZZ`, all four `WTF`.
+- **A major chord on its own reads with a capital `M`: `DM`.** A minor chord has a small `m` (`Dm`). With an
+  extension the major chord's `M` is left out, as chord names are usually written: `D` with a small `7`, `6`, `9` or
+  `M7` (the major seventh, not "D major" plus a 7). The name is the same on every screen: the views, the PERF layer,
+  the sequencer.
+- A root with no chord key is a single note (unless Key Mode is on): it reads as the note's name alone, `D`.
+- Under the name the screen lists the notes as they are voiced. Extension notes are orange.
+- The name of the last chord stays on the screen until the next one.
+- **The 6 with a seventh.** The 6 key adds the note 9 semitones above the root, right under a seventh (on D: B4
+  under C5 or C#5). That is how the Orchid plays it and it is the default. **Options > 6th with 7th** set to
+  **Octave up** plays that 6th an octave higher whenever the chord also has the 7 or the M7 (or both): D + 7 + 6 is
+  then D F# A C and the B above them, a 13th chord. Chords without a seventh (`D` `6`, `D` `6 9`) and single notes do
+  not change, on every chord type; the name on the screen does not change either. KNOB 1 voices the raised note as
+  the top note it is (one step down brings it back inside). A recorded loop holds chords, not notes, so it plays by
+  whichever value is set while it plays. The option acts from the next chord on: one that is sounding keeps its
+  notes.
+
+### Chord names
+
+The names above are the Orchid's: they say which keys you hold. **Options > Chord Names** chooses between them and
+the names a lead sheet would use for the notes that sound. Only the name on the screen changes: the notes, the
+MIDI and a recorded loop are the same under either, and you can switch at any time.
+
+| You hold (root D) | Orchid (default) | Standard |
+| --- | --- | --- |
+| MAJ | `DM` | `DM` |
+| MAJ + 9 | `D` `9` | `Dadd9` |
+| MAJ + 7 + 9 | `D` `7 9` | `D9` |
+| MAJ + 6 + 9 | `D` `6 9` | `D6/9` |
+| MAJ + 7 + 6 | `D` `7 6` | `D13` |
+| MAJ + 7 + 6 + 9 | `D` `JAZZ` | `D13` |
+| MAJ + M7 + 9 | `D` `M7 9` | `DM9` |
+| MIN + 9 | `Dm` `9` | `Dmadd9` |
+| MIN + 7 + 9 | `Dm` `7 9` | `Dm9` |
+| SUS | `Dsus` | `Dsus4` |
+| SUS + 7 | `Dsus` `m7` | `D7sus4` |
+| SUS + 7 + 9 | `Dsus` `m7 9` | `D9sus4` |
+| DIM + 6 | `Ddim` `6` | `Ddim7` |
+| DIM + 7 | `Ddim` `7` | `Dm7b5` |
+| MAJ + 7 + M7 | `D` `7 M7` | `D` `7 M7` |
+
+In Standard:
+
+- A 9 without a seventh is `add9`; with the 7 it is `9`, with M7 `M9`. The major seventh is always written `M`.
+- A 6 with a seventh is a `13` (`D13`, `Dm13`, `DM13`), with or without the 9. The 6th still sounds where it
+  always did, inside the octave: the name changes, not the voicing. To hear it as a 13th, an octave up, set
+  **Options > 6th with 7th** to Octave up ([Types and extensions](#types-and-extensions)); the two options are
+  separate, and either naming goes with either.
+- SUS is the fourth, so it reads `sus4`, and a seventh or ninth goes in front: `D7sus4`, `D9sus4`.
+- On a diminished chord the 6 key gives the diminished seventh (`Ddim7`) and the 7 key the half-diminished chord
+  (`Dm7b5`).
+- The [secret chords](#secret-chords): `D+` and `D5` as before; the power chord with a 9 is `Dsus2`, with a 7
+  `D7no3`; `Dm` `add4` with extensions reads `Dm7add4`, `Dm9add4`.
+- A major chord on its own still reads `DM`, because `D` alone is a single note.
+- With **both sevenths** held (7 + M7) there is no such name: those chords keep the Orchid's (`7 M7`, `JAZZ`,
+  `WTF`). Nothing else reads `JAZZ` or `WTF` in Standard.
+
+The full list, with the notes of every chord, is in [CHORD-NAMES.md](CHORD-NAMES.md).
+
+### LOCK
+
+The **LFO** button switches LOCK on and off; LFO is lit and `lock` shows at the top right while it is on (with the
+Classic chord keys LOCK is the key B3). A chord key pressed while LFO is down switches LOCK at that moment. With LOCK
+sounds in that chord until then.
+
+### Secret chords
+
+Options > Secret Chords: Off (default), Simple (only while Play Style is Simple) or All. When it applies, type keys
+held together make a third chord:
+
+| Held (FM-1 keys) | Classic keys | Chord | On the screen |
+| --- | --- | --- | --- |
+| F#3 + G#3 + A#3 (DIM + SUS) | DIM + SUS | power chord (root, fifth, octave) | `D` with a small `5` |
+| F#3 + A#3 | MAJ + SUS | augmented | `D+` |
+| F#3 + G#3 | MIN + SUS | minor with a fourth instead of a fifth | `Dm` with a small `add4` |
+
+The small `5` and `add4` are red. Extensions stack on top as usual.
+
+### The FM-1 chord keys
+- **The SUS Window** (Options > SUS Window, 30 to 80 ms, 30 by default). One finger never lands on both keys at
+  once. A root pressed while the first of the pair is down and its window still open waits, and plays when the
+  chord is decided: at once when the pair is complete, or when the window closes (then G#3 alone is MIN, A#3 alone
+  MAJ). So you never hear a minor chord turn into a sus chord. A root with no type key down, or with type keys held
+  from before, plays at once. A chord that is already sounding (Advanced, Free, or LOCK with roots held) changes
+  once, at the same moment. In Simple a root pressed before the type keys stays a single note.
+- **Secret chords** (only with Secret Chords on): F#3 + G#3 is m add4, F#3 + A#3 augmented, all three the power
+  chord. With Secret Chords on, a pair waits for the window's close (F#3 could still join). With them off, those
+  pairs are "the last pressed wins", and only G#3 + A#3 combine.
+- **LOCK is on LFO**: tap LFO for LOCK on / off (the LFO light lit), hold it for the LOCK layer (LFO blinks; its
+  bottom line says `LFO: on/off`). A key pressed while LFO is down switches LOCK at that moment. A latched SUS shows
+| F#3 G#3 A#3 | DIM MIN MAJ | the same |
+| C#4 | **SUS**, a key of its own | a root (SUS is G#3 + A#3) |
+| F3 G3 A3 | 6 m7 M7 | the same |
+| C4 | **9** | a root (the 9 is B3) |
+| B3 | **LOCK** (tap: on / off, lit; held: the LOCK layer) | the 9 |
+| LFO | **LATCH** (tap) | LOCK (LATCH: GLO held + LFO) |
+| roots | D4 to G5 (18) | C4 to G5 (20) |
+
+```
+black      DIM   MIN   MAJ         SUS
+           F#3   G#3   A#3         C#4     D#4   ...
+white    6     m7    M7    LOCK  9       D4    E4    F4   ...   G5
+         F3    G3    A3    B3    C4      |-------- roots --------|
+```
+
+There is no SUS Window in Classic (SUS has its own key), and the secret chords are two types held together (DIM +
+SUS, MAJ + SUS, MIN + SUS). On the Full keyboard B3 is a note, so there is no LOCK there.
+
+### Key Mode
+
+Tap **KEY** (printed SEL): the KEY light comes on and `Key: C` shows at the top left. Now a root key on its own plays
+````
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 07:06:22Z)**_
+
+<think><details><summary>Thought Process</summary>
+我接下來先查 ChoralRoot 上游手冊，確認 transpose、和弦命名與鍵名的由來，然後再看網頁燒錄工具與 Agent Deck 的藍牙及自動送字行為，最後寫入 docs。
+
+</details></think>
+
+_**Agent (claude-opus-5-5 2026-11-17 07:06:23Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/vendor/ChoralRootFM1; ls docs; grep -n -i "WTF\|JAZZ" docs/CHORD-NAMES.md | head; grep -n -i "orchid's button\|printed\b.*orchid\|names of the orchid\|the orchid's names\|labels" docs/MANUAL.md | head -15; grep -n -i "sampl\|audio in\|line in" docs/MANUAL.md | head -10; grep -n -i "install\|browser\|web midi\|webusb\|m-flasher" README.md | head -20`
+
+```text
+ble
+manual
+notes
+releases
+AUDIO-QUALITY.md
+BLE-LINK.md
+BOOT-SAFETY.md
+CHORD-LAYOUT.md
+CHORD-NAMES.md
+CZ1.md
+DEVICE-MANAGER.md
+DUALCORE.md
+EDITOR.md
+FLASH.md
+FM6.md
+FX.md
+GRAIN.md
+HANDOFF-WEBSITE.md
+HANDOFF.md
+HISTORY.md
+INSTALL-COMPAT.md
+INTEGRATION.md
+LAYOUT-TOOL.md
+LOOPER-MODES.md
+LOOPER.md
+MANUAL.md
+PRESETS.md
+PROPHET.md
+QUAD.md
+SETTINGS.md
+SOUNDS.md
+TRANSPORTER-HANDOFF.md
+UNBRICK-HANDOFF.md
+USB-AUDIO.md
+VA.md
+VELOCITY.md
+12:  "Standard Chord Naming Framework" (one extension as a superscript, two in a row, three = `JAZZ`, four = `WTF`;
+75:   Orchid's name exactly: `C7 M7`, `JAZZ` with one more extension, `WTF` with both. Nowhere else does Standard say
+76:   `JAZZ` or `WTF`: the 14 other `JAZZ` cells (7 + 6 + 9 and M7 + 6 + 9) are `13` and `M13`.
+110:| MAJ + 6 + 7 + M7 | 0 4 7 9 10 11 | `CJAZZ` | `CJAZZ` (the same) | both sevenths: Orchid's name stands |
+114:| MAJ + 6 + 7 + 9 | 0 4 7 9 10 14 | `CJAZZ` | `C13` | seventh, 6th and 9th: a 13th chord |
+116:| MAJ + 6 + M7 + 9 | 0 4 7 9 11 14 | `CJAZZ` | `CM13` | seventh, 6th and 9th: a 13th chord |
+117:| MAJ + 7 + M7 + 9 | 0 4 7 10 11 14 | `CJAZZ` | `CJAZZ` (the same) | both sevenths: Orchid's name stands |
+118:| MAJ + 6 + 7 + M7 + 9 | 0 4 7 9 10 11 14 | `CWTF` | `CWTF` (the same) | both sevenths: Orchid's name stands |
+131:| MIN + 6 + 7 + M7 | 0 3 7 9 10 11 | `CmJAZZ` | `CmJAZZ` (the same) | both sevenths: Orchid's name stands |
+135:| MIN + 6 + 7 + 9 | 0 3 7 9 10 14 | `CmJAZZ` | `Cm13` | seventh, 6th and 9th: a 13th chord |
+11:  (printed SEL). The printed labels belong to the stock firmware and mostly mean something else here. The tables in
+54:- **Not what the panel says.** Most printed labels have another job (SEL is KEY, ARP is PERF, ENV is BASS, and so on),
+52:  sequencer, sampler and drum sounds are not in it; every sound is synthesised. You can switch to another firmware,
+1728:  the voices left over ring out. FM6 keeps its own portamento (the patch's), and the sampled engines (GRAIN, the
+1729:  samples) do not glide chords.
+1772:| FILT | (1) `FILTER`, under the filter curve: Attack · Decay · Sustain · Release (the filter's envelope), and Freq · Reso · Type · Env depth (by the type: below). (2) `FILTER 2`: Env delay · Key track · Shape · Gain, and Base · Width · BW route. (3) `CRUSH`: Bits (0 off, up to 1 bit) · Rate (sample-rate reduction: 0 off, up to 1/64) · Route (POST after the filter, PRE before it) |
+2130:Over USB the computer sees one device, **ChoralRoot FM-1**: a MIDI port of that name, and an audio input,
+2423:**ChoralRoot In** is a class-compliant audio input: no driver is needed. It has six channels, 16 bit, at 44.1 kHz;
+2432:The three pairs line up to the sample. With Options > Output on Clean all three are 0.7 ms later than with Classic
+2448:- Options > USB Record = Off removes the audio input. When you change it, or USB Rate, the FM-1 leaves USB for
+2484:  (`.dn2pst`, or a `.dn2snd` from a backup) with its filter machine, AHD envelope, bit and sample-rate reduction,
+2675:| The computer shows no audio input | USB Record is Off | Options > USB Record: On |
+15:genkigenki's port, tested by SMK-37 owners. Install it from the
+16:[SMK-37 installer](https://quixotic7.github.io/ChoralRootFM1/webapp/smk37/) (Chrome or Edge), try it first in the
+20:## Install
+22:Try it in the browser first: <https://quixotic7.github.io/ChoralRootFM1/emu/> (the same firmware, with sound, no
+25:**From the browser:** open the web installer at <https://quixotic7.github.io/ChoralRootFM1/webapp/installer/> in
+26:Chrome or Edge, connect the FM-1 and press Install. The button names the version it writes (the newest), and the
+31:browser). A beta may have bugs and the latest stable release can replace it at any time; Install's default is
+33:installed on the computer: the page talks to the FM-1 over Web MIDI, and the firmware files come from the site
+35:interrupted install is resumed by pressing Install again (after a power loss too, from 0.16 on: see "If an install
+37:Afterwards the FM-1 restarts and reports the identity `FM-1_920`. Before installing, the page saves a backup of what
+38:is stored on the FM-1 (settings, user sounds, loops, FM6 patches) to a file, and after installing over
+41:**Before any install:** charge the FM-1 fully (it updates on its battery), connect it straight to the computer with a
+42:data cable (no hub), keep the computer awake, and leave the cable alone until the installer prints "done". Up to 0.15
+43:an update interrupted mid-write could leave the FM-1 dark with no USB device at all (docs/INSTALL-COMPAT.md, "Before
+44:an install"); from 0.16 on it comes back in update mode (below), except during the first second of the install of
+51:pip3 install python-rtmidi
+52:python3 tools/fm1_install.py choralroot-X.Y.fwsc --backup .   # back up to ./choralroot-backup-YYYYMMDD.json, install
+53:python3 tools/fm1_install.py --info          # identity of the connected FM-1 (FM-1_920 after the install)
+54:python3 tools/fm1_install.py --restore FILE  # a backup back onto the FM-1
+55:python3 tools/fm1_install.py --sounds        # the 32 user sounds; --export-sound N FILE / --import-sound N FILE /
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 07:06:27Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/vendor/ChoralRootFM1; sed -n 20,50p README.md; sed -n 48,56p docs/MANUAL.md; sed -n 1,40p docs/INSTALL-COMPAT.md`
+
+````text
+## Install
+
+Try it in the browser first: <https://quixotic7.github.io/ChoralRootFM1/emu/> (the same firmware, with sound, no
+FM-1 needed).
+
+**From the browser:** open the web installer at <https://quixotic7.github.io/ChoralRootFM1/webapp/installer/> in
+Chrome or Edge, connect the FM-1 and press Install. The button names the version it writes (the newest), and the
+page lists what is new in it beside the button. "Other versions" under the button offers the older ones from 0.16
+on, each with its notes and a sentence on what going back means (0.15 and older are only on
+[Releases](https://github.com/Quixotic7/ChoralRootFM1/releases): no protected update path). Beta releases
+(`0.22-beta1`) are opt-in: tick "Show beta releases" under the versions to see them (the page remembers it in that
+browser). A beta may have bugs and the latest stable release can replace it at any time; Install's default is
+always the newest stable release, also when the FM-1 runs a beta. Nothing is
+installed on the computer: the page talks to the FM-1 over Web MIDI, and the firmware files come from the site
+itself (`firmware/`, with their SHA-256, which the page checks before it writes). Do not unplug while it writes; an
+interrupted install is resumed by pressing Install again (after a power loss too, from 0.16 on: see "If an install
+was interrupted"). An update keeps your saved sounds, loops and settings.
+Afterwards the FM-1 restarts and reports the identity `FM-1_920`. Before installing, the page saves a backup of what
+is stored on the FM-1 (settings, user sounds, loops, FM6 patches) to a file, and after installing over
+Felucca it offers that backup back; its Back up and Restore buttons do the same at any time.
+
+**Before any install:** charge the FM-1 fully (it updates on its battery), connect it straight to the computer with a
+data cable (no hub), keep the computer awake, and leave the cable alone until the installer prints "done". Up to 0.15
+an update interrupted mid-write could leave the FM-1 dark with no USB device at all (docs/INSTALL-COMPAT.md, "Before
+an install"); from 0.16 on it comes back in update mode (below), except during the first second of the install of
+0.16 itself over an older version.
+
+**From the command line:** download `choralroot-X.Y.fwsc` from
+[Releases](https://github.com/Quixotic7/ChoralRootFM1/releases) (`SHA256SUMS` next to it), then
+
+```
+
+What it is not:
+
+- **Not the stock firmware with additions.** ChoralRoot replaces the FM-1's firmware while it is installed. The stock
+  sequencer, sampler and drum sounds are not in it; every sound is synthesised. You can switch to another firmware,
+  or put the stock one back, whenever you want ([Switching firmwares](#switching-firmwares)).
+- **Not what the panel says.** Most printed labels have another job (SEL is KEY, ARP is PERF, ENV is BASS, and so on),
+  and in the sound editor the buttons change again. A sticker sheet would carry the table of the
+  [quick reference](#18-quick-reference).
+# Which firmware ChoralRoot installs over
+
+An FM-1 that ran **Sloop** (a fork of Felucca 0.9-beta) ended in the chip's ROM boot mode (black screen, the
+computer shows a USB disk "WL82 UBOOT1.00", USB 4C4A:8057) after ChoralRoot was installed over it. A Reddit guide
+records the same symptom after **Felucca 0.9-beta -> 1.0.1**: the flash dump showed the new firmware written
+byte for byte, and the device came back once the old data (0x97000.., 0xFC000..) was erased. This page is what the
+host checks found, and the policy the installers follow (`web/fm1ota.js` `classifyFirmware`,
+`tools/fm1_install.py` `classify_firmware`).
+
+## Policy
+
+| running firmware | how it is recognised (handshake identity / INFO version) | install ChoralRoot? |
+|---|---|---|
+| official M-VAVE firmware (V15 and older) | `FM-1_001`..`FM-1_099` (V15: `FM-1_015`); no INFO | **allowed** |
+| Bubba Machine | the MIDI port "FM-1 Bubba Machine" (its handshake: `FM-1_003`); no INFO | **refused**, also with `--force` / the override ("Bubba Machine" below) |
+| Felucca 1.0 or later | `FM-1_9XY`, INFO `FELUCCA v1.0`, `v1.0.1`, `v1.1-rc1` ... | **allowed** |
+| Melodee | `FM-1_9...`, INFO `MELODEE v0.11.1` ... | **allowed** |
+| ChoralRoot | `FM-1_920`, INFO `ChoralRoot 0.12` ... | **allowed** |
+| RemoteFM1 0.2 and later | `FM-1_52XXYYZZ` (release X.Y.Z, two digits each: 0.2.1 `FM-1_52000201`), dev builds `FM-1_5200`; no INFO | **allowed** (RemoteFM1 below) |
+| Sloop | INFO `FELUCCA SLOOP 2.2` (dev build), `FELUCCA 2.2 BETA` (release build) | **refused** |
+| Sloop's rescue mode | `FM-1_000` | **refused** |
+| Felucca 0.x betas (0.9-beta and older) | `FM-1_909` ..., INFO `FELUCCA 0.9-BETA`, `FELUCCA 0.5 BETA` | **refused** |
+| anything else | a 9xx identity without INFO, another number, another INFO text | **refused** |
+| a device in update mode | `ota-FM-1_...` | the install / resume finishes the write |
+
+The 9xx identities cannot tell the firmwares apart: every Felucca-based build derives `FM-1_9XY` from its release
+number (Felucca 0.9-beta `FM-1_909`, Felucca 1.0 `FM-1_910`, Sloop 2.0 `FM-1_920`, which is ChoralRoot's own), and
+the dev builds are all `FM-1_900`. So after the handshake both installers send the backup protocol's INFO
+(`web/EDITOR_PROTOCOL.md`; read-only) and classify by its text. The stock firmware does not answer INFO, which is
+fine: it is recognised by its `FM-1_0NN` identity.
+
+A refusal says:
+
+> Installing over *NAME* is not supported: An install over it has left an FM-1 that no longer starts, and the data it leaves in the flash is not known to be safe for ChoralRoot. Return to the official V15 firmware with the installer you used
+> for *NAME* first, then install ChoralRoot. If an FM-1 is already dark (black screen, a "WL82 UBOOT1.00" USB disk):
+> https://github.com/Quixotic7/MvaveFM1Unbricker
+
+Overrides: `tools/fm1_install.py --force` (exit code 8 without it); on the page an "I understand the risk" box that
+appears only after a refusal, then a second confirm. The return to the official V15 (the page's "Return to official
+V15", or `fm1_install.py FM-1.fwsc`) is never refused: it is the way out.
+````
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 07:06:35Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/vendor/fm-1-agent-deck; grep -rn -i "bluetooth\|ble\b\|BLE " README.md docs 2>/dev/null | head -20; echo ---; grep -rn -i "continue" README.md docs host/*.py 2>/dev/null | head -30`
+
+```text
+README.md:33:sequencer, an arpeggiator, effects, a built-in speaker and a rechargeable
+README.md:34:battery into a pocketable box that comes in a stack of cheerful colorways.
+README.md:47:- **USB-C (MIDI + audio), Bluetooth MIDI and TRS MIDI** — it already speaks
+README.md:49:- and an active custom-firmware community that has made the box hackable
+README.md:239:in that catalog too. Up to 0.6.1 that was not possible: the packages
+README.md:314:stable for the life of the daemon process, in backend discovery order,
+README.md:468:`git reset --hard`, `sudo`, `--force`, `drop table`, `mkfs`/`dd`. On a
+README.md:491:fable-5-2 ctx 70k out 12k     <- model, context in use, tokens written
+README.md:532:| a quiet double note | an agent's context is getting full |
+README.md:683:tools in. Without the variable the container runs only the daemon and
+README.md:813:session is reproducible with `tools/emu_test.py`, and every package
+README.md:837:The build is reproducible: the same command in a clean clone on the
+README.md:894:write can leave the unit dark. This is recoverable — the JieLi chip's
+README.md:898:Still: flash on a charged battery / stable USB, and don't unplug
+README.md:906:| Daemon: "no FM-1 MIDI port found" (it then waits) | Unit not plugged in, not flashed with Agent Deck, or another app holds the port. `--port` prints what it sees; check the cable carries data. |
+README.md:940:  firmware base here (Dinghy) has no Bluetooth code at all: BLE MIDI
+README.md:991:Agent Deck stands on a remarkable few months of FM-1 community work:
+README.md:1004:  socket API makes the preferred backend possible.
+docs/cheatsheet.html:24:  table { width: 100%; border-collapse: collapse; }
+docs/cheatsheet.html:47:      <table>
+---
+README.md:354:| **PLAY** | start / continue; on a bare shell, start the default agent in it; on an **empty slot**, spawn a new agent there (`default_agent`, in a new Herdr workspace / tmux window) |
+README.md:385:| **PLAY + key** | start / continue that agent; on an empty key, spawn one there |
+README.md:617:| `presets` | 9 built-ins (`continue`, run tests + fix, summarize, review changes, commit, explain blocker, the test > review > commit pipeline, `/compact`, `/clear`) | the prompts PRESETS arms and SEQ sends: a string, `{"label": …, "text": …}`, or a pipeline `{"label": …, "steps": [ … ]}` |
+README.md:722:  occupies the pane, PLAY sends it a `continue` prompt instead.
+docs/cheatsheet.html:73:        <tr><td><kbd>PLAY</kbd></td><td>start / continue; on an empty key, start a new agent there</td></tr>
+docs/play/fwsc.js:171:    if (!h.pkg || known.has(h.id) || skipped[h.id]) continue;
+docs/play/main.js:1150:    if (record.device && record.device !== DEVICE) continue;
+docs/play/worklet.js:189:        continue;
+docs/editor/defaults.json:3:    "continue",
+host/agtdeck.py:18:  PLAY        start / continue; on an       K1        scroll the detail text
+host/agtdeck.py:162:        "continue",
+host/agtdeck.py:285:    return out or [{"label": "continue", "text": "continue",
+host/agtdeck.py:286:                    "steps": ["continue"]}]
+host/agtdeck.py:502:        r"Press (Enter|any key) to continue",
+host/agtdeck.py:548:                continue
+host/agtdeck.py:629:                self._tmux("send-keys", "-t", agent_id, "-l", "continue")
+host/agtdeck.py:734:                    continue        # an event or stray reply; skip
+host/agtdeck.py:875:            # "continue" at its prompt (and a failure there is the real
+host/agtdeck.py:886:                             {"target": agent_id, "text": "continue"})
+host/agtdeck.py:1012:            continue                           # request blobs: not for us
+host/agtdeck.py:1016:            continue
+host/agtdeck.py:1018:            continue
+host/agtdeck.py:1064:                    continue
+host/agtdeck.py:1161:                    continue
+host/agtdeck.py:1243:                continue
+host/agtdeck.py:1593:                continue
+host/agtdeck.py:1605:                continue                      # more agents than slots
+host/agtdeck.py:1691:                continue
+host/agtdeck.py:1751:                continue
+host/agtdeck.py:1755:                continue
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 07:06:39Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/vendor/fm-1-agent-deck; sed -n 935,948p README.md; sed -n 345,395p README.md; sed -n 600,625p README.md; sed -n 715,726p README.md; sed -n 860,892p host/agtdeck.py; sed -n 610,635p host/agtdeck.py`
+
+```text
+## Scope limits & roadmap
+
+Limits, honestly:
+
+- **USB-MIDI only.** The protocol is transport-agnostic, but the
+  firmware base here (Dinghy) has no Bluetooth code at all: BLE MIDI
+  would mean writing a radio driver for the FM-1, not switching one on.
+- **No text entry on the device.** SEQ sends one of your prompt presets
+  (PRESETS picks); free-form prompts are typed at the agent itself
+  (27 keys ≠ a keyboard, whatever the synth pretends).
+- **54 slots max** (2 pages); a new agent takes the first free slot (or
+  the empty one you pressed PLAY on) and keeps it across daemon restarts.
+- **1 s delta updates.** This is a status deck, not a terminal; the
+  DETAIL page shows 6 wrapped lines at a time (K1 scrolls back ~200
+
+### Buttons and encoders
+
+Actions are executed by the host daemon against the *selected* agent:
+
+| Control | Action |
+|---|---|
+| **Keys** | select a slot (empty ones too) |
+| **SELECT** encoder | move the selection across agents |
+| **PLAY** | start / continue; on a bare shell, start the default agent in it; on an **empty slot**, spawn a new agent there (`default_agent`, in a new Herdr workspace / tmux window) |
+| **REC** | approve the pending prompt |
+| **SAVE** | approve *and don't ask again* — picks the prompt's "Yes, and don't ask again / allow all…" option when one is on screen; otherwise does nothing and says so |
+| **FX** | deny (Esc) |
+| **ENV** | interrupt (Ctrl-C) |
+| **SEL** | Enter |
+| **K2** / **K3** encoders | Up·Down / Left·Right arrow keys — with SEL, enough to answer any menu an agent shows |
+| **LFO** | cycle the agent's mode (Shift+Tab). Lit while the selected agent is marked (firmware 0.4) |
+| **PRESETS** encoder | arm a prompt preset (shown on the footer line) |
+| **SEQ** | send the armed preset as a prompt. To a BLOCKED agent it is **queued** instead and goes out once the agent is free (the row shows `Q`, firmware 0.6) |
+| **ARP** | toggle auto-approve for this agent (row shows `A`, ARP lights); the daemon then approves its prompts as they appear. Off by default, forgotten when the daemon restarts |
+| **K1** encoder | scroll DETAIL back through the agent's output; on the MENU page, move a page at a time |
+| **K4** encoder | jump to the next agent that needs you (BLOCKED, then ERROR, then DONE) |
+| **EDIT** | DETAIL page — and focus that pane on the computer. Pressed again on DETAIL: cycle **OUTPUT**, **INFO** and **DIFF** (below) |
+| **HOME** / **GLO** | GRID page / APPROVALS page. HOME pressed again on the GRID flips it between the **list** and the **boxes** (firmware 0.6). GLO pressed again on APPROVALS jumps to the agent that has waited longest (the oldest BLOCKED, else an ERROR, else a DONE) |
+| **ALGORITHM** encoder | cycle GRID → DETAIL → APPROVALS → MENU → ABOUT |
+| **OCT− / OCT+** | previous / next slot page (54 slots total) |
+| **GLO held +** REC / FX / ENV / SEQ / ARP | the same for *every* agent it applies to: approve or deny all BLOCKED, interrupt all WORKING, send the preset to all IDLE/DONE, auto-approve off everywhere. **While any agents are marked, the same buttons act on the marked ones only**, and GLO + LFO clears the marks |
+| **MASTER** | chime volume |
+
+**Chords** (firmware 0.3) — hold a button and tap keys; the cursor stays
+where it is, and while the button is held the keys light up to show what
+a tap would hit:
+
+| Chord | Action |
+|---|---|
+| **REC + key** | approve *that* agent (blocked ones blink) |
+| **FX + key** | deny that agent |
+| **ENV + key** | interrupt that agent (working ones blink) |
+| **SEQ + key N** | send prompt preset N to the selected agent |
+| **SEL + key N** | answer option N — types the digit 1–9. When the prompt on screen has numbered choices, exactly those keys light (the "don't ask again" one blinks) and the footer names the one you picked |
+| **PLAY + key** | start / continue that agent; on an empty key, spawn one there |
+| **SAVE + key** | move the selected agent to that key (a swap if it is taken) |
+| **LFO + key** | **mark / unmark** that agent (marked keys light). Marks make a group: GLO + REC / FX / ENV / SEQ then acts on just those agents. The row shows `+` (firmware 0.5) |
+| **ARP + key** | toggle auto-approve on that agent (keys on auto light) |
+| **SEQ held ~1 s** | **repeat mode**: send the armed prompt to this agent every time it finishes a turn, up to `repeat_max` times. The row shows `R` and SEQ stays lit; hold SEQ again to stop |
+
+**Knobs with a button held** (firmware 0.3):
+
+| Combo | Action |
+|---|---|
+| **PLAY held + PRESETS** | choose which agent PLAY starts (cycles the installed CLIs) |
+**Installing it as a command** (optional; running the file works as
+before): `pip install .` or `pipx install .` in a clone gives an
+`agtdeck` command, as does
+`uvx --from git+https://github.com/kevinelliott/fm-1-agent-deck agtdeck --doctor`
+without one.
+
+### Config
+
+Optional. Copy [`host/config.example.json`](host/config.example.json) to
+`~/.config/agtdeck/config.json` (or pass `--config`); anything left out
+keeps its default. There is a
+[config editor](https://kevinelliott.github.io/fm-1-agent-deck/editor/)
+in the browser (in this repo: `docs/editor/`): it builds the file for
+you to download and talks to nothing.
+
+| Key | Default | Meaning |
+|---|---|---|
+| `presets` | 9 built-ins (`continue`, run tests + fix, summarize, review changes, commit, explain blocker, the test > review > commit pipeline, `/compact`, `/clear`) | the prompts PRESETS arms and SEQ sends: a string, `{"label": …, "text": …}`, or a pipeline `{"label": …, "steps": [ … ]}` |
+| `default_agent` | `claude` | what PLAY starts on an empty slot |
+| `agents` | `claude`, `codex`, `opencode`, `grok`, `copilot` | shell command per agent kind (add flags here) |
+| `spawn_cwd` | `null` | where a spawned agent starts; `null` = the selected agent's directory |
+| `projects` | `[]` | extra directories offered by MENU → NEW AGENT |
+| `queue_when_working` | `false` | hold a prompt for a WORKING agent until its turn is over, instead of sending it mid-turn |
+| `auto_never` | see above | regular expressions (case-insensitive); auto-approve leaves a matching prompt to you. `[]` turns the check off |
+| `auto_only` | `[]` | when not empty, an allow-list: auto-approve answers only prompts matching one of these, and never one matching `auto_never` |
+| `follow` | `false` | move the selection to an agent when it blocks |
+  BLOCKED agent** (`agent_blocked`), so the daemon surfaces that instead
+  of typing over an approval dialog. For plain shell panes it falls back
+  to `pane.send_input`.
+- Approve/deny/interrupt via `pane.send_keys` with logical keys
+  (`1`+`enter`, `esc`, `ctrl+c`). (`agent.send_keys` only accepts active
+  *named* agents; pane-level keys work for every occupant.)
+- Start via `agent.start` (`{name, kind, pane_id}`); if an agent already
+  occupies the pane, PLAY sends it a `continue` prompt instead.
+- A best-effort `events.subscribe` listener nudges the roster on changes;
+  the 1 s poll remains authoritative.
+
+**Verified live against Herdr 0.9.5** (2026-11-08, log in
+            # BLOCKED agent. For a plain shell / unnamed pane occupant, use
+            # pane.send_input with the same text plus an Enter key.
+            try:
+                self.request("agent.prompt",
+                             {"target": agent_id, "text": arg or ""})
+                return
+            except BackendError as e:
+                if "agent_blocked" in str(e):
+                    raise
+                self.request("pane.send_input", {
+                    "pane_id": agent_id, "text": arg or "",
+                    "keys": ["enter"]})
+                return
+        if action == "start":
+            # If Herdr already recognises an agent in this pane, PLAY means
+            # "continue" at its prompt (and a failure there is the real
+            # error — do not fall through to agent.start, which would just
+            # report the pane busy). Otherwise start the requested kind in
+            # the shell pane; agent.start requires {name, kind, pane_id}
+            # and the name must match [a-z][a-z0-9_-]{0,31}.
+            try:
+                self.request("agent.get", {"target": agent_id})
+            except BackendError:
+                pass
+            else:
+                self.request("agent.prompt",
+                             {"target": agent_id, "text": "continue"})
+                return
+            if kind not in self.START_KINDS:
+                raise BackendError(
+                    "herdr: cannot start kind %r via agent.start" % kind)
+            safe_pane = re.sub(r"[^a-z0-9_-]+", "-", agent_id.lower())
+            name = ("ad-%s-%s" % (kind, safe_pane))[:32].strip("-")
+        if action == "approve":
+            self._send(agent_id, *self.APPROVE.get(kind,
+                                                   self.APPROVE["unknown"]))
+        elif action == "deny":
+            self._send(agent_id, "Escape")
+        elif action == "interrupt":
+            self._send(agent_id, "C-c")
+        elif action == "prompt":
+            if arg:
+                self._tmux("send-keys", "-t", agent_id, "-l", arg)
+                self._send(agent_id, "Enter")
+        elif action == "start":
+            cmd = self.START_CMD.get(kind)
+            agents = {a["id"]: a for a in self.list_agents()}
+            cur = agents.get(agent_id, {}).get("_cmd", "")
+            if cmd and os.path.basename(cur) in ("bash", "zsh", "sh", "fish"):
+                self._tmux("send-keys", "-t", agent_id, "-l", cmd)
+                self._send(agent_id, "Enter")
+            elif arg is None:
+                self._tmux("send-keys", "-t", agent_id, "-l", "continue")
+                self._send(agent_id, "Enter")
+        else:
+            raise BackendError("tmux: unknown action %r" % action)
+
+    def spawn(self, command, cwd, label, near=None):
+        """A new window (a shell, so it outlives the agent) running
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 07:06:55Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+
+```bash
+cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1; grep -rn -i "sample" docs/firmware/sloop/*.md docs/hardware/io.md docs/official.md | head -15; curl -s https://thefirmwarehub.com/catalog.json -o /private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/5f461408-bbdd-44d0-bb3b-b0642eabaa31/scratchpad/catalog.json; python3 -I - <<'EOF'
+import json
+d=json.load(open('/private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/5f461408-bbdd-44d0-bb3b-b0642eabaa31/scratchpad/catalog.json'))
+items=d if isinstance(d,list) else d.get('firmwares',d.get('items',[]))
+print(type(d), len(items)); print(list(items[0].keys()))
+import re
+for f in items:
+    s=json.dumps(f).lower()
+    if re.search(r'usb audio in|record(s|ing)? (from|over) usb|sample (from|over) usb|resampl|audio input|usb.{0,20}sampl|sampl.{0,30}usb', s):
+        print(f.get('name') or f.get('title'), '|', f.get('chip'), '|', (f.get('description') or f.get('summary') or '')[:220])
+EOF
+```
+
+```text
+docs/firmware/sloop/sloop3.md:23:| Audio block | 256 samples | 64 samples |
+docs/firmware/sloop/sloop3.md:25:| Sample slicing | sample / GRAIN | 獨立的 SLICE engine |
+docs/firmware/sloop/index.md:12:| Engines | 12 種：analog、4-op FM、6-op FM（FM6，可匯入 DX7 patch）、phase distortion、三振盪器、tonewheel organ、formant voice、granular、lo-fi chip、sampler、physical models（PHYS）、noise |
+docs/firmware/sloop/index.md:19:| Samples | 4 個 slot，每個約 7.4 秒 |
+docs/firmware/sloop/index.md:36:SLOOP 2.8 被作者標為 stable、tried and tested，但 README 仍寫 "Still a beta"，自行承擔風險。更新時 projects、presets、samples、設定都會保留。
+docs/firmware/sloop/web-editor.md:16:| **Samples** | sample slots、檔案、**CHOP**（丟一段任意長度的錄音進來切） |
+docs/firmware/sloop/web-editor.md:25:**Song & sections → Save a backup** 把機器上的所有東西寫成一個檔案：進行中的音樂、projects、user presets、samples、設定、FM6 bank。**Restore from a file** 全部放回去（先停止播放）。
+docs/official.md:14:| [fm1_open](https://github.com/m-vave/fm1_open) | 官方的**開放韌體** FM1 Open V14：8 軌、8 個 sample slot、16 個效果示範。app 是 GPL-3.0 加 SDK linking exception；Firmware Hub 註明它的聲音引擎是閉源的 binary SDK。build 需要 Windows 與 JieLi 的 Windows toolchain | 沒有 |
+docs/official.md:15:| [Workbench](https://open.m-vave.com/fm1-workbench) | 官方的網頁工具：更新韌體、瀏覽器內預覽、管理 project、sample 與 DX7 音色、下載 Source + SDK | 沒有 |
+<class 'dict'> 238
+['id', 'kind', 'name', 'author', 'repo', 'ident', 'what', 'editor', 'play', 'added', 'loader', 'cheat', 'install', 'card', 'color', 'vintage', 'ambient', 'fmhub', 'stars', 'talk', 'lic', 'starsDay', 'site', 'version', 'date', 'published', 'pkg', 'product', 'size', 'sha256', 'release', 'tag', 'srcref', 'mirror', 'beta', 'hid', 'chip', 'relCheck', 'provCheck', 'base', 'dinghy', 'dinghyv', 'source', 'installs']
+FIZZ | new | 
+Veffbox | old | 
+FM1 Audio Router | old | 
+ECHOFIELD | new | 
+Kurzhaar, der Basshund | new | 
+Atl-Atl: The Atltuner | new | 
+Mini-Grain | new | 
+Fernbedienung | new |
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 07:07:05Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+
+```bash
+cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1; python3 -I - <<'EOF'
+import json,collections
+d=json.load(open('/private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/5f461408-bbdd-44d0-bb3b-b0642eabaa31/scratchpad/catalog.json'))
+items=d['firmwares'] if 'firmwares' in d else list(d.values())[0]
+for n in ['FIZZ','Veffbox','FM1 Audio Router','ECHOFIELD','Mini-Grain','Kurzhaar, der Basshund']:
+    f=[x for x in items if x['name']==n][0]
+    print(n,'|',f['chip'],'|',f['repo'],'|',str(f['what'])[:300]);print()
+print(collections.Counter(str(x.get('install'))[:40] for x in items).most_common(8))
+print(collections.Counter(str(x.get('loader')) for x in items).most_common(5))
+EOF
+```
+
+```text
+FIZZ | new | Quixotic7/FIZZ | A groovebox around one engine, ChoralRoot's FM TONE: six tracks, p-locks and preset sound locks, conditions, ratchets, chords, and MIDI FX for generative patterns and for reworking the ones you have. Bluetooth MIDI, and recording over USB audio.
+
+Veffbox | old | galfaroth/veffbox | Resampling sound design. Build one sound from FM, analog or 808-style drums, play it as notes, steps or strummed chords, add 6 LFOs, 3 envelopes and 8 FX, then resample it into a new source. Every resample keeps its recipe, so a 64-sound bank of generation trees rebuilds bit for bit.
+
+FM1 Audio Router | old | maxravedj/fm1-audio-router | USB audio interface and Bluetooth audio receiver with FX
+
+ECHOFIELD | new | Philip-Bos/echofield-fm1 | A granular sampler: a few seconds of any sound become slow clouds, sparkles, tape loops and swells, played from the keys and knobs. 14 factory sounds, your own samples (or recorded over USB), filter, delay, reverb and tape, and a companion web app for samples, presets and recording.
+
+Mini-Grain | new | eldontyrellcorp/Mini-Grain | A granular synth on your FM-1: two polyphonic granular parts plus a drone and a pad, each with a filter, two LFOs and its own step sequencer, into a shared ping-pong delay and plate reverb. Seven sample generators, your own samples sent over USB from a web page, 16 presets, and USB and TRS MIDI…
+
+Kurzhaar, der Basshund | new | kurzhaar168/kurzhaar | A monophonic analog-style bass synth with a step sequencer: two oscillators and a sub into a resonant ladder filter, two LFOs, drive and reverb, 16 presets. Basslines in your key and scale, 16 patterns, tight sync to a DAW's MIDI clock, and recording over USB audio.
+
+[('None', 232), ('https://keremimo.github.io/melodee/', 1), ('https://deadactive.github.io/FMDj/webapp', 1), ('https://thebigbeat.app/fm1/install/', 1), ('https://dreamsofbacon.github.io/lsdj-bur', 1), ('https://jazzyrhythmer.github.io/Rhythmer', 1), ('https://michaelaperry.github.io/MIKU-FM1', 1)]
+[('None', 235), ('mvave', 3)]
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 07:07:17Z)**_
+
+進度：資料查完了（ChoralRoot 手冊、Agent Deck 原始碼、Hub catalog），現在把答案寫進對應的 docs 頁面。
+
+_**Agent (claude-opus-5-5 2026-11-17 07:07:18Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1; cat docs/getting-started/install-m-flasher.md; echo ======; cat docs/hardware/io.md; echo =====; grep -n "^#\|continue\|Bluetooth\|藍牙" docs/firmware/agent-deck/usage.md docs/firmware/agent-deck/index.md`
+
+````text
+# 安裝 M-Flasher
+
+[M-Flasher](https://github.com/jvitkauskas/m-flasher) 是電腦端的工具：備份整顆 flash、還原、安裝 `.fwsc` 韌體、安裝或移除 m-bootloader。它直接跟晶片 ROM 內建的 USB download mode 溝通，所以韌體壞掉時也能用。目前版本見[資源地圖](../resources.md)。
+
+它和 m-bootloader 是兩回事：
+
+| | 裝在哪 | 作用 |
+|---|---|---|
+| M-Flasher | 電腦 | 備份、刷機、還原、救援 |
+| m-bootloader | FM-1 裡的 boot 區 | 開機時的 recovery menu、從按鍵進 download mode、啟動前檢查韌體 |
+
+## macOS
+
+需要 macOS 11 以上，Apple silicon 與 Intel 都支援。
+
+1. 從 [releases](https://github.com/jvitkauskas/m-flasher/releases) 或[下載頁](https://jvitkauskas.github.io/m-apps/flasher/)取得 `M-Flasher-<版本>-macos.dmg`。
+2. 開啟 dmg，把 M-Flasher 拖進 Applications。
+3. 第一次開啟會被 macOS 擋下，因為它沒有 Apple 簽章：到 **System Settings → Privacy & Security → Open Anyway**。
+4. app 找到機器時會出現兩個系統對話框：
+    - 要求輸入密碼。只有管理員能把 USB 裝置從 macOS 的 disk driver 手上拿走。
+    - 詢問是否允許 M-Flasher 存取 removable volume（那就是 FM-1），選 **Allow**。只會問一次。
+
+!!! note "接上後盡快開 app"
+    機器進 download mode 後如果一直留給 macOS 的 disk driver，大約半分鐘後可能自己離開 download mode。
+
+!!! warning "首次授權不能透過 SSH"
+    removable volume 的詢問只會出現在螢幕上。第一次一定要在本機圖形介面完成，之後 CLI 才能順利用。
+
+### 驗證下載檔
+
+Release 頁面每個 asset 都有 SHA-256 digest。下載後比對：
+
+```sh
+shasum -a 256 M-Flasher-0.12.1-macos.dmg
+gh api repos/jvitkauskas/m-flasher/releases/latest \
+  --jq '.assets[] | select(.name | test("macos")) | "\(.name) \(.digest)"'
+```
+
+### Command line
+
+同一個執行檔帶參數就是 CLI：
+
+```sh
+/Applications/M-Flasher.app/Contents/MacOS/M-Flasher info
+```
+
+可以設 alias：
+
+```sh
+alias m-flasher='/Applications/M-Flasher.app/Contents/MacOS/M-Flasher'
+```
+
+CLI 一樣會跳出系統密碼對話框，或用 `sudo` 執行。完整指令見 [M-Flasher CLI](../agentic/m-flasher-cli.md)。
+
+## Windows 與 Linux
+
+- **Windows 10/11**：解壓 `M-Flasher-…-windows.zip` 執行 `M-Flasher.exe`。未簽章，SmartScreen 選 **More info → Run anyway**。找到機器時會要求管理員權限。Microsoft Defender 偶爾會誤判新版本。
+- **Linux**（x86-64 或 ARM64，glibc 2.35+）：`.deb` / `.rpm` 套件會一併裝好 udev rule 與 SCSI generic driver，一般使用者就能執行 `m-flasher`，不需要 root。這也是 Linux 比較適合 headless 或遠端自動化的原因。
+
+細節以上游的 [Using M-Flasher](https://github.com/jvitkauskas/m-flasher/blob/main/docs/usage.md) 為準。
+
+## 下一步
+
+[備份原廠與確認晶片](backup-and-chip.md)。
+======
+# 接口與連線
+
+## 各接口能做什麼
+
+| 接口 | 能做 | 不能做 |
+|---|---|---|
+| **USB-C** | 充電、USB MIDI in/out、韌體更新、USB audio（依韌體）、自訂 HID 裝置（依韌體） | 當 USB host |
+| **3.5 mm TRS MIDI IN** | 接收其他設備的 note、CC、clock | 不是 MIDI OUT |
+| **3.5 mm 音訊輸出** | 立體聲類比輸出到耳機、mixer、錄音介面 | 不是 audio in，也不是 MIDI |
+| **Bluetooth MIDI** | 硬體本身有無線電（SoC 內建 Bluetooth 與 WiFi）。原廠、CTL-1、Melodee、RemoteFM1、ChoralRoot 會用 | 要韌體開啟才有。SLOOP 不支援，它不開無線電 |
+
+## USB-C：device，不是 host
+
+FM-1 是 USB device。USB 鍵盤直接插在 FM-1 上不會動，因為兩邊都是 device，中間需要一個 host：電腦、手機或 USB MIDI host box。
+
+反過來，電腦對 FM-1 可以做的事很多：
+
+- 接收琴鍵與旋鈕送出的 MIDI note / CC。
+- 送 MIDI 回去控制合成器或 sequencer。
+- 用支援 USB audio 的韌體直接數位錄音。
+- 透過雙向 MIDI / SysEx 自訂螢幕內容、LED 狀態與 host 控制協定（Agent Deck 就是這樣做的）。
+- 用自訂韌體讓 FM-1 變成 HID 鍵盤 / 滑鼠（Trireme）。
+
+注意不同韌體的 MIDI mapping 不同。不能假設每個實體按鍵在原廠韌體下都會送出獨立事件。`[調研]`
+
+## TRS MIDI IN
+
+需要 **TRS-to-DIN MIDI 轉接線**。沒聲音時試另一種型式（Type A / Type B）。
+
+SLOOP 下的 channel 對應：
+
+| MIDI channel | 播放 |
+|---|---|
+| 1、2、3 | synth track 1、2、3 |
+| 10 | drum track |
+| 其他 | 目前選取的 track |
+
+可以在 GLO → MIDI 改。MIDI clock in 可從 USB 或 TRS 進來（GLO → SYSTEM → SYNC）。
+
+## USB audio（SLOOP）
+
+SLOOP 下 FM-1 同時是一個名為 **"Felucca"** 的 USB audio 輸入：44.1 或 48 kHz、16-bit stereo、class compliant，不需要 driver。錄到的是 master 輸出，跟耳機聽到的一樣。MIDI、Web Editor、installer 都走同一條線。
+
+- 音量：按住 `HOME` 進選單 → **USB AUDIO**。`MASTER` 跟著 master 旋鈕；`FULL` 是固定滿音量，適合沒有輸入增益的錄音介面。
+- 安裝後第一次要拔插一次，電腦才會重新辨識成 MIDI + audio 裝置。
+
+## 用電腦接收 MIDI 的最小範例
+
+確認電腦看到的 MIDI port（需要 `pip install mido python-rtmidi`）：
+
+```python
+import mido
+
+print(mido.get_input_names())
+with mido.open_input(mido.get_input_names()[0]) as port:
+    for msg in port:
+        print(msg)
+```
+
+這是通用的 `mido` 用法，不是某個上游專案的指令。port 名稱依韌體而定。
+=====
+docs/firmware/agent-deck/usage.md:1:# Agent Deck 操作速查
+docs/firmware/agent-deck/usage.md:5:## 啟動
+docs/firmware/agent-deck/usage.md:16:## 琴鍵與 LED
+docs/firmware/agent-deck/usage.md:34:## 最常用的幾個動作
+docs/firmware/agent-deck/usage.md:50:## 全部控制項
+docs/firmware/agent-deck/usage.md:77:## 一次處理多個
+docs/firmware/agent-deck/usage.md:98:## 畫面
+docs/firmware/agent-deck/usage.md:114:## Auto-approve
+docs/firmware/agent-deck/usage.md:118:## 設定檔
+docs/firmware/agent-deck/usage.md:131:## 我遇到的
+docs/firmware/agent-deck/index.md:1:# Agent Deck
+docs/firmware/agent-deck/index.md:7:## 不刷機就能試的部分
+docs/firmware/agent-deck/index.md:18:## 讓模擬器裡的韌體接上真的 daemon
+docs/firmware/agent-deck/index.md:23:# terminal 1：模擬器，插上虛擬 USB 線（等同 emu-run … --usb）
+docs/firmware/agent-deck/index.md:26:# terminal 2：daemon 的硬體模式（不是 --simulate），會找到名為 "FM-1 AGTDECK (emu)" 的 MIDI 裝置
+docs/firmware/agent-deck/index.md:40:## 試用結果
+docs/firmware/agent-deck/index.md:52:## 發現
+docs/firmware/agent-deck/index.md:59:## 實刷前要做的
+docs/firmware/agent-deck/index.md:67:## 新晶片上的結果
+docs/firmware/agent-deck/index.md:71:## 風險
+````
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 07:07:23Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1; sed -n 1,15p docs/firmware/agent-deck/usage.md; sed -n 110,134p docs/firmware/agent-deck/usage.md`
+
+````text
+# Agent Deck 操作速查
+
+整理自上游 README 的 Controls reference，對應韌體 0.7。`[上游]`，除非另外標示。我自己的試用與刷機紀錄在[概觀](index.md)。
+
+## 啟動
+
+```sh
+just agtdeck-run        # FM-1 已刷 Agent Deck 並接上 USB；預設用 Herdr backend
+just agtdeck-doctor     # 連不上時先跑這個：檢查 MIDI 埠、設定、agent CLI、Herdr
+```
+
+螢幕右上角從 `NO HOST` 變成 `HOST` 就是連上了。daemon 停掉或 USB 拔掉會回到 `NO HOST`，重新接上會自動重新同步。
+
+macOS 上這台裝置的 MIDI 名稱可能仍顯示成 `Felucca`（系統快取了之前 SLOOP 的名稱，USB 產品名其實是 `FM-1 AGTDECK`）。daemon 認得，不影響使用。`[實機]`
+
+顏色就是狀態：琥珀色是在等你，綠色是完成，紅色是壞了，白色是工作中，灰色是閒置。
+
+列上的旗標：`A` auto-approve、`R` repeat、`+` 已標記、`Q` 有排隊的 prompt。
+
+## Auto-approve
+
+預設關閉，建議維持關閉。開了之後 daemon 會自動批准該 agent 的提示，但會先比對 `auto_never` 清單（預設含 `rm -r` / `-f`、`git push`、`git reset --hard`、`sudo`、`--force`、`drop table`、`mkfs` / `dd`），命中就不批准並發出警示。上游自己說明這是文字比對，不是安全保證。
+
+## 設定檔
+
+`~/.config/agtdeck/config.json`，不存在時用預設值。`python3 vendor/fm-1-agent-deck/host/agtdeck.py --print-config` 會印出完整預設。常改的：
+
+| 欄位 | 用途 |
+|---|---|
+| `presets` | 預設 prompt 清單（預設 9 個），也可以是多步驟的 pipeline |
+| `default_agent` | `PLAY` 在空 slot 上啟動哪一種 agent |
+| `projects` | 開新 agent 時可選的目錄 |
+| `auto_never` | auto-approve 絕不自動批准的字樣 |
+| `nag_minutes` | agent 一直 BLOCKED 時每隔幾分鐘再提醒 |
+| `follow` | 有 agent 被 block 時選取自動跳過去 |
+
+## 我遇到的
+
+- Herdr 裡 shell pane 也會佔 slot，我的 50 個 pane 大半是 shell，真正的 agent 被擠到後面。沒有隱藏 shell 的設定，目前只能用 `SAVE` + 鍵手動整理，或用 **KNOB 4** 直接跳到需要處理的 agent。`[實機]` host 端
+- 完整說明見上游 [README](https://github.com/kevinelliott/fm-1-agent-deck#controls-reference) 與[一頁式 cheat sheet](https://kevinelliott.github.io/fm-1-agent-deck/cheatsheet.html)。
+````
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 07:07:29Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/vendor/fm-1-agent-deck; sed -n 155,175p host/agtdeck.py; grep -n "armed\s*=\|self.armed\|preset_idx\s*=" host/agtdeck.py | head; grep -n "def .*queue\|_queued\|repeat_max" host/agtdeck.py | head`
+
+```text
+DEFAULT_CONFIG = {
+    # Prompt presets: PRESETS arms one, SEQ sends it. A string, or
+    # {"label": "short name for the screen", "text": "what is sent"}, or
+    # {"label": ..., "steps": ["first", "then", ...]}: a pipeline, one
+    # step per finished turn.
+    "presets": [
+        "continue",
+        {"label": "run tests + fix",
+         "text": "Run the test suite and fix any failures."},
+        {"label": "summarize",
+         "text": "Summarize what you have done so far and what is left."},
+        {"label": "review changes",
+         "text": "Review your changes for bugs and edge cases, then fix "
+                 "what you find."},
+        {"label": "commit",
+         "text": "Commit your work with a clear commit message."},
+        {"label": "explain blocker",
+         "text": "Explain what you are waiting on and what you need "
+                 "from me."},
+        {"label": "test > review > commit",
+210:    "repeat_max": 10,
+1469:                r["n"], self._repeat_max(), r["label"]))
+1826:    def _queue_step(self, agents):
+1907:    def clear_queue(self):
+1942:        n = max(1, min(99, self._repeat_max() + (1 if delta > 0 else -1)))
+1943:        self.cfg["repeat_max"] = n
+2026:    def _repeat_max(self):
+2028:            return max(1, int(self.cfg.get("repeat_max", 10)))
+2051:                if r["n"] >= self._repeat_max():
+2059:                print("[repeat] %d/%d -> %s" % (r["n"], self._repeat_max(),
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 07:07:40Z)**_
+
+<tool-use data-tool-type="write" data-tool-name="Edit"><details>
+<summary>Tool use: **Edit**</summary>
+
+```text
+The file /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/docs/firmware/choralroot/tutorial.md has been updated successfully.
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 07:07:54Z)**_
+
+<tool-use data-tool-type="write" data-tool-name="Edit"><details>
+<summary>Tool use: **Edit**</summary>
+
+```text
+The file /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/docs/firmware/choralroot/tutorial.md has been updated successfully.
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 07:08:03Z)**_
+
+<tool-use data-tool-type="write" data-tool-name="Edit"><details>
+<summary>Tool use: **Edit**</summary>
+
+```text
+The file /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/docs/firmware/choralroot/tutorial.md has been updated successfully.
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 07:08:04Z)**_
+
+<tool-use data-tool-type="write" data-tool-name="Edit"><details>
+<summary>Tool use: **Edit**</summary>
+
+```text
+The file /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/docs/firmware/choralroot/tutorial.md has been updated successfully.
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 07:08:09Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/vendor/ChoralRootFM1; sed -n 2078,2090p docs/MANUAL.md | cut -c1-400`
+
+```text
+  editor closes; then the saved state is there again, the loop of the saved slot included. The screen says
+  `reverted`. No question here either. Use it to try things and take them back: change a handful of settings, an
+  edit, a loop; then either hold SAVE to keep them, or GLO + SAVE to be where you were.
+- **A SAVE tap** is still the save-preset dialog ([Saving](#saving)). Saving a sound as a preset is stored at
+  once, as before, and so is a loop when you move to another slot.
+- **The Options are the exception: they are stored by themselves**, as every setting was until 0.17: a moment after
+  the instrument falls quiet (about two seconds without a change and without a sound), never while a loop plays. So
+  is the panel calibration. A revert does not touch the Options.
+
+| A global save keeps (SAVE held) | Stored by itself | Never kept, on purpose |
+| --- | --- | --- |
+| Key Mode, the tonic, the scale, Transpose; **Single Notes and the split point**; the KEY layer's keys (pick or play), Key plays, Keyboard and Numerals | **Options:** Play Style, Extension Addition, Secret Chords, 6th with 7th, Velocity | notes that were sounding, a chord LATCH was holding |
+| the performance mode, its parameters, and whether it is on; the bass's mode, its parameters, and each part's Off | MIDI Perform, MIDI Bass, MIDI Raw Chord, Raw Chord Sound, MIDI Clock | a playing loop: its slot is loaded, **stopped**. It never starts by itself |
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 07:08:14Z)**_
+
+<tool-use data-tool-type="write" data-tool-name="Edit"><details>
+<summary>Tool use: **Edit**</summary>
+
+```text
+The file /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/docs/firmware/choralroot/tutorial.md has been updated successfully.
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 07:08:17Z)**_
+
+ChoralRoot 教學已更新，接著寫網頁燒錄、取樣和 Agent Deck 的部分。
+
+_**Agent (claude-opus-5-5 2026-11-17 07:08:29Z)**_
+
+<tool-use data-tool-type="write" data-tool-name="Edit"><details>
+<summary>Tool use: **Edit**</summary>
+
+```text
+The file /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/docs/getting-started/install-m-flasher.md has been updated successfully.
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 07:08:38Z)**_
+
+<tool-use data-tool-type="write" data-tool-name="Edit"><details>
+<summary>Tool use: **Edit**</summary>
+
+```text
+The file /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/docs/hardware/io.md has been updated successfully.
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 07:08:44Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/vendor/ChoralRootFM1; sed -n 1,15p docs/GRAIN.md | cut -c1-300`
+
+```text
+# GRAIN: a granular engine over material it makes itself (design, 2026-10-15)
+
+**Status: built through step 5 (2026-10-15 / 16, HISTORY 3y133 .. 3y137; MORPH a mix and the render in place since
+3y167 .. 3y169: "The third phase", below): the engine is in the firmware as engine 8
+(`firmware/src/eng_grain.c` over `grain_src.c`), on the unit since 3y136's build, and since the owner's first listening
+(3y137, below: "The second phase") with its own matrix, two synced LFOs, ENV 2, the VA's filter, a bipolar SCAN and
+the wave band; its presets not yet by ear (step 6). Merged on main d75523e (v0.24-beta1 with the flash diet) on the owner's word, 2026-10-16: XIP 537 068 B (93.7 %), POOL 97.0 % (the size table). A sound saved on the first build (a 20-byte version-1 record, the owner's U033 DARK HAZE) loads again si
+(`build/grain-sketch/`, below), kept the granular morph, and said go for steps 1 to 4. The build's size line: XIP
+559 652 B of 573 440 (97.6 %), RAM 79 028 (80.4 %), POOL 304 472 (88.5 %) over da1f8e2; merged on main 5e1e8a7
+(v0.22-beta4: the master filter and the step preview) XIP 561 540 B (97.9 %), POOL 304 712 (88.6 %); on main a11e0ca
+(v0.22 stable, the VA matrix's fine amounts) XIP 562 196 B (98.0 %), POOL 304 716 (88.6 %); on main 1ebaaf2 (Options >
+Velocity Curve, the emulator's velocity) XIP 562 772 B (98.1 %). The owner's words: "Could the
+grain synth have a way to generate its own samples from a couple knobs to quickly get a variety of interesting samples to
+work with?"
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 07:08:50Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+
+```bash
+cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1; python3 - <<'EOF'
+p='docs/hardware/io.md'; s=open(p).read()
+s=s.replace("SLOOP 與 Agent Deck 不支援：它們的基底（Felucca 的 SLOOP 分支、Dinghy）沒有藍牙程式","SLOOP 不支援，它不開無線電。Agent Deck 也不支援：它的基底 Dinghy 完全沒有藍牙程式 `[上游]`")
+s=s.replace("（GRAIN 引擎用的是內建素材）","（GRAIN 引擎是對它自己生成的素材做 granular，不能載入外部 sample）")
+open(p,'w').write(s)
+EOF
+grep -n "Agent Deck 也不支援\|GRAIN 引擎是" docs/hardware/io.md | cut -c1-80
+```
+
+```text
+10:| **Bluetooth MIDI** | 硬體本身有無線電（SoC 內建 Bluetooth 與 WiFi）。原廠、CTL-1、Melodee、Rem
+24:所以「手機或網頁 + FM-1」的組合可以做到 sampler 的效果：在手機或電腦上錄好、剪好，再上傳到支援 sample 的韌體。ChoralRoot
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 07:08:56Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/vendor/ChoralRootFM1; sed -n 1,25p docs/releases/0.31.md | cut -c1-400`
+
+```text
+ChoralRoot 0.31 brings **USB Host** to the FM-1: its USB-C port can be the host of a USB MIDI device instead of
+talking to a computer, so **two FM-1s play each other over one plain USB-C cable**, notes, clock and start / stop in
+both directions. And when USB goes (a cable pulled, a computer asleep, the host FM-1 switched off), the FM-1 now lets
+go of the notes MIDI was holding. Everything else is 0.30's, and your settings, sounds, loops and favorites are stored
+as before.
+
+## USB Host (new in 0.31, FM-1 only)
+
+- **Options > USB Host: On** turns the USB-C port into the host of a USB MIDI device. It is **never saved**: every
+  start-up is a normal USB device again, so the computer, updates and backups always find the FM-1.
+- **Two FM-1s**: a plain USB-C to USB-C cable between them, A on USB Host, B as it is (any ChoralRoot). B plays what
+  A sends on its Perform and Bass channels, and A what B sends. With A's MIDI Clock on Out and B's on In, B's tempo and
+  loop follow A's start and stop; the other way round works too. Both run on their batteries: nothing else is needed.
+- **In**: notes, program changes, the CCs, pitch bend, aftertouch, clock and start / continue / stop, exactly as over
+  USB MIDI from a computer (MIDI Keys, Clock In and 0.30's transport included). **Out**: what the FM-1 sends over USB
+  MIDI (the Perform, Bass and Raw Chord notes, the clock with MIDI Clock Out). SysEx is not passed either way.
+- **While USB Host is On** the port belongs to the device: no computer, no USB audio, no updates. **Off** gives it
+  back: the FM-1 leaves the bus for a second and the computer on the cable finds it again (on a unit, within about
+  10 seconds), without a restart.
+- **The FM-1 does not power the port.** A keyboard, a controller or a hub needs power of its own: a powered hub or a
+  powered USB-C OTG adapter. Full-speed devices only, one hub level.
+- The line under USB Host reads `connected, in 1234` (the messages received) once a device is found, or `looking`
+  and a few letters while it searches (read them out if you report a problem). A message box says what happened:
+  `USB device connected`, `USB device gone`, `not a USB MIDI device`, `nothing on USB: powered hub?`,
+  `USB device not answering`, `low-speed USB: not supported`.
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 07:08:58Z)**_
+
+That's a correction worth making: the io page claims FM-1 can't be a USB host, but ChoralRoot 0.31+ can.
+
+_**Agent (claude-opus-5-5 2026-11-17 07:09:04Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+
+```bash
+cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1; python3 - <<'EOF'
+p='docs/hardware/io.md'; s=open(p).read()
+s=s.replace("| **USB-C** | 充電、USB MIDI in/out、韌體更新、USB audio（依韌體）、自訂 HID 裝置（依韌體） | 當 USB host |",
+"| **USB-C** | 充電、USB MIDI in/out、韌體更新、USB audio（依韌體）、自訂 HID 裝置（依韌體）、USB host（只有少數韌體，見下） | 供電給接上的裝置 |")
+old="FM-1 是 USB device。USB 鍵盤直接插在 FM-1 上不會動，因為兩邊都是 device，中間需要一個 host：電腦、手機或 USB MIDI host box。"
+new=old+"""
+
+**例外（更正 2026-11-17）**：ChoralRoot 0.31 起有 **Options → USB Host**，打開後 USB-C 變成 USB MIDI host，可以直接接一台 USB MIDI 鍵盤，或用一條 USB-C 線把兩台 FM-1 互接。限制：FM-1 不供電，鍵盤要透過有供電的 hub 或 OTG 轉接頭；只支援 full-speed；開著時電腦、USB audio、更新都不能用；每次開機都回到一般 device 模式，不會存。`[上游]`（[release notes](https://github.com/Quixotic7/ChoralRootFM1/blob/main/docs/releases/0.31.md)）其他韌體預設仍是 device。"""
+assert old in s; s=s.replace(old,new)
+open(p,'w').write(s)
+EOF
+```
+
+```text
+(Bash completed with no output)
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 07:09:06Z)**_
+
+Now Agent Deck: Bluetooth and where the `continue` comes from.
+
+_**Agent (claude-opus-5-5 2026-11-17 07:09:15Z)**_
+
+<tool-use data-tool-type="write" data-tool-name="Edit"><details>
+<summary>Tool use: **Edit**</summary>
+
+```text
+The file /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/docs/firmware/agent-deck/usage.md has been updated successfully.
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 07:09:19Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1; grep -n -i "clear_queue\|queue" vendor/fm-1-agent-deck/README.md | head -8`
+
+```text
+88:> time than hours on the desk — the prompt queue, pipelines and
+130:repeat, `+` marked, `Q` prompt queued) and a context gauge. The bottom
+153:| ![DETAIL, OUTPUT: the agent's permission prompt with its three numbered choices](docs/shot-detail-output.png) | ![DETAIL, INFO: session title, model and context, mode and git branch, queue, what was asked, what it wants to run](docs/shot-detail-info.png) | ![DETAIL, DIFF: files changed with lines added and removed, new files, recent commits](docs/shot-detail-diff.png) |
+168:| ![MENU: this agent, fleet, new agent, send prompt, event log, close agent, settings](docs/shot-menu.png) | ![THIS AGENT: view, repeat prompt, auto-approve, marked, muted, queued prompts, commands](docs/shot-menu-agent.png) | ![FLEET: one line per agent with state, time in state and context size](docs/shot-menu-fleet.png) | ![SETTINGS: sounds, feedback sounds, blocked alert, nag, desktop notify, follow the blocked, focus on edit](docs/shot-menu-settings.png) |
+188:the firmware's platform merges into the same queue as USB MIDI). Two
+363:| **SEQ** | send the armed preset as a prompt. To a BLOCKED agent it is **queued** instead and goes out once the agent is free (the row shows `Q`, firmware 0.6) |
+407:| THIS AGENT | view, repeat mode, auto-approve, mark, mute (no sounds or alerts from this one), its prompt queue (clear it), **COMMANDS** (`/compact`, `/clear`, `/context`… from `commands`), focus on the computer, copy its last reply to the clipboard, open its folder |
+410:| SEND PROMPT | `IF WORKING:` send now or queue it; `AGAIN:` what the agent was last asked (Claude Code), then the preset list; pick one to send to the selected agent |
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 07:09:25Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+
+```bash
+cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1; python3 - <<'EOF'
+p='docs/firmware/agent-deck/usage.md'; s=open(p).read()
+old="- 先看列上有沒有 `Q` 或 `R`。`R` 再按住 `SEQ` 一次就停；`Q` 是排隊中的 prompt。"
+new="- 先看列上有沒有 `Q` 或 `R`。`R` 再按住 `SEQ` 一次就停。`Q` 是排隊中的 prompt，在 MENU → THIS AGENT 的 queued prompts 可以清掉。"
+assert old in s; open(p,'w').write(s.replace(old,new))
+EOF
+just docs-check 2>&1 | tail -4
+```
+
+```text
+No issues found
+Build finished in 0.22s
+uv run --locked --all-groups python scripts/check-docs-site.py
+{"status": "ok", "pages": 41, "llm_pages": 41, "deployed": false}
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 07:09:54Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+
+```bash
+cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1; git add docs/firmware/choralroot/tutorial.md docs/getting-started/install-m-flasher.md docs/hardware/io.md docs/firmware/agent-deck/usage.md && git commit -q -m "Docs: web installers vs M-Flasher, ChoralRoot transpose and chord names, no audio input, USB host, Agent Deck continue
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>" && git push -q && git log --oneline -1
+```
+
+```text
+7183937 Docs: web installers vs M-Flasher, ChoralRoot transpose and chord names, no audio input, USB host, Agent Deck continue
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 07:10:13Z)**_
+
+每個問題都依上游文件或原始碼回答，也都寫進 docs 了（已 push）。
+
+## 網頁燒錄工具
+
+有。官方 Workbench、ChoralRoot、Melodee 等韌體都有網頁 installer，用 Chrome 或 Edge 就能刷。不過它們的原理和 M-Flasher 不一樣：
+
+- **網頁 installer 走 Web MIDI**，是請機器上正在跑的韌體自己更新。所以機器得能正常開機，而且只備份那個韌體認得的資料。ChoralRoot 的 installer 還會拒絕從 SLOOP 裝過去。
+- **M-Flasher 走晶片的 ROM download mode**。黑畫面也能用，能整顆 flash 備份與還原，還有 CLI 可以接 `just`。
+
+建議繼續用 M-Flasher。網頁 installer 出問題時要回頭用 M-Flasher 救，反過來不需要。
+
+## ChoralRoot
+
+**用 C 的指法彈 F**：不用兩個都設，**主音留在 C，只把 Transpose 設成 +5**（按住 `SEL`，轉 KNOB 3）。這樣按 C 鍵響的是 F 和弦，級數顯示仍然是 `I`。如果主音設 F、Transpose 也設 +5，會變成 B♭ 大調。要關機後還保留，記得按住 `SAVE`。
+
+**JAZZ / WTF**：這不算彩蛋，是 Orchid 原本的命名規則。它只看 6、m7、M7、9 這四個延伸鍵按了幾個：三個顯示 `JAZZ`，四個顯示 `WTF`，和種類鍵按幾個無關。所以七個全按一定是 `WTF`；按六個時，三個種類鍵加三個延伸鍵就是 `JAZZ`。你打的「JASS」應該就是 `JAZZ`。
+
+- 全部有 64 種組合（4 種和弦 × 16 種延伸組合），組成音都列在上游的 CHORD-NAMES.md。
+- Options → Chord Names 改成 **Standard**，就會顯示正常的和弦名稱，例如 `D13`。
+- 真正藏起來的是 **Secret Chords**（預設關，在 Options 打開）：
+  - F#3 + A#3 是增和弦
+  - F#3 + G#3 是 m add4
+  - 三個種類鍵全按是 power chord
+
+**為什麼要用另一套鍵名**：面板上印的字是給原廠韌體用的，上游手冊直接這樣說，還建議貼貼紙。KEY、BASS 這些名稱我推測是沿用 Orchid 的功能名，這點沒有查證。另外 Options 裡有 Classic 配置，就是 Orchid 原本的鍵位。
+
+## 沒有輸入能不能當 sampler
+
+FM-1 完全沒有類比音訊輸入，ChoralRoot 也沒有 sample 引擎（它的 GRAIN 引擎只用自己生成的素材）。
+
+你說的手機或網頁組合確實可行：在手機或電腦上錄好、剪好，再上傳到支援 sample 的韌體，例如 SLOOP 的 Web Editor（4 個 slot，可以 CHOP）、Mini-Grain、ECHOFIELD。
+
+查資料時順便發現一個錯誤：我原本寫「FM-1 不能當 USB host」，但 ChoralRoot 0.31 起可以（Options → USB Host），能直接接 USB MIDI 鍵盤，或兩台 FM-1 互接。限制是 FM-1 不供電，鍵盤要透過有供電的 hub 或轉接頭。已經改正了。
+
+## Agent Deck
+
+**一定要插 USB。** 晶片雖然有藍牙，但 Agent Deck 的基底 Dinghy 完全沒有藍牙程式，上游寫明只支援 USB MIDI。
+
+**`continue` 的來源**都是按鍵造成的，daemon 不會自己送：
+
+- 對已經有 agent 的 slot 按 `PLAY`。PLAY 的意思是「開始 / 繼續」，只有空的 slot 才會開新 agent。
+- 按 `SEQ`。預設 preset 清單的第一個就是 `continue`。
+- 對 BLOCKED 的 agent 按 `SEQ`，prompt 會排隊（列上出現 `Q`），等 agent 有空才送出。這最像是「自己冒出來的」。
+- 按住 `SEQ` 約 1 秒會進入 repeat mode（列上出現 `R`），agent 每做完一輪就送一次。
+
+排隊中的 prompt 可以在 MENU → THIS AGENT 清掉。如果不想要 `continue` 當預設，在設定檔的 `presets` 把它移掉。
+
+## 改了哪些頁
+
+- `docs/getting-started/install-m-flasher.md`：網頁 installer 與 M-Flasher 的比較
+- `docs/firmware/choralroot/tutorial.md`：Transpose 與主音的差別、JAZZ/WTF 與 Secret Chords、鍵名由來
+- `docs/hardware/io.md`：沒有音訊輸入時的 sampler 做法、USB host 的更正、Agent Deck 沒有藍牙
+- `docs/firmware/agent-deck/usage.md`：沒有藍牙、`continue` 從哪裡來
+
+---
+
+_**User (2026-11-17 09:37:59Z)**_
+
+是說也有那種根音跟主和弦不同的情況 例如 C/G 這種 有辦法按出來嗎？
+然後好像轉位和弦只能提前config好？ 沒辦法一些是不轉位 一些轉？（如果我想要控制組成音的音區範圍的話？）
+
+---
+
+_**Agent (claude-opus-5-5 2026-11-17 09:38:06Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/vendor/ChoralRootFM1; grep -n -i "slash\|inversion\|/G\|bass note\|Free play\|Play Style\|voicing" docs/MANUAL.md | cut -c1-220 | head -60`
+
+```text
+88:**Change the voicing.** Hold a chord and turn KNOB 1. Each click moves the lowest note up an octave (or, the other
+89:way, the highest note down); the screen reads `voicing +2`.
+106:**Add the bass.** Tap **BASS** (printed ENV). A bass note now plays under every chord, and `Bass` shows at the top
+182:| KNOB 1 | the chord's voicing (on the Full keyboard too, since 0.24) | the Single Notes split point |
+323:  always did, inside the octave: the name changes, not the voicing. To hear it as a 13th, an octave up, set
+382:### Voicing and octave
+385:  note down, from -12 to +12. The screen adds `voicing +2` under the notes. The voicing applies to every chord that
+388:- **OCT-** and **OCT+** shift the root keys by octaves, from -2 to +2 (`Oct +1` at the top right). A low voicing can
+391:### Play styles
+393:Options > Play Style decides what the chord keys do while a root is already down.
+414:Options > Secret Chords: Off (default), Simple (only while Play Style is Simple) or All. When it applies, type keys
+565:the key you press in the bass: E plays `C6/E` (E G A C), G `C6/G` (G A C E), A `Am7` (A C E G, the same four notes).
+567:bass under the diminished seventh a semitone up (C# plays C# D F G# B, `C#7b9`). The chord name shows the slash
+590:  below the split point (C to E by default) are bass notes and the others play chords as ever. While Split Bass is
+593:  The looper records a bass-side note as a bass note: the loop plays it with the bass sound, also after you change
+608:- **KNOB 1** on the view is the **voicing** (until 0.24 it was the octave here); the octave is OCT- and OCT+.
+618:  chord on a neighbouring scale note; the voicing you set on the Chords keyboard applies to these chords (new in
+749:  in the PLAY menu it stays the record mode, and in the loop editor OPT + ALGORITHM sets the step's Voicing to
+835:  chord part holds its chord, the bass part its bass note. A new FM-1 (and every older save) has the chords on their
+845:- What the bass performs: the chord you play, moved down to where the bass note would be (the BASS layer's
+1151:you choose now, the voicing on KNOB 1, the performance mode and the bass. The tempo changes its speed, never its
+1154:**Bass notes played by hand.** With Single = `Split Bass` the keys below the split play the bass part, and the looper
+1155:records them as bass notes: the loop plays them back with the bass sound, and on the bass channel of MIDI out. Which
+1160:moves the bass keys; the chord voicing does not touch it. You can play bass by hand over a looped bass line: the
+1162:on while such a loop plays, the bass follows the loop's chords and the recorded bass notes play as well, on the
+1267:- Keys held **together** go on one step: a second root pressed while the first is still down, or a bass note under a
+1293:<img src="manual/loop-editor-trig.png" width="240" alt="The loop editor, page Trig: the same row, the second step with two ticks at its top and a blue strip at its right; Am +2 under the grid; cells Ratchet x2, Cond
+1298:outline pulses, bright and dim); its chord is named under the grid, and if the step has a Voicing of its own, that
+1320:| PRESETS | the **step**: the cursor, a step a click, round and round. The screen shows `step 2/16` and the chord in it. **While the loop is stopped, the step you land on plays**, as the loop would play it (its leng
+1322:| ALGORITHM | the selected step's **Voicing**, on either page. **GLO held + ALGORITHM** jumps between `Follow` and `0`: from either one a click gives the other; from any other value a click clockwise gives `0`, the 
+1334:| KNOB 3 | **Voicing**: Follow, or a voicing of its own, -12 to +12 (the same as ALGORITHM; with GLO held: `Follow` / `0`) |
+1341:**Ratchet, Condition, Chance and Voicing belong to the step**: to everything that starts in it, the chord and, with
+1342:Split Bass, the bass note. The grid shows them: ticks for the ratchet, the strip for the chance and the condition, the blue
+1343:number after the chord for the voicing (above). An empty step has none of them (the cells show `-`); clearing a step clears them; playing new notes
+1352:- **Transpose.** It changes the notes stored in the step: every chord and note that starts in it, the bass note too,
+1354:  Chance and Voicing stay. It always moves by semitones, also with Key Mode on (Key Mode decides what the keys play,
+1362:  whole step decides together: its chord, its bass note and all the strikes of its ratchet. With a Condition as well,
+1364:- **Voicing.** `Follow` is the voicing as it is set when the loop plays (KNOB 1 on the main screen), as every loop
+1365:  plays. A number gives that step's chords their own voicing, whatever the live one is. Single notes and bass notes
+1366:  have no voicing, so it does nothing to them.
+1390:- **Split Bass:** a note played on the bass side replaces the step's bass notes only, a chord on the other side only
+1495:| the loop editor | the step | 8 steps a click | the step's Voicing | Voicing `Follow` / `0` |
+1907:| **Geek Out** | the chord, its notes and keyboard, and status lines: voicing and play style, bass and tempo, the audio load, the second core (`c1 off`, `c1 ok ...`), the transposition |
+1929:<img src="manual/options.png" width="240" alt="An Options page: Play Style, value Simple, the next entry Extension Addition under it, the battery at the top right">
+1947:| **Play Style** | Simple, Advanced, Free | Simple | what chord keys do while a root is held ([Play styles](#play-styles)) |
+2023:- **Reset:** everything in the Options (Play Style back to Simple, 6th with 7th back to In place, Motion, Chord Names, LEDs, Hold Time, the MIDI channels and
+2034:  its slot; a take you were recording is dropped), LOCK and LATCH go off, the octave shift and the voicing return to
+2089:| Key Mode, the tonic, the scale, Transpose; **Single Notes and the split point**; the KEY layer's keys (pick or play), Key plays, Keyboard and Numerals | **Options:** Play Style, Extension Addition, Secret Chords, 
+2092:| the voicing on KNOB 1 and the octave shift | USB Record, USB Level, USB Rate, Dual Core, Output | an open layer, menu, dialog or editor: the FM-1 starts on the view |
+2108:effects, the voicing ...), and the loop. Only what changed is written; a save with nothing changed writes nothing.
+2120:  carry the state of the instrument (the voicing, the edited sounds, the effects' cells ...), and after a restore the
+2179:root keys do: with the chord keys held (on the FM-1, or on pads over MIDI Keys), LOCK and LATCH, the play style,
+2601:[MvaveFM1Unbricker](https://github.com/Quixotic7/MvaveFM1Unbricker). Do not format the disk.
+2605:To switch from ChoralRoot to another firmware, or from another firmware to ChoralRoot, use **[M-Flasher](https://github.com/jvitkauskas/m-flasher) and the
+2606:[M-Bootloader](https://github.com/jvitkauskas/m-bootloader)** (Windows, macOS and Linux; free, unofficial). M-Flasher talks to the chip's own USB download mode, so it works
+2617:To come back, install ChoralRoot's package (`choralroot-X.Y.fwsc`, from the [Releases](https://github.com/Quixotic7/ChoralRootFM1/releases))
+2639:| Some roots play a bass note instead of a chord | Single Notes is Split Bass | KEY layer, KNOB 4: Full |
+2704:| PLAY | LOOP | play / stop the loop; ends a take | PLAY menu: PRESETS slot · ALGORITHM record mode · SELECT page · page 1: KNOB 1 Length · 2 Rate · 3 Quantize · 4 Count-in · page 2: KNOB 1 Level · 2 Beat · GLO: its
+2736:| ALGORITHM | bass sound (with BASS held: bass level) | the bass sound's engine, wherever ALGORITHM alone is the bass sound: the main screen, the Options, the layers, the sound editor (PLAY menu: the record mode, as
+2737:| KNOB 1 | voicing (Full keyboard: the octave) | split point | the layer's first cell | the lane's first value |
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 09:38:11Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/vendor/ChoralRootFM1; sed -n 380,410p docs/MANUAL.md; sed -n 555,600p docs/MANUAL.md; grep -n -i "bass.*inversion\|Bass layer\|BASS layer\|bass mode\|Root\b.*Fifth\|Lowest" docs/MANUAL.md | head -20`
+
+```text
+same type pressed again (off, above) and a type pressed when none is latched leave them alone.
+
+### Voicing and octave
+
+- **KNOB 1** revoices the chord: one click up moves the lowest note up an octave, one click down moves the highest
+  note down, from -12 to +12. The screen adds `voicing +2` under the notes. The voicing applies to every chord that
+  follows, and to a playing loop. On the Full keyboard too (since 0.24: chords play there, Key plays Chords and
+  G5's chords); its octave is OCT- / OCT+'s.
+- **OCT-** and **OCT+** shift the root keys by octaves, from -2 to +2 (`Oct +1` at the top right). A low voicing can
+  put chord notes below D4, where no key can light for them; the notes line on the screen always has them.
+
+### Play styles
+
+Options > Play Style decides what the chord keys do while a root is already down.
+
+| Style | A chord key pressed while a root is held | A chord key pressed with no root held |
+| --- | --- | --- |
+| **Simple** (default) | nothing: the chord was fixed when the root went down | nothing |
+| **Advanced** | a type key replays the held chord as that type; an extension key switches its extension on or off | nothing |
+| **Free** | as Advanced | the last root sounds again as that chord, for as long as a chord key is held |
+
+Options > Extension Addition matters in Advanced and Free: **Add Note** (default) adds or removes just the
+extension's note while the rest of the chord rings on; **Play Chord** strikes the whole chord again.
+
+**With LOCK on** the chord keys mean the same in all three styles: the lit keys are the chord, and the LOCK layer's
+`Type key` and `Ext keys` settings decide what a press does to them. The styles only differ in what follows the lit
+keys. Simple: the next root you play. Advanced: also the roots you are holding, at once (a key that goes off leaves
+the held chord, a new set replaces the old one, no type lit leaves a single note). Free: the same, and while you
+hold a chord key with no root down, the last root sounds again as the lit chord; it stops when you let go of the
+chord key, lit or not. A key that will go off when you let go (the one lit type or extension pressed again) still
+sounds in that chord until then.
+| Bebop Min | MIN | Dorian's, and the passing E: Edim7 | the same |
+| 6-Dim | MAJ | C6 on C, E, G and A (below), Ddim7 Fdim7 G#dim7 Bdim7 | a 7b9 chord |
+| m6-Dim | MIN | Cm6 on C, Eb, G and A, Ddim7 Fdim7 G#dim7 Bdim7 | a 7b9 chord |
+
+The pentatonics, Blues and Hirajoshi have five or six notes. The lights, Key plays `Notes` and Snap use just those
+notes; the chords are the major or minor scale's, so a key between them still plays a chord that fits. In Dbl Harm, G
+and B stack no plain chord in the scale: they play G and Bdim.
+
+**6-Dim and m6-Dim** are Barry Harris's 6th-diminished scales (GitHub issue 45): the major (or minor) scale with a
+raised 5th added, eight notes, each with one of two chords. The tonic's 6th chord sits on C, E, G and A, always with
+the key you press in the bass: E plays `C6/E` (E G A C), G `C6/G` (G A C E), A `Am7` (A C E G, the same four notes).
+D, F, G# and B play the diminished seventh on them. A key outside the scale plays its **7b9 chord**: the key in the
+bass under the diminished seventh a semitone up (C# plays C# D F G# B, `C#7b9`). The chord name shows the slash
+(`C6/E`, `Cm6/D#`); the bass part plays the key you press. The two Dim scales (whole-half and half-whole) give their
+keys outside the scale the same 7b9 chord. A loop records these chords as played and plays them back the same way.
+
+**Numerals** in the new scales count the degrees as Major does for a MAJ scale and as Minor does for a MIN scale: F
+in C Dorian is IV, A is #vi° (Locrian's flat fifth reads #IV). C6/E reads I.
+
+**Keys: pick or play.** The layer opens with its keys on **pick**: the root keys set the tonic, MAJ and MIN the
+scale, and nothing sounds. Tap **OPT** (printed GLO) in the layer and the keys **play** instead, exactly as outside
+the layer: roots, chord keys, LOCK, with their usual lights. Now you can hear the key while KNOB 1 to KNOB 4 change
+the tonic, the scale, the transposition and Single. The top of the layer says which it is (`key · keys pick`,
+`key · keys play`), the footer shows the way to the other, and OPT is lit while the keys play. Tap OPT again for
+pick. The choice is kept by a global save (SAVE held). OPT held with KNOB 1 is still the split point.
+
+**Single: Full, Split Oct, Split Bass.** Single decides what the keys below the split point do.
+
+- `Full`: nothing special.
+- `Split Oct`: single notes (not chords) on keys whose note name lies below the split point sound an octave lower.
+  The split point is F by default, so C to E are the lowered notes, in every octave; OPT + KNOB 1 or Options > Split
+  Point moves it.
+- `Split Bass`: two instruments side by side. The keys below the split point play the **bass part's sound** and
+  nothing else, as single notes at their own pitch (the bass register, KNOB 2 on the view, shifts them by octaves);
+  the other keys play the chord part and nothing else. With the usual keys that means the roots whose note name is
+  below the split point (C to E by default) are bass notes and the others play chords as ever. While Split Bass is
+  on the bass is played by hand: it does not follow the chords, and Bass on / off and the Bass Behaviour are left as
+  they are and ignored until Single is changed back. The top right says `Split Bass`. The bass part is one voice.
+  The looper records a bass-side note as a bass note: the loop plays it with the bass sound, also after you change
+  Single ([The looper](#10-the-looper)).
+
+**Key plays: Chords or Notes** (page 2, KNOB 1). `Chords` is Key Mode as described above: a lone root plays the
+scale's chord. `Notes` keeps Key Mode as a guide and a guard only: the roots and the chord keys behave exactly as
+with Key Mode off (a lone root is a single note, a chord key gives its chord), but a root outside the scale does
+nothing at all: no sound, no MIDI, nothing in a loop, no light. The key still shows on the root keys. Snap (below)
+makes those roots play instead.
+74:**Play a chord.** The lowest four white keys and the three black keys between them are the **chord block**. Hold MAJ
+88:**Change the voicing.** Hold a chord and turn KNOB 1. Each click moves the lowest note up an octave (or, the other
+157:| ENV | **BASS** | the bass on / off | the BASS layer |
+227:| chord keys | lit while held or latched (a latched SUS: G#3 and A#3); otherwise a faint glow, the lowest level (Classic: B3 lit while LOCK is on). In the KEY layer: MAJ and MIN glow, the selected scale's is lit, the others are dark |
+384:- **KNOB 1** revoices the chord: one click up moves the lowest note up an octave, one click down moves the highest
+419:| F#3 + G#3 + A#3 (DIM + SUS) | DIM + SUS | power chord (root, fifth, octave) | `D` with a small `5` |
+756:Hold BASS for the **BASS layer**:
+758:| Control | In the BASS layer |
+845:- What the bass performs: the chord you play, moved down to where the bass note would be (the BASS layer's
+1355:  not what is already in a loop). No note can go below the lowest or above the highest MIDI note: a click that would
+1644:| **BASS** held + **EDIT** | the editor on the bass sound. BASS has to be down; with the BASS layer merely open, EDIT opens the chord sound |
+1680:Every knob that changes a value (the sound editor of every engine, the FX layer, the BASS layer's level, the PERF
+1732:0.37 the slowest slide was about 1.5 s whatever the screen said, and RATE much shorter).
+2100:Three settings can be reached both from the Options and from a layer: **Bass Behaviour** (the BASS layer), **Single
+2178:pitch, from the lowest note to the highest, so a whole keyboard plays ChoralRoot's chords. It plays as the FM-1's
+2645:| The chord sound is silent, the bass plays | Bass Behaviour is Solo (`Bass Solo`) | BASS layer, another behaviour, or tap BASS |
+2647:| The bass layer's keys make no sound | its keys are on pick (`keys pick`, GLO lit) | tap GLO in the layer, or close it |
+2696:| ENV | BASS | bass on / off | BASS layer: SELECT behaviour · KNOB 1 Behaviour · 2 Register · 3 Sound · 4 Level · GLO: the keys play / pick. Held + EDIT: edit the bass sound. Held + SAVE: save it. Held + ARP: the Bass PERF layer |
+2736:| ALGORITHM | bass sound (with BASS held: bass level) | the bass sound's engine, wherever ALGORITHM alone is the bass sound: the main screen, the Options, the layers, the sound editor (PLAY menu: the record mode, as without OPT; loop editor: the step's Voicing, `Follow` / `0`; the editor's picker and the save dialog: as without OPT) | bass sound (PLAY menu: record mode; loop editor: the step's Voicing; with BASS held: the BASS layer's Level) | bass sound |
+2755:| white roots D4 to G4, BASS layer with its keys on pick (GLO) | the bass behaviour |
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 09:38:15Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/vendor/ChoralRootFM1; sed -n 756,790p docs/MANUAL.md | cut -c1-400; sed -n 2176,2185p docs/MANUAL.md`
+
+```text
+Hold BASS for the **BASS layer**:
+
+| Control | In the BASS layer |
+| --- | --- |
+| SELECT, KNOB 1, or the white keys D4 E4 F4 G4 (after a GLO tap) | Behaviour (below) |
+| KNOB 2 | Register |
+| KNOB 3 | Sound (as ALGORITHM, without wrapping round) |
+| KNOB 4 | Level |
+| ALGORITHM | the bass sound, as everywhere; **with BASS held: Level** |
+| GLO | the keys: play (the default) or pick |
+
+The keys play while this layer is open, so you hear the bass as you change it (`keys play` at the top). A **GLO** tap
+in the layer turns its keys into shortcuts (`keys pick`, the GLO light on): the white keys D4 to G4 pick the
+Behaviour and the keys do not sound. Another GLO tap: they play again. The choice is kept with the settings, as the
+KEY layer's.
+
+| Behaviour | What the bass does |
+| --- | --- |
+| **Chords Only** (default) | plays the chord's root, in the bass register, under chords; a single note has no bass |
+| **Unison Bass** | plays under everything, at the pitch of the key you pressed rather than in the bass register (KNOB 2 still moves it by octaves) |
+| **Bass Single Notes** | plays the root under everything; a single note sounds on the bass alone |
+| **Solo** | only the bass sounds, at the chord's root in the octave you play it (KNOB 2 moves it by octaves; new in 0.37); the chord sound is silent (`Bass Solo` at the top right). Until 0.36 Solo played in the bass register, the same octave from every key (GitHub issues 40, 43) |
+
+The same setting is Options > Bass Behaviour. The behaviour, the register and the level are kept by a global save (SAVE held).
+
+To edit the bass sound, hold BASS and tap EDIT. To save it, hold BASS and tap SAVE. To change the bass part's
+engine, hold OPT and turn ALGORITHM (above), or open the bass sound's editor and hold EDIT there
+([Sounds](#11-sounds)).
+
+## 7. Performance modes
+
+A performance mode plays the notes of your chord for you. **PERF** (printed ARP) tap switches the chosen mode on and
+off; the top right names it. Hold PERF for the **PERF layer**: SELECT picks the mode (picking one switches the
+performance on), the root keys play so you hear it, KNOB 1 to KNOB 4 are the mode's parameters, and a PERF tap is
+still on / off. OCT-, OCT+ or HOME closes the layer; holding PERF again switches to the Bass PERF layer and back
+
+**MIDI Roots** (Options > MIDI Roots, Off by default; new in 0.39): on that channel every note is a root at its own
+pitch, from the lowest note to the highest, so a whole keyboard plays ChoralRoot's chords. It plays as the FM-1's
+root keys do: with the chord keys held (on the FM-1, or on pads over MIDI Keys), LOCK and LATCH, the play style,
+Key Mode, the bass, the arpeggio or pattern and the looper, and the home screen shows the chord's name, its notes and
+the lit keys as for a key press. The keyboard's own octave sets the pitch (OCT- and OCT+ do not move it), and the
+note's velocity plays it. A root played while the FM-1 chord keys wait for their SUS Window waits too, as a root key
+does. The notes play whatever layer or page is open. CC 120 and CC 123 let every root go; other messages on that
+channel do nothing (a sustain pedal there holds nothing: use LATCH). It cannot be the MIDI Perform, MIDI Bass or
+MIDI Keys channel. Not on the SMK-37.
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 09:38:29Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/vendor/ChoralRootFM1; grep -n -i "voice lead\|voice-lead\|closest\|nearest voicing\|range" docs/MANUAL.md | cut -c1-200 | head`
+
+```text
+79:<img src="manual/chord.png" width="240" alt="The chord view: Dm with a small orange 7, the notes D4 F4 A4 C5 under it, C5 in orange">
+102:the engine in orange (`FM6`), the number big (`02`), the name (`FM BELL`), a stripe for every preset of the engine,
+194:  `Arp`, `Pattern`, `Harp`; `Bass Arp` and so on in orange while only the bass performs), `Bass`, `Oct +1`, `Latch`, `lock`. While a loop records or plays, the looper's state
+284:- Under the name the screen lists the notes as they are voiced. Extension notes are orange.
+707:  orange, white, green), each with a small picture of its value. The cell you just turned lights up. A dash means the
+738:- **BASS** tap switches it on and off. The screen shows the bass sound's place, in orange (`VA` over `17`, then
+802:| **Strum**, **Strum 2 Octaves** | the notes one after another | Rate (ms) | Direction | Range (octaves) | Hold |
+803:| **Slop** | a strum with uneven timing | Rate | Direction | Range | Amount (%) |
+806:| **Harp** | a fast run over several octaves | Rate | Direction | Gate | Range |
+809:  Division), KNOB 2 the order (Direction; Pattern's figure), KNOB 3 Range in Strum and Slop and Gate in Arpeggiate,
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 09:38:33Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1; grep -n "^## 第五課" docs/firmware/choralroot/tutorial.md`
+
+```text
+196:## 第五課：加 bass
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 09:38:36Z)**_
+
+查完手冊了，正在把轉位與 slash chord 的做法寫進教學。
+
+_**Agent (claude-opus-5-5 2026-11-17 09:38:51Z)**_
+
+<tool-use data-tool-type="write" data-tool-name="Edit"><details>
+<summary>Tool use: **Edit**</summary>
+
+```text
+The file /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/docs/firmware/choralroot/tutorial.md has been updated successfully.
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 09:39:21Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+
+```bash
+cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1; just docs-check 2>&1 | tail -1 && git add docs/firmware/choralroot/tutorial.md && git commit -q -m "ChoralRoot tutorial: inversions, slash chords and per-step voicing
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>" && git push -q && git log --oneline -1
+```
+
+```text
+{"status": "ok", "pages": 41, "llm_pages": 41, "deployed": false}
+e4fc771 ChoralRoot tutorial: inversions, slash chords and per-step voicing
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 09:39:33Z)**_
+
+ChoralRoot 沒有專門指定低音的按法：chord block 只管和弦種類，你按的根音鍵就是最低音的那個根音。不過有幾個繞法。以下是查上游手冊得到的，我還沒在機器上試過。
+
+## C/G 怎麼按出來
+
+**1. 用 voicing 轉位（最直接）**
+
+按住和弦時轉 KNOB 1，每往上一格，最低的音就移高一個八度：
+
+| voicing | 音（低到高） | 等於 |
+|---|---|---|
+| 0 | C E G | C |
+| +1 | E G C | C/E |
+| +2 | G C E | **C/G** |
+
+要先點 `ENV` 把 bass 關掉。不然 bass 聲部還是會在最低音彈 C，聽起來又變回 C。
+
+**2. Split Bass（一隻手彈低音、一隻手彈和弦）**
+
+KEY layer 的 KNOB 4 設成 Split Bass，分割點以下的鍵只彈 bass 單音。問題是它依**音名**分，不是依鍵盤位置：預設每個八度的 C 到 E 都歸 bass、F 到 B 都歸和弦。所以 C/G 偏偏按不出來（C 在 bass 那邊）。F/C、G/D、A/E 這類低音音名在根音前面的就可以。
+
+**3. Key Mode 選 6-Dim 音階**：按 E 會得到 `C6/E`、按 G 得到 `C6/G`，但只有這個音階這樣做，而且是 C6 不是 C。
+
+**4. 低音交給外部**：用 MIDI 送到 iPad 或 DAW，另外彈低音。
+
+## 轉位能不能有些轉、有些不轉
+
+**voicing 是全域設定**，設好之後套用到所有和弦。沒有「某個和弦固定用某種轉位」的設定，也沒有自動 voice leading 或「把組成音限制在某個音域」的選項。
+
+可行的做法：
+
+- **現場演奏**：換和弦的空檔轉 KNOB 1，按住和弦時就會生效。
+- **錄成 loop**：**每一步可以設自己的 voicing**。在 loop 編輯器（`SEQ`）選到一步，用 ALGORITHM 設成 `Follow`（跟著當下的 KNOB 1），或 -12 到 +12 的固定值。這樣就能 I 用原位、IV 用第二轉位，播放時各自保持。這是最接近你想要的方式。
+- **整體音域**：`OCT-` / `OCT+` 把整組移八度；voicing 往負的方向轉，和弦會往下展開。
+
+已寫進 [ChoralRoot 教學](https://daviddwlee84.github.io/M-VAVE_FM-1/firmware/choralroot/tutorial/#slash-chords)（第四課後面），已 push。

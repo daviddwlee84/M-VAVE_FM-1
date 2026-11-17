@@ -64,6 +64,8 @@ GitHub stars 只代表關注度，**不是刷機安全性的證據**。
 | 專案 | 角色 | 評價 |
 |---|---|---|
 | [kevinelliott/fm-1-agent-deck](https://github.com/kevinelliott/fm-1-agent-deck) | coding agent 的實體控制台，整合 Herdr / tmux | 最值得研究；先用模擬模式。見[用 FM-1 控制 agent](agentic/agent-deck.md) |
+| [scf4/codex-midi](https://github.com/scf4/codex-midi) | 把任意 MIDI controller 偽裝成 Codex Micro，控制 ChatGPT 桌面版裡的 Codex | 只限 macOS、注入 ChatGPT.app；見[為什麼不走 Codex Micro](agentic/conductor.md#codex-micro) |
+| [herdrdev/herdr-core](https://github.com/herdrdev/herdr-core) | `hc`：coding agent 的 terminal runtime，JSON-RPC API、OSC 7501 狀態 | Conductor 的主要 backend，見[自己的 agent 控制台](agentic/conductor.md) |
 | [ignis32/trireme_fm1](https://github.com/ignis32/trireme_fm1) | Vial 相容 USB HID macro keyboard | 不需要 daemon 的快捷鍵方案 |
 | [charlesvestal/fm1-ctl](https://github.com/charlesvestal/fm1-ctl) | CTL-1 MIDI controller | MIDI → Python → 任意 API 的基礎 |
 | [smememe/fm1-macropad-patch](https://github.com/smememe/fm1-macropad-patch) | 把原廠 V15 patch 成 MIDI macro pad | host 端自訂按鍵行為 |
@@ -84,6 +86,8 @@ GitHub stars 只代表關注度，**不是刷機安全性的證據**。
 | [sloop3-fm1](https://github.com/isod89/sloop3-fm1/releases) | v3.3.7-beta | 2026-11-16 | prerelease |
 | [fm1-emu](https://github.com/joakimeriksson/fm1-emu/releases) | v0.5.1 | 2026-11-14 | 本機用的版本，見[模擬器](agentic/emulator.md#local) |
 | [fm-1-agent-deck](https://github.com/kevinelliott/fm-1-agent-deck) | v0.7 | 2026-11-14 | 作者實機跑的是 0.6.2 |
+| [herdr-core](https://github.com/herdrdev/herdr-core/blob/master/CHANGELOG.md) | 0.1.21 | 2026-11-12 | 本機安裝的版本（`hc --version`）；Conductor 對它測過 |
+| [herdr](https://github.com/herdrdev/herdr) | 0.9.5 | 沒查 | 本機安裝的版本，classic Herdr；socket protocol 22 |
 
 一次列出全部：`just fm1-versions`。重新查某個 repo 的最新 release：
 

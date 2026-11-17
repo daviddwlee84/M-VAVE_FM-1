@@ -191,6 +191,29 @@ fw-build app="hello": fw-setup fw-toolchain
     JIELI_TOOLCHAIN="$PWD/tools/jieli/toolchain" AC79_SDK="$PWD/tools/fw-AC79_AIoT_SDK" \
       uv run --locked --all-groups python "{{fm1_base}}/tools/build.py" "firmware/{{app}}"
 
+# ---- Conductor: own agent console (firmware/conductor + host/conductor) ------
+
+# Host daemon unit tests (protocol, slot memory, action checks; no hardware, no backend).
+cond-test:
+    uv run --locked --all-groups pytest -q
+
+# The daemon against a text stand-in for the FM-1 (backend: fake, auto, hc or herdr).
+cond-sim backend="fake" *args:
+    PYTHONPATH=host uv run --locked --all-groups python -m conductor --backend "{{backend}}" --simulate {{args}}
+
+# The daemon against a MIDI device named CONDUCTOR: the real unit, or `just cond-emu`.
+# auto (default): hc and classic Herdr together.
+cond-run backend="auto" *args:
+    PYTHONPATH=host uv run --locked --all-groups python -m conductor --backend "{{backend}}" {{args}}
+
+# The firmware in the emulator with the virtual USB cable plugged in (pair with `just cond-run`).
+cond-emu chip="uc25hq80":
+    just emu-run firmware/conductor/build/conductor.fwsc "{{chip}}" --usb
+
+# hc end to end: two fake agents (label conductor-test=1), approve / deny / continue, then kill them.
+cond-it:
+    uv run --locked --all-groups python host/tests/integration_hc.py
+
 # Agent Deck in the emulator with the virtual USB cable plugged in (pair with `just agtdeck-run`).
 agtdeck-emu chip="uc25hq80": agtdeck-fetch
     just emu-run "downloads/agtdeck-{{agtdeck_version}}.fwsc" "{{chip}}" --usb

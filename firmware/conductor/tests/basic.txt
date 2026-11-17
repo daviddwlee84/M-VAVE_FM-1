@@ -1,0 +1,80 @@
+# Conductor in the host simulator: just fw-test conductor
+# The SysEx below are the shared vectors in host/conductor/protocol.py (VECTORS); keep them in step.
+wait 600
+shot boot.png
+expect host 0
+# no host yet: the device says HELLO once a second (version 1, firmware 0.1)
+sysex_out
+wait 1100
+expect_sysex F0 7D 43 4E 01 41 01 00 01 F7
+# HELLO_ACK ("hello_ack")
+sysex F0 7D 43 4E 01 01 01 F7
+wait 30
+expect host 1
+# slot 0: claude "fix-tests", BLOCKED, tag 0x123 ("slot_blocked")
+sysex F0 7D 43 4E 01 03 00 03 01 00 23 02 05 00 66 69 78 2D 74 65 73 74 73 F7
+# slot 3: codex "refactor-api", WORKING; slot 5: claude "docs", DONE
+sysex F0 7D 43 4E 01 03 03 02 02 00 11 00 02 00 72 65 66 61 63 74 6F 72 2D 61 70 69 F7
+sysex F0 7D 43 4E 01 03 05 04 01 00 22 00 00 00 64 6F 63 73 F7
+wait 30
+expect state0 3
+expect state3 2
+expect state5 4
+expect chimes 0
+leds
+shot grid.png
+# REC on the blocked agent: an ACTION approve for slot 0 with its tag ("device_approve")
+sysex_out
+tap REC
+wait 30
+expect_sysex F0 7D 43 4E 01 43 01 00 23 02 F7
+# a key selects its agent: SELECT goes to the host (for the detail)
+sysex_out
+key 3 down
+wait 20
+key 3 up
+wait 20
+expect sel 3
+expect_sysex F0 7D 43 4E 01 44 03 F7
+# REC on a working agent: refused on the device (a message, no ACTION)
+listen
+tap REC
+wait 30
+said NOT WAITING
+# the agent on slot 3 finishes: a chime (not for the first fill above)
+sysex F0 7D 43 4E 01 03 03 04 02 00 11 00 00 00 72 65 66 61 63 74 6F 72 2D 61 70 69 F7
+wait 30
+expect chimes 1
+# K4 jumps to the one that needs you: slot 0
+turn K4 1
+wait 30
+expect sel 0
+# the waiting page lists only the blocked one
+tap GLO
+wait 30
+expect page 2
+shot approvals.png
+# detail of slot 0, filled by the host
+tap EDIT
+wait 30
+expect page 1
+sysex F0 7D 43 4E 01 04 00 00 44 6F 20 79 6F 75 20 77 61 6E 74 20 74 6F 20 72 75 6E 3F F7
+sysex F0 7D 43 4E 01 04 00 01 3E 20 31 2E 20 59 65 73 F7
+wait 30
+shot detail.png
+tap HOME
+wait 30
+expect page 0
+# ARP held: dictation hotkey down at the press, up at the release (slot 0, tag 0x123)
+sysex_out
+press ARP
+wait 30
+expect_sysex F0 7D 43 4E 01 43 0B 00 23 02 F7
+leds
+release ARP
+wait 30
+expect_sysex F0 7D 43 4E 01 43 0C 00 23 02 F7
+# the host goes quiet: after 10 s, NO HOST and the keys go stale
+wait 10500
+expect host 0
+shot nohost.png

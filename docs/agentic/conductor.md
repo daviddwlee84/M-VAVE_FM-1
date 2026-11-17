@@ -1,0 +1,206 @@
+# 自己的 agent 控制台：Conductor
+
+Conductor 是我在 [fm1-base](../dev/index.md) 上寫的 agent 控制台：韌體在 `firmware/conductor/`，電腦端的 daemon 在 `host/conductor/`。用過 [Agent Deck](agent-deck.md) 之後，有兩件事想改：shell pane 佔掉大半琴鍵，而且它只接 classic Herdr / tmux。
+
+**狀態（2026-11-17）：設計與原型完成。host simulator、fm1-emu 兩種晶片、daemon 對 hc 的端到端都跑通 `[模擬]`；還沒刷進實機。**
+
+## 一句話的設計
+
+FM-1 的琴鍵 LED 是**單色**的，沒辦法像 Codex Micro 那樣用顏色區分狀態。所以把資訊拆成三層：
+
+| 誰負責 | 表達什麼 | 怎麼表達 |
+|---|---|---|
+| 琴鍵 LED | 急不急 | 亮度與動態：熄、微亮、中亮、全亮、呼吸、閃爍 |
+| 240×240 彩色螢幕 | 是什麼 | 顏色、名稱、狀態字、輸出內容 |
+| 提示音 | 不用看也知道 | FM 合成的短音型，`MASTER` 控音量 |
+
+硬體能力 `[上游]`（fm1-base `include/plat.h`）：27 個琴鍵與 14 個按鈕都有 LED，全部單色，每顆可以是 off / glow / mid / lit。**只有 `PLAY` 有紅、綠兩顆 LED。** 閃爍與呼吸都是軟體做的。
+
+## 狀態對應
+
+| 狀態 | 琴鍵 LED | 螢幕色 | 提示音 |
+|---|---|---|---|
+| 空 | 熄 | — | — |
+| IDLE | 微亮 | 白 | — |
+| WORKING | 呼吸（微亮 → 中 → 全 → 中，1.6 秒一輪） | 藍 | — |
+| BLOCKED（等你） | 2 Hz 閃 | 琥珀 | 上行兩音 |
+| DONE（還沒看） | 全亮；選過之後轉微亮 | 綠 | 三音和弦 |
+| ERROR | 每 1.2 秒雙閃 | 紅 | 下行兩音 |
+| UNKNOWN | 中亮 | 灰 | — |
+
+- **`PLAY` 是總覽燈**：有任何 BLOCKED / ERROR 時亮紅，全部正常時亮綠，沒有 host 時熄。
+- 螢幕的顏色沿用 Codex Micro 的白 / 藍 / 綠 / 琥珀 / 紅，看過那台的人不用重學。
+- 提示音只在**已知的 agent 換狀態**時響，剛連上、整張表填進來時不響；同時很多個換狀態只響一次。
+- host 斷線 10 秒後，螢幕右上角顯示 `NO HOST`，琴鍵全部退成微亮，表示「這些狀態已經不可靠」。
+
+## 控制
+
+一頁式的面板圖與速查見 [Conductor 操作速查](conductor-cheatsheet.md)。
+
+| 控制 | 動作 |
+|---|---|
+| 琴鍵 | 選那個 agent（每個琴鍵固定一個 agent，換頁不會跑掉） |
+| **SELECT** | 在目前頁面列出的 agent 之間移動 |
+| **KNOB 4** | 跳到下一個需要你的：BLOCKED → ERROR → 還沒看的 DONE |
+| `REC` | approve |
+| `SAVE` | approve 並不再詢問（只對有設定按鍵的 agent 種類） |
+| `FX` | deny（Esc） |
+| `ENV` | interrupt |
+| `SEL` | Enter |
+| `PLAY` | 送 `continue`（只對 IDLE / DONE） |
+| `LFO` | 切換 agent 的 mode（Shift+Tab） |
+| `ARP`（按住） | 語音輸入：daemon 在電腦上按住 `Ctrl`+`Option`，觸發 Wispr Flow / Handy；放開就停。見[速查](conductor-cheatsheet.md#voice) |
+| **KNOB 2** | 上 / 下方向鍵 |
+| `EDIT` | DETAIL 頁（classic Herdr 下同時 focus 那個 pane） |
+| `HOME` / `GLO` | 全部 agent / 只列等你的 |
+| **ALGORITHM** | 輪流切換三個頁面 |
+
+按鈕的位置沿用 Agent Deck，換過來不用重新記。**預設只有 agent 會佔琴鍵，shell 不會**：hc 只放有回報狀態或前景是已知 agent 的 terminal，classic Herdr 用 `agent.list`（它本來就只列 agent）。我的 classic Herdr 當下有 48 個 pane，`agent.list` 是 20 個，27 鍵放得下 `[實機]` host 端。放不下的數量顯示在底部（`+N NOT ON KEYS`）。
+
+琴鍵和 agent 的對應存在 host 的 `~/.config/conductor/slots-<backend>.json`，agent 重開會回到原本的鍵。
+
+## 架構
+
+```text
+FM-1  firmware/conductor（fm1-base app，MIT）
+   ⇅  USB-MIDI SysEx：F0 7D 43 4E …（協定 v1）
+host/conductor（Python daemon）
+   ├─ hc      → `hc connect`（JSON-RPC 2.0）、events.subscribe
+   ├─ herdr   → classic Herdr 的 unix socket、events.subscribe
+   └─ fake    → 測試與 demo
+```
+
+協定規格在 `host/conductor/PROTOCOL.md`。幾個決定：
+
+- **用真正的 SysEx。** Agent Deck 把資料塞進 CC，是因為它的基底 Dinghy 把 SysEx 留給更新程式；fm1-base 讓 app 收發 SysEx（`APP_SYSEX`、`plat_sysex_send`）`[上游]`。前綴 `7D 43 4E` 避開 fm1-base 自己的 `7D 4C ..`。
+- **裝置只送意圖，host 再確認一次。** 裝置送 `ACTION(op, slot, tag)`；host 送鍵前重新讀一次 backend：tag 要還是那個鍵上的 agent，狀態也要對（approve / deny 只對 BLOCKED，continue 只對 IDLE / DONE）。避免「剛好換了一個 agent 到這個鍵上」時批准錯對象。
+- **沒有 auto-approve。**
+- **韌體不寫 flash。** 所有狀態都在 host；fm1-emu 裡兩種晶片都是 0 次 erase / program `[模擬]`。韌體只登記 fm1-base 必要的 panel calibration 物件（`0xDC000`），不用 SLOOP 的設定 sector `0xFC000`。
+- **授權**：`firmware/conductor`、`firmware/common`、`host/conductor` 都是 MIT。沒有複製 Agent Deck（GPL-3.0）的程式碼，只參考它的按鍵配置與行為。
+
+### 為什麼 hc 優先 { #backends }
+
+| | hc（herdr-core 0.1.21） | classic Herdr 0.9.5 |
+|---|---|---|
+| 狀態從哪來 | agent 自己用 OSC 7501 回報；Claude Code、Codex 原生會送；hc 從不猜 `[上游]` | 程序偵測 + 畫面比對，或 integration 回報 `[上游]` |
+| 列出 agent | `terminal.list`；沒回報狀態的當 shell | `agent.list`，只有 agent |
+| approve / deny | `terminal.keys`（沒有專用 method） | `pane.send_keys` |
+| interrupt | `terminal.interrupt`，會回報結果 | 送 Esc |
+| 送 prompt | `terminal.send`，BLOCKED 時拒絕 | `agent.prompt` |
+| focus pane | 沒有 | `pane.focus` |
+| 遠端機器 | `hc machine add`，遠端 terminal 出現在同一份清單 | 沒有 |
+
+兩個是**各自獨立的 runtime**，不共享 agent。我目前每天用的是 classic Herdr，所以兩個 backend 都做：hc 的狀態比較準、能接遠端機器，classic Herdr 能 focus pane。
+
+## 為什麼不走 Codex Micro { #codex-micro }
+
+[scf4/codex-midi](https://github.com/scf4/codex-midi) 把 MIDI controller 偽裝成 OpenAI × Work Louder 的 Codex Micro。我讀過它的原始碼 `[上游]`，決定不當主線：
+
+- 它用 `NODE_OPTIONS=--require=…` 啟動 ChatGPT.app，在 Electron 的 main process 裡攔截 `node-hid`，插入一個假裝置。每次都要先完全關掉 ChatGPT，再從它的 launcher 開。
+- 協定（`v.oai.thstatus`、`v.oai.rgbcfg` 的 64-byte HID report 裡的 JSON-RPC）是逆向工程得來，只對 ChatGPT `26.715.31925` 測過，沒有版本檢查，app 更新後可能**無聲地**失效。
+- task 狀態只以 **RGB 顏色**傳給裝置，沒有「thinking」這種狀態字。FM-1 的單色 LED 收到顏色也還原不出狀態，螢幕也拿不到 task 名稱。
+- 只有 6 個 task 槽，只控制 macOS 桌面版 ChatGPT 裡的 Codex，不碰 Codex CLI。
+
+要接 Codex，比較穩的路是官方有文件的 [`codex app-server`](https://learn.chatgpt.com/docs/app-server.md)（JSON-RPC，有 approval request 與 turn 事件）`[上游]`。它會是之後的第三個 backend，不需要改韌體。
+
+## USB 與 Bluetooth { #bluetooth }
+
+FM-1 的晶片有 Bluetooth，fm1-base 也支援 BLE MIDI（`ble = true`）`[上游]`。協定不挑傳輸方式，frame 都在 36 bytes 以內，BLE 封包裝得下。**目前的 build 只開 USB**（`fm1.toml` 的 `ble = false`），原因是：
+
+- fm1-base 文件寫明 `app_sysex` 收的是「從 USB 來的 SysEx」。BLE 送 SysEx 有路（packet 化後 `plat_midi_send`，或 `plat_ble_stream`），**從 BLE 收 SysEx 給 app 的路徑文件裡沒寫清楚** `[上游]`。要先在 host simulator 與 fm1-emu 確認再做。
+- BLE 配對要存 bond（fm1-base 的 `OBJ_BLE`），會開始寫 flash；USB 版完全不寫。
+
+預計的 Bluetooth 設計（還沒實作）：
+
+| 項目 | 設計 |
+|---|---|
+| 模式 | 插 USB 且有電腦時走 USB；按住 `REC` 1 秒切換 Bluetooth 開 / 關（和 fm1-base template 相同的手勢） |
+| 配對 | FM-1 廣播 BLE MIDI；macOS 第一次在 **Audio MIDI 設定 → MIDI Studio → Bluetooth 設定** 按「連接」。之後 CoreMIDI 出現一個名字含 `CONDUCTOR` 的 port，daemon 用同一段程式找到它（`host/conductor/device.py` 的 `MidiLink` 不分 USB / BLE） |
+| 螢幕 | 標頭顯示 `USB` / `BLE ADV`（廣播中）/ `BLE`（已連線）；配對碼（若有）顯示在螢幕上 |
+| 兩條都在時 | daemon 優先選 USB 那個 port |
+| 安全 | 連上一台之後停止廣播。裝置只送意圖，真正按鍵的是電腦上的 daemon，且會再確認；陌生的電腦連上也拿不到任何 agent 的控制權 |
+| 好處 | 拔掉線用電池當無線控制台，這是 Agent Deck 做不到的（它的基底沒有藍牙程式） |
+
+## 共用模組 { #common }
+
+給之後其他韌體用的部分放在 `firmware/common/`（MIT），app 在 `fm1.toml` 加 `include = ["../common"]`，再在 `app.c` include `.c` 檔：
+
+| 模組 | 用途 |
+|---|---|
+| `hostlink` | app 自己的 SysEx 對話：frame 前綴、HELLO 直到 host 回應、之後 HEARTBEAT、host 是否還在、重新插線後重新 HELLO |
+| `ledfx` | 單色 LED 的動態：off / glow / mid / lit / 呼吸 / 閃 / 雙閃 / 快閃，每 frame 轉成 `plat_lights` + `plat_lights_mid` |
+| `chime` | 兩個 operator 的 FM 小音色加上音符佇列，混進 app 的 render，做提示音 |
+
+說明與用法在 `firmware/common/README.md`。
+
+## 指令
+
+```sh
+just cond-test              # daemon 的單元測試（協定、slot 記憶、動作確認）
+just cond-sim               # daemon 對 fake backend，裝置用 terminal 文字代替
+just cond-sim auto          # 同上，接真的 hc 與 classic Herdr（只看不按就不會送任何鍵）
+just cond-it                # hc 端到端：開兩個假 agent，approve / deny / continue，再關掉
+just fw-test conductor      # 韌體在 host simulator 跑 tests/basic.txt
+just fw-build conductor     # 實機套件 firmware/conductor/build/conductor.fwsc
+just cond-emu               # 韌體在 fm1-emu，插虛擬 USB
+just cond-run               # daemon 接 MIDI 裝置（模擬器或實機）；預設 auto
+just cond-run herdr         # 只接 classic Herdr（hc、fake 同理）
+```
+
+### 假的還是真的 agent { #real-or-fake }
+
+| 跑法 | agent 從哪來 | 按鍵會送到哪 |
+|---|---|---|
+| `just cond-run fake`、`just cond-sim` | daemon 記憶體裡寫死的 5 個 demo agent | 哪裡都不送，只記錄 |
+| `just cond-it` | 在 hc 裡開兩個假 agent 程序（`host/tests/fake_agent.py`，會送 OSC 7501），測完關掉 | 只送給那兩個假 agent |
+| `just cond-run`、`cond-run hc`、`cond-run herdr` | **你真實的 hc / classic Herdr session** | **真的 Claude Code、Codex** |
+
+接真的 backend 時，`REC`、`FX`、`ENV`、`SEL`、`PLAY` 都會真的作用在那個 agent 上。2026-11-17 在 Herdr app（建在 hc 上）裡開的 Claude Code 會自己回報 `app=claude-code` 的狀態，`cond-run hc` 直接顯示成 `CL … DONE` `[實機]` host 端。用 `specstory run claude` 這類 wrapper 啟動也認得：種類從 argv 裡找。
+
+`--backend` 預設是 **`auto`**：hc 與 classic Herdr 哪個在跑就接哪個，兩邊的 agent 合在一起放上琴鍵（標頭顯示 `hc+herdr`）。兩個 runtime 不共享 agent，agent 可能在任一邊。
+
+### 螢幕顯示 `NO AGENTS` { #no-agents }
+
+daemon 已經連上（標頭有 backend 名稱），但那個 backend 裡沒有 agent。2026-11-17 我第一次用 `just cond-run hc` 就是這樣：我的 hc 裡只有兩個 `zsh`，shell 不佔琴鍵，agent 全在 classic Herdr `[實機]` host 端。daemon 啟動時會印出每個 backend 看到什麼：
+
+```text
+[backend] hc: 0 agents, 2 shells not shown (--show-shells to list them)
+[backend] herdr: 20 agents
+```
+
+用預設的 `auto`，或指定 agent 所在的 backend。想讓 hc 的 shell 也佔鍵，加 `--show-shells`。
+
+### 名稱
+
+螢幕只顯示 ASCII。pane 標題開頭的狀態符號（`●`、`✳`）會拿掉；標題大多不是 ASCII（中文、emoji）時，改用工作目錄的名稱。
+
+`cond-sim` 裡可以打 `sel N`、`approve`、`deny`、`int`、`cont`、`show`、`quit`。
+
+daemon 的設定檔是 `~/.config/conductor/config.json`（可省略），可以改各種 agent 的按鍵，例如：
+
+```json
+{"approve_always_keys": {"claude": ["2"], "codex": ["a"]}}
+```
+
+## 驗證結果
+
+| 項目 | 結果 | 標記 |
+|---|---|---|
+| `just cond-test` | 20 項通過 | — |
+| `just cond-it`（hc） | 兩個假 agent 上了琴鍵，既有的兩個 zsh 沒有；approve 送到 Enter、deny 送到 Esc、continue 送到文字；結束後只清掉自己的 terminal | `[實機]` host 端 |
+| classic Herdr（唯讀） | `agent.list` 20 個 agent、`pane.read` 讀得到輸出；**沒有對 classic Herdr 送過任何鍵** | `[實機]` host 端 |
+| `auto`（唯讀） | hc 0 個 agent + 2 個 shell 沒顯示、classic Herdr 20 個，合併上琴鍵，名稱正確 | `[實機]` host 端 |
+| `just fw-test conductor` | 全部 `ok`：HELLO、HELLO_ACK、SLOT、REC 送出 approve、對 WORKING 按 REC 被拒、提示音只在換狀態時響、K4、三個頁面、10 秒後 `NO HOST` | `[模擬]` host simulator |
+| `just fw-build conductor` | app 85,356 B；RAM `.data+.bss` 26,084 / 98,304 B；build 自帶檢查全部 `ok` | — |
+| fm1-emu `uc25hq80` / `p25q80` | 都列舉成 USB `CONDUCTOR FM-1`、每秒 HELLO、收到 HELLO_ACK 後改送 HEARTBEAT、畫面正確；**flash 0 次 erase / program** | `[模擬]` |
+| daemon ↔ fm1-emu（虛擬 USB） | daemon 經 CoreMIDI 找到 `CONDUCTOR FM-1 (emu)`，收到 HELLO 並送出整張表 | `[模擬]` |
+
+## 還沒做 / 下一步
+
+- [ ] approve 的按鍵：預設 Enter（Claude Code 與 Codex 的權限選單預設選「Yes」）。`SAVE`（不再詢問）預設 Claude `2`、Codex `a`，**還沒對真的 session 驗證過** `[調研]`。先用一個用完即丟的 session 試，再把結果寫回這裡。
+- [ ] 在 fm1-emu 視窗裡手動按一輪 `REC` / `FX` / `ENV`，對 hc 的假 agent。
+- [ ] classic Herdr 的動作（approve / deny / focus）在一個新開的測試 workspace 裡驗證。
+- [ ] Bluetooth：先確認 BLE 收 SysEx 的路徑，再照上面的設計實作。
+- [ ] `codex app-server` backend。
+- [ ] 語音鍵（`ARP`）對真的 Wispr Flow 試一次：host 單元測試確認了送出的按鍵與一定會放開，**還沒在有輔助使用權限的 terminal 裡實際觸發過** Wispr Flow。
+- [ ] 實刷：照 `AGENTS.md` 的 preflight，經我批准才做。換韌體前也要照[多韌體切換](../firmware/switching.md)跑 `just emu-rehearse`。

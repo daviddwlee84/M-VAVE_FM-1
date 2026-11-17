@@ -1,0 +1,16 @@
+# Conductor's build settings (fm1-base tools/build.py)
+name = "CONDUCTOR"
+id_prefix = "FM-1_12"          # package identity: dev FM-1_1200
+usb_manufacturer = "fm1-base"
+usb_product = "CONDUCTOR FM-1" # the daemon finds the MIDI port by "CONDUCTOR"
+o2 = []
+include = ["../common"]        # hostlink, ledfx, chime: shared with later firmwares
+words = "words.tsv"
+ble = false                    # USB first; Bluetooth is designed (docs/agentic/conductor.md), not built yet
+tagline = "a desk console for coding agents"
+repo = "https://github.com/daviddwlee84/M-VAVE_FM-1"
+licence = "MIT"
+credits = "Built on fm1-base by Charles Vestal."
+author = "daviddwlee84"
+description = "The keys are your coding agents: their lights say who needs you, the screen says what they are doing, a chime tells you without looking. Talks to hc or Herdr through a host daemon over USB-MIDI."
+tags = ["utility"]
