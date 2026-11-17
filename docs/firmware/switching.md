@@ -40,6 +40,9 @@ downloads/
 | 2026-11-17 | 原廠 015 → SLOOP 2.8.5 | M-Flasher GUI 安裝 `.fwsc` | 成功，存檔正常 |
 | 2026-11-17 | SLOOP 2.8.5 → Agent Deck 0.7 | `fm1-download-mode` → `fm1-backup` → `fm1-flash` → `fm1-restart`，全程不需要按機器上的鍵 | 成功 |
 | 2026-11-17 | CTL-1 1.0.3 → ChoralRoot 0.41 | `just fm1-switch <檔案>` | 成功。寫入 152 個 sector 到 `0x9EFFF`，**蓋掉了 SLOOP 的 project sector** |
+| 2026-11-18 | 原廠 015 → Morse 0.3 release | `fm1_install.py`（USB-MIDI，Hub 測試 3）；原廠是本人用 M-Flasher GUI 還原的 | 成功，fast install |
+| 2026-11-18 | Morse 0.3 → SLOOP 2.8.5 | `fm1_install.py`（USB-MIDI，Hub 測試 1） | 成功，classic install；SLOOP 的曲子還在 |
+| 2026-11-18 | SLOOP 2.8.5 → Morse 0.3 release（`FM-1_41000300`） | `fm1_install.py`（USB-MIDI，Hub 測試 2） | 成功，fast install；Morse 的紀錄在 SLOOP 期間沒被動到 |
 | 2026-11-18 | Morse 0.2 → 0.3（自製） | `just fm1-switch firmware/morse/build/morse.fwsc` | 成功。寫入 32 個 sector（`0x04000`–`0x23FFF`），和預演一致 |
 | 2026-11-18 | Morse 0.1 → 0.2（自製） | `just fm1-switch firmware/morse/build/morse.fwsc` | 成功。寫入 32 個 sector（`0x04000`–`0x23FFF`），學習紀錄 `0xDA000` 沒被寫，和預演一致 |
 | 2026-11-17 | Conductor 0.3 → Morse 0.1（自製） | `just fm1-switch firmware/morse/build/morse.fwsc` | 成功。寫入 30 個 sector（`0x04000`–`0x21FFF`），和模擬器預演一致 |
@@ -136,6 +139,32 @@ just fm1-switch sloop       # 或 agtdeck，或任何 .fwsc 的路徑
 目標韌體已經裝著的時候，M-Flasher 會回報 `Nothing to write` 然後直接重開，不會問 `yes`。`[實機]`
 
 每次切換都會留一份刷前備份在本機，不會自動上傳。
+
+## 兩種寫入路徑：download mode 與 USB-MIDI 更新 { #paths }
+
+2026-11-18 為了 Hub 的上架測試，兩條路都在實機上走過 `[實機]`：
+
+| | `just fm1-switch`（M-Flasher，download mode） | `fm1_install.py`（USB-MIDI 更新，和 Hub 網頁安裝同一套） |
+|---|---|---|
+| 誰負責寫 | 晶片的 download mode（`WL82 UBOOT1.00`），M-Flasher 先把自己的 loader 載進 RAM | 正在跑的韌體讀取新套件的開頭，啟動套件附的 update loader（暫放在 `0xE0000`），由它寫入 |
+| 步驟 | 切 download mode → 讀整顆 flash 做備份 → 列出要寫的 sector → 輸入 `yes` → 寫 → 整顆 CRC32 驗證 → 重開 | 確認套件 → 輸入 `y` → 進更新模式 → 寫 → 重開 → 確認新的 identity |
+| 寫多少 | 只寫和現在不同的 sector | 看 loader：fm1-base 的 loader 只寫有變動的（fast install）；SLOOP 2.8.5 附的較舊，整包重寫（classic install） |
+| 自動備份 | 有 | 沒有，要先自己 `just fm1-backup` |
+| 現在的韌體壞了 | 照樣能用，只要 boot 區沒壞 | 不能用，現在的韌體要懂更新指令 |
+| 中斷後 | 重跑 | loader 停在更新模式，重跑就從中斷處繼續（fm1-base 的說明） |
+| 感覺 | 步驟多、比較慢 | 步驟少、比較順 |
+
+**怎麼選**：
+
+- **開發、或不確定新韌體能不能開機時**：用 `fm1-switch`。它會自動備份、整顆驗證，而且不依賴現在跑的韌體。
+- **兩個都正常的韌體之間切換**：用 USB-MIDI 就好，這也是一般使用者從 Hub 網頁安裝時走的路。
+
+兩條路在 AGENTS.md 都算韌體寫入，一樣要先核准、由本人執行。
+
+```sh
+uv run --locked --all-groups python third_party/fm1-base/tools/fm1_install.py --info        # 唯讀：現在的 identity
+uv run --locked --all-groups python third_party/fm1-base/tools/fm1_install.py PACKAGE.fwsc  # 寫入：本人執行
+```
 
 ## 之後想做的
 

@@ -47812,3 +47812,1200 @@ _**Agent (claude-opus-5-5 2026-11-17 18:32:07Z)**_
 <summary>Tool use: **Read**</summary>
  `/private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/0a574306-469e-4a59-9622-5701a42aee59/scratchpad/rel.png`
 </details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 18:32:25Z)**_
+
+<think><details><summary>Thought Process</summary>
+兩種晶片的 release 套件都通過了，從 0.3 升級後 K4 的設定重開仍讀得回來（[模擬]），全部測試也通過。接下來我會更新設計頁，然後 commit 這次搬家。
+
+</details></think>
+
+_**Agent (claude-opus-5-5 2026-11-17 18:32:35Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Document the new repo; stage the submodule move
+
+```bash
+python3 - <<'PY'
+def sub(p,a,b):
+    s=open(p).read(); assert a in s,(p,a[:60]); s=s.replace(a,b,1); open(p,'w').write(s)
+p='docs/dev/morse.md'
+sub(p,"把 FM-1 變成隨身的摩斯電碼機：琴鍵當電鍵發報、即時解碼成文字、琴鍵當字母鍵盤把文字播成摩斯、用閃卡隨身練習，也能接電腦和 [Vail](https://vailmorse.com/) 跟網路上的人互傳。韌體在 `firmware/morse/`，電腦端在 `host/morse/`，都是 MIT。",
+"把 FM-1 變成隨身的摩斯電碼機：琴鍵當電鍵發報、即時解碼成文字、琴鍵當字母鍵盤把文字播成摩斯、用閃卡隨身練習，也能接電腦和 [Vail](https://vailmorse.com/) 跟網路上的人互傳。韌體在獨立的 repo [fm1-morse](https://github.com/daviddwlee84/fm1-morse)（MIT，以 submodule 放在本 repo 的 `firmware/morse/`），電腦端在本 repo 的 `host/morse/`。")
+sub(p,"## 路線圖 { #roadmap }","""## 獨立 repo 和上架 { #release }
+
+2026-11-18 為了上架 [The Firmware Hub](../firmware/hub.md#listing)，韌體搬到 [daviddwlee84/fm1-morse](https://github.com/daviddwlee84/fm1-morse)（用 `git subtree split` 保留歷史），在本 repo 以 submodule 引回 `firmware/morse`。
+
+- **新 repo 的內容**：根目錄有 MIT `LICENSE`、`fmhub.json`（`kinds: other`、`sounds: none`，卡片圖是 `docs/screen.png`）、英文 README（含 Hub 要求說明的「其他韌體的資料」）、鎖定版本的 fm1-base submodule，以及自帶一份 `common/`（hostlink、ledfx）。
+- **identity 前綴改成 `FM-1_41`**：原本的 `FM-1_13` 和 Hub 上 FM-1 Midi-Mania 的 `FM-1_137` 開頭相同。目錄裡沒有任何 `FM-1_41x`，但送審前仍要用 Hub 的 #check 確認。開發版是 `FM-1_4100`，release 版是 `FM-1_41` 加 XXYYZZ（0.3 是 `FM-1_41000300`）。存檔位置不變，進度會保留。
+- **build**：在本 repo 用 `third_party/fm1-base` build（`just fw-test morse`、`just morse-release 0.3`）。子 repo 裡的那份 fm1-base 是給它單獨 build 用的，`fw-setup` 不會去抓。
+- **改程式的流程**：在 `firmware/morse` 裡 commit 並推到 fm1-morse，再到本 repo commit 新的 submodule 指標。
+
+上架還要做的：
+
+1. 在實機上走 USB-MIDI 更新路徑測三件事：從 Morse 換到別的韌體、從別的韌體裝 Morse、從原廠 V15 裝 Morse。
+2. 發一個附 `morse-0.3.fwsc` 的 GitHub release。
+3. 用 #check 確認 identity。
+4. 寄信給 Hub。
+
+## 路線圖 { #roadmap }""")
+PY
+just docs-check 2>&1 | tail -1 && git add -A && git status --short | head -20
+```
+
+```text
+{"status": "ok", "pages": 46, "llm_pages": 46, "deployed": false}
+A  .claude/plans/edge-computing-text-to-speech-moose-abstract-thacker.md
+M  .gitmodules
+M  .specstory/history/2026-11-17_13-42-11Z-ascii-firmware-focus-host.md
+M  .specstory/history/2026-11-17_17-51-27Z-edge-computing-text-to.md
+M  .specstory/statistics.json
+M  AGENTS.md
+M  Justfile
+M  README.md
+M  docs/dev/morse.md
+M  docs/device-log.md
+M  docs/firmware/hub.md
+M  docs/firmware/switching.md
+M  docs/index.md
+M  firmware/common/README.md
+A  firmware/morse
+D  firmware/morse/.gitignore
+D  firmware/morse/README.md
+D  firmware/morse/app.c
+D  firmware/morse/app.h
+D  firmware/morse/content.c
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 18:32:47Z)**_
+
+<think><details><summary>Thought Process</summary>
+暫存區裡還有另一個工作階段的 `.claude/plans/edge-computing-…` 檔案和它的 `.specstory` 紀錄，與這次搬家無關，所以我把它們留在 commit 之外，只提交搬家的改動。
+
+</details></think>
+
+_**Agent (claude-opus-5-5 2026-11-17 18:32:50Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Commit the submodule move and docs, leaving the other session's files out
+
+```bash
+git restore --staged .claude/plans/edge-computing-text-to-speech-moose-abstract-thacker.md .specstory/history/2026-11-17_17-51-27Z-edge-computing-text-to.md && cat .gitmodules && git commit -q -F - <<'EOF'
+Morse moves to its own repo (fm1-morse), back as a submodule
+
+firmware/morse is now github.com/daviddwlee84/fm1-morse (history kept
+with git subtree split), the repository The Firmware Hub will read:
+MIT LICENSE, fmhub.json, an English README, identity prefix FM-1_41.
+It is still built here with third_party/fm1-base; fw-setup no longer
+recurses into its own fm1-base. just morse-release X.Y builds the
+release package (0.3: FM-1_41000300).
+
+Docs: Morse 0.3 flashed 2026-11-18 02:12 (32 sectors as rehearsed),
+how a firmware gets listed on The Firmware Hub (fmhub.json, the three
+hardware tests, the email; its CONDUCTOR is another author's), the new
+repo and what the listing still needs.
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+EOF
+git log --oneline -1; git status --short
+```
+
+```text
+[submodule "third_party/fm1-base"]
+	path = third_party/fm1-base
+	url = https://github.com/charlesvestal/fm1-base.git
+[submodule "firmware/morse"]
+	path = firmware/morse
+	url = https://github.com/daviddwlee84/fm1-morse.git
+feb86e7 Morse moves to its own repo (fm1-morse), back as a submodule
+ M .specstory/history/2026-11-17_13-42-11Z-ascii-firmware-focus-host.md
+ M .specstory/history/2026-11-17_17-51-27Z-edge-computing-text-to.md
+ M .specstory/statistics.json
+?? .claude/plans/edge-computing-text-to-speech-moose-abstract-thacker.md
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 18:33:03Z)**_
+
+<think><details><summary>Thought Process</summary>
+已提交為 feb86e7，搬家完成且 firmware/morse 已指向 fm1-morse；接下來我會先確認 SLOOP 套件、fm1_install.py 的確認方式，以及 M-Flasher 能否還原原廠韌體，再規劃 Hub 要求的三項實機測試。
+
+</details></think>
+
+_**Agent (claude-opus-5-5 2026-11-17 18:33:04Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Verify SLOOP package; check install confirmation and M-Flasher commands
+
+`shasum -a 256 downloads/sloop-2.8.5.fwsc; grep -n "input(\|yes\b\|--yes\|confirm" third_party/fm1-base/tools/fm1_install.py | head -12; /Applications/M-Flasher.app/Contents/MacOS/M-Flasher --help 2>&1 | head -40`
+
+```text
+b0446effb840740a3aa5c386ce004e79334e4f833d48d82a9eb5edbfde92ae67  downloads/sloop-2.8.5.fwsc
+22:  fm1_install.py PACKAGE.fwsc [--port NAME] [--yes] [--force] [--classic]
+200:        self.inp = mido.open_input(in_name, callback=self._rx)
+424:        The loader (loader=True) may also ask 4 KiB reads and the sector table (the fast install: one it said yes to,
+505:        """step 2: the loader reads and writes the package (the fast install when it says yes), then restarts"""
+663:    if not a.yes and not ask("Install? Do not unplug the FM-1 while writing. [y/N] "):
+705:        return input(prompt).strip().lower() in ("y", "yes")
+715:    ap.add_argument("--yes", action="store_true", help="do not ask for confirmation")
+usage: m-flasher [find | download-mode | restart | info | backup [DIR] | restore BACKUP.bin [--keep-bootloader] |
+                 firmware PACKAGE.fwsc |
+                 bootloader [--stock PACKAGE.fwsc | --file UBOOT.boot] |
+                 run-ram IMAGE --addr ADDR [--call OPCODE]... [--read ADDR:LEN -o OUT]]
+       options: --device PATH  --board fm1|smk37  --backup-dir DIR  --yes
+                --restart (restore, firmware, bootloader: start the unit when written)
+       without arguments: the window (`m-flasher run-ram --help`: the run-ram command)
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 18:33:16Z)**_
+
+<think><details><summary>Thought Process</summary>
+SLOOP 套件的 hash 與下載時核對上游 release 的結果一致，`fm1_install.py` 寫入前會請你確認。M-Flasher 不附原廠韌體，我接下來去查文件裡記載的 V15 取得來源。
+
+</details></think>
+
+_**Agent (claude-opus-5-5 2026-11-17 18:33:16Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Find where docs say the stock V15 firmware comes from
+
+`grep -rn -i "015\|V15\|M-UPGRADE\|官方韌體\|stock.*fwsc\|FM-1.fwsc" docs/official.md docs/getting-started/recovery.md docs/firmware/index.md 2>/dev/null | head -20`
+
+```text
+docs/firmware/index.md:45:| [Macropad Patch](https://github.com/smememe/fm1-macropad-patch) | 把原廠 V15 patch 成 MIDI macro pad | host 端自訂所有按鍵行為 |
+docs/getting-started/recovery.md:31:- `FAILED -5`：Melodee 的 *Return to official V15*、或某些情況下的 M-UPGRADE，因為 boot 區與套件不同而拒絕。boot 區與韌體都沒被動到。改用 M-Flasher。
+docs/official.md:11:| [產品頁](https://www.cuvave.com/product?id=fm-1)（cuvave.com）、[m-vave.com 下載頁](https://www.m-vave.com/download) | 產品資訊、官方韌體與工具的下載 | 沒有 |
+docs/official.md:12:| 原廠韌體 `FM-1.fwsc` | 出廠與官方更新的韌體。我的機器出廠是 **015**；官方較新的是 016（8-part multitimbral 等） | 015 只存在我的原廠備份裡。沒裝過 016 |
+docs/official.md:13:| **M-UPGRADE**（又稱 M-Updater） | 官方的更新工具，PC 與 Mac。會重寫韌體與原廠 preset | 沒有。M-Flasher 可以直接安裝官方的 `.fwsc` |
+docs/official.md:22:- **想完整回到原廠**：我會還原自己的 015 備份（M-Flasher GUI 的 RESTORE FULL FLASH），不需要官方工具。沒有備份的人才需要 M-UPGRADE。
+docs/official.md:23:- **想試官方的新功能**：016 或 FM1 Open V14。注意 016 一執行就會覆寫 preset 區，之後降回 015 會有亂碼與音高錯誤，見[注意事項](getting-started/cautions.md)。
+docs/official.md:29:- 官方更新與 M-UPGRADE 會把**原廠 bootloader** 寫回去。裝了 m-bootloader 的人更新後要重裝。
+docs/official.md:30:- M-UPGRADE 只接受和機器自報型號相符的套件。
+docs/official.md:31:- 社群韌體把 USB 裝置名稱改掉之後，M-UPGRADE 可能找不到機器。SLOOP 的文件建議這時用 Clipper installer 頁面上的 Return to the official firmware。
+docs/official.md:35:- M-Flasher 能做完整 flash 備份與還原，M-UPGRADE 不能。
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 18:33:35Z)**_
+
+<think><details><summary>Thought Process</summary>
+原廠 V15 套件只在你的原廠備份裡，016 會覆寫 preset 區所以不建議裝；三項測試會用 fm1_install.py 寫入，其中從原廠 V15 裝 Morse 前需要你自己先用 M-Flasher 還原原廠備份，進度也會歸零。接下來我先準備測試 1，會請你把機器切到 download mode 並做一份完整備份。
+
+</details></think>
+
+_**Agent (claude-opus-5-5 2026-11-17 18:33:51Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Download mode, full backup, restart back into Morse
+
+`just fm1-find 2>&1 | tail -1; timeout 60 just fm1-download-mode < /dev/null 2>&1 | tail -1; timeout 90 just fm1-backup pre-hub-test-1 < /dev/null 2>&1 | tr '\r' '\n' | grep -E "firmware  |Backup saved|^[0-9a-f]{64}"; timeout 60 just fm1-restart < /dev/null 2>&1 | tail -1; sleep 2; just fm1-find 2>&1 | tail -1`
+
+```text
+midi	Felucca (running; download-mode switches it)
+In download mode: usb:2-4	WL82 UBOOT1.00 (USB bus 2, device 4)
+  firmware    FM-1 130
+Backup saved: backups/2026-11-18-pre-hub-test-1/fm1-20261118-023344.bin
+c2b315877b9a7e0edc59c308c866c166db68c2005a8aa000c82789cd732dfc3c  backups/2026-11-18-pre-hub-test-1/fm1-20261118-023344.bin
+Running: the Felucca is on USB MIDI
+midi	Felucca (running; download-mode switches it)
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 18:33:59Z)**_
+
+備份完成（SHA-256 `c2b31587…`），機器已經重開回 Morse。把這次準備記進 device log。
+
+_**Agent (claude-opus-5-5 2026-11-17 18:34:05Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Record the Hub test 1 backup in the device log
+
+```bash
+python3 - <<'PY'
+p='docs/device-log.md'
+s=open(p).read()
+a="| 2026-11-18 02:12 | 刷 Morse 0.3 之前的 Morse 0.2（含學習紀錄：ROUND 5、聽 20/8） | `backups/2026-11-18-pre-morse-0.3/fm1-20261118-021205.bin` + `.json` | `64e28fc9f9219abbcc8453d62f0f5132d980c27664c4626dd49f2424c06cc60f` | 尚未上傳 |\n"
+assert a in s
+s=s.replace(a,a+"| 2026-11-18 02:33 | Hub 測試 1（Morse → SLOOP，走 USB-MIDI）之前的 Morse 0.3 開發版（`FM-1_1300`） | `backups/2026-11-18-pre-hub-test-1/fm1-20261118-023344.bin` + `.json` | `c2b315877b9a7e0edc59c308c866c166db68c2005a8aa000c82789cd732dfc3c` | 尚未上傳 |\n",1)
+i=s.index("\n## Phase 1 驗收")
+row="| 2026-11-18 02:33 | agent 執行 `just fm1-download-mode`、`fm1-backup pre-hub-test-1`、`fm1-restart`（Hub 測試 1 的準備） | 備份 SHA-256 `c2b31587…732dfc3c`，重開回 Morse 0.3 |\n"
+s=s[:i].rstrip("\n")+"\n"+row+s[i:]
+open(p,'w').write(s)
+PY
+echo ok
+```
+
+```text
+ok
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 18:34:18Z)**_
+
+**Hub 測試 1：從 Morse 換到 SLOOP**，走 USB-MIDI 更新路徑，和 Hub 網頁安裝是同一套。這是一次韌體寫入，所以要你自己執行。
+
+**Preflight**
+
+| 項目 | 狀態 |
+|---|---|
+| 1. 完整備份 | `backups/2026-11-18-pre-hub-test-1/fm1-20261118-023344.bin`，SHA-256 `c2b315877b9a7e0edc59c308c866c166db68c2005a8aa000c82789cd732dfc3c`，已記進 device log。`fm1_install.py` 不會自己備份，所以這份就是退路 |
+| 2. 晶片 | `0xB36014`。SLOOP 2.8.5 支援新晶片，這台機器 11/17 跑過 `[實機]` |
+| 3. 套件 | `downloads/sloop-2.8.5.fwsc`，SHA-256 `b0446effb840740a3aa5c386ce004e79334e4f833d48d82a9eb5edbfde92ae67`，下載時已和 sloop-fm1 v2.8.5 的 release digest 核對過，剛才重算一致 |
+| 4. 會改什麼 | 目前是 Morse 0.3（`FM-1_1300`）、stock bootloader。流程是 Morse 透過 USB MIDI 讀取 SLOOP 套件的開頭，啟動 SLOOP 附的 update loader，再由 loader 寫入。loader 會暫放在 `0xE0000`，韌體區是 `0x04000`–`0x92FFF` 中和現在不同的 sector。SLOOP 開機後會寫自己的設定（`0xFC000` 一帶）。Morse 的紀錄 `0xDA000` 應該不會被動到，測試 2 裝回 Morse 時就能驗證 |
+
+請輸入：
+
+```
+! uv run --locked --all-groups python third_party/fm1-base/tools/fm1_install.py downloads/sloop-2.8.5.fwsc
+```
+
+它會問 `Install? Do not unplug the FM-1 while writing. [y/N]`，由你輸入 `y`。寫入中**不要拔線**。
+
+寫完機器會重開進 SLOOP。把輸出貼給我，我確認 SLOOP 正常（identity、是否在跑）之後，接著準備測試 2：從 SLOOP 裝回 Morse release 0.3。
+
+如果出問題，退路是用 M-Flasher 寫回備份，或用 `just fm1-switch` 重刷 Morse。
+
+---
+
+_**User (2026-11-17 18:36:48Z)**_
+
+```
+
+
+<pasted_content id="cc4a">
+我們用的是 **MIT**。新的 fm1-morse repo 根目錄放的就是 MIT `LICENSE`，這也是你剛才同意的選項。理由如下：
+
+- **fm1-base 允許 app 自選授權**：fm1-base 本身是 MPL-2.0，MPL 只要求「改到 fm1-base 自己的檔案時要開源那些檔案」，app 的程式碼可以用任何授權。AGENTS.md 也寫明了這點。
+- **我們沒有抄 GPL 的程式碼**：只有從 Felucca、SLOOP、Dinghy、Agent Deck 這些 GPL-3.0 韌體複製程式碼，才會被迫改成 GPL-3.0。Morse 全部自己寫，Koch 順序和 Vail 的 MIDI 格式都只是事實和規格，不受著作權限制。
+- **和既有的程式碼一致**：Conductor 和 `firmware/common/`（hostlink、ledfx）都是 MIT，fm1-morse 裡帶的那份 `common/` 也是。
+- **避開一個灰色地帶**：FM1 Dev Wiki 提到，GPL 韌體能不能連結 JieLi 的藍牙或 WiFi 函式庫還有疑義。之後 0.4 要加藍牙，用 MIT 就完全不用煩惱這件事（我們打算用 fm1-base 自己的 BLE stack，本來就不連 JieLi 的庫）。
+- **Hub 兩種都收**：它要求的是「GPL-3.0、MPL-2.0 或其他開源授權」，加上完整原始碼公開在 GitHub。
+
+**取捨**：MIT 允許別人拿去改成閉源版本，GPL-3.0 則強制衍生作品也要開源。如果你在意「別人改了要回饋」，GPL 比較合適；如果希望越多人用、越容易被別的韌體借用越好，MIT 比較合適。以一個學習工具來說，我傾向 MIT。
+
+你是唯一作者，所以之後的版本仍然可以改用別的授權。不過已經用 MIT 發出去的版本會一直是 MIT。
+</pasted_content id="cc4a">
+
+```
+
+感覺可以要求大家分享一下 改成用 GPL-3.0好了？
+
+```
+
+
+<pasted_content id="cc4a">
+❯ uv run --locked --all-groups python third_party/fm1-base/tools/fm1_install.py downloads/sloop-2.8.5.fwsc
+package: FM-1_900  (downloads/sloop-2.8.5.fwsc)
+device:  FM-1_1300  (Felucca)
+Install? Do not unplug the FM-1 while writing. [y/N] y
+starting the update on FM-1_1300
+checking the package (18 reads)
+switching to update mode
+writing   0%
+the loader reads and writes the whole package (classic install)
+writing 100%
+restarting
+done: the FM-1 runs FM-1_900
+</pasted_content id="cc4a">
+
+```
+
+成功進入 SLOOP （之前的歌曲還在）
+
+---
+
+_**Agent (claude-opus-5-5 2026-11-17 18:37:20Z)**_
+
+測試 1 通過 `[實機]`：從 Morse 用 USB-MIDI 換到 SLOOP 成功，機器回報 `FM-1_900`，舊的 SLOOP 歌曲也還在。SLOOP 附的 loader 比較舊，走的是一般安裝（classic install），不是只寫有變動部分的快速安裝。
+
+改成 GPL-3.0 可以，你是唯一的作者：
+
+- **相容性沒問題**：fm1-base 的 MPL-2.0 可以併入 GPL-3.0 的作品；`common/` 的 MIT 程式碼也可以放進 GPL 作品裡。SLOOP 就是 GPL-3.0 加上同一套 felucca-bsp 的前例。
+- **之前的版本仍是 MIT**：已經以 MIT 公開的那幾個 commit 仍然可以照 MIT 使用，之後的版本才是 GPL。
+- **用 GPL-3.0-or-later**：這是 GNU 建議的寫法，允許日後的 GPL 版本也適用。想要嚴格只限 3.0 的話，告訴我改成 GPL-3.0-only。
+- **只有韌體改**：`host/morse` 是另一支透過 MIDI 溝通的程式，留在這個 repo、維持 MIT。
+
+先把測試 1 記進 device log，再到 fm1-morse 換授權。
+
+_**Agent (claude-opus-5-5 2026-11-17 18:37:30Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Record Hub test 1; fetch the GPL-3.0 text
+
+```bash
+python3 - <<'PY'
+p='docs/device-log.md'
+s=open(p).read()
+old=[l for l in s.splitlines() if l.startswith("| 目前韌體 |")][0]
+s=s.replace(old,"| 目前韌體 | **SLOOP 2.8.5**（2026-11-18 Hub 測試 1：從 Morse 0.3 用 USB-MIDI 裝回，identity `FM-1_900`，之前的曲子還在）。之前依序是原廠 015 → SLOOP 2.8.5 → Agent Deck 0.7 → SLOOP 2.8.5 → CTL-1 1.0.3 → ChoralRoot 0.41 → Conductor 0.1 → 0.2 → 0.3 → Morse 0.1 → 0.2 → 0.3 |",1)
+i=s.index("\n## Phase 1 驗收")
+row="| 2026-11-18 02:40 | Hub 測試 1：本人執行 `fm1_install.py downloads/sloop-2.8.5.fwsc`（USB-MIDI 更新路徑，和 Hub 網頁安裝同一套），機器上是 Morse 0.3（`FM-1_1300`） | 成功：`checking the package (18 reads)` → `switching to update mode` → `the loader reads and writes the whole package (classic install)` → `done: the FM-1 runs FM-1_900`。重開進 SLOOP，之前的曲子還在。證明可以從 Morse 換到別的韌體 |\n"
+s=s[:i].rstrip("\n")+"\n"+row+s[i:]
+open(p,'w').write(s)
+PY
+cd firmware/morse && git status --short | head -3; git log --oneline -1; curl -fsSL https://www.gnu.org/licenses/gpl-3.0.txt -o /private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/0a574306-469e-4a59-9622-5701a42aee59/scratchpad/gpl-3.0.txt && head -3 /private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/0a574306-469e-4a59-9622-5701a42aee59/scratchpad/gpl-3.0.txt && wc -l /private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/0a574306-469e-4a59-9622-5701a42aee59/scratchpad/gpl-3.0.txt
+```
+
+```text
+57ea786 Its own repository: MIT licence, fmhub.json, identity FM-1_41
+                    GNU GENERAL PUBLIC LICENSE
+                       Version 3, 29 June 2007
+
+     674 /private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/0a574306-469e-4a59-9622-5701a42aee59/scratchpad/gpl-3.0.txt
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 18:37:39Z)**_
+
+<think><details><summary>Thought Process</summary>
+GPL-3.0 全文已取得；接下來在 fm1-morse 換成 GPL-3.0：LICENSE 與 Morse 自己的 SPDX 標頭改為 GPL-3.0-or-later，`common/` 保留 MIT，並更新 fm1.toml 與 README。
+
+</details></think>
+
+_**Agent (claude-opus-5-5 2026-11-17 18:37:47Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Switch fm1-morse to GPL-3.0-or-later, keep common/ MIT
+
+```bash
+cp /private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/0a574306-469e-4a59-9622-5701a42aee59/scratchpad/gpl-3.0.txt LICENSE && python3 - <<'PY'
+import glob
+own=['app.c','app.h','morse.c','morse.h','learn.c','learn.h','content.c','content.h','tone.c','tone.h','tests/morse_test.c']
+for f in own:
+    s=open(f).read()
+    assert s.startswith('/* SPDX-License-Identifier: MIT */'), f
+    s=s.replace('/* SPDX-License-Identifier: MIT */','/* SPDX-License-Identifier: GPL-3.0-or-later */',1)
+    open(f,'w').write(s)
+s=open('app.h').read()
+a=" * Built on fm1-base (MPL-2.0, its headers); this app and firmware/common are MIT. */"
+assert a in s
+s=s.replace(a," * Built on fm1-base (MPL-2.0, its headers). This app is GPL-3.0-or-later; common/ (hostlink, ledfx) is MIT. */")
+open('app.h','w').write(s)
+w=open('words.tsv').read().replace('# SPDX-License-Identifier: MIT','# SPDX-License-Identifier: GPL-3.0-or-later',1)
+open('words.tsv','w').write(w)
+t=open('fm1.toml').read().replace('licence = "MIT"','licence = "GPL-3.0-or-later"')
+open('fm1.toml','w').write(t)
+r=open('README.md').read()
+a="practice, type letters and CW phrases on the keys. MIT."
+assert a in r
+r=r.replace(a,"practice, type letters and CW phrases on the keys. GPL-3.0-or-later.")
+start=r.index("## License")
+r=r[:start]+"""## License
+
+GPL-3.0-or-later (see `LICENSE`): you may share and change it, and what you build from it and
+share must stay open too. Versions up to commit `57ea786` were published under MIT and stay
+available under it.
+
+- `common/` (hostlink, ledfx) is MIT, shared with other firmwares in
+  [M-VAVE_FM-1](https://github.com/daviddwlee84/M-VAVE_FM-1).
+- fm1-base, in `fm1-base/`, is MPL-2.0 (its files stay under it).
+- The Koch order is LCWO's; the MIDI keying follows the Vail adapter's published format.
+- Everything you hear is generated in code: no samples.
+"""
+open('README.md','w').write(r)
+PY
+grep -rn "SPDX" --include=*.c --include=*.h --include=*.tsv . | grep -v fm1-base | sort; grep -n licence fm1.toml
+```
+
+```text
+(eval):37: no matches found: --include=*.c
+14:licence = "GPL-3.0-or-later"
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 18:37:52Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+List SPDX headers and changed files
+
+`grep -rn "SPDX" . --include='*.c' --include='*.h' --include='*.tsv' | grep -v "^./fm1-base" | sort; head -2 LICENSE; git status --short`
+
+```text
+app.c:1:/* SPDX-License-Identifier: GPL-3.0-or-later */
+app.h:1:/* SPDX-License-Identifier: GPL-3.0-or-later */
+common/hostlink.c:1:/* SPDX-License-Identifier: MIT */
+common/hostlink.h:1:/* SPDX-License-Identifier: MIT */
+common/ledfx.c:1:/* SPDX-License-Identifier: MIT */
+common/ledfx.h:1:/* SPDX-License-Identifier: MIT */
+common/tests/hostlink_test.c:1:/* SPDX-License-Identifier: MIT */
+content.c:1:/* SPDX-License-Identifier: GPL-3.0-or-later */
+content.h:1:/* SPDX-License-Identifier: GPL-3.0-or-later */
+learn.c:1:/* SPDX-License-Identifier: GPL-3.0-or-later */
+learn.h:1:/* SPDX-License-Identifier: GPL-3.0-or-later */
+morse.c:1:/* SPDX-License-Identifier: GPL-3.0-or-later */
+morse.h:1:/* SPDX-License-Identifier: GPL-3.0-or-later */
+tests/morse_test.c:1:/* SPDX-License-Identifier: GPL-3.0-or-later */
+tone.c:1:/* SPDX-License-Identifier: GPL-3.0-or-later */
+tone.h:1:/* SPDX-License-Identifier: GPL-3.0-or-later */
+words.tsv:1:# SPDX-License-Identifier: GPL-3.0-or-later
+                    GNU GENERAL PUBLIC LICENSE
+                       Version 3, 29 June 2007
+ M LICENSE
+ M README.md
+ M app.c
+ M app.h
+ M content.c
+ M content.h
+ M fm1.toml
+ M learn.c
+ M learn.h
+ M morse.c
+ M morse.h
+ M tests/morse_test.c
+ M tone.c
+ M tone.h
+ M words.tsv
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 18:37:58Z)**_
+
+授權標頭都換好了。重新 build release 套件並跑測試，確認只改了授權、韌體行為沒變。
+
+_**Agent (claude-opus-5-5 2026-11-17 18:38:07Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Rebuild and test after the license change
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1 && just morse-unit 2>&1 | tail -1 && just fw-test morse 2>&1 | grep -E "^host:|FAIL|^words" | tail -3 && just morse-release 0.3 2>&1 | grep -E "^  ok    image|FAIL|error|^package|^words" ; shasum -a 256 firmware/morse/build/morse-0.3.fwsc; python3 -c "import json;d=json.load(open('firmware/morse/build/firmware.json'));print(d.get('license'), d.get('name'))"; cd firmware/morse && git status --short | grep -v "^ M" `
+
+```text
+2932 checks, 0 failed
+words: 10 own + 51 common -> /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/firmware/morse/web/words/d25d9228e2.json (1319 B)
+host: 196659 ms simulated, 1388 blits, render 0.0% of real time (host CPU)
+words: 10 own + 51 common -> /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/firmware/morse/web/words/d25d9228e2.json (1319 B)
+  ok    image 127900 B; RAM code .ram_text 5100 B of 32768; RAM .data+.bss 28444 B of 98304; pool 69384 B of 344064
+package  /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/firmware/morse/build/morse-0.3.fwsc  616003 B, identity FM-1_41000300
+1c563fdaeca50b95a782eac6252049564fbabb608b5859960e7d0f2470c0f1b3  firmware/morse/build/morse-0.3.fwsc
+GPL-3.0-or-later MORSE
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 18:38:15Z)**_
+
+<think><details><summary>Thought Process</summary>
+授權修改前後，套件的 SHA-256 完全沒變（仍是 `1c563fda…`），`firmware.json` 的授權欄已改為 `GPL-3.0-or-later`；接下來我會先 commit 並推送 fm1-morse，再更新這個 repo 中提到 Morse 授權的地方。
+
+</details></think>
+
+_**Agent (claude-opus-5-5 2026-11-17 18:38:24Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Commit and push the license change; find MIT mentions for Morse here
+
+```bash
+git add -A && git commit -q -F - <<'EOF'
+Licence: GPL-3.0-or-later
+
+MORSE's own code (app, morse, learn, content, tone, the tests, the
+screen reader's words) moves from MIT to GPL-3.0-or-later, so what is
+built from it and shared stays open. LICENSE is the GPL-3.0 text.
+common/ (hostlink, ledfx) stays MIT, as it is shared with other
+firmwares; fm1-base stays MPL-2.0. Versions up to 57ea786 were
+published under MIT and stay available under it.
+
+The package is unchanged byte for byte (only firmware.json's licence).
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+EOF
+git push -q origin main 2>&1 | tail -1; git log --oneline -3; cd ../.. && grep -rn "MIT" README.md docs/index.md docs/dev/morse.md AGENTS.md | grep -i -E "morse|自製韌體|own firmware|Our own|MIT-licensed|MIT。|都是 MIT" | head
+```
+
+```text
+748402f Licence: GPL-3.0-or-later
+57ea786 Its own repository: MIT licence, fmhub.json, identity FM-1_41
+ea5c817 Morse 0.3: TYPE's code on the keys fits; 0.2 on the unit
+README.md:22:Built here on [fm1-base](https://github.com/charlesvestal/fm1-base) (MPL-2.0), MIT-licensed.
+AGENTS.md:29:| `firmware/morse/` | Submodule: [fm1-morse](https://github.com/daviddwlee84/fm1-morse), own pocket Morse code machine (MIT, its own repo for The Firmware Hub, with `LICENSE` and `fmhub.json`). Built here with `third_party/fm1-base`; commit inside it, then bump the pointer here. Design: `docs/dev/morse.md`. |
+AGENTS.md:32:| `host/morse/` | Morse's host (Python, MIT): types what the FM-1 reads into the Mac, sends text for it to play. Protocol in `PROTOCOL.md` (keying is Vail-format MIDI note 0). |
+docs/index.md:46:在 [fm1-base](dev/index.md) 上寫的，MIT。每個專案是一套 FM-1 韌體，需要的話再加一個電腦端程式。
+docs/dev/morse.md:3:把 FM-1 變成隨身的摩斯電碼機：琴鍵當電鍵發報、即時解碼成文字、琴鍵當字母鍵盤把文字播成摩斯、用閃卡隨身練習，也能接電腦和 [Vail](https://vailmorse.com/) 跟網路上的人互傳。韌體在獨立的 repo [fm1-morse](https://github.com/daviddwlee84/fm1-morse)（MIT，以 submodule 放在本 repo 的 `firmware/morse/`），電腦端在本 repo 的 `host/morse/`。
+docs/dev/morse.md:259:- **新 repo 的內容**：根目錄有 MIT `LICENSE`、`fmhub.json`（`kinds: other`、`sounds: none`，卡片圖是 `docs/screen.png`）、英文 README（含 Hub 要求說明的「其他韌體的資料」）、鎖定版本的 fm1-base submodule，以及自帶一份 `common/`（hostlink、ledfx）。
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 18:38:40Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Update license mentions, bump the submodule, commit
+
+```bash
+python3 - <<'PY'
+def sub(p,a,b):
+    s=open(p).read(); assert a in s,(p,a[:60]); s=s.replace(a,b,1); open(p,'w').write(s)
+sub('README.md',"Built here on [fm1-base](https://github.com/charlesvestal/fm1-base) (MPL-2.0), MIT-licensed.","Built here on [fm1-base](https://github.com/charlesvestal/fm1-base) (MPL-2.0). Conductor and the shared modules are MIT; Morse's firmware is GPL-3.0-or-later (its host program here is MIT).")
+sub('AGENTS.md',"own pocket Morse code machine (MIT, its own repo for The Firmware Hub, with `LICENSE` and `fmhub.json`)","own pocket Morse code machine (GPL-3.0-or-later since 2026-11-18, MIT before; `common/` in it stays MIT; its own repo for The Firmware Hub, with `LICENSE` and `fmhub.json`)")
+sub('docs/index.md',"在 [fm1-base](dev/index.md) 上寫的，MIT。每個專案是一套 FM-1 韌體，需要的話再加一個電腦端程式。","在 [fm1-base](dev/index.md) 上寫的。Conductor 和共用模組是 MIT；Morse 的韌體是 GPL-3.0-or-later（電腦端仍是 MIT）。每個專案是一套 FM-1 韌體，需要的話再加一個電腦端程式。")
+p='docs/dev/morse.md'
+sub(p,"韌體在獨立的 repo [fm1-morse](https://github.com/daviddwlee84/fm1-morse)（MIT，以 submodule 放在本 repo 的 `firmware/morse/`），電腦端在本 repo 的 `host/morse/`。",
+"韌體在獨立的 repo [fm1-morse](https://github.com/daviddwlee84/fm1-morse)（GPL-3.0-or-later，以 submodule 放在本 repo 的 `firmware/morse/`），電腦端在本 repo 的 `host/morse/`（MIT）。")
+sub(p,"- **新 repo 的內容**：根目錄有 MIT `LICENSE`、","- **授權**：2026-11-18 從 MIT 改成 GPL-3.0-or-later，讓拿去改的人分享出來的版本也要開源。fm1-base 的 MPL-2.0 和 `common/` 的 MIT 都可以併入 GPL 作品；SLOOP 就是 GPL-3.0 加 felucca-bsp 的前例。之後的藍牙用 fm1-base 自己的 stack，不會連結 JieLi 的閉源函式庫，所以避開了 GPL 不能連結閉源庫的問題。`57ea786` 以前的版本以 MIT 公開，仍可依 MIT 使用。套件內容不受影響（改授權前後的 `.fwsc` 完全相同）。\n- **新 repo 的內容**：根目錄有 GPL-3.0 `LICENSE`、")
+PY
+git add firmware/morse README.md AGENTS.md docs/index.md docs/dev/morse.md docs/device-log.md && git commit -q -F - <<'EOF'
+Morse: GPL-3.0-or-later (fm1-morse 748402f); Hub test 1 passed
+
+fm1-morse's own code is GPL-3.0-or-later from 748402f (MIT up to
+57ea786); its common/ stays MIT, the host program here stays MIT. The
+package is unchanged byte for byte.
+
+Hub test 1 on the unit: from Morse 0.3, SLOOP 2.8.5 installed over
+USB-MIDI with fm1-base's fm1_install.py (the web installer's protocol):
+classic install, FM-1_900 running, SLOOP's songs still there.
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+EOF
+git log --oneline -1; just docs-check 2>&1 | tail -1
+```
+
+```text
+100e884 Morse: GPL-3.0-or-later (fm1-morse 748402f); Hub test 1 passed
+{"status": "ok", "pages": 46, "llm_pages": 46, "deployed": false}
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 18:38:51Z)**_
+
+<think><details><summary>Thought Process</summary>
+授權修改已完成並提交到兩邊，fm1-morse 也已推上 GitHub。接下來我會把機器切到 download mode 做完整備份，再重開回 SLOOP，準備進行 Hub 測試 2。
+
+</details></think>
+
+_**Agent (claude-opus-5-5 2026-11-17 18:39:08Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Back up the SLOOP state, restart, check identity and Morse record
+
+```bash
+just fm1-find 2>&1 | tail -1; timeout 60 just fm1-download-mode < /dev/null 2>&1 | tail -1; timeout 90 just fm1-backup pre-hub-test-2 < /dev/null 2>&1 | tr '\r' '\n' | grep -E "firmware  |Backup saved|^[0-9a-f]{64}"; timeout 60 just fm1-restart < /dev/null 2>&1 | tail -1; sleep 2; timeout 30 uv run --locked --all-groups python third_party/fm1-base/tools/fm1_install.py --info < /dev/null 2>&1 | tail -2; B=$(ls backups/*pre-hub-test-2*/*.bin | tail -1); python3 -c "
+b=open('$B','rb').read(); S=4096
+print('Morse record at 0xDA000/0xDB000 still there:', [hex(a) for a in (0xDA000,0xDB000) if b[a:a+S]!=b'\xff'*S])"
+```
+
+```text
+midi	Felucca (running; download-mode switches it)
+In download mode: usb:2-4	WL82 UBOOT1.00 (USB bus 2, device 4)
+  firmware    SLOOP 2.8.5
+Backup saved: backups/2026-11-18-pre-hub-test-2/fm1-20261118-023901.bin
+deacf5153e17b52a6675a429bf063cb76e29ffff01d87de3214cd824d4151464  backups/2026-11-18-pre-hub-test-2/fm1-20261118-023901.bin
+Running: the Felucca is on USB MIDI
+FM-1_900  [running]  port: Felucca
+Morse record at 0xDA000/0xDB000 still there: ['0xda000', '0xdb000']
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 18:39:14Z)**_
+
+備份完成（SHA-256 `deacf515…`），機器回到 SLOOP（`FM-1_900`）。從備份可以看到，裝了 SLOOP 之後，Morse 在 `0xDA000` 的紀錄還在 `[實機]`。記進 device log。
+
+_**Agent (claude-opus-5-5 2026-11-17 18:39:20Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Record the Hub test 2 backup in the device log
+
+```bash
+python3 - <<'PY'
+p='docs/device-log.md'
+s=open(p).read()
+a="| `backups/2026-11-18-pre-hub-test-1/fm1-20261118-023344.bin` + `.json` | `c2b315877b9a7e0edc59c308c866c166db68c2005a8aa000c82789cd732dfc3c` | 尚未上傳 |\n"
+assert a in s
+s=s.replace(a,a+"| 2026-11-18 02:39 | Hub 測試 2（SLOOP → Morse release，走 USB-MIDI）之前的 SLOOP 2.8.5（`0xDA000` 仍有 Morse 的紀錄） | `backups/2026-11-18-pre-hub-test-2/fm1-20261118-023901.bin` + `.json` | `deacf5153e17b52a6675a429bf063cb76e29ffff01d87de3214cd824d4151464` | 尚未上傳 |\n",1)
+i=s.index("\n## Phase 1 驗收")
+row="| 2026-11-18 02:39 | agent 執行 `just fm1-download-mode`（SLOOP 執行中）、`fm1-backup pre-hub-test-2`、`fm1-restart`，`fm1_install.py --info` | 備份 SHA-256 `deacf515…d4151464`，M-Flasher 回報 firmware `SLOOP 2.8.5`；重開回 SLOOP，`--info` 回答 `FM-1_900 [running]`。備份裡 `0xDA000`–`0xDBFFF` 的 Morse 紀錄沒被 SLOOP 動到 |\n"
+s=s[:i].rstrip("\n")+"\n"+row+s[i:]
+open(p,'w').write(s)
+PY
+echo ok
+```
+
+```text
+ok
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 18:39:30Z)**_
+
+**Hub 測試 2：從 SLOOP 裝 Morse release 0.3**。走 USB-MIDI 更新路徑，等於 Hub 使用者「從別的韌體安裝」的情境。這是一次韌體寫入，所以要你自己執行。
+
+**Preflight**
+
+| 項目 | 狀態 |
+|---|---|
+| 1. 完整備份 | `backups/2026-11-18-pre-hub-test-2/fm1-20261118-023901.bin`，SHA-256 `deacf5153e17b52a6675a429bf063cb76e29ffff01d87de3214cd824d4151464`，已記進 device log |
+| 2. 晶片 | `0xB36014`。Morse 0.1–0.3 都在這台機器上跑過 |
+| 3. 套件 | `firmware/morse/build/morse-0.3.fwsc`，SHA-256 `1c563fdaeca50b95a782eac6252049564fbabb608b5859960e7d0f2470c0f1b3`，identity **`FM-1_41000300`**（release 版、新前綴），由 fm1-morse `748402f` build（和 `57ea786` 的 build 完全相同）。兩種晶片上「從 0.3 開發版的紀錄升級、改設定、重開、讀回」都通過 `[模擬]` |
+| 4. 會改什麼 | 目前是 SLOOP 2.8.5（`FM-1_900`）。SLOOP 啟動 Morse 套件附的 fm1-base loader，由它寫入韌體區 `0x04000`–`0x92FFF`，loader 會暫放在 `0xE0000`。這個 loader 支援快速安裝，只寫有變動的 sector。Morse 的紀錄 `0xDA000` 不在寫入範圍內，所以開機後應該還是 ROUND 5。SLOOP 的曲子（`0x97000` 一帶）也不會被動到 |
+
+請輸入：
+
+```
+! uv run --locked --all-groups python third_party/fm1-base/tools/fm1_install.py firmware/morse/build/morse-0.3.fwsc
+```
+
+它問 `Install? ... [y/N]` 時輸入 `y`，寫入中不要拔線。
+
+完成後應該會印 `done: the FM-1 runs FM-1_41000300`，機器重開進 Morse。把輸出貼給我，並告訴我 PRACTICE 頁是不是 ROUND 5。
+
+接下來的測試 3（從原廠 V15 安裝）需要你先用 M-Flasher GUI 還原原廠備份，等測試 2 完成再說明。
+
+---
+
+_**User (2026-11-17 18:41:05Z)**_
+
+```
+
+
+<pasted_content id="cc4a">
+❯ uv run --locked --all-groups python third_party/fm1-base/tools/fm1_install.py firmware/morse/build/morse-0.3.fwsc
+package: FM-1_41000300  (firmware/morse/build/morse-0.3.fwsc)
+device:  FM-1_900  (Felucca)
+Install? Do not unplug the FM-1 while writing. [y/N] y
+starting the update on FM-1_900
+checking the package (30 reads)
+switching to update mode
+writing   0%
+the loader writes only the sectors that changed (fast install)
+writing 100%
+restarting
+done: the FM-1 runs FM-1_41000300
+</pasted_content id="cc4a">
+
+```
+
+這個也成功了
+
+（感覺這個走  USB-MIDI 的安裝體驗 好像比 just fm1-switch 的順暢一點點不知道為啥？ 哪一個更好？ (我們的docs有比較過嗎？)）
+
+---
+
+_**Agent (claude-opus-5-5 2026-11-17 18:41:36Z)**_
+
+測試 2 也通過 `[實機]`：從 SLOOP 用 USB-MIDI 裝 Morse release 成功，機器回報 `FM-1_41000300`。這次走的是快速安裝（只寫有變動的 sector），因為負責寫入的是 Morse 套件附的 fm1-base loader，比 SLOOP 附的新。PRACTICE 頁還是 ROUND 5 嗎？那是「換了韌體再換回來，進度還在」的實機證據。
+
+**為什麼 USB-MIDI 安裝感覺比較順**：我們的文件沒有比較過這兩條路，這次補上。差別在流程長短：
+
+| | `just fm1-switch`（M-Flasher） | `fm1_install.py`（USB-MIDI，Hub 網頁安裝同一套） |
+|---|---|---|
+| 誰負責寫 | 晶片內建的 download mode（UBOOT），M-Flasher 先把自己的 loader 載進 RAM | 正在跑的韌體先啟動新套件附的 update loader，由那個 loader 寫入 |
+| 步驟 | 切 download mode → 讀整顆 flash 做備份 → 列出寫入計畫 → 寫 → 整顆 CRC32 驗證 → 重開 | 確認套件 → 進更新模式 → 寫（新 loader 只寫有變動的）→ 重開 |
+| 自動備份 | 有 | 沒有 |
+| 現在的韌體壞了還能用嗎 | 能。只要 boot 區沒壞，不靠韌體 | 不能。要現在的韌體懂更新指令 |
+| 中斷後 | 重跑即可 | loader 停在更新模式，重跑就從中斷處繼續 |
+
+**哪個比較好**：
+
+- **開發和高風險的時候**用 `fm1-switch`：它會自動備份、整顆驗證，而且不依賴現在跑的韌體，最保險。
+- **兩個都正常的韌體之間換來換去**時，USB-MIDI 比較快、步驟少，也是一般使用者實際會走的路。
+
+兩者在這個 repo 的規則裡都算韌體寫入，一樣要先核准。我把這張比較表記進文件。
+
+_**Agent (claude-opus-5-5 2026-11-17 18:41:37Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+List sections in the switching page
+
+`grep -n "^## \|^### " docs/firmware/switching.md | head -20`
+
+```text
+12:## 把電腦當 firmware manager
+36:## 實機紀錄
+50:### SLOOP ↔ Agent Deck 互切不會丟曲子，但設定 sector 是共用的
+78:### 其他韌體會動到哪裡
+90:### 先在模擬器預演
+106:## m-apps slots 與 m-card
+119:## `run-ram`
+123:## `just fm1-switch`
+140:## 之後想做的
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 18:41:43Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Read the fm1-switch section
+
+`sed -n 123,140p docs/firmware/switching.md`
+
+````text
+## `just fm1-switch`
+
+兩個方向都實測過之後做成的捷徑：
+
+```sh
+just fm1-switch             # 不帶參數：列出可用的目標與目前連著的裝置
+just fm1-switch sloop       # 或 agtdeck，或任何 .fwsc 的路徑
+```
+
+具名目標：`sloop`、`agtdeck`、`ctl`、`choralroot`、`remote`，其他韌體把 `.fwsc` 的路徑傳進去。後三個用 `just fm1-fetch-more` 下載。清單也會列出 `downloads/` 與 `firmware/*/build/` 裡現有的套件。
+
+它依序做：確認沒有模擬器佔著 USB MIDI → 切 download mode → 備份到 `backups/<日期時間>-pre-<套件名>/` → 呼叫 M-Flasher 安裝（列出變更，等你輸入 `yes`）→ 重開機。屬於寫入等級，由本人執行。
+
+目標韌體已經裝著的時候，M-Flasher 會回報 `Nothing to write` 然後直接重開，不會問 `yes`。`[實機]`
+
+每次切換都會留一份刷前備份在本機，不會自動上傳。
+
+## 之後想做的
+````
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 18:42:08Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Document the two write paths and Hub test 2
+
+````bash
+python3 - <<'PY'
+def sub(p,a,b):
+    s=open(p).read(); assert a in s,(p,a[:60]); s=s.replace(a,b,1); open(p,'w').write(s)
+p='docs/firmware/switching.md'
+sub(p,"每次切換都會留一份刷前備份在本機，不會自動上傳。\n\n## 之後想做的","""每次切換都會留一份刷前備份在本機，不會自動上傳。
+
+## 兩種寫入路徑：download mode 與 USB-MIDI 更新 { #paths }
+
+2026-11-18 為了 Hub 的上架測試，兩條路都在實機上走過 `[實機]`：
+
+| | `just fm1-switch`（M-Flasher，download mode） | `fm1_install.py`（USB-MIDI 更新，和 Hub 網頁安裝同一套） |
+|---|---|---|
+| 誰負責寫 | 晶片的 download mode（`WL82 UBOOT1.00`），M-Flasher 先把自己的 loader 載進 RAM | 正在跑的韌體讀取新套件的開頭，啟動套件附的 update loader（暫放在 `0xE0000`），由它寫入 |
+| 步驟 | 切 download mode → 讀整顆 flash 做備份 → 列出要寫的 sector → 輸入 `yes` → 寫 → 整顆 CRC32 驗證 → 重開 | 確認套件 → 輸入 `y` → 進更新模式 → 寫 → 重開 → 確認新的 identity |
+| 寫多少 | 只寫和現在不同的 sector | 看 loader：fm1-base 的 loader 只寫有變動的（fast install）；SLOOP 2.8.5 附的較舊，整包重寫（classic install） |
+| 自動備份 | 有 | 沒有，要先自己 `just fm1-backup` |
+| 現在的韌體壞了 | 照樣能用，只要 boot 區沒壞 | 不能用，現在的韌體要懂更新指令 |
+| 中斷後 | 重跑 | loader 停在更新模式，重跑就從中斷處繼續（fm1-base 的說明） |
+| 感覺 | 步驟多、比較慢 | 步驟少、比較順 |
+
+**怎麼選**：
+
+- **開發、或不確定新韌體能不能開機時**：用 `fm1-switch`。它會自動備份、整顆驗證，而且不依賴現在跑的韌體。
+- **兩個都正常的韌體之間切換**：用 USB-MIDI 就好，這也是一般使用者從 Hub 網頁安裝時走的路。
+
+兩條路在 AGENTS.md 都算韌體寫入，一樣要先核准、由本人執行。
+
+```sh
+uv run --locked --all-groups python third_party/fm1-base/tools/fm1_install.py --info        # 唯讀：現在的 identity
+uv run --locked --all-groups python third_party/fm1-base/tools/fm1_install.py PACKAGE.fwsc  # 寫入：本人執行
+```
+
+## 之後想做的""")
+sub(p,"| 2026-11-18 | Morse 0.2 → 0.3（自製） |","| 2026-11-18 | Morse 0.3 → SLOOP 2.8.5 | `fm1_install.py`（USB-MIDI，Hub 測試 1） | 成功，classic install；SLOOP 的曲子還在 |\n| 2026-11-18 | SLOOP 2.8.5 → Morse 0.3 release（`FM-1_41000300`） | `fm1_install.py`（USB-MIDI，Hub 測試 2） | 成功，fast install；Morse 的紀錄在 SLOOP 期間沒被動到 |\n| 2026-11-18 | Morse 0.2 → 0.3（自製） |")
+p='docs/device-log.md'
+s=open(p).read()
+old=[l for l in s.splitlines() if l.startswith("| 目前韌體 |")][0]
+s=s.replace(old,"| 目前韌體 | **Morse 0.3 release（`FM-1_41000300`）**（2026-11-18 Hub 測試 2：從 SLOOP 用 USB-MIDI 安裝；USB 產品名 `MORSE FM-1`，macOS 的 MIDI port 仍顯示 `Felucca`）。之前依序是原廠 015 → SLOOP 2.8.5 → Agent Deck 0.7 → SLOOP 2.8.5 → CTL-1 1.0.3 → ChoralRoot 0.41 → Conductor 0.1 → 0.2 → 0.3 → Morse 0.1 → 0.2 → 0.3 → SLOOP 2.8.5 |",1)
+i=s.index("\n## Phase 1 驗收")
+row="| 2026-11-18 02:41 | Hub 測試 2：本人執行 `fm1_install.py firmware/morse/build/morse-0.3.fwsc`（Morse release，`FM-1_41000300`，SHA-256 `1c563fda…c0f1b3`），機器上是 SLOOP 2.8.5 | 成功：`checking the package (30 reads)` → `switching to update mode` → `the loader writes only the sectors that changed (fast install)` → `done: the FM-1 runs FM-1_41000300`。證明可以從別的韌體裝 Morse。本人覺得比 `fm1-switch` 順，比較見[兩種寫入路徑](firmware/switching.md#paths) |\n"
+s=s[:i].rstrip("\n")+"\n"+row+s[i:]
+open(p,'w').write(s)
+p='docs/dev/morse.md'
+sub(p,"1. 在實機上走 USB-MIDI 更新路徑測三件事：從 Morse 換到別的韌體、從別的韌體裝 Morse、從原廠 V15 裝 Morse。",
+"1. 在實機上走 USB-MIDI 更新路徑測三件事：從 Morse 換到別的韌體（2026-11-18 通過，Morse 0.3 → SLOOP）、從別的韌體裝 Morse（2026-11-18 通過，SLOOP → Morse release 0.3 `FM-1_41000300`）、從原廠 V15 裝 Morse（還沒做）。")
+PY
+just docs-check 2>&1 | tail -1
+````
+
+```text
+{"status": "ok", "pages": 46, "llm_pages": 46, "deployed": false}
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 18:42:22Z)**_
+
+<think><details><summary>Thought Process</summary>
+比較表已存入 docs/firmware/switching.md。接下來做 Hub 測試 3（從原廠 V15 裝 Morse），先把整台還原到出廠狀態；測試前我會先備份目前的 Morse 版本與進度，測完再還原回來。
+
+</details></think>
+
+_**Agent (claude-opus-5-5 2026-11-17 18:42:39Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Back up Morse release state; restart; verify stock backup hash
+
+`timeout 60 just fm1-download-mode < /dev/null 2>&1 | tail -1; timeout 90 just fm1-backup pre-hub-test-3 < /dev/null 2>&1 | tr '\r' '\n' | grep -E "firmware  |Backup saved|^[0-9a-f]{64}"; timeout 60 just fm1-restart < /dev/null 2>&1 | tail -1; sleep 2; timeout 30 uv run --locked --all-groups python third_party/fm1-base/tools/fm1_install.py --info < /dev/null 2>&1 | tail -1; shasum -a 256 backups/2026-11-17-stock/fm1-20261117-011632.bin`
+
+```text
+In download mode: usb:2-4	WL82 UBOOT1.00 (USB bus 2, device 4)
+  firmware    FM-1 410
+Backup saved: backups/2026-11-18-pre-hub-test-3/fm1-20261118-024232.bin
+5601847d2505efa80d85ec611a0813f2854bb9f40c91cb49d47d65299f7e50b5  backups/2026-11-18-pre-hub-test-3/fm1-20261118-024232.bin
+Running: the Felucca is on USB MIDI
+FM-1_41000300  [running]  port: Felucca
+c6a4790266bdb9e97500c20f50a98b80f0d334d8a219e1744bfc8e656a44fd38  backups/2026-11-17-stock/fm1-20261117-011632.bin
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 18:42:48Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Record the Hub test 3 backup in the device log
+
+```bash
+python3 - <<'PY'
+p='docs/device-log.md'
+s=open(p).read()
+a="| `backups/2026-11-18-pre-hub-test-2/fm1-20261118-023901.bin` + `.json` | `deacf5153e17b52a6675a429bf063cb76e29ffff01d87de3214cd824d4151464` | 尚未上傳 |\n"
+assert a in s
+s=s.replace(a,a+"| 2026-11-18 02:42 | Hub 測試 3 之前的 Morse 0.3 release（`FM-1_41000300`，含學習紀錄）：測完要回到這裡就還原這份 | `backups/2026-11-18-pre-hub-test-3/fm1-20261118-024232.bin` + `.json` | `5601847d2505efa80d85ec611a0813f2854bb9f40c91cb49d47d65299f7e50b5` | 尚未上傳 |\n",1)
+i=s.index("\n## Phase 1 驗收")
+row="| 2026-11-18 02:42 | agent 執行 `just fm1-download-mode`、`fm1-backup pre-hub-test-3`、`fm1-restart`，`fm1_install.py --info` | M-Flasher 回報 firmware `FM-1 410`；備份 SHA-256 `5601847d…f7e50b5`；重開回 Morse，`--info` 回答 `FM-1_41000300 [running]`。原廠備份重算 SHA-256 仍是 `c6a47902…44fd38` |\n"
+s=s[:i].rstrip("\n")+"\n"+row+s[i:]
+open(p,'w').write(s)
+PY
+echo ok
+```
+
+```text
+ok
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 18:42:59Z)**_
+
+**Hub 測試 3：從原廠 V15 裝 Morse**。分三步，前兩步只能由你做：
+
+**第 1 步（你）：用 M-Flasher GUI 還原原廠備份**
+
+照 AGENTS.md 的規則，restore 不能由我發起。
+
+1. 打開 M-Flasher，選 RESTORE FULL FLASH。
+2. 選 `backups/2026-11-17-stock/fm1-20261117-011632.bin`。這是 11/17 存的原廠 015 完整備份，SHA-256 `c6a4790266bdb9e97500c20f50a98b80f0d334d8a219e1744bfc8e656a44fd38`，剛才重算一致，GitHub Release 上也有異地副本。
+3. **確認之前先看 M-Flasher 列出的寫入範圍**：boot 區 `0x00000`–`0x03FFF` 應該**不在**清單裡。這台的 bootloader 一直是原廠的，兩邊相同。如果清單裡有 boot 區，先停下來告訴我。
+4. 還原後整台會回到出廠狀態：機器上的 SLOOP 曲子和 Morse 進度都會不見。它們都留在備份裡：SLOOP 在 `pre-hub-test-2`，Morse 在 `pre-hub-test-3`。
+
+**第 2 步（我，唯讀）：確認機器跑的是原廠 015**
+
+用 `fm1-find` 和 `fm1_install.py --info` 確認。
+
+**第 3 步（你）：從原廠裝 Morse**
+
+```
+! uv run --locked --all-groups python third_party/fm1-base/tools/fm1_install.py firmware/morse/build/morse-0.3.fwsc
+```
+
+這一步會先給你 preflight。
+
+**測完之後**，你可以選擇：
+
+- 保留這個全新安裝的 Morse，從 ROUND 1 重新開始；
+- 用 M-Flasher GUI 還原 `backups/2026-11-18-pre-hub-test-3/fm1-20261118-024232.bin`（SHA-256 `5601847d…`），回到現在這個有進度的 Morse release。
+
+現在的狀態也已經記進 device log。準備好了就照第 1 步還原，完成後告訴我，我接著確認並給你第 3 步的 preflight。
+
+---
+
+_**User (2026-11-17 18:46:10Z)**_
+
+還原好了，原廠開機了
+
+```
+❯ just fm1-find
+"/Applications/M-Flasher.app/Contents/MacOS/M-Flasher" find
+midi    FM-1 (running; download-mode switches it)
+
+❯ uv run --locked --all-groups python third_party/fm1-base/tools/fm1_install.py  --info
+FM-1_015  [running]  port: FM-1
+```
+
+---
+
+_**Agent (claude-opus-5-5 2026-11-17 18:46:23Z)**_
+
+原廠 015 開機了：USB 上是 `FM-1_015 [running]`，port 名稱 `FM-1`。
+
+第 3 步之前，先切到 download mode 讀一份最新的完整備份（原廠可以透過 USB MIDI 切換，11/17 驗證過）。一方面當作這次寫入前的備份，一方面拿它和原廠備份的 hash 比對，確認還原是完整的。備份完會重開回原廠。
+
+_**Agent (claude-opus-5-5 2026-11-17 18:46:44Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Back up the restored stock state, compare with the stock backup, restart
+
+```bash
+timeout 60 just fm1-download-mode < /dev/null 2>&1 | tail -1; timeout 90 just fm1-backup pre-hub-test-3-stock < /dev/null 2>&1 | tr '\r' '\n' | grep -E "firmware  |bootloader|Backup saved|^[0-9a-f]{64}"; timeout 60 just fm1-restart < /dev/null 2>&1 | tail -1; sleep 3; timeout 30 uv run --locked --all-groups python third_party/fm1-base/tools/fm1_install.py --info < /dev/null 2>&1 | tail -1; B=$(ls backups/*pre-hub-test-3-stock*/*.bin | tail -1); python3 - "$B" <<'PY'
+import sys
+S=4096
+a=open(sys.argv[1],'rb').read(); s=open('backups/2026-11-17-stock/fm1-20261117-011632.bin','rb').read()
+d=[hex(i*S) for i in range(256) if a[i*S:(i+1)*S]!=s[i*S:(i+1)*S]]
+print("sectors differing from the 11/17 stock backup:", d if d else "none (identical)")
+PY
+```
+
+```text
+In download mode: usb:2-4	WL82 UBOOT1.00 (USB bus 2, device 4)
+  bootloader  stock (M-VAVE)
+  firmware    FM-1 015 (stock)
+Backup saved: backups/2026-11-18-pre-hub-test-3-stock/fm1-20261118-024636.bin
+c6a4790266bdb9e97500c20f50a98b80f0d334d8a219e1744bfc8e656a44fd38  backups/2026-11-18-pre-hub-test-3-stock/fm1-20261118-024636.bin
+Running: the FM-1 is on USB MIDI
+FM-1_015  [running]  port: FM-1
+sectors differing from the 11/17 stock backup: none (identical)
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 18:46:52Z)**_
+
+<think><details><summary>Thought Process</summary>
+還原已完成：讀出的 flash 與 11/17 的原廠備份 SHA-256 完全相同，M-Flasher 也確認為 FM-1 015 原廠 bootloader。我接著把結果記入 device log。
+
+</details></think>
+
+_**Agent (claude-opus-5-5 2026-11-17 18:46:57Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Record the stock restore and its verification
+
+```bash
+python3 - <<'PY'
+p='docs/device-log.md'
+s=open(p).read()
+old=[l for l in s.splitlines() if l.startswith("| 目前韌體 |")][0]
+s=s.replace(old,"| 目前韌體 | **原廠 FM-1 015**（2026-11-18 為了 Hub 測試 3，本人用 M-Flasher GUI 還原 11/17 的原廠備份；讀回的 flash 和原廠備份完全相同；USB port 名稱 `FM-1`，identity `FM-1_015`）。之前依序是原廠 015 → SLOOP 2.8.5 → Agent Deck 0.7 → SLOOP 2.8.5 → CTL-1 1.0.3 → ChoralRoot 0.41 → Conductor 0.1 → 0.2 → 0.3 → Morse 0.1 → 0.2 → 0.3 → SLOOP 2.8.5 → Morse 0.3 release |",1)
+i=s.index("\n## Phase 1 驗收")
+rows=("| 2026-11-18 02:45 | 本人用 M-Flasher GUI 還原 `backups/2026-11-17-stock/fm1-20261117-011632.bin`（RESTORE FULL FLASH） | 原廠開機；`fm1-find` 顯示 `midi FM-1 (running)`，`fm1_install.py --info` 回答 `FM-1_015 [running] port: FM-1` |\n"
+      "| 2026-11-18 02:46 | agent 執行 `just fm1-download-mode`（原廠執行中）、`fm1-backup pre-hub-test-3-stock`、`fm1-restart` | M-Flasher 回報 bootloader stock、firmware `FM-1 015 (stock)`；備份 SHA-256 `c6a47902…44fd38`，**和 11/17 的原廠備份逐 sector 完全相同**：還原是完整的。重開回原廠 |\n")
+s=s[:i].rstrip("\n")+"\n"+rows+s[i:]
+open(p,'w').write(s)
+PY
+echo ok
+```
+
+```text
+ok
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 18:47:08Z)**_
+
+**Hub 測試 3：從原廠 V15 裝 Morse**，走 USB-MIDI 更新路徑。這是一次韌體寫入，所以要你自己執行。
+
+**Preflight**
+
+| 項目 | 狀態 |
+|---|---|
+| 1. 完整備份 | 現在的 flash 就是原廠狀態：`backups/2026-11-18-pre-hub-test-3-stock/fm1-20261118-024636.bin`，SHA-256 `c6a4790266bdb9e97500c20f50a98b80f0d334d8a219e1744bfc8e656a44fd38`，和 11/17 的原廠備份相同。這份原廠備份 GitHub Release 上也有異地副本 |
+| 2. 晶片 | `0xB36014`。Morse release 剛才在測試 2 已經跑過 |
+| 3. 套件 | `firmware/morse/build/morse-0.3.fwsc`，SHA-256 `1c563fdaeca50b95a782eac6252049564fbabb608b5859960e7d0f2470c0f1b3`，identity `FM-1_41000300`，就是測試 2 用的同一個檔案 |
+| 4. 會改什麼 | 目前是原廠 015（`FM-1_015`）、stock bootloader。原廠韌體會用 M-VAVE 自己的更新指令啟動 Morse 套件附的 loader，再由 loader 寫入韌體區 `0x04000`–`0x92FFF`，loader 暫放在 `0xE0000`。boot 區不動。原廠的設定區（`0x93000`–`0xE8FFF`）會有一部分被暫放的 loader 蓋到，之後要回原廠就還原原廠備份。Morse 會用預設值、從 ROUND 1 開始 |
+
+請輸入：
+
+```
+! uv run --locked --all-groups python third_party/fm1-base/tools/fm1_install.py firmware/morse/build/morse-0.3.fwsc
+```
+
+它問 `Install? ... [y/N]` 時輸入 `y`，寫入中不要拔線。應該會看到 `done: the FM-1 runs FM-1_41000300`。
+
+這一項通過的話，Hub 要求的三項實機測試就全部完成了。之後要不要還原回有進度的 Morse（`pre-hub-test-3` 那份備份），等測完再決定。
+
+---
+
+_**User (2026-11-17 18:48:31Z)**_
+
+```
+
+
+<pasted_content id="cc4a">
+❯  uv run --locked --all-groups python third_party/fm1-base/tools/fm1_install.py firmware/morse/build/morse-0.3.fwsc
+package: FM-1_41000300  (firmware/morse/build/morse-0.3.fwsc)
+device:  FM-1_015  (FM-1)
+Install? Do not unplug the FM-1 while writing. [y/N] y
+starting the update on FM-1_015
+checking the package (34 reads)
+switching to update mode
+writing   0%
+the loader writes only the sectors that changed (fast install)
+writing 100%
+restarting
+done: the FM-1 runs FM-1_41000300
+</pasted_content id="cc4a">
+
+```
+確實回到 ROUND 1 了 （不過進度目前是無所謂 因為也還算零基礎）
+
+---
+
+_**Agent (claude-opus-5-5 2026-11-17 18:49:04Z)**_
+
+測試 3 也通過 `[實機]`：從原廠 015 用 USB-MIDI 裝 Morse release 成功，走的是快速安裝，機器回報 `FM-1_41000300`，進度回到 ROUND 1。
+
+**Hub 要求的三項實機測試全部完成了**：
+
+| 測試 | 結果 |
+|---|---|
+| 從原廠 V15 安裝 | 通過（015 → Morse，fast install） |
+| 從別的韌體安裝 | 通過（SLOOP 2.8.5 → Morse，fast install） |
+| 從 Morse 再裝別的韌體 | 通過（Morse → SLOOP 2.8.5，classic install） |
+
+既然進度不重要，就不用再還原了。先把結果記進文件。
+
+_**Agent (claude-opus-5-5 2026-11-17 18:49:13Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Record Hub test 3 and the completed test set
+
+```bash
+python3 - <<'PY'
+def sub(p,a,b):
+    s=open(p).read(); assert a in s,(p,a[:60]); s=s.replace(a,b,1); open(p,'w').write(s)
+p='docs/device-log.md'
+s=open(p).read()
+old=[l for l in s.splitlines() if l.startswith("| 目前韌體 |")][0]
+s=s.replace(old,"| 目前韌體 | **Morse 0.3 release（`FM-1_41000300`）**（2026-11-18 Hub 測試 3：從原廠 015 用 USB-MIDI 安裝，進度從 ROUND 1 重新開始；USB 產品名 `MORSE FM-1`）。之前依序是原廠 015 → SLOOP 2.8.5 → Agent Deck 0.7 → SLOOP 2.8.5 → CTL-1 1.0.3 → ChoralRoot 0.41 → Conductor 0.1 → 0.2 → 0.3 → Morse 0.1 → 0.2 → 0.3 → SLOOP 2.8.5 → Morse 0.3 release → 原廠 015（還原） |",1)
+i=s.index("\n## Phase 1 驗收")
+row="| 2026-11-18 02:48 | Hub 測試 3：本人執行 `fm1_install.py firmware/morse/build/morse-0.3.fwsc`，機器上是原廠 015（`FM-1_015`，port `FM-1`） | 成功：`checking the package (34 reads)` → `switching to update mode` → `the loader writes only the sectors that changed (fast install)` → `done: the FM-1 runs FM-1_41000300`。PRACTICE 從 ROUND 1 開始（原廠備份裡沒有 Morse 紀錄）。Hub 要求的三項實機測試全部通過 |\n"
+s=s[:i].rstrip("\n")+"\n"+row+s[i:]
+open(p,'w').write(s)
+sub('docs/firmware/switching.md',"| 2026-11-18 | Morse 0.3 → SLOOP 2.8.5 | `fm1_install.py`（USB-MIDI，Hub 測試 1） |","| 2026-11-18 | 原廠 015 → Morse 0.3 release | `fm1_install.py`（USB-MIDI，Hub 測試 3）；原廠是本人用 M-Flasher GUI 還原的 | 成功，fast install |\n| 2026-11-18 | Morse 0.3 → SLOOP 2.8.5 | `fm1_install.py`（USB-MIDI，Hub 測試 1） |")
+sub('docs/dev/morse.md',"從原廠 V15 裝 Morse（還沒做）。","從原廠 V15 裝 Morse（2026-11-18 通過，015 → Morse release，fast install）。三項都在新晶片 `0xB36014` 的機器上做。")
+PY
+just docs-check 2>&1 | tail -1
+```
+
+```text
+{"status": "ok", "pages": 46, "llm_pages": 46, "deployed": false}
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 18:49:31Z)**_
+
+文件已更新。上架只剩下面這些步驟，其中有對外公開的動作，所以先問你：
+
+**1. 發 GitHub release（要你同意，我來做）**
+
+在 fm1-morse 打上 `v0.3` 標籤（commit `748402f`），附上 `morse-0.3.fwsc`（SHA-256 `1c563fda…`，就是剛才三項測試用的那個檔案）和 `firmware.json`。Hub 上架後會自動從 release 抓套件。0.x 版本會被標成 beta，這是正常的。
+
+**2. 送審前的檢查（在 Hub 網頁上，你來做比較方便）**
+
+- 到 https://thefirmwarehub.com/submit/#check 確認 identity `FM-1_41000300` 沒有被別人用掉。我從它的目錄看，沒有任何 `FM-1_41x`。
+- 到 https://thefirmwarehub.com/kb/#fmhub 用「Check your file」檢查 repo 根目錄的 `fmhub.json`（已經推上去了）。
+
+**3. 送審（你來送）**
+
+Hub 的送審頁說用表單（https://thefirmwarehub.com/submit/），另一份舊文件則說寄 email 到 zven@thefirmwarehub.com。兩者擇一，表單看起來比較新。要填的內容我先擬好了：
+
+```
+Firmware: MORSE
+Maker: daviddwlee84
+Repository: https://github.com/daviddwlee84/fm1-morse
+Identity: FM-1_41000300 (prefix FM-1_41)
+Licence: GPL-3.0-or-later (fm1-base MPL-2.0)
+
+MORSE is a Morse code trainer and keyer for the FM-1 (kind: other; it makes
+sound: sidetone, flash cards by ear, listening practice).
+
+Tested on a real FM-1 with the newer flash chip (0xB36014), all over the
+USB-MIDI update (fm1-base's fm1_install.py, the web installer's protocol):
+- installed from the stock V15 firmware (015): fast install, runs
+- installed from another firmware (SLOOP 2.8.5): fast install, runs
+- installed SLOOP 2.8.5 from MORSE: works, SLOOP's songs kept
+The package carries fm1-base's update loader.
+```
+
+「Maker」要顯示 `daviddwlee84` 還是你的本名，由你決定，`fmhub.json` 的 `author` 會跟著改。
+
+**4. commit**
+
+這幾次的 device log、兩種寫入路徑的比較、Hub 測試紀錄都還沒 commit。
+
+要我現在 commit 並發 v0.3 release 嗎？送審完、Hub 收錄之後，我會照你之前說的，把整個上架流程整理成 agent skill。
+
+---
+
+_**User (2026-11-17 18:53:28Z)**_
+
+好，commit 然後發 v0.3 release
+
+[Image #10] 確認了 identity 沒有用掉
+[Image #11] 也確認能讀到我們的repo
+
+---
+
+_**User (2026-11-17 18:53:28Z)**_
+
+[Image: source: /private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/0a574306-469e-4a59-9622-5701a42aee59/images/10.png]
+
+[Image: source: /private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/0a574306-469e-4a59-9622-5701a42aee59/images/11.png]
+
+---
+
+_**Agent (claude-opus-5-5 2026-11-17 18:53:39Z)**_
+
+收到。identity 是空的，`fmhub.json` 也通過檢查，卡片會顯示我們的描述、作者、類別和截圖。
+
+先發 release：確認套件 hash 沒變，在 fm1-morse 打 `v0.3` 標籤並推上去。
+
+_**Agent (claude-opus-5-5 2026-11-17 18:53:47Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Verify the package, tag v0.3 in fm1-morse and push the tag
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/firmware/morse && shasum -a 256 build/morse-0.3.fwsc && git status --short | head -3; git log --oneline -1 && git tag -a v0.3 -m "MORSE 0.3" && git push -q origin v0.3 2>&1 | tail -1; git ls-remote --tags origin v0.3`
+
+```text
+1c563fdaeca50b95a782eac6252049564fbabb608b5859960e7d0f2470c0f1b3  build/morse-0.3.fwsc
+748402f Licence: GPL-3.0-or-later
+cb6f987a89b991d293ae5c912d6141521b640a63	refs/tags/v0.3
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 18:54:07Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Create the v0.3 GitHub release with the package and firmware.json
+
+```bash
+cat > /private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/0a574306-469e-4a59-9622-5701a42aee59/scratchpad/release-notes.md <<'EOF'
+The first release of MORSE, a pocket Morse code machine for the M-VAVE FM-1.
+
+- **KEY**: key on the piano keys (straight key or iambic A/B paddles) and read what you sent, as text, as each letter over the dits and dahs you keyed, or as bars to scale.
+- **RHYTHM**: drills of short and long presses with a judgement per press, a hint, and a send speed that fits your hand.
+- **PRACTICE**: flash cards by sound, Leitner boxes, new letters in Koch order.
+- **LISTEN**: endless practice: Koch groups, common words, a made-up QSO, abbreviations with their meaning, sayings.
+- **TYPE**: letters, digits and signs, CW phrases and prosigns on the keys; live or compose.
+- Keying over USB-MIDI in the Vail adapter's format.
+
+| | |
+|---|---|
+| Package | `morse-0.3.fwsc` |
+| Identity | `FM-1_41000300` |
+| SHA-256 | `1c563fdaeca50b95a782eac6252049564fbabb608b5859960e7d0f2470c0f1b3` |
+| Flash chips | saves and updates on `856014` and `B36014` |
+| Licence | GPL-3.0-or-later (fm1-base MPL-2.0, `common/` MIT) |
+
+Tested on an FM-1 with the newer flash chip (`B36014`), over the USB-MIDI update (fm1-base's `fm1_install.py`, the web installer's protocol): installed from the stock V15 firmware (015), installed from SLOOP 2.8.5, and SLOOP 2.8.5 installed from MORSE. The package carries fm1-base's update loader.
+
+MORSE keeps its settings and progress at `0xDA000`-`0xDBFFF` and does not read other firmwares' projects or samples: see the README. Back up your flash before installing.
+EOF
+gh release create v0.3 -R daviddwlee84/fm1-morse --verify-tag --title "MORSE 0.3" --notes-file /private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/0a574306-469e-4a59-9622-5701a42aee59/scratchpad/release-notes.md build/morse-0.3.fwsc build/firmware.json 2>&1 | tail -2; gh api repos/daviddwlee84/fm1-morse/releases/tags/v0.3 --jq '.html_url, (.assets[] | "\(.name) \(.size) \(.digest)")'
+```
+
+```text
+https://github.com/daviddwlee84/fm1-morse/releases/tag/v0.3
+https://github.com/daviddwlee84/fm1-morse/releases/tag/v0.3
+firmware.json 1083 sha256:02772eeb496fb1b6aaeab69f18521488e79d09b26f146863a659136d1284ec0d
+morse-0.3.fwsc 616003 sha256:1c563fdaeca50b95a782eac6252049564fbabb608b5859960e7d0f2470c0f1b3
+```
+</details></tool-use>

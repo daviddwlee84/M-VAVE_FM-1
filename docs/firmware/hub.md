@@ -99,4 +99,6 @@ M-VAVE 官方的產品頁與下載在 [cuvave.com](https://www.cuvave.com/produc
 
 上架之後，fm1-emu 和 RemoteFM1 的清單會自動從 Hub 帶進去。awesome-fm-1（每個 PR 一筆）、aroum/fm1-custom-fw、fm1-editor.com（開 issue）、FM-1 Firmware Atlas（PR 改 `data/firmwares.json`）則要另外提交。公告通常發在 r/MVaveFM1。
 
+**自己的進度**：Morse 照這份清單準備，2026-11-18 完成三項實機測試、發布 v0.3 release，identity 檢查和 `fmhub.json` 檢查都通過，接下來送審。過程見 [Morse](../dev/morse.md#release)。
+
 **注意同名**：Hub 上的 CONDUCTOR 是 MammothCheese 的 groovebox（`MammothCheese/conductor`，GPL-3.0，identity `FM-1_1812`），不是本 repo 的 [Conductor](../agentic/conductor.md)。Hub 和 fm1-emu 上的 id `conductor` 已經被它用了。
