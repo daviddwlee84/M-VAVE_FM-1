@@ -83,6 +83,8 @@ def main(argv=None) -> int:
     ap.add_argument("--herdr-socket")
     ap.add_argument("--herdr-session")
     ap.add_argument("--poll", type=float, default=2.0, help="seconds between full refreshes")
+    ap.add_argument("--no-ble-connect", action="store_true",
+                    help="do not try to connect an FM-1 over Bluetooth when no MIDI port is found")
     ap.add_argument("--no-voice", action="store_true", help="ARP does not press the dictation hotkey")
     ap.add_argument("--slots", help="slot memory file (default ~/.config/conductor/slots-BACKEND.json)")
     args = ap.parse_args(argv)
@@ -103,8 +105,24 @@ def main(argv=None) -> int:
         try:
             link = MidiLink(args.port)
         except RuntimeError as e:
-            print(e, file=sys.stderr)
-            return 2
+            link = None
+            if sys.platform == "darwin" and not args.no_ble_connect and not args.port:
+                # macOS does not reconnect a Bluetooth MIDI device after it restarts: do it here
+                from .blelink import BleError, connect
+
+                print("[ble] no MIDI port; looking for an FM-1 over Bluetooth ...")
+                try:
+                    name = connect(memo=CONFIG_DIR / "ble.json")
+                    if name:
+                        print(f"[ble] connected: {name}")
+                        link = MidiLink(args.port)
+                    else:
+                        print("[ble] none advertising", file=sys.stderr)
+                except (BleError, RuntimeError) as be:
+                    print(f"[ble] {be}", file=sys.stderr)
+            if link is None:
+                print(e, file=sys.stderr)
+                return 2
         print(f"[midi] {link.name}")
 
     slots = SlotMap(args.slots or CONFIG_DIR / f"slots-{backend.name}.json")

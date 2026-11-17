@@ -155,13 +155,14 @@ just cond-run        # 2. daemon：自動接 hc 與 classic Herdr 裡的 agent
 
 1. 第一次：Mac 的「音訊 MIDI 設定」→ 選單「視窗 → 顯示 MIDI 工作室」（`⌘2`）→ 工具列的藍牙圖示 → 找到 `FM-1 XXXX`（我的是 `FM-1 3399`，每台固定），按「連接」。不需要配對碼。注意：預設打開的是「音訊裝置」視窗，那裡和系統設定的「聲音」都不會列 MIDI 裝置。
 2. 跑 `just cond-run`。daemon 自己找到藍牙那個 port；USB 也插著時優先用 USB。
-3. 標頭右上角：沒有 host 時，`BLE` 灰色 = 廣播中、藍色 = 電腦已連上；有 host 時出現藍色 `BLE` = 正在走藍牙。
+3. **FM-1 重開之後，macOS 不會自己重新連上**（2026-11-17 實測 `[實機]`）。daemon 找不到任何 port 時，會自己用 CoreBluetooth 找廣播中的 `FM-1 XXXX` 並交給 CoreMIDI，不用再開 MIDI 工作室。也可以單獨做：`just cond-ble connect` / `just cond-ble disconnect`。第一次會要求 terminal 的藍牙權限。不想要自動連線：`just cond-run --no-ble-connect`
+4. 標頭右上角：沒有 host 時，`BLE` 灰色 = 廣播中、藍色 = 電腦已連上；有 host 時出現藍色 `BLE` = 正在走藍牙。
 
 斷開與移除：
 
 | 想做的事 | 怎麼做 |
 |---|---|
-| 斷開連線 | 同一個藍牙設定視窗按 `FM-1 XXXX` 旁的「中斷連線」；或在 FM-1 按 `OCT+` 關掉藍牙（再按一次會重新廣播） |
+| 斷開連線 | `just cond-ble disconnect`（斷開 `cond-ble connect` 或 daemon 連上的那台）；或藍牙設定視窗按「中斷連線」；或在 FM-1 按 `OCT+` 關掉藍牙（再按一次會重新廣播） |
 | 「取消配對」 | 不需要：Conductor 不配對，系統設定的藍牙清單裡不會有它 |
 | 移除 MIDI 工作室裡的圖示 | 斷開後，選灰色的 `FM-1 XXXX` 圖示，按工具列的「−」（或 Delete）。下次連接會再出現 |
 | port 名稱還是舊韌體的 `Felucca` | FM-1 拔掉 USB 時，在 MIDI 工作室刪掉灰色的 `Felucca` / `FM-1` 圖示，再插上就會用現在的 USB 名稱 `[調研]` |

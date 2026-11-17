@@ -117,6 +117,7 @@ host/conductor（Python daemon）
 | 哪條路 | 沒有 host 時，USB 有電腦就從 USB、藍牙有連線就從藍牙各送一份 HELLO（帶著傳輸方式）；之後只走 HELLO_ACK 來的那條。daemon 兩條都聽到時選 USB |
 | 不寫 flash | 位址由 own stack 從 flash 晶片的唯一 ID 算出（每次開機一樣，名稱 `FM-1 XXXX`）；不開配對（fm1-base：macOS、iOS 不配對也能連）。所以 app 接管藍牙的保存（`APP_BLE_STORE`），只放 RAM，不需要 `OBJ_BLE`。fm1-emu 兩種晶片仍是 0 次寫入 `[模擬]` |
 | 開關 | 每次開機都開；`OCT+` 關到下次開機（不存設定，所以也不寫 flash） |
+| 重新連線 | macOS 不會在 FM-1 重開後自己連回去 `[實機]`。CoreMIDI 有公開的 `MIDIBluetoothConnection.h`（macOS 13 起）：用 CoreBluetooth 掃描並連上周邊，呼叫 `MIDIBluetoothDriverActivateAllConnections` 讓 CoreMIDI 接手，再放掉 CoreBluetooth 的連線；`MIDIBluetoothDriverDisconnect(uuid)` 斷開 `[上游]`。daemon 找不到 port 時照這個流程自己連（`bleak`）|
 | DETAIL | 藍牙上只送 ASCII 文字；點陣圖一行 558 bytes，BLE MIDI 太慢。設定 `detail_pictures_ble: true` 可以強制送圖 |
 | 容量 | app 122 KB、RAM `.data+.bss` 38 KB（上限 96 KB）；`ble_diag = false` 省下 2.4 KB RAM |
 
@@ -318,8 +319,8 @@ Preflight：
 - [ ] classic Herdr 的動作（approve / deny / focus）在一個新開的測試 workspace 裡驗證。
 - [x] Bluetooth（0.3），見 [USB 與 Bluetooth](#bluetooth)。
 - [x] 藍牙在實機連通（2026-11-17）。
-- [ ] FM-1 關機再開機後，macOS 會不會自己重新連上藍牙（還沒試）。
-- [ ] 不用 GUI 連線：`just cond-ble connect / disconnect`（CoreBluetooth + `MIDIBluetoothDriverActivateAllConnections`），見[速查](conductor-cheatsheet.md#bluetooth)。
+- [x] FM-1 關機再開機後，macOS **不會**自己重新連上藍牙（2026-11-17 `[實機]`）。
+- [ ] 不用 GUI 連線：`just cond-ble connect / disconnect` 與 daemon 的自動連線已寫好（CoreBluetooth 掃描與連線 + `MIDIBluetoothDriverActivateAllConnections`，`host/conductor/blelink.py`），**還沒對實機試過**。
 - [ ] `codex app-server` backend。
 - [ ] 語音鍵（`ARP`）對真的 Wispr Flow 試一次：host 單元測試確認了送出的按鍵與一定會放開，**還沒在有輔助使用權限的 terminal 裡實際觸發過** Wispr Flow。
 - [x] 實刷（2026-11-17），見[實刷準備](#flash)。
