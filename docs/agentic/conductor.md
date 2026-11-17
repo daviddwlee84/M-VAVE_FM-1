@@ -195,6 +195,50 @@ daemon 的設定檔是 `~/.config/conductor/config.json`（可省略），可以
 | fm1-emu `uc25hq80` / `p25q80` | 都列舉成 USB `CONDUCTOR FM-1`、每秒 HELLO、收到 HELLO_ACK 後改送 HEARTBEAT、畫面正確；**flash 0 次 erase / program** | `[模擬]` |
 | daemon ↔ fm1-emu（虛擬 USB） | daemon 經 CoreMIDI 找到 `CONDUCTOR FM-1 (emu)`，收到 HELLO 並送出整張表 | `[模擬]` |
 
+## 實刷準備 { #flash }
+
+**狀態（2026-11-17）：除了「接上實機才能做」的兩項，`AGENTS.md` 要求的檢查都做完了。**
+
+要刷的套件：
+
+| 項目 | 值 |
+|---|---|
+| 檔案 | `firmware/conductor/build/conductor.fwsc`（616,003 B，identity `FM-1_1200`，USB 產品名 `CONDUCTOR FM-1`） |
+| 來源 | commit `d45ce67`（原本是 `ba67827`，之後 amend 只加了計畫檔與 `.specstory`，原始碼相同），乾淨的工作區重新 build |
+| SHA-256 | `de1827239a4a9f395316cf9d5d6b9f02f41abdebcde8197aa0f51b78e0d502f3` |
+| 支援的晶片 | `856014`、`B36014`（build 產生的 `firmware.json`；fm1-base 的 `device/fm1_flash_ok.h` 與測試）`[上游]` |
+
+Preflight：
+
+| 檢查 | 結果 | 標記 |
+|---|---|---|
+| `just fw-test conductor` | 全部 `ok` | `[模擬]` host simulator |
+| fm1-emu 兩種晶片：開機 → 重開 → 再讀回 | `uc25hq80`、`p25q80` 都 0 次 erase / program，重開前後 flash 與畫面完全相同（這個韌體沒有東西要存） | `[模擬]` |
+| 換韌體預演（疊在最新的實機備份 `2026-11-17-0413-pre-choralroot-0.41` 上開機） | 正常開機、USB 列舉、收得到 host 的 frame；開機後 0 個 sector 被改寫。套件映像 `0x04000`–`0x92FFF`，和備份相比不同的有 124 個 sector（`0x04000`–`0x7FFFF`） | `[模擬]` |
+| 退路一：M-Flasher 切下載模式 | 送出 M-Flasher 用的進入更新模式 SysEx（`F0 22 24 35 7D F7`，felucca-bsp `chip/usb.c`）後，USB 斷開再重連，和 SLOOP 2.8.5、Agent Deck 0.7 在同一測試下的反應相同；那兩套都在實機上用 M-Flasher 切走過。模擬器不模擬 ROM 更新模式 | `[模擬]` |
+| 退路二：開機時按住 `REC` | fm1-base 開機時偵測到 `REC` 就進入晶片的更新模式（`device/main_fm1.c`），給「韌體能開機但 USB 不通」時用 | `[上游]` |
+| 目前的韌體與 bootloader | ChoralRoot 0.41、原廠 bootloader（[我的機器](../device-log.md)）。**接上後用 `just fm1-info` 再確認一次** | 待實機 |
+| 完整備份（目前 ChoralRoot 的狀態） | **還沒有**：最新的備份是刷 ChoralRoot 之前的。接上後先 `just fm1-backup pre-conductor`，SHA-256 記進[我的機器](../device-log.md) | 待實機 |
+
+會被改的地方：韌體區 `0x04000`–`0x92FFF`。ChoralRoot 的映像到 `0x9EFFF`，`0x93000`–`0x9EFFF` 留著不動，Conductor 不讀它。Conductor 不寫設定 sector `0xFC000`，也不寫任何資料區。實際寫入範圍以 M-Flasher 刷之前印出的計畫為準。
+
+### 刷的步驟（由我本人執行）
+
+1. 關掉模擬器（`fm1-switch` 看到模擬器在 USB 上會拒絕執行，避免刷錯對象）。
+2. FM-1 用 USB **資料線**直接接 Mac，不經過 hub。
+3. agent 跑 `just fm1-info` 和 `just fm1-backup pre-conductor`（唯讀；會先把機器切到下載模式），把 SHA-256 記進 device log。
+4. 我自己跑：
+
+    ```sh
+    just fm1-switch firmware/conductor/build/conductor.fwsc
+    ```
+
+    它會再備份一次，然後 M-Flasher 列出寫入計畫；確認範圍在 `0x04000`–`0x92FFF` 附近，再打 `yes`。
+5. 重開後螢幕顯示 `AGENTS` / `NO AGENTS`、右上角 `NO HOST`。跑 `just cond-run`，右上角變成 backend 名稱就是連上了。
+6. 回 ChoralRoot：`just fm1-switch choralroot`（其他韌體同理）。
+
+刷完後要更新：[我的機器](../device-log.md)、[多韌體切換](../firmware/switching.md)的實機紀錄、[Flash 配置圖](../hardware/flash-map.md)。
+
 ## 還沒做 / 下一步
 
 - [ ] approve 的按鍵：預設 Enter（Claude Code 與 Codex 的權限選單預設選「Yes」）。`SAVE`（不再詢問）預設 Claude `2`、Codex `a`，**還沒對真的 session 驗證過** `[調研]`。先用一個用完即丟的 session 試，再把結果寫回這裡。
@@ -203,4 +247,4 @@ daemon 的設定檔是 `~/.config/conductor/config.json`（可省略），可以
 - [ ] Bluetooth：先確認 BLE 收 SysEx 的路徑，再照上面的設計實作。
 - [ ] `codex app-server` backend。
 - [ ] 語音鍵（`ARP`）對真的 Wispr Flow 試一次：host 單元測試確認了送出的按鍵與一定會放開，**還沒在有輔助使用權限的 terminal 裡實際觸發過** Wispr Flow。
-- [ ] 實刷：照 `AGENTS.md` 的 preflight，經我批准才做。換韌體前也要照[多韌體切換](../firmware/switching.md)跑 `just emu-rehearse`。
+- [ ] 實刷：preflight 只差接上實機的兩項，見[實刷準備](#flash)。

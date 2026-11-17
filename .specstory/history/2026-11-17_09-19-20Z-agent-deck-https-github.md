@@ -15695,3 +15695,338 @@ _**Agent (claude-opus-5-5 2026-11-17 10:25:20Z)**_
 <summary>Tool use: **Read**</summary>
  `/private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/c6419d02-4c76-47d7-b11c-b7db01c7f2b4/scratchpad/rehearse.png`
 </details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 10:25:26Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Read the rest of the switching page
+
+`sed -n 11,37p docs/firmware/switching.md; sed -n 44,90p docs/firmware/switching.md | grep -n "^|\|^#" | head -20`
+
+````text
+## 把電腦當 firmware manager
+
+每套韌體各留一份「裝好並設定好之後」的完整 flash 備份。切換時還原那份備份，回來的不只是韌體，還有它的設定、音色與 project。
+
+建議的本機目錄（都在 gitignore 裡）：
+
+```text
+backups/
+  2026-11-17-stock/          原廠，最重要的一份
+  2026-11-17-sloop-2.8.5/    SLOOP 裝好、設定好之後
+downloads/
+  sloop-2.8.5.fwsc
+```
+
+這個目錄結構是我自己的安排，不是上游工具的要求。
+
+注意：
+
+- 完整還原會連 boot 區與裝置資料一起寫。只用**這台機器自己**的備份。
+- 之後若裝了 m-bootloader 又想還原較舊的備份，要用 **Keep this unit's bootloader**（CLI：`--keep-bootloader`），否則 bootloader 會被舊備份蓋回去。
+- 還原屬於高風險操作，由本人執行，不交給 agent。見[工作流與權限](../agentic/index.md)。
+
+只是想換一套韌體、不在乎保留前一套的狀態時，直接 `m-flasher firmware` 安裝新的 `.fwsc` 就好。M-Flasher 在資料配置不同的韌體之間切換時會警告。
+
+## 實機紀錄
+
+1:| 2026-11-17 | Agent Deck 0.7 → SLOOP 2.8.5 | 同上，只裝韌體、不還原備份 | 寫入成功、能開機，**SLOOP 的曲子都還在** |
+3:### SLOOP ↔ Agent Deck 互切不會丟曲子，但設定 sector 是共用的
+7:| 區域 | 位址 | 數量 | 內容 |
+8:|---|---|---|---|
+9:| 韌體區 | `0x04000`–`0x8FFFF` | 140 | 韌體本身 |
+10:| 設定 sector | `0xFC000` | 1 | Agent Deck 把自己的設定寫在這裡，**蓋掉了 SLOOP 原本存在這裡的設定** |
+17:| 位址 | 內容 | Agent Deck 來回之後 |
+18:|---|---|---|
+19:| `0x97000` | project | 沒變 |
+20:| `0x9F000` | autosave | 沒變 |
+21:| `0xFC000` | 設定 | **被 Agent Deck 蓋掉，尚未被 SLOOP 寫回** |
+22:| `0xFD000` | 另一份設定（內容與 `0xFC000` 大小相同） | 沒變 |
+23:| `0xFE000` | autosave 的另一份 | SLOOP 回來後有更新 |
+31:### 其他韌體會動到哪裡
+35:| 韌體 | 第一次開機改寫 | 對我的影響 |
+36:|---|---|---|
+37:| CTL-1 1.0.3 | `0xDE000`–`0xDFFFF` | 在我的映像裡原本是空的。存設定時還會寫 `0xFC000` |
+38:| RemoteFM1 0.3.6 | `0xF2000`–`0xF3FFF` | `0xF2000` 有原廠留下的資料，會被蓋掉 |
+39:| ChoralRoot 0.41 | 沒有改寫；正常開機 | **韌體映像本身較大（到 `0x9EFFF`），安裝時就會蓋掉 SLOOP 在 `0x97000` 的 project。** 上游另記載過舊版在 SLOOP 資料上掉進 ROM boot mode，見 [ChoralRoot](choralroot/index.md) |
+41:### 先在模擬器預演
+````
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 10:25:42Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Add Conductor to the switching page's firmware table
+
+```bash
+python3 - <<'EOF'
+p='docs/firmware/switching.md'
+s=open(p).read()
+old=[l for l in s.splitlines() if l.startswith("| ChoralRoot 0.41 | 沒有改寫")][0]
+s=s.replace(old, old+"\n| Conductor 0.1（自製） | 沒有改寫，重開再讀回也是 0 次寫入 `[模擬]` | 韌體映像 `0x04000`–`0x92FFF`，不到 `0x97000`。只讀 panel calibration（`0xDC000`），不碰 `0xFC000`。預演是疊在 `2026-11-17-0413-pre-choralroot-0.41` 備份上做的，見 [Conductor](../agentic/conductor.md#flash) |")
+open(p,'w').write(s)
+EOF
+grep -c "Conductor 0.1" docs/firmware/switching.md
+```
+
+```text
+1
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 10:25:50Z)**_
+
+還有一個關鍵問題要確認：刷上 Conductor 之後，能不能從 USB 再切回下載模式換別的韌體（也就是退路）。查一下 fm1-base 怎麼說。
+
+_**Agent (claude-opus-5-5 2026-11-17 10:25:52Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Check fm1-base notes on update path and download mode
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/third_party/fm1-base && grep -n -i -E "m-flasher|download mode|download-mode|recovery|update loader|ota" README.md | head -15`
+
+```text
+230:firmwares (The Firmware Hub, RemoteFM1, M-Flasher): its name, author, licence, a paragraph on it, tags, the install
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 10:25:57Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Find how fm1-base apps enter download/update mode over USB
+
+`grep -rn -i -E "download mode|rom boot|uboot|0x59|upgrade mode|enter.*loader" device/main_fm1.c bsp/README.md bsp/docs/*.md 2>/dev/null | head -12`
+
+```text
+device/main_fm1.c:1147:static void enter_uboot(const char *why)
+device/main_fm1.c:1158:    fm1_enter_uboot();
+device/main_fm1.c:1221:        if (usb.uboot_req)
+device/main_fm1.c:1222:            enter_uboot("UBOOT (USB)");
+device/main_fm1.c:1224:            enter_uboot("UPDATE MODE (REC)");
+device/main_fm1.c:1368:        enter_uboot("UPDATE MODE (REC)");           /* REC held at power-on: the chip's update mode, the same key as
+device/main_fm1.c:1481:        if (usb.uboot_req)
+device/main_fm1.c:1482:            enter_uboot("UBOOT (USB)");
+device/main_fm1.c:1502:        fm1_enter_uboot();
+device/main_fm1.c:1506:        fm1_enter_uboot();
+device/main_fm1.c:1541:        fm1_enter_uboot();
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 10:26:02Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Read the update-mode entry paths in fm1-base
+
+`sed -n 1140,1160p device/main_fm1.c; sed -n 1360,1372p device/main_fm1.c; grep -rn "uboot_req = 1\|uboot_req=1" bsp device | head -3`
+
+```text
+    bootguard.pending = 0;                          /* intentional reset: not a failed boot */
+    radio_clean_exit();
+    fm1_clock_restore();                            /* (a soft reset keeps the PLL: stock for what starts next) */
+    fm1_reboot();
+}
+#endif
+
+static void enter_uboot(const char *why)
+{
+    fm1_clock_restore();                            /* (the chip's update mode at the stock clock) */
+    fm1_audio_stop();
+    lcd_fill(0, 0, 240, 240, C_BLACK);
+    sys_box(0, 110, 240, SYS_S, why, C_WHITE, 1);
+    fm1_delay_ms(20);
+    usb_detach();
+    fm1_delay_ms(30);
+    bootguard.pending = 0;                          /* intentional reset: not a failed boot */
+    radio_clean_exit();
+    fm1_enter_uboot();
+}
+
+     * its rhythm through a render (X0X's finding: below the audio, turns lost steps and LEDs flickered) */
+    fm1_timer5_start(isr_timer5, 4);
+    fm1_guard_lock_top();
+    fm1_irq_enable_all();
+    fm1_delay_ms(30);
+    if ((fm1_in.buttons & 3u) == 3u)
+        panel_setup();                              /* OCT- + OCT+ held at power-on */
+    if (fm1_in.buttons & (1u << panel.btn[B_REC]))
+        enter_uboot("UPDATE MODE (REC)");           /* REC held at power-on: the chip's update mode, the same key as
+                                                     * m-bootloader's (which takes it first when it is installed): a way
+                                                     * in when this firmware starts but its USB cannot be reached */
+    fm1_delay_ms(400);
+    radio_boot_note();                                /* what ended the last Bluetooth run, into its log */
+bsp/chip/usb.c:1368:            usb.uboot_req = 1;
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 10:26:14Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Read what USB request triggers update mode
+
+`sed -n 1352,1370p bsp/chip/usb.c`
+
+```text
+        return;
+#if FELUCCA_OTA
+    if (sx_collect && b != 0xF0 && b != 0xF7) {
+        if (sx_room())
+            sx_frame[sx_at + sx_pos++] = b;
+        else
+            sx_collect = 0;                             /* too long, or no room: dropped */
+    }
+#endif
+    if (usb.sx_len < sizeof usb.sysex)
+        usb.sysex[usb.sx_len++] = b;
+    if (b == 0xF7) {
+        uint32_t i, ok = usb.sx_len == 6u;
+        for (i = 0; ok && i < 6u; i++)
+            ok = usb.sysex[i] == UBOOT_KEY[i];
+        if (ok)
+            usb.uboot_req = 1;
+#if FELUCCA_OTA
+        else if (usb.sx_len == 6u && usb.sysex[1] == 0x22 && usb.sysex[2] == 0x24 && usb.sysex[3] == 0x35 &&
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 10:26:21Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Find the update-mode magic SysEx bytes
+
+`grep -rn "UBOOT_KEY\[\]\|UBOOT_KEY =" bsp | head -3`
+
+```text
+(Bash completed with no output)
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 10:26:27Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Locate the UBOOT_KEY definition
+
+`grep -rn "UBOOT_KEY" bsp | grep -v "UBOOT_KEY\[i\]" | head -3`
+
+```text
+bsp/chip/usb.c:1329:    static const uint8_t UBOOT_KEY[6] = {0xF0, 0x22, 0x24, 0x35, 0x7D, 0xF7};
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 10:26:31Z)**_
+
+正在確認退路：在 headless 模擬器裡送出 M-Flasher 用來切換下載模式的那段 SysEx，看 Conductor 會不會正確進入更新模式。
+
+_**Agent (claude-opus-5-5 2026-11-17 10:26:36Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Send the update-mode SysEx to Conductor in a headless emulator
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/tools/emu-state && pkg=$PWD/../../firmware/conductor/build/conductor.fwsc; rm -f uboot-test.flash; FM1_USB_SEND='2000:F02224357DF7' ../fm1-emu/fm1-live --fwsc "$pkg" --flash-chip uc25hq80 --flash uboot-test.flash --midi none --usb --shot 4000 --lcd-only > uboot-test.log 2>&1; grep -i -E "uboot|update|rom|detach|boot|usb:" uboot-test.log | head -12; cp work/lcd.ppm uboot-lcd.ppm`
+
+```text
+[   302 ms] usb: Configured { product: "CONDUCTOR FM-1", vid: 4617, pid: 1 }
+[  2022 ms] usb: Detached
+[  2346 ms] usb: Configured { product: "CONDUCTOR FM-1", vid: 4617, pid: 1 }
+usb: 10998 SIE accesses (11.0 ms of CPU at 240 cycles each), 0 packets out, 2 in
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 10:26:47Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Compare the same update-mode request on SLOOP and Agent Deck
+
+`for p in sloop-2.8.5 agtdeck-0.7; do rm -f ut-$p.flash; FM1_USB_SEND='2000:F02224357DF7' ../fm1-emu/fm1-live --fwsc ../../downloads/$p.fwsc --flash-chip uc25hq80 --flash ut-$p.flash --midi none --usb --shot 4000 --lcd-only 2>&1 | grep -E "usb: (Configured|Detached)|uboot|ROM" | sed "s/^/$p: /"; done; rm -f ut-*.flash uboot-test.flash`
+
+```text
+sloop-2.8.5: [   349 ms] usb: Configured { product: "Felucca", vid: 4617, pid: 1 }
+sloop-2.8.5: [  2028 ms] usb: Detached
+sloop-2.8.5: [  2406 ms] usb: Configured { product: "Felucca", vid: 4617, pid: 1 }
+agtdeck-0.7: [   334 ms] usb: Configured { product: "FM-1 AGTDECK", vid: 4617, pid: 1 }
+agtdeck-0.7: [  2006 ms] usb: Detached
+agtdeck-0.7: [  2367 ms] usb: Configured { product: "FM-1 AGTDECK", vid: 4617, pid: 1 }
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 10:26:59Z)**_
+
+<think><details><summary>Thought Process</summary>
+退路已確認：Conductor 收到 M-Flasher 的下載模式請求時，模擬器裡的反應與 SLOOP、Agent Deck 相同，但模擬器不模擬晶片的 ROM 更新模式，所以只能證明行為一致；另有開機時按住 `REC` 直接進入更新模式 `[上游]` 的第二條退路。接下來我會把實刷準備寫進設計頁。
+
+</details></think>
+
+_**Agent (claude-opus-5-5 2026-11-17 10:27:18Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Write the flash-readiness section and run docs check
+
+````bash
+cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1 && python3 - <<'EOF'
+p='docs/agentic/conductor.md'
+s=open(p).read()
+s=s.replace('''## 還沒做 / 下一步''','''## 實刷準備 { #flash }
+
+**狀態（2026-11-17）：除了「接上實機才能做」的兩項，`AGENTS.md` 要求的檢查都做完了。**
+
+要刷的套件：
+
+| 項目 | 值 |
+|---|---|
+| 檔案 | `firmware/conductor/build/conductor.fwsc`（616,003 B，identity `FM-1_1200`，USB 產品名 `CONDUCTOR FM-1`） |
+| 來源 | commit `ba67827`，乾淨的工作區重新 build |
+| SHA-256 | `de1827239a4a9f395316cf9d5d6b9f02f41abdebcde8197aa0f51b78e0d502f3` |
+| 支援的晶片 | `856014`、`B36014`（build 產生的 `firmware.json`；fm1-base 的 `device/fm1_flash_ok.h` 與測試）`[上游]` |
+
+Preflight：
+
+| 檢查 | 結果 | 標記 |
+|---|---|---|
+| `just fw-test conductor` | 全部 `ok` | `[模擬]` host simulator |
+| fm1-emu 兩種晶片：開機 → 重開 → 再讀回 | `uc25hq80`、`p25q80` 都 0 次 erase / program，重開前後 flash 與畫面完全相同（這個韌體沒有東西要存） | `[模擬]` |
+| 換韌體預演（疊在最新的實機備份 `2026-11-17-0413-pre-choralroot-0.41` 上開機） | 正常開機、USB 列舉、收得到 host 的 frame；開機後 0 個 sector 被改寫。套件映像 `0x04000`–`0x92FFF`，和備份相比不同的有 124 個 sector（`0x04000`–`0x7FFFF`） | `[模擬]` |
+| 退路一：M-Flasher 切下載模式 | 送出 M-Flasher 用的進入更新模式 SysEx（`F0 22 24 35 7D F7`，felucca-bsp `chip/usb.c`）後，USB 斷開再重連，和 SLOOP 2.8.5、Agent Deck 0.7 在同一測試下的反應相同；那兩套都在實機上用 M-Flasher 切走過。模擬器不模擬 ROM 更新模式 | `[模擬]` |
+| 退路二：開機時按住 `REC` | fm1-base 開機時偵測到 `REC` 就進入晶片的更新模式（`device/main_fm1.c`），給「韌體能開機但 USB 不通」時用 | `[上游]` |
+| 目前的韌體與 bootloader | ChoralRoot 0.41、原廠 bootloader（[我的機器](../device-log.md)）。**接上後用 `just fm1-info` 再確認一次** | 待實機 |
+| 完整備份（目前 ChoralRoot 的狀態） | **還沒有**：最新的備份是刷 ChoralRoot 之前的。接上後先 `just fm1-backup pre-conductor`，SHA-256 記進[我的機器](../device-log.md) | 待實機 |
+
+會被改的地方：韌體區 `0x04000`–`0x92FFF`。ChoralRoot 的映像到 `0x9EFFF`，`0x93000`–`0x9EFFF` 留著不動，Conductor 不讀它。Conductor 不寫設定 sector `0xFC000`，也不寫任何資料區。實際寫入範圍以 M-Flasher 刷之前印出的計畫為準。
+
+### 刷的步驟（由我本人執行）
+
+1. 關掉模擬器（`fm1-switch` 看到模擬器在 USB 上會拒絕執行，避免刷錯對象）。
+2. FM-1 用 USB **資料線**直接接 Mac，不經過 hub。
+3. agent 跑 `just fm1-info` 和 `just fm1-backup pre-conductor`（唯讀；會先把機器切到下載模式），把 SHA-256 記進 device log。
+4. 我自己跑：
+
+    ```sh
+    just fm1-switch firmware/conductor/build/conductor.fwsc
+    ```
+
+    它會再備份一次，然後 M-Flasher 列出寫入計畫；確認範圍在 `0x04000`–`0x92FFF` 附近，再打 `yes`。
+5. 重開後螢幕顯示 `AGENTS` / `NO AGENTS`、右上角 `NO HOST`。跑 `just cond-run`，右上角變成 backend 名稱就是連上了。
+6. 回 ChoralRoot：`just fm1-switch choralroot`（其他韌體同理）。
+
+刷完後要更新：[我的機器](../device-log.md)、[多韌體切換](../firmware/switching.md)的實機紀錄、[Flash 配置圖](../hardware/flash-map.md)。
+
+## 還沒做 / 下一步''')
+s=s.replace('''- [ ] 實刷：照 `AGENTS.md` 的 preflight，經我批准才做。換韌體前也要照[多韌體切換](../firmware/switching.md)跑 `just emu-rehearse`。''','''- [ ] 實刷：preflight 只差接上實機的兩項，見[實刷準備](#flash)。''')
+open(p,'w').write(s)
+EOF
+just docs-check 2>&1 | tail -1
+````
+
+```text
+{"status": "ok", "pages": 43, "llm_pages": 43, "deployed": false}
+```
+</details></tool-use>
