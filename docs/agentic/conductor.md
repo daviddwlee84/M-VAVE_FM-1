@@ -109,8 +109,10 @@ host/conductor（Python daemon）
 
 FM-1 的晶片有 Bluetooth，fm1-base 也支援 BLE MIDI（`ble = true`）`[上游]`。協定不挑傳輸方式。文字 frame 都很短；DETAIL 的點陣圖一行 558 bytes，走 BLE 時要分包，或改回只送文字。**目前的 build 只開 USB**（`fm1.toml` 的 `ble = false`），原因是：
 
-- fm1-base 文件寫明 `app_sysex` 收的是「從 USB 來的 SysEx」。BLE 送 SysEx 有路（packet 化後 `plat_midi_send`，或 `plat_ble_stream`），**從 BLE 收 SysEx 給 app 的路徑文件裡沒寫清楚** `[上游]`。要先在 host simulator 與 fm1-emu 確認再做。
-- BLE 配對要存 bond（fm1-base 的 `OBJ_BLE`），會開始寫 flash；USB 版完全不寫。
+- **收 SysEx 要用 fm1-base 自己的 BLE stack。** 預設的 JieLi stack 解 BLE MIDI 時把 SysEx 整段跳過（`ble/midi/le_midi.c`：`sysex: skip to the end flag`）`[上游]`。`ble_stack = "own"` 的解碼器（`bt/ble/ble_midi.h`）會把跨封包的 SysEx 還原成 USB-MIDI 的 SysEx 封包（CIN 4–7），從 `plat_midi_in` 的 `PORT_BLE` 進來 `[上游]`。但 `APP_SYSEX` 只收 USB，所以 app 要自己把這些封包組回 frame（`hostlink` 加一個 BLE 的組裝器）。送出則用 `plat_midi_send(…, TO_BLE)` 送 SysEx 封包，或 `plat_ble_stream`。
+- **容量夠。** fm1-base 記載 own stack 的 BLE MIDI 約 118–123 KB flash、37 KB RAM、69 KB pool `[上游]`；Conductor 0.2 是 87 KB flash、31 KB RAM，加起來仍在 FM-1 的範圍內（`[調研]`，要 build 才確定）。
+- **配對會寫 flash。** `ble_pairing = true` 會把 bond 存進 store（`OBJ_BLE`）；USB 版完全不寫。要選一個不跟其他韌體衝突的位址，並在模擬器量測寫入。
+- **點陣圖太大。** BLE MIDI 的吞吐量比 USB 低很多，一行 558 bytes 的 DETAIL 點陣圖在 BLE 上會慢；BLE 連線時先送 ASCII 文字，或只在 DETAIL 頁送點陣圖。
 
 預計的 Bluetooth 設計（還沒實作）：
 
@@ -279,7 +281,7 @@ Preflight：
 - [ ] approve 的按鍵：預設 Enter（Claude Code 與 Codex 的權限選單預設選「Yes」）。`SAVE`（不再詢問）預設 Claude `2`、Codex `a`，**還沒對真的 session 驗證過** `[調研]`。先用一個用完即丟的 session 試，再把結果寫回這裡。
 - [ ] 在 fm1-emu 視窗裡手動按一輪 `REC` / `FX` / `ENV`，對 hc 的假 agent。
 - [ ] classic Herdr 的動作（approve / deny / focus）在一個新開的測試 workspace 裡驗證。
-- [ ] Bluetooth：先確認 BLE 收 SysEx 的路徑，再照上面的設計實作。
+- [ ] Bluetooth：用 `ble_stack = "own"`，`hostlink` 加 BLE 的 SysEx 組裝，配對與 flash 寫入在模擬器量測後再實作，見 [USB 與 Bluetooth](#bluetooth)。
 - [ ] `codex app-server` backend。
 - [ ] 語音鍵（`ARP`）對真的 Wispr Flow 試一次：host 單元測試確認了送出的按鍵與一定會放開，**還沒在有輔助使用權限的 terminal 裡實際觸發過** Wispr Flow。
 - [x] 實刷（2026-11-17），見[實刷準備](#flash)。
