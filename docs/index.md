@@ -18,6 +18,7 @@
 | 學 SLOOP 怎麼操作 | [SLOOP](firmware/sloop/index.md) |
 | 讓 agent 幫忙刷機或開發 | [Agentic 工作流](agentic/index.md) |
 | 自己寫韌體 | [自製韌體環境](dev/index.md) |
+| 用 FM-1 管 coding agent（自製） | [Conductor](agentic/conductor.md)、[操作速查](agentic/conductor-cheatsheet.md) |
 | 試 Agent Deck | [Agent Deck 試用](firmware/agent-deck/index.md) |
 | 搞懂官方、社群、Hub、VIBE 的關係 | [生態是怎麼來的](ecosystem.md) |
 | 找某個 repo 或目前版本 | [資源地圖](resources.md) |
@@ -38,6 +39,16 @@
 | 6 | m-apps + m-card 多系統切換（需硬體改裝） | 觀望 |
 
 階段 1、2 做完就可以正常玩，後面都是選配。SLOOP 3 必須透過 m-bootloader 的 MIDI MODE 安裝，所以階段 4 是階段 5 的前置條件。
+
+## 自製韌體 + host
+
+在 [fm1-base](dev/index.md) 上寫的，MIT。每個專案是一套 FM-1 韌體，需要的話再加一個電腦端程式。
+
+| 專案 | 是什麼 | 韌體 | 電腦端 | 狀態 |
+|---|---|---|---|---|
+| **Conductor** | coding agent 的桌上控制台：一個琴鍵一個 agent，LED 表示急不急，螢幕顯示狀態與輸出（含中文），提示音，按鈕批准 / 拒絕 / 中斷，按住說話的語音輸入，USB 或藍牙 | `firmware/conductor/` | `host/conductor/`（接 hc 與 classic Herdr 的 Python daemon） | 韌體 0.3、host 0.3.2；2026-11-17 起在我的機器上，見[設計](agentic/conductor.md)、[速查](agentic/conductor-cheatsheet.md)、[版本紀錄](agentic/conductor-changelog.md) |
+| `hello` | fm1-base 的 template 原樣複本，用來驗證工具鏈 | `firmware/hello/` | — | 模擬器開得起來 |
+| 共用模組 | `hostlink`（經 USB / 藍牙和電腦的 SysEx 連線）、`ledfx`（LED 動態）、`chime`（FM 提示音） | `firmware/common/` | — | Conductor 在用 |
 
 ## 這台機器是什麼
 

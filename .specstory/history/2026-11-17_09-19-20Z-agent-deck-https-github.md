@@ -22192,3 +22192,500 @@ _**Agent (claude-opus-5-5 2026-11-17 13:34:49Z)**_
 我把語音鍵改成只在 macOS 啟用，在其他系統上不需要加 `--no-voice` 也不會出錯。測試 30 項全過。
 
 設計頁新增了「平台」一節，就是上面那張表；藍牙重開後重新連線成功也記進去了。commit `f72449a`，還沒 push。
+
+---
+
+_**User (2026-11-17 13:39:55Z)**_
+
+以後如果要更新這個firmware + host的一套combo 應該怎麽描述比較好？
+
+---
+
+_**Agent (claude-opus-5-5 2026-11-17 13:40:20Z)**_
+
+建議把這套組合當成「同一個產品、兩個零件」來管，每次更新寫清楚三件事：**版本號、要不要重刷、協定有沒有變**。我把這套慣例直接設定好：
+
+| 項目 | 規則 |
+|---|---|
+| 版本號 | **Conductor X.Y = 韌體版本**（`app.c` 的 `FW_MAJOR.FW_MINOR`，HELLO 會回報）。host daemon 用 **X.Y.Z**：X.Y 跟著它搭配的最新韌體，Z 是「只改 host」的更新 |
+| 要不要重刷 | 只改 host（Z+1）＝不用刷，重開 `just cond-run`；有改韌體（Y+1）＝要刷，照 preflight 走 |
+| 協定版本 | frame 開頭那個 byte（目前是 `1`）只在**不相容**的改動才加一。新增 frame 類型、在尾端加可選欄位，都維持 `1`，由 host 依韌體版本決定要不要用（例如點陣圖要 0.2 以上、傳輸方式那個 byte 要 0.3 以上） |
+| 相容原則 | 新的 host 要能接舊的韌體；韌體看到不認識的 frame 就忽略 |
+
+以後跟我描述更新時，可以這樣講：「Conductor 0.4：加某某功能（要刷）」或「host 0.3.2：修 DETAIL 的某某（不用刷）」。我會照這個規則改版本號、寫版本紀錄、在 commit 開頭標版本。
+
+接著把版本號放進 daemon，建一頁版本紀錄，並把規則寫進 `AGENTS.md`。
+
+_**Agent (claude-opus-5-5 2026-11-17 13:40:21Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+List Conductor commits to build the changelog
+
+`git log --oneline --format='%h %ad %s' --date=format:'%H:%M' | grep -i -E "conductor" | head -20`
+
+```text
+a336929 21:34 Conductor: platform notes; voice key only on macOS; Bluetooth reconnect works
+bf65a55 21:32 Conductor: reconnect Bluetooth through macOS's own window
+24b608b 21:04 Conductor: connect the FM-1 over Bluetooth without Audio MIDI Setup
+72eb2b4 21:00 Conductor: Bluetooth works on the unit; how to disconnect and clean up
+e264849 20:10 Conductor 0.3: flash-readiness record
+b7e0564 20:10 Conductor 0.3: Bluetooth MIDI beside USB
+4399973 19:55 Conductor docs: what Bluetooth needs (own BLE stack for SysEx in)
+13c5352 19:46 Conductor daemon: stay silent until the device's HELLO
+d7ebaad 19:05 Conductor: clean Codex screens in DETAIL; record the 0.2 flash
+255ec0a 18:58 Conductor 0.2: flash-readiness record
+5add525 18:58 Conductor 0.2: readable DETAIL in any script, KNOB 1 scroll, help page
+13fc88a 18:43 Conductor on hardware: find the port by protocol, record the flash
+2c03f94 18:39 Record the pre-Conductor backup and device info
+0c9307f 18:27 Conductor: flash-readiness checks
+d45ce67 18:23 Add Conductor: own agent-console firmware and host daemon
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 13:40:34Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Add the host version, print it, warn on newer firmware
+
+```bash
+cat > host/conductor/__init__.py <<'EOF'
+"""Conductor: the host daemon for the FM-1 coding-agent controller (firmware/conductor).
+
+Versions (docs/agentic/conductor-changelog.md): the firmware is X.Y (FW_MAJOR.FW_MINOR in
+firmware/conductor/app.c, reported in its HELLO); this daemon is X.Y.Z, X.Y the newest
+firmware it was made with, Z its host-only updates. The protocol byte (protocol.VERSION)
+changes only for an incompatible change.
+"""
+
+__version__ = "0.3.2"
+FIRMWARE_KNOWN = (0, 3)  # the newest firmware this daemon knows
+EOF
+python3 - <<'EOF'
+p='host/conductor/__main__.py'
+s=open(p).read()
+s=s.replace('''from .backends.base import BackendError''','''from . import FIRMWARE_KNOWN, __version__
+from .backends.base import BackendError''')
+s=s.replace('''    report(backend)
+    try:''','''    print(f"[conductor] host {__version__}")
+    report(backend)
+    try:''')
+open(p,'w').write(s)
+
+p='host/conductor/core.py'
+s=open(p).read()
+s=s.replace('''            self.log(f"[device] hello, protocol {m.payload[0] if m.payload else '?'}, firmware {'.'.join(map(str, self.device_fw))}, via {via}")''','''            self.log(f"[device] hello, protocol {m.payload[0] if m.payload else '?'}, firmware {'.'.join(map(str, self.device_fw))}, via {via}")
+            from . import FIRMWARE_KNOWN
+
+            if self.device_fw > FIRMWARE_KNOWN:
+                self.log(f"[device] firmware {'.'.join(map(str, self.device_fw))} is newer than this daemon knows "
+                         f"({'.'.join(map(str, FIRMWARE_KNOWN))}): update host/conductor (git pull)")''')
+open(p,'w').write(s)
+EOF
+grep -n "FIRMWARE_KNOWN, __version__" host/conductor/__main__.py; grep -n "^from \.\|^import" host/conductor/__main__.py | head
+```
+
+```text
+12:from . import FIRMWARE_KNOWN, __version__
+5:import argparse
+6:import json
+7:import os
+8:import sys
+9:import time
+12:from . import FIRMWARE_KNOWN, __version__
+13:from .backends.base import BackendError
+14:from .core import DEFAULT_CONFIG, Conductor
+15:from .slots import SlotMap
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 13:41:02Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Changelog page, nav, AGENTS.md versioning rules, newer-firmware test
+
+```bash
+sed -i '' 's/^from \. import FIRMWARE_KNOWN, __version__$/from . import __version__/' host/conductor/__main__.py && cat > docs/agentic/conductor-changelog.md <<'EOF'
+# Conductor 版本紀錄
+
+[Conductor](conductor.md) 是韌體加 host daemon 的一套組合。每次更新記在這裡，最新的在上面。
+
+## 版本號怎麼看
+
+| 零件 | 版本 | 在哪裡 |
+|---|---|---|
+| 韌體 | **X.Y**（Conductor 的版本就是這個） | `firmware/conductor/app.c` 的 `FW_MAJOR` / `FW_MINOR`；裝置的 HELLO 會回報，daemon 啟動時印出 `firmware X.Y` |
+| host daemon | **X.Y.Z**：X.Y 是它搭配的最新韌體，Z 是只改 host 的更新 | `host/conductor/__init__.py` 的 `__version__`；啟動時印出 `[conductor] host X.Y.Z` |
+| 協定 | 一個數字，目前 `1` | frame 的第 5 個 byte（`protocol.py` 的 `VERSION`、`app.c` 的 `CN_VER`） |
+
+規則：
+
+- **只改 host**：Z 加一，**不用刷**，重開 `just cond-run` 就好。
+- **有改韌體**：Y 加一，host 也跟著變成 X.Y.0，**要刷**，照[實刷準備](conductor.md#flash)的檢查走。
+- **協定**只在不相容的改動才加一（frame 格式變了、舊的 host 會讀錯）。新增 frame 類型、在 frame 尾端加可選欄位都不算：host 依韌體版本決定要不要用，韌體看到不認識的 frame 就忽略。
+- 新的 host 要能接舊的韌體。韌體比 host 新時，daemon 會提醒更新 host。
+
+## 紀錄
+
+| 版本 | 日期 | 要刷？ | 改了什麼 | commit |
+|---|---|---|---|---|
+| host 0.3.2 | 2026-11-17 | 否 | 版本號與這一頁；`ARP` 語音鍵只在 macOS 啟用；韌體比 host 新時提醒 | （這次） |
+| host 0.3.1 | 2026-11-17 | 否 | FM-1 重開後找不到 port：自動彈出 macOS 的藍牙 MIDI 視窗，按 Connect 後自動接上。純 CoreBluetooth 的做法試過不行 | `bf65a55` |
+| **0.3** | 2026-11-17 | **是** | 藍牙 MIDI（fm1-base own stack，不寫 flash）；`OCT+` 開關藍牙；HELLO / HEARTBEAT 帶傳輸方式；host 優先 USB、藍牙上 DETAIL 送文字 | `b7e0564` |
+| host 0.2.2 | 2026-11-17 | 否 | 收到 HELLO 前不送東西、不執行按鍵（重開 daemon 後才拿得到韌體版本） | `13c5352` |
+| host 0.2.1 | 2026-11-17 | 否 | DETAIL 去掉 Codex 的點字 logo、輸入框與狀態列；缺字顯示 `?` | `d7ebaad` |
+| **0.2** | 2026-11-17 | **是** | DETAIL 點陣圖（中文看得到）、去掉 Claude Code 的介面、KNOB 1 往回捲、`SEQ` 說明頁、修正 DETAIL 第 7–8 行被截掉 | `5add525` |
+| host 0.1.1 | 2026-11-17 | 否 | 聽協定找 port（macOS 沿用 `Felucca` 這個舊名稱）；每 30 秒重送整張表 | `13fc88a` |
+| **0.1** | 2026-11-17 | **是** | 第一版：琴鍵 = agent、LED 急迫度、彩色螢幕、提示音、`PLAY` 總覽燈、`ARP` 語音鍵、hc / classic Herdr / fake backend | `d45ce67` |
+
+## 協定的演進（都還是 `1`）
+
+| 韌體 | 加了什麼 | 舊的一方怎麼辦 |
+|---|---|---|
+| 0.2 | host → 裝置 `08` DETAIL_BMP；SELECT 尾端的 `scroll` | host 對 0.1 送文字；0.1 收到 `08` 會忽略 |
+| 0.3 | HELLO 尾端的 `transport`、HEARTBEAT 尾端的 `transport` | 沒有這個 byte 就當 USB |
+EOF
+python3 - <<'EOF'
+p='zensical.toml'
+s=open(p).read()
+s=s.replace('''    { "Conductor 操作速查" = "agentic/conductor-cheatsheet.md" },''','''    { "Conductor 操作速查" = "agentic/conductor-cheatsheet.md" },
+    { "Conductor 版本紀錄" = "agentic/conductor-changelog.md" },''')
+open(p,'w').write(s)
+
+p='docs/agentic/conductor.md'
+s=open(p).read()
+s=s.replace('''Conductor 是我在 [fm1-base](../dev/index.md) 上寫的 agent 控制台''','''Conductor 是我在 [fm1-base](../dev/index.md) 上寫的 agent 控制台（版本與更新見[版本紀錄](conductor-changelog.md)）''')
+open(p,'w').write(s)
+
+p='AGENTS.md'
+s=open(p).read()
+s=s.replace('''## Conductor and live agents
+''','''## Conductor and live agents
+
+Versions (`docs/agentic/conductor-changelog.md`): firmware X.Y (`FW_MINOR` in
+`firmware/conductor/app.c`), host X.Y.Z (`__version__` in
+`host/conductor/__init__.py`, plus `FIRMWARE_KNOWN`). A host-only change bumps Z;
+a firmware change bumps Y and resets the host to X.Y.0. The protocol byte changes
+only for an incompatible change; additions are gated on the firmware version.
+Every update adds a changelog row (version, date, reflash yes/no, what, commit)
+and starts its commit subject with the version.
+''')
+open(p,'w').write(s)
+EOF
+cat >> host/tests/test_core.py <<'EOF'
+
+
+def test_warns_when_firmware_is_newer(tmp_path):
+    from conductor import FIRMWARE_KNOWN
+
+    logs = []
+    be = FakeBackend.demo()
+    c = Conductor(backend=be, send=lambda f: None, slots=SlotMap(tmp_path / "s.json"), log=logs.append)
+    c.on_frame(P.device_hello(FIRMWARE_KNOWN[0], FIRMWARE_KNOWN[1] + 1, P.TR_USB))
+    assert any("newer than this daemon" in ln for ln in logs)
+EOF
+just cond-test 2>&1 | tail -1; just docs-check 2>&1 | tail -1
+```
+
+```text
+31 passed in 0.08s
+{"status": "ok", "pages": 44, "llm_pages": 44, "deployed": false}
+[This command modified 4 files you've previously read: host/conductor/__main__.py, docs/agentic/conductor.md, host/tests/test_core.py, AGENTS.md. Call Read before editing.]
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 13:41:11Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Commit host 0.3.2 and fill in its commit hash in the changelog
+
+```bash
+git add host docs AGENTS.md zensical.toml && git commit -q -F - <<'EOF'
+host 0.3.2: Conductor version numbers and changelog
+
+Firmware X.Y, host X.Y.Z (Z for host-only updates), protocol byte only
+for incompatible changes. The daemon prints its version and warns when
+the firmware is newer than it knows. A changelog page lists 0.1 to
+host 0.3.2 with reflash yes/no; AGENTS.md has the rules.
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+EOF
+h=$(git rev-parse --short HEAD); sed -i '' "s/| （這次） |/| \`$h\` |/" docs/agentic/conductor-changelog.md && git add docs && git commit -q -m "Conductor changelog: commit for host 0.3.2
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>" && git log --oneline -2
+```
+
+```text
+28c447f Conductor changelog: commit for host 0.3.2
+b443c94 host 0.3.2: Conductor version numbers and changelog
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 13:41:24Z)**_
+
+建議把它當成一套產品來描述：每次更新只講清楚三件事，就是版本號、要不要重刷、協定有沒有變。我已經照這個規則設定好了。
+
+**版本號**
+- **Conductor X.Y＝韌體版本**，目前是 0.3。裝置開機時會回報，daemon 啟動時會印出 `firmware 0.3`。
+- **host daemon 用 X.Y.Z**，目前是 0.3.2。X.Y 跟著它搭配的最新韌體；Z 代表「只改電腦端」的更新。daemon 啟動時會印出 `[conductor] host 0.3.2`。
+- **協定版本**目前是 `1`，只有不相容的改動才會變。像 0.2 加點陣圖、0.3 加傳輸方式，都是「新增」，舊的一方會忽略，所以還是 `1`。
+
+**從版本號就看得出要不要刷**
+- Z 變了（例如 host 0.3.3）：不用刷，重開 `just cond-run` 就好。
+- Y 變了（例如 0.4）：要刷，照實刷前的檢查流程走。
+
+**以後跟我說更新時，可以這樣講**
+- 「Conductor 0.4：DETAIL 加上可以回答 agent 的選項」：要動韌體，會刷。
+- 「host 0.3.3：Codex 的 DETAIL 還有雜訊」：只改電腦端。
+
+不確定是哪一種也沒關係，直接描述想要的功能就好，我會判斷要不要動韌體，並照規則：
+
+- 改版本號；
+- 在版本紀錄加一行（版本、日期、要不要刷、改了什麼、commit）；
+- commit 標題以版本號開頭。
+
+**這次加的東西**
+- 新頁面「Conductor 版本紀錄」：把 0.1 到 host 0.3.2 都補記進去了，也列出協定每一版加了什麼、舊的一方怎麼處理。
+- daemon 啟動時會印出自己的版本；如果韌體比 daemon 新，會提醒你更新 host。
+- 這套規則寫進了 `AGENTS.md`，之後的 session 也會照著做。
+
+測試 31 項全過，文件檢查通過。commit `b443c94`、`28c447f`，還沒 push。
+
+---
+
+_**User (2026-11-17 13:43:15Z)**_
+
+能更新一下我們的 README 這種我們自製的 firmware + host 可以單獨列出來
+
+---
+
+_**Agent (claude-opus-5-5 2026-11-17 13:43:20Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Read README and the docs home page
+
+`cat README.md; sed -n 1,60p docs/index.md`
+
+````text
+# M-VAVE FM-1 Notes
+
+Personal notes on the [M-VAVE FM-1](https://www.m-vave.com/) pocket FM synth:
+flashing and recovery, community firmware (starting with SLOOP), usage notes,
+and the context coding agents need to help operate the device safely.
+
+**Site:** <https://daviddwlee84.github.io/M-VAVE_FM-1/> (written in Traditional Chinese)
+
+## Start here
+
+- [Getting started](docs/getting-started/index.md) — install M-Flasher, back up the stock flash, flash SLOOP 2.8.5
+- [Cautions](docs/getting-started/cautions.md) and [recovery](docs/getting-started/recovery.md)
+- [Firmware map](docs/firmware/index.md) and the [SLOOP section](docs/firmware/sloop/index.md)
+- [Agentic workflow](docs/agentic/index.md) — what an agent may automate and what needs approval
+- [Resource map](docs/resources.md) — upstream repos and current versions
+- [Device log](docs/device-log.md) — the state of my own unit
+
+## Working on the notes
+
+```sh
+just docs-serve     # preview at http://127.0.0.1:8000
+just docs-check     # strict build + output checks
+```
+
+Requires [uv](https://docs.astral.sh/uv/) and [just](https://just.systems/).
+Agents: read [AGENTS.md](AGENTS.md) first, especially the hardware safety rules.
+
+## Disclaimer
+
+Unofficial. Not affiliated with M-VAVE or any firmware author. Flashing custom
+firmware is at your own risk; these are one person's notes, not a guarantee.
+# M-VAVE FM-1 筆記
+
+這裡記錄我的 M-VAVE FM-1：刷機與救援、社群韌體（先從 SLOOP 開始）、使用心得，以及讓 coding agent 能安全協助操作這台機器所需的 context。
+
+!!! warning "非官方筆記"
+    內容與 M-VAVE 及任何韌體作者無關。刷自訂韌體有風險，這只是個人整理，不是保證。動手前請先讀[注意事項](getting-started/cautions.md)。
+
+## 從哪裡開始
+
+| 我想… | 看這頁 |
+|---|---|
+| 第一次拿到機器，照順序做 | [Getting Started](getting-started/index.md) |
+| 知道哪些事絕對不要做 | [注意事項](getting-started/cautions.md) |
+| 機器開不了 | [救援](getting-started/recovery.md)、[變磚的原理與分級](getting-started/bricking.md) |
+| 知道換韌體會蓋掉什麼 | [Flash 配置圖](hardware/flash-map.md) |
+| 不刷機先試玩 | [線上試玩](playground.md) |
+| 選一套韌體來玩 | [韌體地圖](firmware/index.md)、[The Firmware Hub](firmware/hub.md) |
+| 學 SLOOP 怎麼操作 | [SLOOP](firmware/sloop/index.md) |
+| 讓 agent 幫忙刷機或開發 | [Agentic 工作流](agentic/index.md) |
+| 自己寫韌體 | [自製韌體環境](dev/index.md) |
+| 試 Agent Deck | [Agent Deck 試用](firmware/agent-deck/index.md) |
+| 搞懂官方、社群、Hub、VIBE 的關係 | [生態是怎麼來的](ecosystem.md) |
+| 找某個 repo 或目前版本 | [資源地圖](resources.md) |
+| 查我這台現在的狀態 | [我的機器](device-log.md) |
+| 看同晶片的機器、VIBE FM、救援硬體 | [相關硬體](hardware/related.md) |
+| 接 Android 或 iPhone | [搭配手機與平板](hardware/mobile.md)、[iOS 音樂 app](hardware/ios-apps.md) |
+| 找官方的韌體與工具 | [官方資源](official.md) |
+
+## 路線圖
+
+| 階段 | 配置 | 狀態 |
+|---|---|---|
+| 1 | 原廠韌體 + M-Flasher 完整備份 | 完成（2026-11-17），見[我的機器](device-log.md) |
+| 2 | SLOOP 2.8.5 + Web Editor，正常玩音樂 | SLOOP 已刷入，開始玩 |
+| 3 | fm1-emu + Agent Deck host 模擬（不刷機） | fm1-emu 已在本機可用，見[模擬器](agentic/emulator.md#local) |
+| 4 | m-bootloader（先確認晶片相容與復原方案） | 暫緩，只追蹤，見[上游追蹤](watch.md) |
+| 5 | 輪流刷不同韌體 | 已試過 Agent Deck 0.7、CTL-1 1.0.3、ChoralRoot 0.41，用 `just fm1-switch` 切換，見[多韌體切換](firmware/switching.md) |
+| 6 | m-apps + m-card 多系統切換（需硬體改裝） | 觀望 |
+
+階段 1、2 做完就可以正常玩，後面都是選配。SLOOP 3 必須透過 m-bootloader 的 MIDI MODE 安裝，所以階段 4 是階段 5 的前置條件。
+
+## 這台機器是什麼
+
+- 口袋大小的 6-operator FM 合成器，SoC 是 JieLi AC791N，內建 1 MiB SPI NOR flash。
+- 27 個發光琴鍵、240×240 彩色螢幕、7 個 encoder 加一個 master 旋鈕、一排功能鍵、喇叭與電池。
+- USB-C（MIDI、依韌體支援 audio）、3.5 mm TRS MIDI IN、3.5 mm 音訊輸出、Bluetooth MIDI（依韌體）。細節見[接口與連線](hardware/io.md)。
+- 有活躍的開源韌體社群，可以變成 groovebox、鼓機、sampler、MIDI controller，甚至 coding agent 的實體控制台。
+
+## 證據標記
+
+這個生態每週都在變，所以頁面上會標出資訊的可信程度：
+
+- `[實機]`：在我自己的機器上看到的，日期記在[我的機器](device-log.md)。
+- `[上游]`：上游 repo 或文件寫的，附連結。
+- `[模擬]`：在 fm1-emu 裡看到的，不等於實機。
+- `[調研]`：來自調研筆記，還沒對過上游。
+
+沒標的段落預設是 `[上游]`，查核日期見[資源地圖](resources.md)。
+````
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 13:43:29Z)**_
+
+README 加一個「自製韌體 + host」的獨立段落；網站首頁也一起補上，因為它是 README 對應的中文入口。
+
+_**Agent (claude-opus-5-5 2026-11-17 13:43:45Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Add an own firmware + host section to README and the docs home
+
+````bash
+python3 - <<'EOF'
+p='README.md'
+s=open(p).read()
+s=s.replace('''## Working on the notes''','''## Our own firmware + host
+
+Built here on [fm1-base](https://github.com/charlesvestal/fm1-base) (MPL-2.0), MIT-licensed.
+Each one is a firmware for the FM-1 plus, where it needs one, a program on the computer.
+
+| Project | What it is | Firmware | Host | Status |
+|---|---|---|---|---|
+| **Conductor** | The FM-1 as a desk console for coding agents: one agent per key, urgency on the key LEDs, state and output on the screen (Chinese included), chimes, approve / deny / interrupt from the buttons, push-to-talk dictation, USB or Bluetooth | [`firmware/conductor/`](firmware/conductor/) | [`host/conductor/`](host/conductor/) (Python daemon for [herdr-core](https://github.com/herdrdev/herdr-core) `hc` and classic Herdr) | Firmware 0.3, host 0.3.2; on my unit since 2026-11-17 |
+| `hello` | fm1-base's template, unmodified: the toolchain smoke test | [`firmware/hello/`](firmware/hello/) | — | Builds and boots in the emulator |
+| Shared modules | `hostlink` (SysEx link to a host over USB / BLE), `ledfx` (LED patterns), `chime` (FM notification voice) | [`firmware/common/`](firmware/common/) | — | Used by Conductor |
+
+Conductor's docs (Traditional Chinese): [design](docs/agentic/conductor.md),
+[cheatsheet](docs/agentic/conductor-cheatsheet.md),
+[changelog](docs/agentic/conductor-changelog.md); wire protocol:
+[`host/conductor/PROTOCOL.md`](host/conductor/PROTOCOL.md).
+
+```sh
+just cond-run          # daemon: finds the FM-1 over USB or Bluetooth, talks to hc and Herdr
+just cond-sim          # the daemon with a text stand-in, no FM-1 needed
+just fw-test conductor # firmware in fm1-base's host simulator
+just fw-build conductor  # the .fwsc package (flashing: see AGENTS.md, owner approval per write)
+```
+
+Versions: firmware X.Y, host X.Y.Z (Z for host-only updates, which need no reflash).
+The [development environment](docs/dev/index.md) page covers the toolchain.
+
+## Working on the notes''')
+s=s.replace('''- [Agentic workflow](docs/agentic/index.md) — what an agent may automate and what needs approval''','''- [Agentic workflow](docs/agentic/index.md) — what an agent may automate and what needs approval
+- [Conductor](docs/agentic/conductor.md) — our own coding-agent console (firmware + host), see below''')
+open(p,'w').write(s)
+
+p='docs/index.md'
+s=open(p).read()
+s=s.replace('''| 自己寫韌體 | [自製韌體環境](dev/index.md) |''','''| 自己寫韌體 | [自製韌體環境](dev/index.md) |
+| 用 FM-1 管 coding agent（自製） | [Conductor](agentic/conductor.md)、[操作速查](agentic/conductor-cheatsheet.md) |''')
+s=s.replace('''## 這台機器是什麼''','''## 自製韌體 + host
+
+在 [fm1-base](dev/index.md) 上寫的，MIT。每個專案是一套 FM-1 韌體，需要的話再加一個電腦端程式。
+
+| 專案 | 是什麼 | 韌體 | 電腦端 | 狀態 |
+|---|---|---|---|---|
+| **Conductor** | coding agent 的桌上控制台：一個琴鍵一個 agent，LED 表示急不急，螢幕顯示狀態與輸出（含中文），提示音，按鈕批准 / 拒絕 / 中斷，按住說話的語音輸入，USB 或藍牙 | `firmware/conductor/` | `host/conductor/`（接 hc 與 classic Herdr 的 Python daemon） | 韌體 0.3、host 0.3.2；2026-11-17 起在我的機器上，見[設計](agentic/conductor.md)、[速查](agentic/conductor-cheatsheet.md)、[版本紀錄](agentic/conductor-changelog.md) |
+| `hello` | fm1-base 的 template 原樣複本，用來驗證工具鏈 | `firmware/hello/` | — | 模擬器開得起來 |
+| 共用模組 | `hostlink`（經 USB / 藍牙和電腦的 SysEx 連線）、`ledfx`（LED 動態）、`chime`（FM 提示音） | `firmware/common/` | — | Conductor 在用 |
+
+## 這台機器是什麼''')
+open(p,'w').write(s)
+EOF
+just docs-check 2>&1 | tail -1
+````
+
+```text
+{"status": "ok", "pages": 44, "llm_pages": 44, "deployed": false}
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 13:43:51Z)**_
+
+README 和首頁裡寫了目前的版本號，之後改版容易忘記同步，所以在 `AGENTS.md` 的版本規則裡加一條：改版時一起更新這兩處。然後 commit。
+
+_**Agent (claude-opus-5-5 2026-11-17 13:43:56Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Commit the README and home page sections
+
+```bash
+python3 - <<'EOF'
+p='AGENTS.md'
+s=open(p).read()
+s=s.replace('''Every update adds a changelog row (version, date, reflash yes/no, what, commit)
+and starts its commit subject with the version.''','''Every update adds a changelog row (version, date, reflash yes/no, what, commit),
+updates the version in the "Our own firmware + host" tables (`README.md`,
+`docs/index.md`), and starts its commit subject with the version.''')
+open(p,'w').write(s)
+EOF
+git add README.md docs/index.md AGENTS.md && git commit -q -F - <<'EOF'
+README and site home: list our own firmware + host projects
+
+Conductor (firmware/conductor + host/conductor), the hello template and
+firmware/common get their own section, with links, commands and current
+versions. AGENTS.md: keep those versions in step with the changelog.
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+EOF
+git log --oneline -1
+```
+
+```text
+4ff7d2f README and site home: list our own firmware + host projects
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 13:44:05Z)**_
+
+README 和網站首頁都加了一節，單獨列出我們自製的韌體 + host。
+
+**README**（英文）新增「Our own firmware + host」，用一張表列出三項：
+
+| 專案 | 內容 | 位置 | 狀態 |
+|---|---|---|---|
+| **Conductor** | coding agent 控制台 | `firmware/conductor/` + `host/conductor/` | 韌體 0.3、host 0.3.2，2026-11-17 起在實機上 |
+| `hello` | fm1-base template 原樣複本，用來驗證工具鏈 | `firmware/hello/` | 模擬器開得起來 |
+| 共用模組 | `hostlink`、`ledfx`、`chime` | `firmware/common/` | Conductor 在用 |
+
+表格下面附了 Conductor 的設計頁、速查、版本紀錄和協定規格的連結，以及常用的 `just` 指令和版本規則。最上面的「Start here」也多了一行 Conductor。
+
+**網站首頁**（中文）加了同樣內容的「自製韌體 + host」一節，「從哪裡開始」表格也多了一列「用 FM-1 管 coding agent（自製）」。
+
+表格裡寫了目前的版本號，改版時容易忘記同步，所以我在 `AGENTS.md` 的版本規則加了一條：每次更新版本，要一起改 README 和首頁這兩張表。
+
+文件檢查通過，已 commit 為 `4ff7d2f`，還沒 push。
