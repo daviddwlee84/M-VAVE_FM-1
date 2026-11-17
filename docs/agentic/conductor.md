@@ -130,6 +130,18 @@ host/conductor（Python daemon）
 | fm1-emu 兩種晶片 | 開機、重開都 0 次 erase / program；USB 路徑照常。模擬器不模擬藍牙無線電 | `[模擬]` |
 | 實機：Mac 經藍牙連上、daemon 用藍牙 port | 拔掉 USB，在 MIDI 工作室的藍牙設定連上 `FM-1 3399`（不需要配對碼）；CoreMIDI 的 port 名稱是 `FM-1 3399 Bluetooth`，daemon 自己找到並回報 `firmware 0.3, via Bluetooth` | `[實機]` |
 
+## 平台 { #platforms }
+
+只在我的 Mac（macOS 27）上跑過；其他平台是依程式碼判斷 `[調研]`。
+
+| 部分 | macOS | Linux | Windows |
+|---|---|---|---|
+| daemon、USB 連線 | 實測 | 應該可以（`python-rtmidi` 走 ALSA；hc、Herdr 有 Linux 版） | 應該可以（WinMM） |
+| 藍牙 MIDI | 實測；重開後按一下藍牙 MIDI 視窗 | BlueZ 支援 BLE MIDI，`bluetoothctl connect` 可以純指令連線，連上後是 ALSA port | 一般 MIDI API 看不到 BLE MIDI 裝置，要 Windows 的新 MIDI 服務 |
+| 自動彈出藍牙 MIDI 視窗 | 有（CoreAudioKit） | 沒有：找不到 port 就結束 | 沒有 |
+| `ARP` 語音鍵 | 有（CGEvent，要輔助使用權限） | 沒有（之後可用 `xdotool` / `ydotool`） | 沒有 |
+| DETAIL 中文點陣圖 | STHeiti | 有 Noto CJK 就有 | 沒列 Windows 字型，退回 ASCII |
+
 ## 經過 iOS 或 MIDI routing app { #routing }
 
 Conductor 和 daemon 之間說的**全是 SysEx**（`F0 7D 43 4E …`），琴鍵和按鈕不送 note 或 CC。daemon 要在 Mac 上跑（它要接 hc / Herdr），所以 iPad 上的 routing app（StreamByter、MidiFire、AUM 等）頂多是中繼站。我的建議 `[調研]`，沒有實測：
@@ -321,7 +333,8 @@ Preflight：
 - [x] 藍牙在實機連通（2026-11-17）。
 - [x] FM-1 關機再開機後，macOS **不會**自己重新連上藍牙（2026-11-17 `[實機]`）。
 - [x] 純程式連線（CoreBluetooth + `MIDIBluetoothDriverActivateAllConnections`）：試過，不行（見上表）。
-- [ ] 重開後的重新連線：daemon 自動彈出藍牙 MIDI 視窗、按 Connect 後自動接上。視窗叫得出來已確認，整段流程還沒在實機走一次。
+- [x] 重開後的重新連線：daemon 自動彈出藍牙 MIDI 視窗，按 Connect 後以新的 process 重新啟動並接上（2026-11-17 `[實機]`）。
+- [ ] Linux：語音鍵（`xdotool` / `ydotool`）、藍牙重連（`bluetoothctl`）。
 - [ ] `codex app-server` backend。
 - [ ] 語音鍵（`ARP`）對真的 Wispr Flow 試一次：host 單元測試確認了送出的按鍵與一定會放開，**還沒在有輔助使用權限的 terminal 裡實際觸發過** Wispr Flow。
 - [x] 實刷（2026-11-17），見[實刷準備](#flash)。

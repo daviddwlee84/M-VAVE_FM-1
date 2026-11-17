@@ -16030,3 +16030,6165 @@ just docs-check 2>&1 | tail -1
 {"status": "ok", "pages": 43, "llm_pages": 43, "deployed": false}
 ```
 </details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 10:27:24Z)**_
+
+把實刷準備的文件也 commit 進去。
+
+_**Agent (claude-opus-5-5 2026-11-17 10:27:27Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Commit the flash-readiness docs
+
+```bash
+git add docs/agentic/conductor.md docs/firmware/switching.md .specstory && git commit -q -F - <<'EOF'
+Conductor: flash-readiness checks
+
+Clean rebuild from ba67827 (SHA-256 de182723...). In fm1-emu on both
+chips: boot, restart and reload with no flash writes; a rehearsal over
+the latest real backup boots and rewrites nothing; the update-mode
+request M-Flasher sends gets the same reaction as SLOOP and Agent Deck.
+Left for when the unit is connected: fm1-info and a fresh backup of
+the ChoralRoot state.
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+EOF
+git log --oneline -2; git status --short
+```
+
+```text
+33a3369 Conductor: flash-readiness checks
+d45ce67 Add Conductor: own agent-console firmware and host daemon
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 10:27:33Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Investigate why the commit hash changed
+
+`git log --oneline -5; git cat-file -t ba67827 2>&1; git diff ba67827 d45ce67 --stat | tail -3; git reflog -6`
+
+```text
+33a3369 Conductor: flash-readiness checks
+d45ce67 Add Conductor: own agent-console firmware and host daemon
+e4fc771 ChoralRoot tutorial: inversions, slash chords and per-step voicing
+7183937 Docs: web installers vs M-Flasher, ChoralRoot transpose and chord names, no audio input, USB host, Agent Deck continue
+ab74425 Add an online playground index; clarify OPT = GLO and ChoralRoot's input-only USB audio
+commit
+ ...2026-11-17_09-19-20Z-agent-deck-https-github.md | 450 +++++++++++++++++++++
+ .specstory/statistics.json                         |   8 +-
+ 3 files changed, 550 insertions(+), 4 deletions(-)
+33a3369 HEAD@{0}: commit: Conductor: flash-readiness checks
+d45ce67 HEAD@{1}: commit (amend): Add Conductor: own agent-console firmware and host daemon
+ba67827 HEAD@{2}: commit: Add Conductor: own agent-console firmware and host daemon
+e4fc771 HEAD@{3}: commit: ChoralRoot tutorial: inversions, slash chords and per-step voicing
+7183937 HEAD@{4}: commit: Docs: web installers vs M-Flasher, ChoralRoot transpose and chord names, no audio input, USB host, Agent Deck continue
+ab74425 HEAD@{5}: commit: Add an online playground index; clarify OPT = GLO and ChoralRoot's input-only USB audio
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 10:27:41Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+See what the amend changed besides specstory
+
+`git diff ba67827 d45ce67 --stat; git diff ba67827 d45ce67 -- . ':!.specstory' | head -30`
+
+```text
+ ...ps-github-com-kevinelliot-distributed-pillow.md |  96 +++++
+ ...2026-11-17_09-19-20Z-agent-deck-https-github.md | 450 +++++++++++++++++++++
+ .specstory/statistics.json                         |   8 +-
+ 3 files changed, 550 insertions(+), 4 deletions(-)
+diff --git a/.claude/plans/agent-deck-https-github-com-kevinelliot-distributed-pillow.md b/.claude/plans/agent-deck-https-github-com-kevinelliot-distributed-pillow.md
+new file mode 100644
+index 0000000..8dfb400
+--- /dev/null
++++ b/.claude/plans/agent-deck-https-github-com-kevinelliot-distributed-pillow.md
+@@ -0,0 +1,96 @@
++# 自製 FM-1 agent 控制台：設計 + 原型
++
++## Context 背景
++
++Agent Deck 已刷過實機，用下來有兩個痛點：shell pane 佔掉大半琴鍵、只綁 classic Herdr / tmux。市面上有 SlashVibe、VibeDeck、AgentDeck 等競品，也有 codex-midi 這種「假裝成 Codex Micro」的路線。目標是在 **fm1-base** 上寫自己的 agent 控制台韌體 + host daemon，這一輪做到「設計文件 + 原型」：host simulator 與 fm1-emu 跑通，**不刷實機**。
++
++## 調研結論（決定設計的事實）
++
++| 問題 | 結論 | 來源 |
++|---|---|---|
++| Codex Micro 模擬可行嗎 | 可行但不當主線：靠 `NODE_OPTIONS --require` 注入 ChatGPT.app、私有 `v.oai.*` 協定、只認一個 app build、狀態只以 RGB 顏色傳來（單色 LED 無法還原）、只有 6 個 task、只限 macOS 桌面版 Codex | scf4/codex-midi 原始碼 |
++| Codex 的正規介面 | `codex app-server`（官方文件、JSON-RPC、有 approval request 與 turn 事件）與 hooks。列為**之後的第三個 backend**，取代 Codex Micro 模擬 | learn.chatgpt.com/docs/app-server |
++| hc（herdr-core 0.1.21） | JSON-RPC 2.0 over unix socket、`events.subscribe`（含 `seq`/`missed`）、狀態直接來自 OSC 7501（`idle/working/done/blocked/error` + `kind=permission/question`），Claude Code 與 Codex 原生會送。沒有 focus pane | herdr-core repo、本機 `hc schema` |
++| classic Herdr 0.9.5 | 本 session 就在它底下（`HERDR_ENV=1`），有 `pane.focus`、`events.subscribe`，狀態靠偵測 + 畫面比對 | herdr socket-api 文件 |
++| LED | 全部 27 鍵 + 14 鈕都是**單色**，可用 off / glow / mid / lit / breath + 軟體閃爍；**只有 `PLAY` 有紅綠雙色** | fm1-base `include/plat.h:77-94` |
++| 螢幕 | 240×240 RGB565 全彩，`cv_*` 繪圖、多組字型 | fm1-base `device/gfx.c` |
++| 協定 | fm1-base 讓 app 收 SysEx（`APP_SYSEX`，≤640 B）並可送 SysEx；Agent Deck 塞 CC 的作法只是 Dinghy 的限制 | `plat.h:391-409, 624-628` |
++| 測試 | host simulator 腳本可注入 `midi`/`sysex`，並 `expect_sysex`、`leds` 檢查輸出 | fm1-base `host/plat_host.c` |
++
++所以：**LED 負責「急不急」（亮度與動態），螢幕負責「是什麼」（顏色與文字），聲音負責「不用看也知道」。**
++
++## 設計
++
++工作名 **Conductor**（指揮一群 agent；名字可改）。
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 10:27:49Z)**_
+
+<think><details><summary>Thought Process</summary>
+你把第一個 commit amend 了，加入計畫檔和 `.specstory`，hash 因此從 `ba67827` 變成 `d45ce67`。原始碼沒變，不用重新 build，只需把文件中的 commit hash 改成新的。
+
+</details></think>
+
+_**Agent (claude-opus-5-5 2026-11-17 10:27:51Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Confirm sources unchanged, fix the commit reference, amend own unpushed commit
+
+`git diff ba67827 d45ce67 --quiet -- firmware host third_party && echo "firmware/host sources identical"; git log --oneline origin/main..HEAD 2>/dev/null; sed -i '' 's/| 來源 | commit `ba67827`，乾淨的工作區重新 build |/| 來源 | commit `d45ce67`（原本是 `ba67827`，之後 amend 只加了計畫檔與 `.specstory`，原始碼相同），乾淨的工作區重新 build |/' docs/agentic/conductor.md && grep -n "d45ce67" docs/agentic/conductor.md && git add docs/agentic/conductor.md && git commit -q --amend --no-edit && git log --oneline -2`
+
+```text
+firmware/host sources identical
+33a3369 Conductor: flash-readiness checks
+d45ce67 Add Conductor: own agent-console firmware and host daemon
+207:| 來源 | commit `d45ce67`（原本是 `ba67827`，之後 amend 只加了計畫檔與 `.specstory`，原始碼相同），乾淨的工作區重新 build |
+d3e1ab6 Conductor: flash-readiness checks
+d45ce67 Add Conductor: own agent-console firmware and host daemon
+[This command modified 1 file you've previously read: docs/agentic/conductor.md. Call Read before editing.]
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 10:27:59Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Fix the commit hash mentioned in the commit message
+
+`git log -1 --format=%B | sed 's/Clean rebuild from ba67827/Clean rebuild from d45ce67 (sources as in ba67827)/' | git commit -q --amend -F - && git log --oneline -3 && git status --short && git log -1 --format=%B | head -3`
+
+```text
+0c9307f Conductor: flash-readiness checks
+d45ce67 Add Conductor: own agent-console firmware and host daemon
+e4fc771 ChoralRoot tutorial: inversions, slash chords and per-step voicing
+ M .specstory/history/2026-11-17_09-19-20Z-agent-deck-https-github.md
+ M .specstory/statistics.json
+Conductor: flash-readiness checks
+
+Clean rebuild from d45ce67 (sources as in ba67827) (SHA-256 de182723...). In fm1-emu on both
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 10:28:12Z)**_
+
+已經 commit 了，可刷的程度也做到了。`AGENTS.md` 要求的實刷前檢查，只剩兩項要等 FM-1 接上才能做：你目前接著的只有模擬器，沒有實機。
+
+**Commit**
+- `d45ce67`：Conductor 的韌體、daemon、共用模組和文件。你那邊 amend 過一次，加進了計畫檔和 `.specstory`；原始碼和我原本的 `ba67827` 相同。
+- `0c9307f`：實刷準備的檢查結果。
+
+都還沒 push。
+
+**要刷的套件**：`firmware/conductor/build/conductor.fwsc`，從乾淨的工作區重新 build，SHA-256 `de1827239a4a9f395316cf9d5d6b9f02f41abdebcde8197aa0f51b78e0d502f3`。
+
+**已完成的檢查**
+
+| 檢查 | 結果 |
+|---|---|
+| 晶片支援 | fm1-base 支援兩種晶片（含你的 `B36014`），有測試 `[上游]` |
+| host simulator | 全部通過 |
+| 模擬器兩種晶片：開機 → 重開 → 再讀回 | 都是 0 次 flash 寫入，重開前後 flash 內容和畫面都一樣 `[模擬]` |
+| 疊在你最新的實機備份上開機 | 正常開機、能連 host，0 個 sector 被改寫。韌體只佔 `0x04000`–`0x92FFF`，不碰 `0xFC000` 和資料區 `[模擬]` |
+| 退路一：M-Flasher 切下載模式 | 模擬器不模擬晶片的 ROM 更新模式，只能比對：Conductor 的反應和 SLOOP、Agent Deck 完全一樣，而那兩套你都在實機上用 M-Flasher 切走過 `[模擬]` |
+| 退路二：開機時按住 `REC` | 直接進入更新模式，給「能開機但 USB 不通」時用 `[上游]` |
+
+**接上 FM-1 之後的步驟**
+1. 關掉模擬器。`fm1-switch` 看到模擬器在 USB 上會拒絕執行，避免刷錯對象。
+2. 用 USB 資料線直接接 Mac，不經過 hub。
+3. 跟我說一聲。我跑 `just fm1-info` 和 `just fm1-backup pre-conductor`，這兩個是唯讀的，但會先把機器切到下載模式。這是第一份 ChoralRoot 狀態的備份，SHA-256 會記進 device log。
+4. 你自己執行：
+   ```sh
+   just fm1-switch firmware/conductor/build/conductor.fwsc
+   ```
+   M-Flasher 列出寫入計畫時，確認範圍在 `0x04000`–`0x92FFF` 附近，再打 `yes`。
+5. 重開後跑 `just cond-run`，螢幕右上角從 `NO HOST` 變成 backend 名稱，就是連上了。
+6. 要回 ChoralRoot：`just fm1-switch choralroot`。
+
+這些步驟和檢查表都寫在 `docs/agentic/conductor.md` 新增的「實刷準備」一節。`docs/firmware/switching.md` 的韌體表也加了 Conductor 一列。
+
+---
+
+_**User (2026-11-17 10:36:33Z)**_
+
+<bash-input>just fm1-info</bash-input>
+
+---
+
+_**User (2026-11-17 10:36:33Z)**_
+
+<bash-stdout></bash-stdout><bash-stderr>"/Applications/M-Flasher.app/Contents/MacOS/M-Flasher" info
+Refused: the unit is running, not in download mode: `m-flasher download-mode` switches it
+error: recipe `fm1-info` failed on line 245 with exit code 1
+</bash-stderr>
+
+---
+
+_**Agent (claude-opus-5-5 2026-11-17 10:36:40Z)**_
+
+M-Flasher 要先把機器切到下載模式才讀得到。切換前先確認它找到的是實機，不是模擬器。
+
+_**Agent (claude-opus-5-5 2026-11-17 10:36:41Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Read-only: confirm which unit is on USB
+
+`just fm1-find 2>&1 | tail -5`
+
+```text
+"/Applications/M-Flasher.app/Contents/MacOS/M-Flasher" find
+midi	Felucca (running; download-mode switches it)
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 10:36:56Z)**_
+
+<think><details><summary>Thought Process</summary>
+只找到一台 Felucca，就是你的實機（macOS 快取了舊的 MIDI 名稱，實際跑的是 ChoralRoot），模擬器已關閉。接下來我會先切換到下載模式（不寫入 flash），再進行唯讀的資訊讀取與完整備份。
+
+</details></think>
+
+_**Agent (claude-opus-5-5 2026-11-17 10:37:08Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Mode switch to download mode, then read-only device info
+
+`just fm1-download-mode 2>&1 | tail -5 && sleep 2 && just fm1-info 2>&1 | tail -25`
+
+```text
+"/Applications/M-Flasher.app/Contents/MacOS/M-Flasher" download-mode
+Sent the Felucca the download-mode message over USB MIDI; waiting for it
+In download mode: usb:2-4	WL82 UBOOT1.00 (USB bus 2, device 4)
+"/Applications/M-Flasher.app/Contents/MacOS/M-Flasher" info
+Connecting to usb:2-4
+Starting the M-Flasher loader 1.3
+Flash chip 0xB36014 (new)
+Reading the flash
+    1%    3%    4%    6%    7%    9%   10%   12%   14%   15%   17%   18%   20%   21%   23%   25%   26%   28%   29%   31%   32%   34%   35%   37%   39%   40%   42%   43%   45%   46%   48%   50%   51%   53%   54%   56%   57%   59%   60%   62%   64%   65%   67%   68%   70%   71%   73%   75%   76%   78%   79%   81%   82%   84%   85%   87%   89%   90%   92%   93%   95%   96%   98%  100%
+Read in 1.3 s (806 KB/s)
+Checked: the chip's CRC32 of the flash matches the read
+  model       FM-1
+  bootloader  stock (M-VAVE)
+  firmware    Felucca
+  app         OK
+  chip key    0x980F
+  flash       0xB36014
+  unit id     55227286a0cb022a
+  loader      M-Flasher 1.3, CPU at 96 MHz
+    - the firmware uses the FM-1 flash layout
+    - flash chip 0xB36014 (new)
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 10:37:13Z)**_
+
+Chip `0xB36014`, stock bootloader, app OK, as recorded. Now the full backup (read-only).
+
+_**Agent (claude-opus-5-5 2026-11-17 10:38:40Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Read-only full-flash backup of the current ChoralRoot state
+
+`just fm1-backup pre-conductor 2>&1 | grep -v "%  " | tail -12; ls backups/*pre-conductor*/`
+
+```text
+  bootloader  stock (M-VAVE)
+  firmware    Felucca
+  app         OK
+  chip key    0x980F
+  flash       0xB36014
+  unit id     55227286a0cb022a
+  loader      M-Flasher 1.3, CPU at 96 MHz
+    - the firmware uses the FM-1 flash layout
+    - flash chip 0xB36014 (new)
+Backup saved: backups/2026-11-17-pre-conductor/fm1-20261117-183840.bin
+81f048bb0e8bea174ccb84df4de2555c891b087651083710c41c428a0e7ba1e1  backups/2026-11-17-pre-conductor/fm1-20261117-183840.bin
+Record this in docs/device-log.md and keep a copy off this machine.
+fm1-20261117-183840.bin
+fm1-20261117-183840.json
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 10:38:48Z)**_
+
+備份完成。先驗證備份，再用這份「真正的現況」重做一次換韌體預演。
+
+_**Agent (claude-opus-5-5 2026-11-17 10:38:56Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Verify backups, rehearse over the fresh backup of the current state
+
+```bash
+just fm1-verify-backups 2>&1 | tail -4; cd tools/emu-state && pkg=$PWD/../../firmware/conductor/build/conductor.fwsc; bak=$PWD/../../backups/2026-11-17-pre-conductor/fm1-20261117-183840.bin; python3 ../../scripts/emu_rehearse.py pristine-conductor.flash "$bak" rehearse-conductor.flash; cp rehearse-conductor.flash rehearse-conductor.before; for chip in uc25hq80; do FM1_USB_SEND='2500:F07D434E010101F7;2600:F07D434E010300030100230205006669782D7465737473F7' ../fm1-emu/fm1-live --fwsc "$pkg" --flash-chip $chip --flash rehearse-conductor.flash --midi none --usb --shot 4500 --lcd-only 2>&1 | grep -i -E "^flash:|fault|crash|Configured"; done; python3 - <<'EOF'
+a=open('rehearse-conductor.before','rb').read(); b=open('rehearse-conductor.flash','rb').read()
+bak=open('../../backups/2026-11-17-pre-conductor/fm1-20261117-183840.bin','rb').read()
+print("changed by booting:", [hex(i) for i in range(0,len(a),4096) if a[i:i+4096]!=b[i:i+4096]] or "none")
+w=[i for i in range(0,len(a),4096) if a[i:i+4096]!=bak[i:i+4096]]
+print(f"install differs from current flash in {len(w)} sectors: {hex(w[0])}-{hex(w[-1]+4095)}")
+EOF
+```
+
+```text
+ok   backups/2026-11-17-pre-agtdeck/fm1-20261117-023458.bin
+ok   backups/2026-11-17-pre-conductor/fm1-20261117-183840.bin
+ok   backups/2026-11-17-sloop-2.8.5/fm1-20261117-014153.bin
+ok   backups/2026-11-17-stock/fm1-20261117-011632.bin
+package image 0x04000-0x92FFF laid over the backup
+[   302 ms] usb: Configured { product: "CONDUCTOR FM-1", vid: 4617, pid: 1 }
+flash: 0 erases / programs
+changed by booting: none
+install differs from current flash in 140 sectors: 0x4000-0x91fff
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 10:39:04Z)**_
+
+Everything checks out. Recording it in the device log and the readiness table.
+
+_**Agent (claude-opus-5-5 2026-11-17 10:39:05Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Find where to add the backup and history rows in the device log
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1 && grep -n "pre-choralroot-0.41/fm1-20261117-041350.bin" docs/device-log.md | head -2; tail -5 docs/device-log.md`
+
+```text
+37:| 2026-11-17 | 刷 ChoralRoot 之前的 CTL-1（仍含 SLOOP 的 project sector） | `backups/2026-11-17-0413-pre-choralroot-0.41/fm1-20261117-041350.bin` + `.json` | `8834d0188eb309c7229fb3ad9e89a76a349eca546accb666b8a741509a66eb10` | 尚未上傳 |
+- [x] `FLASH CHIP` / JEDEC ID 已記錄
+- [x] 完整 flash 備份已存，SHA-256 已記錄
+- [x] 備份另存一份到這台電腦以外的地方（GitHub Release）
+- [x] SLOOP 2.8.5 已刷入
+- [x] Save → 關機 → 開機 → Load 測試通過
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 10:39:15Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Locate the end of the operations history table
+
+`grep -n "^| 2026-11-17 | ChoralRoot 在新晶片實機" docs/device-log.md; sed -n '/^## 操作歷史/,/^## /p' docs/device-log.md | tail -4`
+
+```text
+79:| 2026-11-17 | ChoralRoot 在新晶片實機、且 flash 裡有 SLOOP 與 CTL-1 殘留資料的狀態下 | 開得起來、USB MIDI 正常。上游記載的「在 Sloop 資料上掉進 ROM boot」在這台、這個版本沒有發生 |
+| 2026-11-17 | 本人執行 `just fm1-switch downloads/choralroot-0.41.fwsc` | M-Flasher 的計畫：`Writes 152 sectors (608 KiB): 0x04000-0x8EFFF, 0x91000-0x91FFF, 0x93000-0x9EFFF`。寫入後機器重開，USB 產品名 `ChoralRoot FM-1`。M-Flasher 自動備份 `fm1-20261117-041838.bin` |
+| 2026-11-17 | ChoralRoot 在新晶片實機、且 flash 裡有 SLOOP 與 CTL-1 殘留資料的狀態下 | 開得起來、USB MIDI 正常。上游記載的「在 Sloop 資料上掉進 ROM boot」在這台、這個版本沒有發生 |
+
+## Phase 1 驗收
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 10:39:32Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Record backup and preflight in device log and design page; commit
+
+```bash
+python3 - <<'EOF'
+p='docs/device-log.md'
+s=open(p).read()
+row37="| 2026-11-17 | 刷 ChoralRoot 之前的 CTL-1（仍含 SLOOP 的 project sector） | `backups/2026-11-17-0413-pre-choralroot-0.41/fm1-20261117-041350.bin` + `.json` | `8834d0188eb309c7229fb3ad9e89a76a349eca546accb666b8a741509a66eb10` | 尚未上傳 |"
+s=s.replace(row37, row37+"\n| 2026-11-17 | 刷 Conductor 之前的 ChoralRoot 0.41（目前狀態） | `backups/2026-11-17-pre-conductor/fm1-20261117-183840.bin` + `.json` | `81f048bb0e8bea174ccb84df4de2555c891b087651083710c41c428a0e7ba1e1` | 尚未上傳 |")
+row79="| 2026-11-17 | ChoralRoot 在新晶片實機、且 flash 裡有 SLOOP 與 CTL-1 殘留資料的狀態下 | 開得起來、USB MIDI 正常。上游記載的「在 Sloop 資料上掉進 ROM boot」在這台、這個版本沒有發生 |"
+s=s.replace(row79, row79+"\n| 2026-11-17 18:38 | agent 執行 `just fm1-download-mode`、`fm1-info`、`fm1-backup pre-conductor`（刷 Conductor 前的 preflight） | 切換成功（`WL82 UBOOT1.00`）。`info`：model FM-1、bootloader stock (M-VAVE)、firmware Felucca、app OK、flash `0xB36014`，晶片 CRC32 與讀取相符。備份 SHA-256 `81f048bb…7ba1e1`，`fm1-verify-backups` ok。機器停在下載模式，等本人刷寫 |")
+open(p,'w').write(s)
+
+p='docs/agentic/conductor.md'
+s=open(p).read()
+s=s.replace('''**狀態（2026-11-17）：除了「接上實機才能做」的兩項，`AGENTS.md` 要求的檢查都做完了。**''','''**狀態（2026-11-17 18:38）：`AGENTS.md` 要求的檢查全部做完，等我本人刷寫。**''')
+s=s.replace('''| 目前的韌體與 bootloader | ChoralRoot 0.41、原廠 bootloader（[我的機器](../device-log.md)）。**接上後用 `just fm1-info` 再確認一次** | 待實機 |
+| 完整備份（目前 ChoralRoot 的狀態） | **還沒有**：最新的備份是刷 ChoralRoot 之前的。接上後先 `just fm1-backup pre-conductor`，SHA-256 記進[我的機器](../device-log.md) | 待實機 |''','''| 目前的韌體與 bootloader | `fm1-info`：firmware Felucca（即 ChoralRoot 0.41）、bootloader stock (M-VAVE)、app OK、flash `0xB36014` | `[實機]` |
+| 完整備份（目前 ChoralRoot 的狀態） | `backups/2026-11-17-pre-conductor/fm1-20261117-183840.bin`，SHA-256 `81f048bb0e8bea174ccb84df4de2555c891b087651083710c41c428a0e7ba1e1`，已記進[我的機器](../device-log.md) | `[實機]` |
+| 疊在**這份**備份上預演 | 正常開機、0 個 sector 被改寫；安裝會和現況不同的是 140 個 sector（`0x04000`–`0x91FFF`） | `[模擬]` |''')
+open(p,'w').write(s)
+EOF
+just docs-check 2>&1 | tail -1; git add docs/device-log.md docs/agentic/conductor.md && git commit -q -m "Record the pre-Conductor backup and device info
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>" && git log --oneline -1
+```
+
+```text
+{"status": "ok", "pages": 43, "llm_pages": 43, "deployed": false}
+2c03f94 Record the pre-Conductor backup and device info
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 10:39:42Z)**_
+
+實刷前的檢查全部做完，接下來只差你本人刷寫。
+
+我做了三件事：
+- **切到下載模式**：只切換模式，沒有寫 flash。
+- **讀機器資訊**（唯讀）：
+  - 型號 FM-1，原廠 bootloader，app OK
+  - flash 晶片 `0xB36014`（新款）
+  - 晶片自己算的 CRC32 和讀到的內容相符
+- **完整備份**（唯讀）：
+  - 檔案：`backups/2026-11-17-pre-conductor/fm1-20261117-183840.bin`
+  - SHA-256：`81f048bb0e8bea174ccb84df4de2555c891b087651083710c41c428a0e7ba1e1`
+  - `fm1-verify-backups` 驗證通過
+  - 這是第一份 ChoralRoot 現況的備份
+
+我也用這份備份在模擬器重做了一次換韌體預演：正常開機，沒有改寫任何 sector。安裝時會和現況不同的是 140 個 sector，範圍 `0x04000`–`0x91FFF`。
+
+結果記進了 `docs/device-log.md` 和設計頁的實刷準備表，commit 為 `2c03f94`，還沒 push。
+
+**機器現在停在下載模式**，可以直接刷：
+
+```sh
+just fm1-switch firmware/conductor/build/conductor.fwsc
+```
+
+它會自己再備份一次，然後 M-Flasher 列出寫入計畫。範圍應該在 `0x04000`–`0x92FFF` 之內，預期約 140 個 sector；確認沒問題再打 `yes`。
+
+刷完、機器重開後，跑 `just cond-run` 看右上角是否從 `NO HOST` 變成 backend 名稱，再跟我說結果，我會更新 device log、切換紀錄和 flash 配置圖。
+
+如果決定先不刷，跑 `just fm1-restart` 就會回到 ChoralRoot。
+
+---
+
+_**User (2026-11-17 10:41:17Z)**_
+
+```
+
+
+<pasted_content id="ef8f">
+❯ just fm1-switch firmware/conductor/build/conductor.fwsc
+usb:2-4 WL82 UBOOT1.00 (USB bus 2, device 4)
+  100%
+  firmware    Felucca
+  app         OK
+    - the firmware uses the FM-1 flash layout
+Backup saved: backups/2026-11-17-1839-pre-conductor/fm1-20261117-184005.bin
+81f048bb0e8bea174ccb84df4de2555c891b087651083710c41c428a0e7ba1e1  backups/2026-11-17-1839-pre-conductor/fm1-20261117-184005.bin
+Backup before the switch: backups/2026-11-17-1839-pre-conductor (not uploaded; just fm1-backup-release 2026-11-17-1839-pre-conductor if you want it off this machine)
+Connecting to usb:2-4
+M-Flasher loader 1.3 already running
+Flash chip 0xB36014 (new)
+Reading the flash
+  100%
+Read in 1.3 s (807 KB/s)
+Checked: the chip's CRC32 of the flash matches the read
+  model       FM-1
+  bootloader  stock (M-VAVE)
+  firmware    Felucca
+  app         OK
+  chip key    0x980F
+  flash       0xB36014
+  unit id     55227286a0cb022a
+  loader      M-Flasher 1.3, CPU at 96 MHz
+    - the firmware uses the FM-1 flash layout
+    - flash chip 0xB36014 (new)
+
+Install firmware FM-1_1200
+Writes 140 sectors (560 KiB): 0x04000-0x8EFFF, 0x91000-0x91FFF
+Installs FM-1_1200 (0x04000-0x92FFF).
+Type "yes" to write: yes
+Backup saved: /Users/zhouhanru/Documents/M-Flasher/backups/fm1-20261117-184013.bin
+Writing 0x04000-0x8EFFF
+   99%
+Writing 0x91000-0x91FFF
+  100%
+Done: everything written is verified (the chip's CRC32 matches)
+Sent the restart (a 34-byte program at 0x01C28000); waiting for the unit to reset
+Running: the Felucca is on USB MIDI
+</pasted_content id="ef8f">
+
+
+
+
+<pasted_content id="ef8f">
+❯ just cond-run hc
+PYTHONPATH=host uv run --locked --all-groups python -m conductor --backend "hc"
+no Conductor MIDI port (inputs: ['Felucca'])
+error: recipe `cond-run` failed on line 207 with exit code 2
+</pasted_content id="ef8f">
+
+```
+機器上是能看到 但是 host daemon沒跑起來
+
+---
+
+_**Agent (claude-opus-5-5 2026-11-17 10:41:26Z)**_
+
+韌體刷進去了：140 個 sector 寫入並驗證通過，機器正常重開。daemon 起不來，是 macOS 快取了這台的舊 MIDI 名稱，所以 port 還叫 `Felucca`，而 daemon 只認名字裡有 `CONDUCTOR` 的 port。Agent Deck 刷上去時也遇過同樣的問題。
+
+**現在馬上可以用**：
+
+```sh
+just cond-run hc --port Felucca
+```
+
+我同時把 daemon 改成不靠名字找裝置：找不到 `CONDUCTOR` 時，聽所有 MIDI 輸入兩秒，誰送出 Conductor 的 HELLO / HEARTBEAT 就用誰。
+
+_**Agent (claude-opus-5-5 2026-11-17 10:41:28Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+View the current MidiLink constructor
+
+`sed -n '/^class MidiLink/,/^    def _on_msg/p' host/conductor/device.py`
+
+```text
+class MidiLink:
+    """SysEx in and out through mido. Over USB or BLE MIDI the port looks the same; only
+    its name differs (macOS shows a Bluetooth device once it is connected in Audio MIDI
+    Setup > MIDI Studio > Bluetooth)."""
+
+    def __init__(self, port: str | None = None):
+        import mido  # only needed for a real device
+
+        ins, outs = mido.get_input_names(), mido.get_output_names()
+        name_in, name_out = find_port(ins, port), find_port(outs, port)
+        if not name_in or not name_out:
+            raise RuntimeError(f"no Conductor MIDI port (inputs: {ins})")
+        self.name = name_in
+        self.q: queue.Queue[bytes] = queue.Queue()
+        self.out = mido.open_output(name_out)
+        self.inp = mido.open_input(name_in, callback=self._on_msg)
+        self._mido = mido
+
+    def _on_msg(self, msg):
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 10:41:41Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Add protocol sniffing for the device port; test against the real unit
+
+```bash
+python3 - <<'EOF'
+p='host/conductor/device.py'
+s=open(p).read()
+s=s.replace('''def find_port(names: list[str], want: str | None) -> str | None:''','''def sniff_port(mido, names: list[str], seconds: float = 2.5) -> str | None:
+    """The input that speaks our protocol: the device says HELLO or HEARTBEAT every
+    second, whatever macOS calls the port (it keeps a firmware's old name, e.g.
+    "Felucca", after a switch)."""
+    found: list[str] = []
+    ports = []
+    for n in names:
+        def hear(msg, n=n):
+            if msg.type == "sysex" and bytes(msg.data[:3]) == P.HEADER and n not in found:
+                found.append(n)
+        try:
+            ports.append(mido.open_input(n, callback=hear))
+        except (OSError, IOError):
+            continue
+    end = time.time() + seconds
+    while time.time() < end and not found:
+        time.sleep(0.05)
+    for p in ports:
+        p.close()
+    return found[0] if found else None
+
+
+def find_port(names: list[str], want: str | None) -> str | None:''')
+s=s.replace('''import queue
+import sys
+import threading''','''import queue
+import sys
+import threading
+import time''')
+s=s.replace('''        ins, outs = mido.get_input_names(), mido.get_output_names()
+        name_in, name_out = find_port(ins, port), find_port(outs, port)
+        if not name_in or not name_out:
+            raise RuntimeError(f"no Conductor MIDI port (inputs: {ins})")''','''        ins, outs = mido.get_input_names(), mido.get_output_names()
+        name_in, name_out = find_port(ins, port), find_port(outs, port)
+        if not name_in and not port:
+            name_in = sniff_port(mido, ins)  # not by name: by what it says
+            name_out = name_in if name_in in outs else None
+        if not name_in or not name_out:
+            raise RuntimeError(f"no Conductor on MIDI: no port named CONDUCTOR and none saying HELLO (inputs: {ins})")''')
+open(p,'w').write(s)
+EOF
+just cond-test 2>&1 | tail -1; PYTHONPATH=host uv run --locked --all-groups python -c "
+import mido, time
+from conductor.device import sniff_port
+t=time.time(); print('sniffed:', sniff_port(mido, mido.get_input_names()), f'{time.time()-t:.1f}s')"
+```
+
+```text
+20 passed in 0.05s
+sniffed: Felucca 0.4s
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 10:41:48Z)**_
+
+<think><details><summary>Thought Process</summary>
+在實機上，`Felucca` 埠在 0.4 秒內就送出了 Conductor 的 HELLO，證明韌體和 USB SysEx 都正常運作。接下來我會用 fake backend 跑 5 秒來確認握手，不會碰到任何真實的 agent。
+
+</details></think>
+
+_**Agent (claude-opus-5-5 2026-11-17 10:41:58Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Five-second daemon run with the fake backend against the real unit
+
+```bash
+S=/private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/c6419d02-4c76-47d7-b11c-b7db01c7f2b4/scratchpad; PYTHONPATH=host CONDUCTOR_HOME=$S/hw-home uv run --locked --all-groups python -u - <<'EOF' 2>&1 | tail -8
+import subprocess, sys, time, os
+d = subprocess.Popen([sys.executable, "-u", "-m", "conductor", "--backend", "fake", "--no-voice"], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
+time.sleep(7)
+d.terminate()
+print(d.communicate(timeout=5)[0])
+EOF
+```
+
+```text
+[midi] Felucca
+[backend] fake: 5 agents
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 10:42:05Z)**_
+
+沒看到 `[device] hello`。直接聽 3 秒原始 MIDI，看裝置到底送了什麼。
+
+_**Agent (claude-opus-5-5 2026-11-17 10:42:10Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Print raw MIDI from the real unit for a few seconds
+
+```bash
+uv run --locked --all-groups python -c "
+import mido, time
+got=[]
+p=mido.open_input('Felucca', callback=lambda m: got.append(m))
+time.sleep(3.5); p.close()
+for m in got[:8]: print(m.type, ' '.join(f'{b:02X}' for b in (m.data if m.type=='sysex' else m.bytes())))
+print(len(got),'messages')"
+```
+
+```text
+sysex 7D 43 4E 01 44 05
+sysex 7D 43 4E 01 44 02
+sysex 7D 43 4E 01 44 01
+sysex 7D 43 4E 01 44 03
+sysex 7D 43 4E 01 42 01
+sysex 7D 43 4E 01 44 00
+sysex 7D 43 4E 01 44 01
+sysex 7D 43 4E 01 44 00
+15 messages
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 10:42:26Z)**_
+
+<think><details><summary>Thought Process</summary>
+裝置正在收到你那邊 daemon 的 HEARTBEAT 和琴鍵 SELECT，表示你的 daemon 已經連上；我剛才的 5 秒假測試可能和它衝突，請重開一次 `cond-run` 讓它重送整張表。之後我會加上每 30 秒重送一次完整表格的自我修復，也不再對實機跑 daemon。
+
+</details></think>
+
+_**Agent (claude-opus-5-5 2026-11-17 10:42:28Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Add a periodic full resend to the daemon and retest
+
+```bash
+python3 - <<'EOF'
+p='host/conductor/core.py'
+s=open(p).read()
+s=s.replace('''    "meta_every": 3.0,
+''','''    "meta_every": 3.0,
+    "full_every": 30.0,  # resend every slot now and then: heals a device that missed or got other frames
+''')
+s=s.replace('''    _meta: bytes = b""
+''','''    _meta: bytes = b""
+    _full_at: float = 0.0
+''')
+s=s.replace('''    def refresh(self) -> None:
+        now = time.time()
+''','''    def refresh(self) -> None:
+        now = time.time()
+        if now - self._full_at >= self.config.get("full_every", 30.0):
+            self._full_at = now
+            self._slot_frames.clear()
+''')
+open(p,'w').write(s)
+EOF
+just cond-test 2>&1 | tail -1
+```
+
+```text
+20 passed in 0.03s
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 10:42:33Z)**_
+
+接著把這次實刷記進文件。先看 flash 配置圖的格式。
+
+_**Agent (claude-opus-5-5 2026-11-17 10:42:34Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Read the flash map page structure
+
+`grep -n "^#\|^| " docs/hardware/flash-map.md | head -40`
+
+```text
+1:# Flash 配置圖
+5:## 總覽
+7:| 位址 | 內容 | 來源 |
+9:| `0x00000`–`0x03FFF` | **boot head**：bootloader 與 boot 設定（16 KiB）。壞了就開不了機 | `[上游]` M-Flasher、Unbricker |
+10:| `0x04000`–`0x92FFF` | **韌體區**。多數韌體（原廠 V15、SLOOP、Agent Deck、CTL-1）佔這段 | `[實機]` M-Flasher 的寫入計畫 |
+11:| `0x93000`–`0xE8FFF` | 原廠 V15 的**設定區**。社群韌體也把資料放在這裡面 | `[上游]` |
+12:| `0xE9000` | Bluetooth 資料（配對） | `[上游]` |
+13:| `0xEA000`–`0xFBFFF` | 原廠音色（factory voices） | `[上游]` |
+14:| `0xFC000`–`0xFEFFF` | M-Flasher 的圖上標為 free；Felucca 系拿來放全域設定 | `[實機]` |
+15:| `0xFF000`–`0xFFFFF` | key / MAC，裝置自己的資料 | `[上游]` |
+19:## 韌體區不一定只到 `0x92FFF`
+21:| 韌體 | 佔用範圍 | 來源 |
+23:| SLOOP 2.8.5、Agent Deck 0.7、CTL-1 1.0.3 | `0x04000`–`0x92FFF`（實際寫入到 `0x8FFFF`） | `[實機]` |
+24:| **ChoralRoot 0.41** | `0x04000`–**`0x9EFFF`** | `[實機]` M-Flasher 的計畫：152 sectors |
+25:| **原廠 V16** | 到 **`0xA8FFF`** | `[上游]` Unbricker |
+29:## Felucca 系韌體的資料位置
+33:| 位址 | 內容 |
+35:| `0x97000` 起 | project（曲子） |
+36:| `0x9F000` | SLOOP 的 autosave（和 ChoralRoot 的 FM6 bank 是同一個物件編號） |
+37:| `0xA0000` 起 | samples |
+38:| `0xDC000` 起 | user preset bank；CTL-1 用來放面板校正 |
+39:| `0xDE000` | CTL-1 的 Bluetooth 設定 |
+40:| `0xE0000` | 更新時暫存 update loader |
+41:| `0xF2000`–`0xF3FFF` | RemoteFM1 第一次開 Bluetooth 時寫入 |
+42:| `0xFC000` | 全域設定。**SLOOP、Agent Deck、CTL-1 都寫這裡** |
+43:| `0xFE000` | SLOOP autosave 的另一份 |
+47:## 我的機器上實際發生的 `[實機]`
+51:| 動作 | 改變的 sector |
+53:| 原廠 015 → 裝 SLOOP 並玩過 | 韌體區，加上 `0x97000`、`0x9F000`、`0xFC000`、`0xFD000`、`0xFE000` |
+54:| → Agent Deck | 韌體區，加上 `0xFC000`（蓋掉 SLOOP 的設定） |
+55:| → 回 SLOOP | 韌體區，加上 `0xFE000`。曲子還在 |
+56:| → CTL-1 | 韌體區，加上 `0xDE000`、`0xDF000`、`0xFC000`、`0xFD000` |
+57:| → ChoralRoot | `0x04000`–`0x9EFFF`，蓋掉了 `0x97000` 的 SLOOP project（已執行，尚未用備份比對確認其他 sector） |
+61:## 自己比對兩份備份
+70:## 這對操作的意義
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 10:43:04Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Record the flash in device log, switching, flash map, design page
+
+```bash
+python3 - <<'EOF'
+import re
+# device log
+p='docs/device-log.md'
+s=open(p).read()
+old=[l for l in s.splitlines() if l.startswith("| 目前韌體 |")][0]
+s=s.replace(old,"| 目前韌體 | **Conductor 0.1（自製）**（2026-11-17 18:40 刷入，套件識別 `FM-1_1200`，USB 產品名 `CONDUCTOR FM-1`；macOS 的 MIDI port 仍顯示 `Felucca`）。之前依序是原廠 015 → SLOOP 2.8.5 → Agent Deck 0.7 → SLOOP 2.8.5 → CTL-1 1.0.3 → ChoralRoot 0.41 |")
+s=s.replace("| 2026-11-17 | 刷 Conductor 之前的 ChoralRoot 0.41（目前狀態） |","| 2026-11-17 | 刷 Conductor 之前的 ChoralRoot 0.41 |")
+anchor=[l for l in s.splitlines() if l.startswith("| 2026-11-17 18:38 | agent 執行 `just fm1-download-mode`")][0]
+s=s.replace(anchor, anchor+"""
+| 2026-11-17 18:40 | 本人執行 `just fm1-switch firmware/conductor/build/conductor.fwsc`（SHA-256 `de182723…0502f3`，commit `d45ce67`） | 先自動備份 `backups/2026-11-17-1839-pre-conductor/fm1-20261117-184005.bin`（SHA-256 與 18:38 那份相同，`81f048bb…7ba1e1`）。M-Flasher 的計畫：`Writes 140 sectors (560 KiB): 0x04000-0x8EFFF, 0x91000-0x91FFF`，安裝範圍 `0x04000-0x92FFF`。寫入後全部驗證通過（晶片 CRC32 相符），M-Flasher 自動備份 `fm1-20261117-184013.bin`，機器重開 |
+| 2026-11-17 | Conductor 在實機開機 | 螢幕正常；macOS 的 MIDI port 名稱沿用 `Felucca`，daemon 照名字找不到 → 改成聽協定找 port。裝置 0.4 秒內送出 Conductor 的 HELLO，本人的 daemon 連上，裝置改送 HEARTBEAT，SELECT 有回傳。Conductor 不寫 flash，資料區沒有變動（模擬器預演結果，實機尚未用備份比對） |""")
+open(p,'w').write(s)
+
+# switching
+p='docs/firmware/switching.md'
+s=open(p).read()
+anchor=[l for l in s.splitlines() if l.startswith("| 2026-11-17 | CTL-1 1.0.3 → ChoralRoot 0.41 |")][0]
+s=s.replace(anchor, anchor+"\n| 2026-11-17 | ChoralRoot 0.41 → Conductor 0.1（自製） | `just fm1-switch firmware/conductor/build/conductor.fwsc` | 成功。寫入 140 個 sector（`0x04000`–`0x8EFFF`、`0x91000`–`0x91FFF`）。ChoralRoot 在 `0x93000`–`0x9EFFF` 的映像殘留還在，Conductor 不讀它 |")
+s=s.replace("| Conductor 0.1（自製） | 沒有改寫，重開再讀回也是 0 次寫入 `[模擬]` |","| Conductor 0.1（自製） | 沒有改寫，重開再讀回也是 0 次寫入 `[模擬]`；2026-11-17 已刷進實機 |")
+open(p,'w').write(s)
+
+# flash map
+p='docs/hardware/flash-map.md'
+s=open(p).read()
+s=s.replace("| SLOOP 2.8.5、Agent Deck 0.7、CTL-1 1.0.3 | `0x04000`–`0x92FFF`（實際寫入到 `0x8FFFF`） | `[實機]` |","| SLOOP 2.8.5、Agent Deck 0.7、CTL-1 1.0.3 | `0x04000`–`0x92FFF`（實際寫入到 `0x8FFFF`） | `[實機]` |\n| Conductor 0.1（自製，fm1-base） | `0x04000`–`0x92FFF`（實際寫入 `0x04000`–`0x8EFFF`、`0x91000`–`0x91FFF`） | `[實機]` M-Flasher 的計畫：140 sectors |")
+s=s.replace("| `0xDC000` 起 | user preset bank；CTL-1 用來放面板校正 |","| `0xDC000` 起 | user preset bank；CTL-1 與 fm1-base 的 app（含 Conductor）用來放面板校正 |")
+anchor=[l for l in s.splitlines() if l.startswith("| → ChoralRoot |")][0]
+s=s.replace(anchor, anchor+"\n| → Conductor | 韌體區 140 個 sector（`0x04000`–`0x8EFFF`、`0x91000`–`0x91FFF`）。開機後不寫任何資料（預演 `[模擬]`；實機尚未用備份比對） |")
+open(p,'w').write(s)
+
+# conductor page
+p='docs/agentic/conductor.md'
+s=open(p).read()
+s=s.replace("**狀態（2026-11-17）：設計與原型完成。host simulator、fm1-emu 兩種晶片、daemon 對 hc 的端到端都跑通 `[模擬]`；還沒刷進實機。**",
+            "**狀態（2026-11-17）：已刷進實機（新晶片 `0xB36014`），開機正常，daemon 連得上 `[實機]`。按鍵、LED、批准流程還沒逐項在實機確認。**")
+s=s.replace("**狀態（2026-11-17 18:38）：`AGENTS.md` 要求的檢查全部做完，等我本人刷寫。**",
+            "**2026-11-17 18:40 已由我本人刷寫，結果見[我的機器](../device-log.md)。** 以下是刷之前做的檢查。")
+s=s.replace("- [ ] 實刷：preflight 只差接上實機的兩項，見[實刷準備](#flash)。",
+            "- [x] 實刷（2026-11-17），見[實刷準備](#flash)。\n- [ ] 在實機逐項確認：琴鍵燈的各種狀態、`REC` / `FX` / `ENV` 對 `cond-it` 的假 agent、提示音、`ARP` 語音鍵。")
+s=s.replace('''### 螢幕顯示 `NO AGENTS` { #no-agents }''','''### MIDI port 叫 `Felucca` { #port-name }
+
+macOS 會記住這台機器之前的 MIDI 名稱，刷了 Conductor 之後 port 仍可能叫 `Felucca`（USB 產品名其實是 `CONDUCTOR FM-1`）`[實機]`。daemon 先找名字含 `CONDUCTOR` 的 port，找不到就聽所有 MIDI 輸入 2.5 秒，誰送出 Conductor 的 HELLO / HEARTBEAT 就用誰。也可以直接指定：`just cond-run hc --port Felucca`。
+
+**同一時間只開一個 daemon。** 兩個 daemon 對著同一台機器時，裝置會收到兩邊的表；daemon 每 30 秒重送一次完整的表，最多 30 秒就會恢復。
+
+### 螢幕顯示 `NO AGENTS` { #no-agents }''')
+open(p,'w').write(s)
+EOF
+just docs-check 2>&1 | tail -1
+```
+
+```text
+{"status": "ok", "pages": 43, "llm_pages": 43, "deployed": false}
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 10:43:12Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Commit the daemon fixes and flash records
+
+```bash
+grep -n "目前韌體\|SLOOP 的曲子" docs/device-log.md | head -3; git add host docs && git commit -q -F - <<'EOF'
+Conductor on hardware: find the port by protocol, record the flash
+
+macOS keeps the unit's old MIDI name (Felucca) after a switch, so the
+daemon now falls back to listening for Conductor's HELLO / HEARTBEAT
+on every input. The daemon also resends the full table every 30 s, so a
+device that got another daemon's frames heals.
+
+Flashed 2026-11-17 18:40 by the owner (140 sectors, verified); recorded
+in the device log, switching page and flash map.
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+EOF
+git log --oneline -1
+```
+
+```text
+13:| 目前韌體 | **Conductor 0.1（自製）**（2026-11-17 18:40 刷入，套件識別 `FM-1_1200`，USB 產品名 `CONDUCTOR FM-1`；macOS 的 MIDI port 仍顯示 `Felucca`）。之前依序是原廠 015 → SLOOP 2.8.5 → Agent Deck 0.7 → SLOOP 2.8.5 → CTL-1 1.0.3 → ChoralRoot 0.41 |
+14:| SLOOP 的曲子 | **已不在機器上**（`0x97000` 被 ChoralRoot 的韌體蓋掉）。完整保存在 `2026-11-17-0341-pre-ctl-1.0.3` 備份裡；回 SLOOP 要在 M-Flasher GUI 還原那份備份 |
+13fc88a Conductor on hardware: find the port by protocol, record the flash
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 10:43:22Z)**_
+
+Conductor 已經在實機上跑起來了：140 個 sector 寫入並驗證通過，你的 daemon 也連上了。
+
+**daemon 沒找到裝置的原因**：macOS 會記住這台機器之前的 MIDI 名稱，所以刷完之後 port 還叫 `Felucca`。實際的 USB 產品名是 `CONDUCTOR FM-1`，而 daemon 原本只認名字裡有 `CONDUCTOR` 的 port。Agent Deck 刷上去時也遇過一樣的情況。
+
+**修正**：daemon 找不到 `CONDUCTOR` 時，會聽所有 MIDI 輸入，誰送出 Conductor 的 HELLO 就用誰。對著實機測，0.4 秒就找到 `Felucca`。所以之後直接跑 `just cond-run` 就行，不用再加 `--port Felucca`。
+
+**我這邊出了一個錯，要請你處理**：為了確認握手，我用 fake backend 對實機跑了 5 秒，沒注意到你自己的 daemon 已經連著。兩個 daemon 同時送資料，你的螢幕上可能混進了 `fix-tests`、`refactor-api` 這類假 agent。
+
+- 假 agent 只是 daemon 裡寫死的資料，沒有對任何真的 session 送過鍵。
+- 但你的 daemon 只送有變動的部分，不會自己蓋回來。**請重開一次你的 `cond-run`**，它會重送整張表。
+- 我已經讓 daemon 每 30 秒重送一次完整的表，就算再發生，最多 30 秒也會恢復。
+- 之後我不會在你的 daemon 開著時，再對實機跑 daemon。
+
+**實機上還沒逐項確認的**：
+- 琴鍵燈的各種狀態
+- `REC`、`FX`、`ENV` 的批准流程（可以用 `just cond-it` 開假 agent 來試）
+- 提示音
+- `ARP` 語音鍵
+
+文件都更新了：device log、切換紀錄、flash 配置圖，設計頁也加了「MIDI port 叫 `Felucca`」一節。改動已 commit 為 `13fc88a`，還沒 push。
+
+---
+
+_**User (2026-11-17 10:46:09Z)**_
+
+```
+
+
+<pasted_content id="ef8f">
+❯ just cond-run hc --port Felucca
+PYTHONPATH=host uv run --locked --all-groups python -m conductor --backend "hc" --port Felucca
+[midi] Felucca
+[backend] hc: 1 agents, 3 shells not shown (--show-shells to list them)
+[voice] ARP holds ctrl+option (hold)
+[voice] this terminal has no Accessibility permission: the keys will not arrive. System Settings > Privacy & Security > Accessibility
+[device] hello, protocol 1
+[action] CHANGED, LOOK AGAIN
+[action] LISTENING
+[action] VOICE OFF
+</pasted_content id="ef8f">
+
+```
+
+目前看起來好像是有展示demo？ [Image #9] 而不是真實 hc 內容？
+
+---
+
+_**User (2026-11-17 10:46:09Z)**_
+
+[Image: source: /private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/c6419d02-4c76-47d7-b11c-b7db01c7f2b4/images/9.png]
+
+---
+
+_**Agent (claude-opus-5-5 2026-11-17 10:46:26Z)**_
+
+對，除了第一列，其他都是假資料。
+
+- **第一列 `F3 CL zhouhanru: done` 是真的**：你 hc 裡那個 Claude Code。你的 daemon 也印了 `hc: 1 agents`。
+- **第 2 到 5 列是我那 5 秒 fake 測試留下的**：`refactor-api`、`docs-pass`、`spike-ui`、`remote-train`。順序是：你的 daemon 先連上，送了整張真的表；接著我的 fake daemon 把第 2 到 5 個鍵蓋成 demo agent。你那個 daemon 是在我加「每 30 秒重送整張表」之前啟動的，舊版只送有變動的部分，所以那幾列一直沒被蓋回來。
+- **紅色的 `PLAY` 和琴鍵燈**也是被假的 ERROR 那一列觸發的。
+
+**處理方式**：Ctrl-C 停掉 daemon，重跑 `just cond-run hc`（現在不用加 `--port Felucca`）。重連時會先清空再送整張表，畫面就只剩你真的那一個 agent，之後每 30 秒也會自己校正一次。
+
+你的 log 裡還有兩個好消息：
+
+- **`CHANGED, LOOK AGAIN` 是安全檢查在實機上生效了。** 你在一列假 agent 上按了 `REC`，裝置送出的身分標記對不上 daemon 那邊這個鍵上的 agent，所以拒絕，什麼鍵都沒送。這正是為了「鍵上換了人」的情況設計的。
+- **`ARP` 的語音鍵在實機上走通了**：按下顯示 `LISTENING`，放開顯示 `VOICE OFF`。但 macOS 擋掉了模擬按鍵，Wispr Flow 收不到。要到系統設定 → 隱私權與安全性 → 輔助使用，加入你跑 `cond-run` 的那個 app（看起來是 Herdr app），之後重開 daemon。
+
+---
+
+_**User (2026-11-17 10:51:36Z)**_
+
+我有什麼辦法預覽 agent session 裡面的內容？ 
+然後添加了 [Image #10] 確定 ARP語音輸入能夠work
+
+另外是不是也能有一個device上的help page (雖然我們也有cheatsheet了？）
+
+---
+
+_**User (2026-11-17 10:51:36Z)**_
+
+[Image: source: /private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/c6419d02-4c76-47d7-b11c-b7db01c7f2b4/images/10.png]
+
+---
+
+_**Agent (claude-opus-5-5 2026-11-17 10:52:10Z)**_
+
+三件事：
+
+1. **預覽 session 內容**：其實已經有了。按 agent 的琴鍵選它，再按 `EDIT`，會顯示它最後 8 行輸出；在電腦上，classic Herdr 也會同時 focus 那個 pane。不過現在每行只有 28 個字、不能捲動，Claude Code 介面的框線字元還會變成 `?`。我改成：更寬的行、長行自動折行、TUI 符號轉成 ASCII，並且可以用 **KNOB 1 往回捲**。
+2. **ARP 語音**：要看你在哪個 app 裡跑 `cond-run`。在 Ghostty 跑，你清單裡已經有了；在 Herdr app 裡跑，清單裡要有 Herdr。重開 daemon 時，如果不再出現 `no Accessibility permission` 的提醒，就是生效了。
+3. **裝置上的 help 頁**：按 `SEQ`（目前沒用到）開關，ALGORITHM 輪頁時也會經過。
+
+第 1 點的折行與符號轉換只改 host 端，重開 daemon 就生效；捲動和 help 頁要改韌體，需要再刷一次。先寫 host 端。
+
+_**Agent (claude-opus-5-5 2026-11-17 10:52:13Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Locate detail-related code in the daemon
+
+`grep -n "DETAIL_MAX\|DETAIL_LINES" host/conductor/*.py | head; sed -n '/def send_detail/,/self.send(P.detail/p' host/conductor/core.py; grep -n "T_SELECT and" -A3 host/conductor/core.py; grep -n "terminal.read" host/conductor/backends/hc.py`
+
+```text
+host/conductor/core.py:108:                lines = self.backend.read_lines(aid, P.DETAIL_LINES)
+host/conductor/core.py:111:        lines = (lines + [""] * P.DETAIL_LINES)[: P.DETAIL_LINES]
+host/conductor/protocol.py:71:DETAIL_LINES = 8
+host/conductor/protocol.py:72:DETAIL_MAX = 28
+host/conductor/protocol.py:125:    return frame(T_DETAIL, bytes([index, line]) + _text(text, DETAIL_MAX))
+    def send_detail(self, force: bool = False) -> None:
+        self._detail_at = time.time()
+        aid = self.slots.agent_at(self.selected) if self.selected is not None else None
+        lines: list[str] = []
+        if aid:
+            try:
+                lines = self.backend.read_lines(aid, P.DETAIL_LINES)
+            except BackendError as e:
+                lines = [f"read failed: {e}"]
+        lines = (lines + [""] * P.DETAIL_LINES)[: P.DETAIL_LINES]
+        if self.selected is not None and (lines != self._detail or force):
+            self._detail = lines
+            for i, ln in enumerate(lines):
+                self.send(P.detail(self.selected, i, ln))
+141:        elif m.type == P.T_SELECT and m.payload:
+142-            self.selected = m.payload[0] if m.payload[0] < P.NSLOTS else None
+143-            self.send_detail(force=True)
+144-        elif m.type == P.T_ACTION:
+161:        res = self.rpc.call("terminal.read", {"terminal": agent_id, "lines": 0})
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 10:52:34Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Wrap and ASCII-fold detail lines, read more history, scroll by KNOB 1; tests
+
+```bash
+python3 - <<'EOF'
+p='host/conductor/protocol.py'
+s=open(p).read()
+s=s.replace("DETAIL_MAX = 28","DETAIL_MAX = 36\nDETAIL_HISTORY = 120  # lines read back from the agent's screen and history, for scrolling")
+s=s.replace('''def device_select(index: int) -> bytes:
+    return frame(T_SELECT, bytes([index]))''','''def device_select(index: int, scroll: int = 0) -> bytes:
+    return frame(T_SELECT, bytes([index]) + (bytes([min(scroll, 127)]) if scroll else b""))''')
+open(p,'w').write(s)
+
+p='host/conductor/core.py'
+s=open(p).read()
+s=s.replace('''import time
+from collections.abc import Callable''','''import textwrap
+import time
+from collections.abc import Callable''')
+s=s.replace('''KIND_WORD = {''','''# terminal UI marks to ASCII, so a Claude Code / Codex screen reads on the device
+TUI_ASCII = str.maketrans({
+    "─": "-", "━": "-", "│": "|", "┃": "|", "╭": "+", "╮": "+", "╰": "+", "╯": "+", "┌": "+", "┐": "+",
+    "└": "+", "┘": "+", "├": "+", "┤": "+", "❯": ">", "›": ">", "»": ">", "⏵": ">", "▶": ">", "→": "->",
+    "←": "<-", "●": "*", "•": "*", "✳": "*", "✻": "*", "✶": "*", "✽": "*", "·": ".", "…": "...",
+    "✓": "v", "✔": "v", "✗": "x", "✘": "x", "⎿": "L", "“": '"', "”": '"', "‘": "'", "’": "'", "\\t": " ",
+})
+
+
+def device_lines(raw: list[str], width: int) -> list[str]:
+    """Screen lines as the device can show them: ASCII marks, other characters dropped,
+    long lines wrapped, blank runs left out."""
+    out: list[str] = []
+    for ln in raw:
+        t = ln.translate(TUI_ASCII)
+        t = "".join(ch if 0x20 <= ord(ch) < 0x7F else ("?" if ord(ch) > 0x2FFF else "") for ch in t).rstrip()
+        if not t.strip():
+            continue
+        out.extend(textwrap.wrap(t, width, drop_whitespace=False, subsequent_indent="  ") or [""])
+    return out
+
+
+KIND_WORD = {''')
+s=s.replace('''    selected: int | None = None
+''','''    selected: int | None = None
+    scroll: int = 0  # wrapped lines back from the end, set by KNOB 1 on the device
+''')
+s=s.replace('''                lines = self.backend.read_lines(aid, P.DETAIL_LINES)
+            except BackendError as e:
+                lines = [f"read failed: {e}"]
+        lines = (lines + [""] * P.DETAIL_LINES)[: P.DETAIL_LINES]''','''                lines = device_lines(self.backend.read_lines(aid, P.DETAIL_HISTORY), P.DETAIL_MAX)
+            except BackendError as e:
+                lines = [f"read failed: {e}"]
+        end = max(len(lines) - self.scroll, min(len(lines), P.DETAIL_LINES))
+        lines = lines[max(0, end - P.DETAIL_LINES) : end]
+        lines = (lines + [""] * P.DETAIL_LINES)[: P.DETAIL_LINES]''')
+s=s.replace('''            self.selected = m.payload[0] if m.payload[0] < P.NSLOTS else None
+            self.send_detail(force=True)''','''            self.selected = m.payload[0] if m.payload[0] < P.NSLOTS else None
+            self.scroll = m.payload[1] * 4 if len(m.payload) > 1 else 0  # KNOB 1: four lines a detent
+            self.send_detail(force=True)''')
+open(p,'w').write(s)
+
+p='host/conductor/backends/hc.py'
+s=open(p).read()
+s=s.replace('''res = self.rpc.call("terminal.read", {"terminal": agent_id, "lines": 0})''','''res = self.rpc.call("terminal.read", {"terminal": agent_id, "lines": n})  # the screen plus n of history''')
+open(p,'w').write(s)
+EOF
+grep -n '"lines": n \* 3' host/conductor/backends/herdr.py; sed -i '' 's/"lines": n \* 3,/"lines": n,/' host/conductor/backends/herdr.py
+cat >> host/tests/test_core.py <<'EOF'
+
+
+def test_device_lines_ascii_and_wrap():
+    from conductor.core import device_lines
+
+    out = device_lines(["╭─ Bash ─╮", "❯ 1. Yes", "", "x" * 50, "中文 ok"], 36)
+    assert out[0] == "+- Bash -+" and out[1] == "> 1. Yes"
+    assert out[2] == "x" * 36 and out[3].startswith("  x")
+    assert out[4] == "?? ok"
+    assert all(all(0x20 <= ord(c) < 0x7F for c in ln) for ln in out)
+
+
+def test_detail_scrolls_back(tmp_path):
+    be, sim, c = setup(tmp_path)
+    be.read_lines = lambda aid, n: [f"line {i}" for i in range(30)]
+    sim.q.put(P.device_select(0))
+    for f in sim.poll():
+        c.on_frame(f)
+    assert sim.detail[7] == "line 29"
+    sim.q.put(P.device_select(0, scroll=2))  # two detents: eight lines back
+    for f in sim.poll():
+        c.on_frame(f)
+    assert sim.detail[0] == "line 14" and sim.detail[7] == "line 21"
+EOF
+just cond-test 2>&1 | tail -2
+```
+
+```text
+116:        res = self.call("pane.read", {"pane_id": agent_id, "source": "recent", "lines": n * 3, "strip_ansi": True})
+......................                                                   [100%]
+22 passed in 0.05s
+[This command modified 5 files you've previously read: host/conductor/protocol.py, host/tests/test_core.py, host/conductor/core.py, host/conductor/backends/herdr.py, host/conductor/backends/hc.py. Call Read before editing.]
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 10:52:40Z)**_
+
+Host 端完成。用你真實的那個 hc agent 看一下效果（唯讀）。
+
+_**Agent (claude-opus-5-5 2026-11-17 10:52:45Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Preview the real hc agent's detail lines as the device would show them
+
+```bash
+PYTHONPATH=host uv run --locked --all-groups python -c "
+from conductor.backends.hc import HcBackend
+from conductor.core import device_lines
+b=HcBackend(); a=b.list_agents()
+print(a[0].name if a else 'none')
+if a:
+    ls=device_lines(b.read_lines(a[0].id,120),36)
+    print(len(ls),'lines'); print('\n'.join('|'+l for l in ls[-8:]))
+b.close()"
+```
+
+```text
+zhouhanru: done
+252 lines
+|  1 rules | 11 hooks
+|  v Bash 9
+|  Started: 2026-11-17 18:06 | Last 
+|  reply: 0s ago
+|  Tokens 612k (in: 24, out: 5k, 
+|  cache: 607k)
+|  >> bypass permissions on 
+|  (shift+tab to cycle)
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 10:52:51Z)**_
+
+折行和符號轉換都正常。Claude Code 畫面最底下是狀態列，真正的對話在上面，所以需要 KNOB 1 往回捲。接著改韌體：加 KNOB 1 捲動和 help 頁。
+
+_**Agent (claude-opus-5-5 2026-11-17 10:53:13Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Add KNOB 1 scroll and a help page to the firmware; run host-simulator tests
+
+```bash
+python3 - <<'EOF'
+p='firmware/conductor/app.c'
+s=open(p).read()
+s=s.replace("#define LINE_MAX 28u","#define LINE_MAX 36u")
+s=s.replace("#define FW_MINOR 1u","#define FW_MINOR 2u")
+s=s.replace('''enum { PG_GRID, PG_DETAIL, PG_APPROVALS, PG_N };
+static struct {
+    uint8_t page, sel, top;''','''enum { PG_GRID, PG_DETAIL, PG_APPROVALS, PG_HELP, PG_N };
+static struct {
+    uint8_t page, sel, top;
+    uint8_t scroll;                      /* DETAIL: KNOB 1 detents back (the host turns them into lines) */
+    uint8_t back;                        /* the page HELP returns to */''')
+s=s.replace('''static void send_select(void)
+{
+    uint8_t s = ui.sel;
+    if (hl_host(&link, plat_ms()))
+        hl_send(&link, T_SELECT, &s, 1);
+}''','''static void send_select(void)
+{
+    uint8_t p[2] = {ui.sel, ui.scroll};
+    if (hl_host(&link, plat_ms()))
+        hl_send(&link, T_SELECT, p, ui.scroll ? 2u : 1u);
+}''')
+s=s.replace('''    ui.sel = (uint8_t)k;
+    if (slots[k].state == S_DONE)''','''    if (ui.sel != k)
+        ui.scroll = 0;
+    ui.sel = (uint8_t)k;
+    if (slots[k].state == S_DONE)''')
+s=s.replace('''        case B_GLO: set_page(PG_APPROVALS); break;''','''        case B_GLO: set_page(PG_APPROVALS); break;
+        case B_SEQ:                      /* help, and back to where we were */
+            if (ui.page == PG_HELP)
+                set_page(ui.back);
+            else {
+                ui.back = ui.page;
+                set_page(PG_HELP);
+            }
+            break;''')
+s=s.replace('''    (void)plat_enc(EN_PRESET), (void)plat_enc(EN_K1), (void)plat_enc(EN_K3);''','''    if ((e = plat_enc(EN_K1)) != 0 && ui.page == PG_DETAIL) {   /* back through the agent's output */
+        int32_t v = clamp((int32_t)ui.scroll + (e < 0 ? 1 : -1), 0, 30);
+        if (v != ui.scroll) {
+            ui.scroll = (uint8_t)v;
+            send_select();
+            ui.redraw = 1;
+        }
+    }
+    (void)plat_enc(EN_PRESET), (void)plat_enc(EN_K3);''')
+s=s.replace('''        static const char *const PAGE[PG_N] = {"AGENTS", "DETAIL", "WAITING"};''','''        static const char *const PAGE[PG_N] = {"AGENTS", "DETAIL", "WAITING", "HELP"};''')
+# help page drawing
+s=s.replace('''static void draw_footer(uint32_t now)''','''static void draw_help(void)
+{
+    static const char *const L[][2] = {
+        {"REC", "approve"}, {"FX", "deny"},
+        {"SAVE", "always"}, {"ENV", "stop"},
+        {"SEL", "enter"}, {"PLAY", "continue"},
+        {"LFO", "mode"}, {"ARP", "hold: talk"},
+        {"EDIT", "output"}, {"K1", "scroll it"},
+        {"HOME", "all"}, {"GLO", "waiting"},
+        {"SELECT", "move"}, {"K4", "next"},
+        {"K2", "up / down"}, {"SEQ", "this help"},
+    };
+    static const char *const LIGHT[] = {"blink waits", "pulse works", "lit done", "2x error", "glow idle"};
+    static const uint8_t LS[] = {S_BLOCKED, S_WORKING, S_DONE, S_ERROR, S_IDLE};
+    uint32_t i;
+    int32_t x = 4;
+    cv_begin(240, ROW_H * ROWS, C_BLACK);
+    for (i = 0; i < sizeof L / sizeof L[0]; i++) {
+        int32_t cx = (i & 1u) ? 122 : 4, y = 2 + (int32_t)(i / 2u) * 17;
+        cv_text(cx, y, &FONT_XS, L[i][0], C_WHITE);
+        cv_text(cx + 44, y, &FONT_XS, L[i][1], C_AMB);
+    }
+    for (i = 0; i < 5u; i++) {                 /* the keys' lights, in their state colours */
+        if (i == 3u)
+            x = 4;
+        cv_text(x, i < 3u ? 142 : 158, &FONT_XS, LIGHT[i], state_rgb(LS[i]));
+        x += text_w(&FONT_XS, LIGHT[i]) + 12;
+    }
+    cv_blit(0, 32);
+}
+
+static void draw_footer(uint32_t now)''')
+s=s.replace('''    else if (meta.hidden) {''','''    else if (ui.page == PG_DETAIL) {
+        char t[24] = "K1 scroll";
+        if (ui.scroll) {
+            text_cat(t, "  -");
+            int_text(ui.scroll * 4, t + 12);
+        }
+        cv_text(8, 9, &FONT_XS, t, C_DIM);
+    } else if (ui.page == PG_HELP)
+        cv_text(8, 9, &FONT_XS, "SEQ back  keys: one agent each", C_DIM);
+    else if (meta.hidden) {''')
+s=s.replace('''        cv_text(8, 9, &FONT_XS, "REC ok  FX no  ENV stop  K4 next", C_DIM);''','''        cv_text(8, 9, &FONT_XS, "REC ok  FX no  K4 next  SEQ help", C_DIM);''')
+s=s.replace('''    if (ui.page == PG_DETAIL)
+        draw_detail();
+    else
+        draw_list();''','''    if (ui.page == PG_DETAIL)
+        draw_detail();
+    else if (ui.page == PG_HELP)
+        draw_help();
+    else
+        draw_list();''')
+open(p,'w').write(s)
+
+p='firmware/conductor/tests/basic.txt'
+s=open(p).read()
+s=s.replace("expect_sysex F0 7D 43 4E 01 41 01 00 01 F7","expect_sysex F0 7D 43 4E 01 41 01 00 02 F7")
+s=s.replace('''tap HOME
+wait 30
+expect page 0''','''# KNOB 1 back through the output: SELECT with the detents back
+sysex_out
+turn K1 -2
+wait 30
+expect_sysex F0 7D 43 4E 01 44 00 02 F7
+tap HOME
+wait 30
+expect page 0
+# SEQ: the help page, and back
+tap SEQ
+wait 30
+expect page 3
+shot help.png
+tap SEQ
+wait 30
+expect page 0''')
+open(p,'w').write(s)
+EOF
+just fw-test conductor 2>&1 | grep -E "FAIL|error|warning: .*app.c|host:"
+```
+
+```text
+host: 13545 ms simulated, 217 blits, render 0.0% of real time (host CPU)
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 10:53:22Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Scroll by the full detent count and rerun tests
+
+`sed -i '' 's/int32_t v = clamp((int32_t)ui.scroll + (e < 0 ? 1 : -1), 0, 30);/int32_t v = clamp((int32_t)ui.scroll - e, 0, 30);   \/* counter-clockwise: further back *\//' firmware/conductor/app.c && grep -n "ui.scroll - e" firmware/conductor/app.c && just fw-test conductor 2>&1 | grep -E "FAIL|host:"`
+
+```text
+367:        int32_t v = clamp((int32_t)ui.scroll - e, 0, 30);   /* counter-clockwise: further back */
+host: 13545 ms simulated, 217 blits, render 0.0% of real time (host CPU)
+[This command modified 1 file you've previously read: firmware/conductor/app.c. Call Read before editing.]
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 10:53:22Z)**_
+
+<tool-use data-tool-type="read" data-tool-name="Read"><details>
+<summary>Tool use: **Read**</summary>
+ `./firmware/conductor/build/host/help.png`
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 10:53:34Z)**_
+
+<think><details><summary>Thought Process</summary>
+help 頁的表格顯示正常，但底部的燈號說明被截掉了，原因是主區畫到 176 行，超過畫布 144 行的上限；DETAIL 頁也有同樣問題。我會把主區改成分上下兩半來畫。
+
+</details></think>
+
+_**Agent (claude-opus-5-5 2026-11-17 10:53:34Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+View the detail drawing function
+
+`sed -n '/^static void draw_detail/,/^}/p' firmware/conductor/app.c`
+
+```text
+static void draw_detail(void)
+{
+    const slot_t *s = &slots[ui.sel];
+    char t[24];
+    uint32_t i;
+    cv_begin(240, ROW_H * ROWS, C_BLACK);
+    note_name(ui.sel, t);
+    cv_text(8, 2, &FONT_XS, t, C_GRAY);
+    if (s->state == S_EMPTY) {
+        cv_text(40, 2, &FONT_XS, "EMPTY KEY", C_DIM);
+    } else {
+        cv_rect(36, 4, 4, 12, state_rgb(s->state));
+        cv_text(46, 2, &FONT_XS, KIND2[s->kind], C_DIM);
+        cv_text(66, 2, &FONT_XS, s->name, C_WHITE);
+        cv_text(234 - text_w(&FONT_XS, STATE_WORD[s->state]), 2, &FONT_XS, STATE_WORD[s->state], state_rgb(s->state));
+        if (detail.slot == ui.sel)
+            for (i = 0; i < DETAIL_LINES; i++)
+                cv_text(4, 24 + (int32_t)i * 18, &FONT_XS, detail.line[i], C_AMB);
+    }
+    cv_blit(0, 32);
+}
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 10:53:57Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Draw tall pages in two canvas halves; extend the detail test to 8 lines
+
+```bash
+python3 - <<'EOF'
+p='firmware/conductor/app.c'
+s=open(p).read()
+old_detail=s[s.index("static void draw_detail(void)"):]
+old_detail=old_detail[:old_detail.index("\n}\n")+3]
+new_detail='''/* the main area, 240 x 176, is taller than fm1-base's canvas (240 x 144): drawn in two halves, each pass with the
+ * rows above it taken off (oy), so a line across the seam is cut in two and shown whole */
+#define MAIN_H (ROW_H * ROWS)
+static void main_area(void (*fn)(int32_t oy))
+{
+    cv_begin(240, MAIN_H / 2, C_BLACK);
+    fn(0);
+    cv_blit(0, 32);
+    cv_begin(240, MAIN_H / 2, C_BLACK);
+    fn(MAIN_H / 2);
+    cv_blit(0, 32 + MAIN_H / 2);
+}
+
+static void detail_at(int32_t oy)
+{
+    const slot_t *s = &slots[ui.sel];
+    char t[24];
+    uint32_t i;
+    note_name(ui.sel, t);
+    cv_text(8, 2 - oy, &FONT_XS, t, C_GRAY);
+    if (s->state == S_EMPTY) {
+        cv_text(40, 2 - oy, &FONT_XS, "EMPTY KEY", C_DIM);
+        return;
+    }
+    cv_rect(36, 4 - oy, 4, 12, state_rgb(s->state));
+    cv_text(46, 2 - oy, &FONT_XS, KIND2[s->kind], C_DIM);
+    cv_text(66, 2 - oy, &FONT_XS, s->name, C_WHITE);
+    cv_text(234 - text_w(&FONT_XS, STATE_WORD[s->state]), 2 - oy, &FONT_XS, STATE_WORD[s->state], state_rgb(s->state));
+    if (detail.slot == ui.sel)
+        for (i = 0; i < DETAIL_LINES; i++)
+            cv_text(4, 24 + (int32_t)i * 18 - oy, &FONT_XS, detail.line[i], C_AMB);
+}
+
+static void draw_detail(void) { main_area(detail_at); }
+'''
+s=s.replace(old_detail,new_detail)
+s=s.replace('''static void draw_help(void)
+{''','''static void help_at(int32_t oy)
+{''')
+s=s.replace('''    int32_t x = 4;
+    cv_begin(240, ROW_H * ROWS, C_BLACK);
+    for (i = 0; i < sizeof L / sizeof L[0]; i++) {
+        int32_t cx = (i & 1u) ? 122 : 4, y = 2 + (int32_t)(i / 2u) * 17;''','''    int32_t x = 4;
+    for (i = 0; i < sizeof L / sizeof L[0]; i++) {
+        int32_t cx = (i & 1u) ? 122 : 4, y = 2 + (int32_t)(i / 2u) * 17 - oy;''')
+s=s.replace('''        cv_text(x, i < 3u ? 142 : 158, &FONT_XS, LIGHT[i], state_rgb(LS[i]));
+        x += text_w(&FONT_XS, LIGHT[i]) + 12;
+    }
+    cv_blit(0, 32);
+}''','''        cv_text(x, (i < 3u ? 142 : 158) - oy, &FONT_XS, LIGHT[i], state_rgb(LS[i]));
+        x += text_w(&FONT_XS, LIGHT[i]) + 12;
+    }
+}
+
+static void draw_help(void) { main_area(help_at); }''')
+open(p,'w').write(s)
+
+# detail test: fill 8 lines so the seam and the bottom are exercised
+p='firmware/conductor/tests/basic.txt'
+s=open(p).read()
+s=s.replace('''sysex F0 7D 43 4E 01 04 00 01 3E 20 31 2E 20 59 65 73 F7
+wait 30
+shot detail.png''','''sysex F0 7D 43 4E 01 04 00 01 3E 20 31 2E 20 59 65 73 F7
+sysex F0 7D 43 4E 01 04 00 02 20 20 32 2E 20 59 65 73 2C 20 64 6F 6E 27 74 20 61 73 6B F7
+sysex F0 7D 43 4E 01 04 00 03 20 20 33 2E 20 4E 6F F7
+sysex F0 7D 43 4E 01 04 00 04 6C 69 6E 65 20 66 69 76 65 F7
+sysex F0 7D 43 4E 01 04 00 05 6C 69 6E 65 20 73 69 78 F7
+sysex F0 7D 43 4E 01 04 00 06 6C 69 6E 65 20 73 65 76 65 6E F7
+sysex F0 7D 43 4E 01 04 00 07 6C 69 6E 65 20 65 69 67 68 74 3A 20 74 68 65 20 6C 61 73 74 20 6F 6E 65 F7
+wait 30
+shot detail.png''')
+open(p,'w').write(s)
+EOF
+just fw-test conductor 2>&1 | grep -E "FAIL|error:|host:"
+```
+
+```text
+host: 13551 ms simulated, 228 blits, render 0.0% of real time (host CPU)
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 10:53:57Z)**_
+
+<tool-use data-tool-type="read" data-tool-name="Read"><details>
+<summary>Tool use: **Read**</summary>
+ `./firmware/conductor/build/host/help.png`
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 10:53:57Z)**_
+
+<tool-use data-tool-type="read" data-tool-name="Read"><details>
+<summary>Tool use: **Read**</summary>
+ `./firmware/conductor/build/host/detail.png`
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 10:54:04Z)**_
+
+兩頁都正常了：help 頁的燈號說明出來了，DETAIL 頁 8 行都顯示得到。接著 build 實機套件，跑模擬器兩種晶片的開機、重開、讀回。
+
+_**Agent (claude-opus-5-5 2026-11-17 10:54:20Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Build package; emulator boot/restart on both chips; rehearsal over the real backup
+
+`just fw-build conductor 2>&1 | grep -E "ok    image|package|FAIL|error" ; shasum -a 256 firmware/conductor/build/conductor.fwsc; cd tools/emu-state && pkg=$PWD/../../firmware/conductor/build/conductor.fwsc; for chip in uc25hq80 p25q80; do f=pf2-$chip.flash; rm -f $f; for boot in 1 2; do ../fm1-emu/fm1-live --fwsc "$pkg" --flash-chip $chip --flash $f --midi none --shot 3000 --lcd-only 2>&1 | grep -i -E "^flash:|fault|crash" | sed "s/^/  $chip boot$boot: /"; done; done; bak=$PWD/../../backups/2026-11-17-pre-conductor/fm1-20261117-183840.bin; rm -f pristine-c2.flash; ../fm1-emu/fm1-live --fwsc "$pkg" --flash-chip uc25hq80 --flash pristine-c2.flash --midi none --shot 1 --lcd-only >/dev/null 2>&1; python3 ../../scripts/emu_rehearse.py pristine-c2.flash "$bak" rehearse-c2.flash; FM1_USB_SEND='2500:F07D434E010101F7' ../fm1-emu/fm1-live --fwsc "$pkg" --flash-chip uc25hq80 --flash rehearse-c2.flash --midi none --usb --shot 4000 --lcd-only 2>&1 | grep -E "^flash:|Configured|fault"`
+
+```text
+Resolved 21 packages in 3ms
+Checked 18 packages in 1ms
+  ok    image 86420 B; RAM code .ram_text 5100 B of 32768; RAM .data+.bss 26168 B of 98304; pool 69384 B of 344064
+package  /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/firmware/conductor/build/conductor.fwsc  616003 B, identity FM-1_1200
+20a14b7b3adec620ccecf00d5e765ba6b6aa5e1dcf7244f866b03999b55a25de  firmware/conductor/build/conductor.fwsc
+  uc25hq80 boot1: flash: 0 erases / programs
+  uc25hq80 boot2: flash: 0 erases / programs
+  p25q80 boot1: flash: 0 erases / programs
+  p25q80 boot2: flash: 0 erases / programs
+package image 0x04000-0x92FFF laid over the backup
+[   302 ms] usb: Configured { product: "CONDUCTOR FM-1", vid: 4617, pid: 1 }
+flash: 0 erases / programs
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 10:54:39Z)**_
+
+<think><details><summary>Thought Process</summary>
+你看到的畫面我也確認了：DETAIL 頁把整個 Claude Code 介面都照搬進來，真正的對話被擠在中間。我接下來要在 host 端去掉這些固定介面，只保留對話內容，並先對照你那個 session 的原始畫面（唯讀）。
+
+</details></think>
+
+_**Agent (claude-opus-5-5 2026-11-17 10:54:40Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Read the raw bottom of the real Claude Code screen (read-only)
+
+```bash
+cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1 && PYTHONPATH=host uv run --locked --all-groups python -c "
+from conductor.backends.hc import HcBackend
+b=HcBackend(); a=b.list_agents()
+res=b.rpc.call('terminal.read',{'terminal':a[0].id,'lines':10})
+lines=res['text'].splitlines()
+for l in lines[-40:]: print(repr(l[:90]))
+b.close()"
+```
+
+````text
+'  另外有件小事：/opt/homebrew/bin/codex 是 0.166.0，daemon 是 0.169.0，版本不一致，目前看起來不影響，有空可以 brew upgra'
+''
+'✻ Sautéed for 44s · done 6:07 PM'
+''
+'❯ 好像在 hc 裡面跑 codex 會 crash'
+''
+'  [Pacontinuested text #2 +20 lines]'
+''
+'  Listed 2 directories, ran 3 shell commands · 1 failed'
+''
+'⏺ 你這次貼的錯誤訊息沒有傳過來，訊息裡只剩一個 [Pacontinuested text #2 +20 lines] placeholder，所以我看不到這次實際報了什麼錯。'
+''
+'  我在 hc 裡面重新測了一次，目前看起來是正常的：'
+''
+'  - 登入： ~/.codex/auth.json 在 18:08 有更新，應該是你重新登入過了。codex exec "Reply with just: ok" 有正常回 ok'
+'  - daemon： 在 pty 裡開互動式 codex，它跑了 15 秒都沒有 crash，最後是被我的 timeout 關掉的。這次有起一個新的 app-server dae'
+'  - 限制： 我沒有抓到 TUI 的畫面輸出，所以只能確認它啟動後沒有退出，沒辦法確認畫面顯示是不是正常。'
+''
+'  daemon log 裡現在只剩一行 config 的 deprecation 警告，它還不至於讓 codex crash：`[features].multi_agent` i'
+''
+'  麻煩你在 hc 再跑一次 codex。如果還是會 crash，請把錯誤訊息重貼一次，可以直接貼純文字，或是把它存成檔案再告訴我路徑。'
+''
+'✻ Worked for 1m 17s · done 6:46 PM'
+''
+'─── History 54/54 ────────────────────────────────────────────────────────────────────────'
+'❯\xa0好像在 hc 裡面跑 codex 會 crash'
+''
+'  ```'
+'  [Pacontinuested text #2 +20 lines]'
+'  ```'
+'──────────────────────────────────────────────────────────────────────────────────────────'
+'  [Opus 5.5 ◑ high] │ zhouhanru │ ⏱️  40m │ Cost $0.477 │ CC v2.1.326 │ Advisor: Opus 5.5 '
+'  Context    █░░░░░░░░░ 6% (60k/1.0M) │ Usage      █░░░░░░░░░ 12% (resets in 3h 44m) | Wee'
+'  Cache ⏱ at 07:46 PM'
+'  Approx RAM ████░░░░░░ 8.9 GB / 24 GB (37%)'
+'  1 rules | 11 hooks'
+'  ✓ Bash ×9'
+'  Started: 2026-11-17 18:06 │ Last reply: 0s ago'
+'  Tokens 612k (in: 24, out: 5k, cache: 607k)'
+'  ⏵⏵ bypass permissions on (shift+tab to cycle)'
+````
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 10:55:21Z)**_
+
+<think><details><summary>Thought Process</summary>
+看到原始畫面後發現，問題有兩個：底部全是介面，加上中文在只有 ASCII 字型的螢幕上全變成問號。我先從 host 端切掉介面，接著改用圖片傳中文，這需要改韌體。
+
+</details></think>
+
+_**Agent (claude-opus-5-5 2026-11-17 10:55:36Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Strip agent UI chrome from detail lines; test on fixtures and the real session
+
+```bash
+python3 - <<'EOF'
+p='host/conductor/core.py'
+s=open(p).read()
+s=s.replace('''def device_lines(raw: list[str], width: int) -> list[str]:''','''_RULE = re.compile(r"^\\s*[─━-]{3}")
+_PROMPT = re.compile(r"^\\s*[❯›>]")
+_OPTION = re.compile(r"^\\s*[❯›>]?\\s*\\d+\\.\\s")
+_CHROME = re.compile(
+    r"bypass permissions|shift\\+tab|\\? for shortcuts|esc to interrupt|context left|⏎|ctrl\\+[a-z] |"
+    r"^\\s*(Context|Tokens|Cache|Approx RAM|Started:|Usage|Weekly)\\b|\\d+ rules \\||\\d+ hooks|"
+    r"[█▓▒░]{3,}|^\\s*\\[(Opus|Sonnet|Haiku|Fable|gpt|o\\d)|^\\s*✓ \\w+ ×\\d"
+)
+
+
+def strip_chrome(lines: list[str]) -> list[str]:
+    """The conversation without the agent's own interface: the input box (from the rule
+    above an empty prompt down), and status lines at the bottom. A permission menu
+    (numbered choices) is kept: it is what the person is asked."""
+    cut = len(lines)
+    for i in range(len(lines) - 1, max(-1, len(lines) - 40), -1):
+        nxt = next((ln for ln in lines[i + 1 : i + 3] if ln.strip()), "")
+        if _RULE.match(lines[i]) and _PROMPT.match(nxt) and not _OPTION.match(nxt):
+            cut = i
+    out = lines[:cut]
+    while out and (not out[-1].strip() or _CHROME.search(out[-1]) or _RULE.match(out[-1])):
+        out.pop()
+    return out
+
+
+def device_lines(raw: list[str], width: int) -> list[str]:''')
+s=s.replace('''import textwrap
+import time''','''import re
+import textwrap
+import time''')
+s=s.replace('''lines = device_lines(self.backend.read_lines(aid, P.DETAIL_HISTORY), P.DETAIL_MAX)''','''lines = device_lines(strip_chrome(self.backend.read_lines(aid, P.DETAIL_HISTORY)), P.DETAIL_MAX)''')
+open(p,'w').write(s)
+EOF
+cat >> host/tests/test_core.py <<'EOF'
+
+
+CLAUDE_SCREEN = """\
+⏺ I re-tested it in hc; it looks fine now.
+✻ Worked for 1m 17s · done 6:46 PM
+─── History 54/54 ──────────────────────
+❯ 好像在 hc 裡面跑 codex 會 crash
+──────────────────────────────────────
+  [Opus 5.5 ◑ high] │ zhouhanru │ ⏱️  40m │ Cost $0.477
+  Context    █░░░░░░░░░ 6% (60k/1.0M)
+  Approx RAM ████░░░░░░ 8.9 GB / 24 GB (37%)
+  1 rules | 11 hooks
+  ✓ Bash ×9
+  Tokens 612k (in: 24, out: 5k, cache: 607k)
+  ⏵⏵ bypass permissions on (shift+tab to cycle)""".splitlines()
+
+
+def test_strip_chrome_keeps_the_conversation():
+    from conductor.core import strip_chrome
+
+    assert strip_chrome(CLAUDE_SCREEN) == CLAUDE_SCREEN[:2]
+
+
+def test_strip_chrome_keeps_a_permission_menu():
+    from conductor.core import strip_chrome
+
+    screen = ["⏺ Bash(make test)", "╭────────────────╮", "│ Do you want to proceed?", "──────────",
+              "❯ 1. Yes", "  2. Yes, and don't ask again", "  3. No", "  ⏵⏵ bypass permissions on (shift+tab to cycle)"]
+    out = strip_chrome(screen)
+    assert out[-1] == "  3. No" and "❯ 1. Yes" in out
+EOF
+just cond-test 2>&1 | tail -2; PYTHONPATH=host uv run --locked --all-groups python -c "
+from conductor.backends.hc import HcBackend
+from conductor.core import device_lines, strip_chrome
+b=HcBackend(); a=b.list_agents()
+print('\n'.join('|'+l for l in device_lines(strip_chrome(b.read_lines(a[0].id,120)),36)[-8:])); b.close()"
+```
+
+```text
+........................                                                 [100%]
+24 passed in 0.03s
+|  ??
+|  daemon log ??????? config ? 
+|  deprecation ????????? codex 
+|  crash?`[features].multi_agent` is 
+|  deprecated?
+|  ???? hc ???? codex?????? crash????
+|  ????????????????????????????????
+|* Worked for 1m 17s . done 6:46 PM
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 10:55:42Z)**_
+
+介面去掉了，最後一行就是 `Worked for 1m 17s · done`。剩下的 `?` 就是中文。接著做點陣圖路線，先確認 Mac 上有哪些中文字型可用。
+
+_**Agent (claude-opus-5-5 2026-11-17 10:55:44Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Find CJK-capable system fonts on macOS
+
+`ls /System/Library/Fonts/ | grep -i -E "pingfang|hiragino|heiti|stheiti|sfns|menlo" ; ls /System/Library/Fonts/Supplemental 2>/dev/null | grep -i -E "pingfang|songti|arial unicode" | head; ls /System/Library/AssetsV2/com_apple_MobileAsset_Font*/ 2>/dev/null | head -3`
+
+```text
+'Hiragino Sans GB.ttc'
+Menlo.ttc
+SFNS.ttf
+SFNSItalic.ttf
+SFNSMono.ttf
+SFNSMonoItalic.ttf
+SFNSRounded.ttf
+'STHeiti Light.ttc'
+'STHeiti Medium.ttc'
+'Arial Unicode.ttf'
+Songti.ttc
+/System/Library/AssetsV2/com_apple_MobileAsset_Font7/:
+com_apple_MobileAsset_Font7.xml
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 10:55:59Z)**_
+
+<tool-use data-tool-type="write" data-tool-name="Write"><details>
+<summary>Tool use: **Write**</summary>
+
+```python
+"""Lines of any script drawn on the host, sent to the device as 1-bit pictures.
+
+The FM-1's fonts are ASCII only, and a CJK font would not fit in the firmware, so the
+host draws each DETAIL line (Chinese, Japanese, symbols) with a system font into a
+240 x 16 bitmap and the device only paints it. One line packs into 549 bytes of 7-bit
+SysEx: within fm1-base's 640-byte frame.
+"""
+
+from __future__ import annotations
+
+import os
+
+W, H = 240, 16
+BITS = W * H
+PACKED = (BITS + 6) // 7  # 549
+
+FONT_CANDIDATES = [
+    "/System/Library/Fonts/STHeiti Medium.ttc",  # Traditional and Simplified Chinese, Latin
+    "/System/Library/Fonts/Hiragino Sans GB.ttc",
+    "/System/Library/Fonts/Supplemental/Arial Unicode.ttf",
+    "/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc",
+    "/usr/share/fonts/noto-cjk/NotoSansCJK-Regular.ttc",
+]
+
+
+def pack7(bits: list[int]) -> bytes:
+    """A bit stream cut into 7-bit bytes, first bit highest. Pixel i is bit
+    (6 - i % 7) of byte i // 7: the device reads it in place, no unpacking."""
+    out = bytearray(PACKED)
+    for i, b in enumerate(bits):
+        if b:
+            out[i // 7] |= 1 << (6 - i % 7)
+    return bytes(out)
+
+
+class LineRenderer:
+    def __init__(self, font_path: str | None = None, size: int = 14):
+        from PIL import ImageFont  # Pillow is in the host dependency group
+
+        path = font_path or next((f for f in FONT_CANDIDATES if os.path.exists(f)), None)
+        if not path:
+            raise OSError("no font with CJK glyphs found; set detail_font in config.json")
+        self.font = ImageFont.truetype(path, size)
+        self.path = path
+
+    def width(self, text: str) -> float:
+        return self.font.getlength(text)
+
+    def wrap(self, text: str, width: int = W - 4) -> list[str]:
+        """Break a line where it would run past the screen, by drawn width (a CJK
+        character is about twice a Latin one)."""
+        out, cur = [], ""
+        for ch in text:
+            if self.width(cur + ch) > width and cur:
+                out.append(cur.rstrip())
+                cur = "  " + ch if ch != " " else "  "
+            else:
+                cur += ch
+        out.append(cur.rstrip())
+        return out
+
+    def bitmap(self, text: str) -> bytes:
+        from PIL import Image, ImageDraw
+
+        img = Image.new("L", (W, H), 0)
+        ImageDraw.Draw(img).text((2, H // 2), text, font=self.font, fill=255, anchor="lm")
+        px = img.load()
+        return pack7([1 if px[x, y] >= 110 else 0 for y in range(H) for x in range(W)])
+
+
+def unpack7(data: bytes) -> list[int]:
+    return [(data[i // 7] >> (6 - i % 7)) & 1 for i in range(BITS)]
+
+```
+
+```text
+File created successfully at: /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/host/conductor/render.py (file state is current in your context — no need to Read it back)
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 10:56:04Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Prototype host-rendered CJK lines as 1-bit bitmaps
+
+```bash
+S=/private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/c6419d02-4c76-47d7-b11c-b7db01c7f2b4/scratchpad; PYTHONPATH=host uv run --locked --all-groups python -c "
+from conductor.render import LineRenderer, unpack7, W, H
+from PIL import Image
+r=LineRenderer()
+lines=[]
+for t in ['麻煩你在 hc 再跑一次 codex。如果還是會 crash，請把錯誤訊息重貼一次','> 1. Yes   2. Yes, don\'t ask again','* Worked for 1m 17s . done 6:46 PM']:
+    lines+=r.wrap(t)
+img=Image.new('RGB',(W,len(lines)*18),(0,0,0))
+for j,l in enumerate(lines):
+    bits=unpack7(r.bitmap(l))
+    for i,b in enumerate(bits):
+        if b: img.putpixel((i%W, j*18+i//W),(255,184,70))
+img.resize((W*3,len(lines)*18*3),Image.NEAREST).save('$S/bmp-preview.png'); print(r.path, len(lines))"
+```
+
+```text
+/System/Library/Fonts/STHeiti Medium.ttc 5
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 10:56:09Z)**_
+
+<tool-use data-tool-type="read" data-tool-name="Read"><details>
+<summary>Tool use: **Read**</summary>
+ `/private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/c6419d02-4c76-47d7-b11c-b7db01c7f2b4/scratchpad/bmp-preview.png`
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 10:56:18Z)**_
+
+點陣圖的效果可以接受，中文、英文、符號都讀得出來。接著接進協定和 daemon：裝置回報韌體 0.2 以上就送點陣圖，0.1 就照舊送文字。
+
+_**Agent (claude-opus-5-5 2026-11-17 10:56:38Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Wire picture DETAIL lines into protocol and daemon; add tests
+
+```bash
+python3 - <<'EOF'
+p='pyproject.toml'
+s=open(p).read()
+s=s.replace('''host = [
+    "mido>=1.3.3",''','''host = [
+    "mido>=1.3.3",
+    "pillow>=13.0.0",''')
+open(p,'w').write(s)
+
+p='host/conductor/protocol.py'
+s=open(p).read()
+s=s.replace('''T_BEEP = 0x07
+''','''T_BEEP = 0x07
+T_DETAIL_BMP = 0x08  # a DETAIL line as a 240 x 16 1-bit picture (firmware 0.2 and later)
+''')
+s=s.replace('''def meta(total: int, hidden: int, backend: str) -> bytes:''','''def detail_bmp(index: int, line: int, packed: bytes) -> bytes:
+    """packed: 549 bytes, 7 bits each (render.pack7)."""
+    return frame(T_DETAIL_BMP, bytes([index, line]) + packed)
+
+
+def meta(total: int, hidden: int, backend: str) -> bytes:''')
+open(p,'w').write(s)
+
+p='host/conductor/core.py'
+s=open(p).read()
+s=s.replace('''def device_lines(raw: list[str], width: int) -> list[str]:''','''def tui_lines(raw: list[str]) -> list[str]:
+    """Screen lines with TUI marks folded to ASCII and control / private-use characters
+    dropped, but other scripts (CJK) kept: for lines the host draws as pictures."""
+    out = []
+    for ln in raw:
+        t = ln.translate(TUI_ASCII)
+        t = "".join(ch for ch in t if ch.isprintable() and not 0xE000 <= ord(ch) <= 0xF8FF).rstrip()
+        if t.strip():
+            out.append(t)
+    return out
+
+
+def device_lines(raw: list[str], width: int) -> list[str]:''')
+s=s.replace('''    voice: object = None  # a VoiceKey, or None: the button does nothing
+''','''    voice: object = None  # a VoiceKey, or None: the button does nothing
+    device_fw: tuple = (0, 0)  # from the device's HELLO
+    renderer: object = None  # a render.LineRenderer: DETAIL as pictures (any script) for firmware >= 0.2
+''')
+s=s.replace('''        lines: list[str] = []
+        if aid:
+            try:
+                lines = device_lines(strip_chrome(self.backend.read_lines(aid, P.DETAIL_HISTORY)), P.DETAIL_MAX)
+            except BackendError as e:
+                lines = [f"read failed: {e}"]''','''        pictures = self.renderer is not None and self.device_fw >= (0, 2)
+        lines: list[str] = []
+        if aid:
+            try:
+                raw = strip_chrome(self.backend.read_lines(aid, P.DETAIL_HISTORY))
+                if pictures:
+                    lines = [w for ln in tui_lines(raw) for w in self.renderer.wrap(ln)]
+                else:
+                    lines = device_lines(raw, P.DETAIL_MAX)
+            except BackendError as e:
+                lines = [f"read failed: {e}"]''')
+s=s.replace('''            for i, ln in enumerate(lines):
+                self.send(P.detail(self.selected, i, ln))''','''            for i, ln in enumerate(lines):
+                if pictures:
+                    self.send(P.detail_bmp(self.selected, i, self.renderer.bitmap(ln)))
+                else:
+                    self.send(P.detail(self.selected, i, ln))''')
+s=s.replace('''            self.log(f"[device] hello, protocol {m.payload[0] if m.payload else '?'}")''','''            self.device_fw = tuple(m.payload[1:3]) if len(m.payload) >= 3 else (0, 0)
+            self.log(f"[device] hello, protocol {m.payload[0] if m.payload else '?'}, firmware {'.'.join(map(str, self.device_fw))}")''')
+open(p,'w').write(s)
+
+p='host/conductor/__main__.py'
+s=open(p).read()
+s=s.replace('''    report(backend)
+    if cfg.get("voice_keys")''','''    report(backend)
+    try:
+        from .render import LineRenderer
+
+        c.renderer = LineRenderer(cfg.get("detail_font"), cfg.get("detail_font_size", 14))
+    except (ImportError, OSError) as e:
+        print(f"[detail] text only (ASCII): {e}", file=sys.stderr)
+    if cfg.get("voice_keys")''')
+open(p,'w').write(s)
+
+p='host/conductor/device.py'
+s=open(p).read()
+s=s.replace('''        elif m.type == P.T_DETAIL:
+            self.detail[p[1]] = p[2:].decode("ascii", "replace")
+            return  # shown by "show"''','''        elif m.type == P.T_DETAIL:
+            self.detail[p[1]] = p[2:].decode("ascii", "replace")
+            return  # shown by "show"
+        elif m.type == P.T_DETAIL_BMP:
+            lit = sum(bin(b).count("1") for b in p[2:])
+            self.detail[p[1]] = f"[picture, {lit} dots]"
+            return''')
+s=s.replace('''        self.q.put(P.device_hello())''','''        self.q.put(P.device_hello(0, 1))  # as firmware 0.1: text DETAIL lines, readable here''')
+open(p,'w').write(s)
+EOF
+grep -n "def device_hello" -A2 host/conductor/protocol.py
+cat >> host/tests/test_core.py <<'EOF'
+
+
+def test_detail_as_pictures_for_newer_firmware(tmp_path):
+    from conductor.render import PACKED, LineRenderer, unpack7
+
+    be, sim, c = setup(tmp_path)
+    c.renderer = LineRenderer()
+    be.read_lines = lambda aid, n: ["請把錯誤訊息重貼一次", "> 1. Yes"]
+    sent = []
+    c.send = sent.append
+    c.on_frame(P.device_hello(0, 2))
+    c.on_frame(P.device_select(0))
+    pics = [P.parse(f) for f in sent if P.parse(f).type == P.T_DETAIL_BMP]
+    assert len(pics) == P.DETAIL_LINES
+    assert all(len(m.payload) == 2 + PACKED for m in pics)
+    assert all(len(f) <= 640 + 2 for f in sent)  # fm1-base: 640 bytes between F0 and F7
+    assert sum(unpack7(pics[0].payload[2:])) > 50  # the Chinese line has ink
+    # firmware 0.1 still gets text
+    sent.clear()
+    c.on_frame(P.device_hello(0, 1))
+    c.on_frame(P.device_select(0))
+    assert not [f for f in sent if P.parse(f).type == P.T_DETAIL_BMP]
+EOF
+uv sync --locked --all-groups 2>&1 | tail -1; uv lock 2>&1 | tail -1; just cond-test 2>&1 | tail -2
+```
+
+```text
+187:def device_hello(fw_major: int = 0, fw_minor: int = 1) -> bytes:
+188-    return frame(T_HELLO, bytes([VERSION, fw_major, fw_minor]))
+189-
+hint: To update the lockfile, run `uv lock`.
+Resolved 21 packages in 15ms
+.........................                                                [100%]
+25 passed in 0.08s
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 10:56:42Z)**_
+
+Host 端完成（25 項測試通過）。接著改韌體：收點陣圖行並貼上。
+
+_**Agent (claude-opus-5-5 2026-11-17 10:56:58Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Firmware: receive and draw picture lines; test with a host-rendered CJK line
+
+```bash
+python3 - <<'EOF'
+p='firmware/conductor/app.c'
+s=open(p).read()
+s=s.replace('''enum { T_HELLO_ACK = 0x01, T_CLEAR, T_SLOT, T_DETAIL, T_META, T_FOOTER, T_BEEP };''','''enum { T_HELLO_ACK = 0x01, T_CLEAR, T_SLOT, T_DETAIL, T_META, T_FOOTER, T_BEEP, T_DETAIL_BMP };''')
+s=s.replace('''#define LINE_MAX 36u''','''#define LINE_MAX 36u
+/* a DETAIL line drawn by the host (any script: our fonts are ASCII): 240 x 16 dots, 7 per byte, pixel i at bit
+ * 6 - i % 7 of byte i / 7 (host/conductor/render.py) */
+#define BMP_W 240u
+#define BMP_H 16u
+#define BMP_BYTES ((BMP_W * BMP_H + 6u) / 7u)''')
+s=s.replace('''static struct {
+    uint8_t slot;
+    char line[DETAIL_LINES][LINE_MAX + 1];
+} detail;''','''static struct {
+    uint8_t slot;
+    char line[DETAIL_LINES][LINE_MAX + 1];
+    uint8_t is_bmp[DETAIL_LINES];
+    uint8_t bmp[DETAIL_LINES][BMP_BYTES];
+} detail;''')
+s=s.replace('''    case T_DETAIL:
+        if (len >= 2u && d[1] < DETAIL_LINES) {
+            detail.slot = d[0];
+            copy_text(detail.line[d[1]], d + 2, len - 2u, LINE_MAX);
+        }
+        break;''','''    case T_DETAIL:
+        if (len >= 2u && d[1] < DETAIL_LINES) {
+            detail.slot = d[0];
+            copy_text(detail.line[d[1]], d + 2, len - 2u, LINE_MAX);
+            detail.is_bmp[d[1]] = 0;
+        }
+        break;
+    case T_DETAIL_BMP:
+        if (len == 2u + BMP_BYTES && d[1] < DETAIL_LINES) {
+            detail.slot = d[0];
+            for (i = 0; i < BMP_BYTES; i++)
+                detail.bmp[d[1]][i] = d[2 + i];
+            detail.is_bmp[d[1]] = 1;
+        }
+        break;''')
+s=s.replace('''static void detail_at(int32_t oy)''','''static void bmp_line(const uint8_t *b, int32_t y0, uint16_t c)
+{
+    uint32_t i;
+    for (i = 0; i < BMP_W * BMP_H; i++)
+        if (b[i / 7u] >> (6u - i % 7u) & 1u)
+            cv_pset((int32_t)(i % BMP_W), y0 + (int32_t)(i / BMP_W), c);
+}
+
+static void detail_at(int32_t oy)''')
+s=s.replace('''        for (i = 0; i < DETAIL_LINES; i++)
+            cv_text(4, 24 + (int32_t)i * 18 - oy, &FONT_XS, detail.line[i], C_AMB);''','''        for (i = 0; i < DETAIL_LINES; i++) {
+            if (detail.is_bmp[i])
+                bmp_line(detail.bmp[i], 22 + (int32_t)i * 18 - oy, C_AMB);
+            else
+                cv_text(4, 24 + (int32_t)i * 18 - oy, &FONT_XS, detail.line[i], C_AMB);
+        }''')
+s=s.replace('''    else if (!strcmp(what, "chimes"))''','''    else if (!strcmp(what, "bmp0")) {           /* dots lit in DETAIL picture line 0 */
+        uint32_t i, n = 0;
+        for (i = 0; i < BMP_BYTES; i++)
+            n += (uint32_t)__builtin_popcount(detail.bmp[0][i]);
+        *got = detail.is_bmp[0] ? (int)n : -1;
+    } else if (!strcmp(what, "chimes"))''')
+open(p,'w').write(s)
+EOF
+PYTHONPATH=host uv run --locked --all-groups python - <<'EOF'
+# a real picture line for the firmware test, from the host's renderer
+from conductor import protocol as P
+from conductor.render import LineRenderer, unpack7
+r = LineRenderer()
+f = P.detail_bmp(0, 0, r.bitmap("請把錯誤訊息重貼一次 ok"))
+lit = sum(unpack7(f[8:-1]))
+p = "firmware/conductor/tests/basic.txt"
+s = open(p).read()
+marker = "wait 30\nshot detail.png"
+s = s.replace(marker, marker + f"""
+# a picture line from the host (any script): host/conductor/render.py, "請把錯誤訊息重貼一次 ok", {lit} dots
+sysex {P.hexs(f)}
+wait 30
+expect bmp0 {lit}
+shot detail_cjk.png""", 1)
+open(p, "w").write(s)
+print("dots", lit, "frame bytes", len(f))
+EOF
+just fw-test conductor 2>&1 | grep -E "FAIL|bmp0|error:|host:"
+```
+
+```text
+dots 699 frame bytes 558
+  ok bmp0 == 699
+host: 13582 ms simulated, 232 blits, render 0.0% of real time (host CPU)
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 10:57:03Z)**_
+
+<tool-use data-tool-type="read" data-tool-name="Read"><details>
+<summary>Tool use: **Read**</summary>
+ `./firmware/conductor/build/host/detail_cjk.png`
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 10:57:09Z)**_
+
+<think><details><summary>Thought Process</summary>
+韌體的中文行顯示正常。我接下來會重新建置實機套件，跑兩種晶片的模擬器與預演，並透過虛擬 USB 送一張點陣圖，確認 558 bytes 的大 frame 在真實 USB 路徑上也能收到。
+
+</details></think>
+
+_**Agent (claude-opus-5-5 2026-11-17 10:57:28Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Build v0.2 package; emulator boot/restart both chips; rehearsal; picture line over virtual USB
+
+```bash
+just fw-build conductor 2>&1 | grep -E "ok    image|package|FAIL|error" ; shasum -a 256 firmware/conductor/build/conductor.fwsc; PYTHONPATH=host uv run --locked --all-groups python -c "
+from conductor import protocol as P
+from conductor.render import LineRenderer
+r=LineRenderer()
+fr=[P.hello_ack(), P.slot(0,P.S_BLOCKED,P.K_CLAUDE,0,0x123,1,'zhouhanru'), P.detail_bmp(0,0,r.bitmap('請把錯誤訊息重貼一次，可以直接貼純文字')), P.detail_bmp(0,1,r.bitmap('> 1. Yes   2. No'))]
+print(';'.join(f'{2500+i*100}:'+f.hex().upper() for i,f in enumerate(fr)))" > tools/emu-state/usbsend.txt; cd tools/emu-state && pkg=$PWD/../../firmware/conductor/build/conductor.fwsc; for chip in uc25hq80 p25q80; do f=pf3-$chip.flash; rm -f $f; for boot in 1 2; do ../fm1-emu/fm1-live --fwsc "$pkg" --flash-chip $chip --flash $f --midi none --shot 3000 --lcd-only 2>&1 | grep -i -E "^flash:|fault|crash" | sed "s/^/  $chip boot$boot: /"; done; done; bak=$PWD/../../backups/2026-11-17-pre-conductor/fm1-20261117-183840.bin; rm -f pristine-c3.flash; ../fm1-emu/fm1-live --fwsc "$pkg" --flash-chip uc25hq80 --flash pristine-c3.flash --midi none --shot 1 --lcd-only >/dev/null 2>&1; python3 ../../scripts/emu_rehearse.py pristine-c3.flash "$bak" rehearse-c3.flash; FM1_USB_SEND="@$PWD/usbsend.txt" FM1_BENCH_KEYS='3200:T:EDIT,3250:T:EDIT^' ../fm1-emu/fm1-live --fwsc "$pkg" --flash-chip uc25hq80 --flash rehearse-c3.flash --midi none --usb --shot 4500 --lcd-only 2>&1 | grep -E "^flash:|Configured|fault"; cp work/lcd.ppm cjk-emu.ppm
+```
+
+```text
+Resolved 21 packages in 3ms
+Checked 18 packages in 2ms
+  ok    image 86688 B; RAM code .ram_text 5100 B of 32768; RAM .data+.bss 30564 B of 98304; pool 69384 B of 344064
+package  /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/firmware/conductor/build/conductor.fwsc  616003 B, identity FM-1_1200
+48a052f9aa917a576a505f1f0dd75a4eaa375204371c5660a7932eeb2cfaea6d  firmware/conductor/build/conductor.fwsc
+  uc25hq80 boot1: flash: 0 erases / programs
+  uc25hq80 boot2: flash: 0 erases / programs
+  p25q80 boot1: flash: 0 erases / programs
+  p25q80 boot2: flash: 0 erases / programs
+package image 0x04000-0x92FFF laid over the backup
+[   302 ms] usb: Configured { product: "CONDUCTOR FM-1", vid: 4617, pid: 1 }
+flash: 0 erases / programs
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 10:57:35Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Convert the emulator LCD capture
+
+```bash
+cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1 && uv run --locked --all-groups python -I -c "
+from PIL import Image; Image.open('tools/emu-state/cjk-emu.ppm').save('/private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/c6419d02-4c76-47d7-b11c-b7db01c7f2b4/scratchpad/cjk-emu.png')"
+```
+
+```text
+(Bash completed with no output)
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 10:57:36Z)**_
+
+<tool-use data-tool-type="read" data-tool-name="Read"><details>
+<summary>Tool use: **Read**</summary>
+ `/private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/c6419d02-4c76-47d7-b11c-b7db01c7f2b4/scratchpad/cjk-emu.png`
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 10:57:42Z)**_
+
+模擬器的按鍵腳本格式我寫錯了，所以沒切到 DETAIL 頁。修正格式重跑。
+
+_**Agent (claude-opus-5-5 2026-11-17 10:57:49Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Rerun with corrected key script to open DETAIL
+
+```bash
+cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/tools/emu-state && pkg=$PWD/../../firmware/conductor/build/conductor.fwsc; FM1_USB_SEND="@$PWD/usbsend.txt" FM1_BENCH_KEYS='3200:EDIT,3300:EDIT^' ../fm1-emu/fm1-live --fwsc "$pkg" --flash-chip uc25hq80 --flash rehearse-c3.flash --midi none --usb --shot 4500 --lcd-only 2>&1 | grep -E "^flash:|fault|key|unknown" | head; cd ../.. && uv run --locked --all-groups python -I -c "
+from PIL import Image; Image.open('tools/emu-state/work/lcd.ppm').save('/private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/c6419d02-4c76-47d7-b11c-b7db01c7f2b4/scratchpad/cjk-emu.png')"
+```
+
+```text
+flash: 0 erases / programs
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 10:57:49Z)**_
+
+<tool-use data-tool-type="read" data-tool-name="Read"><details>
+<summary>Tool use: **Read**</summary>
+ `/private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/c6419d02-4c76-47d7-b11c-b7db01c7f2b4/scratchpad/cjk-emu.png`
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 10:57:56Z)**_
+
+<think><details><summary>Thought Process</summary>
+虛擬 USB 測試也通過，558 bytes 的點陣圖 frame 能正常收到，DETAIL 頁中文顯示正確。接著我會更新速查表、協定規格和設計頁，然後提交。
+
+</details></think>
+
+_**Agent (claude-opus-5-5 2026-11-17 10:58:13Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Update cheatsheet, protocol spec and design page for 0.2
+
+```bash
+python3 - <<'EOF'
+p='docs/agentic/conductor-cheatsheet.md'
+s=open(p).read()
+s=s.replace("對應韌體 0.1、協定 v1（2026-11-17）。","對應韌體 0.2、協定 v1（2026-11-17）。")
+s=s.replace('<circle class="off" cx="510" cy="50" r="18"/><text class="lab" x="510" y="22">KNOB1</text><text class="lab" x="510" y="84">—</text>',
+            '<circle class="nav" cx="510" cy="50" r="18"/><text class="lab" x="510" y="22">KNOB1</text><text class="fn" x="510" y="84">往回捲</text>')
+s=s.replace('<rect class="off" x="614" y="146" width="40" height="34" rx="6"/><text class="lab" x="634" y="160">SEQ</text><text class="lab" x="634" y="175">—</text>',
+            '<rect class="nav" x="614" y="146" width="40" height="34" rx="6"/><text class="lab" x="634" y="160">SEQ</text><text class="fn" x="634" y="175">說明</text>')
+s=s.replace('''| `EDIT` | 選取 agent 的細節（輸出最後 8 行）；classic Herdr 下同時在電腦上 focus 那個 pane |
+| ALGORITHM | 三頁輪流 |''','''| `EDIT` | 選取 agent 的輸出（見下面）；classic Herdr 下同時在電腦上 focus 那個 pane |
+| KNOB 1 | 在輸出裡往回捲（逆時針），一格 4 行；換 agent 會回到最底 |
+| `SEQ` | 裝置上的說明頁；再按一次回原本的頁 |
+| ALGORITHM | 四頁輪流：全部、輸出、等你的、說明 |
+
+### 看 agent 在做什麼 { #detail }
+
+`EDIT` 顯示選取 agent 畫面上的對話，最後 8 行：
+
+- daemon 會先去掉 agent 自己的介面：輸入框、狀態列、`bypass permissions` 這類提示。權限選單（`❯ 1. Yes`…）會留著，那正是要你回答的。
+- 中文、日文和符號由電腦用系統字型畫成點陣圖再送過去（韌體 0.2 起），裝置本身的字型只有 ASCII。舊韌體收到的是 ASCII 文字，中文會變成 `?`。
+- 要看更前面的內容，逆時針轉 KNOB 1。''')
+s=s.replace("## 沒有 FM-1 時：文字版","## 沒有 FM-1 時：文字版")
+open(p,'w').write(s)
+
+p='host/conductor/PROTOCOL.md'
+s=open(p).read()
+s=s.replace('''| `04` | DETAIL | `slot`, `line` (0–7), `text` (≤ 28) |''','''| `04` | DETAIL | `slot`, `line` (0–7), `text` (≤ 36) |''')
+s=s.replace('''| `07` | BEEP | `figure` (0 up, 1 done, 2 error, 3 tick) |''','''| `07` | BEEP | `figure` (0 up, 1 done, 2 error, 3 tick) |
+| `08` | DETAIL_BMP | `slot`, `line` (0–7), 549 bytes: a 240 × 16 1-bit picture of the line, 7 dots a byte, dot *i* at bit `6 - i % 7` of byte `i / 7` (row-major). Firmware 0.2 and later; the host sends DETAIL text to 0.1 |''')
+s=s.replace('''| `44` | SELECT | `slot` — the host answers with DETAIL lines for it |''','''| `44` | SELECT | `slot`, optional `scroll` (KNOB 1 detents back, 4 lines each) — the host answers with DETAIL lines for it |''')
+s=s.replace('''- Frames stay short (at most 36 bytes), so they fit BLE MIDI packets later.''','''- Frames are at most 46 bytes, except DETAIL_BMP (558 bytes, inside fm1-base's
+  640-byte limit for a SysEx frame to the app).''')
+open(p,'w').write(s)
+
+p='docs/agentic/conductor.md'
+s=open(p).read()
+s=s.replace('''- **韌體不寫 flash。**''','''- **DETAIL 由電腦畫。** 裝置的字型只有 ASCII，中文字型也放不進韌體。所以 daemon 先去掉 agent 的介面（輸入框、狀態列），再用系統字型（macOS 的 STHeiti）把每一行畫成 240×16 的點陣圖送過去，一行一個 558 bytes 的 SysEx。韌體 0.1 收到的是 ASCII 文字。
+- **韌體不寫 flash。**''')
+s=s.replace('''協定不挑傳輸方式，frame 都在 36 bytes 以內，BLE 封包裝得下。''','''協定不挑傳輸方式。文字 frame 都很短；DETAIL 的點陣圖一行 558 bytes，走 BLE 時要分包，或改回只送文字。''')
+open(p,'w').write(s)
+EOF
+grep -n "^- \*\*授權\*\*" docs/agentic/conductor.md | head -2; just docs-check 2>&1 | tail -1
+```
+
+```text
+80:- **授權**：`firmware/conductor`、`firmware/common`、`host/conductor` 都是 MIT。沒有複製 Agent Deck（GPL-3.0）的程式碼，只參考它的按鍵配置與行為。
+{"status": "ok", "pages": 43, "llm_pages": 43, "deployed": false}
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 10:58:19Z)**_
+
+先 commit 程式碼，再從乾淨的工作區重新 build，讓套件的 hash 對應到 commit。
+
+_**Agent (claude-opus-5-5 2026-11-17 10:58:29Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Commit 0.2, rebuild from the clean tree, rerun firmware tests
+
+```bash
+git add host firmware docs pyproject.toml uv.lock && git commit -q -F - <<'EOF'
+Conductor 0.2: readable DETAIL in any script, KNOB 1 scroll, help page
+
+The daemon strips the agent's own interface (input box, status lines)
+from the screen it reads, keeping permission menus, and draws each line
+with a system font into a 240 x 16 1-bit picture (DETAIL_BMP, 558-byte
+SysEx), so Chinese and symbols read on the device; firmware 0.1 still
+gets ASCII text. KNOB 1 scrolls back through the output; SEQ opens a
+help page. Pages taller than fm1-base's canvas are drawn in two halves.
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+EOF
+git status --short | grep -v specstory; rm -rf firmware/conductor/build && just fw-build conductor 2>&1 | grep -E "^package"; shasum -a 256 firmware/conductor/build/conductor.fwsc; just fw-test conductor 2>&1 | grep -E "FAIL|host:"; git log --oneline -1
+```
+
+```text
+package  /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/firmware/conductor/build/conductor.fwsc  616003 B, identity FM-1_1200
+48a052f9aa917a576a505f1f0dd75a4eaa375204371c5660a7932eeb2cfaea6d  firmware/conductor/build/conductor.fwsc
+host: 13582 ms simulated, 232 blits, render 0.0% of real time (host CPU)
+5add525 Conductor 0.2: readable DETAIL in any script, KNOB 1 scroll, help page
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 10:58:33Z)**_
+
+重新 build 的 SHA-256 和 commit 前完全相同。把 0.2 的實刷檢查記進設計頁。
+
+_**Agent (claude-opus-5-5 2026-11-17 10:58:42Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Record 0.2 readiness and commit
+
+```bash
+python3 - <<'EOF'
+p='docs/agentic/conductor.md'
+s=open(p).read()
+s=s.replace('''### 刷的步驟（由我本人執行）''','''### 0.2 的檢查 { #flash-0-2 }
+
+0.2 加了 DETAIL 點陣圖、KNOB 1 捲動、說明頁。換成 0.2 一樣是韌體寫入，要我本人批准。
+
+| 項目 | 值 |
+|---|---|
+| 檔案 | `firmware/conductor/build/conductor.fwsc`（616,003 B，identity `FM-1_1200`） |
+| 來源 | commit `5add525`，乾淨的工作區重新 build，兩次 build 的 SHA-256 相同 |
+| SHA-256 | `48a052f9aa917a576a505f1f0dd75a4eaa375204371c5660a7932eeb2cfaea6d` |
+
+| 檢查 | 結果 | 標記 |
+|---|---|---|
+| `just fw-test conductor` | 全部 `ok`，含 KNOB 1 捲動、說明頁、host 畫的中文行（699 個點） | `[模擬]` |
+| fm1-emu 兩種晶片：開機 → 重開 → 再讀回 | 都 0 次 erase / program | `[模擬]` |
+| 疊在 `2026-11-17-pre-conductor` 備份上開機 | 正常、0 次寫入 | `[模擬]` |
+| 558 bytes 的點陣圖 frame 走虛擬 USB | 收得到，DETAIL 頁中文正確 | `[模擬]` |
+| 備份 | `2026-11-17-pre-conductor`（ChoralRoot 狀態）；0.1 不寫 flash，所以現在的資料區和那份相同（除了韌體區） | `[實機]` |
+
+步驟和 0.1 相同：關掉模擬器與 daemon，跑 `just fm1-switch firmware/conductor/build/conductor.fwsc`，確認計畫後打 `yes`。
+
+### 刷的步驟（由我本人執行）''')
+open(p,'w').write(s)
+EOF
+just docs-check 2>&1 | tail -1 && git add docs/agentic/conductor.md && git commit -q -m "Conductor 0.2: flash-readiness record
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>" && git log --oneline -3
+```
+
+```text
+{"status": "ok", "pages": 43, "llm_pages": 43, "deployed": false}
+255ec0a Conductor 0.2: flash-readiness record
+5add525 Conductor 0.2: readable DETAIL in any script, KNOB 1 scroll, help page
+13fc88a Conductor on hardware: find the port by protocol, record the flash
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 10:58:55Z)**_
+
+三件事都做好了。0.2 的韌體已經 build 好、檢查完，要你本人刷進去。
+
+**1. 預覽 agent session 內容**
+
+選一個 agent（按它的琴鍵或轉 SELECT），按 `EDIT`。你看到「不知所云」有兩個原因，都修了：
+
+- **畫面底部全是 Claude Code 自己的介面**：輸入框、你的狀態列、`bypass permissions`。現在 daemon 會先切掉這些，只留對話。權限選單（`❯ 1. Yes`…）會保留，那正是要你回答的。我用你真實的 session 測過，最後一行會是 `Worked for 1m 17s · done`。
+- **你的對話大多是中文**，而裝置字型只有 ASCII，中文字型也放不進韌體。現在改成由 Mac 用系統字型把每一行畫成點陣圖再送過去，中文和符號都讀得出來。這個在 host simulator 和模擬器的虛擬 USB 上都驗證過。
+- 另外加了 **KNOB 1 逆時針往回捲**，一格 4 行，可以看更前面的內容。
+
+**只重開 daemon** 就能去掉介面；中文顯示和捲動要等刷完 0.2。0.1 會收到 ASCII 文字，中文仍是 `?`。
+
+**2. ARP 語音**
+
+清單裡已經有 Ghostty。如果你是在 Ghostty 裡跑 `just cond-run`，重開 daemon 時不再出現 `no Accessibility permission` 的提醒，就是生效了。之後按住 `ARP` 說話、放開，文字應該會打進目前 focus 的視窗。如果你是在 Herdr app 裡跑，清單裡要再加 Herdr。
+
+**3. 裝置上的說明頁**
+
+按 `SEQ` 開啟，再按一次回到原本的頁；ALGORITHM 輪頁時也會經過。內容是所有按鍵的功能，以及琴鍵燈號代表的狀態，燈號說明用各自的狀態色顯示。
+
+途中修了一個 bug：fm1-base 的畫布高度不夠，DETAIL 頁第 7、8 行原本會被截掉。
+
+**刷 0.2**
+
+- 檔案：`firmware/conductor/build/conductor.fwsc`
+- SHA-256：`48a052f9aa917a576a505f1f0dd75a4eaa375204371c5660a7932eeb2cfaea6d`（commit `5add525`）
+- 檢查：模擬器兩種晶片開機、重開都是 0 次 flash 寫入；疊在實機備份上預演正常。
+
+步驟和上次一樣：
+
+1. 停掉 daemon，關掉模擬器。
+2. 執行：
+   ```sh
+   just fm1-switch firmware/conductor/build/conductor.fwsc
+   ```
+3. 確認 M-Flasher 列出的寫入計畫，再打 `yes`。
+4. 刷完重開 `just cond-run`，啟動訊息應該會顯示 `firmware 0.2`。
+
+速查頁、協定規格、設計頁都更新了。程式碼和文件已 commit 到 `255ec0a`，還沒 push。
+
+---
+
+_**User (2026-11-17 11:03:57Z)**_
+
+```
+
+
+<pasted_content id="ef8f">
+❯ just fm1-switch firmware/conductor/build/conductor.fwsc
+midi    Felucca (running; download-mode switches it)
+Sent the Felucca the download-mode message over USB MIDI; waiting for it
+In download mode: usb:2-4       WL82 UBOOT1.00 (USB bus 2, device 4)
+  100%
+  firmware    FM-1 120
+  app         OK
+    - the firmware uses the FM-1 flash layout
+Backup saved: backups/2026-11-17-1859-pre-conductor/fm1-20261117-185927.bin
+71dd8a47533b3bda6da1d001ad59989cdcbb2c69dde280dff240cf5aed9c1c32  backups/2026-11-17-1859-pre-conductor/fm1-20261117-185927.bin
+Backup before the switch: backups/2026-11-17-1859-pre-conductor (not uploaded; just fm1-backup-release 2026-11-17-1859-pre-conductor if you want it off this machine)
+Connecting to usb:2-4
+M-Flasher loader 1.3 already running
+Flash chip 0xB36014 (new)
+Reading the flash
+  100%
+Read in 1.3 s (759 KB/s)
+Checked: the chip's CRC32 of the flash matches the read
+  model       FM-1
+  bootloader  stock (M-VAVE)
+  firmware    FM-1 120
+  app         OK
+  chip key    0x980F
+  flash       0xB36014
+  unit id     55227286a0cb022a
+  loader      M-Flasher 1.3, CPU at 96 MHz
+    - the firmware uses the FM-1 flash layout
+    - flash chip 0xB36014 (new)
+
+Install firmware FM-1_1200
+Writes 22 sectors (88 KiB): 0x04000-0x19FFF
+Installs FM-1_1200 (0x04000-0x92FFF).
+Type "yes" to write: yes
+Backup saved: /Users/zhouhanru/Documents/M-Flasher/backups/fm1-20261117-185935.bin
+Writing 0x04000-0x19FFF
+  100%
+Done: everything written is verified (the chip's CRC32 matches)
+Sent the restart (a 34-byte program at 0x01C28000); waiting for the unit to reset
+Running: the Felucca is on USB MIDI
+</pasted_content id="ef8f">
+
+
+
+
+<pasted_content id="ef8f">
+❯ just cond-run hc
+PYTHONPATH=host uv run --locked --all-groups python -m conductor --backend "hc"
+[midi] Felucca
+[backend] hc: 2 agents, 2 shells not shown (--show-shells to list them)
+[voice] ARP holds ctrl+option (hold)
+[device] hello, protocol 1, firmware 0.2
+</pasted_content id="ef8f">
+
+```
+
+然後 Claude 狀態欄清楚了 但是 Codex 的現在變成有很多方框等等
+
+---
+
+_**Agent (claude-opus-5-5 2026-11-17 11:04:07Z)**_
+
+0.2 刷好了：這次只寫了 22 個 sector，因為韌體區大部分沒變，daemon 也回報 `firmware 0.2`。啟動訊息裡不再有輔助使用權限的提醒，所以 `ARP` 語音應該已經可以用了。
+
+Codex 的方框，是它畫面用的某些符號在中文字型裡沒有字形，畫出來就成了空心方框。先讀 Codex session 的原始畫面看是哪些字元（唯讀）。
+
+_**Agent (claude-opus-5-5 2026-11-17 11:04:15Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Read the Codex session raw screen and find glyphs the font lacks
+
+```bash
+PYTHONPATH=host uv run --locked --all-groups python - <<'EOF'
+from conductor.backends.hc import HcBackend
+from conductor.core import strip_chrome, tui_lines
+from conductor.render import LineRenderer
+from collections import Counter
+b = HcBackend()
+r = LineRenderer()
+font = r.font
+for a in b.list_agents():
+    print("==", a.id, a.kind, a.name)
+    raw = b.rpc.call("terminal.read", {"terminal": a.id, "lines": 60})["text"].splitlines()
+    if a.kind != 2:
+        continue
+    for l in raw[-25:]:
+        print(repr(l[:100]))
+    # characters the font has no glyph for
+    missing = Counter()
+    for ch in "".join(raw):
+        if ord(ch) > 0x7E:
+            try:
+                if font.getmask(ch).getbbox() is None and not ch.isspace():
+                    missing[ch] += 1
+            except Exception:
+                missing[ch] += 1
+    print("no glyph / blank:", [(c, hex(ord(c)), n) for c, n in missing.most_common(20)])
+b.close()
+EOF
+```
+
+```text
+== t1b 1 zhouhanru: done
+== t1c 2 zhouhanru
+''
+''
+''
+''
+''
+''
+''
+''
+''
+''
+''
+''
+''
+''
+''
+''
+''
+''
+''
+''
+''
+'› Ask Codex to do anything'
+''
+'  GPT-6.1-Sol xhigh · Standard · Ready · Context 100% left · ~'
+'  ← for agents · ? for shortcuts                                                                    '
+no glyph / blank: []
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 11:04:26Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Find which Codex characters render as the font's missing-glyph box
+
+```bash
+PYTHONPATH=host uv run --locked --all-groups python - <<'EOF'
+from conductor.backends.hc import HcBackend
+from conductor.core import strip_chrome, tui_lines
+from conductor.render import LineRenderer
+from collections import Counter
+b = HcBackend(); r = LineRenderer(); font = r.font
+notdef = bytes(font.getmask("\U000F0000"))
+raw = b.read_lines("t1c", 120)
+print(len(raw), "lines")
+for l in raw[:30]: print(repr(l[:100]))
+miss = Counter(ch for ch in "".join(tui_lines(strip_chrome(raw))) if ord(ch) > 0x7E and bytes(font.getmask(ch)) == notdef)
+print("render as a box:", [(c, hex(ord(c)), n) for c, n in miss.most_common(20)])
+print("after strip:", tui_lines(strip_chrome(raw))[-10:])
+b.close()
+EOF
+```
+
+```text
+23 lines
+'  >_ OpenAI Codex (v0.169.0)'
+'     ~'
+'  permissions: YOLO mode'
+'                                                                                                    '
+'                                                                                                    '
+'                                                                                                    '
+'                                                                                                    '
+'                                                                                                    '
+'                                                                                                    '
+'                                                                                                    '
+'                                                                                                    '
+'                                                                                                    '
+'                                                                                                    '
+'                                                                                                    '
+'                                                                                                    '
+'                                                                                                    '
+'                                                                                                    '
+'                                                                                                    '
+'                                                                                                    '
+'                                                                                                    '
+'› Ask Codex to do anything'
+'  GPT-6.1-Sol xhigh · Standard · Ready · Context 100% left · ~'
+'  ← for agents · ? for shortcuts                                                                    '
+render as a box: [('⣿', '0x28ff', 170), ('⣤', '0x28e4', 13), ('⠿', '0x283f', 13), ('⠈', '0x2808', 11), ('⠛', '0x281b', 11), ('⣀', '0x28c0', 10), ('⢸', '0x28b8', 10), ('⣶', '0x28f6', 8), ('⣷', '0x28f7', 8), ('⢿', '0x28bf', 8), ('⡇', '0x2847', 8), ('⣠', '0x28e0', 7), ('⣦', '0x28e6', 7), ('⡀', '0x2840', 7), ('⠋', '0x280b', 7), ('⣾', '0x28fe', 6), ('⠉', '0x2809', 6), ('⡿', '0x287f', 6), ('⠟', '0x281f', 6), ('⠁', '0x2801', 6)]
+after strip: ['                                                                                                                            ⠈⢿⣿⣿⣦⡀⠈⠛⠿⣿⣿⣿⣿⣄⡀  ⢀⣠⣼⣿⣿  ⣿⣿⡇  ⣿⣿⣿⠇', '                                                                                                                              ⢻⣿⣿⣿⣷⣦⣀⠈⠙⠻⣿⣿⣿⣶⣶⣿⣿⣿⣿⣿  ⣿⣿⡇ ⣠⣿⣿⣿', '                                                                                                                              ⢸⣿⣿⡿⢿⣿⣿⣿⣦⣠⣴⣿⣿⣿⡿⠟⠋⢸⣿⣿  ⣿⣿⣷⣴⣿⣿⣿⠃', '                                                                                                                              ⠘⣿⣿⣷ ⠈⠛⢿⣿⣿⣿⠿⠋⠉ ⣠⣴⣿⣿⣿  ⣿⣿⣿⣿⣿⠟⠁', '                                                                                                                               ⠻⣿⣿⣿⣤⣀ ⠈⠉ ⢀⣤⣶⣿⣿⣿⠿⠟⠁ ⣰⣿⣿⡟⠋⠁', '                                                                                                                                ⠈⠿⣿⣿⣿⣿⣶⣾⣿⣿⣿⣿⠟⠋⠁  ⣠⣼⣿⣿⡟', '                                                                                                                                   ⠙⠛⠛⠛⠻⠛⢿⣿⣿⣿⣿⣷⣾⣿⣿⣿⡿⠏', '                                                                                                                                          ⠈⠙⠛⠿⠿⠿⠿⠛⠉', '> Ask Codex to do anything', '  GPT-6.1-Sol xhigh . Standard . Ready . Context 100% left . ~']
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 11:04:48Z)**_
+
+<think><details><summary>Thought Process</summary>
+Codex 歡迎畫面的方框是點字 ASCII art 在缺字的字型裡變成方框，我會拿掉這類圖案、縮短縮排、把缺字符號改成 `?`，並補上 Codex 底部介面的規則。
+
+</details></think>
+
+_**Agent (claude-opus-5-5 2026-11-17 11:05:03Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Drop braille art and Codex chrome, replace missing glyphs; test on fixtures and real sessions
+
+```bash
+python3 - <<'EOF'
+p='host/conductor/core.py'
+s=open(p).read()
+s=s.replace('''_CHROME = re.compile(
+    r"bypass permissions|shift\\+tab|\\? for shortcuts|esc to interrupt|context left|⏎|ctrl\\+[a-z] |"''','''_CHROME = re.compile(
+    r"bypass permissions|shift\\+tab|\\? for shortcuts|esc to interrupt|context left|\\d+% (context )?left|"
+    r"context \\d+% left|← for agents|⏎|ctrl\\+[a-z] |"''')
+s=s.replace('''    r"[█▓▒░]{3,}|^\\s*\\[(Opus|Sonnet|Haiku|Fable|gpt|o\\d)|^\\s*✓ \\w+ ×\\d"
+)''','''    r"[█▓▒░]{3,}|^\\s*\\[(Opus|Sonnet|Haiku|Fable|gpt|o\\d)|^\\s*✓ \\w+ ×\\d",
+    re.IGNORECASE,
+)''')
+s=s.replace('''    out = lines[:cut]
+    while out and (not out[-1].strip() or _CHROME.search(out[-1]) or _RULE.match(out[-1])):
+        out.pop()
+    return out''','''    out = lines[:cut]
+    while out and (not out[-1].strip() or _CHROME.search(out[-1]) or _RULE.match(out[-1])):
+        out.pop()
+    if out and _PROMPT.match(out[-1]) and not _OPTION.match(out[-1]):
+        out.pop()  # the input line at the very bottom (Codex: "› Ask Codex to do anything")
+        while out and not out[-1].strip():
+            out.pop()
+    return out''')
+s=s.replace('''    out = []
+    for ln in raw:
+        t = ln.translate(TUI_ASCII)
+        t = "".join(ch for ch in t if ch.isprintable() and not 0xE000 <= ord(ch) <= 0xF8FF).rstrip()
+        if t.strip():
+            out.append(t)
+    return out''','''    out = []
+    for ln in raw:
+        t = ln.translate(TUI_ASCII)
+        # braille and block elements are pictures drawn in text (Codex's logo): left out
+        t = "".join(
+            ch
+            for ch in t
+            if ch.isprintable() and not 0xE000 <= ord(ch) <= 0xF8FF and not 0x2800 <= ord(ch) <= 0x28FF
+            and not 0x2580 <= ord(ch) <= 0x259F
+        ).rstrip()
+        if not t.strip():
+            continue
+        lead = len(t) - len(t.lstrip(" "))
+        out.append(("  " + t.lstrip(" ")) if lead > 8 else t)  # deep indents waste the narrow screen
+    return out''')
+open(p,'w').write(s)
+
+p='host/conductor/render.py'
+s=open(p).read()
+s=s.replace('''        self.font = ImageFont.truetype(path, size)
+        self.path = path''','''        self.font = ImageFont.truetype(path, size)
+        self.path = path
+        self._notdef = bytes(self.font.getmask("\\U000F0000"))  # what a character the font lacks looks like
+        self._has: dict[str, bool] = {}
+
+    def has_glyph(self, ch: str) -> bool:
+        if ord(ch) < 0x80:
+            return True
+        if ch not in self._has:
+            self._has[ch] = bytes(self.font.getmask(ch)) != self._notdef
+        return self._has[ch]
+
+    def clean(self, text: str) -> str:
+        """'?' for what the font cannot draw, rather than its empty box."""
+        return "".join(ch if self.has_glyph(ch) else "?" for ch in text)''')
+s=s.replace('''        out, cur = [], ""
+        for ch in text:''','''        out, cur = [], ""
+        for ch in self.clean(text):''')
+s=s.replace('''        ImageDraw.Draw(img).text((2, H // 2), text, font=self.font, fill=255, anchor="lm")''','''        ImageDraw.Draw(img).text((2, H // 2), self.clean(text), font=self.font, fill=255, anchor="lm")''')
+open(p,'w').write(s)
+EOF
+cat >> host/tests/test_core.py <<'EOF'
+
+
+CODEX_SCREEN = [
+    "  >_ OpenAI Codex (v0.169.0)",
+    "  permissions: YOLO mode",
+    " " * 120 + "⠈⢿⣿⣿⣦⡀⠈⠛⠿⣿⣿⣿⣿⣄⡀  ⢀⣠⣼⣿⣿",
+    "• Ran make test, 12 passed",
+    "",
+    "› Ask Codex to do anything",
+    "",
+    "  GPT-6.1-Sol xhigh · Standard · Ready · Context 100% left · ~",
+    "  ← for agents · ? for shortcuts",
+]
+
+
+def test_codex_screen():
+    from conductor.core import strip_chrome, tui_lines
+
+    out = tui_lines(strip_chrome(CODEX_SCREEN))
+    assert out == ["  >_ OpenAI Codex (v0.169.0)", "  permissions: YOLO mode", "* Ran make test, 12 passed"]
+
+
+def test_missing_glyphs_become_question_marks():
+    from conductor.render import LineRenderer
+
+    r = LineRenderer()
+    assert r.clean("ok 中文 \U0001F9EA") == "ok 中文 ?"
+EOF
+just cond-test 2>&1 | tail -2; PYTHONPATH=host uv run --locked --all-groups python -c "
+from conductor.backends.hc import HcBackend
+from conductor.core import strip_chrome, tui_lines
+b=HcBackend()
+for a in b.list_agents():
+    print('==', a.name, a.kind); print('\n'.join('|'+l for l in tui_lines(strip_chrome(b.read_lines(a.id,120)))[-6:]))
+b.close()"
+```
+
+```text
+...........................                                              [100%]
+27 passed in 0.10s
+== zhouhanru: done 1
+|  - 登入： ~/.codex/auth.json 在 18:08 有更新，應該是你重新登入過了。codex exec "Reply with just: ok" 有正常回 ok，沒有 401。
+|  - daemon： 在 pty 裡開互動式 codex，它跑了 15 秒都沒有 crash，最後是被我的 timeout 關掉的。這次有起一個新的 app-server daemon（pid 73130），socket /private/tmp/codex-daemon-501/7200c2... 也確實建出來了，symlink 沒有再指向不存在的檔案。
+|  - 限制： 我沒有抓到 TUI 的畫面輸出，所以只能確認它啟動後沒有退出，沒辦法確認畫面顯示是不是正常。
+|  daemon log 裡現在只剩一行 config 的 deprecation 警告，它還不至於讓 codex crash：`[features].multi_agent` is deprecated。
+|  麻煩你在 hc 再跑一次 codex。如果還是會 crash，請把錯誤訊息重貼一次，可以直接貼純文字，或是把它存成檔案再告訴我路徑。
+|* Worked for 1m 17s . done 6:46 PM
+== zhouhanru 2
+|  >_ OpenAI Codex (v0.169.0)
+|     ~
+|  permissions: YOLO mode
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 11:05:12Z)**_
+
+<think><details><summary>Thought Process</summary>
+兩個真實 session 都已乾淨：Claude 只剩對話內容，Codex 只剩版本與 permissions 資訊，logo 與狀態列都已移除。只改 host 端，重開 `just cond-run` 即生效，下一步是把 0.2 實刷記入 device log 並 commit。
+
+</details></think>
+
+_**Agent (claude-opus-5-5 2026-11-17 11:05:22Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Record 0.2 flash and Codex cleanup in docs; commit
+
+```bash
+python3 - <<'EOF'
+p='docs/device-log.md'
+s=open(p).read()
+old=[l for l in s.splitlines() if l.startswith("| 目前韌體 |")][0]
+new=old.replace("**Conductor 0.1（自製）**（2026-11-17 18:40 刷入，","**Conductor 0.2（自製）**（2026-11-17 18:59 刷入；0.1 是 18:40，")
+s=s.replace(old,new)
+anchor=[l for l in s.splitlines() if l.startswith("| 2026-11-17 | Conductor 在實機開機 |")][0]
+s=s.replace(anchor, anchor+"""
+| 2026-11-17 18:59 | 本人執行 `just fm1-switch firmware/conductor/build/conductor.fwsc`（0.2，SHA-256 `48a052f9…faea6d`，commit `5add525`） | 先自動備份 `backups/2026-11-17-1859-pre-conductor/fm1-20261117-185927.bin`（Conductor 0.1 的狀態，SHA-256 `71dd8a47533b3bda6da1d001ad59989cdcbb2c69dde280dff240cf5aed9c1c32`）。M-Flasher 的計畫：`Writes 22 sectors (88 KiB): 0x04000-0x19FFF`，驗證通過，自動備份 `fm1-20261117-185935.bin`。重開後 daemon 回報 `firmware 0.2`；輔助使用權限的警告消失 |""")
+open(p,'w').write(s)
+
+p='docs/agentic/conductor.md'
+s=open(p).read()
+s=s.replace("**狀態（2026-11-17）：已刷進實機（新晶片 `0xB36014`），開機正常，daemon 連得上 `[實機]`。按鍵、LED、批准流程還沒逐項在實機確認。**",
+            "**狀態（2026-11-17）：0.2 已刷進實機（新晶片 `0xB36014`），開機正常，daemon 連得上，DETAIL 的中文點陣圖在實機顯示 `[實機]`。按鍵、LED、批准流程還沒逐項在實機確認。**")
+s=s.replace('''- **DETAIL 由電腦畫。**''','''- **DETAIL 由電腦畫，先去掉 agent 的介面。** Claude Code：從輸入框上方的分隔線切掉，再刪底部的狀態列。Codex：歡迎畫面的點字 logo（`⣿⠿…`，字型裡沒有，會畫成方框）、底部的 `› Ask Codex…` 與 `Context 100% left` 狀態列。字型缺的字顯示成 `?`。2026-11-17 用我真實的 Claude Code 與 Codex session 對照過 `[實機]` host 端。
+- **DETAIL 的字由電腦畫。**''')
+open(p,'w').write(s)
+EOF
+just docs-check 2>&1 | tail -1; git add host docs && git commit -q -F - <<'EOF'
+Conductor: clean Codex screens in DETAIL; record the 0.2 flash
+
+Codex's braille logo (no glyphs in the CJK font: drawn as boxes) and
+its bottom input and status lines are left out; deep indents shortened;
+characters the font lacks become '?'. 0.2 flashed by the owner
+(22 sectors), recorded in the device log.
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+EOF
+git log --oneline -1
+```
+
+```text
+{"status": "ok", "pages": 43, "llm_pages": 43, "deployed": false}
+d7ebaad Conductor: clean Codex screens in DETAIL; record the 0.2 flash
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 11:05:34Z)**_
+
+Codex 的方框修好了，這次只改了 daemon，**重開 `just cond-run` 就生效，不用再刷韌體**。
+
+**方框的原因**
+- **Codex 的歡迎畫面有一個用點字符號畫的 OpenAI logo**（`⣿⠿⢸…`），前面還墊了一百多個空格。中文字型裡沒有點字，每個字都被畫成空心方框。
+- **Codex 底部的介面我原本沒認出來**：`› Ask Codex to do anything` 這個輸入框，和 `Context 100% left`、`← for agents · ? for shortcuts` 這兩行狀態列。
+
+**修法**
+- 點字和方塊字元畫的 ASCII art 直接拿掉。
+- 過長的縮排收成兩格，不會在窄螢幕上折出一堆空行。
+- 字型裡沒有的字顯示成 `?`，不再畫方框。
+- 補上 Codex 底部介面的過濾規則。
+
+我用你兩個真實的 session 對照過：Claude 那邊顯示中文對話，最後一行是 `Worked for 1m 17s · done`；Codex 那邊只剩 `OpenAI Codex (v0.169.0)`、`permissions: YOLO mode`，因為它還沒開始對話。`just cond-test` 27 項全過。
+
+**0.2 實刷結果**：這次只寫了 22 個 sector（`0x04000`–`0x19FFF`），驗證通過，daemon 回報 `firmware 0.2`。M-Flasher 先自動備份了 0.1 的狀態，已記進 device log。
+
+**語音輸入**：daemon 啟動時沒有再出現輔助使用權限的警告，`ARP` 應該可以觸發 Wispr Flow 了。可以在任一個文字框按住 `ARP` 說話試試。
+
+文件已 commit 到 `d7ebaad`，還沒 push。
+
+---
+
+_**User (2026-11-17 11:41:22Z)**_
+
+現在是什麼情況下會有中文傳圖片 什麼情況下會純英文然後中文char用?替代？
+
+---
+
+_**Agent (claude-opus-5-5 2026-11-17 11:41:57Z)**_
+
+只有 **DETAIL 頁的輸出內容**會傳圖片，而且要同時符合兩個條件。其他地方一律是 ASCII 文字。
+
+| 顯示的位置 | 傳圖片（中文看得到） | 純文字（ASCII） |
+|---|---|---|
+| **DETAIL 頁的輸出**（`EDIT`） | 裝置是韌體 0.2 以上，**而且** daemon 成功載入字型（Pillow + Mac 的 STHeiti） | 韌體 0.1；或字型載入失敗，這時 daemon 啟動會印 `[detail] text only (ASCII): …`；或在 `just cond-sim` 的文字模擬裡（它故意假裝成 0.1，terminal 才看得懂） |
+| **列表上的 agent 名稱** | — | 一律文字，最多 20 字 |
+| 底部的動作結果、標頭的 backend 名稱、說明頁 | — | 一律文字，這些都是固定的英文 |
+
+**純文字時，非 ASCII 字元怎麼處理**
+- **DETAIL 的輸出**：先把常見的介面符號換成 ASCII（`❯`→`>`、`─`→`-`、`●`→`*`），中日韓文字變成 `?`，其他符號直接拿掉。
+- **agent 名稱**：先拿掉開頭的狀態符號（`●`、`✳`）。標題有超過兩成不是 ASCII 時，整個改用工作目錄的名稱，例如你那個 Codex 顯示 `zhouhanru`；少量的非 ASCII 字元才會變成 `?`。
+
+**傳圖片時也會出現的 `?`**：字型裡缺字的符號，例如 emoji 🧪，會畫成 `?`，不畫方框。點字 logo 這類 ASCII art 則整行拿掉。
+
+所以你現在的組合（0.2 + `just cond-run`）下，DETAIL 的中文都是圖片；只有列表上的名稱還是 ASCII。如果你的 pane 標題常是中文，我可以把列表名稱也改成圖片。名稱很短，一行就能傳完，但需要再刷一次韌體。
+
+---
+
+_**User (2026-11-17 11:45:10Z)**_
+
+理論上現在燒錄的是 0.2
+
+```
+
+
+<pasted_content id="ef8f">
+❯ just cond-run hc
+PYTHONPATH=host uv run --locked --all-groups python -m conductor --backend "hc"
+[midi] Felucca
+[backend] hc: 2 agents, 2 shells not shown (--show-shells to list them)
+[voice] ARP holds ctrl+option (hold)
+</pasted_content id="ef8f">
+
+```
+
+---
+
+_**Agent (claude-opus-5-5 2026-11-17 11:45:36Z)**_
+
+daemon 沒印出 `[device] hello, protocol 1, firmware 0.2`，所以它不知道裝置是 0.2，會退回送 ASCII 文字，中文就變成 `?`。
+
+原因是時間差：你停掉舊的 daemon 後，10 秒內就開了新的。裝置還認為 host 在線，只送 HEARTBEAT，不會再送 HELLO，而韌體版本只寫在 HELLO 裡。這是我的 bug。
+
+**現在可以這樣避開**：停掉 daemon 後等 10 秒以上再開，或拔插一次 USB。
+
+我順便改 daemon：還沒收到 HELLO 前先不送任何東西，裝置 10 秒內就會判定 host 離線，主動送出 HELLO，daemon 拿到版本後才開始同步。這樣不用改韌體。
+
+_**Agent (claude-opus-5-5 2026-11-17 11:45:37Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+List send calls in the daemon core
+
+`grep -n "self.send(" host/conductor/core.py`
+
+```text
+172:                self.send(f)
+176:            self.send(m)
+201:                    self.send(P.detail_bmp(self.selected, i, self.renderer.bitmap(ln)))
+203:                    self.send(P.detail(self.selected, i, ln))
+210:        self.send(P.hello_ack())
+211:        self.send(P.clear())
+237:            self.send(P.footer(out.text))
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 11:45:48Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Hold all output until the device's HELLO
+
+```bash
+python3 - <<'EOF'
+p='host/conductor/core.py'
+s=open(p).read()
+s=s.replace("self.send(", "self.out(")
+s=s.replace('''    device_fw: tuple = (0, 0)  # from the device's HELLO
+''','''    device_fw: tuple = (0, 0)  # from the device's HELLO
+    synced: bool = False  # the device said HELLO to this daemon; until then nothing is sent
+    _waiting_said: bool = False
+''')
+s=s.replace('''    # ------------------------------------------------------------ backend -> device
+    def refresh(self) -> None:''','''    def out(self, frame: bytes) -> None:
+        """Nothing goes out before the device's HELLO. A device still attached to a daemon
+        that just quit only sends HEARTBEATs (no firmware version in them); kept silent,
+        it decides within 10 s that the host left and says HELLO again."""
+        if self.synced:
+            self.send(frame)
+
+    # ------------------------------------------------------------ backend -> device
+    def refresh(self) -> None:''')
+s=s.replace('''            if self.voice:
+                self.voice.let_go()  # the device restarted: its button is not held any more
+            self.resync()''','''            if self.voice:
+                self.voice.let_go()  # the device restarted: its button is not held any more
+            self.synced = True
+            self.resync()''')
+s=s.replace('''        elif m.type == P.T_SELECT and m.payload:''','''        elif m.type == P.T_HEARTBEAT and not self.synced and not self._waiting_said:
+            self._waiting_said = True
+            self.log("[device] still attached to the last daemon; waiting for its HELLO (up to 10 s)")
+        elif m.type == P.T_SELECT and m.payload:''')
+open(p,'w').write(s)
+EOF
+grep -n "def test_slots_survive_restart" -A6 host/tests/test_core.py | head -8
+```
+
+```text
+74:def test_slots_survive_restart(tmp_path):
+75-    be, sim, c = setup(tmp_path)
+76-    before = dict(c.slots.current)
+77-    c2 = Conductor(backend=be, send=lambda f: None, slots=SlotMap(tmp_path / "slots.json"))
+78-    c2.refresh()
+79-    assert c2.slots.current == before
+80-
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 11:46:00Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Ignore actions before HELLO; test the silent start
+
+```bash
+python3 - <<'EOF'
+p='host/conductor/core.py'
+s=open(p).read()
+s=s.replace('''        elif m.type == P.T_ACTION:
+            out = self.act(P.parse_action(m))''','''        elif m.type == P.T_ACTION and not self.synced:
+            self.log("[action] ignored: the device has not said HELLO to this daemon yet")
+        elif m.type == P.T_ACTION:
+            out = self.act(P.parse_action(m))''')
+open(p,'w').write(s)
+EOF
+cat >> host/tests/test_core.py <<'EOF'
+
+
+def test_silent_until_hello(tmp_path):
+    be = FakeBackend.demo()
+    sent = []
+    c = Conductor(backend=be, send=sent.append, slots=SlotMap(tmp_path / "s.json"), log=lambda *_: None)
+    c.on_frame(P.device_heartbeat())  # still attached to the last daemon
+    c.refresh()
+    c.on_frame(P.device_action(P.OP_APPROVE, 0, 1))
+    assert sent == [] and be.sent == []  # nothing out, no keys pressed
+    c.on_frame(P.device_hello(0, 2))
+    assert c.device_fw == (0, 2) and P.parse(sent[0]).type == P.T_HELLO_ACK
+EOF
+just cond-test 2>&1 | tail -1
+```
+
+```text
+28 passed in 0.07s
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 11:46:07Z)**_
+
+28 項測試通過。你的 daemon 可能還開著，所以我不對實機測，避免又兩個 daemon 撞在一起。把這個情況記進設計頁，然後 commit。
+
+_**Agent (claude-opus-5-5 2026-11-17 11:46:14Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Document the restart case and commit
+
+```bash
+python3 - <<'EOF'
+p='docs/agentic/conductor.md'
+s=open(p).read()
+s=s.replace('''### 螢幕顯示 `NO AGENTS` { #no-agents }''','''### 重開 daemon 後中文變成 `?` { #restart }
+
+韌體版本只寫在裝置的 HELLO 裡，而裝置只在認為 host 不在時才送 HELLO（最後一個 frame 之後 10 秒）。2026-11-17 我停掉 daemon 後馬上重開，新 daemon 只收到 HEARTBEAT，不知道裝置是 0.2，DETAIL 就退回 ASCII `[實機]`。
+
+現在 daemon 在收到 HELLO 前什麼都不送、也不執行任何按鍵，裝置 10 秒內就會判定 host 離線並重新 HELLO。等待時會印 `[device] still attached to the last daemon; waiting for its HELLO (up to 10 s)`；之後出現 `[device] hello, protocol 1, firmware 0.2` 就對了。
+
+### 螢幕顯示 `NO AGENTS` { #no-agents }''')
+open(p,'w').write(s)
+EOF
+just docs-check 2>&1 | tail -1; git add host docs && git commit -q -F - <<'EOF'
+Conductor daemon: stay silent until the device's HELLO
+
+A device still attached to a daemon that just quit only sends
+HEARTBEATs, so a quickly restarted daemon never learned the firmware
+version and fell back to ASCII DETAIL lines. Now nothing is sent and no
+ACTION is carried out before HELLO; the device times out within 10 s
+and says HELLO again.
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+EOF
+git log --oneline -1
+```
+
+```text
+{"status": "ok", "pages": 43, "llm_pages": 43, "deployed": false}
+13c5352 Conductor daemon: stay silent until the device's HELLO
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 11:46:23Z)**_
+
+對，裝置上是 0.2。問題出在 daemon 不知道它是 0.2：你的輸出裡少了 `[device] hello, protocol 1, firmware 0.2` 這一行，所以 daemon 退回送 ASCII 文字，DETAIL 裡的中文就變成 `?`。
+
+**原因**：韌體版本只放在裝置的 HELLO 裡，而裝置只有在「10 秒沒收到 host 的訊息」時才會重新送 HELLO。你停掉舊 daemon 後不到 10 秒就開了新的，裝置還以為原本的 host 在，只送心跳，新 daemon 因此拿不到版本。這是我的 bug。
+
+**已修正（只改 daemon，不用重刷）**：daemon 在收到 HELLO 之前什麼都不送，也不執行任何按鍵。裝置 10 秒內就會判定 host 已離開，重新送出 HELLO，daemon 這時拿到版本才開始同步。等待期間會印出：
+
+```text
+[device] still attached to the last daemon; waiting for its HELLO (up to 10 s)
+[device] hello, protocol 1, firmware 0.2
+```
+
+**你要做的**：Ctrl-C 停掉現在的 daemon，再跑一次 `just cond-run hc`。等最多 10 秒，看到 `firmware 0.2` 就表示 DETAIL 會改送圖片，中文也就看得到了。
+
+我沒有對實機測這個修正，因為你的 daemon 可能還開著，兩個同時跑會互相干擾。28 項單元測試都通過。設計頁加了「重開 daemon 後中文變成 `?`」一節，改動已 commit 到 `13c5352`，還沒 push。
+
+---
+
+_**User (2026-11-17 11:53:55Z)**_
+
+```
+
+
+<pasted_content id="ef8f">
+❯ just cond-run hc
+PYTHONPATH=host uv run --locked --all-groups python -m conductor --backend "hc"
+[midi] Felucca
+[backend] hc: 2 agents, 2 shells not shown (--show-shells to list them)
+[voice] ARP holds ctrl+option (hold)
+[device] still attached to the last daemon; waiting for its HELLO (up to 10 s)
+[device] hello, protocol 1, firmware 0.2
+</pasted_content id="ef8f">
+
+```
+
+看起來有成功
+
+是說現在 bluetooth 還在backlog嗎？
+
+---
+
+_**Agent (claude-opus-5-5 2026-11-17 11:54:06Z)**_
+
+成功了。daemon 等了一下就收到 HELLO，也認出 `firmware 0.2`，所以 DETAIL 現在走圖片，中文看得到。
+
+Bluetooth 還在 backlog。我先花一點時間看清楚卡在哪，這樣才能告訴你具體要做什麼。
+
+_**Agent (claude-opus-5-5 2026-11-17 11:54:08Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Check how fm1-base handles SysEx arriving over BLE MIDI
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/third_party/fm1-base && ls ble ble/midi 2>/dev/null | head; grep -rn -i "sysex\|0xF0" ble/midi/*.c device/bt_own.c 2>/dev/null | head -15`
+
+```text
+ble:
+lwip
+midi
+shim
+wifi
+
+ble/midi:
+le_midi.c
+device/bt_own.c:155:    own_in[oi_w % IQ].pkt = own_role == 2u ? (pkt & ~0xF0u) | 0x10u : pkt & ~0xF0u;   /* a device's: cable 1 */
+ble/midi/le_midi.c:145:static int midi_len(u8 st)                       /* data bytes of a status byte; -1 for sysex */
+ble/midi/le_midi.c:147:    switch (st & 0xF0) {
+ble/midi/le_midi.c:150:    case 0xF0:
+ble/midi/le_midi.c:154:        case 0xF0: return -1;
+ble/midi/le_midi.c:163:    if (st < 0xF0) return st >> 4;
+ble/midi/le_midi.c:188:            if (n < 0) {                         /* sysex: skip to the end flag */
+ble/midi/le_midi.c:260:        if (st < 0xF0 && st == run && i) {
+ble/midi/le_midi.c:279:        if (st < 0xF0)
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 11:54:14Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Read BLE MIDI receive parsing around SysEx
+
+`sed -n 175,200p ble/midi/le_midi.c; grep -n -i "sysex" device/bt_own.c device/bt_own_central.c | head -8; grep -n "ble_stack" README.md | head -5`
+
+```text
+                hi = (u8)((hi + 1u) & 0x3Fu);
+            lo = l;
+            seen = 1;
+            ts = (u32)hi << 7 | lo;
+            i++;
+            if (i < len && (b[i] & 0x80))
+                st = b[i++];
+        }
+        if (!st)
+            return;
+        {
+            int n = midi_len(st), k;
+            u8 d[2] = {0, 0};
+            if (n < 0) {                         /* sysex: skip to the end flag */
+                while (i < len && !(b[i] & 0x80))
+                    i++;
+                continue;
+            }
+            if (st >= 0xF8) {
+                ble_midi_receive(cable | 0xFu | (uint32_t)st << 8, ts);
+                continue;
+            }
+            for (k = 0; k < n; k++) {
+                if (i >= len || (b[i] & 0x80))
+                    return;
+                d[k] = b[i++];
+28:| Bluetooth MIDI with a computer or tablet | `ble = true` (`tools/build.py --no-ble` leaves it out of one build) | `TO_BLE`, `PORT_BLE`; `plat_ble_state`, `plat_ble_connected`; `plat_ble_enable`; with `ble_stack = "own"` a stream of SysEx frames read by the radio at the link's rate (`plat_ble_stream`: a screen mirrored) and the link as agreed (`plat_ble_link_info`) |
+30:| Bluetooth on fm1-base's own stack instead of JieLi's libraries (below) | `ble_stack = "own"`, with `ble` | the same calls |
+31:| Pairing on the own stack (LE legacy pairing, the bond kept) | `ble_pairing = true`, with `ble_stack = "own"` | nothing |
+32:| Bluetooth MIDI in by the sender's time (for an app that follows a clock by time) | `ble_midi_time = true`, with `ble_stack = "own"` | `plat_midi_in_t24` after `plat_midi_in` |
+33:| Bluetooth audio to headphones and speakers (A2DP) | `bt_audio = true`, with `ble_stack = "own"`; `bt_log = true` puts its set-up on the radio's log | `plat_bta_on`, `plat_bta_scan`, `plat_bta_found`, `plat_bta_known`, `plat_bta_pick`, `plat_bta_reconnect`, `plat_bta_forget`, `plat_bta_hangup`, `plat_bta_state` |
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 11:54:24Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Check whether fm1-base's own BLE stack also drops incoming SysEx
+
+`grep -n "le_midi\|midi_parse\|ble_midi_receive\|parse" device/bt_own.c | head -10; grep -rn "skip to the end flag\|sysex" device/bt_own*.c ble/shim/*.c 2>/dev/null | head -5`
+
+```text
+9: * ble_poll, ble_midi_send_many, ble_midi_connected and the plat_ble_* calls. One link at a time: the computer's
+90: * low octets the hash the JieLi build named itself by (radio.c ble_midi_name), so the name stays "FM-1 XXXX" */
+143:static int own_stream_on(void) { return own_role == 1u && ble_midi_ready(); }   /* (the computer's link, listening) */
+191:int ble_midi_connected(int link)
+195:    return link == 0 ? own_role == 1u && ble_midi_ready() : own_role == 2u && ble_midi_ready();
+197:int ble_midi_send_many(int link, const uint32_t *pkts, const uint16_t *ms, int n)
+200:    if (!ble_midi_connected(link))
+211:int ble_midi_peripheral_connected(void) { return own_role == 1u && ble_midi_ready(); }
+212:int ble_midi_peripheral_linked(void) { return own_role == 1u; }
+370:        ble_midi_receive_at(own_in[oi_r % IQ].pkt, own_in[oi_r % IQ].t24);
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 11:54:30Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Check the own-stack BLE MIDI parser in felucca-bsp for SysEx
+
+`grep -rln "ble_midi_ready" bsp | head -3; f=$(grep -rln "ble_midi_ready" bsp | head -1); grep -n -i "sysex\|0xF0" $f | head -12`
+
+```text
+(Bash completed with no output)
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 11:54:35Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Locate the BLE MIDI parser used by the own stack
+
+`grep -rln "ble_midi_ready" --include=*.c --include=*.h . 2>/dev/null | head; `
+
+```text
+(eval):1: no matches found: --include=*.c
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 11:54:41Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Find the own-stack BLE MIDI implementation and its SysEx handling
+
+`grep -rl "int ble_midi_ready" . 2>/dev/null | head -3; f=$(grep -rl "int ble_midi_ready" . 2>/dev/null | head -1); [ -n "$f" ] && grep -n -i "sysex" "$f" | head -10`
+
+```text
+bt/ble/ble_att.c
+bt/ble/ble.h
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 11:54:47Z)**_
+
+正在查 fm1-base 自己的 BLE stack 收到 SysEx 時怎麼處理，這是 Bluetooth 能不能做的關鍵。
+
+_**Agent (claude-opus-5-5 2026-11-17 11:54:49Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Look for SysEx handling in the own BLE stack
+
+`grep -n -i "sysex\|0xf0\|0xF7\|midi_rx\|parse" bt/ble/ble_att.c | head -15`
+
+```text
+(Bash completed with no output)
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 11:54:55Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Trace where the own stack decodes incoming BLE MIDI
+
+`grep -rn "own_in\[oi_w" device/bt_own.c | head -3; grep -n "static void own_midi_in\|void own_.*in\|midi_decode\|le_midi_decode" device/bt_own.c bt/ble/*.c | head; grep -rn "skip to the end flag" . 2>/dev/null | head`
+
+```text
+device/bt_own.c:155:    own_in[oi_w % IQ].pkt = own_role == 2u ? (pkt & ~0xF0u) | 0x10u : pkt & ~0xF0u;   /* a device's: cable 1 */
+device/bt_own.c:157:    own_in[oi_w % IQ].t24 = ble_in_time(&own_clk, fm1_ticks(), 1000u * FM1_TICKS_PER_US, ts, last_ts);
+device/bt_own.c:159:    own_in[oi_w % IQ].ts = ts;
+device/bt_own.c:91:static void own_addr(uint8_t a[6])
+device/bt_own.c:214:static void own_held(int hold)                    /* the BLE interrupts held while the main loop changes the stack */
+device/bt_own.c:305:static void own_diag_line(void)                   /* the link layer's counters, a line on the log */
+ble/midi/le_midi.c:188:            if (n < 0) {                         /* sysex: skip to the end flag */
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 11:55:04Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Read the own stack's incoming MIDI handoff
+
+`sed -n 140,160p device/bt_own.c; grep -rn "own_midi_rx\|ble_midi_on_packet\|(\*.*midi.*)(uint32_t" bt/ble/*.h | head -5`
+
+```text
+    if (oo_r != oo_w)
+        oo_r++;
+}
+static int own_stream_on(void) { return own_role == 1u && ble_midi_ready(); }   /* (the computer's link, listening) */
+static uint32_t own_stream_ms(void) { return fm1_ms; }
+#include "bt_own_stream.h"                        /* ble_app_midi_peek / pop: the queue and the app's stream */
+BLE_API void ble_app_midi_in(uint32_t pkt, uint16_t ts, uint16_t last_ts)
+{
+#if !FM1B_BLE_MIDI_TIME
+    (void)last_ts;
+#endif
+    if (oi_w - oi_r >= IQ) {
+        oi_lost++;
+        return;
+    }
+    own_in[oi_w % IQ].pkt = own_role == 2u ? (pkt & ~0xF0u) | 0x10u : pkt & ~0xF0u;   /* a device's: cable 1 */
+#if FM1B_BLE_MIDI_TIME
+    own_in[oi_w % IQ].t24 = ble_in_time(&own_clk, fm1_ticks(), 1000u * FM1_TICKS_PER_US, ts, last_ts);
+#else
+    own_in[oi_w % IQ].ts = ts;
+#endif
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 11:55:12Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Find the own stack caller that decodes BLE MIDI packets
+
+`grep -rn "ble_app_midi_in(" bt | head -3; f=$(grep -rln "ble_app_midi_in(" bt | head -1); grep -n -B3 -A3 "ble_app_midi_in(" $f | grep -n -i "sysex\|0xF0\|skip" | head`
+
+```text
+bt/ble/ble.h:27:BLE_API void ble_app_midi_in(uint32_t pkt, uint16_t ts, uint16_t last_ts);
+bt/ble/ble_att.c:304:    ble_app_midi_in(pkt, ts, *(const uint16_t *)ctx);
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 11:55:17Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Read the own stack's BLE MIDI decode path
+
+`sed -n 285,330p bt/ble/ble_att.c; grep -rn "midi_unpack\|blemidi_decode\|ble_midi_parse" bt | head -5`
+
+```text
+    if (att_need_enc(h)) {
+        att_error(p[0], h, ATT_ERR_AUTHEN);
+        return;
+    }
+    vl = att_len(h, &v);
+    if (off > vl) {
+        att_error(p[0], h, ATT_ERR_OFFSET);
+        return;
+    }
+    vl = ble_min(vl - off, (uint32_t)batt.mtu - 1u);
+    batt.buf[0] = (uint8_t)(p[0] + 1u);
+    if (vl)                                       /* (an empty value, the MIDI I/O's, may have no pointer: no NULL + 0) */
+        ble_cpy(batt.buf + 1, v + off, vl);
+    att_send((uint16_t)(1u + vl));
+}
+
+static void att_midi_in(void *ctx, uint32_t pkt, uint16_t ts)
+{
+    BLE_DIAG_MIDI_KIND(ble_dg, pkt);
+    ble_app_midi_in(pkt, ts, *(const uint16_t *)ctx);
+}
+
+/* one BLE-MIDI packet in: a central's write to our MIDI I/O, or (as central) the peripheral's notification */
+BLE_API void ble_att_midi_packet(const uint8_t *v, uint16_t n)
+{
+    uint16_t last = ble_midi_last_ts(v, n);
+#if BLE_DIAG
+    uint32_t i, r = ble_dg.mi_raw_n++ & 3u;
+    for (i = 0; i < 12u; i++)
+        ble_dg.mi_raw[r][i] = i < n ? v[i] : 0u;
+    ble_dg.mi_raw_len[r] = (uint8_t)(n > 255u ? 255u : n);
+    if (ble_midi_dec(&batt.dec, v, n, att_midi_in, &last))
+        ble_dg.mi_pkts++;
+    else
+        ble_dg.mi_bad_hdr++;
+#else
+    (void)ble_midi_dec(&batt.dec, v, n, att_midi_in, &last);
+#endif
+}
+
+/* returns an ATT error code, 0 when written */
+static uint8_t att_write(uint16_t h, const uint8_t *v, uint16_t n)
+{
+    if (!h || h > H_LAST)
+        return ATT_ERR_HANDLE;
+    if (!(ATT_DB[h].flags & A_W))
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 11:55:22Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Check the own stack's BLE MIDI decoder for SysEx
+
+`f=$(grep -rln "ble_midi_dec(" bt | grep -v ble_att.c | head -1); echo $f; grep -n -i "sysex\|0xf0\|f7" $f | head -12`
+
+```text
+bt/ble/ble_midi.h
+4: * (cable 0; CIN 4 SysEx start / continue, 5 / 6 / 7 SysEx end with 1 / 2 / 3 octets or a single-octet
+9: * own timestamp octet; real-time messages may come anywhere, SysEx included, each after a timestamp octet.
+10: * SysEx goes on over packets: a continuation packet holds the header and then data at once; the closing F7
+24:    uint8_t sysex;                       /* a SysEx is open (it goes on in the next packet) */
+26:/* a new packet in buf (cap octets: the ATT MTU - 3); an open SysEx stays open */
+34:/* forget an open SysEx (a new connection) */
+37:/* ---- decoder: one packet at a time, state kept between packets (SysEx, running status) */
+42:    uint8_t sysex, sx_n, sx[3];          /* inside SysEx; octets waiting for a USB-MIDI packet */
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 11:55:29Z)**_
+
+查清楚了。Bluetooth 還在 backlog，但卡關的點已經確定，有一條可行的路。我先把結論寫進設計頁。
+
+_**Agent (claude-opus-5-5 2026-11-17 11:55:41Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Write the Bluetooth findings into the design page and commit
+
+```bash
+cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1 && python3 - <<'EOF'
+p='docs/agentic/conductor.md'
+s=open(p).read()
+old_start=s.index("- fm1-base 文件寫明 `app_sysex` 收的是")
+old_end=s.index("預計的 Bluetooth 設計（還沒實作）：")
+s=s[:old_start]+'''- **收 SysEx 要用 fm1-base 自己的 BLE stack。** 預設的 JieLi stack 解 BLE MIDI 時把 SysEx 整段跳過（`ble/midi/le_midi.c`：`sysex: skip to the end flag`）`[上游]`。`ble_stack = "own"` 的解碼器（`bt/ble/ble_midi.h`）會把跨封包的 SysEx 還原成 USB-MIDI 的 SysEx 封包（CIN 4–7），從 `plat_midi_in` 的 `PORT_BLE` 進來 `[上游]`。但 `APP_SYSEX` 只收 USB，所以 app 要自己把這些封包組回 frame（`hostlink` 加一個 BLE 的組裝器）。送出則用 `plat_midi_send(…, TO_BLE)` 送 SysEx 封包，或 `plat_ble_stream`。
+- **容量夠。** fm1-base 記載 own stack 的 BLE MIDI 約 118–123 KB flash、37 KB RAM、69 KB pool `[上游]`；Conductor 0.2 是 87 KB flash、31 KB RAM，加起來仍在 FM-1 的範圍內（`[調研]`，要 build 才確定）。
+- **配對會寫 flash。** `ble_pairing = true` 會把 bond 存進 store（`OBJ_BLE`）；USB 版完全不寫。要選一個不跟其他韌體衝突的位址，並在模擬器量測寫入。
+- **點陣圖太大。** BLE MIDI 的吞吐量比 USB 低很多，一行 558 bytes 的 DETAIL 點陣圖在 BLE 上會慢；BLE 連線時先送 ASCII 文字，或只在 DETAIL 頁送點陣圖。
+
+'''+s[old_end:]
+s=s.replace("- [ ] Bluetooth：先確認 BLE 收 SysEx 的路徑，再照上面的設計實作。","- [ ] Bluetooth：用 `ble_stack = \"own\"`，`hostlink` 加 BLE 的 SysEx 組裝，配對與 flash 寫入在模擬器量測後再實作，見 [USB 與 Bluetooth](#bluetooth)。")
+open(p,'w').write(s)
+EOF
+grep -n "收 SysEx 要用\|Bluetooth：用" docs/agentic/conductor.md | head; just docs-check 2>&1 | tail -1; git add docs && git commit -q -m "Conductor docs: what Bluetooth needs (own BLE stack for SysEx in)
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>" && git log --oneline -1
+```
+
+```text
+112:- **收 SysEx 要用 fm1-base 自己的 BLE stack。** 預設的 JieLi stack 解 BLE MIDI 時把 SysEx 整段跳過（`ble/midi/le_midi.c`：`sysex: skip to the end flag`）`[上游]`。`ble_stack = "own"` 的解碼器（`bt/ble/ble_midi.h`）會把跨封包的 SysEx 還原成 USB-MIDI 的 SysEx 封包（CIN 4–7），從 `plat_midi_in` 的 `PORT_BLE` 進來 `[上游]`。但 `APP_SYSEX` 只收 USB，所以 app 要自己把這些封包組回 frame（`hostlink` 加一個 BLE 的組裝器）。送出則用 `plat_midi_send(…, TO_BLE)` 送 SysEx 封包，或 `plat_ble_stream`。
+284:- [ ] Bluetooth：用 `ble_stack = "own"`，`hostlink` 加 BLE 的 SysEx 組裝，配對與 flash 寫入在模擬器量測後再實作，見 [USB 與 Bluetooth](#bluetooth)。
+{"status": "ok", "pages": 43, "llm_pages": 43, "deployed": false}
+4399973 Conductor docs: what Bluetooth needs (own BLE stack for SysEx in)
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 11:55:55Z)**_
+
+對，Bluetooth 還在 backlog，但現在知道該怎麼做了。之前卡在「不確定電腦透過 BLE 送 SysEx 給 FM-1 能不能收到」，我讀了 fm1-base 的原始碼，答案是：要換一個 BLE stack 才收得到。
+
+**查到的事實**
+- **預設的 JieLi BLE stack 收不到**：它解 BLE MIDI 時會把 SysEx 整段跳過，Conductor 的協定全是 SysEx，等於收不到任何東西。
+- **fm1-base 自己的 BLE stack 收得到**：設定 `ble_stack = "own"` 後，它會把跨封包的 SysEx 組回來，從一般的 MIDI 輸入交給 app。韌體只要自己把這些封包拼回完整的 frame。
+- **送出沒問題**：兩種 stack 都能送 SysEx。
+- **容量應該夠**：fm1-base 記載自有 stack 約 120 KB flash、37 KB RAM，加上 Conductor 目前的大小仍在 FM-1 的範圍內。這是我推算的，要實際 build 才確定。
+
+**還要處理的**
+- **配對會開始寫 flash**：要存配對資料（bond）。USB 版完全不寫，這是第一次有寫入，要在模擬器量測寫幾次、寫在哪，並避開其他韌體用的位址。
+- **DETAIL 的點陣圖在 BLE 上會慢**：一行 558 bytes，BLE 的頻寬比 USB 低很多。BLE 連線時先送 ASCII 文字，或只在 DETAIL 頁送圖。
+- **要再刷一次韌體**，而且 BLE 在模擬器裡只能測到一部分，最後要靠實機。
+
+**實際用起來**：第一次在 macOS 的「音訊 MIDI 設定 → Bluetooth」配對一次，之後 daemon 會用同一套方式找到裝置。拔掉 USB 用電池，就是無線控制台。
+
+這些我寫進了設計頁的「USB 與 Bluetooth」一節，commit `4399973`，還沒 push。
+
+要我現在開始做 Bluetooth 嗎？或者你想先在實機上把現有功能試一輪（燈號、`REC`/`FX` 批准流程、提示音、`ARP` 語音），我再接著做？
+
+---
+
+_**User (2026-11-17 12:03:38Z)**_
+
+可以開始實作 Bluetooth
+
+另外如果很多東西要走MIDI 對於像iOS中 StreamByter之類的routing方案 有沒有什麼建議？
+
+---
+
+_**Agent (claude-opus-5-5 2026-11-17 12:04:11Z)**_
+
+開始做 Bluetooth。iOS 路由（StreamByter）的建議放在最後回答，先查清楚 fm1-base 實作 BLE 需要的細節：store 物件、廣播名稱，以及 host simulator 能不能模擬 BLE SysEx。
+
+_**Agent (claude-opus-5-5 2026-11-17 12:04:13Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Find BLE build options, store object and boot behaviour in fm1-base
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/third_party/fm1-base && grep -n -i "ble_name\|ble_stack\|ble_pairing\|OBJ_BLE\|APP_BLE_AT_BOOT\|ble_midi_time" tools/build.py README.md include/plat.h | head -25`
+
+```text
+include/plat.h:109: * too, while the 2 kHz poll that takes them may wait for it); Bluetooth's: when it was read, or with fm1.toml ble_midi_time (ble_stack = "own") when the sender stamped it, the connection's bunching taken out (the transport then comes at once, not held to the sender's time). For an app that follows a
+include/plat.h:146: * OBJ_BLE (the radio's address and pairing). Without it (FM1B_BLE 0, tools/build.py --no-ble) nothing of JieLi's is
+include/plat.h:157:/* A stream of SysEx frames to the computer's link (ble_stack = "own"; a screen mirrored): the radio reads it in its own
+include/plat.h:171:/* the computer's link as agreed (ble_stack = "own"; 0 each when none, or another stack): v[0] the LL data length
+include/plat.h:191:                                        * show it; -1: none (ble_stack = "own" only: an iPhone app asks for one) */
+include/plat.h:193: * app.h; ble_stack = "own" only, else none of this does anything): every advertising report the scan hears goes to the
+include/plat.h:233: * on starts it (or advertises again). Whether it starts at power-on: APP_BLE_AT_BOOT (app.h, e.g. a saved setting;
+include/plat.h:236:/* What Bluetooth keeps (the own stack, ble_stack = "own"), by default in the app's store object OBJ_BLE. An app that
+include/plat.h:238: * APP_BLE_STORE in app.h and gives the two calls below; it then needs no OBJ_BLE. app_ble_load: at Bluetooth's start
+include/plat.h:244:    uint8_t bonded, rsv;               /* the computer's bond (ble_pairing): bonded, ediv, rand, ltk */
+include/plat.h:257:/* Bluetooth audio out (fm1.toml bt_audio = true, with ble_stack = "own": FM1B_BT_AUDIO 1): an A2DP source to headphones
+include/plat.h:259: * FM-1's own output is muted. Four devices are remembered with their keys (in OBJ_BLE), the last one first. Expect
+README.md:28:| Bluetooth MIDI with a computer or tablet | `ble = true` (`tools/build.py --no-ble` leaves it out of one build) | `TO_BLE`, `PORT_BLE`; `plat_ble_state`, `plat_ble_connected`; `plat_ble_enable`; with `ble_stack = "own"` a stream of SysEx frames read by the radio at the link's rate (`plat_ble_stream`: a screen mirrored) and the link as agreed (`plat_ble_link_info`) |
+README.md:30:| Bluetooth on fm1-base's own stack instead of JieLi's libraries (below) | `ble_stack = "own"`, with `ble` | the same calls |
+README.md:31:| Pairing on the own stack (LE legacy pairing, the bond kept) | `ble_pairing = true`, with `ble_stack = "own"` | nothing |
+README.md:32:| Bluetooth MIDI in by the sender's time (for an app that follows a clock by time) | `ble_midi_time = true`, with `ble_stack = "own"` | `plat_midi_in_t24` after `plat_midi_in` |
+README.md:33:| Bluetooth audio to headphones and speakers (A2DP) | `bt_audio = true`, with `ble_stack = "own"`; `bt_log = true` puts its set-up on the radio's log | `plat_bta_on`, `plat_bta_scan`, `plat_bta_found`, `plat_bta_known`, `plat_bta_pick`, `plat_bta_reconnect`, `plat_bta_forget`, `plat_bta_hangup`, `plat_bta_state` |
+README.md:62:libraries. Bluetooth on fm1-base's own stack (`ble_stack = "own"`) links nothing of JieLi's, and neither does a
+README.md:68:`ble_stack = "own"` it runs instead on Henri David's stack from [Optimist](https://github.com/w0ts/optimist),
+README.md:74:- With `ble_pairing = true` it pairs and encrypts the link (LE legacy pairing), and keeps the bond in `OBJ_BLE`.
+README.md:78:- With `ble_midi_time = true` each message from Bluetooth comes with the time it was sent, from its BLE-MIDI
+README.md:104:   a controller), beside a computer. For the own stack, add `ble_stack = "own"` and its options (above).
+README.md:105:2. In app.h, give it a store object: `OBJ_BLE` in the app's object enum, and its offset in `APP_STORE_MAP` (the
+README.md:108:   plat_ble_rec`), and no `OBJ_BLE`.
+README.md:119:changes, and tells the platform whether to start it at power-on with `APP_BLE_AT_BOOT` in app.h (an expression,
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 12:04:20Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Read fm1-base's Bluetooth setup notes and store contract
+
+`sed -n 60,125p README.md; sed -n 225,256p include/plat.h`
+
+```text
+A firmware has Bluetooth or WiFi, not both: each fills most of what the FM-1 has (the chip has no external RAM),
+and together they don't fit. WiFi, and Bluetooth on JieLi's stack, need JieLi's AC79 SDK (`$AC79_SDK`) for its
+libraries. Bluetooth on fm1-base's own stack (`ble_stack = "own"`) links nothing of JieLi's, and neither does a
+build without a radio. Every build still takes the three SDK files a package needs (LICENSING.md).
+
+### Two Bluetooth stacks
+
+By default (`ble = true`), Bluetooth runs on JieLi's binary libraries from the SDK, through a shim (`ble/`). With
+`ble_stack = "own"` it runs instead on Henri David's stack from [Optimist](https://github.com/w0ts/optimist),
+in `bt/` under MPL-2.0, with felucca-bsp's radio drivers. Nothing of JieLi's is linked, there is no shim and no
+task, and the build checks it. The radio calibrates itself at every start, so an FM-1 whose stock calibration was
+overwritten works the same. The own stack is smaller and does more:
+
+- Bluetooth MIDI with a computer or a phone, as on JieLi's.
+- With `ble_pairing = true` it pairs and encrypts the link (LE legacy pairing), and keeps the bond in `OBJ_BLE`.
+  Without it a pairing is refused; macOS and iOS connect anyway.
+- `ble_diag = false` leaves out the link layer's diagnostics (its counters and event rings: about 2.4 KB of RAM
+  and some code; the radio log's `BT ll` line). They are kept by default.
+- With `ble_midi_time = true` each message from Bluetooth comes with the time it was sent, from its BLE-MIDI
+  timestamp (`plat_midi_in_t24`): the connection's bunching taken out, for an app that times a clock it follows
+  itself. Without it the clock and transport are held to the sender's time (spaced as sent, up to 0.12 s later).
+- With `ble_central = true` the FM-1 connects to Bluetooth MIDI devices, as on JieLi's. A device that asks for a
+  code gets one on the FM-1's screen (`plat_ble_passkey`).
+- With `bt_audio = true` it sends its sound to headphones and speakers (A2DP, SBC), beside Bluetooth MIDI on the
+  one radio. While it streams, the FM-1's own output is muted. Four devices are remembered, the last one first, and
+  `plat_bta_reconnect(0)` at power-on connects it again. `bt_log = true` adds the audio set-up's steps to the
+  radio's log.
+
+It was tried on one FM-1 with a Mac, an iPhone (GarageBand; Cubasis as host and as a peripheral with the code),
+headphones (AIAIAI TMA-2) and a speaker (Anker SoundCore 2), MIDI and audio at once. Its limits:
+
+- One Bluetooth MIDI link at a time: while the FM-1 is connected to a device, a computer can't connect to it
+  (JieLi's keeps both).
+- Audio reaches the ear 150-300 ms after a key (the device's own buffer): for listening, not for playing in time.
+- After an abrupt drop, a speaker may not answer for a minute or two.
+- Each firmware keeps its own keys. After switching firmware, forget the FM-1 on the phone or speaker and pair
+  again.
+
+`examples/ble_own` is the template on the own stack with every option. For how the stack works, see
+[docs/bt/README.md](docs/bt/README.md).
+
+### Turning Bluetooth on
+
+1. In fm1.toml, `ble = true`. Add `ble_central = true` for the FM-1 to connect to MIDI devices too (a keyboard,
+   a controller), beside a computer. For the own stack, add `ble_stack = "own"` and its options (above).
+2. In app.h, give it a store object: `OBJ_BLE` in the app's object enum, and its offset in `APP_STORE_MAP` (the
+   radio's address and pairing are kept there). On the own stack an app may keep them in its own saved data instead
+   (a settings record of its own): `#define APP_BLE_STORE` and `app_ble_load` / `app_ble_save` (plat.h `struct
+   plat_ble_rec`), and no `OBJ_BLE`.
+3. In the app: MIDI goes out with `TO_BLE` and comes in on `PORT_BLE`, as USB's does. For a page of devices, add
+   `#define APP_BTDEV` to app.h and use lib/btdev.h (the template's REC does).
+4. With devices there are two links, the computer's and the device's. `TO_BLE` goes to both; `TO_BLE_HOST` or
+   `TO_BLE_DEV` goes to one, each with its own queue, so a slow device never holds up the computer. Both come in on
+   `PORT_BLE`, and `plat_midi_in_from()` says which. MIDI thru, with nothing sent back where it came from (a keyboard
+   played through to a phone): after each `plat_midi_in`,
+   `plat_midi_send(pkt, (TO_USB | TO_BLE) & ~plat_midi_in_from())`.
+
+Bluetooth starts at every power-on, as on M-VAVE's firmware, unless the last Bluetooth run crashed. A firmware
+that lets the player turn it off keeps that as a setting, calls `plat_ble_enable(0)` / `plat_ble_enable(1)` when it
+changes, and tells the platform whether to start it at power-on with `APP_BLE_AT_BOOT` in app.h (an expression,
+e.g. `(set.bluetooth != 0)`). Off ends every link and stops advertising and scanning: the radio is quiet. Its manual
+should say where the setting is (the template's: for details, see template/docs/MANUAL.md).
+`tools/build.py --no-ble` builds the same firmware without Bluetooth (NAME-usb.fwsc).
+
+### Turning WiFi on
+
+int plat_ble_connect_peer(const struct plat_ble_peer *p);   /* 0 = connecting (plat_ble_device), -1 not now */
+int plat_ble_device_fail(uint32_t *code);   /* why the last connection to a device ended (PLAT_BLE_CF_*); code: its
+                                        * code (the link layer's reason, the ATT error or the SMP reason) */
+uint32_t plat_ble_device_flags(void);  /* PLAT_BLE_DF_* */
+int plat_ble_rpa_resolve(const uint8_t irk[16], const uint8_t addr[6]);   /* 1: addr is a private address made from irk */
+void app_ble_scan_report(const uint8_t *pdu, uint32_t n, uint32_t rssi);
+void app_ble_device_keys(const struct plat_ble_keys *k);
+/* Bluetooth on or off, as the player asks: off ends every link, stops advertising and scanning (the radio quiet);
+ * on starts it (or advertises again). Whether it starts at power-on: APP_BLE_AT_BOOT (app.h, e.g. a saved setting;
+ * default 1) */
+void plat_ble_enable(int on);
+/* What Bluetooth keeps (the own stack, ble_stack = "own"), by default in the app's store object OBJ_BLE. An app that
+ * keeps it in its own saved data instead (a settings record it has, with these fields at its own places) defines
+ * APP_BLE_STORE in app.h and gives the two calls below; it then needs no OBJ_BLE. app_ble_load: at Bluetooth's start
+ * (main loop), 1 with r filled, 0 none kept (the platform makes the address then, and saves it); app_ble_save: main
+ * loop, once something changed (a new address, a pairing, a remembered audio device), 0 kept (the app may write it
+ * to the flash later, with its own data) */
+struct plat_ble_rec {
+    uint8_t addr[6];                   /* our BLE address (static random: the top two bits 1) */
+    uint8_t bonded, rsv;               /* the computer's bond (ble_pairing): bonded, ediv, rand, ltk */
+    uint16_t bond_ediv;
+    uint8_t bond_rand[8], bond_ltk[16];
+    uint8_t bta_addr[6], bta_addr_set;   /* Bluetooth audio (bt_audio): our BR/EDR address, once made */
+    uint8_t bta_n;                     /* the remembered audio devices, the last one first */
+    struct plat_bta_dev {
+        uint8_t addr[6], bonded, link_key[16];   /* link_key: from its pairing (air order), when bonded */
+        char name[17];
+    } bta[4];
+};
+int app_ble_load(struct plat_ble_rec *r);
+int app_ble_save(const struct plat_ble_rec *r);
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 12:04:29Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Look for BLE name option, a unit id API, and the own-stack example config
+
+`grep -n -i "ble_name\|midi_name\|APP_BLE_NAME" device/*.c include/*.h tools/build.py | head -8; grep -n -i "unit_id\|plat_uid\|chip_id\|plat_serial\|unique" include/plat.h | head -5; ls examples/ble_own; grep -n "ble\|BLE" examples/ble_own/fm1.toml examples/ble_own/app.h | head -20`
+
+```text
+device/bt_own.c:90: * low octets the hash the JieLi build named itself by (radio.c ble_midi_name), so the name stays "FM-1 XXXX" */
+device/radio.c:302:void ble_midi_name(char *name)
+device/radio.c:682:            ble_midi_name(b + 25);
+467:/* 16 bytes unique to this FM-1 (its flash part's factory ID; the same across updates, firmwares and a wiped store):
+docs
+site
+tests
+app.c
+app.h
+fm1.toml
+README.md
+words.tsv
+examples/ble_own/app.h:14:#define APP_BLE_AT_BOOT (!template_ble_off())   /* Bluetooth at power-on: as the player left it (REC held) */
+examples/ble_own/app.h:15:int template_ble_off(void);
+examples/ble_own/app.h:19:enum { OBJ_SETTINGS, OBJ_PANEL, OBJ_BLE, OBJ_NOBJ };
+examples/ble_own/fm1.toml:2:name = "BLE_OWN"              # APP_NAME is in app.h; this names the build's files
+examples/ble_own/fm1.toml:8:ble = true                     # Bluetooth MIDI (--no-ble builds without it)
+examples/ble_own/fm1.toml:9:ble_stack = "own"              # Optimist's own Bluetooth stack (bt/), no JieLi library
+examples/ble_own/fm1.toml:10:ble_pairing = true             # pairing and an encrypted link (the bond kept)
+examples/ble_own/fm1.toml:13:ble_central = true             # and connects to Bluetooth MIDI devices (one link at a time)
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 12:04:36Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Read unit-id API, BLE naming, and the own-stack example config
+
+`sed -n 465,471p include/plat.h; sed -n 300,316p device/radio.c; sed -n 85,100p device/bt_own.c; cat examples/ble_own/fm1.toml | head -20`
+
+```text
+uint32_t plat_analog_mask(void);       /* bit k: key k is on an analog row (PA7 / PA8; the top row is probed) */
+
+/* 16 bytes unique to this FM-1 (its flash part's factory ID; the same across updates, firmwares and a wiped store):
+ * for an address that must not change (the WiFi MAC, the Bluetooth name); 0 = unknown (and in a build without a radio) */
+const uint8_t *plat_chip_uid(void);
+
+/* persistent storage (Felucca storage.c objects: A/B sectors, CRC, torn-write safe) */
+ * one computer are told apart. From the flash's unique ID: the same every start, update and firmware, and a wiped
+ * store; no ID (a part that does not answer), from the BT address */
+void ble_midi_name(char *name)
+{
+    static const char hex[] = "0123456789ABCDEF";
+    const uint8_t *u = plat_chip_uid();
+    uint32_t h = 2166136261u, i = 1;
+    while (u && i < 16u && u[i] == u[0])          /* all FF or all 0: no ID */
+        i++;
+    if (u && i < 16u) {
+        for (i = 0; i < 16u; i++)
+            h = (h ^ u[i]) * 16777619u;
+        h ^= h >> 16;
+    } else {
+        u = bt_get_mac_addr();
+        h = (uint32_t)u[4] << 8 | u[5];
+    }
+    return app_ble_save(&r);
+}
+#endif
+
+/* the address: a static random one (Core Vol 6 Part B 1.3.2.1: the top two bits 11) from the flash's unique ID, its two
+ * low octets the hash the JieLi build named itself by (radio.c ble_midi_name), so the name stays "FM-1 XXXX" */
+static void own_addr(uint8_t a[6])
+{
+    const uint8_t *u = plat_chip_uid();
+    uint32_t h = 2166136261u, g = 0x9E3779B9u, i = 1;
+    while (u && i < 16u && u[i] == u[0])
+        i++;
+    if (u && i < 16u) {
+        for (i = 0; i < 16u; i++) {
+            h = (h ^ u[i]) * 16777619u;
+            g = (g ^ u[i]) * 2246822519u;
+# The template's build settings (tools/build.py)
+name = "BLE_OWN"              # APP_NAME is in app.h; this names the build's files
+id_prefix = "FM-1_11"          # package identity (each firmware its own): dev FM-1_1100, releases FM-1_11XXYYZZ
+usb_manufacturer = "fm1-base"
+usb_product = "TEMPLATE FM-1"
+o2 = []                        # separate units compiled at -O2 (an app's DSP)
+words = "words.tsv"
+ble = true                     # Bluetooth MIDI (--no-ble builds without it)
+ble_stack = "own"              # Optimist's own Bluetooth stack (bt/), no JieLi library
+ble_pairing = true             # pairing and an encrypted link (the bond kept)
+bt_audio = true                # Bluetooth audio out to headphones and speakers (A2DP)
+bt_log = true                  # the audio set-up step by step on the log (diagnostics)
+ble_central = true             # and connects to Bluetooth MIDI devices (one link at a time)
+# the site (tools/make_site.py, tools/publish_site.sh)
+tagline = "a starting point for FM-1 firmware"
+repo = "https://github.com/charlesvestal/fm1-base"
+licence = "MPL-2.0"
+credits = ""                   # a sentence for the installer's footer: what your firmware is built from
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 12:04:46Z)**_
+
+<think><details><summary>Thought Process</summary>
+fm1-base 已有兩個可直接沿用的設計：藍牙位址由晶片 ID 固定算出、每次開機相同，而且 app 可以接管藍牙保存資料，因此不寫 flash 也能讓 macOS 連線。接下來我會檢查 host simulator 能否從 BLE 注入 SysEx。
+
+</details></think>
+
+_**Agent (claude-opus-5-5 2026-11-17 12:04:46Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Find how the host simulator injects MIDI per port
+
+`grep -n "\"midi\"\|cmd, \"midi\")\|static void host_midi\|PORT_BLE" host/plat_host.c | head -12`
+
+```text
+21: *                                BLE is the computer's link, BLE-DEV the device's: both PORT_BLE, FM1B_BLE_CENTRAL)
+436:    if (!strcmp(a, "midi")) {
+478:int plat_midi_in(uint32_t *pkt, int *port)       /* the script's "midi" (BLE-DEV's on cable 1, as radio.c has them) */
+488:    midi_in_from = p == PORT_USB ? TO_USB : p != PORT_BLE ? 0u : (q >> 4 & 0xFu) == 1u ? TO_BLE_DEV : TO_BLE_HOST;
+507:        midi_counted(PORT_BLE, 1, pkt);
+2626:        } else if (!strcmp(cmd, "midi")) {
+2627:            int dev = !strcmp(a, "BLE-DEV"), p = dev ? PORT_BLE : find_name(PORT_N, NPORTS, a);
+2638:                fails += usbh_cmd("midi", "F8", "", "");
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 12:04:51Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Read the host simulator's midi command parsing
+
+`sed -n 2626,2650p host/plat_host.c; grep -n "static void midi_push\|void host_midi_push\|static .*midi_q" host/plat_host.c | head`
+
+```text
+        } else if (!strcmp(cmd, "midi")) {
+            int dev = !strcmp(a, "BLE-DEV"), p = dev ? PORT_BLE : find_name(PORT_N, NPORTS, a);
+            if ((p < 0 || p == PORT_USB) && !dev && usbh_port()) {   /* (the port is a host: no computer to send it) */
+                printf("  midi USB: the port is a USB host, no computer: dropped\n");
+            } else {
+                min_q[mi_w % MQ] = p < 0 ? mk_pkt(a, b, c) : mk_pkt(b, c, d) | (dev ? 0x10u : 0u);   /* cable 1 */
+                min_port[mi_w++ % MQ] = p < 0 ? PORT_USB : (uint32_t)p;
+            }
+            run_ms(2);
+        } else if (!strcmp(cmd, "usbh") && !strcmp(a, "clock")) {   /* usbh clock N [MS]: N clocks from the device */
+            int n = atoi(b), gap = c[0] ? atoi(c) : 21;
+            for (; n > 0; n--) {
+                fails += usbh_cmd("midi", "F8", "", "");
+                run_ms((uint32_t)gap);
+            }
+        } else if (!strcmp(cmd, "usbh")) {
+            fails += usbh_cmd(a, b, c, d);
+            run_ms(2);
+        } else if (!strcmp(cmd, "ble")) {
+            if (!strcmp(a, "connect") && ble_state == BLE_READY) {
+                ble_conn = 1;
+                ble_say("connected");
+            } else if (!strcmp(a, "link") && ble_state == BLE_READY) {   /* linked, its MIDI not subscribed */
+                ble_link = 1;
+                ble_say("connected");
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 12:04:57Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+See how the host simulator builds a packet from a midi command
+
+`grep -n "static uint32_t mk_pkt" -A14 host/plat_host.c`
+
+```text
+411:static uint32_t mk_pkt(const char *a, const char *b, const char *c);
+412-/* the script's usbh: plug NAME [in|out|nomidi] (both ways by default; _ in NAME a space), unplug, midi B0 B1 B2 (from the device) */
+413-static int usbh_cmd(const char *a, const char *b, const char *c, const char *d)
+414-{
+415-    usbh_step();
+416-    if (!strcmp(a, "plug") && b[0]) {
+417-        snprintf(uhs.name, sizeof uhs.name, "%s", b);
+418-        for (char *p = uhs.name; *p; p++)
+419-            if (*p == '_')
+420-                *p = ' ';                       /* (the script's words: "Launchkey_Mini" is "Launchkey Mini") */
+421-        uhs.plugged = 1;
+422-        uhs.midi_in = (uint8_t)(strcmp(c, "out") && strcmp(c, "nomidi"));
+423-        uhs.midi_out = (uint8_t)(strcmp(c, "in") && strcmp(c, "nomidi"));
+424-        uhs.t_plug = now_ms;
+425-        uhs.said = 0;
+--
+2161:static uint32_t mk_pkt(const char *a, const char *b, const char *c)
+2162-{
+2163-    uint32_t st = (uint32_t)strtoul(a, 0, 16), d1 = b[0] ? (uint32_t)strtoul(b, 0, 16) : 0,
+2164-             d2 = c[0] ? (uint32_t)strtoul(c, 0, 16) : 0;
+2165-    uint32_t cin = st >= 0xF0 ? 0x0F : st >> 4;
+2166-    return cin | st << 8 | d1 << 16 | d2 << 24;
+2167-}
+2168-static const char *const PORT_N[NPORTS] = {"USB", "BLE", "TRS"};
+2169-/* this message went out to PORT since the last "out" (sent 1), or did not (sent 0); PORT BLE is the computer's link
+2170- * (TO_BLE_HOST), BLE-DEV the device's */
+2171-static int expect_out(const char *port, uint32_t pkt, int sent)
+2172-{
+2173-    int p = find_name(PORT_N, NPORTS, port);
+2174-    uint32_t to = !strcmp(port, "BLE-DEV") ? TO_BLE_DEV : !strcmp(port, "USBH") ? TO_USBH_SIM : p >= 0 ? 1u << p : 0u, i;
+2175-    for (i = 0; i < n_out; i++)
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 12:05:29Z)**_
+
+<think><details><summary>Thought Process</summary>
+host simulator 無法模擬 BLE 的 SysEx 封包，所以 BLE 的封包組裝與拆分要另寫獨立的 C 單元測試來驗證。接下來先改 hostlink。
+
+</details></think>
+
+_**Agent (claude-opus-5-5 2026-11-17 12:05:43Z)**_
+
+<tool-use data-tool-type="write" data-tool-name="Write"><details>
+<summary>Tool use: **Write**</summary>
+
+```c
+/* SPDX-License-Identifier: MIT */
+/* hostlink: an app's own SysEx conversation with a program on the computer, over fm1-base, by USB or Bluetooth.
+ *
+ * Frames are F0 7D <id0> <id1> <ver> <type> <payload...> F7. 7D is the MIDI non-commercial ID; pick
+ * id0/id1 so you stay apart from fm1-base's own 7D 4C .. frames (Conductor uses 43 4E, "CN").
+ * The device says HELLO once a second (on every transport that has a computer) until the host answers, then a
+ * HEARTBEAT once a second on the transport the answer came by; the host counts as present while frames keep
+ * coming (HOSTLINK_TIMEOUT_MS).
+ *
+ * Transports:
+ *   USB  frames in through APP_SYSEX (app_sysex), out through plat_sysex_send.
+ *   BLE  fm1-base's own stack (ble_stack = "own") turns BLE-MIDI SysEx into USB-MIDI SysEx packets (CIN 4..7) on
+ *        PORT_BLE; hl_sx_packet puts them back together. Out: the frame cut into such packets, plat_midi_send to
+ *        TO_BLE_HOST. (JieLi's stack drops incoming SysEx: Bluetooth needs the own stack.)
+ *
+ * Use (unity build: app.c includes hostlink.c; fm1.toml include = ["../common"]):
+ *   static hostlink_t hl;  static hl_sx_t ble_rx;
+ *   hl_init(&hl, 0x43, 0x4E, 1);
+ *   int app_sysex(const uint8_t *p, uint32_t n) { return my_frame(p, n, HL_USB); }
+ *   main loop: while (plat_midi_in(&pkt, &port)) if (port == PORT_BLE && hl_sx_packet(&ble_rx, pkt, &f, &n))
+ *                  my_frame(f, n, HL_BLE);
+ *   my_frame: d = hl_match(&hl, p, n, &t, &len); if (!d) return 0; hl_seen(&hl, now); on HELLO_ACK
+ *             hl_acked(&hl, now, transport); ...
+ *   each frame: hl_tick(&hl, now, T_HELLO, T_HEARTBEAT, hello_payload, n);
+ */
+#pragma once
+#include <stdint.h>
+
+#define HOSTLINK_TIMEOUT_MS 10000u
+#define HOSTLINK_EVERY_MS 1000u
+#define HOSTLINK_MAX 64u                 /* the longest payload an app sends through hl_send */
+#define HOSTLINK_RX_MAX 640u             /* the longest frame taken from Bluetooth (fm1-base's APP_SYSEX limit) */
+
+enum { HL_USB, HL_BLE, HL_NTRANSPORTS };
+
+typedef struct {
+    uint8_t id0, id1, ver;
+    uint8_t acked;                       /* the host answered our HELLO since it was last lost */
+    uint8_t transport;                   /* HL_USB / HL_BLE: where the answer came from, where we reply */
+    uint32_t seen;                       /* plat_ms of the last frame from the host (0: never) */
+    uint32_t sent;                       /* plat_ms of the last HELLO / HEARTBEAT */
+    uint32_t session;                    /* plat_usb_session when acked over USB: a new cable means a new HELLO */
+} hostlink_t;
+
+/* a SysEx frame put back together from USB-MIDI packets (Bluetooth) */
+typedef struct {
+    uint8_t b[HOSTLINK_RX_MAX];
+    uint32_t n;
+    uint8_t open, over;                  /* inside a frame; it ran past HOSTLINK_RX_MAX (dropped at its end) */
+} hl_sx_t;
+
+void hl_init(hostlink_t *h, uint8_t id0, uint8_t id1, uint8_t ver);
+/* one of ours (p: the bytes between F0 and F7): its type and payload; 0 when it is someone else's */
+const uint8_t *hl_match(const hostlink_t *h, const uint8_t *p, uint32_t n, uint8_t *type, uint32_t *len);
+void hl_seen(hostlink_t *h, uint32_t now);
+void hl_acked(hostlink_t *h, uint32_t now, int transport);
+int hl_host(const hostlink_t *h, uint32_t now);   /* 1: the host is there */
+int hl_send(hostlink_t *h, uint8_t type, const uint8_t *payload, uint32_t n);   /* to the host's transport; 0 = queued */
+int hl_send_to(hostlink_t *h, int transport, uint8_t type, const uint8_t *payload, uint32_t n);
+void hl_tick(hostlink_t *h, uint32_t now, uint8_t hello, uint8_t heartbeat, const uint8_t *hello_p, uint32_t hello_n);
+/* 1 when pkt (a USB-MIDI event packet) ended a SysEx frame: *frame, *n are its bytes between F0 and F7 */
+int hl_sx_packet(hl_sx_t *s, uint32_t pkt, const uint8_t **frame, uint32_t *n);
+/* a whole frame F0 .. F7 as USB-MIDI SysEx packets (CIN 4, then 5 / 6 / 7 at the end): how many went into out */
+uint32_t hl_sx_packets(const uint8_t *f, uint32_t n, uint32_t *out, uint32_t max);
+
+```
+
+```text
+The file /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/firmware/common/hostlink.h has been updated successfully. (file state is current in your context — no need to Read it back)
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 12:05:59Z)**_
+
+<tool-use data-tool-type="write" data-tool-name="Write"><details>
+<summary>Tool use: **Write**</summary>
+
+```c
+/* SPDX-License-Identifier: MIT */
+/* hostlink: see hostlink.h */
+#include "hostlink.h"
+
+void hl_init(hostlink_t *h, uint8_t id0, uint8_t id1, uint8_t ver)
+{
+    h->id0 = id0;
+    h->id1 = id1;
+    h->ver = ver;
+    h->acked = 0;
+    h->transport = HL_USB;
+    h->seen = h->sent = h->session = 0;
+}
+
+const uint8_t *hl_match(const hostlink_t *h, const uint8_t *p, uint32_t n, uint8_t *type, uint32_t *len)
+{
+    if (n < 5u || p[0] != 0x7Du || p[1] != h->id0 || p[2] != h->id1 || p[3] != h->ver)
+        return 0;
+    *type = p[4];
+    *len = n - 5u;
+    return p + 5;
+}
+
+void hl_seen(hostlink_t *h, uint32_t now) { h->seen = now ? now : 1u; }
+
+void hl_acked(hostlink_t *h, uint32_t now, int transport)
+{
+    hl_seen(h, now);
+    h->acked = 1;
+    h->transport = (uint8_t)(transport == HL_BLE ? HL_BLE : HL_USB);
+    h->session = plat_usb_session();
+}
+
+int hl_host(const hostlink_t *h, uint32_t now) { return h->acked && h->seen && now - h->seen < HOSTLINK_TIMEOUT_MS; }
+
+/* ---------------------------------------------------------- USB-MIDI SysEx packets --- */
+int hl_sx_packet(hl_sx_t *s, uint32_t pkt, const uint8_t **frame, uint32_t *n)
+{
+    uint32_t cin = pkt & 0x0Fu, k, nb;
+    if (cin == 0x4u || cin == 0x7u)
+        nb = 3;
+    else if (cin == 0x6u)
+        nb = 2;
+    else if (cin == 0x5u)
+        nb = 1;
+    else
+        return 0;                        /* not SysEx */
+    for (k = 0; k < nb; k++) {
+        uint8_t b = (uint8_t)(pkt >> (8u + 8u * k));
+        if (b == 0xF0u) {
+            s->open = 1;
+            s->over = 0;
+            s->n = 0;
+        } else if (b == 0xF7u) {
+            int whole = s->open && !s->over;
+            s->open = 0;
+            if (whole) {
+                *frame = s->b;
+                *n = s->n;
+                return 1;
+            }
+        } else if (s->open) {
+            if (s->n < HOSTLINK_RX_MAX)
+                s->b[s->n++] = b;
+            else
+                s->over = 1;
+        }
+    }
+    return 0;
+}
+
+uint32_t hl_sx_packets(const uint8_t *f, uint32_t n, uint32_t *out, uint32_t max)
+{
+    uint32_t i = 0, k = 0;
+    while (i < n && k < max) {
+        uint32_t left = n - i, take = left > 3u ? 3u : left, cin, j, pkt;
+        if (left > 3u)
+            cin = 0x4u;                  /* start / continue */
+        else
+            cin = 0x4u + take;           /* the end: 5, 6, 7 for 1, 2, 3 bytes */
+        pkt = cin;
+        for (j = 0; j < take; j++)
+            pkt |= (uint32_t)f[i + j] << (8u + 8u * j);
+        out[k++] = pkt;
+        i += take;
+    }
+    return k;
+}
+
+/* ------------------------------------------------------------------- sending --- */
+int hl_send_to(hostlink_t *h, int transport, uint8_t type, const uint8_t *payload, uint32_t n)
+{
+    uint8_t f[HOSTLINK_MAX + 7u];
+    uint32_t i, k = 0;
+    if (n > HOSTLINK_MAX)
+        return -1;
+    f[k++] = 0xF0;
+    f[k++] = 0x7D;
+    f[k++] = h->id0;
+    f[k++] = h->id1;
+    f[k++] = h->ver;
+    f[k++] = type & 0x7Fu;
+    for (i = 0; i < n; i++)
+        f[k++] = payload[i] & 0x7Fu;
+    f[k++] = 0xF7;
+    if (transport == HL_BLE) {
+#if FM1B_BLE
+        uint32_t pk[(HOSTLINK_MAX + 7u + 2u) / 3u + 1u], np = hl_sx_packets(f, k, pk, sizeof pk / sizeof pk[0]);
+        if (!plat_ble_connected() || plat_midi_out_room(TO_BLE_HOST) < np)
+            return -1;                   /* whole or not at all: a frame cut short is worse than one late */
+        for (i = 0; i < np; i++)
+            plat_midi_send(pk[i], TO_BLE_HOST);
+        return 0;
+#else
+        return -1;
+#endif
+    }
+    return plat_sysex_send(f, k);
+}
+
+int hl_send(hostlink_t *h, uint8_t type, const uint8_t *payload, uint32_t n)
+{
+    return hl_send_to(h, h->transport, type, payload, n);
+}
+
+void hl_tick(hostlink_t *h, uint32_t now, uint8_t hello, uint8_t heartbeat, const uint8_t *hello_p, uint32_t hello_n)
+{
+    if (h->acked && !hl_host(h, now))
+        h->acked = 0;                    /* lost: say HELLO again */
+    if (h->acked && h->transport == HL_USB && plat_usb_session() != h->session)
+        h->acked = 0;                    /* a new cable */
+#if FM1B_BLE
+    if (h->acked && h->transport == HL_BLE && !plat_ble_connected())
+        h->acked = 0;                    /* the Bluetooth link went */
+#endif
+    if (h->sent && now - h->sent < HOSTLINK_EVERY_MS)
+        return;
+    h->sent = now ? now : 1u;
+    if (h->acked) {
+        uint8_t hb[2] = {h->ver, h->transport};
+        hl_send(h, heartbeat, hb, 2);
+        return;
+    }
+    if (plat_usb_session())
+        hl_send_to(h, HL_USB, hello, hello_p, hello_n);
+#if FM1B_BLE
+    if (plat_ble_connected())
+        hl_send_to(h, HL_BLE, hello, hello_p, hello_n);
+#endif
+}
+
+```
+
+```text
+The file /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/firmware/common/hostlink.c has been updated successfully. (file state is current in your context — no need to Read it back)
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 12:06:14Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Append the transport byte to HELLO per transport
+
+```bash
+cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1 && python3 - <<'EOF'
+p='firmware/common/hostlink.c'
+s=open(p).read()
+s=s.replace('''    if (plat_usb_session())
+        hl_send_to(h, HL_USB, hello, hello_p, hello_n);
+#if FM1B_BLE
+    if (plat_ble_connected())
+        hl_send_to(h, HL_BLE, hello, hello_p, hello_n);
+#endif
+}''','''    {
+        uint8_t b[HOSTLINK_MAX];             /* the app's HELLO, then the transport it goes by */
+        uint32_t i;
+        if (hello_n >= HOSTLINK_MAX)
+            return;
+        for (i = 0; i < hello_n; i++)
+            b[i] = hello_p[i];
+        if (plat_usb_session()) {
+            b[hello_n] = HL_USB;
+            hl_send_to(h, HL_USB, hello, b, hello_n + 1u);
+        }
+#if FM1B_BLE
+        if (plat_ble_connected()) {
+            b[hello_n] = HL_BLE;
+            hl_send_to(h, HL_BLE, hello, b, hello_n + 1u);
+        }
+#endif
+    }
+}''')
+open(p,'w').write(s)
+p='firmware/common/hostlink.h'
+s=open(p).read()
+s=s.replace(''' *   each frame: hl_tick(&hl, now, T_HELLO, T_HEARTBEAT, hello_payload, n);''',''' *   each frame: hl_tick(&hl, now, T_HELLO, T_HEARTBEAT, hello_payload, n);
+ * HELLO carries the app's payload and then the transport byte (HL_USB / HL_BLE); HEARTBEAT carries ver, transport. */''')
+s=s.replace(''' *   each frame: hl_tick(&hl, now, T_HELLO, T_HEARTBEAT, hello_payload, n);
+ * HELLO carries the app's payload and then the transport byte (HL_USB / HL_BLE); HEARTBEAT carries ver, transport. */
+ */''',''' *   each frame: hl_tick(&hl, now, T_HELLO, T_HEARTBEAT, hello_payload, n);
+ * HELLO carries the app's payload and then the transport byte (HL_USB / HL_BLE); HEARTBEAT carries ver, transport.
+ */''')
+open(p,'w').write(s)
+EOF
+sed -n 20,30p firmware/common/hostlink.h
+```
+
+```text
+ *   main loop: while (plat_midi_in(&pkt, &port)) if (port == PORT_BLE && hl_sx_packet(&ble_rx, pkt, &f, &n))
+ *                  my_frame(f, n, HL_BLE);
+ *   my_frame: d = hl_match(&hl, p, n, &t, &len); if (!d) return 0; hl_seen(&hl, now); on HELLO_ACK
+ *             hl_acked(&hl, now, transport); ...
+ *   each frame: hl_tick(&hl, now, T_HELLO, T_HEARTBEAT, hello_payload, n);
+ * HELLO carries the app's payload and then the transport byte (HL_USB / HL_BLE); HEARTBEAT carries ver, transport.
+ */
+#pragma once
+#include <stdint.h>
+
+#define HOSTLINK_TIMEOUT_MS 10000u
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 12:06:20Z)**_
+
+加一個獨立的 C 單元測試，驗證 BLE 封包的拆分與組回。
+
+_**Agent (claude-opus-5-5 2026-11-17 12:06:35Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Write and run a standalone C test for BLE SysEx packetizing
+
+```bash
+mkdir -p firmware/common/tests && cat > firmware/common/tests/hostlink_test.c <<'EOF'
+/* SPDX-License-Identifier: MIT */
+/* hostlink's Bluetooth half on the computer: frames cut into USB-MIDI SysEx packets and put back together.
+ *   cc -I.. -o /tmp/hostlink_test hostlink_test.c && /tmp/hostlink_test      (just fw-common-test) */
+#include <stdio.h>
+#include <string.h>
+#define FM1B_BLE 0
+static unsigned plat_usb_session(void) { return 1; }
+static int plat_sysex_send(const unsigned char *f, unsigned n) { (void)f, (void)n; return 0; }
+#include "../hostlink.c"
+
+static int fails;
+#define CHECK(c, msg) do { if (!(c)) { printf("FAIL %s\n", msg); fails++; } } while (0)
+
+static void round_trip(uint32_t len)
+{
+    uint8_t f[HOSTLINK_RX_MAX + 2];
+    uint32_t pk[260], np, i, n = 0, got = 0;
+    const uint8_t *out = 0;
+    hl_sx_t s;
+    memset(&s, 0, sizeof s);
+    f[0] = 0xF0;
+    for (i = 0; i < len; i++)
+        f[1 + i] = (uint8_t)((i * 37u + 5u) & 0x7Fu);
+    f[1 + len] = 0xF7;
+    np = hl_sx_packets(f, len + 2, pk, 260);
+    CHECK(np == (len + 2 + 2) / 3, "packet count");
+    for (i = 0; i < np; i++) {
+        uint32_t cin = pk[i] & 0xFu;
+        CHECK(i + 1 < np ? cin == 4 : cin >= 5 && cin <= 7, "CIN: 4 until the last, then 5 / 6 / 7");
+        if (i == np / 2)
+            hl_sx_packet(&s, 0x0090u | 0x3C00u << 8, &out, &n);   /* a note-on in between: not SysEx, ignored */
+        got += (uint32_t)hl_sx_packet(&s, pk[i], &out, &n);
+    }
+    CHECK(got == 1 && n == len && !memcmp(out, f + 1, len), "the same bytes back");
+}
+
+int main(void)
+{
+    uint32_t len;
+    for (len = 0; len <= 20; len++)
+        round_trip(len);
+    round_trip(551);                       /* a DETAIL picture line between F0 and F7 */
+    round_trip(HOSTLINK_RX_MAX);
+    {                                      /* one byte too long: dropped whole, and the next frame is fine */
+        uint8_t f[HOSTLINK_RX_MAX + 3];
+        uint32_t pk[260], np, i, n = 0, got = 0;
+        const uint8_t *out = 0;
+        hl_sx_t s;
+        memset(&s, 0, sizeof s);
+        memset(f, 0x11, sizeof f);
+        f[0] = 0xF0, f[HOSTLINK_RX_MAX + 2] = 0xF7;
+        np = hl_sx_packets(f, sizeof f, pk, 260);
+        for (i = 0; i < np; i++)
+            got += (uint32_t)hl_sx_packet(&s, pk[i], &out, &n);
+        CHECK(got == 0, "an over-long frame is dropped");
+        np = hl_sx_packets((const uint8_t *)"\xF0\x7D\x43\x4E\xF7", 5, pk, 260);
+        for (i = 0; i < np; i++)
+            got += (uint32_t)hl_sx_packet(&s, pk[i], &out, &n);
+        CHECK(got == 1 && n == 3, "the next frame after it");
+    }
+    printf(fails ? "hostlink: %d FAILED\n" : "hostlink: all ok\n", fails);
+    return fails != 0;
+}
+EOF
+cc -Wall -Wextra -I firmware/common -o /private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/c6419d02-4c76-47d7-b11c-b7db01c7f2b4/scratchpad/hostlink_test firmware/common/tests/hostlink_test.c 2>&1 | head -20 && /private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/c6419d02-4c76-47d7-b11c-b7db01c7f2b4/scratchpad/hostlink_test
+```
+
+```text
+hostlink: all ok
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 12:06:41Z)**_
+
+封包測試全過。接著改 Conductor app：BLE 收發、`OCT+` 開關、標頭顯示傳輸方式，並讓藍牙資料不寫 flash。
+
+_**Agent (claude-opus-5-5 2026-11-17 12:06:43Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Locate hostlink call sites in the app
+
+`grep -n "hl_acked\|hl_tick\|int app_sysex\|static void draw_header\|FW_MINOR\|cv_text(x - 6 - text_w(&FONT_XS, meta.backend)\|NO HOST\", state_rgb" firmware/conductor/app.c`
+
+```text
+19:#define FW_MINOR 2u
+183:int app_sysex(const uint8_t *p, uint32_t n)
+193:        hl_acked(&link, now);
+434:static void draw_header(uint32_t now)
+459:            cv_text(x - 6 - text_w(&FONT_XS, meta.backend), 10, &FONT_XS, meta.backend, C_GRAY);
+461:            cv_text(232 - text_w(&FONT_XS, "NO HOST"), 10, &FONT_XS, "NO HOST", state_rgb(S_ERROR));
+670:    static const uint8_t HELLO[3] = {CN_VER, FW_MAJOR, FW_MINOR};
+675:    hl_tick(&link, now, T_HELLO, T_HEARTBEAT, HELLO, 3);
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 12:06:47Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+View app_sysex head and header drawing
+
+`sed -n 180,192p firmware/conductor/app.c; sed -n 452,465p firmware/conductor/app.c`
+
+```text
+    ui.redraw = 1;
+}
+
+int app_sysex(const uint8_t *p, uint32_t n)
+{
+    uint8_t t;
+    uint32_t len, i, now = plat_ms();
+    const uint8_t *d = hl_match(&link, p, n, &t, &len);
+    if (!d)
+        return 0;
+    hl_seen(&link, now);
+    switch (t) {
+    case T_HELLO_ACK:
+            t[0] = 0;
+            int_text((int32_t)waiting, t);
+            x = 232 - text_w(&FONT_S, t);
+            cv_text(x, 8, &FONT_S, t, waiting ? state_rgb(S_BLOCKED) : C_DIM);
+            int_text((int32_t)working, t);
+            x -= 10 + text_w(&FONT_S, t);
+            cv_text(x, 8, &FONT_S, t, state_rgb(S_WORKING));
+            cv_text(x - 6 - text_w(&FONT_XS, meta.backend), 10, &FONT_XS, meta.backend, C_GRAY);
+        } else {
+            cv_text(232 - text_w(&FONT_XS, "NO HOST"), 10, &FONT_XS, "NO HOST", state_rgb(S_ERROR));
+        }
+    }
+    cv_rect(0, 31, 240, 1, C_LINE);
+    cv_blit(0, 0);
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 12:07:16Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Add Bluetooth to the Conductor app and its host-simulator test
+
+```bash
+python3 - <<'EOF'
+p='firmware/conductor/app.c'
+s=open(p).read()
+s=s.replace("#define FW_MINOR 2u","#define FW_MINOR 3u")
+s=s.replace('''int app_sysex(const uint8_t *p, uint32_t n)
+{
+    uint8_t t;
+    uint32_t len, i, now = plat_ms();
+    const uint8_t *d = hl_match(&link, p, n, &t, &len);
+    if (!d)
+        return 0;
+    hl_seen(&link, now);
+    switch (t) {
+    case T_HELLO_ACK:
+        hl_acked(&link, now);''','''static int host_frame(const uint8_t *p, uint32_t n, int transport)
+{
+    uint8_t t;
+    uint32_t len, i, now = plat_ms();
+    const uint8_t *d = hl_match(&link, p, n, &t, &len);
+    if (!d)
+        return 0;
+    hl_seen(&link, now);
+    switch (t) {
+    case T_HELLO_ACK:
+        hl_acked(&link, now, transport);''')
+# after the host_frame function ends: add app_sysex wrapper and BLE polling
+s=s.replace('''/* --------------------------------------------------------------- host out --- */''','''int app_sysex(const uint8_t *p, uint32_t n) { return host_frame(p, n, HL_USB); }
+
+/* Bluetooth: fm1-base's own stack hands SysEx over as USB-MIDI packets on PORT_BLE (main loop) */
+static hl_sx_t ble_rx;
+static void ble_in(void)
+{
+    uint32_t pkt, n;
+    int port;
+    const uint8_t *f;
+    while (plat_midi_in(&pkt, &port))
+        if (port == PORT_BLE && hl_sx_packet(&ble_rx, pkt, &f, &n))
+            host_frame(f, n, HL_BLE);
+}
+
+/* nothing of Bluetooth's is written to the flash: the own stack makes its address from the flash part's unique ID
+ * (the same at every start), there is no pairing to keep (macOS and iOS connect without one), so the record lives
+ * in RAM and its save is a no-op */
+int app_ble_load(struct plat_ble_rec *r)
+{
+    (void)r;
+    return 0;
+}
+int app_ble_save(const struct plat_ble_rec *r)
+{
+    (void)r;
+    return 0;
+}
+
+/* --------------------------------------------------------------- host out --- */''')
+# OCT+ toggles Bluetooth
+s=s.replace('''        case B_SEQ:                      /* help, and back to where we were */''','''        case B_OCTUP:                    /* Bluetooth on / off, for this power-on (nothing saved) */
+            ble_on = !ble_on;
+            plat_ble_enable(ble_on);
+            app_say("BLUETOOTH", ble_on ? "ON" : "OFF");
+            break;
+        case B_SEQ:                      /* help, and back to where we were */''')
+s=s.replace('''static uint32_t chimes;                  /* figures played since boot (the host simulator's "chimes") */''','''static uint32_t chimes;                  /* figures played since boot (the host simulator's "chimes") */
+static int ble_on = 1;                   /* Bluetooth starts at every power-on; OCT+ turns it off until the next */''')
+# header: transport tag
+s=s.replace('''            cv_text(x - 6 - text_w(&FONT_XS, meta.backend), 10, &FONT_XS, meta.backend, C_GRAY);
+        } else {
+            cv_text(232 - text_w(&FONT_XS, "NO HOST"), 10, &FONT_XS, "NO HOST", state_rgb(S_ERROR));
+        }''','''            x -= 6 + text_w(&FONT_XS, meta.backend);
+            cv_text(x, 10, &FONT_XS, meta.backend, C_GRAY);
+            if (link.transport == HL_BLE)
+                cv_text(x - 6 - text_w(&FONT_XS, "BLE"), 10, &FONT_XS, "BLE", state_rgb(S_WORKING));
+        } else {
+            int32_t x = 232 - text_w(&FONT_XS, "NO HOST");
+            cv_text(x, 10, &FONT_XS, "NO HOST", state_rgb(S_ERROR));
+            if (FM1B_BLE && ble_on)              /* grey while it advertises, blue once a computer is connected */
+                cv_text(x - 6 - text_w(&FONT_XS, "BLE"), 10, &FONT_XS, "BLE",
+                        plat_ble_connected() ? state_rgb(S_WORKING) : C_DIM);
+        }''')
+s=s.replace('''    input();
+    hl_tick(&link, now, T_HELLO, T_HEARTBEAT, HELLO, 3);''','''    input();
+    ble_in();
+    hl_tick(&link, now, T_HELLO, T_HEARTBEAT, HELLO, 3);''')
+s=s.replace('''    if (host != ui.host_was) {
+        ui.host_was = host;
+        ui.redraw = 1;
+    }''','''    if (host != ui.host_was || (uint8_t)plat_ble_connected() != ui.ble_was) {
+        ui.host_was = host;
+        ui.ble_was = (uint8_t)plat_ble_connected();
+        ui.redraw = 1;
+    }''')
+s=s.replace('''    uint8_t host_was;
+} ui;''','''    uint8_t host_was, ble_was;
+} ui;''')
+s=s.replace('''    else if (!strcmp(what, "chimes"))''','''    else if (!strcmp(what, "transport"))
+        *got = link.transport;
+    else if (!strcmp(what, "chimes"))''')
+open(p,'w').write(s)
+
+p='firmware/conductor/app.h'
+s=open(p).read()
+s=s.replace('''/* nothing of ours is saved: the slots live on the host. The platform's panel calibration is the only object */
+enum { OBJ_PANEL, OBJ_NOBJ };
+#define APP_STORE_MAP {0xDC000u}''','''/* nothing of ours is saved: the slots live on the host. The platform's panel calibration is the only object;
+ * Bluetooth's record is kept by the app (APP_BLE_STORE), in RAM only (app.c app_ble_load / app_ble_save) */
+enum { OBJ_PANEL, OBJ_NOBJ };
+#define APP_STORE_MAP {0xDC000u}
+#define APP_BLE_STORE''')
+open(p,'w').write(s)
+
+p='firmware/conductor/fm1.toml'
+s=open(p).read()
+s=s.replace('''ble = false                    # USB first; Bluetooth is designed (docs/agentic/conductor.md), not built yet''','''ble = true                     # Bluetooth MIDI beside USB (OCT+ turns it off until the next power-on)
+ble_stack = "own"              # fm1-base's own stack: it hands incoming SysEx to the app (JieLi's drops it)
+ble_diag = false               # no link-layer diagnostics: 2.4 KB of RAM back''')
+open(p,'w').write(s)
+
+p='firmware/conductor/tests/basic.txt'
+s=open(p).read()
+s=s.replace("expect_sysex F0 7D 43 4E 01 41 01 00 02 F7","expect_sysex F0 7D 43 4E 01 41 01 00 03 00 F7")
+s=s.replace('''# the host goes quiet''','''# OCT+: Bluetooth off, then on again (nothing saved)
+listen
+tap OCT+
+wait 30
+said BLUETOOTH OFF
+tap OCT+
+wait 30
+said BLUETOOTH ON
+expect transport 0
+expect store_writes 0
+# the host goes quiet''')
+open(p,'w').write(s)
+EOF
+grep -n "HEARTBEAT\|42 01" firmware/conductor/tests/basic.txt | head; just fw-test conductor 2>&1 | grep -E "FAIL|error|warning:.*conductor|host:" | head
+```
+
+```text
+warning: /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/firmware/conductor/fm1.toml has no install, screenshot: firmware.json goes without them, and a release build refuses (docs/FIRMWARE-JSON.md)
+FAIL unknown expect transport
+host: 13842 ms simulated, 272 blits, render 0.0% of real time (host CPU), EXPECTATIONS FAILED
+error: recipe `fw-test` failed with exit code 1
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 12:07:27Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Add the transport check and rerun
+
+```bash
+python3 - <<'EOF'
+p='firmware/conductor/app.c'
+s=open(p).read()
+s=s.replace('''    else if (!strcmp(what, "bmp0")) {''','''    else if (!strcmp(what, "transport"))
+        *got = link.transport;
+    else if (!strcmp(what, "bmp0")) {''',1)
+open(p,'w').write(s)
+EOF
+just fw-test conductor 2>&1 | grep -E "FAIL|ok transport|store_writes|said BLUETOOTH|host:" | head
+```
+
+```text
+  ok transport == 0
+  ok store_writes == 0
+host: 13842 ms simulated, 272 blits, render 0.0% of real time (host CPU)
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 12:07:34Z)**_
+
+host simulator 全部通過，按 `OCT+` 開關藍牙不會寫 flash。再用 host simulator 的 BLE 替身確認：電腦從 BLE 連上後，裝置會不會從 BLE 送出 HELLO。
+
+_**Agent (claude-opus-5-5 2026-11-17 12:07:38Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Host simulator: connect the BLE stand-in and print what the device sends
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/firmware/conductor && S=/private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/c6419d02-4c76-47d7-b11c-b7db01c7f2b4/scratchpad; printf 'usb unplug\nwait 1500\nble connect\nout\nwait 1200\nout\nexpect store_writes 0\n' > $S/ble.txt; build/host/conductor_host $S/ble.txt $S/blehost 2>&1 | tail -12`
+
+```text
+  out F0 7D 43 -> BLE
+  out 4E 01 41 -> BLE
+  out 01 00 03 -> BLE
+  out 01 F7 00 -> BLE
+  ok store_writes == 0
+host: 2703 ms simulated, 6 blits, render 0.0% of real time (host CPU)
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 12:07:48Z)**_
+
+<think><details><summary>Thought Process</summary>
+裝置經 BLE 送出帶「走 BLE」標記（倒數第二個 byte 為 01）的 HELLO，且藍牙未寫入 flash；接著我要改 daemon，讓它讀取此標記，兩路並存時優先 USB，走 BLE 時 DETAIL 只送文字。
+
+</details></think>
+
+_**Agent (claude-opus-5-5 2026-11-17 12:08:04Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Daemon: read the transport, prefer USB, text-only DETAIL over Bluetooth; tests
+
+```bash
+cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1 && python3 - <<'EOF'
+p='host/conductor/protocol.py'
+s=open(p).read()
+s=s.replace('''def device_hello(fw_major: int = 0, fw_minor: int = 1) -> bytes:
+    return frame(T_HELLO, bytes([VERSION, fw_major, fw_minor]))
+
+
+def device_heartbeat() -> bytes:
+    return frame(T_HEARTBEAT, bytes([VERSION]))''','''TR_USB, TR_BLE = 0, 1  # the transport a device frame came by (firmware 0.3 says; older ones are USB only)
+
+
+def device_hello(fw_major: int = 0, fw_minor: int = 1, transport: int | None = None) -> bytes:
+    return frame(T_HELLO, bytes([VERSION, fw_major, fw_minor]) + (bytes([transport]) if transport is not None else b""))
+
+
+def device_heartbeat(transport: int | None = None) -> bytes:
+    return frame(T_HEARTBEAT, bytes([VERSION]) + (bytes([transport]) if transport is not None else b""))
+
+
+def transport_of(m: Message) -> int:
+    """USB unless a HELLO (4th byte) or HEARTBEAT (2nd byte) says Bluetooth."""
+    i = 3 if m.type == T_HELLO else 1 if m.type == T_HEARTBEAT else None
+    return m.payload[i] if i is not None and len(m.payload) > i else TR_USB''')
+open(p,'w').write(s)
+
+p='host/conductor/core.py'
+s=open(p).read()
+s=s.replace('''    device_fw: tuple = (0, 0)  # from the device's HELLO
+''','''    device_fw: tuple = (0, 0)  # from the device's HELLO
+    device_transport: int = 0  # P.TR_USB / P.TR_BLE, from the HELLO
+''')
+s=s.replace('''        pictures = self.renderer is not None and self.device_fw >= (0, 2)''','''        pictures = (
+            self.renderer is not None
+            and self.device_fw >= (0, 2)
+            and (self.device_transport == P.TR_USB or self.config.get("detail_pictures_ble", False))
+        )  # a picture line is 558 bytes: too slow over Bluetooth MIDI, so text there''')
+s=s.replace('''            self.device_fw = tuple(m.payload[1:3]) if len(m.payload) >= 3 else (0, 0)
+            self.log(f"[device] hello, protocol {m.payload[0] if m.payload else '?'}, firmware {'.'.join(map(str, self.device_fw))}")''','''            self.device_fw = tuple(m.payload[1:3]) if len(m.payload) >= 3 else (0, 0)
+            self.device_transport = P.transport_of(m)
+            via = "Bluetooth" if self.device_transport == P.TR_BLE else "USB"
+            self.log(f"[device] hello, protocol {m.payload[0] if m.payload else '?'}, firmware {'.'.join(map(str, self.device_fw))}, via {via}")''')
+open(p,'w').write(s)
+
+p='host/conductor/device.py'
+s=open(p).read()
+s=s.replace('''def sniff_port(mido, names: list[str], seconds: float = 2.5) -> str | None:
+    """The input that speaks our protocol: the device says HELLO or HEARTBEAT every
+    second, whatever macOS calls the port (it keeps a firmware's old name, e.g.
+    "Felucca", after a switch)."""
+    found: list[str] = []
+    ports = []
+    for n in names:
+        def hear(msg, n=n):
+            if msg.type == "sysex" and bytes(msg.data[:3]) == P.HEADER and n not in found:
+                found.append(n)
+        try:
+            ports.append(mido.open_input(n, callback=hear))
+        except (OSError, IOError):
+            continue
+    end = time.time() + seconds
+    while time.time() < end and not found:
+        time.sleep(0.05)
+    for p in ports:
+        p.close()
+    return found[0] if found else None''','''def sniff_port(mido, names: list[str], seconds: float = 2.5) -> str | None:
+    """The input that speaks our protocol: the device says HELLO or HEARTBEAT every
+    second, whatever macOS calls the port (it keeps a firmware's old name, e.g.
+    "Felucca", after a switch; over Bluetooth it is "FM-1 XXXX"). With the device on
+    USB and Bluetooth at once, USB wins: faster, and the pictures go over it."""
+    found: dict[str, int] = {}
+    ports = []
+    for n in names:
+        def hear(msg, n=n):
+            if msg.type != "sysex" or bytes(msg.data[:3]) != P.HEADER:
+                return
+            try:
+                m = P.parse(bytes(msg.data))
+            except P.ProtocolError:
+                return
+            if m and m.type in (P.T_HELLO, P.T_HEARTBEAT):
+                found[n] = P.transport_of(m)
+        try:
+            ports.append(mido.open_input(n, callback=hear))
+        except (OSError, IOError):
+            continue
+    end = time.time() + seconds
+    while time.time() < end and P.TR_USB not in found.values():
+        if found and time.time() > end - seconds + 1.2:  # one beat heard, and a second for the other link
+            break
+        time.sleep(0.05)
+    for p in ports:
+        p.close()
+    if not found:
+        return None
+    return min(found, key=lambda n: found[n])''')
+open(p,'w').write(s)
+EOF
+cat >> host/tests/test_core.py <<'EOF'
+
+
+def test_bluetooth_gets_text_detail(tmp_path):
+    from conductor.render import LineRenderer
+
+    be, sim, c = setup(tmp_path)
+    c.renderer = LineRenderer()
+    sent = []
+    c.send = sent.append
+    c.on_frame(P.device_hello(0, 3, P.TR_BLE))
+    assert c.device_transport == P.TR_BLE
+    c.on_frame(P.device_select(0))
+    kinds = {P.parse(f).type for f in sent}
+    assert P.T_DETAIL in kinds and P.T_DETAIL_BMP not in kinds
+    sent.clear()
+    c.on_frame(P.device_hello(0, 3, P.TR_USB))
+    c.on_frame(P.device_select(0))
+    assert P.T_DETAIL_BMP in {P.parse(f).type for f in sent}
+
+
+def test_transport_of_old_and_new_frames():
+    assert P.transport_of(P.parse(P.device_hello(0, 2))) == P.TR_USB
+    assert P.transport_of(P.parse(P.device_hello(0, 3, P.TR_BLE))) == P.TR_BLE
+    assert P.transport_of(P.parse(P.device_heartbeat(P.TR_BLE))) == P.TR_BLE
+    assert P.transport_of(P.parse(P.device_heartbeat())) == P.TR_USB
+EOF
+just cond-test 2>&1 | tail -1
+```
+
+```text
+30 passed in 0.11s
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 12:08:10Z)**_
+
+daemon 端 30 項測試通過。接著 build 帶藍牙的實機套件，看容量，再到模擬器跑兩種晶片。
+
+_**Agent (claude-opus-5-5 2026-11-17 12:08:16Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Build the Bluetooth-enabled device package
+
+`just fw-build conductor 2>&1 | grep -E "ok |parts|package|FAIL|error|warn" | grep -v "fm1.toml has no install"; shasum -a 256 firmware/conductor/build/conductor.fwsc`
+
+```text
+Resolved 21 packages in 2ms
+Checked 18 packages in 0.39ms
+  ok    .ram_text: 1738 insns, no calls
+  ok    no 64-bit multiply inlined beside a load
+  ok    own Bluetooth stack: nothing of JieLi's linked, the radio's ramp in RAM
+  ok    no soft-double routines (single-precision FPU only)
+  ok    image 122120 B; RAM code .ram_text 5576 B of 32768; RAM .data+.bss 38452 B of 98304; pool 69384 B of 344064
+  ok    register access: felucca-bsp only (device/, include/ and the app clean)
+parts    Bluetooth MIDI, USB audio in, USB audio out, the screen reader  (not built in: Bluetooth MIDI devices, Bluetooth audio, USB MIDI host, USB disk mode, WiFi, the second core, velocity, pressure, screen mirroring, backup and restore, a resource region)
+package  /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/firmware/conductor/build/conductor.fwsc  616003 B, identity FM-1_1200
+b48d6059b621c86cef3b84b29c2c023c6741ac04c68dc5d892a7ff77f8476609  firmware/conductor/build/conductor.fwsc
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 12:08:22Z)**_
+
+容量很寬裕：app 122 KB、RAM 38 KB，上限分別是 581 KB 和 96 KB。到模擬器跑兩種晶片的開機、重開、預演，看藍牙開著時 flash 是否仍然 0 次寫入。
+
+_**Agent (claude-opus-5-5 2026-11-17 12:08:37Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Emulator boot/restart both chips and rehearsal for the Bluetooth build
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/tools/emu-state && pkg=$PWD/../../firmware/conductor/build/conductor.fwsc; for chip in uc25hq80 p25q80; do f=pf4-$chip.flash; rm -f $f; for boot in 1 2; do ../fm1-emu/fm1-live --fwsc "$pkg" --flash-chip $chip --flash $f --midi none --shot 5000 --lcd-only 2>&1 | grep -i -E "^flash:|fault|crash|ble|radio" | head -4 | sed "s/^/  $chip boot$boot: /"; done; done; bak=$PWD/../../backups/2026-11-17-1859-pre-conductor/fm1-20261117-185927.bin; rm -f pristine-c4.flash; ../fm1-emu/fm1-live --fwsc "$pkg" --flash-chip uc25hq80 --flash pristine-c4.flash --midi none --shot 1 --lcd-only >/dev/null 2>&1; python3 ../../scripts/emu_rehearse.py pristine-c4.flash "$bak" rehearse-c4.flash; cp rehearse-c4.flash rehearse-c4.before; FM1_USB_SEND='2500:F07D434E010101F7' ../fm1-emu/fm1-live --fwsc "$pkg" --flash-chip uc25hq80 --flash rehearse-c4.flash --midi none --usb --shot 5000 --lcd-only 2>&1 | grep -E "^flash:|Configured|fault"; cmp -s rehearse-c4.flash rehearse-c4.before && echo "rehearsal: no sector changed by booting"; cp work/lcd.ppm ble-emu.ppm`
+
+```text
+  uc25hq80 boot1: flash: 0 erases / programs
+  uc25hq80 boot2: flash: 0 erases / programs
+  p25q80 boot1: flash: 0 erases / programs
+  p25q80 boot2: flash: 0 erases / programs
+package image 0x04000-0x92FFF laid over the backup
+[   301 ms] usb: Configured { product: "CONDUCTOR FM-1", vid: 4617, pid: 1 }
+flash: 0 erases / programs
+rehearsal: no sector changed by booting
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 12:08:46Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Convert LCD capture; check emulator output for radio messages
+
+```bash
+cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1 && uv run --locked --all-groups python -I -c "
+from PIL import Image; Image.open('tools/emu-state/ble-emu.ppm').save('/private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/c6419d02-4c76-47d7-b11c-b7db01c7f2b4/scratchpad/ble-emu.png')"; tools/fm1-emu/fm1-live --fwsc firmware/conductor/build/conductor.fwsc --flash-chip uc25hq80 --flash tools/emu-state/pf4-uc25hq80.flash --midi none --shot 3000 --lcd-only 2>&1 | grep -i -E "radio|bluetooth|ble|bt " | head -5
+```
+
+```text
+(Bash completed with no output)
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 12:08:46Z)**_
+
+<tool-use data-tool-type="read" data-tool-name="Read"><details>
+<summary>Tool use: **Read**</summary>
+ `/private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/c6419d02-4c76-47d7-b11c-b7db01c7f2b4/scratchpad/ble-emu.png`
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 12:08:59Z)**_
+
+<think><details><summary>Thought Process</summary>
+模擬器無法驗證藍牙無線電，BLE 收發目前只有 C 單元測試和 host 替身佐證，真正的確認需要實機。接下來我補 Justfile recipe 與文件。
+
+</details></think>
+
+_**Agent (claude-opus-5-5 2026-11-17 12:09:33Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Add the common-test recipe and document Bluetooth across pages
+
+```bash
+python3 - <<'EOF'
+p='Justfile'
+s=open(p).read()
+s=s.replace('''# hc end to end: two fake agents''','''# firmware/common's own tests on this computer (hostlink's Bluetooth SysEx packets).
+fw-common-test:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    mkdir -p build
+    cc -Wall -Wextra -I firmware/common -o build/hostlink_test firmware/common/tests/hostlink_test.c
+    build/hostlink_test
+
+# hc end to end: two fake agents''')
+open(p,'w').write(s)
+
+p='AGENTS.md'
+s=open(p).read()
+s=s.replace('''just cond-run [BACKEND]    # daemon against a CONDUCTOR MIDI device (emulator or real unit)''','''just cond-run [BACKEND]    # daemon against a CONDUCTOR MIDI device (emulator or real unit)
+just fw-common-test    # firmware/common unit tests on this computer (hostlink BLE packets)''')
+open(p,'w').write(s)
+
+p='firmware/common/README.md'
+s=open(p).read()
+s=s.replace('''| `hostlink` | An app's own SysEx conversation with a program on the computer: framing under `F0 7D id0 id1 ver`, HELLO until the host answers, HEARTBEAT after, host presence with a timeout, a new HELLO after a new USB session. |''','''| `hostlink` | An app's own SysEx conversation with a program on the computer, over USB or Bluetooth: framing under `F0 7D id0 id1 ver`, HELLO on every transport until the host answers, HEARTBEAT after on the transport it answered by, host presence with a timeout, a new HELLO after a new USB session or a lost Bluetooth link. Bluetooth needs `ble_stack = "own"` (JieLi's stack drops incoming SysEx); `hl_sx_packet` puts the SysEx packets back together. |''')
+s=s.replace('''`firmware/conductor` is the first user;''','''`just fw-common-test` builds and runs `tests/` on the computer (hostlink's packet
+cutting and reassembly). `firmware/conductor` is the first user;''')
+open(p,'w').write(s)
+
+p='host/conductor/PROTOCOL.md'
+s=open(p).read()
+s=s.replace('''| `41` | HELLO | `ver`, `fw_major`, `fw_minor` — once a second until HELLO_ACK |
+| `42` | HEARTBEAT | `ver` — once a second after HELLO_ACK |''','''| `41` | HELLO | `ver`, `fw_major`, `fw_minor`, `transport` (0 USB, 1 Bluetooth; from firmware 0.3) — once a second on every transport with a computer, until HELLO_ACK |
+| `42` | HEARTBEAT | `ver`, `transport` (from 0.3) — once a second after HELLO_ACK, on the transport the HELLO_ACK came by |''')
+s=s.replace('''## Liveness''','''## Transports
+
+USB: SysEx as it is. Bluetooth (firmware 0.3, fm1-base's own BLE stack): the same
+frames as BLE-MIDI SysEx; the device reassembles them from the USB-MIDI packets the
+stack hands over and replies on the link the HELLO_ACK came by. The host prefers a
+USB port when it hears the device on both, and sends DETAIL as text over Bluetooth
+(a DETAIL_BMP is 558 bytes).
+
+## Liveness''')
+s=s.replace('''- After a new USB session (cable out and in) the device says HELLO again.''','''- After a new USB session (cable out and in), or when the Bluetooth link drops, the
+  device says HELLO again.
+- The host sends nothing and carries out no ACTION before it has heard a HELLO.''')
+open(p,'w').write(s)
+
+p='docs/agentic/conductor-cheatsheet.md'
+s=open(p).read()
+s=s.replace("對應韌體 0.2、協定 v1（2026-11-17）。","對應韌體 0.3、協定 v1（2026-11-17）。")
+s=s.replace('<rect class="off" x="122" y="216" width="58" height="24" rx="6"/><text class="lab" x="151" y="232">OCT+</text>',
+            '<rect class="ctl" x="122" y="216" width="58" height="24" rx="6"/><text class="lab" x="151" y="232">OCT+ 藍牙</text>')
+s=s.replace('''| ALGORITHM | 四頁輪流：全部、輸出、等你的、說明 |''','''| ALGORITHM | 四頁輪流：全部、輸出、等你的、說明 |
+| `OCT+` | 藍牙開 / 關（到下次開機為止，不存） |''')
+s=s.replace('''## 沒有 FM-1 時：文字版''','''## 藍牙 { #bluetooth }
+
+韌體 0.3 起，USB 和藍牙都能接 daemon。藍牙每次開機都會打開，`OCT+` 可以關掉（到下次開機為止）。
+
+1. 第一次：Mac 的「音訊 MIDI 設定」→ 選單「視窗 → 顯示 MIDI 工作室」→ 工具列的藍牙圖示 → 找到 `FM-1 XXXX`，按「連接」。不需要配對碼。
+2. 跑 `just cond-run`。daemon 自己找到藍牙那個 port；USB 也插著時優先用 USB。
+3. 標頭右上角：沒有 host 時，`BLE` 灰色 = 廣播中、藍色 = 電腦已連上；有 host 時出現藍色 `BLE` = 正在走藍牙。
+
+走藍牙時，`EDIT` 的輸出只送 ASCII 文字（點陣圖一行 558 bytes，藍牙太慢），中文會是 `?`。要看中文就插 USB。
+
+## 沒有 FM-1 時：文字版''')
+open(p,'w').write(s)
+
+p='docs/agentic/conductor.md'
+s=open(p).read()
+a=s.index("## USB 與 Bluetooth { #bluetooth }")
+b=s.index("## 共用模組 { #common }")
+s=s[:a]+'''## USB 與 Bluetooth { #bluetooth }
+
+**韌體 0.3 起支援藍牙**（2026-11-17 實作；實機還沒驗證）。使用方式見[速查](conductor-cheatsheet.md#bluetooth)。
+
+| 項目 | 做法 |
+|---|---|
+| BLE stack | fm1-base 自己的 stack（`ble_stack = "own"`）。預設的 JieLi stack 解 BLE MIDI 時把收到的 SysEx 整段跳過（`ble/midi/le_midi.c`：`sysex: skip to the end flag`）`[上游]`；own stack 會把它還原成 USB-MIDI 的 SysEx 封包（CIN 4–7），從 `plat_midi_in` 的 `PORT_BLE` 進來 `[上游]` |
+| 收 | `APP_SYSEX` 只收 USB，所以 `hostlink` 的 `hl_sx_packet` 自己把 BLE 的封包組回 frame |
+| 送 | frame 切成 USB-MIDI SysEx 封包，`plat_midi_send(…, TO_BLE_HOST)`；佇列放不下整個 frame 就不送（寧可晚，不要送一半） |
+| 哪條路 | 沒有 host 時，USB 有電腦就從 USB、藍牙有連線就從藍牙各送一份 HELLO（帶著傳輸方式）；之後只走 HELLO_ACK 來的那條。daemon 兩條都聽到時選 USB |
+| 不寫 flash | 位址由 own stack 從 flash 晶片的唯一 ID 算出（每次開機一樣，名稱 `FM-1 XXXX`）；不開配對（fm1-base：macOS、iOS 不配對也能連）。所以 app 接管藍牙的保存（`APP_BLE_STORE`），只放 RAM，不需要 `OBJ_BLE`。fm1-emu 兩種晶片仍是 0 次寫入 `[模擬]` |
+| 開關 | 每次開機都開；`OCT+` 關到下次開機（不存設定，所以也不寫 flash） |
+| DETAIL | 藍牙上只送 ASCII 文字；點陣圖一行 558 bytes，BLE MIDI 太慢。設定 `detail_pictures_ble: true` 可以強制送圖 |
+| 容量 | app 122 KB、RAM `.data+.bss` 38 KB（上限 96 KB）；`ble_diag = false` 省下 2.4 KB RAM |
+
+驗證到哪裡：
+
+| 項目 | 結果 | 標記 |
+|---|---|---|
+| `just fw-common-test` | 0–20 bytes、558、640 bytes 的 frame 切成封包再組回，內容相同；中間插一個 note-on 會被忽略；超長的 frame 整個丟掉、下一個正常 | — |
+| host simulator 的 BLE 替身 | 拔掉 USB、從 BLE 連上後，裝置從 BLE 送出 HELLO（傳輸方式 `01`）；`OCT+` 開關藍牙；0 次 store 寫入 | `[模擬]` |
+| fm1-emu 兩種晶片 | 開機、重開都 0 次 erase / program；USB 路徑照常。模擬器不模擬藍牙無線電 | `[模擬]` |
+| 實機：Mac 經藍牙連上、daemon 用藍牙 port | 還沒做 | — |
+
+'''+s[b:]
+s=s.replace("- [ ] Bluetooth：用 `ble_stack = \"own\"`，`hostlink` 加 BLE 的 SysEx 組裝，配對與 flash 寫入在模擬器量測後再實作，見 [USB 與 Bluetooth](#bluetooth)。",
+            "- [x] Bluetooth（0.3），見 [USB 與 Bluetooth](#bluetooth)。\n- [ ] 藍牙在實機驗證：Mac 連上 `FM-1 XXXX`、daemon 走藍牙、拔掉 USB 用電池。")
+s=s.replace('''| `hostlink` | app 自己的 SysEx 對話：frame 前綴、HELLO 直到 host 回應、之後 HEARTBEAT、host 是否還在、重新插線後重新 HELLO |''','''| `hostlink` | app 自己的 SysEx 對話，走 USB 或藍牙：frame 前綴、HELLO 直到 host 回應、之後 HEARTBEAT、host 是否還在、重新插線或藍牙斷線後重新 HELLO；藍牙 SysEx 封包的拆與組 |''')
+s=s.replace('''just cond-test              # daemon 的單元測試（協定、slot 記憶、動作確認）''','''just cond-test              # daemon 的單元測試（協定、slot 記憶、動作確認）
+just fw-common-test         # firmware/common 的單元測試（藍牙 SysEx 封包）''')
+open(p,'w').write(s)
+EOF
+just fw-common-test 2>&1 | tail -1; just docs-check 2>&1 | tail -1
+```
+
+```text
+hostlink: all ok
+{"status": "ok", "pages": 43, "llm_pages": 43, "deployed": false}
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 12:09:48Z)**_
+
+最後寫 iOS / MIDI routing 的建議，然後 commit。
+
+_**Agent (claude-opus-5-5 2026-11-17 12:10:07Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Document iOS routing, commit 0.3, rebuild clean and retest
+
+```bash
+python3 - <<'EOF'
+p='docs/agentic/conductor.md'
+s=open(p).read()
+s=s.replace('''## 共用模組 { #common }''','''## 經過 iOS 或 MIDI routing app { #routing }
+
+Conductor 和 daemon 之間說的**全是 SysEx**（`F0 7D 43 4E …`），琴鍵和按鈕不送 note 或 CC。daemon 要在 Mac 上跑（它要接 hc / Herdr），所以 iPad 上的 routing app（StreamByter、MidiFire、AUM 等）頂多是中繼站。我的建議 `[調研]`，沒有實測：
+
+- **能直接接就直接接。** USB 或藍牙直連 Mac 最單純；中間每多一個 app，就多一個可能丟掉或改寫 SysEx 的地方。
+- **藍牙一次只能連一台。** fm1-base 的 own stack 同時只有一條 BLE MIDI 連線 `[上游]`：iPad 用藍牙連著時，Mac 就連不上藍牙。iPad 和 Mac 都要用時，Mac 走 USB。
+- **讓 SysEx 原封不動通過。** 很多 routing app 預設會過濾或限制 SysEx。規則用前綴 `F0 7D 43 4E` 放行，其他照你的需求處理；`7D 43 4E` 是我們自己的固定前綴，就是為了好認、好放行。
+- **不要把別的來源合併進同一條路。** 兩個來源合流時，SysEx 可能被別的訊息插進中間而損壞。Conductor 的 frame 損壞時會被丟掉，不會誤動作，但會漏掉更新。
+- **一台裝置只接一個 daemon。** routing 把同一台 FM-1 分給兩個 daemon，兩邊會搶著送表、各自執行按鍵。
+- **想在 iOS 上拿琴鍵觸發別的東西**，現在做不到，因為沒有 note / CC。之後可以加一個選項：琴鍵同時送 channel 16 的 note、按鈕送 CC，讓 StreamByter 這類工具不必懂 SysEx 也能用。
+
+## 共用模組 { #common }''')
+open(p,'w').write(s)
+EOF
+just docs-check 2>&1 | tail -1; git add firmware host docs Justfile AGENTS.md && git commit -q -F - <<'EOF'
+Conductor 0.3: Bluetooth MIDI beside USB
+
+fm1-base's own BLE stack (JieLi's drops incoming SysEx). hostlink puts
+BLE SysEx packets back together and cuts frames into them, says HELLO
+on every transport with a computer (with the transport in it) and then
+replies on the one the HELLO_ACK came by. Bluetooth's record stays in
+RAM (APP_BLE_STORE; address from the flash part's ID, no pairing), so
+the firmware still writes nothing to the flash. OCT+ turns Bluetooth
+off until the next power-on.
+
+The daemon prefers the USB port when it hears both and sends DETAIL as
+text over Bluetooth. firmware/common gets its own C test
+(just fw-common-test). Docs: Bluetooth use and design, routing through
+iOS apps.
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+EOF
+git status --short | grep -v specstory; rm -rf firmware/conductor/build && just fw-build conductor 2>&1 | grep -E "^package"; shasum -a 256 firmware/conductor/build/conductor.fwsc; just fw-test conductor 2>&1 | grep -E "FAIL|host:"; git log --oneline -1
+```
+
+```text
+{"status": "ok", "pages": 43, "llm_pages": 43, "deployed": false}
+package  /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/firmware/conductor/build/conductor.fwsc  616003 B, identity FM-1_1200
+b48d6059b621c86cef3b84b29c2c023c6741ac04c68dc5d892a7ff77f8476609  firmware/conductor/build/conductor.fwsc
+host: 13842 ms simulated, 272 blits, render 0.0% of real time (host CPU)
+b7e0564 Conductor 0.3: Bluetooth MIDI beside USB
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 12:10:12Z)**_
+
+重新 build 的 SHA-256 和 commit 前相同。把 0.3 的實刷檢查記下來。
+
+_**Agent (claude-opus-5-5 2026-11-17 12:10:20Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Record 0.3 readiness and commit
+
+```bash
+python3 - <<'EOF'
+p='docs/agentic/conductor.md'
+s=open(p).read()
+s=s.replace('''### 刷的步驟（由我本人執行）''','''### 0.3 的檢查 { #flash-0-3 }
+
+0.3 加了藍牙。換成 0.3 一樣要我本人批准。
+
+| 項目 | 值 |
+|---|---|
+| 檔案 | `firmware/conductor/build/conductor.fwsc`（616,003 B，identity `FM-1_1200`，app 122,120 B） |
+| 來源 | commit `b7e0564`，乾淨的工作區重新 build，兩次 SHA-256 相同 |
+| SHA-256 | `b48d6059b621c86cef3b84b29c2c023c6741ac04c68dc5d892a7ff77f8476609` |
+
+| 檢查 | 結果 | 標記 |
+|---|---|---|
+| `just fw-test conductor`、`just fw-common-test`、`just cond-test` | 全部通過 | `[模擬]` / 單元測試 |
+| fm1-emu 兩種晶片：開機 → 重開 → 再讀回 | 都 0 次 erase / program（藍牙開著） | `[模擬]` |
+| 疊在 `2026-11-17-1859-pre-conductor` 備份上開機 | 正常、0 個 sector 被改寫 | `[模擬]` |
+| 藍牙實際連線 | 模擬器沒有無線電，**只能在實機確認** | — |
+
+風險：藍牙是新程式碼，最壞的情況是開機後藍牙不正常。fm1-base 寫明「上一次藍牙執行當掉，下次開機就不自動啟動藍牙」`[上游]`，USB 照常可用，`fm1-switch` 也能換回 0.2 或別的韌體。
+
+### 刷的步驟（由我本人執行）''')
+open(p,'w').write(s)
+EOF
+just docs-check 2>&1 | tail -1 && git add docs && git commit -q -m "Conductor 0.3: flash-readiness record
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>" && git log --oneline -1
+```
+
+```text
+{"status": "ok", "pages": 43, "llm_pages": 43, "deployed": false}
+e264849 Conductor 0.3: flash-readiness record
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 12:10:38Z)**_
+
+藍牙版本（0.3）已經實作、build 好了，等你刷進實機驗證。模擬器不模擬藍牙無線電，所以「真的連得上」這一步只能在實機上確認。
+
+## Bluetooth（韌體 0.3）
+
+**做法**
+- **換成 fm1-base 自己的藍牙 stack。** 預設的 JieLi stack 會丟掉收到的 SysEx，Conductor 的協定全是 SysEx，所以非換不可。
+- **封包組裝**：藍牙送進來的 SysEx 會被拆成小封包，韌體負責組回完整的 frame；送出時反過來切成封包。
+- **選路**：還沒連上時，USB 和藍牙各送一次 HELLO，並標明走哪條；之後只走 daemon 回應的那條。兩條都通時，daemon 優先用 USB。
+- **仍然完全不寫 flash**：藍牙位址由晶片的唯一 ID 算出，每次開機都一樣，名稱是 `FM-1 XXXX`；不開配對（macOS、iOS 不需要）。藍牙資料只放在記憶體裡，模擬器兩種晶片都是 0 次寫入。
+- **開關**：藍牙每次開機都會開；按 `OCT+` 關掉，到下次開機為止。
+- **藍牙上 DETAIL 只送文字**：點陣圖一行 558 bytes，藍牙太慢，所以中文在藍牙上會是 `?`；要看中文請插 USB。
+- **容量**：app 122 KB、RAM 38 KB，都還很寬裕。
+
+**已驗證**
+- 新增 `just fw-common-test`：藍牙封包的拆分與組回，從 0 到 640 bytes 都測過。
+- host simulator 的藍牙替身：裝置從藍牙送出 HELLO，`OCT+` 能開關藍牙。
+- 模擬器兩種晶片：開機、重開都正常；疊在你的實機備份上預演，0 個 sector 被改寫。
+- 單元測試 `just cond-test` 30 項全過。
+
+**刷 0.3 與試藍牙**
+1. 停掉 daemon，執行：
+   ```sh
+   just fm1-switch firmware/conductor/build/conductor.fwsc
+   ```
+   SHA-256 是 `b48d6059…7f8476609`。
+2. 先插著 USB 跑 `just cond-run`，確認看到 `firmware 0.3, via USB`。
+3. 試藍牙：停掉 daemon、拔掉 USB。在 Mac 的「音訊 MIDI 設定」→ 視窗 → 顯示 MIDI 工作室 → 工具列的藍牙圖示，找到 `FM-1 XXXX`，按「連接」。
+4. 再跑 `just cond-run`，應該看到 `via Bluetooth`，螢幕標頭出現藍色的 `BLE`。
+
+**風險**：藍牙是新程式碼。如果藍牙執行時當掉，fm1-base 下次開機就不會自動啟動藍牙，USB 照常可用，也能用 `fm1-switch` 換回 0.2。
+
+## iOS 上的 StreamByter 這類 routing
+
+這部分是建議，我沒有實測：
+- **daemon 必須跑在 Mac 上**，因為它要接 hc / Herdr。iPad 頂多當中繼站，能直連 Mac 就直連。
+- **藍牙一次只能連一台**：iPad 用藍牙連著時，Mac 就連不上藍牙；兩台都要用時，Mac 走 USB。
+- **讓 SysEx 原封不動通過**：很多 routing app 預設會過濾 SysEx。用前綴 `F0 7D 43 4E` 寫規則放行，這個固定前綴就是為了方便辨認。
+- **不要把多個來源合流到同一條路**：別的訊息插進 SysEx 中間會讓 frame 損壞。損壞的 frame 會被丟掉，不會誤動作，但會漏掉更新。
+- **一台 FM-1 只接一個 daemon**：否則兩個 daemon 會搶著送畫面、各自執行按鍵。
+- **想在 iOS 上用琴鍵觸發別的東西**，目前做不到：Conductor 只送 SysEx，不送 note 或 CC。可以加一個選項，讓琴鍵同時送 channel 16 的 note、按鈕送 CC，StreamByter 就能直接拿來用。要的話我再做。
+
+藍牙用法寫進了速查頁，設計、驗證與 routing 建議寫進了設計頁，協定規格也更新了。改動已 commit 到 `e264849`，還沒 push。
+
+---
+
+_**User (2026-11-17 12:56:38Z)**_
+
+```
+
+
+<pasted_content id="ef8f">
+M-VAVE_FM-1 on  main [!⇡6] via  v3.15.1 took 19s
+❯ just fm1-switch firmware/conductor/build/conductor.fwsc
+midi    Felucca (running; download-mode switches it)
+Sent the Felucca the download-mode message over USB MIDI; waiting for it
+In download mode: usb:2-4       WL82 UBOOT1.00 (USB bus 2, device 4)
+  100%
+  firmware    FM-1 120
+  app         OK
+    - the firmware uses the FM-1 flash layout
+Backup saved: backups/2026-11-17-2052-pre-conductor/fm1-20261117-205303.bin
+7c71530b486d2a11b5ab90f841bbd27f9e129e3445628aa9013cfca0e40d6993  backups/2026-11-17-2052-pre-conductor/fm1-20261117-205303.bin
+Backup before the switch: backups/2026-11-17-2052-pre-conductor (not uploaded; just fm1-backup-release 2026-11-17-2052-pre-conductor if you want it off this machine)
+Connecting to usb:2-4
+M-Flasher loader 1.3 already running
+Flash chip 0xB36014 (new)
+Reading the flash
+  100%
+Read in 1.3 s (800 KB/s)
+Checked: the chip's CRC32 of the flash matches the read
+  model       FM-1
+  bootloader  stock (M-VAVE)
+  firmware    FM-1 120
+  app         OK
+  chip key    0x980F
+  flash       0xB36014
+  unit id     55227286a0cb022a
+  loader      M-Flasher 1.3, CPU at 96 MHz
+    - the firmware uses the FM-1 flash layout
+    - flash chip 0xB36014 (new)
+
+Install firmware FM-1_1200
+Writes 30 sectors (120 KiB): 0x04000-0x21FFF
+Installs FM-1_1200 (0x04000-0x92FFF).
+Type "yes" to write: yes
+Backup saved: /Users/zhouhanru/Documents/M-Flasher/backups/fm1-20261117-205309.bin
+Writing 0x04000-0x21FFF
+  100%
+Done: everything written is verified (the chip's CRC32 matches)
+Sent the restart (a 34-byte program at 0x01C28000); waiting for the unit to reset
+Running: the Felucca is on USB MIDI
+</pasted_content id="ef8f">
+
+
+
+
+<pasted_content id="ef8f">
+M-VAVE_FM-1 on  main [!⇡8] via  v3.15.1 took 7m15s
+❯ just cond-run hc
+PYTHONPATH=host uv run --locked --all-groups python -m conductor --backend "hc"
+[midi] Felucca
+[backend] hc: 2 agents, 2 shells not shown (--show-shells to list them)
+[voice] ARP holds ctrl+option (hold)
+[device] still attached to the last daemon; waiting for its HELLO (up to 10 s)
+[device] hello, protocol 1, firmware 0.2
+[device] hello, protocol 1, firmware 0.3
+</pasted_content id="ef8f">
+
+```
+
+拔USB了
+
+[Image #17] Audio MIDI Setup
+[Image #18] System Setting Sound
+好像都沒看到？
+
+---
+
+_**User (2026-11-17 12:56:38Z)**_
+
+[Image: source: /private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/c6419d02-4c76-47d7-b11c-b7db01c7f2b4/images/17.png]
+
+[Image: source: /private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/c6419d02-4c76-47d7-b11c-b7db01c7f2b4/images/18.png]
+
+---
+
+_**Agent (claude-opus-5-5 2026-11-17 12:57:04Z)**_
+
+你打開的是 Audio MIDI Setup 的「音訊裝置」視窗，那裡只列音訊。藍牙 MIDI 在另一個視窗：
+
+1. 在 Audio MIDI Setup 選單選 **視窗 → 顯示 MIDI 工作室**（`⌘2`）。
+2. MIDI 工作室工具列上有一個**藍牙圖示**（「設定藍牙」），點它。
+3. 清單裡找 `FM-1 XXXX`，按**連接**。
+
+系統設定的「聲音」不會列 MIDI 裝置，那邊找不到是正常的。
+
+我先從電腦這邊看看 FM-1 有沒有在廣播（唯讀查詢）。
+
+_**Agent (claude-opus-5-5 2026-11-17 12:57:06Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Read-only: look for the FM-1 in macOS Bluetooth info
+
+`system_profiler SPBluetoothDataType 2>/dev/null | grep -i -B2 -A8 "FM-1" | head -30; echo "---"; system_profiler SPBluetoothDataType 2>/dev/null | grep -E "State:|Not Connected:|Connected:" | head`
+
+```text
+---
+          State: On
+      Connected:
+      Not Connected:
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 12:57:17Z)**_
+
+電腦這邊的藍牙資訊只列配對過或連線過的裝置，FM-1 還沒連過，所以查不到廣播，只能從裝置端確認。
+
+**先看 FM-1 螢幕右上角**（拔掉 USB 後，靠電池運作）：
+
+- `NO HOST` 左邊有**灰色 `BLE`**：藍牙正在廣播，照上面的步驟在 MIDI 工作室連接就好。
+- `BLE` 變成**藍色**：Mac 已經連上了。這時跑 `just cond-run`，應該會看到 `via Bluetooth`。
+- **完全沒有 `BLE`**：藍牙沒在跑。可能是不小心按到 `OCT+` 關掉了，再按一次 `OCT+` 會顯示 `BLUETOOTH ON`；如果還是沒有，告訴我螢幕顯示什麼。
+
+另外，你的 log 裡先出現 `firmware 0.2`、再出現 `firmware 0.3`，不用擔心。應該是 macOS 把刷寫前排著的一個舊 HELLO 晚送了；daemon 以最後收到的為準，最後是 0.3，所以沒問題。
+
+---
+
+_**User (2026-11-17 12:59:19Z)**_
+
+[Image #19] [Image #20] 看起來成功了 （這部分只能通過GUI操作嗎？）
+
+```
+
+
+<pasted_content id="ef8f">
+❯ just cond-run hc
+PYTHONPATH=host uv run --locked --all-groups python -m conductor --backend "hc"
+[midi] FM-1 3399 Bluetooth
+[backend] hc: 2 agents, 2 shells not shown (--show-shells to list them)
+[voice] ARP holds ctrl+option (hold)
+[device] hello, protocol 1, firmware 0.3, via Bluetooth
+</pasted_content id="ef8f">
+
+```
+
+（然後如果要取消配對與連接的話呢？）
+
+---
+
+_**User (2026-11-17 12:59:19Z)**_
+
+[Image: source: /private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/c6419d02-4c76-47d7-b11c-b7db01c7f2b4/images/19.png]
+
+[Image: source: /private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/c6419d02-4c76-47d7-b11c-b7db01c7f2b4/images/20.png]
+
+---
+
+_**Agent (claude-opus-5-5 2026-11-17 12:59:34Z)**_
+
+藍牙在實機上成功了：daemon 透過 `FM-1 3399 Bluetooth` 連上，也回報 `via Bluetooth`。先查 macOS 有沒有可以從程式控制藍牙 MIDI 連線的介面，再回答你的兩個問題。
+
+_**Agent (claude-opus-5-5 2026-11-17 12:59:37Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Check whether CoreMIDI exposes Bluetooth MIDI connection functions
+
+```bash
+python3 -c "
+import ctypes
+cm=ctypes.cdll.LoadLibrary('/System/Library/Frameworks/CoreMIDI.framework/CoreMIDI')
+for s in ['MIDIBluetoothDriverActivateAllConnections','MIDIBluetoothDriverDisconnect']:
+    print(s, hasattr(cm, s))
+"; ls /System/Library/Frameworks/CoreMIDI.framework/Headers/ 2>/dev/null | grep -i blue; find /Library/Developer/CommandLineTools/SDKs -name "MIDIBluetoothConnection.h" 2>/dev/null | head -1
+```
+
+```text
+MIDIBluetoothDriverActivateAllConnections True
+MIDIBluetoothDriverDisconnect True
+/Library/Developer/CommandLineTools/SDKs/MacOSX27.0.sdk/System/Library/Frameworks/CoreMIDI.framework/Versions/A/Headers/MIDIBluetoothConnection.h
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 12:59:42Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Read the public CoreMIDI Bluetooth connection header
+
+`grep -v "^\s*$" /Library/Developer/CommandLineTools/SDKs/MacOSX27.0.sdk/System/Library/Frameworks/CoreMIDI.framework/Versions/A/Headers/MIDIBluetoothConnection.h | grep -v "^//\|^#\|^ \*\s*$" | head -50`
+
+```text
+/*
+    File:       CoreMIDI/MIDIBluetoothConnection.h
+    Contains:   Routines for connecting MIDI over Bluetooth LE.
+    Copyright:  (c) 2022 by Apple Inc., all rights reserved.
+    Bugs?:      For bug reports, consult the following page on
+                the World Wide Web:
+                    http://feedbackassistant.apple.com/
+*/
+CF_ASSUME_NONNULL_BEGIN
+/*!
+    @header MIDIBluetoothConnection.h
+    The following methods are used to register connected Bluetooth Low Energy
+    MIDI peripherals with CoreMIDI so that MIDI I/O becomes possible and to
+	programmatically disconnect a BLE MIDI peripheral from CoreMIDI.
+*/
+extern "C" {
+/*!
+	@function       MIDIBluetoothDriverActivateAllConnections
+	@abstract       Promotes all active CoreBluetooth connections to peripherals' Bluetooth LE MIDI
+					service into online MIDI devices capable of I/O.
+	@result         An OSStatus result code.
+	@discussion
+		To programmatically establish a Bluetooth MIDI driver connection to a LE MIDI peripheral,
+		the following steps must be completed in order.
+		1. Using CoreBluetooth API, scan for the peripheral's advertised LE MIDI service.
+		2. Using CoreBluetooth API, connect to the desired advertised peripheral.
+		3. Upon successful connection, call MIDIBluetoothDriverActivateAllConnections.
+		4. Using CoreMIDI API, confirm the peripheral's registration by locating its MIDIDeviceRef.
+		5. If present, CoreMIDI now owns a connection the peripheral.
+		6. Using CoreBluetooth API, disconnect from the peripheral now managed by CoreMIDI.
+*/
+extern OSStatus
+MIDIBluetoothDriverActivateAllConnections(void) API_AVAILABLE(macos(13.0), ios(16.0));
+/*!
+	@function       MIDIBluetoothDriverDisconnect
+	@abstract       Disconnects the Bluetooth MIDI driver from a BLE MIDI peripheral.
+	@param          uuid
+						A string representation of the CoreBluetooth UUI for a connected peripheral.
+	@result         An OSStatus result code.
+	@discussion
+		If a CoreMIDI is connected to a BLE MIDI peripheral with the supplied UUID, it will disconnect.
+*/
+extern OSStatus
+MIDIBluetoothDriverDisconnect(__nonnull CFStringRef uuid) API_AVAILABLE(macos(13.0), ios(16.0));
+}
+CF_ASSUME_NONNULL_END
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 13:00:04Z)**_
+
+<think><details><summary>Thought Process</summary>
+CoreMIDI 在 macOS 13 起提供公開 API（MIDIBluetoothConnection.h）可從程式連接藍牙 MIDI 裝置，Apple 沒附命令列工具，我會自己寫一個。接著先把藍牙在實機上成功的結果記進文件。
+
+</details></think>
+
+_**Agent (claude-opus-5-5 2026-11-17 13:00:15Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Record the Bluetooth hardware result and disconnect steps; commit
+
+```bash
+python3 - <<'EOF'
+p='docs/agentic/conductor.md'
+s=open(p).read()
+s=s.replace("**韌體 0.3 起支援藍牙**（2026-11-17 實作；實機還沒驗證）。","**韌體 0.3 起支援藍牙**，2026-11-17 在實機上連通 `[實機]`。")
+s=s.replace("| 實機：Mac 經藍牙連上、daemon 用藍牙 port | 還沒做 | — |","| 實機：Mac 經藍牙連上、daemon 用藍牙 port | 拔掉 USB，在 MIDI 工作室的藍牙設定連上 `FM-1 3399`（不需要配對碼）；CoreMIDI 的 port 名稱是 `FM-1 3399 Bluetooth`，daemon 自己找到並回報 `firmware 0.3, via Bluetooth` | `[實機]` |")
+s=s.replace("- [ ] 藍牙在實機驗證：Mac 連上 `FM-1 XXXX`、daemon 走藍牙、拔掉 USB 用電池。","- [x] 藍牙在實機連通（2026-11-17）。\n- [ ] FM-1 關機再開機後，macOS 會不會自己重新連上藍牙（還沒試）。\n- [ ] 不用 GUI 連線：`just cond-ble connect / disconnect`（CoreBluetooth + `MIDIBluetoothDriverActivateAllConnections`），見[速查](conductor-cheatsheet.md#bluetooth)。")
+open(p,'w').write(s)
+
+p='docs/agentic/conductor-cheatsheet.md'
+s=open(p).read()
+s=s.replace('''1. 第一次：Mac 的「音訊 MIDI 設定」→ 選單「視窗 → 顯示 MIDI 工作室」→ 工具列的藍牙圖示 → 找到 `FM-1 XXXX`，按「連接」。不需要配對碼。''','''1. 第一次：Mac 的「音訊 MIDI 設定」→ 選單「視窗 → 顯示 MIDI 工作室」（`⌘2`）→ 工具列的藍牙圖示 → 找到 `FM-1 XXXX`（我的是 `FM-1 3399`，每台固定），按「連接」。不需要配對碼。注意：預設打開的是「音訊裝置」視窗，那裡和系統設定的「聲音」都不會列 MIDI 裝置。''')
+s=s.replace('''走藍牙時，`EDIT` 的輸出只送 ASCII 文字''','''斷開與移除：
+
+| 想做的事 | 怎麼做 |
+|---|---|
+| 斷開連線 | 同一個藍牙設定視窗按 `FM-1 XXXX` 旁的「中斷連線」；或在 FM-1 按 `OCT+` 關掉藍牙（再按一次會重新廣播） |
+| 「取消配對」 | 不需要：Conductor 不配對，系統設定的藍牙清單裡不會有它 |
+| 移除 MIDI 工作室裡的圖示 | 斷開後，選灰色的 `FM-1 XXXX` 圖示，按工具列的「−」（或 Delete）。下次連接會再出現 |
+| port 名稱還是舊韌體的 `Felucca` | FM-1 拔掉 USB 時，在 MIDI 工作室刪掉灰色的 `Felucca` / `FM-1` 圖示，再插上就會用現在的 USB 名稱 `[調研]` |
+
+走藍牙時，`EDIT` 的輸出只送 ASCII 文字''')
+open(p,'w').write(s)
+EOF
+just docs-check 2>&1 | tail -1; git add docs && git commit -q -m "Conductor: Bluetooth works on the unit; how to disconnect and clean up
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>" && git log --oneline -1
+```
+
+```text
+{"status": "ok", "pages": 43, "llm_pages": 43, "deployed": false}
+72eb2b4 Conductor: Bluetooth works on the unit; how to disconnect and clean up
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 13:00:29Z)**_
+
+藍牙在實機上通了：沒插 USB，daemon 透過 `FM-1 3399 Bluetooth` 連上，回報 `firmware 0.3, via Bluetooth`。
+
+**只能用 GUI 嗎？**
+
+不是。macOS 13 起，CoreMIDI 有公開的 API 可以從程式連線（標頭檔 `MIDIBluetoothConnection.h`），我在你的 Mac 上確認這兩個函式都存在：
+
+- **連接**：先用 CoreBluetooth 掃描並連上 `FM-1 XXXX`，再呼叫 `MIDIBluetoothDriverActivateAllConnections()`，由 CoreMIDI 接手，port 就會出現。
+- **斷開**：`MIDIBluetoothDriverDisconnect(UUID)`。
+
+Apple 沒有附命令列工具，所以要自己寫。我可以做成 `just cond-ble connect` 和 `just cond-ble disconnect`：
+
+- 要加一個 BLE 函式庫（`bleak`）。
+- 第一次執行時，macOS 會要求 terminal 的藍牙權限。
+- 要能測，FM-1 得處於沒連線、正在廣播的狀態，所以會打斷你現在的藍牙連線。要做的話跟我說，我們挑一個方便的時間一起測。
+
+**取消配對與斷開**
+
+| 想做的事 | 怎麼做 |
+|---|---|
+| 斷開連線 | 在你截圖裡那個「藍牙設定」視窗按 **Disconnect**；或在 FM-1 上按 `OCT+` 關掉藍牙，再按一次會重新廣播 |
+| 取消配對 | 不需要。Conductor 不做配對，所以系統設定的藍牙清單裡不會有它 |
+| 移除 MIDI 工作室裡的圖示 | 斷開後選灰色的 `FM-1 3399`，按工具列的「−」；下次連接會再出現 |
+
+順帶一提，你的 MIDI 工作室裡還有灰色的 `Felucca` 和 `FM-1`，是舊韌體留下的 USB 裝置記錄。把它們刪掉後再插 USB，port 名稱應該會變回現在的 `CONDUCTOR FM-1`。這是 macOS 的一般行為，我沒在這台實際試過。
+
+**還沒試的**：FM-1 關機再開機後，macOS 會不會自動重新連上藍牙。你方便時可以試一次，我再記下結果。
+
+速查頁加了斷開與清理的說明，設計頁記下了實機結果，commit `72eb2b4`，還沒 push。
+
+---
+
+_**User (2026-11-17 13:02:48Z)**_
+
+關機後開機 現在顯示 BLE NO HOST
+目前需要重新到 MIDI Studio手動把bluetooth連上FM-1才能成功啟動daemon
+
+```
+
+
+<pasted_content id="ef8f">
+M-VAVE_FM-1 on  main [!⇡12] via  v3.15.1 took 2m44s
+❯ just cond-run hc
+PYTHONPATH=host uv run --locked --all-groups python -m conductor --backend "hc"
+no Conductor on MIDI: no port named CONDUCTOR and none saying HELLO (inputs: [])
+error: recipe `cond-run` failed on line 207 with exit code 2
+
+M-VAVE_FM-1 on  main [!⇡12] via  v3.15.1 took 2s
+❯ just cond-run hc
+PYTHONPATH=host uv run --locked --all-groups python -m conductor --backend "hc"
+[midi] FM-1 3399 Bluetooth
+[backend] hc: 2 agents, 2 shells not shown (--show-shells to list them)
+[voice] ARP holds ctrl+option (hold)
+[device] hello, protocol 1, firmware 0.3, via Bluetooth
+</pasted_content id="ef8f">
+
+```
+
+---
+
+_**Agent (claude-opus-5-5 2026-11-17 13:03:09Z)**_
+
+macOS 不會在 FM-1 重開後自動重新連上，所以我讓 daemon 自己連：找不到 port 時，用 CoreBluetooth 掃描廣播中的 `FM-1 XXXX`，連上後交給 CoreMIDI（前面查到的 `MIDIBluetoothDriverActivateAllConnections`），再繼續原本的流程。另外也加 `just cond-ble connect` 和 `just cond-ble disconnect` 可以單獨使用。
+
+BLE 這部分需要一個函式庫，我用 `bleak`（macOS 上就是 CoreBluetooth 的包裝）。
+
+_**Agent (claude-opus-5-5 2026-11-17 13:03:17Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Add bleak to the host dependency group and install it
+
+```bash
+python3 - <<'EOF'
+p='pyproject.toml'
+s=open(p).read()
+s=s.replace('''host = [
+    "mido>=1.3.3",''','''host = [
+    "bleak>=1.0; sys_platform == 'darwin'",
+    "mido>=1.3.3",''')
+open(p,'w').write(s)
+EOF
+uv lock 2>&1 | tail -2 && uv sync --locked --all-groups 2>&1 | tail -2 && uv run --locked --all-groups python -c "import bleak, importlib.metadata as m; print('bleak', m.version('bleak'))"
+```
+
+```text
+Added pyobjc-framework-libdispatch v13.0
+Added typing-extensions v4.16.0
+ + pyobjc-framework-corebluetooth==13.0
+ + pyobjc-framework-libdispatch==13.0
+bleak 3.1.0
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 13:03:41Z)**_
+
+<tool-use data-tool-type="write" data-tool-name="Write"><details>
+<summary>Tool use: **Write**</summary>
+
+```python
+"""Bluetooth MIDI connections without Audio MIDI Setup (macOS 13 and later).
+
+CoreMIDI's public MIDIBluetoothConnection.h describes the steps: find the peripheral
+with CoreBluetooth, connect to it, call MIDIBluetoothDriverActivateAllConnections so
+CoreMIDI takes it over as a MIDI device, then let CoreBluetooth's own connection go.
+MIDIBluetoothDriverDisconnect(uuid) ends CoreMIDI's.
+
+macOS does not reconnect a BLE MIDI device by itself after the device restarts, so the
+daemon calls connect() when it finds no port. The terminal app needs the Bluetooth
+permission (macOS asks the first time).
+"""
+
+from __future__ import annotations
+
+import asyncio
+import ctypes
+import json
+import sys
+import time
+from pathlib import Path
+
+MIDI_SERVICE = "03b80e5a-ede8-4b33-a751-6ce34ec4c700"  # the BLE-MIDI service
+NAME_PREFIX = "FM-1"  # fm1-base names it "FM-1 XXXX" from the flash part's ID
+_CM = "/System/Library/Frameworks/CoreMIDI.framework/CoreMIDI"
+_CF = "/System/Library/Frameworks/CoreFoundation.framework/CoreFoundation"
+
+
+class BleError(RuntimeError):
+    pass
+
+
+def _coremidi():
+    if sys.platform != "darwin":
+        raise BleError("Bluetooth MIDI connections: macOS only")
+    cm = ctypes.cdll.LoadLibrary(_CM)
+    if not hasattr(cm, "MIDIBluetoothDriverActivateAllConnections"):
+        raise BleError("this macOS has no MIDIBluetoothConnection API (needs 13 or later)")
+    cm.MIDIBluetoothDriverActivateAllConnections.restype = ctypes.c_int32
+    cm.MIDIBluetoothDriverDisconnect.restype = ctypes.c_int32
+    cm.MIDIBluetoothDriverDisconnect.argtypes = [ctypes.c_void_p]
+    return cm
+
+
+def _cfstring(s: str):
+    cf = ctypes.cdll.LoadLibrary(_CF)
+    cf.CFStringCreateWithCString.restype = ctypes.c_void_p
+    cf.CFStringCreateWithCString.argtypes = [ctypes.c_void_p, ctypes.c_char_p, ctypes.c_uint32]
+    return cf.CFStringCreateWithCString(None, s.encode(), 0x08000100)  # kCFStringEncodingUTF8
+
+
+def _ports() -> list[str]:
+    import mido
+
+    return mido.get_input_names()
+
+
+def _matches(device, adv, prefix: str) -> bool:
+    name = (adv.local_name or device.name or "").strip()
+    return name.startswith(prefix) and (MIDI_SERVICE in [u.lower() for u in adv.service_uuids] or not adv.service_uuids)
+
+
+async def _connect(prefix: str, scan_s: float):
+    from bleak import BleakClient, BleakScanner
+
+    dev = await BleakScanner.find_device_by_filter(lambda d, a: _matches(d, a, prefix), timeout=scan_s)
+    if dev is None:
+        return None
+    async with BleakClient(dev, timeout=10.0):
+        status = _coremidi().MIDIBluetoothDriverActivateAllConnections()
+        if status != 0:
+            raise BleError(f"MIDIBluetoothDriverActivateAllConnections: OSStatus {status}")
+        before = set()
+        end = time.time() + 6.0
+        while time.time() < end:  # CoreMIDI registers the device: its port shows up
+            names = _ports()
+            if any((dev.name or "") and (dev.name in n) for n in names) or set(names) - before:
+                break
+            await asyncio.sleep(0.25)
+    # leaving the block lets CoreBluetooth's connection go; CoreMIDI keeps its own (step 6)
+    return dev
+
+
+def connect(prefix: str = NAME_PREFIX, scan_s: float = 8.0, memo: Path | None = None) -> str | None:
+    """Find an advertising FM-1 and hand it to CoreMIDI. Its name, or None if none was
+    found. The peripheral's CoreBluetooth UUID is remembered in memo, for disconnect()."""
+    try:
+        dev = asyncio.run(_connect(prefix, scan_s))
+    except BleError:
+        raise
+    except Exception as e:  # bleak: no permission, Bluetooth off, connection refused
+        raise BleError(f"{type(e).__name__}: {e}") from e
+    if dev is None:
+        return None
+    if memo:
+        try:
+            memo.parent.mkdir(parents=True, exist_ok=True)
+            memo.write_text(json.dumps({"uuid": dev.address, "name": dev.name}))
+        except OSError:
+            pass
+    return dev.name or dev.address
+
+
+def disconnect(uuid: str | None = None, memo: Path | None = None) -> str:
+    """End CoreMIDI's Bluetooth connection to the FM-1 (the one connect() remembered)."""
+    if not uuid and memo and memo.exists():
+        uuid = json.loads(memo.read_text()).get("uuid")
+    if not uuid:
+        raise BleError("no device remembered: connect with `just cond-ble connect` first, or pass its UUID")
+    status = _coremidi().MIDIBluetoothDriverDisconnect(_cfstring(uuid))
+    if status != 0:
+        raise BleError(f"MIDIBluetoothDriverDisconnect: OSStatus {status}")
+    return uuid
+
+
+def main(argv=None) -> int:
+    import argparse
+    import os
+
+    ap = argparse.ArgumentParser(prog="conductor.blelink", description="Bluetooth MIDI connect / disconnect for the FM-1")
+    ap.add_argument("action", choices=["connect", "disconnect"])
+    ap.add_argument("--prefix", default=NAME_PREFIX, help="advertised name to look for (default: FM-1)")
+    ap.add_argument("--uuid", help="disconnect: this CoreBluetooth UUID instead of the remembered one")
+    args = ap.parse_args(argv)
+    memo = Path(os.environ.get("CONDUCTOR_HOME", Path.home() / ".config" / "conductor")) / "ble.json"
+    try:
+        if args.action == "connect":
+            name = connect(args.prefix, memo=memo)
+            if not name:
+                print("no FM-1 advertising Bluetooth MIDI (is BLE grey on its screen? OCT+ turns it on)", file=sys.stderr)
+                return 1
+            print(f"[ble] connected: {name}; MIDI ports: {_ports()}")
+        else:
+            print(f"[ble] disconnected {disconnect(args.uuid, memo)}")
+    except BleError as e:
+        print(f"[ble] {e}", file=sys.stderr)
+        return 2
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())
+
+```
+
+```text
+File created successfully at: /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/host/conductor/blelink.py (file state is current in your context — no need to Read it back)
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 13:03:46Z)**_
+
+接進 daemon：找不到 port 時自動嘗試藍牙連線，並加上 `just cond-ble` recipe。
+
+_**Agent (claude-opus-5-5 2026-11-17 13:03:54Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Wire Bluetooth auto-connect into the daemon; add the recipe; smoke-check the API bindings
+
+```bash
+python3 - <<'EOF'
+p='host/conductor/__main__.py'
+s=open(p).read()
+s=s.replace('''        try:
+            link = MidiLink(args.port)
+        except RuntimeError as e:
+            print(e, file=sys.stderr)
+            return 2''','''        try:
+            link = MidiLink(args.port)
+        except RuntimeError as e:
+            link = None
+            if sys.platform == "darwin" and not args.no_ble_connect and not args.port:
+                # macOS does not reconnect a Bluetooth MIDI device after it restarts: do it here
+                from .blelink import BleError, connect
+
+                print("[ble] no MIDI port; looking for an FM-1 over Bluetooth ...")
+                try:
+                    name = connect(memo=CONFIG_DIR / "ble.json")
+                    if name:
+                        print(f"[ble] connected: {name}")
+                        link = MidiLink(args.port)
+                    else:
+                        print("[ble] none advertising", file=sys.stderr)
+                except (BleError, RuntimeError) as be:
+                    print(f"[ble] {be}", file=sys.stderr)
+            if link is None:
+                print(e, file=sys.stderr)
+                return 2''')
+s=s.replace('''    ap.add_argument("--no-voice",''','''    ap.add_argument("--no-ble-connect", action="store_true",
+                    help="do not try to connect an FM-1 over Bluetooth when no MIDI port is found")
+    ap.add_argument("--no-voice",''')
+open(p,'w').write(s)
+
+p='Justfile'
+s=open(p).read()
+s=s.replace('''# The firmware in the emulator with the virtual USB cable plugged in (pair with `just cond-run`).''','''# Bluetooth MIDI without Audio MIDI Setup (macOS 13+): connect an advertising FM-1, or disconnect it.
+cond-ble action="connect":
+    PYTHONPATH=host uv run --locked --all-groups python -m conductor.blelink "{{action}}"
+
+# The firmware in the emulator with the virtual USB cable plugged in (pair with `just cond-run`).''')
+open(p,'w').write(s)
+EOF
+just cond-test 2>&1 | tail -1; PYTHONPATH=host uv run --locked --all-groups python -c "
+from conductor import blelink
+cm = blelink._coremidi(); print('CoreMIDI Bluetooth API ok'); s = blelink._cfstring('00000000-0000-0000-0000-000000000000'); print('CFString ok', bool(s))"
+```
+
+```text
+30 passed in 0.06s
+CoreMIDI Bluetooth API ok
+CFString ok True
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 13:04:15Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Fix port-wait logic; read-only BLE scan to check bleak and permission
+
+```bash
+python3 - <<'EOF'
+p='host/conductor/blelink.py'
+s=open(p).read()
+s=s.replace('''    async with BleakClient(dev, timeout=10.0):
+        status = _coremidi().MIDIBluetoothDriverActivateAllConnections()
+        if status != 0:
+            raise BleError(f"MIDIBluetoothDriverActivateAllConnections: OSStatus {status}")
+        before = set()
+        end = time.time() + 6.0''','''    before = set(_ports())
+    async with BleakClient(dev, timeout=10.0):
+        status = _coremidi().MIDIBluetoothDriverActivateAllConnections()
+        if status != 0:
+            raise BleError(f"MIDIBluetoothDriverActivateAllConnections: OSStatus {status}")
+        end = time.time() + 6.0''')
+open(p,'w').write(s)
+EOF
+PYTHONPATH=host timeout 20 uv run --locked --all-groups python -c "
+import asyncio
+from bleak import BleakScanner
+from conductor.blelink import MIDI_SERVICE
+async def go():
+    found = await BleakScanner.discover(timeout=5, return_adv=True)
+    midi = [(d.name, a.local_name) for d, a in found.values() if MIDI_SERVICE in [u.lower() for u in a.service_uuids]]
+    print(len(found), 'BLE devices seen;', 'advertising MIDI:', midi)
+asyncio.run(go())" 2>&1 | tail -3
+```
+
+```text
+22 BLE devices seen; advertising MIDI: []
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 13:04:24Z)**_
+
+<think><details><summary>Thought Process</summary>
+掃描正常，找到 22 個藍牙裝置；FM-1 因為已連線而不在廣播清單中，完整流程得等它回到廣播狀態才能測。我接下來先更新文件並 commit。
+
+</details></think>
+
+_**Agent (claude-opus-5-5 2026-11-17 13:04:36Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Document Bluetooth auto-connect and commit
+
+```bash
+python3 - <<'EOF'
+p='docs/agentic/conductor-cheatsheet.md'
+s=open(p).read()
+s=s.replace('''2. 跑 `just cond-run`。daemon 自己找到藍牙那個 port；USB 也插著時優先用 USB。''','''2. 跑 `just cond-run`。daemon 自己找到藍牙那個 port；USB 也插著時優先用 USB。
+3. **FM-1 重開之後，macOS 不會自己重新連上**（2026-11-17 實測 `[實機]`）。daemon 找不到任何 port 時，會自己用 CoreBluetooth 找廣播中的 `FM-1 XXXX` 並交給 CoreMIDI，不用再開 MIDI 工作室。也可以單獨做：`just cond-ble connect` / `just cond-ble disconnect`。第一次會要求 terminal 的藍牙權限。不想要自動連線：`just cond-run --no-ble-connect`''')
+s=s.replace('''3. 標頭右上角：''','''4. 標頭右上角：''')
+s=s.replace('''| 斷開連線 | 同一個藍牙設定視窗按 `FM-1 XXXX` 旁的「中斷連線」；或在 FM-1 按 `OCT+` 關掉藍牙（再按一次會重新廣播） |''','''| 斷開連線 | `just cond-ble disconnect`（斷開 `cond-ble connect` 或 daemon 連上的那台）；或藍牙設定視窗按「中斷連線」；或在 FM-1 按 `OCT+` 關掉藍牙（再按一次會重新廣播） |''')
+open(p,'w').write(s)
+
+p='docs/agentic/conductor.md'
+s=open(p).read()
+s=s.replace("- [ ] FM-1 關機再開機後，macOS 會不會自己重新連上藍牙（還沒試）。\n- [ ] 不用 GUI 連線：`just cond-ble connect / disconnect`（CoreBluetooth + `MIDIBluetoothDriverActivateAllConnections`），見[速查](conductor-cheatsheet.md#bluetooth)。",
+            "- [x] FM-1 關機再開機後，macOS **不會**自己重新連上藍牙（2026-11-17 `[實機]`）。\n- [ ] 不用 GUI 連線：`just cond-ble connect / disconnect` 與 daemon 的自動連線已寫好（CoreBluetooth 掃描與連線 + `MIDIBluetoothDriverActivateAllConnections`，`host/conductor/blelink.py`），**還沒對實機試過**。")
+s=s.replace('''| 開關 | 每次開機都開；`OCT+` 關到下次開機（不存設定，所以也不寫 flash） |''','''| 開關 | 每次開機都開；`OCT+` 關到下次開機（不存設定，所以也不寫 flash） |
+| 重新連線 | macOS 不會在 FM-1 重開後自己連回去 `[實機]`。CoreMIDI 有公開的 `MIDIBluetoothConnection.h`（macOS 13 起）：用 CoreBluetooth 掃描並連上周邊，呼叫 `MIDIBluetoothDriverActivateAllConnections` 讓 CoreMIDI 接手，再放掉 CoreBluetooth 的連線；`MIDIBluetoothDriverDisconnect(uuid)` 斷開 `[上游]`。daemon 找不到 port 時照這個流程自己連（`bleak`）|''')
+open(p,'w').write(s)
+EOF
+just docs-check 2>&1 | tail -1; git add host docs Justfile pyproject.toml uv.lock && git commit -q -F - <<'EOF'
+Conductor: connect the FM-1 over Bluetooth without Audio MIDI Setup
+
+macOS does not reconnect a BLE MIDI device after it restarts. The
+daemon now, when it finds no MIDI port, scans for an advertising
+"FM-1 XXXX" with CoreBluetooth (bleak), connects, and calls CoreMIDI's
+public MIDIBluetoothDriverActivateAllConnections so CoreMIDI takes it
+over; MIDIBluetoothDriverDisconnect ends it. Also as
+`just cond-ble connect|disconnect`. Not tried on the unit yet.
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+EOF
+git log --oneline -1
+```
+
+```text
+{"status": "ok", "pages": 43, "llm_pages": 43, "deployed": false}
+24b608b Conductor: connect the FM-1 over Bluetooth without Audio MIDI Setup
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 13:04:47Z)**_
+
+你遇到的情況確認了：FM-1 重開後，macOS 不會自己重新連上藍牙。我改成讓 daemon 自己連，但這段還沒在實機上試過，需要你測一次。
+
+**做了什麼**
+
+- **daemon 會自己連**：`just cond-run` 找不到任何 MIDI port 時，會用 CoreBluetooth 掃描正在廣播的 `FM-1 XXXX`，連上後交給 CoreMIDI，接著照常啟動。這用的是 Apple 公開的 API（`MIDIBluetoothConnection.h`，macOS 13 起）。
+- **也可以單獨下指令**：`just cond-ble connect` 連線，`just cond-ble disconnect` 斷開。
+- **關掉自動連線**：`just cond-run --no-ble-connect`。
+
+**已確認的部分**：CoreMIDI 這兩個函式在你的 Mac 上呼叫得到；藍牙掃描也正常，看到周遭 22 個 BLE 裝置，權限沒問題。FM-1 不在廣播清單裡，因為它現在正連著，連線中的裝置不會廣播。所以完整流程只能等它回到廣播狀態才能測。
+
+**請你這樣測**：
+
+1. 停掉 daemon。
+2. FM-1 關機再開機，確認螢幕顯示灰色的 `BLE` 和 `NO HOST`。不要打開 MIDI 工作室。
+3. 執行 `just cond-run hc`，預期會看到：
+   ```text
+   [ble] no MIDI port; looking for an FM-1 over Bluetooth ...
+   [ble] connected: FM-1 3399
+   [midi] FM-1 3399 Bluetooth
+   [device] hello, protocol 1, firmware 0.3, via Bluetooth
+   ```
+4. 也可以順便試 `just cond-ble disconnect`，它會斷開剛才 daemon 連上的那台。
+
+如果第一次執行時 macOS 跳出藍牙權限的詢問，請允許你跑 daemon 的那個 terminal app。
+
+失敗的話，把輸出貼給我。可能的問題有兩個：CoreMIDI 接手後 port 出現得比較慢，或者放掉 CoreBluetooth 的連線時，連帶把整條藍牙連線也斷了。
+
+速查頁和設計頁都更新了，commit `24b608b`，還沒 push。
+
+---
+
+_**User (2026-11-17 13:28:50Z)**_
+
+```
+
+
+<pasted_content id="ef8f">
+❯  just cond-run hc
+PYTHONPATH=host uv run --locked --all-groups python -m conductor --backend "hc"
+[ble] no MIDI port; looking for an FM-1 over Bluetooth ...
+[ble] connected: FM-1 3399
+[ble] no Conductor on MIDI: no port named CONDUCTOR and none saying HELLO (inputs: [])
+no Conductor on MIDI: no port named CONDUCTOR and none saying HELLO (inputs: [])
+error: recipe `cond-run` failed on line 207 with exit code 2
+</pasted_content id="ef8f">
+
+```
+
+---
+
+_**Agent (claude-opus-5-5 2026-11-17 13:29:14Z)**_
+
+CoreBluetooth 的連線成功了，但 daemon 接著看不到 MIDI port。先看是 port 根本沒出現，還是只有 daemon 這個 process 看不到：開一個新的 process 列出目前的 MIDI port（唯讀）。
+
+_**Agent (claude-opus-5-5 2026-11-17 13:29:15Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+List MIDI inputs from a fresh process
+
+`uv run --locked --all-groups python -c "import mido; print(mido.get_input_names())"`
+
+```text
+[]
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 13:29:38Z)**_
+
+<think><details><summary>Thought Process</summary>
+CoreMIDI 還沒有接手，因為 port 根本沒出現；我猜是 daemon 看到的是舊清單，而我又太早放掉了 CoreBluetooth 連線。接下來我會保持連線，每秒用新的 process 檢查 port 是否出現。
+
+</details></think>
+
+_**Agent (claude-opus-5-5 2026-11-17 13:29:59Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Experiment: connect over CoreBluetooth, activate CoreMIDI, watch ports from fresh processes
+
+```bash
+PYTHONPATH=host uv run --locked --all-groups python - <<'EOF' 2>&1 | tail -25
+import asyncio, subprocess, sys, time
+from bleak import BleakClient, BleakScanner
+from conductor import blelink
+
+def ports():
+    return subprocess.run([sys.executable, "-c", "import mido;print(mido.get_input_names())"], capture_output=True, text=True).stdout.strip()
+
+async def go():
+    dev = await BleakScanner.find_device_by_filter(lambda d, a: blelink._matches(d, a, "FM-1"), timeout=8)
+    print("found:", dev)
+    if not dev:
+        return
+    async with BleakClient(dev, timeout=10) as c:
+        print("connected:", c.is_connected, "services:", [s.uuid for s in c.services])
+        print("activate:", blelink._coremidi().MIDIBluetoothDriverActivateAllConnections())
+        for i in range(12):
+            await asyncio.sleep(1)
+            p = ports()
+            print(f"t+{i+1}s ports: {p}")
+            if "FM-1" in p:
+                break
+    print("CoreBluetooth released")
+    for i in range(4):
+        time.sleep(1)
+        print(f"after release t+{i+1}s ports: {ports()}")
+
+asyncio.run(go())
+EOF
+```
+
+```text
+found: D6921B0E-EB92-E739-FF01-84F882416496: FM-1 3399
+connected: True services: ['03b80e5a-ede8-4b33-a751-6ce34ec4c700']
+activate: 0
+t+1s ports: []
+t+2s ports: []
+t+3s ports: []
+t+4s ports: []
+t+5s ports: []
+t+6s ports: []
+t+7s ports: []
+t+8s ports: []
+t+9s ports: []
+t+10s ports: []
+t+11s ports: []
+t+12s ports: []
+CoreBluetooth released
+after release t+1s ports: []
+after release t+2s ports: []
+after release t+3s ports: []
+after release t+4s ports: []
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 13:30:14Z)**_
+
+<think><details><summary>Thought Process</summary>
+MIDIBluetoothDriverActivateAllConnections 返回成功，但 CoreMIDI 仍未建立裝置。我接下來會試兩件事：先訂閱 MIDI 特徵值的通知，並在同一個 process 中先建立 CoreMIDI client 且讓 run loop 運行。
+
+</details></think>
+
+_**Agent (claude-opus-5-5 2026-11-17 13:30:36Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Experiment: notify on MIDI I/O, create a CoreMIDI client and pump the run loop
+
+```bash
+PYTHONPATH=host uv run --locked --all-groups python - <<'EOF' 2>&1 | tail -25
+import asyncio, ctypes, subprocess, sys
+from bleak import BleakClient, BleakScanner
+from conductor import blelink
+
+MIDI_IO = "7772e5db-3868-4112-a1a9-f2669d106bf3"
+cm = blelink._coremidi()
+cf = ctypes.cdll.LoadLibrary(blelink._CF)
+cf.CFRunLoopRunInMode.argtypes = [ctypes.c_void_p, ctypes.c_double, ctypes.c_bool]
+mode = ctypes.c_void_p.in_dll(cf, "kCFRunLoopDefaultMode")
+client = ctypes.c_uint32()
+cm.MIDIClientCreate.argtypes = [ctypes.c_void_p, ctypes.c_void_p, ctypes.c_void_p, ctypes.POINTER(ctypes.c_uint32)]
+print("MIDIClientCreate:", cm.MIDIClientCreate(blelink._cfstring("conductor-probe"), None, None, ctypes.byref(client)))
+cm.MIDIGetNumberOfDevices.restype = ctypes.c_ulong
+cm.MIDIGetNumberOfSources.restype = ctypes.c_ulong
+
+def ports():
+    return subprocess.run([sys.executable, "-c", "import mido;print(mido.get_input_names())"], capture_output=True, text=True).stdout.strip()
+
+async def pump(seconds):
+    end = asyncio.get_event_loop().time() + seconds
+    while asyncio.get_event_loop().time() < end:
+        cf.CFRunLoopRunInMode(mode, 0.05, False)
+        await asyncio.sleep(0.05)
+
+async def go():
+    dev = await BleakScanner.find_device_by_filter(lambda d, a: blelink._matches(d, a, "FM-1"), timeout=8)
+    print("found:", dev)
+    if not dev:
+        return
+    async with BleakClient(dev, timeout=10) as c:
+        await c.start_notify(MIDI_IO, lambda h, d: None)
+        print("notify on MIDI I/O")
+        await pump(0.5)
+        print("activate:", cm.MIDIBluetoothDriverActivateAllConnections())
+        for i in range(10):
+            await pump(1.0)
+            p = ports()
+            print(f"t+{i+1}s devices={cm.MIDIGetNumberOfDevices()} sources={cm.MIDIGetNumberOfSources()} fresh={p}")
+            if "FM-1" in p:
+                break
+    await pump(2.0)
+    print("after release:", ports())
+
+asyncio.run(go())
+EOF
+```
+
+```text
+MIDIClientCreate: 0
+found: D6921B0E-EB92-E739-FF01-84F882416496: FM-1 3399
+notify on MIDI I/O
+activate: 0
+t+1s devices=8 sources=0 fresh=[]
+t+2s devices=8 sources=0 fresh=[]
+t+3s devices=8 sources=0 fresh=[]
+t+4s devices=8 sources=0 fresh=[]
+t+5s devices=8 sources=0 fresh=[]
+t+6s devices=8 sources=0 fresh=[]
+t+7s devices=8 sources=0 fresh=[]
+t+8s devices=8 sources=0 fresh=[]
+t+9s devices=8 sources=0 fresh=[]
+t+10s devices=8 sources=0 fresh=[]
+after release: []
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 13:31:08Z)**_
+
+<think><details><summary>Thought Process</summary>
+實驗確認 CoreMIDI 記得 FM-1 3399，但它一直離線，公開 API 無法讓它重新上線，所以我改為叫出系統內建的「藍牙 MIDI 設定」視窗，請您按一下「連接」，daemon 會自動接上；我先測試這個視窗能否正常開啟。
+
+</details></think>
+
+_**Agent (claude-opus-5-5 2026-11-17 13:31:44Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Compile a tiny Swift helper that opens the system Bluetooth MIDI window; open it briefly
+
+```bash
+S=/private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/c6419d02-4c76-47d7-b11c-b7db01c7f2b4/scratchpad; cat > $S/btpanel.swift <<'EOF'
+import Cocoa
+import CoreAudioKit
+let app = NSApplication.shared
+app.setActivationPolicy(.accessory)
+let wc = CABTLEMIDIWindowController()
+wc.showWindow(nil)
+NSApp.activate(ignoringOtherApps: true)
+print("window:", wc.window?.title ?? "none")
+fflush(stdout)
+NotificationCenter.default.addObserver(forName: NSWindow.willCloseNotification, object: wc.window, queue: nil) { _ in exit(0) }
+DispatchQueue.main.asyncAfter(deadline: .now() + 60) { exit(0) }
+app.run()
+EOF
+cd $S && swiftc -O -o btpanel btpanel.swift 2>&1 | tail -3; ls -la btpanel 2>/dev/null | awk '{print $5}'; (./btpanel & sleep 3; pkill -f "$S/btpanel" ; true) 2>&1 | head -3
+```
+
+```text
+Nov
+2026-11-17 21:31:42.749 btpanel[60203:262699456] Could not find image named 'Bluetooth'.
+2026-11-17 21:31:42.818 btpanel[60203:262699456] Warning: Column selection is not supported in view-based table and outline views (<CAUITableView: 0x100221ee0>).
+window: Bluetooth Configuration
+Shell cwd was reset to /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 13:32:04Z)**_
+
+<think><details><summary>Thought Process</summary>
+視窗能叫出來（標題和 MIDI 工作室那個一樣），所以 daemon 找不到 port 時改成彈出這個視窗，按「連接」後等 port 出現就自動重啟接上；CoreBluetooth 已確定不通，我會連同 `bleak` 依賴一起移除。
+
+</details></think>
+
+_**Agent (claude-opus-5-5 2026-11-17 13:32:26Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Replace the CoreBluetooth path with the system Bluetooth MIDI window plus wait-and-restart
+
+```bash
+cat > host/conductor/btpanel.swift <<'EOF'
+// SPDX-License-Identifier: MIT
+// macOS's own Bluetooth MIDI window (the one in Audio MIDI Setup's MIDI Studio), opened by itself.
+// The daemon builds this once with swiftc (host/conductor/blelink.py) and opens it when it finds no MIDI port:
+// one click on Connect next to "FM-1 XXXX". It quits when the window closes, or after 10 minutes.
+import Cocoa
+import CoreAudioKit
+
+let app = NSApplication.shared
+app.setActivationPolicy(.accessory)
+let wc = CABTLEMIDIWindowController()
+wc.showWindow(nil)
+NSApp.activate(ignoringOtherApps: true)
+NotificationCenter.default.addObserver(forName: NSWindow.willCloseNotification, object: wc.window, queue: nil) { _ in exit(0) }
+DispatchQueue.main.asyncAfter(deadline: .now() + 600) { exit(0) }
+app.run()
+EOF
+cat > host/conductor/blelink.py <<'EOF'
+"""Bluetooth MIDI on macOS: getting the FM-1 connected again after it restarts.
+
+macOS does not reconnect a BLE MIDI device by itself when the device comes back
+(2026-11-17, on the owner's Mac). CoreMIDI's public MIDIBluetoothConnection.h suggests
+connecting with CoreBluetooth and calling MIDIBluetoothDriverActivateAllConnections;
+tried the same day, it returned 0 but left the known device offline, with or without
+MIDI notifications on and a CoreMIDI client with its run loop. So the daemon opens
+macOS's own Bluetooth MIDI window (CoreAudioKit's CABTLEMIDIWindowController, the one in
+Audio MIDI Setup) and waits: one click on Connect.
+"""
+
+from __future__ import annotations
+
+import os
+import shutil
+import subprocess
+import sys
+import time
+from pathlib import Path
+
+SOURCE = Path(__file__).with_name("btpanel.swift")
+CACHE = Path(os.environ.get("XDG_CACHE_HOME", Path.home() / ".cache")) / "conductor"
+
+
+def panel_binary() -> Path | None:
+    """btpanel.swift built once (swiftc, from the Xcode command line tools); None without it."""
+    out = CACHE / "btpanel"
+    if out.exists() and out.stat().st_mtime >= SOURCE.stat().st_mtime:
+        return out
+    swiftc = shutil.which("swiftc")
+    if not swiftc:
+        return None
+    CACHE.mkdir(parents=True, exist_ok=True)
+    r = subprocess.run([swiftc, "-O", "-o", str(out), str(SOURCE)], capture_output=True, text=True)
+    return out if r.returncode == 0 and out.exists() else None
+
+
+def open_panel() -> subprocess.Popen | None:
+    """The Bluetooth MIDI window, or Audio MIDI Setup when the helper cannot be built."""
+    if sys.platform != "darwin":
+        return None
+    exe = panel_binary()
+    if exe:
+        return subprocess.Popen([str(exe)], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    subprocess.run(["open", "-a", "Audio MIDI Setup"], check=False)
+    return None
+
+
+def fresh_ports() -> list[str]:
+    """MIDI inputs as a new process sees them. A process's own CoreMIDI client may keep an
+    old list without a run loop, so ask a fresh one."""
+    r = subprocess.run(
+        [sys.executable, "-c", "import mido; print('\\n'.join(mido.get_input_names()))"],
+        capture_output=True, text=True,
+    )
+    return [ln for ln in r.stdout.splitlines() if ln.strip()]
+
+
+def wait_for_port(timeout: float = 300.0, every: float = 1.0) -> str | None:
+    end = time.time() + timeout
+    while time.time() < end:
+        ports = fresh_ports()
+        if ports:
+            return ports[0]
+        time.sleep(every)
+    return None
+
+
+def main(argv=None) -> int:
+    """python -m conductor.blelink: open the window and wait for a port."""
+    p = open_panel()
+    print("[ble] Bluetooth MIDI window open: click Connect next to FM-1 XXXX")
+    port = wait_for_port()
+    if p and p.poll() is None:
+        p.terminate()
+    if not port:
+        print("[ble] no MIDI port appeared", file=sys.stderr)
+        return 1
+    print(f"[ble] connected: {port}")
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())
+EOF
+python3 - <<'EOF'
+p='host/conductor/__main__.py'
+s=open(p).read()
+start=s.index("            if sys.platform == \"darwin\" and not args.no_ble_connect and not args.port:")
+end=s.index("            if link is None:")
+s=s[:start]+'''            if sys.platform == "darwin" and not args.no_ble_connect and not args.port:
+                # macOS does not reconnect a Bluetooth MIDI device after it restarts: open its window and wait
+                from .blelink import open_panel, wait_for_port
+
+                panel = open_panel()
+                print("[ble] no MIDI port. In the Bluetooth MIDI window, click Connect next to FM-1 XXXX "
+                      "(or plug in USB). Waiting up to 5 minutes ...")
+                port = wait_for_port()
+                if panel and panel.poll() is None:
+                    panel.terminate()
+                if port:
+                    print(f"[ble] port appeared: {port}; starting again")
+                    # a fresh process: this one's CoreMIDI client may not see the new port
+                    os.execv(sys.executable, [sys.executable, "-m", "conductor", *(argv or sys.argv[1:]), "--no-ble-connect"])
+'''+s[end:]
+s=s.replace('''    ap.add_argument("--no-ble-connect", action="store_true",
+                    help="do not try to connect an FM-1 over Bluetooth when no MIDI port is found")''','''    ap.add_argument("--no-ble-connect", action="store_true",
+                    help="no MIDI port: exit, instead of opening the Bluetooth MIDI window and waiting")''')
+open(p,'w').write(s)
+
+p='pyproject.toml'
+s=open(p).read()
+s=s.replace('''    "bleak>=1.0; sys_platform == 'darwin'",\n''','')
+open(p,'w').write(s)
+
+p='Justfile'
+s=open(p).read()
+s=s.replace('''# Bluetooth MIDI without Audio MIDI Setup (macOS 13+): connect an advertising FM-1, or disconnect it.
+cond-ble action="connect":
+    PYTHONPATH=host uv run --locked --all-groups python -m conductor.blelink "{{action}}"''','''# macOS's Bluetooth MIDI window, opened by itself (click Connect next to FM-1 XXXX); waits for the port.
+cond-ble:
+    PYTHONPATH=host uv run --locked --all-groups python -m conductor.blelink''')
+open(p,'w').write(s)
+EOF
+uv lock 2>&1 | tail -1; uv sync --locked --all-groups 2>&1 | tail -1; just cond-test 2>&1 | tail -1; PYTHONPATH=host uv run --locked --all-groups python -c "
+from conductor.blelink import panel_binary, fresh_ports
+print('helper:', panel_binary()); print('ports now:', fresh_ports())"
+```
+
+```text
+Removed typing-extensions v4.16.0
+ - pyobjc-framework-libdispatch==13.0
+30 passed in 0.14s
+helper: /Users/zhouhanru/.cache/conductor/btpanel
+ports now: []
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 13:32:32Z)**_
+
+輔助程式 build 好了（`~/.cache/conductor/btpanel`），測試也都通過。更新文件，並把這次查到的結論寫進去，然後 commit。
+
+_**Agent (claude-opus-5-5 2026-11-17 13:32:48Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Document the outcome and the new flow; commit
+
+```bash
+python3 - <<'EOF'
+p='docs/agentic/conductor-cheatsheet.md'
+s=open(p).read()
+old_start=s.index("3. **FM-1 重開之後，macOS 不會自己重新連上**")
+old_end=s.index("4. 標頭右上角：")
+s=s[:old_start]+'''3. **FM-1 重開之後，macOS 不會自己重新連上**（2026-11-17 實測 `[實機]`）。daemon 找不到任何 MIDI port 時，會自己彈出 macOS 的藍牙 MIDI 視窗（和 MIDI 工作室裡的同一個），按 `FM-1 XXXX` 旁的「Connect」就好；port 出現後 daemon 會自己重新啟動並接上。單獨叫出視窗：`just cond-ble`。不想要：`just cond-run --no-ble-connect`。第一次使用時會用 `swiftc` 編譯一個小程式（需要 Xcode command line tools）；沒有的話改成打開「音訊 MIDI 設定」。
+'''+s[old_end:]
+s=s.replace('''| 斷開連線 | `just cond-ble disconnect`（斷開 `cond-ble connect` 或 daemon 連上的那台）；或藍牙設定視窗按「中斷連線」；或在 FM-1 按 `OCT+` 關掉藍牙（再按一次會重新廣播） |''','''| 斷開連線 | 藍牙 MIDI 視窗（`just cond-ble`）裡按「Disconnect」；或在 FM-1 按 `OCT+` 關掉藍牙（再按一次會重新廣播） |''')
+open(p,'w').write(s)
+
+p='docs/agentic/conductor.md'
+s=open(p).read()
+s=s.replace('''| 重新連線 | macOS 不會在 FM-1 重開後自己連回去 `[實機]`。CoreMIDI 有公開的 `MIDIBluetoothConnection.h`（macOS 13 起）：用 CoreBluetooth 掃描並連上周邊，呼叫 `MIDIBluetoothDriverActivateAllConnections` 讓 CoreMIDI 接手，再放掉 CoreBluetooth 的連線；`MIDIBluetoothDriverDisconnect(uuid)` 斷開 `[上游]`。daemon 找不到 port 時照這個流程自己連（`bleak`）|''','''| 重新連線 | macOS 不會在 FM-1 重開後自己連回去 `[實機]`。CoreMIDI 公開的 `MIDIBluetoothConnection.h`（macOS 13 起）說：用 CoreBluetooth 連上周邊，再呼叫 `MIDIBluetoothDriverActivateAllConnections` 讓 CoreMIDI 接手 `[上游]`。2026-11-17 實測：CoreBluetooth 連得上（看得到 BLE-MIDI service、可以訂閱 MIDI I/O），呼叫也回傳 0，但 CoreMIDI 裡已知的 `FM-1 3399` 一直是離線，先建立 CoreMIDI client、讓 run loop 跑也一樣 `[實機]`。所以 daemon 改成找不到 port 時彈出 macOS 的藍牙 MIDI 視窗（CoreAudioKit 的 `CABTLEMIDIWindowController`，`host/conductor/btpanel.swift`），按一下「Connect」，port 出現後 daemon 以新的 process 重新啟動（同一個 process 的 CoreMIDI client 可能看不到新的 port）|''')
+s=s.replace("- [ ] 不用 GUI 連線：`just cond-ble connect / disconnect` 與 daemon 的自動連線已寫好（CoreBluetooth 掃描與連線 + `MIDIBluetoothDriverActivateAllConnections`，`host/conductor/blelink.py`），**還沒對實機試過**。",
+            "- [x] 純程式連線（CoreBluetooth + `MIDIBluetoothDriverActivateAllConnections`）：試過，不行（見上表）。\n- [ ] 重開後的重新連線：daemon 自動彈出藍牙 MIDI 視窗、按 Connect 後自動接上。視窗叫得出來已確認，整段流程還沒在實機走一次。")
+open(p,'w').write(s)
+EOF
+just docs-check 2>&1 | tail -1; git add host docs Justfile pyproject.toml uv.lock && git commit -q -F - <<'EOF'
+Conductor: reconnect Bluetooth through macOS's own window
+
+Tried on the unit: connecting with CoreBluetooth and calling CoreMIDI's
+MIDIBluetoothDriverActivateAllConnections returns 0 but leaves the known
+device offline. So the daemon, finding no MIDI port, opens macOS's
+Bluetooth MIDI window (CoreAudioKit CABTLEMIDIWindowController, a small
+Swift helper built once with swiftc), waits for a port, and restarts in
+a fresh process to pick it up. bleak is gone again.
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+EOF
+git log --oneline -1
+```
+
+```text
+{"status": "ok", "pages": 43, "llm_pages": 43, "deployed": false}
+bf65a55 Conductor: reconnect Bluetooth through macOS's own window
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 13:33:01Z)**_
+
+全自動重新連上藍牙做不到，所以我改成：daemon 自動彈出 macOS 的藍牙 MIDI 視窗，你按一下「Connect」就好，不用再去 MIDI 工作室找。
+
+**為什麼不能全自動**
+
+我用 FM-1 實際試了 Apple 文件寫的程式連線方式：
+
+- 程式透過藍牙連得上 FM-1，也看得到它的 MIDI 服務。
+- 接著叫 macOS 的 MIDI 系統接手，回傳是成功的，但 macOS 記得的 `FM-1 3399` 一直停在離線，port 始終沒有出現。
+- 換了兩種做法（先開啟 MIDI 資料通知、先建立 MIDI 連線並讓它跑起來），結果都一樣。
+
+所以這條路不通，相關程式和新加的 BLE 套件都拿掉了。
+
+**現在的流程**
+
+1. FM-1 開機，螢幕顯示灰色的 `BLE` 和 `NO HOST`。
+2. 跑 `just cond-run hc`。找不到任何 MIDI port 時，會**自動彈出藍牙 MIDI 視窗**，也就是你在 MIDI 工作室用過的那個。
+3. 按 `FM-1 3399` 旁的 **Connect**。
+4. port 一出現，daemon 會自動重新啟動並連上，視窗也會自己關掉。
+
+其他用法：
+- 只想叫出那個視窗：`just cond-ble`。
+- 不想彈視窗：`just cond-run --no-ble-connect`，找不到 port 就直接結束。
+- 這個視窗是一個小 Swift 程式，第一次使用時用 `swiftc` 編譯，我已經在你的 Mac 上編好了。
+
+視窗叫得出來我已經確認過，但整段流程（按 Connect → daemon 自動接上）還沒在實機上走過。你可以關機再開機試一次。如果按了 Connect 之後 daemon 一直沒接上，把輸出貼給我。
+
+**斷開**：在同一個視窗按 Disconnect，或在 FM-1 上按 `OCT+`。
+
+速查頁和設計頁都更新了，「純程式連線試過、不行」的結果也記進去了。commit `bf65a55`，還沒 push。
+
+---
+
+_**User (2026-11-17 13:34:16Z)**_
+
+```
+
+
+<pasted_content id="ef8f">
+❯ just cond-run hc
+PYTHONPATH=host uv run --locked --all-groups python -m conductor --backend "hc"
+[ble] no MIDI port. In the Bluetooth MIDI window, click Connect next to FM-1 XXXX (or plug in USB). Waiting up to 5 minutes ...
+[ble] port appeared: FM-1 3399 Bluetooth; starting again
+[midi] FM-1 3399 Bluetooth
+[backend] hc: 2 agents, 2 shells not shown (--show-shells to list them)
+[voice] ARP holds ctrl+option (hold)
+[device] hello, protocol 1, firmware 0.3, via Bluetooth
+</pasted_content id="ef8f">
+
+```
+
+成功了 不過目前這個流程是不是也只能在 MacOS上面work？
+
+---
+
+_**Agent (claude-opus-5-5 2026-11-17 13:34:33Z)**_
+
+流程跑通了：按 Connect 之後，daemon 自動重新啟動，透過藍牙接上。
+
+對，**有兩個功能只能在 macOS 上用**，其他部分原則上跨平台，但我只在你的 Mac 上試過：
+
+| 部分 | macOS | Linux | Windows |
+|---|---|---|---|
+| daemon 本體（hc / Herdr、協定、找 port） | 已實測 | 應該可以：`mido` + `python-rtmidi` 走 ALSA；hc 和 Herdr 也有 Linux 版 | 應該可以：USB-MIDI 走 WinMM |
+| USB 連線 | 已實測 | 應該可以 | 應該可以 |
+| 藍牙 MIDI 連線 | 已實測；重開後靠藍牙 MIDI 視窗按一下 | 應該可以，而且可能更簡單：BlueZ 支援 BLE MIDI，`bluetoothctl connect <位址>` 可以純指令連線，連上後會出現 ALSA port | 難：一般的 MIDI 介面看不到藍牙 MIDI 裝置，要改用 Windows 新的 MIDI 服務 |
+| **自動彈出藍牙視窗** | ✅ | ❌ macOS 專屬（CoreAudioKit） | ❌ |
+| **`ARP` 語音鍵** | ✅ | ❌ 目前只寫了 macOS 的按鍵模擬 | ❌ |
+| DETAIL 中文點陣圖 | ✅ STHeiti | 有 Noto CJK 字型就可以（已列在字型候選裡） | 字型候選沒列 Windows 的字型，會退回 ASCII 文字 |
+
+在非 macOS 系統上，這兩個專屬功能會自動跳過，不會讓 daemon 起不來。找不到 port 時，daemon 會直接結束，不會彈視窗；語音鍵目前沒有自動跳過，不過 `--no-voice` 可以關掉。要支援 Linux 的話，語音鍵可以改用 `xdotool` 或 `ydotool`，藍牙重連可以用 `bluetoothctl`。你有在 Linux 上用的需求，我再補上。
+
+順便把這次的成功和平台對照記進文件。
+
+_**Agent (claude-opus-5-5 2026-11-17 13:34:43Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Skip the voice key off macOS, add a platform table, record the reconnect result; commit
+
+```bash
+grep -n "voice = VoiceKey" host/conductor/__main__.py; python3 - <<'EOF'
+p='host/conductor/__main__.py'
+s=open(p).read()
+s=s.replace('''    if cfg.get("voice_keys") and not args.no_voice:''','''    if cfg.get("voice_keys") and not args.no_voice and sys.platform == "darwin":  # key events: macOS only so far''')
+open(p,'w').write(s)
+
+p='docs/agentic/conductor.md'
+s=open(p).read()
+s=s.replace("- [ ] 重開後的重新連線：daemon 自動彈出藍牙 MIDI 視窗、按 Connect 後自動接上。視窗叫得出來已確認，整段流程還沒在實機走一次。",
+            "- [x] 重開後的重新連線：daemon 自動彈出藍牙 MIDI 視窗，按 Connect 後以新的 process 重新啟動並接上（2026-11-17 `[實機]`）。\n- [ ] Linux：語音鍵（`xdotool` / `ydotool`）、藍牙重連（`bluetoothctl`）。")
+s=s.replace('''## 經過 iOS 或 MIDI routing app { #routing }''','''## 平台 { #platforms }
+
+只在我的 Mac（macOS 27）上跑過；其他平台是依程式碼判斷 `[調研]`。
+
+| 部分 | macOS | Linux | Windows |
+|---|---|---|---|
+| daemon、USB 連線 | 實測 | 應該可以（`python-rtmidi` 走 ALSA；hc、Herdr 有 Linux 版） | 應該可以（WinMM） |
+| 藍牙 MIDI | 實測；重開後按一下藍牙 MIDI 視窗 | BlueZ 支援 BLE MIDI，`bluetoothctl connect` 可以純指令連線，連上後是 ALSA port | 一般 MIDI API 看不到 BLE MIDI 裝置，要 Windows 的新 MIDI 服務 |
+| 自動彈出藍牙 MIDI 視窗 | 有（CoreAudioKit） | 沒有：找不到 port 就結束 | 沒有 |
+| `ARP` 語音鍵 | 有（CGEvent，要輔助使用權限） | 沒有（之後可用 `xdotool` / `ydotool`） | 沒有 |
+| DETAIL 中文點陣圖 | STHeiti | 有 Noto CJK 就有 | 沒列 Windows 字型，退回 ASCII |
+
+## 經過 iOS 或 MIDI routing app { #routing }''')
+open(p,'w').write(s)
+EOF
+just cond-test 2>&1 | tail -1; just docs-check 2>&1 | tail -1; git add host docs && git commit -q -m "Conductor: platform notes; voice key only on macOS; Bluetooth reconnect works
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>" && git log --oneline -1
+```
+
+```text
+141:        c.voice = VoiceKey(cfg["voice_keys"], cfg.get("voice_mode", "hold"), cfg.get("voice_max_hold", 120.0))
+30 passed in 0.05s
+{"status": "ok", "pages": 43, "llm_pages": 43, "deployed": false}
+f72449a Conductor: platform notes; voice key only on macOS; Bluetooth reconnect works
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 13:34:49Z)**_
+
+我把語音鍵改成只在 macOS 啟用，在其他系統上不需要加 `--no-voice` 也不會出錯。測試 30 項全過。
+
+設計頁新增了「平台」一節，就是上面那張表；藍牙重開後重新連線成功也記進去了。commit `f72449a`，還沒 push。

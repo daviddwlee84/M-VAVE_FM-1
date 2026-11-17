@@ -135,7 +135,7 @@ def main(argv=None) -> int:
         c.renderer = LineRenderer(cfg.get("detail_font"), cfg.get("detail_font_size", 14))
     except (ImportError, OSError) as e:
         print(f"[detail] text only (ASCII): {e}", file=sys.stderr)
-    if cfg.get("voice_keys") and not args.no_voice:
+    if cfg.get("voice_keys") and not args.no_voice and sys.platform == "darwin":  # key events: macOS only so far
         from .voice import VoiceKey, accessibility_trusted
 
         c.voice = VoiceKey(cfg["voice_keys"], cfg.get("voice_mode", "hold"), cfg.get("voice_max_hold", 120.0))
