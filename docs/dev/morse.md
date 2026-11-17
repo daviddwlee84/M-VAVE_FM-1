@@ -137,14 +137,15 @@ WPM 是每分鐘幾個字，以 PARIS 這個字（50 個單位）為準：**dit 
 
 | 方式 | 怎麼做 |
 |---|---|
-| 網頁（Chrome、Edge） | fm1-morse 的 `web/progress.html`：Connect、Download the progress；還原時選檔案、Send it to the FM-1 |
+| 網頁（Chrome、Edge） | [MORSE on the web](https://daviddwlee84.github.io/fm1-morse/web/)（fm1-morse 的 `web/index.html`，舊網址 `web/progress.html` 會轉過去）：Connect、Download the progress；還原時選檔案、Send it to the FM-1 |
 | 指令列 | `just morse-backup FILE.json`、`just morse-restore FILE.json` |
 
 檔案是 JSON，列出每個字兩個方向的盒號（0–5）和最後作答的回合，可以手改。FM-1 收到後先檢查 CRC 和內容是否合理，再顯示回合數、開放幾個字、答過幾題，按 `PLAY` 才載入。協定見 [`host/morse/PROTOCOL.md`](https://github.com/daviddwlee84/M-VAVE_FM-1/blob/main/host/morse/PROTOCOL.md) 的 Progress 一節。
 
 - **只走 USB**：0.4 的韌體沒有開藍牙，所以網頁和指令列都要接 USB 線。網頁找機器時不看 port 名稱，而是看哪個 port 在送 HELLO，因為 macOS 會沿用這個 USB 裝置第一次接上時的名字（這台叫 `Felucca`）`[實機]`。
 - **藍牙之後**：0.5 開 own BLE stack 後，hostlink 本來就能走藍牙收發 SysEx。macOS 在「音訊 MIDI 設定」配對 BLE-MIDI 裝置後，會把它當成一般的 MIDI port，Chrome 的 Web MIDI 應該也看得到，網頁程式不用改。這點還沒驗證 `[調研]`。
-- **入口**：進度頁目前只從 fm1-morse 的 README 和這裡連過去。Hub 的 `fmhub.json` 有 `editor` 欄位（「a web editor for its sounds or settings」，會顯示在卡片上 `[上游]`），可以填這個網址。
+- **入口**：fm1-morse README 的最上面，以及 Hub 卡片：`fmhub.json` 的 `editor` 欄位（「a web editor for its sounds or settings」`[上游]`）2026-11-18 填了這個網址。
+- **Live**（2026-11-18 加入，不需要新韌體）：網頁顯示 FM-1 讀到的字（`T_CHAR`，在 KEY 頁發報或在 TYPE 頁打字）和按鍵燈號（note 0），也能送字給 FM-1 播（`T_TEXT`、`T_STOP`），等於網頁版的 `morse-send`，加上只顯示、不打進系統的 `morse-type`。網頁會回應 HELLO，所以 FM-1 會顯示 `PC`。送字在實機上試過 `[實機]`。
 
 ## 練長短：RHYTHM 頁 { #rhythm }
 
@@ -349,5 +350,4 @@ TYPE 頁的 LIVE 對應「打一個送一個」，COMPOSE 對應「先打好再�
 | 項目 | 為什麼現在不做 | 什麼時候做、怎麼做 |
 |---|---|---|
 | **更多符號進閃卡**：`' ! ( ) & : ; + - _ " $ @`，以及 `<AR>` `<SK>` `<KN>` 等 prosign（2026-11-18 試用時提出） | 課程是 LCWO 的 41 字 Koch 課表，通聯和考試幾乎只用這些。這些符號很少用，prosign 在 LISTEN 的 QSO 節目和 TYPE 的片語頁裡聽得到。每個字的盒號存在大小固定的紀錄裡（`LN_N = 41`，`ln_state_t`），加字就要改存檔格式：韌體的 `REC_VER` 升到 2 並寫升級程式，備份格式（`PROG_FORMAT`、host 的 `progress.py`、網頁）也要升版，舊備份要能讀 | 等學完 41 個字。做法：在 Koch 順序之後加第 9、10 組（常用的 prosign 一組，其他符號一組），prosign 的卡片用 `<..>` 連在一起播 |
-| **網頁上的即時互動**：機器打的字即時出現在網頁上、網頁打字送到 FM-1 播，像 SLOOP 的網頁編輯器那樣連著用（2026-11-18 提出） | 現在的功能已經夠用：打字進電腦有 `just morse-type`，電腦送字有 `just morse-send`，看自己的按鍵節奏有 KEY 頁的 TIMING 檢視，網頁上的發報練習有 Vail。機器端不用改（`T_CHAR`、`T_TEXT` 都有），只差網頁 | 如果有不想裝 Python 的使用者想用「電腦送字給 FM-1 練抄收」，就在進度頁加一個 Live 區塊：顯示 FM-1 讀到的字、一個送字的輸入框、PLAY/STOP |
 | **網頁走藍牙** | 韌體 0.4 沒有開藍牙 | 跟著 0.5 的藍牙一起驗證，見[備份與還原](#backup) |

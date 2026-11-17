@@ -144,7 +144,7 @@ just morse-backup progress.json  # 0.4：學習進度存成 JSON（FM-1 上什�
 just morse-restore progress.json # 0.4：載回去；FM-1 會先問，按 PLAY 才載入
 ```
 
-不想裝 Python 的話，用 Chrome 開 fm1-morse 的 `web/progress.html` 也能備份和還原。
+不想裝 Python 的話，用 Chrome 或 Edge 開 [MORSE on the web](https://daviddwlee84.github.io/fm1-morse/web/)：看 FM-1 讀到的字、送字給它播、備份和還原，都不用安裝。
 
 ## 0.1 和 0.2 的差別
 

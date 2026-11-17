@@ -79,7 +79,7 @@ EDIT 改的是副本，按 `PLAY`（或 `REC`）時才問「SAVE CHANGES?」。
 
 進度存在 FM-1 的 flash 裡（`0xDA000`）。換成別的韌體不一定保得住：從 SLOOP 2.8.5 切回來時還在，刷回原廠 V15 就沒了 `[實機]`。換韌體前先備份：
 
-- **網頁**：用 Chrome 或 Edge 開 [progress 頁](https://daviddwlee84.github.io/fm1-morse/web/progress.html)（或 fm1-morse 裡的 `web/progress.html`），Connect，Download the progress。換回 MORSE 後選檔案，Send it to the FM-1。
+- **網頁**：用 Chrome 或 Edge 開 [MORSE on the web](https://daviddwlee84.github.io/fm1-morse/web/)（或 fm1-morse 裡的 `web/index.html`），Connect，Download the progress。換回 MORSE 後選檔案，Send it to the FM-1。
 - **指令列**：`just morse-backup progress.json`，之後 `just morse-restore progress.json`。
 
 FM-1 收到備份後會顯示回合數、開放幾個字、答過幾題，按 `PLAY` 才載入。備份檔是 JSON，可以直接改每個字的盒號。
@@ -102,4 +102,4 @@ FM-1 收到備份後會顯示回合數、開放幾個字、答過幾題，按 `P
 
 接上電腦後，FM-1 在 Vail 眼中就是一個 MIDI 電鍵（[和 Vail 搭配](morse.md#vail)）。單字和呼號的抄收、QSO 模擬、和朋友互傳（Morse Mailbox、Repeater），都到 [training.vailmorse.com](https://training.vailmorse.com/) 練。MORSE 本身負責每天的字母和節奏基礎。
 
-也可以把 FM-1 當成 Mac 的摩斯鍵盤：`just morse-type`，在 KEY 頁打的字會打進目前的視窗。
+也可以把 FM-1 當成 Mac 的摩斯鍵盤：`just morse-type`，在 KEY 頁打的字會打進目前的視窗。只想看自己打了什麼、或讓電腦送字給 FM-1 練抄收，用 [MORSE on the web](https://daviddwlee84.github.io/fm1-morse/web/) 的 Live 區塊就好，不用裝東西，也不需要 Accessibility 權限。

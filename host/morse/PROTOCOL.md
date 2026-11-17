@@ -56,7 +56,7 @@ CHAR is sent only while the host counts as present (it answered within 10 s).
 
 ## Progress
 
-Firmware 0.4 and later; `host/morse/progress.py`, and the same code in fm1-morse `web/progress.html`.
+Firmware 0.4 and later; `host/morse/progress.py`, and the same code in fm1-morse `web/index.html` (MORSE on the web, which also shows CHAR and sends TEXT / STOP).
 
 The record: a format byte (`01`), then `learn.c`'s `ln_blob`, 259 bytes little-endian with no padding (round u16,
 streak u16, open u8, answered u32, right u32, then for each of the 41 characters in Koch order its recognise and
