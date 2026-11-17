@@ -97,7 +97,20 @@ M-VAVE 官方的產品頁與下載在 [cuvave.com](https://www.cuvave.com/produc
 - **Hub 讀的是 `fmhub.json`**：fm1-base build 出來的 `firmware.json`，在 Hub 的文件裡完全沒提到。
 - **一個 repo 一張卡**：圖片路徑、`fmhub.json` 都以 repo 根目錄為準，所以要上架的韌體應該放在獨立 repo（見[自製韌體環境](../dev/index.md)）。
 
-上架之後，fm1-emu 和 RemoteFM1 的清單會自動從 Hub 帶進去。awesome-fm-1（每個 PR 一筆）、aroum/fm1-custom-fw、fm1-editor.com（開 issue）、FM-1 Firmware Atlas（PR 改 `data/firmwares.json`）則要另外提交。公告通常發在 r/MVaveFM1。
+### 社群清單 { #lists }
+
+Hub 之外的韌體清單，2026-11-18 查的。stars 是當天 GitHub 上的數字，「外部 PR」是最近 15 個已關閉、不是維護者自己開的 PR 中被 merge 的比例。`[上游]`
+
+| 清單 | 熱門程度 | 收錄方式與格式 | Morse |
+|---|---|---|---|
+| [aroum/fm1-custom-fw](https://github.com/aroum/fm1-custom-fw) | 424 stars；外部 PR 11/15 merge | 發 PR。沒有 CONTRIBUTING，README 是編號表格：`**名稱 by 作者**<br>[GitHub](…) \| …<br>**License:** …`，加上 Concept／Features 欄。fm1-base 做的工具（CTL-1、MIDIMON）放 1.1.4，遊戲和非音訊的放 1.3 | [PR #36](https://github.com/aroum/fm1-custom-fw/pull/36)：1.1.4 第 126 筆 |
+| [cicloid/awesome-fm-1](https://github.com/cicloid/awesome-fm-1) | 93 stars；外部 PR 15/15 merge | 依 `CONTRIBUTING.md` 發 PR：`- [名稱](url) - 說明.`，一行、寫作者和授權、一個 PR 只加一筆。工具放 *Not a synth* | [PR #30](https://github.com/cicloid/awesome-fm-1/pull/30) |
+| [fm1-editor.com](https://fm1-editor.com/firmware/)（benny-sparra/fm1-dx7-patch-importer） | 75 stars | 頁尾寫「缺了哪個韌體就開 issue」 | 等 Hub 上架後看會不會自己出現 |
+| fm1-emu、RemoteFM1 的 FM-1 Player、[FMDB](https://stanleygurvich.github.io/FMDB_FM1_FirmwareDatabase/) | — | 自動跟著 Hub 的目錄，或自己爬 GitHub | 不用送 |
+| FM-1 Firmware Atlas（wero1414/atlas-fm-1） | 0 stars | 發 PR 改 `data/firmwares.json` | 不送 |
+| FM1 Developers' Wiki | 5 stars | 不是韌體清單，只收「帶有開發知識」的專案 | 不送 |
+
+公告通常發在 r/MVaveFM1。這張表也寫在 repo 的 skill `fm1-hub-listing` 裡，兩邊要一起更新。
 
 **實際送審的經驗**（Morse，2026-11-18）：
 

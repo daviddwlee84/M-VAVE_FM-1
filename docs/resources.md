@@ -35,7 +35,7 @@ GitHub stars 只代表關注度，**不是刷機安全性的證據**。
 | [cicloid/awesome-fm-1](https://github.com/cicloid/awesome-fm-1) | awesome list（CC0） | 快速找新韌體與工具 |
 | [The Firmware Hub](https://thefirmwarehub.com/) | 韌體目錄 + 瀏覽器一鍵安裝 | 方便試玩；只檢查封裝，見上方警告 |
 
-分工：找新韌體看 The Firmware Hub 或 awesome-fm-1；查底層正確性看 Developers' Wiki；查逆向與工具看 aroum/fm1-custom-fw。
+分工：找新韌體看 The Firmware Hub 或 awesome-fm-1；查底層正確性看 Developers' Wiki；查逆向與工具看 aroum/fm1-custom-fw。要把自己的韌體放上這些清單：熱門程度與收錄方式見[社群清單](firmware/hub.md#lists)。
 
 ## C. 韌體 base
 
