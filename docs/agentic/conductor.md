@@ -230,6 +230,26 @@ Preflight：
 
 會被改的地方：韌體區 `0x04000`–`0x92FFF`。ChoralRoot 的映像到 `0x9EFFF`，`0x93000`–`0x9EFFF` 留著不動，Conductor 不讀它。Conductor 不寫設定 sector `0xFC000`，也不寫任何資料區。實際寫入範圍以 M-Flasher 刷之前印出的計畫為準。
 
+### 0.2 的檢查 { #flash-0-2 }
+
+0.2 加了 DETAIL 點陣圖、KNOB 1 捲動、說明頁。換成 0.2 一樣是韌體寫入，要我本人批准。
+
+| 項目 | 值 |
+|---|---|
+| 檔案 | `firmware/conductor/build/conductor.fwsc`（616,003 B，identity `FM-1_1200`） |
+| 來源 | commit `5add525`，乾淨的工作區重新 build，兩次 build 的 SHA-256 相同 |
+| SHA-256 | `48a052f9aa917a576a505f1f0dd75a4eaa375204371c5660a7932eeb2cfaea6d` |
+
+| 檢查 | 結果 | 標記 |
+|---|---|---|
+| `just fw-test conductor` | 全部 `ok`，含 KNOB 1 捲動、說明頁、host 畫的中文行（699 個點） | `[模擬]` |
+| fm1-emu 兩種晶片：開機 → 重開 → 再讀回 | 都 0 次 erase / program | `[模擬]` |
+| 疊在 `2026-11-17-pre-conductor` 備份上開機 | 正常、0 次寫入 | `[模擬]` |
+| 558 bytes 的點陣圖 frame 走虛擬 USB | 收得到，DETAIL 頁中文正確 | `[模擬]` |
+| 備份 | `2026-11-17-pre-conductor`（ChoralRoot 狀態）；0.1 不寫 flash，所以現在的資料區和那份相同（除了韌體區） | `[實機]` |
+
+步驟和 0.1 相同：關掉模擬器與 daemon，跑 `just fm1-switch firmware/conductor/build/conductor.fwsc`，確認計畫後打 `yes`。
+
 ### 刷的步驟（由我本人執行）
 
 1. 關掉模擬器（`fm1-switch` 看到模擬器在 USB 上會拒絕執行，避免刷錯對象）。
