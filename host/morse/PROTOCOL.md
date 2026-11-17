@@ -38,14 +38,14 @@ ID; `4D 4F` ("MO") keeps it apart from fm1-base's `7D 4C …` and Conductor's `7
 |---|---|---|
 | `41` | HELLO | `ver`, firmware major, minor, transport (0 USB, 1 BLE). Once a second until a HELLO_ACK |
 | `42` | HEARTBEAT | `ver`, transport. Once a second after a HELLO_ACK |
-| `43` | CHAR | ASCII: what the device read from the key (KEY page), or a letter typed (TYPE page). `20` (space) ends a word; `*` is a pattern that is no character |
+| `43` | CHAR | ASCII: what the device read from the key (KEY page), or what was typed (TYPE page: a letter, or from firmware 0.2 a phrase such as `<SK> `, several characters in one frame; in COMPOSE mode the whole line when it is sent). `20` (space) ends a word; `*` is a pattern that is no character |
 
 ### Host → device
 
 | Type | Name | Payload |
 |---|---|---|
 | `01` | HELLO_ACK | `ver`. The answer to HELLO **and to every HEARTBEAT**: the device counts the host as gone 10 s after its last frame |
-| `02` | TEXT | ASCII, at most 60 characters: played as received, at the device's speed. Characters without a code are skipped |
+| `02` | TEXT | ASCII, at most 60 characters: played as received, at the device's hearing speed. Characters without a code are skipped. From firmware 0.2, characters between `<` and `>` are run together as one prosign (`<SK>` is `...-.-`) |
 | `03` | STOP | stop playing the received text |
 
 CHAR is sent only while the host counts as present (it answered within 10 s).
@@ -57,7 +57,7 @@ The same bytes are in `host/morse/protocol.py` (`VECTORS`) and in
 
 | Name | Bytes |
 |---|---|
-| hello (firmware 0.1, USB) | `F0 7D 4D 4F 01 41 01 00 01 00 F7` |
+| hello (firmware 0.2, USB) | `F0 7D 4D 4F 01 41 01 00 02 00 F7` |
 | hello_ack | `F0 7D 4D 4F 01 01 01 F7` |
 | char_k | `F0 7D 4D 4F 01 43 4B F7` |
 | text_cq | `F0 7D 4D 4F 01 02 43 51 F7` |

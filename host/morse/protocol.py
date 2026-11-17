@@ -30,6 +30,7 @@ TEXT_MAX = 60  # characters in one TEXT frame (the device's player queues 63)
 
 # the characters the firmware knows (firmware/morse/morse.c MO_TABLE), and the space
 MORSE_CHARS = set("ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789.,?'!/()&:;=+-_\"$@ ")
+PROSIGN_OPEN, PROSIGN_CLOSE = "<", ">"  # characters between them are run together (<SK>), firmware 0.2 and later
 UNKNOWN = "*"  # what the device's decoder sends for a pattern that is no character
 
 # MIDI keying, as the Vail adapter sends it (vail-adapter docs/MIDI_INTEGRATION_SPEC.md)
@@ -75,7 +76,7 @@ def clean_text(text: str) -> str:
     for ch in text.upper():
         if ch in ("\n", "\t"):
             ch = " "
-        if ch not in MORSE_CHARS:
+        if ch not in MORSE_CHARS and ch not in (PROSIGN_OPEN, PROSIGN_CLOSE):
             continue
         if ch == " " and (not out or out[-1] == " "):
             continue
@@ -133,7 +134,7 @@ def hexs(b: bytes) -> str:
 
 # shared with firmware/morse/tests/basic.txt: the same bytes, by the name in its comments
 VECTORS = {
-    "hello": (device_hello(0, 1), "F0 7D 4D 4F 01 41 01 00 01 00 F7"),
+    "hello": (device_hello(0, 2), "F0 7D 4D 4F 01 41 01 00 02 00 F7"),
     "hello_ack": (hello_ack(), "F0 7D 4D 4F 01 01 01 F7"),
     "char_k": (device_char("K"), "F0 7D 4D 4F 01 43 4B F7"),
     "text_cq": (text("cq")[0], "F0 7D 4D 4F 01 02 43 51 F7"),

@@ -33,6 +33,7 @@ def test_not_ours_and_wrong_version():
 
 def test_clean_text():
     assert P.clean_text("  cq  cq\nde FM1 k ") == "CQ CQ DE FM1 K"
+    assert P.clean_text("73 <sk>") == "73 <SK>"
     assert P.clean_text("naïve #1 ~ ok?") == "NAVE 1 OK?"
     assert P.clean_text("") == ""
 
@@ -59,7 +60,7 @@ def test_host_answers_hello_and_types():
     for _ in range(3):
         host.pump(0.01)
     assert link.acked and host.connected
-    assert host.firmware == (0, 1)
+    assert host.firmware == (0, 2)
     assert typer.typed == "cq de fm1 "
     assert P.hello_ack() in link.sent
 

@@ -22,7 +22,7 @@ M-Flasher 的 flash map 用顏色標的就是這些：BOOT `00–03`、FIRMWARE 
 |---|---|---|
 | SLOOP 2.8.5、Agent Deck 0.7、CTL-1 1.0.3 | `0x04000`–`0x92FFF`（實際寫入到 `0x8FFFF`） | `[實機]` |
 | Conductor 0.1（自製，fm1-base） | `0x04000`–`0x92FFF`（實際寫入 `0x04000`–`0x8EFFF`、`0x91000`–`0x91FFF`） | `[實機]` M-Flasher 的計畫：140 sectors |
-| Morse 0.1（自製，fm1-base） | `0x04000`–`0x92FFF` | `[模擬]` 預演，還沒刷 |
+| Morse 0.1（自製，fm1-base） | `0x04000`–`0x92FFF`（從 Conductor 0.3 換過來時實際寫入 `0x04000`–`0x21FFF`） | `[實機]` M-Flasher 的計畫：30 sectors |
 | **ChoralRoot 0.41** | `0x04000`–**`0x9EFFF`** | `[實機]` M-Flasher 的計畫：152 sectors |
 | **原廠 V16** | 到 **`0xA8FFF`** | `[上游]` Unbricker |
 

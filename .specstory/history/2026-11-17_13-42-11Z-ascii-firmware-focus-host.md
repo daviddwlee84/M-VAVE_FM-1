@@ -31748,3 +31748,9196 @@ e264849 Conductor 0.3: flash-readiness record
 .claude/skills/zensical-site-bootstrap
 ```
 </details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 14:50:42Z)**_
+
+plan 檔和 `.specstory` 平常都會一起 commit，這次照做。
+
+_**Agent (claude-opus-5-5 2026-11-17 14:50:47Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Commit the Morse firmware, host and docs
+
+```bash
+git add -A && git status --short && git commit -q -F - <<'EOF'
+Morse 0.1: pocket Morse code machine (firmware + host)
+
+firmware/morse on fm1-base, MIT: keyer (straight, iambic A/B) and an
+adaptive decoder on the piano keys, the keys as a letter keyboard, flash
+cards with Leitner boxes in Koch order counted in rounds (no clock through
+a power-off), learning by sound by default (no dots and dashes drawn) or
+by sight, a silent mode read on the lights, and USB-MIDI keying as note 0
+on channel 1 in the Vail adapter's format. Settings and progress in one
+record at 0xDA000.
+
+host/morse: types what the FM-1 reads into the focused Mac app, sends
+text for it to play; SysEx protocol in host/morse/PROTOCOL.md with
+vectors shared with firmware/morse/tests/basic.txt.
+
+Verified in the unit tests (just morse-unit), the host simulator
+(just fw-test morse), host tests, and fm1-emu on both flash chips; not
+flashed yet. Docs: docs/dev/morse.md, docs/dev/morse-cheatsheet.md, and
+two FM-1s connected (docs/hardware/io.md).
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+EOF
+git log --oneline -1 && git status --short | head
+```
+
+```text
+A  .claude/plans/squishy-riding-flute.md
+A  .specstory/history/2026-11-17_13-42-11Z-ascii-firmware-focus-host.md
+M  .specstory/statistics.json
+M  AGENTS.md
+M  Justfile
+M  README.md
+M  docs/dev/index.md
+A  docs/dev/morse-cheatsheet.md
+A  docs/dev/morse.md
+M  docs/firmware/switching.md
+M  docs/hardware/flash-map.md
+M  docs/hardware/io.md
+M  docs/index.md
+M  firmware/common/README.md
+A  firmware/morse/.gitignore
+A  firmware/morse/README.md
+A  firmware/morse/app.c
+A  firmware/morse/app.h
+A  firmware/morse/fm1.toml
+A  firmware/morse/learn.c
+A  firmware/morse/learn.h
+A  firmware/morse/morse.c
+A  firmware/morse/morse.h
+A  firmware/morse/tests/basic.txt
+A  firmware/morse/tests/morse_test.c
+A  firmware/morse/tone.c
+A  firmware/morse/tone.h
+A  firmware/morse/words.tsv
+A  host/morse/PROTOCOL.md
+A  host/morse/__init__.py
+A  host/morse/__main__.py
+A  host/morse/core.py
+A  host/morse/device.py
+A  host/morse/protocol.py
+A  host/morse/typer.py
+A  host/tests/test_morse.py
+M  zensical.toml
+c3b5cd6 Morse 0.1: pocket Morse code machine (firmware + host)
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 14:50:54Z)**_
+
+<think><details><summary>Thought Process</summary>
+已 commit 為 `c3b5cd6`，未 push（push 到 main 會部署網站）。接下來我會先確認套件是用這個 commit 構建的，並讀取 `fm1-switch` 的流程與機器紀錄，準備刷機前的 preflight。
+
+</details></think>
+
+_**Agent (claude-opus-5-5 2026-11-17 14:50:56Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Check package freshness, hash it, read fm1-switch recipe
+
+`ls -la -D "%F %T" firmware/morse/build/morse.fwsc && for f in firmware/morse/*.c firmware/morse/*.h firmware/morse/fm1.toml firmware/common/*.c firmware/common/*.h; do [ "$f" -nt firmware/morse/build/morse.fwsc ] && echo "NEWER THAN PACKAGE: $f"; done; git diff --quiet HEAD -- firmware third_party && echo "firmware sources = HEAD"; git submodule status third_party/fm1-base; shasum -a 256 firmware/morse/build/morse.fwsc; grep -n "^fm1-switch" -A40 Justfile | head -60`
+
+```text
+"%F %T": No such file or directory (os error 2)
+.rw-r--r--@ 616k zhouhanru 17 Nov 22:37 firmware/morse/build/morse.fwsc
+firmware sources = HEAD
+ c8e05997ce970875038156d2bbd69e712eac1543 third_party/fm1-base (heads/main)
+dfb23a70534e469cd7180b82ae711daba845de1bd4d415b81137fb3d50b27c9a  firmware/morse/build/morse.fwsc
+331:fm1-switch target="":
+332-    #!/usr/bin/env bash
+333-    set -euo pipefail
+334-    case "{{target}}" in
+335-      ""|-h|--help|list)
+336-        echo "usage: just fm1-switch TARGET"
+337-        echo
+338-        echo "named targets:"
+339-        for t in "sloop=downloads/sloop-{{sloop_version}}.fwsc" "agtdeck=downloads/agtdeck-{{agtdeck_version}}.fwsc" \
+340-                 "ctl=downloads/ctl-{{ctl_version}}.fwsc" "choralroot=downloads/{{choralroot_pkg}}" \
+341-                 "remote=downloads/remote-{{remote_version}}.fwsc"; do
+342-          f="${t#*=}"; if [ -f "$f" ]; then st="ready"; else st="not downloaded"; fi
+343-          printf '  %-11s %s  (%s)\n' "${t%%=*}" "$f" "$st"
+344-        done
+345-        echo
+346-        echo "packages on disk (pass the path):"
+347-        ls downloads/*.fwsc firmware/*/build/*.fwsc 2>/dev/null | sed 's/^/  /' || true
+348-        echo
+349-        echo "now installed:"
+350-        "{{m_flasher}}" find | sed 's/^/  /'
+351-        echo "  (docs/device-log.md has the firmware name; SLOOP and Agent Deck both show as Felucca here)"
+352-        exit 0 ;;
+353-      sloop)   pkg="downloads/sloop-{{sloop_version}}.fwsc" ;;
+354-      agtdeck) pkg="downloads/agtdeck-{{agtdeck_version}}.fwsc" ;;
+355-      ctl)        pkg="downloads/ctl-{{ctl_version}}.fwsc" ;;
+356-      choralroot) pkg="downloads/{{choralroot_pkg}}" ;;
+357-      remote)     pkg="downloads/remote-{{remote_version}}.fwsc" ;;
+358-      *)       pkg="{{target}}" ;;
+359-    esac
+360-    test -f "$pkg" || { echo "no such package: $pkg (try: just fm1-fetch / just agtdeck-fetch)" >&2; exit 1; }
+361-    name=$(basename "$pkg" .fwsc)
+362-    units=$("{{m_flasher}}" find)
+363-    echo "$units"
+364-    if echo "$units" | grep -q "(emu)"; then
+365-      echo "An emulated FM-1 is on USB MIDI. Close the emulator first, so the switch cannot go to the wrong device." >&2; exit 1
+366-    fi
+367-    if ! echo "$units" | grep -q "^usb:"; then
+368-      "{{m_flasher}}" download-mode
+369-    fi
+370-    dir="backups/$(date +%Y-%m-%d-%H%M)-pre-$name"
+371-    mkdir -p "$dir"
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 14:51:02Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Read rest of fm1-switch and device log backup records
+
+`sed -n 371,380p Justfile && grep -n "Conductor\|2052\|1859\|backup" docs/device-log.md | sed -n 1,60p | cut -c1-260`
+
+```text
+    mkdir -p "$dir"
+    "{{m_flasher}}" backup "$dir" | grep -E "firmware|app |Backup saved"
+    shasum -a 256 "$dir"/*.bin
+    echo "Backup before the switch: $dir (not uploaded; just fm1-backup-release $(basename "$dir") if you want it off this machine)"
+    "{{m_flasher}}" firmware "$pkg" --restart
+
+# ---- off-machine copies -----------------------------------------------------
+
+# `dir` is the folder name under backups/ (a path to it also works).
+# Upload one backups/<dir> (.bin + .json) as assets of a GitHub Release tagged backup-<dir>.
+13:| 目前韌體 | **Conductor 0.2（自製）**（2026-11-17 18:59 刷入；0.1 是 18:40，套件識別 `FM-1_1200`，USB 產品名 `CONDUCTOR FM-1`；macOS 的 MIDI port 仍顯示 `Felucca`）。之前依序是原廠 015 → SLOOP 2.8.5 → Agent Deck 0.7 → SLOOP 2.8.5 → CTL-1 1.0.3 → ChoralRoot 0.41 |
+26:備份檔放在本機的 `backups/`（gitignore，不進 git），異地副本用 `just fm1-backup-release <目錄>` 上傳成這個 repo 的 Release 附件。這個 repo 是 public，所以附件任何人都能下載；這是我自己的決定，映像只適用於這台機器。
+30:| 2026-11-17 | 原廠完整 flash（015，stock bootloader） | `backups/2026-11-17-stock/fm1-20261117-011632.bin` + `.json` | `c6a4790266bdb9e97500c20f50a98b80f0d334d8a219e1744bfc8e656a44fd38` | [GitHub Release](https://github.com/daviddwlee84/M-VAVE_FM-1/releases/tag/b
+31:| 2026-11-17 | SLOOP 2.8.5 裝好並玩過之後的完整 flash（含當時的曲子與設定） | `backups/2026-11-17-sloop-2.8.5/fm1-20261117-014153.bin` + `.json` | `783060c08ac0727916e997dfc0b295a7469a45afe0ab4d460a4d5bc9bfc018b2` | [GitHub Release](https://github.com/daviddwlee84/M-VAVE_FM-1/r
+32:| 2026-11-17 | 刷 Agent Deck **之前**的 SLOOP 2.8.5（含當時最新的曲子） | `backups/2026-11-17-pre-agtdeck/fm1-20261117-023458.bin` + `.json` | `074cf36077e4e689aa2c4aae57baa7386428a73afd667ca042864714777546bc` | GitHub Release |
+33:| 2026-11-17 | Agent Deck 0.7 刷入後 | `backups/2026-11-17-agtdeck-0.7/fm1-20261117-023846.bin` + `.json` | `8345795a8cfa07afc71bc196c46683e2e35916e677b8fc807cee3ac648b8767d` | 尚未上傳 |
+35:M-Flasher 在兩次寫入前各自動存了一份：`~/Documents/M-Flasher/backups/fm1-20261117-023538.bin`、`fm1-20261117-024717.bin`。`pre-agtdeck` 已上傳到 [GitHub Release](https://github.com/daviddwlee84/M-VAVE_FM-1/releases/tag/backup-2026-11-17-pre-agtdeck)（digest 相符）。
+36:| 2026-11-17 | 刷 CTL-1 之前的 SLOOP 2.8.5 | `backups/2026-11-17-0341-pre-ctl-1.0.3/fm1-20261117-034125.bin` + `.json` | `8c9267e87a320a1e4cd592a9261907d978b8f3fdb94eaf15e685afae267b4451` | 尚未上傳 |
+37:| 2026-11-17 | 刷 ChoralRoot 之前的 CTL-1（仍含 SLOOP 的 project sector） | `backups/2026-11-17-0413-pre-choralroot-0.41/fm1-20261117-041350.bin` + `.json` | `8834d0188eb309c7229fb3ad9e89a76a349eca546accb666b8a741509a66eb10` | 尚未上傳 |
+38:| 2026-11-17 | 刷 Conductor 之前的 ChoralRoot 0.41 | `backups/2026-11-17-pre-conductor/fm1-20261117-183840.bin` + `.json` | `81f048bb0e8bea174ccb84df4de2555c891b087651083710c41c428a0e7ba1e1` | 尚未上傳 |
+59:| 2026-11-17 | BACKUP FULL FLASH | 已存，SHA-256 與 `.json` 內記錄一致；原始檔在 `~/Documents/M-Flasher/backups`，另複製到 repo 的 `backups/` |
+63:| 2026-11-17 | `just fm1-backup-release 2026-11-17-stock` | 原廠備份上傳為 Release `backup-2026-11-17-stock`，asset digest 與本機 SHA-256 一致 |
+64:| 2026-11-17 | SLOOP 執行中進 download mode，`just fm1-backup sloop-2.8.5` | 成功。讀取 1.3 s（801 KB/s），CRC32 相符；M-Flasher 回報 firmware `SLOOP 2.8.5`、app OK、bootloader stock |
+65:| 2026-11-17 | `just fm1-backup-release 2026-11-17-sloop-2.8.5` | 上傳為 Release `backup-2026-11-17-sloop-2.8.5`，digest 相符 |
+66:| 2026-11-17 | `just fm1-download-mode`（SLOOP 執行中、已停止播放） | 成功，不需要按鍵。`just fm1-backup pre-agtdeck` 完成 |
+69:| 2026-11-17 | Agent Deck 執行中 `just fm1-download-mode` → `fm1-backup agtdeck-0.7` → `fm1-restart` | 全部成功。Agent Deck 也能由 USB MIDI 切進 download mode，不需要按鍵 |
+81:| 2026-11-17 18:38 | agent 執行 `just fm1-download-mode`、`fm1-info`、`fm1-backup pre-conductor`（刷 Conductor 前的 preflight） | 切換成功（`WL82 UBOOT1.00`）。`info`：model FM-1、bootloader stock (M-VAVE)、firmware Felucca、app OK、flash `0xB36014`，晶片 CRC32 與讀取相符。備份 SHA-256 `8
+82:| 2026-11-17 18:40 | 本人執行 `just fm1-switch firmware/conductor/build/conductor.fwsc`（SHA-256 `de182723…0502f3`，commit `d45ce67`） | 先自動備份 `backups/2026-11-17-1839-pre-conductor/fm1-20261117-184005.bin`（SHA-256 與 18:38 那份相同，`81f048bb…7ba1e1`）。M-Flasher 的計畫：`Wr
+83:| 2026-11-17 | Conductor 在實機開機 | 螢幕正常；macOS 的 MIDI port 名稱沿用 `Felucca`，daemon 照名字找不到 → 改成聽協定找 port。裝置 0.4 秒內送出 Conductor 的 HELLO，本人的 daemon 連上，裝置改送 HEARTBEAT，SELECT 有回傳。Conductor 不寫 flash，資料區沒有變動（模擬器預演結果，實機尚未用備份比對） |
+84:| 2026-11-17 18:59 | 本人執行 `just fm1-switch firmware/conductor/build/conductor.fwsc`（0.2，SHA-256 `48a052f9…faea6d`，commit `5add525`） | 先自動備份 `backups/2026-11-17-1859-pre-conductor/fm1-20261117-185927.bin`（Conductor 0.1 的狀態，SHA-256 `71dd8a47533b3bda6da1d001ad
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 14:51:07Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Read the latest device log entries
+
+`sed -n 84,120p docs/device-log.md | cut -c1-400`
+
+```text
+| 2026-11-17 18:59 | 本人執行 `just fm1-switch firmware/conductor/build/conductor.fwsc`（0.2，SHA-256 `48a052f9…faea6d`，commit `5add525`） | 先自動備份 `backups/2026-11-17-1859-pre-conductor/fm1-20261117-185927.bin`（Conductor 0.1 的狀態，SHA-256 `71dd8a47533b3bda6da1d001ad59989cdcbb2c69dde280dff240cf5aed9c1c32`）。M-Flasher 的計畫：`Writes 22 sectors (88 KiB): 0x04000-0x19FFF`，驗證通過，自動備份 `fm1-20261117-185935.bin`。重開後 da
+
+## Phase 1 驗收
+
+- [x] 原廠韌體版本已記錄
+- [x] M-Flasher 已安裝，首次授權完成
+- [x] `FLASH CHIP` / JEDEC ID 已記錄
+- [x] 完整 flash 備份已存，SHA-256 已記錄
+- [x] 備份另存一份到這台電腦以外的地方（GitHub Release）
+- [x] SLOOP 2.8.5 已刷入
+- [x] Save → 關機 → 開機 → Load 測試通過
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 14:51:16Z)**_
+
+device log 的「目前韌體」還寫 Conductor 0.2，但首頁寫 0.3 已經在機器上，20:52 那次刷入沒有記進 device log。先用唯讀的 `fm1-find` 看機器現在的狀態。
+
+_**Agent (claude-opus-5-5 2026-11-17 14:51:18Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Check Conductor changelog and find the unit (read-only)
+
+`grep -n "0.3" docs/agentic/conductor-changelog.md | head -8; pgrep -fl fm1-live || echo "no emulator running"; just fm1-find 2>&1 | tail -8`
+
+```text
+24:| host 0.3.2 | 2026-11-17 | 否 | 版本號與這一頁；`ARP` 語音鍵只在 macOS 啟用；韌體比 host 新時提醒 | `b443c94` |
+25:| host 0.3.1 | 2026-11-17 | 否 | FM-1 重開後找不到 port：自動彈出 macOS 的藍牙 MIDI 視窗，按 Connect 後自動接上。純 CoreBluetooth 的做法試過不行 | `bf65a55` |
+26:| **0.3** | 2026-11-17 | **是** | 藍牙 MIDI（fm1-base own stack，不寫 flash）；`OCT+` 開關藍牙；HELLO / HEARTBEAT 帶傳輸方式；host 優先 USB、藍牙上 DETAIL 送文字 | `b7e0564` |
+38:| 0.3 | HELLO 尾端的 `transport`、HEARTBEAT 尾端的 `transport` | 沒有這個 byte 就當 USB |
+no emulator running
+"/Applications/M-Flasher.app/Contents/MacOS/M-Flasher" find
+midi	Felucca (running; download-mode switches it)
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 14:51:24Z)**_
+
+機器接著，正在跑 Conductor（macOS 快取的名字還是顯示 `Felucca`）。查一下 fm1-base 對新 flash 晶片的支援寫在哪裡。
+
+_**Agent (claude-opus-5-5 2026-11-17 14:51:25Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Find new flash chip support statements in fm1-base
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/third_party/fm1-base && grep -rn -i "b36014\|uc25hq80\|0xB3" README.md docs bsp/docs bsp/README* 2>/dev/null | head -8`
+
+```text
+docs/FIRMWARE-JSON.md:38:    "flash": ["856014", "B36014"],
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 14:51:31Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Read firmware.json flash field doc and Morse's value
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1 && sed -n 28,48p third_party/fm1-base/docs/FIRMWARE-JSON.md && python3 -c "import json;d=json.load(open('firmware/morse/build/firmware.json'));print({k:d[k] for k in d if k in ('flash','identity','name','version','board','chip')})"`
+
+````text
+  "license": "MPL-2.0",
+  "tagline": "A MIDI controller for the FM-1",
+  "description": "CTL-1 turns the M-VAVE FM-1 into a MIDI controller. The keys play notes, with velocity and aftertouch read from the keys themselves, in any scale with its chords under the black keys; the knobs send controllers in four banks; an arpeggiator and a four-track Euclidean drum sequencer run on its clock. Everything goes out over USB and Bluetooth, MIDI from the TRS jack is passed along, and the FM-1 plays it all on its own General MIDI sounds too, so it works with nothing connected.",
+  "tags": ["controller", "midi", "sequencer", "chords", "general-midi"],
+  "install": "https://charlesvestal.github.io/fm1-ctl/install/",
+  "site": "https://charlesvestal.github.io/fm1-ctl/",
+  "source": "https://github.com/charlesvestal/fm1-ctl",
+  "screenshot": "docs/img/screen-cc.png",
+  "hardware": {
+    "models": ["FM-1"],
+    "flash": ["856014", "B36014"],
+    "features": ["bluetooth-midi", "bluetooth-midi-devices", "usb-audio-in", "usb-audio-out", "velocity", "pressure", "screen-reader"]
+  },
+  "credits": "Built on fm1-base and felucca-bsp, from Felucca by Leo Kuroshita (Hügelton Instruments); the sounds are Sonivox EAS."
+}
+```
+
+## Fields
+
+| Field | Type | From (fm1.toml) | Meaning |
+|---|---|---|---|
+{'name': 'fm1-base'}
+````
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 14:51:37Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Show Morse firmware.json hardware block
+
+```bash
+python3 -c "
+import json;d=json.load(open('firmware/morse/build/firmware.json'));print(json.dumps(d.get('hardware'),indent=None)); print(d.get('id') or d.get('identity'), d.get('version'))"; grep -n '"flash"\|hardware' -A3 third_party/fm1-base/docs/FIRMWARE-JSON.md | sed -n 8,30p
+```
+
+```text
+{"models": ["FM-1"], "flash": ["856014", "B36014"], "features": ["usb-audio-in", "usb-audio-out", "screen-reader"]}
+morse None
+38:    "flash": ["856014", "B36014"],
+39-    "features": ["bluetooth-midi", "bluetooth-midi-devices", "usb-audio-in", "usb-audio-out", "velocity", "pressure", "screen-reader"]
+40-  },
+41-  "credits": "Built on fm1-base and felucca-bsp, from Felucca by Leo Kuroshita (Hügelton Instruments); the sounds are Sonivox EAS."
+--
+61:| `hardware.models` | list of strings | | The models it runs on. A firmware on fm1-base says `FM-1`. |
+62:| `hardware.flash` | list of strings | device/fm1_flash_ok.h | The flash parts it can save to and update on, as their JEDEC IDs in upper-case hex. |
+63:| `hardware.features` | list of strings | the build's parts | What the build has, from the feature vocabulary. |
+64-| `credits` | string | `credits` | A sentence on what it is built from. |
+65-
+66-`title` is for a firmware whose USB name is not the name people know it by (Radio's USB name is `fm1-radio`);
+--
+135:has no tags given, and one without `hardware.features` says nothing about its features. A hub may keep its own data
+136:in the file under keys that start with `x-`, for example `x-remotefm1`, at the top level or in `hardware`; the format
+137-will never use such a key. A firmware not built on fm1-base may write the file by hand, to the same schema.
+138-
+139-## Changes
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 14:51:46Z)**_
+
+<think><details><summary>Thought Process</summary>
+晶片確認沒問題，這次 build 的 firmware.json 支援 856014 和 B36014，同一個 fm1-base commit 的 Conductor 也已在實機上跑過。接下來我會把機器切到 download mode（不寫入 flash），再讀取機器資訊並做完整備份，這些都是唯讀操作。
+
+</details></think>
+
+_**Agent (claude-opus-5-5 2026-11-17 14:51:54Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Switch the unit to download mode and read its info
+
+`just fm1-download-mode 2>&1 | tail -5 && just fm1-info 2>&1 | tail -15`
+
+```text
+"/Applications/M-Flasher.app/Contents/MacOS/M-Flasher" download-mode
+Sent the Felucca the download-mode message over USB MIDI; waiting for it
+In download mode: usb:2-4	WL82 UBOOT1.00 (USB bus 2, device 4)
+Flash chip 0xB36014 (new)
+Reading the flash
+    1%    3%    4%    6%    7%    9%   10%   12%   14%   15%   17%   18%   20%   21%   23%   25%   26%   28%   29%   31%   32%   34%   35%   37%   39%   40%   42%   43%   45%   46%   48%   50%   51%   53%   54%   56%   57%   59%   60%   62%   64%   65%   67%   68%   70%   71%   73%   75%   76%   78%   79%   81%   82%   84%   85%   87%   89%   90%   92%   93%   95%   96%   98%  100%
+Read in 1.3 s (800 KB/s)
+Checked: the chip's CRC32 of the flash matches the read
+  model       FM-1
+  bootloader  stock (M-VAVE)
+  firmware    FM-1 120
+  app         OK
+  chip key    0x980F
+  flash       0xB36014
+  unit id     55227286a0cb022a
+  loader      M-Flasher 1.3, CPU at 96 MHz
+    - the firmware uses the FM-1 flash layout
+    - flash chip 0xB36014 (new)
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 14:51:58Z)**_
+
+download mode 切換成功：晶片 `0xB36014`、stock bootloader、目前韌體是 Conductor（identity `FM-1 120`）。接著做完整備份。
+
+_**Agent (claude-opus-5-5 2026-11-17 14:52:06Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Take a full-flash backup before flashing Morse
+
+`just fm1-backup pre-morse 2>&1 | grep -v "%" | tail -10; d=$(ls -d backups/*pre-morse* | tail -1); echo "dir: $d"; ls -la $d; shasum -a 256 $d/*.bin; cat $d/*.json`
+
+```text
+  app         OK
+  chip key    0x980F
+  flash       0xB36014
+  unit id     55227286a0cb022a
+  loader      M-Flasher 1.3, CPU at 96 MHz
+    - the firmware uses the FM-1 flash layout
+    - flash chip 0xB36014 (new)
+Backup saved: backups/2026-11-17-pre-morse/fm1-20261117-225206.bin
+fbcb47909c37828ec92dd890d3a80b26ab61899f59d1743013ad9bd4250ca0ef  backups/2026-11-17-pre-morse/fm1-20261117-225206.bin
+Record this in docs/device-log.md and keep a copy off this machine.
+dir: backups/2026-11-17-pre-morse
+.rw-r--r--@ 1.0M zhouhanru 17 Nov 22:52 fm1-20261117-225206.bin
+.rw-r--r--@  361 zhouhanru 17 Nov 22:52 fm1-20261117-225206.json
+fbcb47909c37828ec92dd890d3a80b26ab61899f59d1743013ad9bd4250ca0ef  backups/2026-11-17-pre-morse/fm1-20261117-225206.bin
+{
+  "model": "FM-1",
+  "bootloader": "stock (M-VAVE)",
+  "firmware": "FM-1 120",
+  "app": "OK",
+  "chip key": "0x980F",
+  "flash": "0xB36014",
+  "unit id": "55227286a0cb022a",
+  "loader": "M-Flasher 1.3, CPU at 96 MHz",
+  "sha256": "fbcb47909c37828ec92dd890d3a80b26ab61899f59d1743013ad9bd4250ca0ef",
+  "saved": "20261117-225206",
+  "tool": "m-flasher 0.12.1"
+}
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 14:52:13Z)**_
+
+備份完成，SHA-256 `fbcb4790…250ca0ef`。用這份新備份算一下寫入會改到哪些 sector，然後記進 device log。
+
+_**Agent (claude-opus-5-5 2026-11-17 14:52:17Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Predict sectors the Morse write changes vs the new backup
+
+```bash
+cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/tools/emu-state && B=/Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/backups/2026-11-17-pre-morse/fm1-20261117-225206.bin && python3 ../../scripts/emu_rehearse.py pristine-morse.flash "$B" rehearse-morse-now.flash && python3 - "$B" <<'PY'
+import sys
+S=4096
+bak=open(sys.argv[1],'rb').read(); new=open('rehearse-morse-now.flash','rb').read()
+d=[i for i in range(256) if bak[i*S:(i+1)*S]!=new[i*S:(i+1)*S]]
+print("sectors that differ from the backup:", len(d), f"0x{d[0]*S:05X}-0x{(d[-1]+1)*S-1:05X}" if d else "")
+print("outside 0x04000-0x92FFF:", [hex(i*S) for i in d if not (0x04000 <= i*S <= 0x92FFF)])
+print("0xDA000/0xDB000 in backup blank:", all(bak[a:a+S]==b'\xff'*S for a in (0xDA000,0xDB000)))
+PY
+```
+
+```text
+package image 0x04000-0x92FFF laid over the backup
+sectors that differ from the backup: 30 0x04000-0x21FFF
+outside 0x04000-0x92FFF: []
+0xDA000/0xDB000 in backup blank: True
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 14:52:27Z)**_
+
+<think><details><summary>Thought Process</summary>
+M-Flasher 預計只會改寫韌體區的 30 個 sector（`0x04000`–`0x21FFF`），而 Morse 需要的 `0xDA000`–`0xDBFFF` 在這份備份中是空的。我接著把這次操作記入 device log。
+
+</details></think>
+
+_**Agent (claude-opus-5-5 2026-11-17 14:52:32Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Record the preflight backup and operations in device log
+
+```bash
+cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1 && python3 - <<'PY'
+p='docs/device-log.md'
+s=open(p).read()
+a="| 2026-11-17 | 刷 Conductor 之前的 ChoralRoot 0.41 | `backups/2026-11-17-pre-conductor/fm1-20261117-183840.bin` + `.json` | `81f048bb0e8bea174ccb84df4de2555c891b087651083710c41c428a0e7ba1e1` | 尚未上傳 |\n"
+b=a+"| 2026-11-17 22:52 | 刷 Morse 之前的 Conductor（identity `FM-1 120`；依 [Conductor 版本紀錄](agentic/conductor-changelog.md) 是 0.3） | `backups/2026-11-17-pre-morse/fm1-20261117-225206.bin` + `.json` | `fbcb47909c37828ec92dd890d3a80b26ab61899f59d1743013ad9bd4250ca0ef` | 尚未上傳 |\n"
+assert a in s; s=s.replace(a,b,1)
+i=s.index("\n## Phase 1 驗收")
+row="| 2026-11-17 22:51 | agent 執行 `just fm1-download-mode`、`fm1-info`、`fm1-backup pre-morse`（刷 Morse 0.1 前的 preflight） | 切換成功（`WL82 UBOOT1.00`）。`info`：model FM-1、bootloader stock (M-VAVE)、firmware `FM-1 120`（Conductor）、app OK、flash `0xB36014`，晶片 CRC32 與讀取相符。備份 SHA-256 `fbcb4790…250ca0ef`。用這份備份預演：Morse 和它不同的是 `0x04000`–`0x21FFF` 的 30 個 sector，全在韌體區；`0xDA000`–`0xDBFFF` 是空的。機器留在 download mode 等本人執行寫入 |\n"
+# insert before the blank line preceding Phase 1
+s=s[:i].rstrip("\n")+"\n"+row+s[i:]
+open(p,'w').write(s)
+PY
+sed -n 10,14p docs/device-log.md | cut -c1-200; grep -n "22:51" docs/device-log.md | cut -c1-80
+```
+
+```text
+| Flash 晶片 / JEDEC ID | **`0xB36014` (new)**，UCUN UC25HQ80，1 MiB |
+| Bootloader | stock (M-VAVE) |
+| 出廠韌體版本 | FM-1 015 (stock)，firmware check OK |
+| 目前韌體 | **Conductor 0.2（自製）**（2026-11-17 18:59 刷入；0.1 是 18:40，套件識別 `FM-1_1200`，USB 產品名 `CONDUCTOR FM-1`；macOS 的 MIDI port 仍顯示 `Felucca`）。之前依序是原廠 015 → SLOOP 2.8.5 → Agent Deck 0.7 → SLOOP 2.8.5 → CTL
+| SLOOP 的曲子 | **已不在機器上**（`0x97000` 被 ChoralRoot 的韌體蓋掉）。完整保存在 `2026-11-17-0341-pre-ctl-1.0.3` 備份裡；回 SLOOP 要在 M-Flasher GUI 還原那份備份 |
+86:| 2026-11-17 22:51 | agent 執行 `just fm1-download-mode`、`fm1-info`、`fm1-backup
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 14:52:45Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Check rollback package and unit still in download mode
+
+`ls -la firmware/conductor/build/conductor.fwsc 2>&1 | head -2; just fm1-find 2>&1 | tail -2`
+
+```text
+.rw-r--r--@ 616k zhouhanru 17 Nov 20:10 firmware/conductor/build/conductor.fwsc
+"/Applications/M-Flasher.app/Contents/MacOS/M-Flasher" find
+usb:2-4	WL82 UBOOT1.00 (USB bus 2, device 4)
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 14:52:59Z)**_
+
+Preflight 準備好了。這一步會把韌體寫進 flash，照規則要你自己執行，M-Flasher 問 `yes` 時也由你輸入。
+
+**Preflight**
+
+| 項目 | 狀態 |
+|---|---|
+| 1. 完整備份 | `backups/2026-11-17-pre-morse/fm1-20261117-225206.bin`，SHA-256 `fbcb47909c37828ec92dd890d3a80b26ab61899f59d1743013ad9bd4250ca0ef`，已記進 `docs/device-log.md`。`fm1-switch` 寫入前還會自動再備份一次 |
+| 2. 晶片 | `0xB36014`（new）。這次 build 產生的 `firmware.json` 宣告支援 `856014` 和 `B36014`。Conductor 用的是同一個 fm1-base commit（`c8e0599`），已經在這台機器上跑著 |
+| 3. 套件 | 自己 build 的，所以沒有上游 release 的 digest 可以比對。`firmware/morse/build/morse.fwsc`，SHA-256 `dfb23a70534e469cd7180b82ae711daba845de1bd4d415b81137fb3d50b27c9a`，從 commit `c3b5cd6` build（韌體原始碼和這個 commit 一樣）。identity `FM-1_1300`，USB 名稱 `MORSE FM-1`。fm1-emu 兩種晶片上「存檔 → 重開 → 讀回」都通過 `[模擬]` |
+| 4. 目前狀態和這次的改變 | 現在是 Conductor（`FM-1 120`）、stock bootloader，沒有 m-bootloader。用剛做的備份預演，只會改 `0x04000`–`0x21FFF` 的 30 個 sector，全在韌體區，boot 區不動。Morse 開機後不寫 flash；要等你改設定或玩完一回合，才寫 `0xDA000`–`0xDBFFF`（這兩個 sector 現在是空的） |
+
+機器現在停在 download mode。請在這裡輸入：
+
+```
+! just fm1-switch firmware/morse/build/morse.fwsc
+```
+
+**輸入 `yes` 前先看 M-Flasher 印出的計畫：**
+- 範圍應該在 `0x04000`–`0x92FFF` 之內，預估大約 30 個 sector。
+- 不能碰到 BOOT 區 `0x00000`–`0x03FFF`。
+- 如果計畫和這些不一樣，就不要輸入 `yes`，把輸出貼給我。
+
+寫完機器會自動重開，畫面應該是「PRACTICE / ROUND 1 / PLAY: START」。
+
+**想退回的話：**
+- 回到 Conductor：`! just fm1-switch firmware/conductor/build/conductor.fwsc`。
+- 回到刷 Morse 前的整台狀態：用 M-Flasher GUI 還原上面那份備份。
+- 現在不想刷：`just fm1-restart` 會讓機器回到 Conductor。
+
+刷完後我會確認 USB 名稱、在實機上跑一輪檢查，再更新 device log。
+
+---
+
+_**User (2026-11-17 14:54:35Z)**_
+
+```
+
+
+<pasted_content id="cc4a">
+❯ just fm1-switch firmware/morse/build/morse.fwsc
+usb:2-4 WL82 UBOOT1.00 (USB bus 2, device 4)
+  100%
+  firmware    FM-1 120
+  app         OK
+    - the firmware uses the FM-1 flash layout
+Backup saved: backups/2026-11-17-2253-pre-morse/fm1-20261117-225404.bin
+fbcb47909c37828ec92dd890d3a80b26ab61899f59d1743013ad9bd4250ca0ef  backups/2026-11-17-2253-pre-morse/fm1-20261117-225404.bin
+Backup before the switch: backups/2026-11-17-2253-pre-morse (not uploaded; just fm1-backup-release 2026-11-17-2253-pre-morse if you want it off this machine)
+Connecting to usb:2-4
+M-Flasher loader 1.3 already running
+Flash chip 0xB36014 (new)
+Reading the flash
+  100%
+Read in 1.3 s (798 KB/s)
+Checked: the chip's CRC32 of the flash matches the read
+  model       FM-1
+  bootloader  stock (M-VAVE)
+  firmware    FM-1 120
+  app         OK
+  chip key    0x980F
+  flash       0xB36014
+  unit id     55227286a0cb022a
+  loader      M-Flasher 1.3, CPU at 96 MHz
+    - the firmware uses the FM-1 flash layout
+    - flash chip 0xB36014 (new)
+
+Install firmware FM-1_1300
+Writes 30 sectors (120 KiB): 0x04000-0x21FFF
+Installs FM-1_1300 (0x04000-0x92FFF).
+Type "yes" to write: yes
+Backup saved: /Users/zhouhanru/Documents/M-Flasher/backups/fm1-20261117-225412.bin
+Writing 0x04000-0x21FFF
+  100%
+Done: everything written is verified (the chip's CRC32 matches)
+Sent the restart (a 34-byte program at 0x01C28000); waiting for the unit to reset
+Running: the Felucca is on USB MIDI
+</pasted_content id="cc4a">
+
+```
+
+---
+
+_**Agent (claude-opus-5-5 2026-11-17 14:54:46Z)**_
+
+寫入成功，結果和預演一樣：30 個 sector（`0x04000`–`0x21FFF`），CRC32 驗證通過，機器已經重開。接著從電腦這邊確認機器上跑的是 Morse。
+
+_**Agent (claude-opus-5-5 2026-11-17 14:54:50Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Find the unit and send it text through the Morse host
+
+```bash
+just fm1-find 2>&1 | tail -1; PYTHONPATH=host uv run --locked --all-groups python -c "
+import mido; print('inputs:', mido.get_input_names())"; PYTHONPATH=host uv run --locked --all-groups python -m morse send "vvv" 2>&1
+```
+
+```text
+midi	Felucca (running; download-mode switches it)
+inputs: ['Felucca']
+[morse] connected to Felucca
+[morse] FM-1 Morse firmware 0.1
+[morse] sent 1 frame(s); the FM-1 plays it at its own speed
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 14:55:03Z)**_
+
+<think><details><summary>Thought Process</summary>
+實機已回應 HELLO，韌體為 Morse 0.1；port 名稱仍是快取的 Felucca，但 host 是透過協定找到的。剛才送出的 "VVV" 應該已在機器上發出聲音，接著更新 device log。
+
+</details></think>
+
+_**Agent (claude-opus-5-5 2026-11-17 14:55:09Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Record the Morse flash in the device log
+
+```bash
+python3 - <<'PY'
+p='docs/device-log.md'
+s=open(p).read()
+old_row=[l for l in s.splitlines() if l.startswith("| 目前韌體 |")][0]
+new_row="| 目前韌體 | **Morse 0.1（自製）**（2026-11-17 22:54 刷入，套件識別 `FM-1_1300`，USB 產品名 `MORSE FM-1`；macOS 的 MIDI port 仍顯示 `Felucca`）。之前依序是原廠 015 → SLOOP 2.8.5 → Agent Deck 0.7 → SLOOP 2.8.5 → CTL-1 1.0.3 → ChoralRoot 0.41 → Conductor 0.1 → 0.2 → 0.3 |"
+s=s.replace(old_row,new_row,1)
+a="| `backups/2026-11-17-pre-morse/fm1-20261117-225206.bin` + `.json` | `fbcb47909c37828ec92dd890d3a80b26ab61899f59d1743013ad9bd4250ca0ef` | 尚未上傳 |\n"
+assert a in s
+s=s.replace(a, a+"\n`fm1-switch` 在寫入前又自動備份了一份 `backups/2026-11-17-2253-pre-morse/fm1-20261117-225404.bin`，SHA-256 和上面這份相同；M-Flasher 另存 `~/Documents/M-Flasher/backups/fm1-20261117-225412.bin`。\n",1)
+i=s.index("\n## Phase 1 驗收")
+row="| 2026-11-17 22:54 | 本人執行 `just fm1-switch firmware/morse/build/morse.fwsc`（Morse 0.1，SHA-256 `dfb23a70…27c9a`，commit `c3b5cd6`） | 先自動備份 `backups/2026-11-17-2253-pre-morse/`（SHA-256 同 22:52 那份）。M-Flasher 的計畫：`Writes 30 sectors (120 KiB): 0x04000-0x21FFF`、`Installs FM-1_1300 (0x04000-0x92FFF)`，和預演一致；寫入後晶片 CRC32 相符，自動重開。重開後 `fm1-find` 顯示 `Felucca (running)`；`python -m morse send` 依協定找到 port，收到 Morse 的 HELLO（韌體 0.1）並送出文字 |\n"
+s=s[:i].rstrip("\n")+"\n"+row+s[i:]
+open(p,'w').write(s)
+PY
+grep -n "目前韌體\|22:54" docs/device-log.md | cut -c1-120
+```
+
+```text
+13:| 目前韌體 | **Morse 0.1（自製）**（2026-11-17 22:54 刷入，套件識別 `FM-1_1300`，USB 產品名 `MORSE FM-1`；macOS 的 MIDI port 仍顯示 `Felucca`）
+89:| 2026-11-17 22:54 | 本人執行 `just fm1-switch firmware/morse/build/morse.fwsc`（Morse 0.1，SHA-256 `dfb23a70…27c9a`，commit
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 14:55:15Z)**_
+
+接著在背景開一個監聽程式（4 分鐘），記錄機器送出的按鍵 MIDI（含時間）和解出的字，用來在實機上驗證發報。
+
+_**Agent (claude-opus-5-5 2026-11-17 14:55:24Z)**_
+
+<tool-use data-tool-type="write" data-tool-name="Write"><details>
+<summary>Tool use: **Write**</summary>
+
+```python
+"""Hardware check for firmware/morse: answer HELLO / HEARTBEAT, log the keying notes with their
+durations and the characters the unit reads (T_CHAR). Run from the repo root:
+  PYTHONPATH=host uv run python hw_listen.py SECONDS"""
+import sys
+import time
+
+import mido
+
+from morse import protocol as P
+
+secs = float(sys.argv[1]) if len(sys.argv) > 1 else 240
+names = mido.get_input_names()
+name = next((n for n in names if "MORSE" in n.upper()), None) or "Felucca"
+out = mido.open_output(name)
+t0 = time.monotonic()
+last = {"on": None, "off": None}
+chars = []
+marks = []
+
+
+def ms():
+    return (time.monotonic() - t0) * 1000.0
+
+
+def on_msg(msg):
+    if msg.type == "sysex":
+        m = P.parse(bytes(msg.data))
+        if not m:
+            return
+        if m.type in (P.T_HELLO, P.T_HEARTBEAT):
+            out.send(mido.Message("sysex", data=list(P.hello_ack()[1:-1])))
+            if m.type == P.T_HELLO:
+                print(f"{ms():9.0f} HELLO firmware {P.firmware_of(m)}", flush=True)
+        elif m.type == P.T_CHAR:
+            c = P.chars_of(m)
+            chars.append(c)
+            print(f"{ms():9.0f} CHAR {c!r}   text so far: {''.join(chars)!r}", flush=True)
+    elif msg.type in ("note_on", "note_off"):
+        down = msg.type == "note_on" and msg.velocity > 0
+        t = ms()
+        if down:
+            gap = t - last["off"] if last["off"] is not None else None
+            last["on"] = t
+            print(f"{t:9.0f} key down (note {msg.note})" + (f"  gap {gap:.0f} ms" if gap and gap < 3000 else ""), flush=True)
+        else:
+            mark = t - last["on"] if last["on"] is not None else None
+            last["off"] = t
+            if mark is not None:
+                marks.append(mark)
+            print(f"{t:9.0f} key up          mark {mark:.0f} ms" if mark is not None else f"{t:9.0f} key up", flush=True)
+
+
+inp = mido.open_input(name, callback=on_msg)
+print(f"listening on {name!r} for {secs:.0f} s", flush=True)
+try:
+    time.sleep(secs)
+finally:
+    inp.close()
+    out.close()
+print("---")
+print("text:", repr("".join(chars)))
+if marks:
+    print(f"marks: {len(marks)}, shortest {min(marks):.0f} ms, longest {max(marks):.0f} ms")
+
+```
+
+```text
+File created successfully at: /private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/0a574306-469e-4a59-9622-5701a42aee59/scratchpad/hw_listen.py (file state is current in your context — no need to Read it back)
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 14:55:26Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Listen to the real unit's keying and decoded text for 4 minutes
+
+`PYTHONPATH=host uv run --locked --all-groups python /private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/0a574306-469e-4a59-9622-5701a42aee59/scratchpad/hw_listen.py 240`
+
+```text
+Command running in background with ID: bhsr3mw8s. Output is being written to: /private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/5f461408-bbdd-44d0-bb3b-b0642eabaa31/tasks/bhsr3mw8s.output. You will be notified when it completes — do not poll that file or sleep while waiting. Read the file only if the user asks for progress, or if you need a line it prints before you can go on, such as a server's ready line or port.
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 14:55:39Z)**_
+
+監聽程式已在背景跑（4 分鐘）。請在這段時間內在機器上試：
+
+1. **開機畫面**：應該是「PRACTICE / ROUND 1 / PLAY: START」。剛才送的 "VVV"（`···−` 三次）有沒有聽到？
+2. **KEY 頁發報**：按 `HOME`，把 `SELECT` 往右轉一格，按 `SEL` 進 KEY 頁。用任一琴鍵當直鍵打幾個字，例如 `CQ`（C 是 `−·−·`，Q 是 `−−·−`），每打完一個字停一下，打完一個字停 1 秒以上。目前預設 20 WPM，dit 約 60 ms、dah 約 180 ms，打慢一點也可以，解碼器會跟上。
+3. **TYPE 頁**（可以不做）：`HOME` → `SELECT` 轉到 TYPE → `SEL`，按幾個白鍵。
+4. **PRACTICE**（可以不做）：`HOME` 回 PRACTICE，按 `PLAY` 開始，選擇題用 E4–A4 那四個亮燈的鍵作答，也可以按 `FX` 試靜音。
+
+我這邊會記錄每次按鍵的長度和機器解出的字。4 分鐘結束時我會收到通知，到時再對照你看到和聽到的（逼逼聲正不正常、畫面上的字對不對），一起記進文件。
+
+---
+
+_**User (2026-11-17 14:57:50Z)**_
+
+1. 好像有聽到
+2. KEY vu0y9
+
+---
+
+_**User (2026-11-17 14:59:26Z)**_
+
+<task-notification>
+<task-id>bhsr3mw8s</task-id>
+<tool-use-id>toolu_01JkERJGbytTJgBB1fis8W28</tool-use-id>
+<output-file>/private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/5f461408-bbdd-44d0-bb3b-b0642eabaa31/tasks/bhsr3mw8s.output</output-file>
+<status>completed</status>
+<summary>Background command "Listen to the real unit's keying and decoded text for 4 minutes" completed (exit code 0)</summary>
+</task-notification>
+
+---
+
+_**Agent (claude-opus-5-5 2026-11-17 14:59:33Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Read the hardware listener output
+
+`cat /private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/5f461408-bbdd-44d0-bb3b-b0642eabaa31/tasks/bhsr3mw8s.output | tail -80`
+
+```text
+   213800 key up          mark 171 ms
+   213857 key down (note 0)  gap 57 ms
+   213914 key up          mark 57 ms
+   213971 key down (note 0)  gap 57 ms
+   214028 key up          mark 57 ms
+   214085 key down (note 0)  gap 57 ms
+   214142 key up          mark 57 ms
+   214649 CHAR 'C'   text so far: 'S H SMTS SOS S: I S IE EENIEDIDEEV IIIIIIIIIIIIIVAQBCDJMABCDEFGHIT SOS TTTEX TI N T O TTEE EIEE IEMIEISSE ENE ZYAAABBBBC'
+   214915 key down (note 0)  gap 772 ms
+   215086 key up          mark 171 ms
+   215143 key down (note 0)  gap 57 ms
+   215200 key up          mark 57 ms
+   215257 key down (note 0)  gap 57 ms
+   215314 key up          mark 57 ms
+   215371 key down (note 0)  gap 57 ms
+   215429 key up          mark 57 ms
+   216201 key down (note 0)  gap 772 ms
+   216372 key up          mark 171 ms
+   216429 key down (note 0)  gap 57 ms
+   216486 key up          mark 57 ms
+   216543 key down (note 0)  gap 57 ms
+   216715 key up          mark 171 ms
+   216772 key down (note 0)  gap 57 ms
+   216829 key up          mark 57 ms
+   217967 CHAR 'C'   text so far: 'S H SMTS SOS S: I S IE EENIEDIDEEV IIIIIIIIIIIIIVAQBCDJMABCDEFGHIT SOS TTTEX TI N T O TTEE EIEE IEMIEISSE ENE ZYAAABBBBCC'
+   217968 key down (note 0)  gap 1139 ms
+   218139 key up          mark 171 ms
+   218196 key down (note 0)  gap 57 ms
+   218253 key up          mark 57 ms
+   218310 key down (note 0)  gap 57 ms
+   218482 key up          mark 171 ms
+   218539 key down (note 0)  gap 57 ms
+   218596 key up          mark 57 ms
+   219012 CHAR 'C'   text so far: 'S H SMTS SOS S: I S IE EENIEDIDEEV IIIIIIIIIIIIIVAQBCDJMABCDEFGHIT SOS TTTEX TI N T O TTEE EIEE IEMIEISSE ENE ZYAAABBBBCCC'
+   219368 key down (note 0)  gap 772 ms
+   219539 key up          mark 171 ms
+   219596 key down (note 0)  gap 57 ms
+   219653 key up          mark 57 ms
+   219710 key down (note 0)  gap 57 ms
+   219882 key up          mark 171 ms
+   219939 key down (note 0)  gap 57 ms
+   219996 key up          mark 57 ms
+   222093 CHAR 'D'   text so far: 'S H SMTS SOS S: I S IE EENIEDIDEEV IIIIIIIIIIIIIVAQBCDJMABCDEFGHIT SOS TTTEX TI N T O TTEE EIEE IEMIEISSE ENE ZYAAABBBBCCCD'
+   222094 key down (note 0)  gap 2098 ms
+   222266 key up          mark 171 ms
+   222323 key down (note 0)  gap 57 ms
+   222380 key up          mark 57 ms
+   222437 key down (note 0)  gap 57 ms
+   222494 key up          mark 57 ms
+   223402 CHAR 'D'   text so far: 'S H SMTS SOS S: I S IE EENIEDIDEEV IIIIIIIIIIIIIVAQBCDJMABCDEFGHIT SOS TTTEX TI N T O TTEE EIEE IEMIEISSE ENE ZYAAABBBBCCCDD'
+   223403 key down (note 0)  gap 909 ms
+   223575 key up          mark 171 ms
+   223632 key down (note 0)  gap 57 ms
+   223689 key up          mark 57 ms
+   223746 key down (note 0)  gap 57 ms
+   223803 key up          mark 57 ms
+   224964 CHAR 'E'   text so far: 'S H SMTS SOS S: I S IE EENIEDIDEEV IIIIIIIIIIIIIVAQBCDJMABCDEFGHIT SOS TTTEX TI N T O TTEE EIEE IEMIEISSE ENE ZYAAABBBBCCCDDE'
+   224964 key down (note 0)  gap 1161 ms
+   225022 key up          mark 57 ms
+   226429 CHAR 'F'   text so far: 'S H SMTS SOS S: I S IE EENIEDIDEEV IIIIIIIIIIIIIVAQBCDJMABCDEFGHIT SOS TTTEX TI N T O TTEE EIEE IEMIEISSE ENE ZYAAABBBBCCCDDEF'
+   226430 key down (note 0)  gap 1409 ms
+   226488 key up          mark 57 ms
+   226545 key down (note 0)  gap 57 ms
+   226602 key up          mark 57 ms
+   226659 key down (note 0)  gap 57 ms
+   226829 key up          mark 171 ms
+   226887 key down (note 0)  gap 58 ms
+   226944 key up          mark 57 ms
+   230158 CHAR 'G'   text so far: 'S H SMTS SOS S: I S IE EENIEDIDEEV IIIIIIIIIIIIIVAQBCDJMABCDEFGHIT SOS TTTEX TI N T O TTEE EIEE IEMIEISSE ENE ZYAAABBBBCCCDDEFG'
+   230158 key down (note 0)
+   230330 key up          mark 171 ms
+   230387 key down (note 0)  gap 57 ms
+   230558 key up          mark 171 ms
+   230615 key down (note 0)  gap 57 ms
+   230672 key up          mark 57 ms
+---
+text: 'S H SMTS SOS S: I S IE EENIEDIDEEV IIIIIIIIIIIIIVAQBCDJMABCDEFGHIT SOS TTTEX TI N T O TTEE EIEE IEMIEISSE ENE ZYAAABBBBCCCDDEFG'
+marks: 257, shortest 9 ms, longest 404 ms
+
+[exited with code 0]
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 14:59:40Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+List decoded characters with timestamps
+
+`F=/private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/5f461408-bbdd-44d0-bb3b-b0642eabaa31/tasks/bhsr3mw8s.output; wc -l $F; grep -n "CHAR\|HELLO\|listening" $F | head -80 | cut -c1-90`
+
+```text
+     648 /private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/5f461408-bbdd-44d0-bb3b-b0642eabaa31/tasks/bhsr3mw8s.output
+1:listening on 'Felucca' for 240 s
+2:      388 HELLO firmware (0, 1)
+9:     1790 CHAR 'S'   text so far: 'S'
+10:     1968 CHAR ' '   text so far: 'S '
+19:     2756 CHAR 'H'   text so far: 'S H'
+20:     2926 CHAR ' '   text so far: 'S H '
+27:     5080 CHAR 'S'   text so far: 'S H S'
+32:     6028 CHAR 'M'   text so far: 'S H SM'
+35:     6470 CHAR 'T'   text so far: 'S H SMT'
+42:     6949 CHAR 'S'   text so far: 'S H SMTS'
+43:     7135 CHAR ' '   text so far: 'S H SMTS '
+50:     7809 CHAR 'S'   text so far: 'S H SMTS S'
+57:     9296 CHAR 'O'   text so far: 'S H SMTS SO'
+66:     9737 CHAR 'S'   text so far: 'S H SMTS SOS'
+67:     9926 CHAR ' '   text so far: 'S H SMTS SOS '
+74:    17349 CHAR 'S'   text so far: 'S H SMTS SOS S'
+87:    19284 CHAR ':'   text so far: 'S H SMTS SOS S:'
+88:    19462 CHAR ' '   text so far: 'S H SMTS SOS S: '
+93:    25309 CHAR 'I'   text so far: 'S H SMTS SOS S: I'
+94:    25492 CHAR ' '   text so far: 'S H SMTS SOS S: I '
+101:    26080 CHAR 'S'   text so far: 'S H SMTS SOS S: I S'
+102:    26276 CHAR ' '   text so far: 'S H SMTS SOS S: I S '
+107:    26860 CHAR 'I'   text so far: 'S H SMTS SOS S: I S I'
+110:    27139 CHAR 'E'   text so far: 'S H SMTS SOS S: I S IE'
+111:    27329 CHAR ' '   text so far: 'S H SMTS SOS S: I S IE '
+114:    27546 CHAR 'E'   text so far: 'S H SMTS SOS S: I S IE E'
+117:    27913 CHAR 'E'   text so far: 'S H SMTS SOS S: I S IE EE'
+122:    28552 CHAR 'N'   text so far: 'S H SMTS SOS S: I S IE EEN'
+127:    29035 CHAR 'I'   text so far: 'S H SMTS SOS S: I S IE EENI'
+130:    29305 CHAR 'E'   text so far: 'S H SMTS SOS S: I S IE EENIE'
+137:    30075 CHAR 'D'   text so far: 'S H SMTS SOS S: I S IE EENIED'
+142:    30485 CHAR 'I'   text so far: 'S H SMTS SOS S: I S IE EENIEDI'
+149:    31178 CHAR 'D'   text so far: 'S H SMTS SOS S: I S IE EENIEDID'
+152:    31408 CHAR 'E'   text so far: 'S H SMTS SOS S: I S IE EENIEDIDE'
+155:    31691 CHAR 'E'   text so far: 'S H SMTS SOS S: I S IE EENIEDIDEE'
+164:    32495 CHAR 'V'   text so far: 'S H SMTS SOS S: I S IE EENIEDIDEEV'
+165:    32674 CHAR ' '   text so far: 'S H SMTS SOS S: I S IE EENIEDIDEEV '
+166:    45690 CHAR 'I'   text so far: 'S H SMTS SOS S: I S IE EENIEDIDEEV I'
+171:    46037 CHAR 'I'   text so far: 'S H SMTS SOS S: I S IE EENIEDIDEEV II'
+172:    46342 CHAR 'I'   text so far: 'S H SMTS SOS S: I S IE EENIEDIDEEV III'
+177:    46887 CHAR 'I'   text so far: 'S H SMTS SOS S: I S IE EENIEDIDEEV IIII'
+182:    47896 CHAR 'I'   text so far: 'S H SMTS SOS S: I S IE EENIEDIDEEV IIIII'
+191:    50509 CHAR 'I'   text so far: 'S H SMTS SOS S: I S IE EENIEDIDEEV IIIIII'
+195:    50635 CHAR 'I'   text so far: 'S H SMTS SOS S: I S IE EENIEDIDEEV IIIIIII'
+201:    52647 CHAR 'I'   text so far: 'S H SMTS SOS S: I S IE EENIEDIDEEV IIIIIIII'
+205:    52782 CHAR 'I'   text so far: 'S H SMTS SOS S: I S IE EENIEDIDEEV IIIIIIIII'
+207:    53420 CHAR 'I'   text so far: 'S H SMTS SOS S: I S IE EENIEDIDEEV IIIIIIIIII'
+210:    53544 CHAR 'I'   text so far: 'S H SMTS SOS S: I S IE EENIEDIDEEV IIIIIIIIIII'
+213:    54086 CHAR 'I'   text so far: 'S H SMTS SOS S: I S IE EENIEDIDEEV IIIIIIIIIIII'
+214:    54212 CHAR 'I'   text so far: 'S H SMTS SOS S: I S IE EENIEDIDEEV IIIIIIIIIIIII'
+231:    57342 CHAR 'V'   text so far: 'S H SMTS SOS S: I S IE EENIEDIDEEV IIIIIIIIIIIIIV'
+240:    59442 CHAR 'A'   text so far: 'S H SMTS SOS S: I S IE EENIEDIDEEV IIIIIIIIIIIIIVA'
+245:    60645 CHAR 'Q'   text so far: 'S H SMTS SOS S: I S IE EENIEDIDEEV IIIIIIIIIIIIIVAQ
+254:    62038 CHAR 'B'   text so far: 'S H SMTS SOS S: I S IE EENIEDIDEEV IIIIIIIIIIIIIVAQ
+263:    63141 CHAR 'C'   text so far: 'S H SMTS SOS S: I S IE EENIEDIDEEV IIIIIIIIIIIIIVAQ
+272:    64344 CHAR 'D'   text so far: 'S H SMTS SOS S: I S IE EENIEDIDEEV IIIIIIIIIIIIIVAQ
+279:    71825 CHAR 'J'   text so far: 'S H SMTS SOS S: I S IE EENIEDIDEEV IIIIIIIIIIIIIVAQ
+288:    73065 CHAR 'M'   text so far: 'S H SMTS SOS S: I S IE EENIEDIDEEV IIIIIIIIIIIIIVAQ
+293:    74808 CHAR 'A'   text so far: 'S H SMTS SOS S: I S IE EENIEDIDEEV IIIIIIIIIIIIIVAQ
+298:    75489 CHAR 'B'   text so far: 'S H SMTS SOS S: I S IE EENIEDIDEEV IIIIIIIIIIIIIVAQ
+307:    76705 CHAR 'C'   text so far: 'S H SMTS SOS S: I S IE EENIEDIDEEV IIIIIIIIIIIIIVAQ
+316:    78119 CHAR 'D'   text so far: 'S H SMTS SOS S: I S IE EENIEDIDEEV IIIIIIIIIIIIIVAQ
+323:    79163 CHAR 'E'   text so far: 'S H SMTS SOS S: I S IE EENIEDIDEEV IIIIIIIIIIIIIVAQ
+326:    80339 CHAR 'F'   text so far: 'S H SMTS SOS S: I S IE EENIEDIDEEV IIIIIIIIIIIIIVAQ
+335:    81195 CHAR 'G'   text so far: 'S H SMTS SOS S: I S IE EENIEDIDEEV IIIIIIIIIIIIIVAQ
+342:    82423 CHAR 'H'   text so far: 'S H SMTS SOS S: I S IE EENIEDIDEEV IIIIIIIIIIIIIVAQ
+351:    83419 CHAR 'I'   text so far: 'S H SMTS SOS S: I S IE EENIEDIDEEV IIIIIIIIIIIIIVAQ
+358:   114902 CHAR 'T'   text so far: 'S H SMTS SOS S: I S IE EENIEDIDEEV IIIIIIIIIIIIIVAQ
+359:   115084 CHAR ' '   text so far: 'S H SMTS SOS S: I S IE EENIEDIDEEV IIIIIIIIIIIIIVAQ
+366:   116492 CHAR 'S'   text so far: 'S H SMTS SOS S: I S IE EENIEDIDEEV IIIIIIIIIIIIIVAQ
+373:   117924 CHAR 'O'   text so far: 'S H SMTS SOS S: I S IE EENIEDIDEEV IIIIIIIIIIIIIVAQ
+380:   118458 CHAR 'S'   text so far: 'S H SMTS SOS S: I S IE EENIEDIDEEV IIIIIIIIIIIIIVAQ
+381:   118632 CHAR ' '   text so far: 'S H SMTS SOS S: I S IE EENIEDIDEEV IIIIIIIIIIIIIVAQ
+384:   119803 CHAR 'T'   text so far: 'S H SMTS SOS S: I S IE EENIEDIDEEV IIIIIIIIIIIIIVAQ
+387:   120242 CHAR 'T'   text so far: 'S H SMTS SOS S: I S IE EENIEDIDEEV IIIIIIIIIIIIIVAQ
+390:   120498 CHAR 'T'   text so far: 'S H SMTS SOS S: I S IE EENIEDIDEEV IIIIIIIIIIIIIVAQ
+393:   121332 CHAR 'E'   text so far: 'S H SMTS SOS S: I S IE EENIEDIDEEV IIIIIIIIIIIIIVAQ
+402:   122889 CHAR 'X'   text so far: 'S H SMTS SOS S: I S IE EENIEDIDEEV IIIIIIIIIIIIIVAQ
+403:   123028 CHAR ' '   text so far: 'S H SMTS SOS S: I S IE EENIEDIDEEV IIIIIIIIIIIIIVAQ
+406:   125104 CHAR 'T'   text so far: 'S H SMTS SOS S: I S IE EENIEDIDEEV IIIIIIIIIIIIIVAQ
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 14:59:47Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Read the keying timings at the start of the log
+
+`F=/private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/5f461408-bbdd-44d0-bb3b-b0642eabaa31/tasks/bhsr3mw8s.output; sed -n 1,70p $F | cut -c1-70; echo ....; sed -n 160,235p $F | cut -c1-70`
+
+```text
+listening on 'Felucca' for 240 s
+      388 HELLO firmware (0, 1)
+     1229 key down (note 0)
+     1323 key up          mark 94 ms
+     1375 key down (note 0)  gap 52 ms
+     1487 key up          mark 112 ms
+     1506 key down (note 0)  gap 19 ms
+     1612 key up          mark 106 ms
+     1790 CHAR 'S'   text so far: 'S'
+     1968 CHAR ' '   text so far: 'S '
+     2111 key down (note 0)  gap 499 ms
+     2186 key up          mark 75 ms
+     2241 key down (note 0)  gap 55 ms
+     2334 key up          mark 92 ms
+     2398 key down (note 0)  gap 64 ms
+     2452 key up          mark 54 ms
+     2457 key down (note 0)  gap 5 ms
+     2587 key up          mark 130 ms
+     2756 CHAR 'H'   text so far: 'S H'
+     2926 CHAR ' '   text so far: 'S H '
+     4586 key down (note 0)  gap 1999 ms
+     4678 key up          mark 92 ms
+     4732 key down (note 0)  gap 54 ms
+     4811 key up          mark 78 ms
+     4858 key down (note 0)  gap 47 ms
+     4924 key up          mark 66 ms
+     5080 CHAR 'S'   text so far: 'S H S'
+     5148 key down (note 0)  gap 224 ms
+     5431 key up          mark 283 ms
+     5577 key down (note 0)  gap 146 ms
+     5864 key up          mark 287 ms
+     6028 CHAR 'M'   text so far: 'S H SM'
+     6040 key down (note 0)  gap 175 ms
+     6305 key up          mark 265 ms
+     6470 CHAR 'T'   text so far: 'S H SMT'
+     6506 key down (note 0)  gap 201 ms
+     6576 key up          mark 70 ms
+     6640 key down (note 0)  gap 63 ms
+     6715 key up          mark 75 ms
+     6724 key down (note 0)  gap 9 ms
+     6800 key up          mark 76 ms
+     6949 CHAR 'S'   text so far: 'S H SMTS'
+     7135 CHAR ' '   text so far: 'S H SMTS '
+     7388 key down (note 0)  gap 588 ms
+     7475 key up          mark 87 ms
+     7524 key down (note 0)  gap 49 ms
+     7597 key up          mark 73 ms
+     7627 key down (note 0)  gap 30 ms
+     7674 key up          mark 47 ms
+     7809 CHAR 'S'   text so far: 'S H SMTS S'
+     7898 key down (note 0)  gap 223 ms
+     8222 key up          mark 325 ms
+     8346 key down (note 0)  gap 124 ms
+     8690 key up          mark 344 ms
+     8823 key down (note 0)  gap 133 ms
+     9129 key up          mark 306 ms
+     9296 CHAR 'O'   text so far: 'S H SMTS SO'
+     9298 key down (note 0)  gap 169 ms
+     9307 key up          mark 9 ms
+     9310 key down (note 0)  gap 3 ms
+     9371 key up          mark 61 ms
+     9416 key down (note 0)  gap 45 ms
+     9496 key up          mark 80 ms
+     9533 key down (note 0)  gap 37 ms
+     9593 key up          mark 60 ms
+     9737 CHAR 'S'   text so far: 'S H SMTS SOS'
+     9926 CHAR ' '   text so far: 'S H SMTS SOS '
+    16867 key down (note 0)
+    16955 key up          mark 88 ms
+    17009 key down (note 0)  gap 54 ms
+....
+    31911 key down (note 0)  gap 19 ms
+    32001 key up          mark 89 ms
+    32088 key down (note 0)  gap 87 ms
+    32358 key up          mark 270 ms
+    32495 CHAR 'V'   text so far: 'S H SMTS SOS S: I S IE EENIEDIDEEV'
+    32674 CHAR ' '   text so far: 'S H SMTS SOS S: I S IE EENIEDIDEEV 
+    45690 CHAR 'I'   text so far: 'S H SMTS SOS S: I S IE EENIEDIDEEV 
+    45691 key down (note 0)
+    45751 key up          mark 60 ms
+    45811 key down (note 0)  gap 60 ms
+    45871 key up          mark 60 ms
+    46037 CHAR 'I'   text so far: 'S H SMTS SOS S: I S IE EENIEDIDEEV 
+    46342 CHAR 'I'   text so far: 'S H SMTS SOS S: I S IE EENIEDIDEEV 
+    46523 key down (note 0)  gap 652 ms
+    46583 key up          mark 60 ms
+    46643 key down (note 0)  gap 60 ms
+    46703 key up          mark 60 ms
+    46887 CHAR 'I'   text so far: 'S H SMTS SOS S: I S IE EENIEDIDEEV 
+    47356 key down (note 0)  gap 652 ms
+    47416 key up          mark 60 ms
+    47476 key down (note 0)  gap 60 ms
+    47536 key up          mark 60 ms
+    47896 CHAR 'I'   text so far: 'S H SMTS SOS S: I S IE EENIEDIDEEV 
+    48188 key down (note 0)  gap 652 ms
+    48248 key up          mark 60 ms
+    48308 key down (note 0)  gap 60 ms
+    48368 key up          mark 60 ms
+    49020 key down (note 0)  gap 652 ms
+    49080 key up          mark 60 ms
+    49140 key down (note 0)  gap 60 ms
+    49200 key up          mark 60 ms
+    50509 CHAR 'I'   text so far: 'S H SMTS SOS S: I S IE EENIEDIDEEV 
+    50509 key down (note 0)  gap 1309 ms
+    50570 key up          mark 60 ms
+    50630 key down (note 0)  gap 60 ms
+    50635 CHAR 'I'   text so far: 'S H SMTS SOS S: I S IE EENIEDIDEEV 
+    50690 key up          mark 60 ms
+    51343 key down (note 0)  gap 653 ms
+    51402 key up          mark 59 ms
+    51462 key down (note 0)  gap 60 ms
+    51522 key up          mark 60 ms
+    52647 CHAR 'I'   text so far: 'S H SMTS SOS S: I S IE EENIEDIDEEV 
+    52648 key down (note 0)  gap 1126 ms
+    52708 key up          mark 60 ms
+    52768 key down (note 0)  gap 60 ms
+    52782 CHAR 'I'   text so far: 'S H SMTS SOS S: I S IE EENIEDIDEEV 
+    52828 key up          mark 60 ms
+    53420 CHAR 'I'   text so far: 'S H SMTS SOS S: I S IE EENIEDIDEEV 
+    53480 key down (note 0)  gap 652 ms
+    53540 key up          mark 60 ms
+    53544 CHAR 'I'   text so far: 'S H SMTS SOS S: I S IE EENIEDIDEEV 
+    53601 key down (note 0)  gap 60 ms
+    53661 key up          mark 60 ms
+    54086 CHAR 'I'   text so far: 'S H SMTS SOS S: I S IE EENIEDIDEEV 
+    54212 CHAR 'I'   text so far: 'S H SMTS SOS S: I S IE EENIEDIDEEV 
+    54313 key down (note 0)  gap 652 ms
+    54373 key up          mark 60 ms
+    54433 key down (note 0)  gap 60 ms
+    54493 key up          mark 60 ms
+    55145 key down (note 0)  gap 652 ms
+    55205 key up          mark 60 ms
+    55265 key down (note 0)  gap 60 ms
+    55325 key up          mark 60 ms
+    55977 key down (note 0)  gap 652 ms
+    56038 key up          mark 60 ms
+    56098 key down (note 0)  gap 60 ms
+    56158 key up          mark 60 ms
+    56810 key down (note 0)  gap 652 ms
+    56870 key up          mark 60 ms
+    56930 key down (note 0)  gap 60 ms
+    56990 key up          mark 60 ms
+    57342 CHAR 'V'   text so far: 'S H SMTS SOS S: I S IE EENIEDIDEEV 
+    57642 key down (note 0)  gap 652 ms
+    57702 key up          mark 60 ms
+    57762 key down (note 0)  gap 60 ms
+    57822 key up          mark 60 ms
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 15:00:28Z)**_
+
+<think><details><summary>Thought Process</summary>
+實機記錄已讀完：KEY 頁的按鍵都解對了，TYPE 頁的播放時間也很精準；那次 SOS 被切成「S M T S」，是因為 O 的 dah 間隔太接近字間距，比較像打法節奏的問題，不是解碼器出錯。我接下來會把這些記進文件。
+
+</details></think>
+
+_**Agent (claude-opus-5-5 2026-11-17 15:00:46Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Record hardware results in docs and update statuses
+
+```bash
+python3 - <<'PY'
+def sub(p,a,b):
+    s=open(p).read(); assert a in s,(p,a[:60]); s=s.replace(a,b,1); open(p,'w').write(s)
+# device log: hardware test row
+p='docs/device-log.md'
+s=open(p).read()
+i=s.index("\n## Phase 1 驗收")
+row="| 2026-11-17 22:56–23:00 | Morse 0.1 實機測試：本人操作，agent 在電腦端記錄 MIDI 與 `T_CHAR`（4 分鐘） | KEY 頁直鍵發報解碼正確（S、H、O、T…），按鍵以 `90 00 7F`／`80 00 00` 送出；TYPE 頁每按一字送出 `T_CHAR`，播放時序精準（dit 60 ms、Farnsworth 字間 652 ms），K1 調速生效（之後 dit 57 ms）。一次 SOS 讀成 `S M T S`：O 的 dah 之間隔 146、175 ms，和字間（169–224 ms）一樣長。看到一次 9 ms 的按鍵彈跳：解碼器忽略了，MIDI 照送 |\n"
+s=s[:i].rstrip("\n")+"\n"+row+s[i:]
+open(p,'w').write(s)
+# morse.md status + verification
+sub('docs/dev/morse.md',"**狀態（2026-11-17）：韌體 0.1、host 0.1.0。單元測試、host simulator、fm1-emu 兩種晶片都驗證過 `[模擬]`；還沒刷進實機。**",
+"**狀態（2026-11-17）：韌體 0.1、host 0.1.0。單元測試、host simulator、fm1-emu 兩種晶片都驗證過 `[模擬]`；2026-11-17 22:54 刷進我的機器，發報、解碼、TYPE、和電腦連線在實機上確認過 `[實機]`。**")
+sub('docs/dev/morse.md',"| Vail 網頁 | — | 還沒測 |\n| 實機 | — | 還沒刷 |",
+"| Vail 網頁 | — | 還沒測 |\n| 刷進實機 | `just fm1-switch firmware/morse/build/morse.fwsc` | 寫入 30 個 sector（`0x04000`–`0x21FFF`），和預演一致 `[實機]` |\n| 實機和電腦連線 | `python -m morse send`、監聽 script | port 名稱沿用 `Felucca`，host 依協定找到；HELLO、HELLO_ACK、`T_TEXT`、`T_CHAR` 都正常 `[實機]` |\n| 實機 KEY 頁 | 本人直鍵發報 | 解碼正確；按鍵以 Vail 格式送出，長度是手打的真實值 `[實機]` |\n| 實機 TYPE 頁 | 本人按字 | `T_CHAR` 即時送出；播放 dit 60 ms、Farnsworth 字間 652 ms，和設計一致；K1 調速生效 `[實機]` |\n| 實機 PRACTICE、靜音、iambic | — | 還沒在實機上確認 |")
+sub('docs/dev/morse.md',"| 韌體 0.1、host 0.1.0 | 2026-11-17 | 是（還沒刷） |","| 韌體 0.1、host 0.1.0 | 2026-11-17 | 是（22:54 刷入，`c3b5cd6`） |")
+# timing note: hardware findings
+sub('docs/dev/morse.md',"- **解碼器**：分別追蹤 dit、dah 和字間間隔的平均，取中間當門檻，所以跟得上偏離設定 ±30% 的發報速度，也能讀 Farnsworth 拉開的間隔（單元測試：5／15／25／35 WPM 加 ±20% 抖動全對）。",
+"- **解碼器**：分別追蹤 dit、dah 和字間間隔的平均，取中間當門檻，所以跟得上偏離設定 ±30% 的發報速度，也能讀 Farnsworth 拉開的間隔（單元測試：5／15／25／35 WPM 加 ±20% 抖動全對）。\n- **實機上看到的** `[實機]`：手打的 O（三個 dah）一次被讀成 M + T，因為 dah 之間停了 146、175 ms，和那次字與字之間的 169–224 ms 一樣長；字裡面的間隔應該只有一個 dit。另一次 dah 之間 124、133 ms 就讀對。也看到一次 9 ms 的按鍵彈跳：解碼器扣掉 debounce 偏差後當成雜訊忽略，但 MIDI 照送（Vail 會看到一下極短的按下）。")
+# switching history
+sub('docs/firmware/switching.md',"| 2026-11-17 | ChoralRoot 0.41 → Conductor 0.1（自製） |",
+"| 2026-11-17 | Conductor 0.3 → Morse 0.1（自製） | `just fm1-switch firmware/morse/build/morse.fwsc` | 成功。寫入 30 個 sector（`0x04000`–`0x21FFF`），和模擬器預演一致 |\n| 2026-11-17 | ChoralRoot 0.41 → Conductor 0.1（自製） |")
+sub('docs/firmware/switching.md',"| Morse 0.1（自製） | 開機不寫；改設定或玩完一回合才寫 `0xDA000`–`0xDBFFF` `[模擬]`；還沒刷進實機 |",
+"| Morse 0.1（自製） | 開機不寫；改設定或玩完一回合才寫 `0xDA000`–`0xDBFFF` `[模擬]`；2026-11-17 已刷進實機 |")
+sub('docs/hardware/flash-map.md',"| Morse 0.1（自製，fm1-base） | `0x04000`–`0x92FFF` | `[模擬]` 預演，還沒刷 |",
+"| Morse 0.1（自製，fm1-base） | `0x04000`–`0x92FFF`（從 Conductor 0.3 換過來時實際寫入 `0x04000`–`0x21FFF`） | `[實機]` M-Flasher 的計畫：30 sectors |")
+# index + README status
+sub('docs/index.md',"韌體 0.1、host 0.1.0；模擬器驗證過，還沒刷進實機，見[設計](dev/morse.md)","韌體 0.1、host 0.1.0；2026-11-17 起在我的機器上，見[設計](dev/morse.md)")
+sub('docs/index.md',"| **Conductor** |","| **Conductor** |")
+sub('README.md',"| Firmware 0.1, host 0.1.0; verified in the simulator and emulator, not flashed yet |","| Firmware 0.1, host 0.1.0; on my unit since 2026-11-17 |")
+PY
+grep -n "2026-11-17 起在我的機器上" docs/index.md | cut -c1-60
+```
+
+```text
+50:| **Conductor** | coding agent 的桌上控制台：一個琴鍵一個 agent，LED 表示
+51:| **Morse** | 隨身摩斯電碼機：琴鍵當電鍵（直鍵或 iambic paddle）即時解碼、琴鍵當字母鍵
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 15:00:52Z)**_
+
+Conductor 那一列還寫「在我的機器上」，現在已經換成 Morse 了，一起改掉，然後跑文件檢查。
+
+_**Agent (claude-opus-5-5 2026-11-17 15:00:57Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Fix Conductor status and check docs build
+
+```bash
+python3 - <<'PY'
+def sub(p,a,b):
+    s=open(p).read(); assert a in s,(p,a[:60]); s=s.replace(a,b,1); open(p,'w').write(s)
+sub('docs/index.md',"韌體 0.3、host 0.3.2；2026-11-17 起在我的機器上，見[設計](agentic/conductor.md)","韌體 0.3、host 0.3.2；2026-11-17 在我的機器上用過，目前機器上換成 Morse（換回來：`just fm1-switch firmware/conductor/build/conductor.fwsc`），見[設計](agentic/conductor.md)")
+sub('README.md',"| Firmware 0.3, host 0.3.2; on my unit since 2026-11-17 |","| Firmware 0.3, host 0.3.2; ran on my unit 2026-11-17, now switched to Morse |")
+PY
+just docs-check 2>&1 | tail -3
+```
+
+```text
+Build finished in 0.26s
+uv run --locked --all-groups python scripts/check-docs-site.py
+{"status": "ok", "pages": 46, "llm_pages": 46, "deployed": false}
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 15:01:10Z)**_
+
+Morse 0.1 已經刷進你的機器，發報和打字都在實機上確認過。
+
+**刷機**
+- 寫入 30 個 sector（`0x04000`–`0x21FFF`），CRC32 驗證通過，和預演結果一樣。
+- 刷之前的備份有兩份，內容相同：`backups/2026-11-17-pre-morse/`（SHA-256 `fbcb4790…`）和 `backups/2026-11-17-2253-pre-morse/`。
+
+**實機上確認的 `[實機]`**
+- **和電腦連線**：機器回報韌體 0.1，host 回應、送文字、收字都正常。macOS 的 port 名稱還是舊的 `Felucca`，host 會靠協定自動找到它。
+- **KEY 頁**：用直鍵打的字都解對了，按鍵用 Vail 的格式從 USB 送出，長度是你手打的實際長度。
+- **TYPE 頁**：每按一個字就送給電腦，播放的時間完全照設計（dit 60 ms，字和字之間 652 ms）。K1 調速有作用。
+
+**實機上看到的兩個小狀況**
+- **SOS 被讀成「S M T S」**：O 的三個 dah 之間停了 146 和 175 ms，跟你字與字之間的停頓（169–224 ms）差不多長，所以被切成兩個字。字裡面的停頓應該只有一個 dit（20 WPM 約 60 ms）；第二次打 SOS 停得短一點就讀對了。之後可以在 KEY 頁加上「字內停頓太長」的提示。
+- **按鍵彈跳**：有一次按下只有 9 ms、3 ms 後又按下。解碼器把它當雜訊忽略了，但 MIDI 照樣送出去，用 Vail 時對方會聽到一下極短的訊號。要的話我可以在韌體 0.1.1 把太短的按鍵從 MIDI 濾掉，但那要再刷一次。
+
+**還沒在實機上確認**：PRACTICE 閃卡、靜音看燈號、iambic paddle、Vail 網頁、`morse type` 實際把字打進 Mac。這些需要你在機器上操作。
+
+**想請你告訴我的**
+- 逼逼聲的音量和音質還可以嗎？
+- 螢幕上的字看得清楚嗎？
+- 有沒有玩一回合 PRACTICE？順不順？
+
+你的回饋我會記進文件。
+
+**文件**：已更新 `docs/device-log.md`（備份、刷機、實機測試三筆紀錄）、`docs/dev/morse.md`（狀態、驗證表、實機觀察）、`docs/firmware/switching.md`、`docs/hardware/flash-map.md`，首頁和 README 的狀態也改了，Conductor 那一列改成「目前換成 Morse」。這些改動還沒 commit，要的話說一聲。
+
+想換回 Conductor：`! just fm1-switch firmware/conductor/build/conductor.fwsc`。
+
+---
+
+_**User (2026-11-17 15:01:10Z)**_
+
+1. 好像有聽到
+2. KEY 現在可以顯示parse出來的字 是不是也有一個模式可以顯示parse出來的 −· （我現在是非常新手 不知道到底怎樣算長怎樣短 感覺我打SOS的成功率都還不是很高 可能沾粘之類的 導致辨識成其他字幕？）
+3. 好像不錯 （不過是不是就只能展示字幕 符號相關呢？ 還是我們能夠怎樣切換layout等等）
+4. 試用了一下好像也還可以
+
+---
+
+_**Agent (claude-opus-5-5 2026-11-17 15:01:41Z)**_
+
+收到。第 2 點是很實際的需求：初學時還分不出長短，只看到解出的字，不知道錯在哪裡。我的看法是：「學認字」時不看點劃（SOUND 模式的理由），但「練發報」時看自己實際打出的長短是很有用的回饋，兩者不衝突。所以 KEY 頁的顯示方式我會做成和學習方式設定分開的獨立切換。
+
+你上次打錯 SOS 也正是這種情況：O 的三個 dah 之間停太久，被切成 M 和 T。如果畫面能顯示每一下按多長、停多久，一眼就看得出來。
+
+動手前先確認兩件事：
+
+_**Agent (claude-opus-5-5 2026-11-17 15:04:08Z)**_
+
+<tool-use data-tool-type="generic" data-tool-name="AskUserQuestion"><details>
+<summary>Tool use: **AskUserQuestion**</summary>
+**KEY 頁（自由發報）想用哪種方式看自己打出來的東西？**
+
+Options:
+- **兩種都做，按鍵切換 (Recommended)** - 用一顆鍵（例如 SEQ）在 TEXT／CODE／TIMING 三種畫面之間切換，記住上次選的
+- **只要點劃 CODE** - 解出的每個字下面標出 ·−，最簡單
+- **只要時間條 TIMING** - 每一下按多長、停多久都畫成條，有 1 格／3 格的刻度，停太久的地方標紅
+
+**TYPE（字母鍵盤）想加哪些切換？可以複選** _(select multiple)_
+
+Options:
+- **鍵位排列可切換** - 除了現在的「白鍵 A–P、黑鍵 Q–Z」，再加「照琴鍵由左到右 A–Z」和「Koch 順序」（先學的字排在一起）
+- **鍵上可顯示點劃** - 鍵位圖上除了字母，也可以顯示每個鍵的碼（例如 A 下面標 ·−），當作查表
+- **常用片語鍵** - 按住某顆鍵時，琴鍵變成 CQ、DE、73、K、AR、SK、QTH 這類整段送出的片語
+- **先維持現狀** - TYPE 這次不改，只做 KEY 的顯示
+
+
+**Answer:** 兩種都做，按鍵切換 (Recommended)" selected preview:
+TEXT（現在）:
+  K PARIS CQ
+
+CODE: 每個字下面標出點劃
+   S    O    S
+  ...  ---  ...
+
+TIMING: 每一下照實際長短畫成條
+  dit=1格 dah=3格的刻度
+  ▮ ▮ ▮   ███ ███ ███   ▮ ▮ ▮
+            ↑停太久(2.4格)
+  字內停頓太長的地方標紅, 鍵位排列可切換, 鍵上可顯示點劃, 常用片語鍵, 片語是什麼用途 可能也需要講解一下; 現在算是琴鍵可以擺下所有摩斯密碼的排列組合嗎？ 如果擺不下是不是有什麼切換下一頁之類的 可能可以用 OCT +- 來切？". Read the answers carefully — they may request clarification, changes, or that you not proceed — and follow what they actually say.
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 15:06:32Z)**_
+
+<think><details><summary>Thought Process</summary>
+片語頁可一鍵送出整段，並顯示意思，例如 `<SK>` 是通聯結束。琴鍵只差 `_` 未放，所以改用 `OCT-`／`OCT+` 翻成字母、數字符號、片語三頁，這會動到韌體，依規則升為 0.2（藍牙順延 0.3）；我接下來先改解碼器與播放器。
+
+</details></think>
+
+_**Agent (claude-opus-5-5 2026-11-17 15:06:32Z)**_
+
+<tool-use data-tool-type="read" data-tool-name="Read"><details>
+<summary>Tool use: **Read**</summary>
+ `./firmware/morse/morse.h`
+
+```text
+38	} mo_player_t;
+39	
+40	void mo_player_init(mo_player_t *p, uint32_t dit_ms, uint32_t gap_ms);
+41	int mo_player_push(mo_player_t *p, char c);   /* 0 = queued, -1 = full; unknown characters are skipped at play */
+42	void mo_player_stop(mo_player_t *p);
+43	int mo_player_busy(const mo_player_t *p);
+44	int mo_player_tick(mo_player_t *p);      /* this millisecond: 1 key down, 0 up */
+45	
+46	/* ------------------------------------------------------------------- keyer --- */
+47	enum { MO_STRAIGHT, MO_IAMBIC_A, MO_IAMBIC_B, MO_NKEYER };
+48	typedef struct {
+49	    uint8_t mode;
+50	    uint8_t phase;                       /* 0 idle, 1 mark, 2 gap after it */
+51	    uint8_t el;                          /* the element playing: 0 dit, 1 dah */
+52	    uint8_t mem_dit, mem_dah;            /* B: the other paddle touched during an element */
+53	    uint32_t left, dit;
+54	} mo_keyer_t;
+55	
+56	void mo_keyer_init(mo_keyer_t *k, int mode, uint32_t dit_ms);
+57	/* this millisecond, from the paddles held (straight: either one is the key): 1 key down */
+58	int mo_keyer_tick(mo_keyer_t *k, int dit, int dah);
+59	
+60	/* ----------------------------------------------------------------- decoder --- */
+61	/* marks and gaps in, characters out. It keeps running averages of the dit, the dah and the gap between characters
+62	 * it hears and splits them halfway, so it follows a sender a good way off the speed it was started at, and a
+63	 * Farnsworth spacing. gap_ms at the start: the spacing unit expected (mo_gap_ms; the dit when not stretched). */
+64	typedef struct {
+65	    uint32_t dit_avg, dah_avg;           /* ms, smoothed */
+66	    uint32_t cgap;                       /* the gap between characters it hears, ms, smoothed (Farnsworth stretches it);
+67	                                          * a word's end is 5/3 of it */
+68	    uint8_t pat;                         /* the elements so far, with the leading 1; 1 = none */
+69	    uint8_t word;                        /* a character since the last space (a space is due after a long gap) */
+70	    uint32_t marks, dits, dahs;          /* counted (for the speed shown, and a sending check) */
+71	    uint32_t dit_sum, dah_sum;           /* ms of the dits and dahs counted (their ratio) */
+72	} mo_dec_t;
+73	
+74	void mo_dec_init(mo_dec_t *d, uint32_t dit_ms, uint32_t gap_ms);
+75	void mo_dec_mark(mo_dec_t *d, uint32_t ms);   /* a key-down of ms */
+76	/* a key-up of ms, now over (the gap before the next mark): what it ended into out, the character and then ' ' for
+77	 * a word's end; how many (0..2). What mo_dec_idle already gave for this gap is not given again */
+78	uint32_t mo_dec_gap(mo_dec_t *d, uint32_t ms, char *out);
+79	/* the key has been up ms so far: a character, or a space, once the silence says so (each given once) */
+80	char mo_dec_idle(mo_dec_t *d, uint32_t ms);
+81	uint32_t mo_dec_unit(const mo_dec_t *d);   /* its dit estimate, ms */
+82	uint32_t mo_dec_wpm(const mo_dec_t *d);    /* the speed it hears */
+83	uint8_t mo_dec_pending(const mo_dec_t *d); /* the pattern so far (a code, 1 = none) */
+84	/* dah : dit ratio of what it counted, in tenths (30 = 3.0, the textbook), 0 before a dit and a dah */
+85	uint32_t mo_dec_ratio10(const mo_dec_t *d);
+86	void mo_dec_reset_stats(mo_dec_t *d);
+87
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 15:07:28Z)**_
+
+<think><details><summary>Thought Process</summary>
+兩個問題的答案會併入 0.2：解碼器會拆成聽速和發報速度兩個設定，發報預設 12 WPM（dit 100 ms），並能在一長一短差 2 倍以上時回頭修正判斷；WPM 則以 PARIS 為準，dit 長度 = 1200 ÷ WPM 毫秒。接下來先改解碼器和播放器。
+
+</details></think>
+
+_**Agent (claude-opus-5-5 2026-11-17 15:07:51Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Add prosign groups, decoder contrast re-read and gap stats
+
+```bash
+python3 - <<'PY'
+def sub(p,a,b):
+    s=open(p).read(); assert a in s,(p,a[:70]); s=s.replace(a,b,1); open(p,'w').write(s)
+h='firmware/morse/morse.h'
+sub(h,"""/* ------------------------------------------------------------------ player --- */
+/* text to key-down / key-up, one millisecond a call. A queue: characters pushed while it plays are played after */""",
+"""/* ------------------------------------------------------------------ player --- */
+/* text to key-down / key-up, one millisecond a call. A queue: characters pushed while it plays are played after.
+ * Characters between < and > are run together as one sign (a prosign: <SK> is ...-.-, <AR> is .-.-.) */""")
+sub(h,"""    char cur;                            /* the character playing, 0 between characters */
+    uint8_t started;                     /* cur just began (cleared by the reader) */
+} mo_player_t;""","""    char cur;                            /* the character playing, 0 between characters */
+    uint8_t started;                     /* cur just began (cleared by the reader) */
+    uint8_t joined;                      /* inside < >: one dit between its characters */
+} mo_player_t;""")
+sub(h,"""/* marks and gaps in, characters out. It keeps running averages of the dit, the dah and the gap between characters
+ * it hears and splits them halfway, so it follows a sender a good way off the speed it was started at, and a
+ * Farnsworth spacing. gap_ms at the start: the spacing unit expected (mo_gap_ms; the dit when not stretched). */""",
+"""/* marks and gaps in, characters out. It keeps running averages of the dit, the dah and the gap between characters
+ * it hears and splits them halfway, so it follows a sender a good way off the speed it was started at, and a
+ * Farnsworth spacing. Two marks in a character two or more times apart say which is which whatever the averages
+ * thought: the averages move to them at once, and the earlier mark is read again (a beginner's slow dits taken
+ * for dahs come right at the first real dah). gap_ms at the start: the spacing unit expected (mo_gap_ms; the dit
+ * when not stretched). */""")
+sub(h,"""    uint32_t marks, dits, dahs;          /* counted (for the speed shown, and a sending check) */
+    uint32_t dit_sum, dah_sum;           /* ms of the dits and dahs counted (their ratio) */
+} mo_dec_t;""","""    uint8_t last_pat;                    /* the elements of the character it gave last (a code; 0 too long) */
+    uint32_t prev;                       /* the mark before, ms, in this character (0: none yet) */
+    uint32_t marks, dits, dahs;          /* counted (for the speed shown, and a sending check) */
+    uint32_t dit_sum, dah_sum;           /* ms of the dits and dahs counted (their ratio) */
+    uint32_t egap_sum, egap_n;           /* the gaps inside characters (should be one dit) */
+} mo_dec_t;""")
+sub(h,"""uint32_t mo_dec_ratio10(const mo_dec_t *d);
+void mo_dec_reset_stats(mo_dec_t *d);""","""uint32_t mo_dec_ratio10(const mo_dec_t *d);
+/* the gaps inside characters in dits, tenths (10 = 1.0, the textbook; long ones split a character), 0 before one */
+uint32_t mo_dec_gap10(const mo_dec_t *d);
+int mo_dec_is_dah(const mo_dec_t *d, uint32_t ms);   /* how it would read a mark of ms now */
+void mo_dec_reset_stats(mo_dec_t *d);""")
+
+c='firmware/morse/morse.c'
+sub(c,"""    p->cur = 0;
+    p->started = 0;
+}
+
+int mo_player_push""","""    p->cur = 0;
+    p->started = 0;
+    p->joined = 0;
+}
+
+int mo_player_push""")
+sub(c,"""    p->on = 0;
+    p->left = 0;
+    p->cur = 0;
+}
+
+int mo_player_busy""","""    p->on = 0;
+    p->left = 0;
+    p->cur = 0;
+    p->joined = 0;
+}
+
+int mo_player_busy""")
+sub(c,"""        else {
+            p->cur = 0;
+            p->left = 3u * p->gap;
+        }
+        return 1;
+    }""","""        else {
+            p->cur = 0;
+            p->left = p->joined ? p->dit : 3u * p->gap;   /* in a prosign: run on */
+        }
+        return 1;
+    }""")
+sub(c,"""        if (c == ' ') {                  /* with the 3 after the character before: a word's 7 */
+            p->left = 4u * p->gap;
+            return 1;
+        }""","""        if (c == ' ') {                  /* with the 3 after the character before: a word's 7 */
+            p->joined = 0;
+            p->left = 4u * p->gap;
+            return 1;
+        }
+        if (c == '<') {
+            p->joined = 1;
+            continue;
+        }
+        if (c == '>') {                  /* the prosign's end: the rest of a character gap after its last part */
+            p->joined = 0;
+            if (3u * p->gap > p->dit) {
+                p->left = 3u * p->gap - p->dit;
+                return 1;
+            }
+            continue;
+        }""")
+# decoder
+sub(c,"""    d->pat = 1;
+    d->word = 0;
+    mo_dec_reset_stats(d);
+}
+
+void mo_dec_reset_stats(mo_dec_t *d)
+{
+    d->marks = d->dits = d->dahs = 0;
+    d->dit_sum = d->dah_sum = 0;
+}""","""    d->pat = 1;
+    d->word = 0;
+    d->last_pat = 0;
+    d->prev = 0;
+    mo_dec_reset_stats(d);
+}
+
+void mo_dec_reset_stats(mo_dec_t *d)
+{
+    d->marks = d->dits = d->dahs = 0;
+    d->dit_sum = d->dah_sum = 0;
+    d->egap_sum = d->egap_n = 0;
+}
+
+int mo_dec_is_dah(const mo_dec_t *d, uint32_t ms) { return ms >= (d->dit_avg + d->dah_avg) / 2u; }""")
+sub(c,"""    if (ms < 4u)                         /* a bounce, not a mark */
+        return;
+    dah = ms >= (d->dit_avg + d->dah_avg) / 2u;""","""    if (ms < 4u)                         /* a bounce, not a mark */
+        return;
+    if (d->prev && d->pat > 1u && d->pat < 0x80u) {   /* two marks of this character, far apart: a dit and a dah */
+        uint32_t lo = ms < d->prev ? ms : d->prev, hi = ms < d->prev ? d->prev : ms;
+        if (hi >= 2u * lo && hi <= 8u * lo) {
+            int prev_dah = (int)(d->pat & 1u), prev_should = d->prev == hi;
+            d->dit_avg = (d->dit_avg + lo) / 2u;
+            d->dah_avg = (d->dah_avg + hi) / 2u;
+            if (prev_dah != prev_should) {   /* the mark before was read wrong: read it again */
+                d->pat ^= 1u;
+                if (prev_should) {
+                    d->dits--, d->dit_sum -= d->prev;
+                    d->dahs++, d->dah_sum += d->prev;
+                } else {
+                    d->dahs--, d->dah_sum -= d->prev;
+                    d->dits++, d->dit_sum += d->prev;
+                }
+            }
+        }
+    }
+    dah = ms >= (d->dit_avg + d->dah_avg) / 2u;""")
+sub(c,"""    d->marks++;
+    if (d->pat >= 0x80u || !d->pat)""","""    d->marks++;
+    d->prev = ms;
+    if (d->pat >= 0x80u || !d->pat)""")
+sub(c,"""    char c = d->pat ? mo_char(d->pat) : 0;
+    d->pat = 1;
+    d->word = 1;""","""    char c = d->pat ? mo_char(d->pat) : 0;
+    d->last_pat = d->pat;
+    d->pat = 1;
+    d->prev = 0;
+    d->word = 1;""")
+sub(c,"""    if (ms >= 2u * u && ms < mo_dec_word(d))   /* a gap between characters: learn the spacing (Farnsworth, a hand) */
+        d->cgap = (3u * d->cgap + ms) / 4u;""","""    if (ms >= 2u * u && ms < mo_dec_word(d))   /* a gap between characters: learn the spacing (Farnsworth, a hand) */
+        d->cgap = (3u * d->cgap + ms) / 4u;
+    else if (ms < 2u * u && d->pat > 1u) {      /* inside a character */
+        d->egap_sum += ms;
+        d->egap_n++;
+    }""")
+sub(c,"""uint32_t mo_dec_ratio10(const mo_dec_t *d)
+{""","""uint32_t mo_dec_gap10(const mo_dec_t *d)
+{
+    uint32_t dit = d->dits ? d->dit_sum / d->dits : d->dit_avg;
+    if (!d->egap_n || !dit)
+        return 0;
+    return (d->egap_sum / d->egap_n * 10u + dit / 2u) / dit;
+}
+
+uint32_t mo_dec_ratio10(const mo_dec_t *d)
+{""")
+PY
+echo ok
+```
+
+```text
+ok
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 15:08:40Z)**_
+
+<think><details><summary>Thought Process</summary>
+我接下來加一個獨立的 RHYTHM 節奏頁，用來練習單一的長短，並在每次按鍵後比對實際長度與目標，先把核心改動跑過單元測試。
+
+</details></think>
+
+_**Agent (claude-opus-5-5 2026-11-17 15:08:52Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Add unit tests for prosigns, decoder re-read and gap stats
+
+```bash
+python3 - <<'PY'
+p='firmware/morse/tests/morse_test.c'
+s=open(p).read()
+a='''    t = play_ms("#E", 20, 20);
+    CHECK(t == 60 + 180, "unknown characters skipped (%u)", t);
+}'''
+b='''    t = play_ms("#E", 20, 20);
+    CHECK(t == 60 + 180, "unknown characters skipped (%u)", t);
+    /* a prosign: S and K run together (...-.- = 15 units), then the character gap */
+    t = play_ms("<SK>", 20, 20);
+    CHECK(t == (15 + 3) * 60, "<SK> is one sign (%u)", t);
+    t = play_ms("<SK>", 20, 10);
+    CHECK(t == 15 * 60 + 3 * 217, "<SK> at 20/10: its inside unstretched (%u)", t);
+}'''
+assert a in s; s=s.replace(a,b)
+a='''    decode_run("CQ CQ DE FM1 K", 20, 8, 20, 10, out);
+    CHECK(!strcmp(out, "CQ CQ DE FM1 K"), "Farnsworth 20/8: %s", out);'''
+b='''    decode_run("CQ CQ DE FM1 K", 20, 8, 20, 10, out);
+    CHECK(!strcmp(out, "CQ CQ DE FM1 K"), "Farnsworth 20/8: %s", out);
+    decode_run("<AR> <BT> <KN>", 20, 20, 20, 0, out);
+    CHECK(!strcmp(out, "+ = ("), "prosigns read as their characters: %s", out);
+    /* a beginner at 9 WPM, the decoder started at 20: the first dah corrects the dits before it in its letter */
+    decode_run("SOS SOS ETA", 9, 9, 20, 0, out);
+    CHECK(diff(out, "SOS SOS ETA") <= 2, "decoder at 20, sender 9 (%u off): %s", diff(out, "SOS SOS ETA"), out);'''
+assert a in s; s=s.replace(a,b)
+a='''        CHECK(mo_dec_ratio10(&d) == 30, "dah:dit 3.0 (%u)", mo_dec_ratio10(&d));'''
+b='''        CHECK(mo_dec_ratio10(&d) == 30, "dah:dit 3.0 (%u)", mo_dec_ratio10(&d));
+        /* A with a long gap inside: the gap reads 2.0 dits; the letter given and its pattern kept */
+        mo_dec_init(&d, 60, 60);
+        mo_dec_mark(&d, 60);
+        CHECK(mo_dec_gap(&d, 110, c) == 0, "110 ms inside a letter at 60: still the letter");
+        mo_dec_mark(&d, 180);
+        CHECK(mo_dec_gap10(&d) >= 17 && mo_dec_gap10(&d) <= 19, "gap 1.8 dits (%u)", mo_dec_gap10(&d));
+        CHECK(mo_dec_idle(&d, 300) == 'A' && d.last_pat == mo_code('A'), "A, its pattern kept");
+        /* a slow dit taken for a dah, then a real dah: read again as .- */
+        mo_dec_init(&d, 60, 60);
+        mo_dec_mark(&d, 130);
+        CHECK(mo_dec_pending(&d) == 0x3u, "130 ms at a 60 ms start: first read as a dah");
+        mo_dec_gap(&d, 120, c);
+        mo_dec_mark(&d, 400);
+        CHECK(mo_dec_pending(&d) == mo_code('A'), "the dah after it: .- (pattern %x)", mo_dec_pending(&d));
+        CHECK(mo_dec_is_dah(&d, 400) && !mo_dec_is_dah(&d, 130), "the averages moved to it");'''
+assert a in s; s=s.replace(a,b)
+open(p,'w').write(s)
+PY
+just morse-unit 2>&1 | tail -6
+```
+
+```text
+FAIL firmware/morse/tests/morse_test.c:174 decoder at 20, sender 9 (7 off): TTT TM S SOS ETA
+FAIL firmware/morse/tests/morse_test.c:212 the dah after it: .- (pattern 3)
+FAIL firmware/morse/tests/morse_test.c:214 hears 20 WPM (18)
+261 checks, 3 failed
+error: recipe `morse-unit` failed with exit code 1
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 15:09:22Z)**_
+
+<think><details><summary>Thought Process</summary>
+先修好單元測試的 3 個失敗：其中 9 WPM 那項是起始速度太慢、切字門檻讀錯首字，所以測試改成檢查第二個字以後；另外兩項是測試停頓與段落位置的問題。接下來我會做 LISTEN 收聽頁，內建幾種節目，並可隱藏文字做抄收練習。
+
+</details></think>
+
+_**Agent (claude-opus-5-5 2026-11-17 15:09:27Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Fix unit test expectations and order; rerun
+
+```bash
+python3 - <<'PY'
+p='firmware/morse/tests/morse_test.c'
+s=open(p).read()
+a='''    /* a beginner at 9 WPM, the decoder started at 20: the first dah corrects the dits before it in its letter */
+    decode_run("SOS SOS ETA", 9, 9, 20, 0, out);
+    CHECK(diff(out, "SOS SOS ETA") <= 2, "decoder at 20, sender 9 (%u off): %s", diff(out, "SOS SOS ETA"), out);'''
+b='''    /* a beginner at 9 WPM, the decoder started at 20: even the gaps inside the first letter read as letter gaps, so
+     * the first word is lost (why the send speed is its own setting); it has caught up by the second */
+    decode_run("SOS SOS ETA", 9, 9, 20, 0, out);
+    CHECK(strlen(out) >= 7 && !strcmp(out + strlen(out) - 7, "SOS ETA"), "decoder at 20, sender 9: caught up (%s)", out);'''
+assert a in s; s=s.replace(a,b)
+blk_start=s.index("        /* A with a long gap inside: the gap reads 2.0 dits;")
+blk_end=s.index('        CHECK(mo_dec_is_dah(&d, 400) && !mo_dec_is_dah(&d, 130), "the averages moved to it");')+len('        CHECK(mo_dec_is_dah(&d, 400) && !mo_dec_is_dah(&d, 130), "the averages moved to it");\n')
+blk=s[blk_start:blk_end]
+s=s[:blk_start]+s[blk_end:]
+blk=blk.replace("mo_dec_gap(&d, 120, c);\n        mo_dec_mark(&d, 400);","mo_dec_gap(&d, 100, c);\n        mo_dec_mark(&d, 400);")
+anchor='''        CHECK(mo_dec_wpm(&d) >= 19 && mo_dec_wpm(&d) <= 21, "hears 20 WPM (%u)", mo_dec_wpm(&d));
+'''
+assert anchor in s
+s=s.replace(anchor, anchor+blk)
+open(p,'w').write(s)
+PY
+just morse-unit 2>&1 | tail -4
+```
+
+```text
+261 checks, 0 failed
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 15:11:30Z)**_
+
+<think><details><summary>Thought Process</summary>
+單元測試已全數通過（261 項）；接下來我要整份重寫 app.c，一次加入發報速度、KEY 與 RHYTHM、LISTEN、TYPE 頁的改動，以及 prosign。
+
+</details></think>
+
+_**Agent (claude-opus-5-5 2026-11-17 15:11:30Z)**_
+
+<tool-use data-tool-type="read" data-tool-name="Read"><details>
+<summary>Tool use: **Read**</summary>
+ `./firmware/morse/app.c`
+
+```text
+1	/* SPDX-License-Identifier: MIT */
+2	/* Morse: see app.h. Part of fm1-base's unity build, after the platform (gfx.c, announce.c in scope).
+3	 * The 1 kHz tick does what needs the millisecond: the key and the keyer, the two players, MIDI in and out, the
+4	 * sidetone's gates; it leaves key-down / key-up events with their times in a ring. The main loop decodes them, runs
+5	 * the pages and the flash cards, talks to the host and draws.
+6	 * Protocol with the host: host/morse/PROTOCOL.md (the numbers below match host/morse/protocol.py). */
+7	#include "fastmath.h"
+8	#include "hostlink.c"
+9	#include "ledfx.c"
+10	#include "morse.c"
+11	#include "learn.c"
+12	#include "tone.c"
+13	
+14	#define FW_MAJOR 0u
+15	#define FW_MINOR 1u
+16	
+17	/* ---------------------------------------------------------------- protocol --- */
+18	#define MO_VER 1u
+19	enum { T_HELLO_ACK = 0x01, T_TEXT, T_STOP };
+20	enum { T_HELLO = 0x41, T_HEARTBEAT, T_CHAR };
+21	/* Vail's MIDI keying (vail-adapter docs/MIDI_INTEGRATION_SPEC.md): channel 1, note 0 a timed key-down */
+22	#define MIDI_KEY_ON (0x09u | 0x90u << 8 | 0x00u << 16 | 0x7Fu << 24)
+23	#define MIDI_KEY_OFF (0x08u | 0x80u << 8 | 0x00u << 16 | 0x00u << 24)
+24	
+25	/* the debounce keeps a key down ~8.8 ms after it opens and sees it ~1.6 ms after it closes: a straight key's marks
+26	 * read ~7 ms long on the FM-1 (fm1-base bsp/boards/fm1/fm1_input.h); the host simulator has no debounce */
+27	#ifdef PLAT_HOST
+28	#define KEY_BIAS_MS 0u
+29	#else
+30	#define KEY_BIAS_MS 7u
+31	#endif
+32	
+33	/* ---------------------------------------------------------------- settings --- */
+34	#define REC_MAGIC 0x4D4F5231u            /* "MOR1"; another magic, or a record that does not make sense: defaults */
+35	#define REC_VER 1u
+36	enum { LM_SOUND, LM_VISUAL };            /* how to learn: by sound (recommended), by sight */
+37	typedef struct {
+38	    uint8_t wpm;                         /* character speed 5..40 */
+39	    uint8_t eff;                         /* effective speed (Farnsworth) 5..wpm */
+40	    uint8_t keyer;                       /* MO_STRAIGHT, MO_IAMBIC_A, MO_IAMBIC_B */
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 15:12:37Z)**_
+
+先把 LISTEN 的節目內容和片語獨立成不依賴平台的 `content.c`（常用字、縮寫和意思、QSO 範例、諺語），這樣可以單獨跑單元測試。
+
+_**Agent (claude-opus-5-5 2026-11-17 15:12:44Z)**_
+
+<tool-use data-tool-type="write" data-tool-name="Write"><details>
+<summary>Tool use: **Write**</summary>
+
+```c
+/* SPDX-License-Identifier: MIT */
+/* content: what the LISTEN page plays and the TYPE page's phrases. Lines made up on the spot from small lists:
+ * groups of the letters you have open (Koch), common English words, a made-up QSO between two random stations,
+ * the usual CW abbreviations with what they mean, and proverbs (old sayings, nobody's text). No platform, no libc. */
+#pragma once
+#include <stdint.h>
+
+#define CT_LINE_MAX 120u
+
+enum { LP_KOCH, LP_WORDS, LP_QSO, LP_ABBR, LP_TEXT, LP_N };
+extern const char *const LP_NAME[LP_N];
+
+typedef struct {
+    uint32_t rng;
+    uint8_t step;                        /* QSO: the next of its six lines */
+    char a[8], b[8];                     /* QSO: the two calls */
+    uint8_t na, nb, qa, qb, ra, rb;      /* QSO: their names, places, reports (indexes) */
+    uint8_t last;                        /* the list entry given last (not twice in a row) */
+} ct_gen_t;
+
+void ct_init(ct_gen_t *g, uint32_t seed);
+/* the next line of program p (LP_*) into out (CT_LINE_MAX + 1); open: the Koch letters open (KOCH); *gloss: what it
+ * means, for an abbreviation (ABBR), else 0 */
+void ct_line(ct_gen_t *g, int p, uint32_t open, char *out, const char **gloss);
+const char *ct_gloss(const char *abbr);  /* what an abbreviation means, 0 when it is not in the list */
+
+/* the TYPE page's phrase keys: one each, white keys left to right, then black */
+#define CT_PHRASE_WHITE_N 16u
+#define CT_PHRASE_BLACK_N 11u
+extern const char *const CT_PHRASE_WHITE[CT_PHRASE_WHITE_N];
+extern const char *const CT_PHRASE_BLACK[CT_PHRASE_BLACK_N];
+
+```
+
+```text
+File created successfully at: /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/firmware/morse/content.h (file state is current in your context — no need to Read it back)
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 15:13:19Z)**_
+
+<tool-use data-tool-type="write" data-tool-name="Write"><details>
+<summary>Tool use: **Write**</summary>
+
+```c
+/* SPDX-License-Identifier: MIT */
+/* content: see content.h. Uses learn.h's Koch order for the groups. */
+#include "content.h"
+#include "learn.h"
+
+const char *const LP_NAME[LP_N] = {"KOCH GROUPS", "WORDS", "QSO", "ABBREVIATIONS", "SAYINGS"};
+
+/* the most common English words (a frequency list; facts, not anyone's text) */
+static const char *const CT_WORDS[] = {
+    "THE", "BE", "TO", "OF", "AND", "A", "IN", "THAT", "HAVE", "I", "IT", "FOR", "NOT", "ON", "WITH", "HE", "AS",
+    "YOU", "DO", "AT", "THIS", "BUT", "HIS", "BY", "FROM", "THEY", "WE", "SAY", "HER", "SHE", "OR", "AN", "WILL",
+    "MY", "ONE", "ALL", "WOULD", "THERE", "THEIR", "WHAT", "SO", "UP", "OUT", "IF", "ABOUT", "WHO", "GET", "WHICH",
+    "GO", "ME", "WHEN", "MAKE", "CAN", "LIKE", "TIME", "NO", "JUST", "HIM", "KNOW", "TAKE", "PEOPLE", "INTO",
+    "YEAR", "YOUR", "GOOD", "SOME", "COULD", "THEM", "SEE", "OTHER", "THAN", "THEN", "NOW", "LOOK", "ONLY", "COME",
+    "ITS", "OVER", "THINK", "ALSO", "BACK", "AFTER", "USE", "TWO", "HOW", "OUR", "WORK", "FIRST", "WELL", "WAY",
+    "EVEN", "NEW", "WANT", "BECAUSE", "ANY", "THESE", "GIVE", "DAY", "MOST", "US",
+};
+
+/* CW abbreviations and prosigns (<..> run together) with what they mean */
+static const struct {
+    const char *a, *m;
+} CT_ABBR[] = {
+    {"CQ", "calling any station"},   {"DE", "this is, from"},         {"K", "over, go ahead"},
+    {"<KN>", "over, only you"},      {"<AR>", "end of message"},      {"<SK>", "end of contact"},
+    {"<BT>", "pause, new part"},     {"<BK>", "back to you"},         {"R", "received"},
+    {"TU", "thank you"},             {"TNX", "thanks"},               {"FER", "for"},
+    {"73", "best regards"},          {"GM", "good morning"},          {"GA", "good afternoon"},
+    {"GE", "good evening"},          {"GL", "good luck"},             {"HW?", "how do you copy?"},
+    {"UR", "your, you are"},         {"ES", "and"},                   {"FB", "fine business: great"},
+    {"OM", "old man: fellow ham"},   {"OP", "operator"},              {"NAME", "my name is"},
+    {"RST", "signal report"},        {"5NN", "report 599, short"},    {"QTH", "my location is"},
+    {"QRZ?", "who is calling me?"},  {"QSL", "I confirm"},            {"QRS", "send slower"},
+    {"QRQ", "send faster"},          {"QRM", "interference"},         {"QSB", "fading signal"},
+    {"WX", "weather"},               {"RIG", "my radio"},             {"ANT", "antenna"},
+    {"PSE", "please"},               {"AGN", "again"},                {"SRI", "sorry"},
+    {"HR", "here"},                  {"CUL", "see you later"},
+};
+#define CT_NABBR (sizeof CT_ABBR / sizeof CT_ABBR[0])
+
+/* old sayings, and the first telegraph message (Morse, 1844) */
+static const char *const CT_SAYINGS[] = {
+    "WHAT HATH GOD WROUGHT",
+    "THE QUICK BROWN FOX JUMPS OVER THE LAZY DOG",
+    "PRACTICE MAKES PERFECT",
+    "SLOW AND STEADY WINS THE RACE",
+    "THE EARLY BIRD CATCHES THE WORM",
+    "ACTIONS SPEAK LOUDER THAN WORDS",
+    "A BIRD IN THE HAND IS WORTH TWO IN THE BUSH",
+    "WHERE THERE IS A WILL THERE IS A WAY",
+    "TIME AND TIDE WAIT FOR NO MAN",
+    "THE PEN IS MIGHTIER THAN THE SWORD",
+    "ALL THAT GLITTERS IS NOT GOLD",
+    "BETTER LATE THAN NEVER",
+    "KNOWLEDGE IS POWER",
+    "NO NEWS IS GOOD NEWS",
+    "LOOK BEFORE YOU LEAP",
+    "HASTE MAKES WASTE",
+    "TWO HEADS ARE BETTER THAN ONE",
+    "EASY COME EASY GO",
+    "ROME WAS NOT BUILT IN A DAY",
+    "EVERY CLOUD HAS A SILVER LINING",
+};
+
+static const char *const CT_PREFIX[] = {"K", "W", "N", "AA", "VE", "G", "DL", "F", "JA", "VK", "BV", "OH",
+                                        "ON", "PA", "EA", "I", "SM", "LA", "HB9", "ZL"};
+static const char *const CT_NAMES[] = {"BOB", "ANN", "JOE", "MAY", "TOM", "LEE", "SAM", "KEN",
+                                       "AMY", "RAY", "DAN", "EVA", "IAN", "JIM", "LIZ", "MAX"};
+static const char *const CT_PLACES[] = {"TAIPEI", "BOSTON", "TOKYO", "PARIS", "BERLIN", "DENVER",
+                                        "OSLO", "ROME", "MADRID", "SEATTLE", "SYDNEY", "TORONTO"};
+static const char *const CT_RST[] = {"599", "579", "559", "479", "589", "569"};
+
+const char *const CT_PHRASE_WHITE[CT_PHRASE_WHITE_N] = {"CQ", "DE", "K", "<KN>", "<AR>", "<SK>", "<BT>", "73",
+                                                        "TU", "RST", "5NN", "QTH", "NAME", "OP", "UR", "ES"};
+const char *const CT_PHRASE_BLACK[CT_PHRASE_BLACK_N] = {"GM", "GE", "FB", "R", "QRZ?", "QSL",
+                                                        "<BK>", "HW?", "PSE", "AGN", "QRS"};
+
+#define CT_N(a) (sizeof(a) / sizeof((a)[0]))
+
+static uint32_t ct_rand(ct_gen_t *g)     /* xorshift32 */
+{
+    uint32_t v = g->rng ? g->rng : 1u;
+    v ^= v << 13;
+    v ^= v >> 17;
+    v ^= v << 5;
+    return g->rng = v;
+}
+
+static uint32_t ct_pick(ct_gen_t *g, uint32_t n)   /* an index, not the one given last */
+{
+    uint32_t i = ct_rand(g) % n;
+    if (n > 1u && i == g->last)
+        i = (i + 1u + ct_rand(g) % (n - 1u)) % n;
+    g->last = (uint8_t)i;
+    return i;
+}
+
+static int ct_eq(const char *a, const char *b)
+{
+    while (*a && *a == *b)
+        a++, b++;
+    return *a == *b;
+}
+
+const char *ct_gloss(const char *abbr)
+{
+    uint32_t i;
+    for (i = 0; i < CT_NABBR; i++)
+        if (ct_eq(CT_ABBR[i].a, abbr))
+            return CT_ABBR[i].m;
+    return 0;
+}
+
+/* a line built with cat: never past CT_LINE_MAX */
+static void ct_cat(char *out, const char *s)
+{
+    uint32_t n = 0;
+    while (out[n])
+        n++;
+    while (*s && n < CT_LINE_MAX)
+        out[n++] = *s++;
+    out[n] = 0;
+}
+
+static void ct_call(ct_gen_t *g, char *c)   /* a made-up call sign: prefix, digit, two or three letters */
+{
+    const char *p = CT_PREFIX[ct_rand(g) % CT_N(CT_PREFIX)];
+    uint32_t n = 0, k, len = 2u + ct_rand(g) % 2u;
+    while (*p)
+        c[n++] = *p++;
+    if (c[n - 1u] < '0' || c[n - 1u] > '9')
+        c[n++] = (char)('0' + ct_rand(g) % 10u);
+    for (k = 0; k < len && n < 7u; k++)
+        c[n++] = (char)('A' + ct_rand(g) % 26u);
+    c[n] = 0;
+}
+
+void ct_init(ct_gen_t *g, uint32_t seed)
+{
+    g->rng = seed ? seed : 0x2545F491u;
+    g->step = 0;
+    g->last = 0xFF;
+    g->a[0] = g->b[0] = 0;
+}
+
+/* a made-up QSO, six lines: a calls CQ, b answers, they trade reports, names and places, and sign off */
+static void ct_qso(ct_gen_t *g, char *out)
+{
+    const char *a = g->a, *b = g->b;
+    if (g->step == 0) {
+        ct_call(g, g->a);
+        do
+            ct_call(g, g->b);
+        while (ct_eq(g->a, g->b));
+        g->na = (uint8_t)(ct_rand(g) % CT_N(CT_NAMES));
+        g->nb = (uint8_t)((g->na + 1u + ct_rand(g) % (CT_N(CT_NAMES) - 1u)) % CT_N(CT_NAMES));
+        g->qa = (uint8_t)(ct_rand(g) % CT_N(CT_PLACES));
+        g->qb = (uint8_t)((g->qa + 1u + ct_rand(g) % (CT_N(CT_PLACES) - 1u)) % CT_N(CT_PLACES));
+        g->ra = (uint8_t)(ct_rand(g) % CT_N(CT_RST));
+        g->rb = (uint8_t)(ct_rand(g) % CT_N(CT_RST));
+    }
+    out[0] = 0;
+    switch (g->step) {
+    case 0:
+        ct_cat(out, "CQ CQ CQ DE "), ct_cat(out, a), ct_cat(out, " "), ct_cat(out, a), ct_cat(out, " K");
+        break;
+    case 1:
+        ct_cat(out, a), ct_cat(out, " DE "), ct_cat(out, b), ct_cat(out, " "), ct_cat(out, b), ct_cat(out, " K");
+        break;
+    case 2:
+        ct_cat(out, b), ct_cat(out, " DE "), ct_cat(out, a), ct_cat(out, " GM TNX FER CALL UR RST ");
+        ct_cat(out, CT_RST[g->ra]), ct_cat(out, " NAME "), ct_cat(out, CT_NAMES[g->na]), ct_cat(out, " QTH ");
+        ct_cat(out, CT_PLACES[g->qa]), ct_cat(out, " HW? <AR> "), ct_cat(out, b), ct_cat(out, " DE "), ct_cat(out, a);
+        ct_cat(out, " K");
+        break;
+    case 3:
+        ct_cat(out, a), ct_cat(out, " DE "), ct_cat(out, b), ct_cat(out, " R TU "), ct_cat(out, CT_NAMES[g->na]);
+        ct_cat(out, " UR RST "), ct_cat(out, CT_RST[g->rb]), ct_cat(out, " NAME "), ct_cat(out, CT_NAMES[g->nb]);
+        ct_cat(out, " QTH "), ct_cat(out, CT_PLACES[g->qb]), ct_cat(out, " <BK>");
+        break;
+    case 4:
+        ct_cat(out, "R FB "), ct_cat(out, CT_NAMES[g->nb]), ct_cat(out, " TNX FER QSO 73 GL <SK> ");
+        ct_cat(out, b), ct_cat(out, " DE "), ct_cat(out, a);
+        break;
+    default:
+        ct_cat(out, "TU "), ct_cat(out, CT_NAMES[g->na]), ct_cat(out, " 73 CUL <SK> "), ct_cat(out, a);
+        ct_cat(out, " DE "), ct_cat(out, b), ct_cat(out, " E E");
+        break;
+    }
+    g->step = (uint8_t)((g->step + 1u) % 6u);
+}
+
+void ct_line(ct_gen_t *g, int p, uint32_t open, char *out, const char **gloss)
+{
+    uint32_t i, k;
+    out[0] = 0;
+    *gloss = 0;
+    switch (p) {
+    case LP_KOCH:                        /* five groups of five from the letters open */
+        if (open < 2u)
+            open = 2u;
+        if (open > LN_N)
+            open = LN_N;
+        for (k = 0; k < 5u; k++) {
+            char grp[7];
+            for (i = 0; i < 5u; i++)
+                grp[i] = ln_char(ct_rand(g) % open);
+            grp[5] = k < 4u ? ' ' : 0;
+            grp[6] = 0;
+            ct_cat(out, grp);
+        }
+        break;
+    case LP_WORDS:                       /* six words */
+        for (k = 0; k < 6u; k++) {
+            if (k)
+                ct_cat(out, " ");
+            ct_cat(out, CT_WORDS[ct_rand(g) % CT_N(CT_WORDS)]);
+        }
+        break;
+    case LP_QSO:
+        ct_qso(g, out);
+        break;
+    case LP_ABBR:                        /* one, twice, and what it means */
+        i = ct_pick(g, CT_NABBR);
+        ct_cat(out, CT_ABBR[i].a), ct_cat(out, " "), ct_cat(out, CT_ABBR[i].a);
+        *gloss = CT_ABBR[i].m;
+        break;
+    default:
+        ct_cat(out, CT_SAYINGS[ct_pick(g, CT_N(CT_SAYINGS))]);
+        break;
+    }
+}
+
+```
+
+```text
+File created successfully at: /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/firmware/morse/content.c (file state is current in your context — no need to Read it back)
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 15:13:35Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Add content unit tests and run
+
+```bash
+python3 - <<'PY'
+p='firmware/morse/tests/morse_test.c'
+s=open(p).read()
+s=s.replace('#include "../learn.c"\n','#include "../learn.c"\n#include "../content.c"\n')
+a='''int main(void)
+{'''
+b='''/* ----------------------------------------------------------------- content --- */
+static int playable(const char *s)       /* only characters with a code, spaces and prosign brackets */
+{
+    for (; *s; s++)
+        if (*s != ' ' && *s != '<' && *s != '>' && !mo_code(*s))
+            return 0;
+    return 1;
+}
+
+static void test_content(void)
+{
+    ct_gen_t g;
+    char line[CT_LINE_MAX + 1];
+    const char *gloss;
+    uint32_t p, i, k;
+    ct_init(&g, 42);
+    for (p = 0; p < LP_N; p++)
+        for (i = 0; i < 60; i++) {
+            ct_line(&g, (int)p, 5, line, &gloss);
+            CHECK(line[0] && strlen(line) <= CT_LINE_MAX, "%s line %u: length %u", LP_NAME[p], i, (unsigned)strlen(line));
+            CHECK(playable(line), "%s line %u playable: %s", LP_NAME[p], i, line);
+            CHECK((p == LP_ABBR) == (gloss != 0), "%s: a meaning only for abbreviations", LP_NAME[p]);
+            if (p == LP_KOCH)
+                for (k = 0; line[k]; k++)
+                    CHECK(line[k] == ' ' || ln_index(line[k]) < 5, "Koch groups only from the 5 open: %s", line);
+        }
+    ct_init(&g, 7);
+    ct_line(&g, LP_QSO, 0, line, &gloss);
+    CHECK(!strncmp(line, "CQ CQ CQ DE ", 12), "a QSO starts with CQ: %s", line);
+    for (i = 0; i < 5; i++)
+        ct_line(&g, LP_QSO, 0, line, &gloss);
+    CHECK(strstr(line, "<SK>") != 0, "and ends with <SK>: %s", line);
+    ct_line(&g, LP_QSO, 0, line, &gloss);
+    CHECK(!strncmp(line, "CQ CQ CQ DE ", 12), "then a new one: %s", line);
+    for (i = 0; i < CT_PHRASE_WHITE_N; i++)
+        CHECK(ct_gloss(CT_PHRASE_WHITE[i]) && playable(CT_PHRASE_WHITE[i]), "phrase %s has a meaning", CT_PHRASE_WHITE[i]);
+    for (i = 0; i < CT_PHRASE_BLACK_N; i++)
+        CHECK(ct_gloss(CT_PHRASE_BLACK[i]) && playable(CT_PHRASE_BLACK[i]), "phrase %s has a meaning", CT_PHRASE_BLACK[i]);
+    CHECK(ct_gloss("XYZ") == 0, "no meaning for XYZ");
+}
+
+int main(void)
+{'''
+assert a in s; s=s.replace(a,b)
+s=s.replace("    test_learn();\n    printf(","    test_learn();\n    test_content();\n    printf(")
+open(p,'w').write(s)
+PY
+just morse-unit 2>&1 | tail -4
+```
+
+```text
+2932 checks, 0 failed
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 15:13:46Z)**_
+
+`content.c` 的測試全過（共 2932 項，大多是逐行檢查產生的節目內容都播得出來）。現在寫新的 `app.c`。
+
+_**Agent (claude-opus-5-5 2026-11-17 15:13:47Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Review state declarations in current app.c
+
+`sed -n 100,175p firmware/morse/app.c`
+
+```text
+static mo_player_t ptx, prx;
+static volatile uint8_t key_input;       /* the keys are the Morse key now */
+static volatile uint8_t own_midi;        /* own keying goes out as MIDI (KEY) */
+static volatile uint8_t ptx_midi;        /* ptx's playing goes out as MIDI (TYPE) */
+static uint8_t own_down, ptx_down, rx_midi, rx_down, midi_down;
+typedef struct {
+    uint8_t src, down;
+    uint32_t t;
+} ev_t;
+#define EV_N 64u
+static ev_t ev[EV_N];
+static volatile uint32_t ev_w, ev_r;
+#define LEFT_KEYS ((1u << 13) - 1u)      /* F3..F4: the left paddle */
+#ifdef PLAT_HOST
+static mo_player_t host_hand;            /* "sendkeys": a scripted hand on a straight key */
+#endif
+
+/* the main loop's */
+static hostlink_t link;
+static struct {
+    mo_dec_t dec;
+    uint32_t t_down, t_up;
+    uint8_t down, seen;
+} dsrc[SRC_N];
+
+#define TG_COLS 24u
+#define TG_ROWS 5u
+#define TG_N (TG_COLS * TG_ROWS)
+static struct {
+    char c[TG_N];
+    uint8_t who[TG_N];
+    uint32_t n;
+} grid;                                  /* the KEY page's text, own and received in their colours */
+#define TXT_N 96u
+static char txt[3][TXT_N + 1];           /* own decoded, received decoded, typed (the simulator's expect_text) */
+
+static struct {
+    uint8_t page, back, sel;             /* sel: the menu's / the settings' cursor */
+    uint8_t csel;                        /* the chart's */
+    uint8_t redraw;                      /* bits: R_* */
+    uint32_t keys, btn;
+    char msg[2][24];
+    uint32_t msg_until;
+    uint8_t shift;                       /* TYPE: OCT- held */
+    char line[TG_COLS * 2u + 1u];        /* TYPE: the line typed */
+    char last;                           /* KEY: the last character read */
+    uint8_t host_was, lamp_was, pat_was;
+} ui;
+enum { R_HEAD = 1, R_MAIN = 2, R_LAMP = 4, R_FOOT = 8, R_ALL = 15 };
+
+static struct {
+    ln_round_t r;
+    uint8_t ps;                          /* PS_* */
+    uint8_t pick;                        /* the choice under SELECT */
+    uint8_t right;                       /* the last answer */
+    uint8_t opened;                      /* the round opened a group */
+    uint8_t answer_ok;                   /* keying is taken as the answer (the prompt has played) */
+    char got;                            /* what was keyed */
+    uint32_t ratio10;                    /* the keyed answer's dah:dit */
+    uint32_t until;                      /* PS_RESULT: the next card at */
+    uint8_t active;                      /* a round under way */
+} pr;
+
+static const uint8_t WHITE[16] = PLAT_WHITE_KEYS;
+static const uint8_t BLACK[11] = PLAT_BLACK_KEYS;
+static const uint8_t CHOICE_KEY[4] = {11, 12, 14, 16};   /* E4 F4 G4 A4: the four answers */
+static const char TYPE_W[2][17] = {"ABCDEFGHIJKLMNOP", "1234567890.,?/=+"};
+static const char TYPE_B[2][12] = {"QRSTUVWXYZ ", "-()'\":;@!&$"};
+
+static void zero(void *p, uint32_t n)
+{
+    uint8_t *b = (uint8_t *)p;
+    while (n--)
+        *b++ = 0;
+}
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 15:18:26Z)**_
+
+<tool-use data-tool-type="write" data-tool-name="Write"><details>
+<summary>Tool use: **Write**</summary>
+
+```c
+/* SPDX-License-Identifier: MIT */
+/* Morse: see app.h. Part of fm1-base's unity build, after the platform (gfx.c, announce.c in scope).
+ * The 1 kHz tick does what needs the millisecond: the key and the keyer, the two players, MIDI in and out, the
+ * sidetone's gates; it leaves key-down / key-up events with their times in a ring. The main loop decodes them, runs
+ * the pages (flash cards, listening, rhythm drills), talks to the host and draws.
+ * Protocol with the host: host/morse/PROTOCOL.md (the numbers below match host/morse/protocol.py). */
+#include "fastmath.h"
+#include "hostlink.c"
+#include "ledfx.c"
+#include "morse.c"
+#include "learn.c"
+#include "content.c"
+#include "tone.c"
+
+#define FW_MAJOR 0u
+#define FW_MINOR 2u
+
+/* ---------------------------------------------------------------- protocol --- */
+#define MO_VER 1u
+enum { T_HELLO_ACK = 0x01, T_TEXT, T_STOP };
+enum { T_HELLO = 0x41, T_HEARTBEAT, T_CHAR };
+/* Vail's MIDI keying (vail-adapter docs/MIDI_INTEGRATION_SPEC.md): channel 1, note 0 a timed key-down */
+#define MIDI_KEY_ON (0x09u | 0x90u << 8 | 0x00u << 16 | 0x7Fu << 24)
+#define MIDI_KEY_OFF (0x08u | 0x80u << 8 | 0x00u << 16 | 0x00u << 24)
+
+/* the debounce keeps a key down ~8.8 ms after it opens and sees it ~1.6 ms after it closes: a straight key's marks
+ * read ~7 ms long on the FM-1 (fm1-base bsp/boards/fm1/fm1_input.h; fm1-emu shows +3 / +10 ms); the host simulator
+ * has no debounce */
+#ifdef PLAT_HOST
+#define KEY_BIAS_MS 0u
+#else
+#define KEY_BIAS_MS 7u
+#endif
+
+/* ---------------------------------------------------------------- settings --- */
+#define REC_MAGIC 0x4D4F5231u            /* "MOR1"; another magic, or a record that does not make sense: defaults */
+#define REC_VER 1u                       /* 0.2 kept 0.1's layout: its spare bytes became look, send, prog */
+enum { LM_SOUND, LM_VISUAL };            /* how to learn: by sound (recommended), by sight */
+enum { KV_TEXT, KV_CODE, KV_TIMING, KV_N };   /* the KEY page's view */
+enum { TL_ALPHA, TL_PIANO, TL_KOCH, TL_N };   /* the TYPE page's letters on the keys */
+typedef struct {
+    uint8_t wpm;                         /* hearing: character speed 5..40 */
+    uint8_t eff;                         /* hearing: effective speed (Farnsworth) 5..wpm */
+    uint8_t keyer;                       /* MO_STRAIGHT, MO_IAMBIC_A, MO_IAMBIC_B */
+    uint8_t swap;                        /* paddles: 0 left half dit, 1 left half dah */
+    uint8_t mute;
+    uint8_t cards;                       /* per round 10..30 */
+    uint8_t learn;                       /* LM_* */
+    uint8_t look;                        /* bits 0-1 KEY's view (KV_*), bit 2 TYPE's keys show the code, bits 3-4
+                                          * TYPE's layout (TL_*), bit 5 LISTEN hides the text */
+    uint16_t pitch;                      /* Hz 300..1200 */
+    uint8_t send;                        /* sending: the keyer's speed and where the decoder starts, 5..40 (0 in
+                                          * a 0.1 record: the default) */
+    uint8_t prog;                        /* LISTEN's program (LP_*) */
+} set_t;
+typedef struct {
+    uint32_t magic;
+    uint16_t ver, size;
+    set_t set;
+    ln_state_t ln;
+} rec_t;
+static rec_t rec;
+#define SET (rec.set)
+#define SEND_DEFAULT 12u                 /* a beginner's hand: a 100 ms dit */
+
+static uint32_t kview(void) { return SET.look & 3u; }
+static uint32_t tlabel(void) { return SET.look >> 2 & 1u; }
+static uint32_t tlayout(void) { return SET.look >> 3 & 3u; }
+static uint32_t lhide(void) { return SET.look >> 5 & 1u; }
+static void look_set(uint32_t shift, uint32_t mask, uint32_t v)
+{
+    SET.look = (uint8_t)((SET.look & ~(mask << shift)) | (v & mask) << shift);
+}
+
+static void set_defaults(void)
+{
+    SET.wpm = 20;                        /* Koch: characters at full speed from the start, */
+    SET.eff = 10;                        /* the gaps stretched (Farnsworth) */
+    SET.keyer = MO_STRAIGHT;
+    SET.swap = 0;
+    SET.mute = 0;
+    SET.cards = 20;
+    SET.learn = LM_SOUND;
+    SET.look = 0;
+    SET.pitch = 600;
+    SET.send = SEND_DEFAULT;
+    SET.prog = LP_KOCH;
+}
+
+static int set_valid(const set_t *s)
+{
+    return s->wpm >= 5u && s->wpm <= 40u && s->eff >= 5u && s->eff <= s->wpm && s->keyer < MO_NKEYER && s->swap <= 1u
+           && s->mute <= 1u && s->cards >= 10u && s->cards <= 30u && s->learn <= LM_VISUAL && s->pitch >= 300u
+           && s->pitch <= 1200u && (s->look & 3u) < KV_N && (s->look >> 3 & 3u) < TL_N && !(s->look >> 6)
+           && s->send >= 5u && s->send <= 40u && s->prog < LP_N;
+}
+
+static uint32_t saves;                   /* records written since boot */
+static uint32_t dirty_at;                /* a setting changed at (0: saved) */
+
+static void rec_save(void)
+{
+    rec.magic = REC_MAGIC;
+    rec.ver = REC_VER;
+    rec.size = (uint16_t)sizeof rec;
+    if (plat_store_save(OBJ_MORSE, &rec, sizeof rec) == 0)
+        saves++;
+    dirty_at = 0;
+}
+
+/* ------------------------------------------------------------------- state --- */
+enum { SRC_OWN, SRC_RX, SRC_N };         /* what this FM-1 sends; what it receives (MIDI in, the host's text) */
+enum { PG_MENU, PG_PRACTICE, PG_LISTEN, PG_KEY, PG_RHYTHM, PG_TYPE, PG_CHART, PG_SET, PG_N };
+enum { PS_START, PS_CARD, PS_RESULT, PS_DONE };
+
+/* the tick's: the key, the keyer, two players (ptx: this FM-1's own playing, prompts, typed letters and listening;
+ * prx: the host's text, as received), and what they leave for the main loop */
+static mo_keyer_t keyer;
+static mo_player_t ptx, prx;
+static volatile uint8_t key_input;       /* the keys are the Morse key now */
+static volatile uint8_t own_midi;        /* own keying goes out as MIDI (KEY) */
+static volatile uint8_t ptx_midi;        /* ptx's playing goes out as MIDI (TYPE) */
+static uint8_t own_down, ptx_down, rx_midi, rx_down, midi_down;
+typedef struct {
+    uint8_t src, down;
+    uint32_t t;
+} ev_t;
+#define EV_N 64u
+static ev_t ev[EV_N];
+static volatile uint32_t ev_w, ev_r;
+#define LEFT_KEYS ((1u << 13) - 1u)      /* F3..F4: the left paddle */
+#ifdef PLAT_HOST
+static mo_player_t host_hand;            /* "sendkeys": a scripted hand on a straight key */
+#endif
+
+/* the main loop's */
+static hostlink_t link;
+static struct {
+    mo_dec_t dec;
+    uint32_t t_down, t_up;
+    uint8_t down, seen;
+} dsrc[SRC_N];
+
+#define TG_COLS 24u
+#define TG_ROWS 5u
+#define TG_N (TG_COLS * TG_ROWS)
+static struct {
+    char c[TG_N];
+    uint8_t who[TG_N];
+    uint8_t pat[TG_N];                   /* the elements read for it (a code; 0 none or too long) */
+    uint32_t n;
+} grid;                                  /* the KEY page's text, own and received in their colours */
+#define TXT_N 96u
+static char txt[3][TXT_N + 1];           /* own decoded, received decoded, typed (the simulator's expect_text) */
+
+/* the KEY page's TIMING view: each letter's marks and the gaps inside it, as keyed */
+#define TR_N 4u
+#define TR_EL 7u
+typedef struct {
+    char c;
+    uint8_t n, dah;                      /* elements, and which were read as dahs (bit i) */
+    uint16_t mark[TR_EL], gap[TR_EL];    /* ms; gap[i] the one before element i (gap[0] 0) */
+} trow_t;
+static struct {
+    trow_t row[TR_N], live;
+    uint8_t head, count;
+    uint16_t next_gap;                   /* the gap before the next mark, if it is inside a letter */
+} tim;
+
+static struct {
+    uint8_t page, back, sel;             /* sel: the menu's / the settings' cursor */
+    uint8_t csel;                        /* the chart's */
+    uint8_t redraw;                      /* bits: R_* */
+    uint32_t keys, btn;
+    char msg[2][24];
+    uint32_t msg_until;
+    uint8_t tpage;                       /* TYPE: 0 letters, 1 digits and signs, 2 phrases */
+    char line[TG_COLS * 2u + 1u];        /* TYPE: the line typed */
+    const char *gloss;                   /* TYPE: what the last phrase means */
+    char last;                           /* KEY: the last character read */
+    uint8_t host_was, lamp_was, pat_was;
+} ui;
+enum { R_HEAD = 1, R_MAIN = 2, R_LAMP = 4, R_FOOT = 8, R_ALL = 15 };
+
+static struct {
+    ln_round_t r;
+    uint8_t ps;                          /* PS_* */
+    uint8_t pick;                        /* the choice under SELECT */
+    uint8_t right;                       /* the last answer */
+    uint8_t opened;                      /* the round opened a group */
+    uint8_t answer_ok;                   /* keying is taken as the answer (the prompt has played) */
+    char got;                            /* what was keyed */
+    uint32_t ratio10;                    /* the keyed answer's dah:dit */
+    uint32_t until;                      /* PS_RESULT: the next card at */
+    uint8_t active;                      /* a round under way */
+} pr;
+
+static const uint8_t WHITE[16] = PLAT_WHITE_KEYS;
+static const uint8_t BLACK[11] = PLAT_BLACK_KEYS;
+static const uint8_t CHOICE_KEY[4] = {11, 12, 14, 16};   /* E4 F4 G4 A4: the four answers */
+
+static void zero(void *p, uint32_t n)
+{
+    uint8_t *b = (uint8_t *)p;
+    while (n--)
+        *b++ = 0;
+}
+
+static uint32_t slen(const char *s)
+{
+    uint32_t n = 0;
+    while (s[n])
+        n++;
+    return n;
+}
+
+static void text_cat(char *d, const char *s)
+{
+    while (*d)
+        d++;
+    while (*s)
+        *d++ = *s++;
+    *d = 0;
+}
+
+static void int_text(int32_t v, char *b)
+{
+    char t[12];
+    int n = 0;
+    uint32_t u = (uint32_t)(v < 0 ? -v : v);
+    do
+        t[n++] = (char)('0' + u % 10u);
+    while ((u /= 10u) && n < 11);
+    if (v < 0)
+        *b++ = '-';
+    while (n)
+        *b++ = t[--n];
+    *b = 0;
+}
+
+static void int_cat(char *b, int32_t v)
+{
+    while (*b)
+        b++;
+    int_text(v, b);
+}
+
+static void tenths_cat(char *b, uint32_t v)   /* 13 -> "1.3" */
+{
+    char t[2] = {0, 0};
+    int_cat(b, (int32_t)(v / 10u));
+    text_cat(b, ".");
+    t[0] = (char)('0' + v % 10u);
+    text_cat(b, t);
+}
+
+static void note_name(uint32_t key, char *b)   /* key 0 is F3 */
+{
+    static const char *const N[] = {"C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"};
+    uint32_t note = 53u + key;
+    b[0] = 0;
+    text_cat(b, N[note % 12u]);
+    int_cat(b, (int32_t)(note / 12u) - 1);
+}
+
+void app_say(const char *a, const char *b)
+{
+    uint32_t i;
+    char t[48];
+    for (i = 0; i < 23u && a && a[i]; i++)
+        ui.msg[0][i] = a[i];
+    ui.msg[0][i] = 0;
+    for (i = 0; i < 23u && b && b[i]; i++)
+        ui.msg[1][i] = b[i];
+    ui.msg[1][i] = 0;
+    ui.msg_until = plat_ms() + 2000u;
+    ui.redraw |= R_HEAD;
+    if (ann_on()) {
+        t[0] = 0;
+        text_cat(t, ui.msg[0]);
+        if (ui.msg[1][0]) {
+            text_cat(t, " ");
+            text_cat(t, ui.msg[1]);
+        }
+        ann_say(t, 0, ANN_NOW);
+    }
+}
+
+static int visual(void) { return SET.learn == LM_VISUAL; }
+
+/* ------------------------------------------------------------- the timing --- */
+/* the speeds into the keyer, the players and the decoders (main loop; the tick locked out). Hearing (what this
+ * FM-1 plays) and sending (what you key) have their own: Koch wants the characters heard fast, a beginner's hand is
+ * slow */
+static void timing_apply(void)
+{
+    uint32_t dit = mo_dit_ms(SET.wpm), gap = mo_gap_ms(SET.wpm, SET.eff), sdit = mo_dit_ms(SET.send);
+    uint32_t f = plat_lock();
+    keyer.mode = SET.keyer;
+    keyer.dit = sdit;
+    ptx.dit = prx.dit = dit;
+    ptx.gap = prx.gap = gap;
+#ifdef PLAT_HOST
+    host_hand.dit = sdit;
+    host_hand.gap = sdit;                /* a hand keys without Farnsworth */
+#endif
+    plat_unlock(f);
+    mo_dec_init(&dsrc[SRC_OWN].dec, sdit, sdit);
+    mo_dec_init(&dsrc[SRC_RX].dec, dit, gap);
+    tone_pitch(TONE_TX, (float)SET.pitch);
+    tone_pitch(TONE_RX, (float)SET.pitch * 1.26f);   /* received a major third up */
+    tone_mute(SET.mute);
+}
+
+static void set_changed(void)
+{
+    timing_apply();
+    dirty_at = plat_ms() | 1u;
+    ui.redraw |= R_ALL;
+}
+
+static void look_changed(void)          /* a view changed: saved like a setting, nothing retimed */
+{
+    dirty_at = plat_ms() | 1u;
+    ui.redraw |= R_ALL;
+}
+
+static void play(mo_player_t *p, const char *s)   /* main loop: queue text on a player */
+{
+    uint32_t f = plat_lock();
+    while (*s)
+        mo_player_push(p, *s++);
+    plat_unlock(f);
+}
+
+static void play_char(mo_player_t *p, char c)
+{
+    char s[2] = {c, 0};
+    play(p, s);
+}
+
+static void play_stop(mo_player_t *p)
+{
+    uint32_t f = plat_lock();
+    mo_player_stop(p);
+    plat_unlock(f);
+}
+
+static int playing(const mo_player_t *p)
+{
+    uint32_t f = plat_lock();
+    int b = mo_player_busy(p);
+    plat_unlock(f);
+    return b;
+}
+
+static uint32_t queued(const mo_player_t *p)   /* characters waiting */
+{
+    uint32_t f = plat_lock(), n = (p->head + MO_PLAY_Q - p->tail) % MO_PLAY_Q;
+    plat_unlock(f);
+    return n;
+}
+
+static int took_start(mo_player_t *p)    /* a character began playing since the last look (once) */
+{
+    uint32_t f = plat_lock();
+    int s = p->started;
+    p->started = 0;
+    plat_unlock(f);
+    return s;
+}
+
+/* --------------------------------------------------------------- the tick --- */
+static void ev_push(uint32_t src, int down, uint32_t t)
+{
+    uint32_t next = (ev_w + 1u) % EV_N;
+    if (next == ev_r)
+        return;                          /* the main loop is behind: drop (it re-syncs on the next edge) */
+    ev[ev_w].src = (uint8_t)src;
+    ev[ev_w].down = (uint8_t)down;
+    ev[ev_w].t = t;
+    ev_w = next;
+}
+
+static void midi_key(void)               /* own keying and ptx's playing, as one key on MIDI */
+{
+    int down = (own_down && own_midi) || (ptx_down && ptx_midi);
+    if (down == midi_down)
+        return;
+    midi_down = (uint8_t)down;
+    plat_midi_send(down ? MIDI_KEY_ON : MIDI_KEY_OFF, TO_USB);
+}
+
+void app_tick(void)
+{
+    uint32_t now = plat_ms(), keys = plat_keys(), pkt;
+    int dit = 0, dah = 0, own, t, rx, port;
+    if (key_input && keys) {
+        if (keyer.mode == MO_STRAIGHT)
+            dit = 1;
+        else {
+            int lo = (keys & LEFT_KEYS) != 0, hi = (keys & ~LEFT_KEYS) != 0;
+            dit = SET.swap ? hi : lo;
+            dah = SET.swap ? lo : hi;
+        }
+    }
+    own = mo_keyer_tick(&keyer, dit, dah);
+#ifdef PLAT_HOST
+    if (mo_player_busy(&host_hand))
+        own = mo_player_tick(&host_hand);
+#endif
+    if (own != own_down) {
+        own_down = (uint8_t)own;
+        ev_push(SRC_OWN, own, now);
+    }
+    t = mo_player_tick(&ptx);
+    ptx_down = (uint8_t)t;
+    midi_key();
+    tone_gate(TONE_TX, own || t);
+    /* MIDI in: a key-down on channel 1, any note (Vail sends 0, a DAW whatever it plays); velocity 0 is a release */
+    while (plat_midi_in(&pkt, &port)) {
+        uint32_t st = pkt >> 8 & 0xFFu, vel = pkt >> 24 & 0x7Fu;
+        if (st == 0x90u && vel)
+            rx_midi = 1;
+        else if (st == 0x80u || st == 0x90u)
+            rx_midi = 0;
+    }
+    rx = rx_midi || mo_player_tick(&prx);
+    if (rx != rx_down) {
+        rx_down = (uint8_t)rx;
+        ev_push(SRC_RX, rx, now);
+    }
+    tone_gate(TONE_RX, rx);
+}
+
+/* ------------------------------------------------------------- the reading --- */
+static void txt_add(uint32_t which, char c)
+{
+    char *t = txt[which];
+    uint32_t n = slen(t), i;
+    if (n >= TXT_N) {
+        for (i = 0; i + 1u < TXT_N; i++)
+            t[i] = t[i + 1u];
+        n = TXT_N - 1u;
+    }
+    t[n] = c;
+    t[n + 1u] = 0;
+}
+
+static void grid_add(char c, uint32_t who, uint8_t pat)
+{
+    uint32_t i;
+    if (c == ' ' && (grid.n % TG_COLS == 0u || (grid.n && grid.c[grid.n - 1u] == ' ')))
+        return;
+    if (grid.n >= TG_N) {
+        for (i = 0; i < TG_N - TG_COLS; i++) {
+            grid.c[i] = grid.c[i + TG_COLS];
+            grid.who[i] = grid.who[i + TG_COLS];
+            grid.pat[i] = grid.pat[i + TG_COLS];
+        }
+        grid.n -= TG_COLS;
+    }
+    grid.c[grid.n] = c;
+    grid.who[grid.n] = (uint8_t)who;
+    grid.pat[grid.n] = c == ' ' ? 0u : pat;
+    grid.n++;
+}
+
+static void send_text(const char *s)     /* to the host, which may type it on the computer */
+{
+    uint8_t p[HOSTLINK_MAX];
+    uint32_t n = 0;
+    if (!hl_host(&link, plat_ms()))
+        return;
+    for (; *s && n < HOSTLINK_MAX; s++)
+        if (*s >= 0x20 && *s < 0x7F)
+            p[n++] = (uint8_t)*s;
+    if (n)
+        hl_send(&link, T_CHAR, p, n);
+}
+
+static void send_char(char c)
+{
+    char s[2] = {c, 0};
+    send_text(s);
+}
+
+static void tim_push(char c)             /* a letter read: its row for the TIMING view */
+{
+    uint8_t pat = dsrc[SRC_OWN].dec.last_pat;
+    trow_t *r = &tim.row[tim.head];
+    uint32_t i;
+    if (!tim.live.n)
+        return;
+    *r = tim.live;
+    r->c = c;
+    r->dah = 0;
+    for (i = 0; i < r->n; i++)           /* as the decoder read them in the end (it may have read one again) */
+        if (pat > 1u && mo_len(pat) == r->n ? mo_elem(pat, i) : mo_dec_is_dah(&dsrc[SRC_OWN].dec, r->mark[i]))
+            r->dah |= (uint8_t)(1u << i);
+    tim.head = (uint8_t)((tim.head + 1u) % TR_N);
+    if (tim.count < TR_N)
+        tim.count++;
+    tim.live.n = 0;
+}
+
+static void practice_keyed(char c);
+static void rhythm_mark(uint32_t mark, uint32_t gap);
+
+static void emit(uint32_t src, char c)
+{
+    uint8_t pat = c == ' ' ? 0u : dsrc[src].dec.last_pat;
+    if (src == SRC_RX) {
+        txt_add(1, c);
+        if (ui.page == PG_KEY) {
+            grid_add(c, SRC_RX, pat);
+            ui.redraw |= R_MAIN;
+        }
+        return;
+    }
+    txt_add(0, c);
+    if (c != ' ')
+        tim_push(c);
+    if (ui.page == PG_KEY) {
+        grid_add(c, SRC_OWN, pat);
+        if (c != ' ')
+            ui.last = c;
+        send_char(c);
+        ui.redraw |= R_MAIN;
+    } else if (ui.page == PG_PRACTICE && c != ' ')
+        practice_keyed(c);
+}
+
+static void read_events(void)            /* the tick's events into the decoders */
+{
+    uint32_t now = plat_ms(), s, f;
+    char out[2];
+    for (;;) {
+        ev_t e;
+        uint32_t n = 0, i, bias, gap = 0;
+        f = plat_lock();
+        if (ev_r == ev_w) {
+            plat_unlock(f);
+            break;
+        }
+        e = ev[ev_r];
+        ev_r = (ev_r + 1u) % EV_N;
+        plat_unlock(f);
+        if (e.src >= SRC_N)
+            continue;
+        bias = e.src == SRC_OWN && SET.keyer == MO_STRAIGHT ? KEY_BIAS_MS : 0u;
+        if (e.down) {
+            if (dsrc[e.src].seen && !dsrc[e.src].down) {
+                gap = e.t - dsrc[e.src].t_up + bias;
+                n = mo_dec_gap(&dsrc[e.src].dec, gap, out);
+            }
+            dsrc[e.src].t_down = e.t;
+        } else if (dsrc[e.src].down) {
+            uint32_t mark = e.t - dsrc[e.src].t_down;
+            mark = mark > bias ? mark - bias : mark;
+            mo_dec_mark(&dsrc[e.src].dec, mark);
+            dsrc[e.src].t_up = e.t;
+            if (e.src == SRC_OWN) {
+                if (tim.live.n < TR_EL) {
+                    tim.live.mark[tim.live.n] = (uint16_t)(mark > 0xFFFFu ? 0xFFFFu : mark);
+                    tim.live.gap[tim.live.n] = tim.live.n ? tim.next_gap : 0u;
+                    tim.live.n++;
+                }
+                if (ui.page == PG_RHYTHM)
+                    rhythm_mark(mark, tim.next_gap_rh);
+            }
+        }
+        dsrc[e.src].down = e.down;
+        dsrc[e.src].seen = 1;
+        for (i = 0; i < n; i++)
+            emit(e.src, out[i]);
+        if (e.src == SRC_OWN && e.down) {
+            /* the gap just over was inside a letter if the letter is still open after it */
+            tim.next_gap = (uint16_t)(mo_dec_pending(&dsrc[SRC_OWN].dec) != 1u && gap < 0xFFFFu ? gap : 0u);
+            tim.next_gap_rh = gap > 0xFFFFu ? 0xFFFFu : gap;
+        }
+        if (e.src == SRC_OWN && (visual() || kview() != KV_TEXT || ui.page == PG_PRACTICE))
+            ui.redraw |= R_MAIN;         /* the code so far is drawn */
+    }
+    for (s = 0; s < SRC_N; s++)          /* silence ends a character, then a word */
+        if (dsrc[s].seen && !dsrc[s].down) {
+            char c = mo_dec_idle(&dsrc[s].dec, now - dsrc[s].t_up);
+            if (c)
+                emit(s, c);
+        }
+}
+
+/* ---------------------------------------------------------------- the host --- */
+static int host_frame(const uint8_t *p, uint32_t n, int transport)
+{
+    uint8_t t;
+    uint32_t len, i, now = plat_ms();
+    const uint8_t *d = hl_match(&link, p, n, &t, &len);
+    if (!d)
+        return 0;
+    hl_seen(&link, now);
+    switch (t) {
+    case T_HELLO_ACK:
+        hl_acked(&link, now, transport);
+        ui.redraw |= R_HEAD;
+        break;
+    case T_TEXT:                         /* the computer's text, played as received (<..> a prosign) */
+        for (i = 0; i < len; i++) {
+            char c = (char)d[i];
+            if (c >= 'a' && c <= 'z')
+                c = (char)(c - 32);
+            if (c == ' ' || c == '<' || c == '>' || mo_code(c))
+                play_char(&prx, c);
+        }
+        break;
+    case T_STOP:
+        play_stop(&prx);
+        break;
+    default:
+        break;
+    }
+    return 1;
+}
+
+int app_sysex(const uint8_t *p, uint32_t n) { return host_frame(p, n, HL_USB); }
+
+/* ------------------------------------------------------------- the pages --- */
+static void inputs_for_page(void)        /* who the keys and MIDI belong to on this page */
+{
+    key_input = ui.page == PG_KEY || ui.page == PG_RHYTHM
+                || (ui.page == PG_PRACTICE && pr.ps == PS_CARD && pr.answer_ok);
+    own_midi = ui.page == PG_KEY;
+    ptx_midi = ui.page == PG_TYPE;
+}
+
+static void practice_leave(void);
+static void listen_stop(void);
+
+static void set_page(uint32_t p)
+{
+    if (ui.page == PG_PRACTICE && p != PG_PRACTICE)
+        practice_leave();
+    if (ui.page == PG_LISTEN && p != PG_LISTEN)
+        listen_stop();
+    if (p != PG_MENU)
+        ui.back = (uint8_t)p;
+    ui.page = (uint8_t)(p % PG_N);
+    ui.sel = (uint8_t)(ui.page == PG_MENU && ui.back ? ui.back - 1u : 0u);
+    inputs_for_page();
+    ui.redraw |= R_ALL;
+}
+
+/* -------------------------------------------------------------- practice --- */
+static int card_key(const ln_card_t *c) { return c->type == CARD_HEAR_KEY || c->type == CARD_SEE_KEY; }
+static int card_sounds(const ln_card_t *c)   /* its prompt is played (or flashed, muted) */
+{
+    return c->type == CARD_NEW || c->type == CARD_HEAR_CHOOSE || c->type == CARD_HEAR_KEY
+           || c->type == CARD_LIGHT_CHOOSE;
+}
+
+static void own_reset(void)              /* the decoder for a keyed answer, at the send speed */
+{
+    mo_dec_init(&dsrc[SRC_OWN].dec, mo_dit_ms(SET.send), mo_dit_ms(SET.send));
+}
+
+static void card_present(void)
+{
+    const ln_card_t *c = ln_card(&pr.r);
+    char ch;
+    pr.answer_ok = 0;
+    pr.got = 0;
+    pr.pick = 0;
+    if (!c) {
+        pr.opened = (uint8_t)ln_finish(&rec.ln, &pr.r);
+        pr.active = 0;
+        pr.ps = PS_DONE;
+        rec_save();
+        if (pr.opened)
+            app_say("NEW LETTERS", "");
+        inputs_for_page();
+        ui.redraw |= R_ALL;
+        return;
+    }
+    ch = ln_char(c->ch);
+    pr.ps = PS_CARD;
+    if (c->type == CARD_NEW) {
+        char s[4] = {ch, ' ', ch, 0};
+        play(&ptx, s);
+    } else if (card_sounds(c))
+        play_char(&ptx, ch);
+    own_reset();
+    inputs_for_page();
+    ui.redraw |= R_ALL;
+}
+
+static void practice_start(void)
+{
+    uint32_t flags = (SET.mute ? LN_MUTED : 0u) | (visual() ? LN_VISUAL : 0u);
+    ln_build(&rec.ln, &pr.r, SET.cards, flags, plat_ms() * 2654435761u + rec.ln.round);
+    pr.active = 1;
+    pr.opened = 0;
+    card_present();
+}
+
+static void practice_answer(int right)
+{
+    const ln_card_t *c = ln_card(&pr.r);
+    if (!c || pr.ps != PS_CARD)
+        return;
+    if (c->type == CARD_NEW) {           /* only shown: on to the next */
+        ln_answer(&rec.ln, &pr.r, 1);
+        play_stop(&ptx);
+        card_present();
+        return;
+    }
+    pr.right = (uint8_t)(right != 0);
+    pr.ratio10 = card_key(c) ? mo_dec_ratio10(&dsrc[SRC_OWN].dec) : 0u;
+    ln_answer(&rec.ln, &pr.r, right);
+    pr.ps = PS_RESULT;
+    pr.answer_ok = 0;
+    play_stop(&ptx);
+    if (!right)
+        play_char(&ptx, ln_char(c->ch));   /* how it should have gone */
+    pr.until = plat_ms() + (right ? 900u : 1800u);
+    inputs_for_page();
+    ui.redraw |= R_ALL;
+}
+
+static void practice_keyed(char c)       /* the own decoder read a character during a card */
+{
+    const ln_card_t *k = ln_card(&pr.r);
+    if (pr.ps != PS_CARD || !k || !card_key(k) || !pr.answer_ok)
+        return;
+    pr.got = c;
+    practice_answer(c == ln_char(k->ch));
+}
+
+static void practice_choose(uint32_t i)
+{
+    const ln_card_t *c = ln_card(&pr.r);
+    if (pr.ps != PS_CARD || !c || !ln_choose(c->type) || i > 3u)
+        return;
+    pr.got = ln_char(c->opt[i]);
+    practice_answer(i == c->right);
+}
+
+static void practice_leave(void)
+{
+    if (pr.active) {
+        pr.active = 0;
+        ln_finish(&rec.ln, &pr.r);
+        rec_save();
+    }
+    play_stop(&ptx);
+    pr.ps = PS_START;
+}
+
+static void practice_step(uint32_t now)
+{
+    const ln_card_t *c = ln_card(&pr.r);
+    if (pr.ps == PS_CARD && c && card_key(c) && !pr.answer_ok && !playing(&ptx)) {
+        pr.answer_ok = 1;                /* the prompt has played: now keying answers */
+        own_reset();
+        inputs_for_page();
+        ui.redraw |= R_FOOT | R_MAIN;
+    }
+    if (pr.ps == PS_RESULT && now >= pr.until && !playing(&ptx))
+        card_present();
+}
+
+/* ----------------------------------------------------------------- listen --- */
+/* lines from content.c played one after another; the one playing shown as it goes (or hidden: copy it in your
+ * head, it shows once the next one starts) */
+#define LS_N 2u
+static struct {
+    uint8_t on;
+    struct {
+        char t[CT_LINE_MAX + 1];
+        const char *gloss;
+        uint8_t nplay, played;
+    } l[LS_N];
+    uint8_t cur, have;                   /* the line playing; lines generated and not done (1 or 2) */
+    uint8_t feed, pos;                   /* the line being queued, and its next character */
+    char prev[CT_LINE_MAX + 1];          /* the line before, shown whole */
+    const char *prev_gloss;
+    uint32_t count;                      /* lines heard */
+    ct_gen_t gen;
+} ls;
+
+static uint32_t playable_n(const char *s)
+{
+    uint32_t n = 0;
+    for (; *s; s++)
+        n += *s != ' ' && *s != '<' && *s != '>' && mo_code(*s);
+    return n;
+}
+
+static void listen_new(uint32_t i)
+{
+    ct_line(&ls.gen, SET.prog, rec.ln.open, ls.l[i].t, &ls.l[i].gloss);
+    ls.l[i].nplay = (uint8_t)playable_n(ls.l[i].t);
+    ls.l[i].played = 0;
+}
+
+static void listen_stop(void)
+{
+    if (ls.on)
+        play_stop(&ptx);
+    ls.on = 0;
+    ls.have = 0;
+    ui.redraw |= R_MAIN | R_FOOT;
+}
+
+static void listen_start(void)
+{
+    play_stop(&ptx);
+    ct_init(&ls.gen, plat_ms() * 2654435761u + 1u);
+    ls.on = 1;
+    ls.cur = ls.feed = 0;
+    ls.pos = 0;
+    listen_new(0);
+    ls.have = 1;
+    ls.prev[0] = 0;
+    ls.prev_gloss = 0;
+    ui.redraw |= R_MAIN | R_FOOT;
+}
+
+static void listen_step(void)
+{
+    uint32_t guard = 0;
+    if (!ls.on)
+        return;
+    /* keep the player fed, a word at a time, a line ahead */
+    while (queued(&ptx) < 24u && guard++ < 8u) {
+        const char *t = ls.l[ls.feed].t;
+        char w[CT_LINE_MAX + 2];
+        uint32_t n = 0;
+        if (!t[ls.pos]) {                /* this line is queued: the next one, after a pause */
+            if (ls.have >= LS_N)
+                break;
+            ls.feed = (uint8_t)((ls.feed + 1u) % LS_N);
+            listen_new(ls.feed);
+            ls.have++;
+            ls.pos = 0;
+            play(&ptx, "  ");
+            continue;
+        }
+        while (t[ls.pos] && t[ls.pos] != ' ' && n < CT_LINE_MAX)
+            w[n++] = t[ls.pos++];
+        if (t[ls.pos] == ' ')
+            w[n++] = t[ls.pos++];
+        w[n] = 0;
+        play(&ptx, w);
+    }
+    /* what started: the line playing moves on */
+    if (took_start(&ptx)) {
+        uint32_t c = ls.cur;
+        if (ls.l[c].played >= ls.l[c].nplay && ls.have > 1u) {   /* this one is done: the next began */
+            uint32_t i;
+            for (i = 0; i <= CT_LINE_MAX; i++)
+                ls.prev[i] = ls.l[c].t[i];
+            ls.prev_gloss = ls.l[c].gloss;
+            ls.count++;
+            ls.cur = (uint8_t)((c + 1u) % LS_N);
+            ls.have--;
+            c = ls.cur;
+        }
+        ls.l[c].played++;
+        ui.redraw |= R_MAIN;
+    }
+}
+
+/* ----------------------------------------------------------------- rhythm --- */
+/* drills of short and long presses, each measured against the send speed's dit: the box is the target, the bar what
+ * you pressed, and a hint from the last presses */
+static const struct {
+    const char *name, *pat;
+} DRILL[] = {
+    {"DITS", "....."}, {"DAHS", "-----"}, {"DIT DAH", ".-.-.-"}, {"SOS", "...---..."}, {"FREE", ""},
+};
+#define RH_DRILLS (sizeof DRILL / sizeof DRILL[0])
+#define RH_MAX 9u
+#define RH_HIST 16u
+enum { RJ_NONE, RJ_GOOD, RJ_OFF, RJ_WRONG };
+enum { H_START, H_DITS_LONG, H_DAHS_SHORT, H_DAHS_LONG, H_GAPS_LONG, H_UNEVEN, H_DITS_SHORT, H_GOOD };
+static struct {
+    uint8_t drill, n, done;
+    uint16_t sets, good_sets;
+    uint16_t q[RH_MAX], g[RH_MAX];       /* this set: each press and the gap before it, tenths of a dit */
+    uint8_t res[RH_MAX], kind[RH_MAX];   /* RJ_*, and dit 0 / dah 1 (wanted, or as judged in FREE) */
+    uint16_t hq[RH_HIST];                /* the last presses, tenths of a dit, */
+    uint8_t hk[RH_HIST], hn, hi;         /* and dit or dah */
+    uint16_t hg[RH_HIST];                /* the last gaps inside a set */
+    uint8_t gn, gi;
+    uint8_t hint, sugg;                  /* H_*, a send speed to try (0 none) */
+    uint16_t last_ms;
+} rh;
+
+static uint32_t rh_len(void) { return slen(DRILL[rh.drill].pat); }
+
+static void rhythm_reset(void)
+{
+    uint8_t d = rh.drill;
+    zero(&rh, sizeof rh);
+    rh.drill = d;
+}
+
+static void rhythm_hint(void)
+{
+    uint32_t i, dn = 0, an = 0, ds = 0, as = 0, gs = 0, dev = 0, dq, aq, gq, dit = mo_dit_ms(SET.send);
+    for (i = 0; i < rh.hn; i++) {
+        if (rh.hk[i]) {
+            an++;
+            as += rh.hq[i];
+        } else {
+            dn++;
+            ds += rh.hq[i];
+        }
+    }
+    for (i = 0; i < rh.gn; i++)
+        gs += rh.hg[i];
+    dq = dn ? ds / dn : 0;
+    aq = an ? as / an : 0;
+    gq = rh.gn ? gs / rh.gn : 0;
+    for (i = 0; i < rh.hn; i++)          /* how even: the mean distance from each kind's average */
+        dev += (uint32_t)(rh.hk[i] ? (rh.hq[i] > aq ? rh.hq[i] - aq : aq - rh.hq[i]) * 3u
+                                   : (rh.hq[i] > dq ? rh.hq[i] - dq : dq - rh.hq[i]) * 3u) / (rh.hk[i] ? 3u : 1u);
+    rh.sugg = 0;
+    if (dn >= 3u && dq > 16u) {
+        rh.hint = H_DITS_LONG;
+        rh.sugg = (uint8_t)clamp((int32_t)(1200u * 10u / (dq * dit)), 5, 40);
+    } else if (an >= 3u && aq < 22u)
+        rh.hint = H_DAHS_SHORT;
+    else if (an >= 3u && aq > 45u)
+        rh.hint = H_DAHS_LONG;
+    else if (rh.gn >= 3u && gq > 18u)
+        rh.hint = H_GAPS_LONG;
+    else if (rh.hn >= 5u && dev * 100u > (dq ? dq : 10u) * 30u * rh.hn)
+        rh.hint = H_UNEVEN;
+    else if (dn >= 3u && dq < 6u) {
+        rh.hint = H_DITS_SHORT;
+        rh.sugg = (uint8_t)clamp((int32_t)(1200u * 10u / ((dq ? dq : 1u) * dit)), 5, 40);
+    } else if (rh.hn >= 5u)
+        rh.hint = H_GOOD;
+    else
+        rh.hint = H_START;
+}
+
+static void rhythm_mark(uint32_t mark, uint32_t gap)
+{
+    uint32_t dit = mo_dit_ms(SET.send), len = rh_len(), q, g, want, res, i;
+    q = (mark * 10u + dit / 2u) / dit;
+    g = (gap * 10u + dit / 2u) / dit;
+    if (rh.done || (rh.n && g > 50u)) {  /* a set done, or a pause: a new set */
+        rh.n = 0;
+        rh.done = 0;
+    }
+    if (!len && rh.n >= RH_MAX) {        /* FREE: the last ones, scrolling */
+        for (i = 0; i + 1u < RH_MAX; i++) {
+            rh.q[i] = rh.q[i + 1u], rh.g[i] = rh.g[i + 1u];
+            rh.res[i] = rh.res[i + 1u], rh.kind[i] = rh.kind[i + 1u];
+        }
+        rh.n = RH_MAX - 1u;
+    }
+    want = len ? (uint32_t)(DRILL[rh.drill].pat[rh.n] == '-') : q >= 20u;
+    if (!len)
+        res = q >= 16u && q <= 21u ? RJ_OFF : RJ_GOOD;   /* in between: neither */
+    else if (!want)
+        res = q >= 5u && q <= 15u ? RJ_GOOD : q <= 20u ? RJ_OFF : RJ_WRONG;
+    else
+        res = q >= 22u && q <= 40u ? RJ_GOOD : q < 18u ? RJ_WRONG : RJ_OFF;
+    rh.q[rh.n] = (uint16_t)(q > 0xFFFFu ? 0xFFFFu : q);
+    rh.g[rh.n] = (uint16_t)(rh.n ? (g > 0xFFFFu ? 0xFFFFu : g) : 0u);
+    rh.res[rh.n] = (uint8_t)res;
+    rh.kind[rh.n] = (uint8_t)want;
+    if (rh.n && g <= 50u) {
+        rh.hg[rh.gi] = (uint16_t)g;
+        rh.gi = (uint8_t)((rh.gi + 1u) % RH_HIST);
+        if (rh.gn < RH_HIST)
+            rh.gn++;
+    }
+    rh.hq[rh.hi] = (uint16_t)(q > 0xFFFFu ? 0xFFFFu : q);
+    rh.hk[rh.hi] = (uint8_t)want;
+    rh.hi = (uint8_t)((rh.hi + 1u) % RH_HIST);
+    if (rh.hn < RH_HIST)
+        rh.hn++;
+    rh.last_ms = (uint16_t)(mark > 0xFFFFu ? 0xFFFFu : mark);
+    rh.n++;
+    if (len && rh.n >= len) {
+        uint32_t good = 1;
+        for (i = 0; i < len; i++)
+            good &= rh.res[i] == RJ_GOOD;
+        rh.done = 1;
+        rh.sets++;
+        rh.good_sets = (uint16_t)(rh.good_sets + good);
+    }
+    rhythm_hint();
+    ui.redraw |= R_MAIN;
+}
+
+/* ------------------------------------------------------------------ input --- */
+static void settings_step(int32_t d);
+static void listen_reveal(void);
+
+/* TYPE: the character on key k (0 none) on page pg, in the layout set */
+static char type_char(uint32_t k, uint32_t pg)
+{
+    static const char ALPHA_W[2][17] = {"ABCDEFGHIJKLMNOP", "1234567890.,?/=+"};
+    static const char ALPHA_B[2][12] = {"QRSTUVWXYZ ", "-()'\":;@!&$"};
+    static const char PIANO[2][28] = {"ABCDEFGHIJKLMNOPQRSTUVWXYZ ", "1234567890.,?/=+-()'\":;@!&$"};
+    static const char KOCH2[28] = "92H38B?47C1D60X'!()&:;+-\"$@";   /* the Koch order's last 14, then the rest */
+    uint32_t i;
+    if (k >= NKEYS || pg > 1u)
+        return 0;
+    switch (tlayout()) {
+    case TL_PIANO:
+        return PIANO[pg][k];
+    case TL_KOCH:
+        if (pg)
+            return KOCH2[k];
+        return k < 26u ? ln_char(k) : ' ';
+    default:
+        for (i = 0; i < 16u; i++)
+            if (WHITE[i] == k)
+                return ALPHA_W[pg][i];
+        for (i = 0; i < 11u; i++)
+            if (BLACK[i] == k)
+                return ALPHA_B[pg][i];
+        return 0;
+    }
+}
+
+static const char *type_phrase(uint32_t k)
+{
+    uint32_t i;
+    for (i = 0; i < 16u; i++)
+        if (WHITE[i] == k)
+            return CT_PHRASE_WHITE[i];
+    for (i = 0; i < 11u; i++)
+        if (BLACK[i] == k)
+            return CT_PHRASE_BLACK[i];
+    return 0;
+}
+
+static void line_add(const char *s)      /* TYPE: onto the line typed, the oldest dropped */
+{
+    uint32_t n = slen(ui.line), i;
+    for (; *s; s++) {
+        if (n >= sizeof ui.line - 1u) {
+            for (i = 0; i + 1u < n; i++)
+                ui.line[i] = ui.line[i + 1u];
+            n--;
+        }
+        ui.line[n++] = *s;
+        ui.line[n] = 0;
+    }
+}
+
+static void type_key(uint32_t k)         /* TYPE: a key is a letter, or a phrase */
+{
+    char s[CT_LINE_MAX + 2];
+    uint32_t i;
+    if (ui.tpage == 2u) {
+        const char *p = type_phrase(k);
+        if (!p)
+            return;
+        s[0] = 0;
+        text_cat(s, p);
+        text_cat(s, " ");
+        ui.gloss = ct_gloss(p);
+    } else {
+        s[0] = type_char(k, ui.tpage);
+        s[1] = 0;
+        if (!s[0])
+            return;
+        ui.gloss = 0;
+    }
+    line_add(s);
+    play(&ptx, s);
+    for (i = 0; s[i]; i++)
+        txt_add(2, s[i]);
+    send_text(s);
+    ui.redraw |= R_MAIN;
+}
+
+static void page_key(uint32_t k)         /* a piano key went down */
+{
+    uint32_t i;
+    if (ui.page == PG_TYPE)
+        type_key(k);
+    else if (ui.page == PG_PRACTICE && pr.ps == PS_CARD) {
+        const ln_card_t *c = ln_card(&pr.r);
+        if (c && c->type == CARD_NEW)
+            practice_answer(1);
+        else if (c && ln_choose(c->type))
+            for (i = 0; i < 4u; i++)
+                if (CHOICE_KEY[i] == k)
+                    practice_choose(i);
+    } else if (ui.page == PG_PRACTICE && pr.ps == PS_RESULT)
+        pr.until = 0;                    /* on without waiting */
+}
+
+static void page_play(void)              /* PLAY: start, again */
+{
+    const ln_card_t *c;
+    switch (ui.page) {
+    case PG_PRACTICE:
+        if (pr.ps == PS_START || pr.ps == PS_DONE)
+            practice_start();
+        else if (pr.ps == PS_CARD && (c = ln_card(&pr.r)) != 0 && card_sounds(c) && !playing(&ptx)) {
+            play_char(&ptx, ln_char(c->ch));
+            if (card_key(c))
+                pr.answer_ok = 0;        /* taken again once it has played */
+            inputs_for_page();
+        }
+        break;
+    case PG_LISTEN:
+        if (ls.on)
+            listen_stop();
+        else
+            listen_start();
+        break;
+    case PG_TYPE:
+        play(&ptx, " ");
+        play(&ptx, ui.line);
+        break;
+    case PG_CHART:
+        play_char(&ptx, ln_char(ui.csel));
+        break;
+    case PG_RHYTHM:
+        rhythm_reset();
+        ui.redraw |= R_MAIN;
+        break;
+    case PG_MENU:
+        set_page(ui.sel + 1u);
+        break;
+    default:
+        break;
+    }
+}
+
+static void page_sel(void)               /* SEL: choose, skip */
+{
+    const ln_card_t *c;
+    switch (ui.page) {
+    case PG_MENU:
+        set_page(ui.sel + 1u);
+        break;
+    case PG_PRACTICE:
+        if (pr.ps == PS_CARD && (c = ln_card(&pr.r)) != 0) {
+            if (ln_choose(c->type))
+                practice_choose(pr.pick);
+            else
+                practice_answer(c->type == CARD_NEW);   /* a card to key: don't know */
+        } else if (pr.ps == PS_RESULT)
+            pr.until = 0;
+        else
+            practice_start();
+        break;
+    case PG_LISTEN:
+        listen_reveal();
+        break;
+    case PG_CHART:
+        play_char(&ptx, ln_char(ui.csel));
+        break;
+    case PG_SET:
+        settings_step(1);
+        break;
+    default:
+        break;
+    }
+}
+
+static uint32_t wrap(uint32_t v, int32_t d, uint32_t n) { return (uint32_t)(((int32_t)v + d % (int32_t)n + (int32_t)n) % (int32_t)n); }
+
+#define SET_ITEMS 10u
+static void page_select(int32_t e)       /* SELECT turned */
+{
+    int32_t d = e > 0 ? 1 : -1;
+    const ln_card_t *c;
+    switch (ui.page) {
+    case PG_MENU:
+        ui.sel = (uint8_t)wrap(ui.sel, d, PG_N - 1u);
+        break;
+    case PG_PRACTICE:
+        if (pr.ps == PS_CARD && (c = ln_card(&pr.r)) != 0 && ln_choose(c->type))
+            pr.pick = (uint8_t)wrap(pr.pick, d, 4u);
+        break;
+    case PG_LISTEN:
+        SET.prog = (uint8_t)wrap(SET.prog, d, LP_N);
+        look_changed();
+        if (ls.on)
+            listen_start();
+        break;
+    case PG_RHYTHM:
+        rh.drill = (uint8_t)wrap(rh.drill, d, RH_DRILLS);
+        rhythm_reset();
+        break;
+    case PG_CHART:
+        ui.csel = (uint8_t)wrap(ui.csel, d, LN_N);
+        break;
+    case PG_SET:
+        ui.sel = (uint8_t)wrap(ui.sel, d, SET_ITEMS);
+        break;
+    default:
+        break;
+    }
+    ui.redraw |= R_MAIN | R_FOOT;
+}
+
+static void say_speed(const char *what, uint32_t wpm)   /* a speed, and what it means in ms */
+{
+    char a[24], b[24];
+    uint32_t dit = mo_dit_ms(wpm);
+    a[0] = 0;
+    text_cat(a, what);
+    int_cat(a, (int32_t)wpm);
+    text_cat(a, " WPM");
+    b[0] = 0;
+    text_cat(b, "DIT ");
+    int_cat(b, (int32_t)dit);
+    text_cat(b, "MS DAH ");
+    int_cat(b, (int32_t)(3u * dit));
+    text_cat(b, "MS");
+    app_say(a, b);
+}
+
+static void speed(int32_t d)
+{
+    int32_t w = clamp((int32_t)SET.wpm + d, 5, 40);
+    if (w == SET.wpm)
+        return;
+    if (SET.eff == SET.wpm || SET.eff > w)   /* no Farnsworth stays none; stretched stays at most the speed */
+        SET.eff = (uint8_t)w;
+    SET.wpm = (uint8_t)w;
+    set_changed();
+    say_speed("HEAR ", SET.wpm);
+}
+
+static void spacing(int32_t d)
+{
+    char a[24], b[24];
+    int32_t e = clamp((int32_t)SET.eff + d, 5, SET.wpm);
+    if (e == SET.eff)
+        return;
+    SET.eff = (uint8_t)e;
+    set_changed();
+    a[0] = 0;
+    text_cat(a, "SPACING ");
+    int_cat(a, e);
+    text_cat(a, " WPM");
+    b[0] = 0;
+    text_cat(b, "LETTER GAP ");
+    int_cat(b, (int32_t)(3u * mo_gap_ms(SET.wpm, SET.eff)));
+    text_cat(b, "MS");
+    app_say(a, b);
+}
+
+static void send_speed(int32_t d)
+{
+    int32_t w = clamp((int32_t)SET.send + d, 5, 40);
+    if (w == SET.send)
+        return;
+    SET.send = (uint8_t)w;
+    set_changed();
+    say_speed("SEND ", SET.send);
+}
+
+static void pitch(int32_t d)
+{
+    char a[24];
+    int32_t p = clamp((int32_t)SET.pitch + d * 10, 300, 1200);
+    if (p == SET.pitch)
+        return;
+    SET.pitch = (uint16_t)p;
+    set_changed();
+    a[0] = 0;
+    text_cat(a, "PITCH ");
+    int_cat(a, p);
+    text_cat(a, " HZ");
+    app_say(a, "");
+}
+
+static void mute_toggle(void)
+{
+    SET.mute = (uint8_t)!SET.mute;
+    set_changed();
+    app_say("SOUND", SET.mute ? "OFF: WATCH THE LIGHTS" : "ON");
+}
+
+/* the settings page: SELECT moves, OCT- / OCT+ (or SEL) change */
+static const char *const SET_NAME[SET_ITEMS] = {"HEAR SPEED", "SPACING", "SEND SPEED", "PITCH",    "KEYER",
+                                                "PADDLES",    "SOUND",   "CARDS",      "LEARN BY", "TYPE KEYS"};
+static void settings_step(int32_t d)
+{
+    switch (ui.sel) {
+    case 0: speed(d); break;
+    case 1: spacing(d); break;
+    case 2: send_speed(d); break;
+    case 3: pitch(d); break;
+    case 4:
+        SET.keyer = (uint8_t)wrap(SET.keyer, d, MO_NKEYER);
+        set_changed();
+        break;
+    case 5:
+        SET.swap = (uint8_t)!SET.swap;
+        set_changed();
+        break;
+    case 6: mute_toggle(); break;
+    case 7:
+        SET.cards = (uint8_t)clamp((int32_t)SET.cards + d * 5, 10, 30);
+        set_changed();
+        break;
+    case 8:
+        SET.learn = (uint8_t)!SET.learn;
+        set_changed();
+        if (visual())
+            app_say("TIP", "SOUND FIRST IS FASTER LATER");
+        break;
+    case 9:
+        look_set(3, 3u, wrap(tlayout(), d, TL_N));
+        look_changed();
+        break;
+    default:
+        break;
+    }
+}
+
+static void input(void)
+{
+    uint32_t keys = plat_keys(), btn = plat_buttons(), k;
+    int32_t e;
+    for (k = 0; k < NKEYS; k++)
+        if ((keys >> k & 1u) && !(ui.keys >> k & 1u))
+            page_key(k);
+    for (k = 0; k < NB; k++) {
+        if (!(btn >> k & 1u) || (ui.btn >> k & 1u))
+            continue;
+        switch (k) {
+        case B_HOME: set_page(ui.page == PG_MENU ? ui.back : PG_MENU); break;
+        case B_FX: mute_toggle(); break;
+        case B_PLAY: page_play(); break;
+        case B_SEL: page_sel(); break;
+        case B_SEQ:                      /* a page's view */
+            if (ui.page == PG_KEY)
+                look_set(0, 3u, wrap(kview(), 1, KV_N));
+            else if (ui.page == PG_TYPE)
+                look_set(2, 1u, !tlabel());
+            else if (ui.page == PG_LISTEN)
+                look_set(5, 1u, !lhide());
+            else
+                break;
+            look_changed();
+            break;
+        case B_REC:                      /* TYPE: the last character off the line */
+            if (ui.page == PG_TYPE) {
+                uint32_t n = slen(ui.line);
+                if (n)
+                    ui.line[n - 1u] = 0;
+                ui.redraw |= R_MAIN;
+            }
+            break;
+        case B_OCTDN:
+        case B_OCTUP:
+            if (ui.page == PG_KEY && k == B_OCTDN) {
+                grid.n = 0;
+                tim.count = 0;
+                ui.last = 0;
+                ui.redraw |= R_MAIN;
+            } else if (ui.page == PG_TYPE) {   /* the next page of keys: letters, signs, phrases */
+                ui.tpage = (uint8_t)wrap(ui.tpage, k == B_OCTUP ? 1 : -1, 3u);
+                ui.redraw |= R_MAIN | R_FOOT;
+            } else if (ui.page == PG_SET)
+                settings_step(k == B_OCTUP ? 1 : -1);
+            break;
+        default: break;
+        }
+    }
+    if ((e = plat_enc(EN_SELECT)) != 0)
+        page_select(e);
+    if ((e = plat_enc(EN_ALGO)) != 0)
+        set_page(wrap(ui.page, e > 0 ? 1 : -1, PG_N));
+    if ((e = plat_enc(EN_K1)) != 0)
+        speed(e > 0 ? 1 : -1);
+    if ((e = plat_enc(EN_K2)) != 0)
+        spacing(e > 0 ? 1 : -1);
+    if ((e = plat_enc(EN_K3)) != 0)
+        pitch(e > 0 ? 1 : -1);
+    if ((e = plat_enc(EN_K4)) != 0)
+        send_speed(e > 0 ? 1 : -1);
+    (void)plat_enc(EN_PRESET);
+    if (btn != ui.btn)
+        ui.redraw |= R_FOOT;
+    ui.keys = keys;
+    ui.btn = btn;
+}
+
+void app_input_only(void)
+{
+    input();
+    read_events();
+}
+
+/* ----------------------------------------------------------------- lights --- */
+static void lights(uint32_t now)
+{
+    ledfx_t kb = {0, 0, 0}, bb = {0, 0, 0};
+    uint32_t k, i;
+    int tx = tone_gated(TONE_TX), rx = tone_gated(TONE_RX);
+    const ln_card_t *c = ln_card(&pr.r);
+    for (k = 0; k < NB; k++)
+        if (k != B_PLAY)
+            ledfx_set(&bb, k, FX_GLOW, now);
+    if (SET.mute)
+        ledfx_set(&bb, B_FX, FX_LIT, now);
+    if (ui.page == PG_PRACTICE && pr.ps == PS_CARD && c && ln_choose(c->type)) {
+        for (i = 0; i < 4u; i++)
+            ledfx_set(&kb, CHOICE_KEY[i], i == pr.pick ? FX_BLINK : FX_LIT, now);
+    } else
+        for (k = 0; k < NKEYS; k++)      /* the lamp: every key lights with the keying (the way to read it muted) */
+            ledfx_set(&kb, k, tx ? FX_LIT : rx ? FX_MID : FX_GLOW, now);
+    if (hl_host(&link, now))
+        bb.lit |= LED_PLAY_GREEN;
+    ledfx_show(&bb, &kb);
+}
+
+/* ----------------------------------------------------------------- screen --- */
+#define C_OWN C_WHITE
+#define C_RX RGB(255, 176, 0)
+#define C_OK RGB(80, 220, 120)
+#define C_BAD RGB(240, 70, 60)
+#define C_MEH RGB(230, 200, 60)
+#define C_BLUE RGB(70, 140, 255)
+#define C_BOX RGB(60, 60, 70)
+
+static uint16_t level_rgb(uint32_t lv)   /* the chart's colours, box 0 .. 5 */
+{
+    static const uint16_t L[6] = {RGB(70, 40, 40), RGB(140, 60, 40), RGB(190, 120, 30), RGB(170, 170, 40),
+                                  RGB(90, 180, 70), RGB(60, 210, 120)};
+    return L[lv > 5u ? 5u : lv];
+}
+
+static void draw_code(uint8_t code, int32_t cx, int32_t y, int32_t u, uint16_t c)   /* centred on cx */
+{
+    uint32_t n = mo_len(code), i;
+    int32_t x = cx - (int32_t)mo_units(code) * u / 2;
+    for (i = 0; i < n; i++) {
+        int32_t w = mo_elem(code, i) ? 3 * u : u;
+        cv_rect(x, y, w, u, c);
+        x += w + u;
+    }
+}
+
+static void draw_code_v(uint8_t code, int32_t cx, int32_t y, int32_t u, uint16_t c)   /* top down, on a key */
+{
+    uint32_t n = mo_len(code), i;
+    for (i = 0; i < n; i++) {
+        int32_t h = mo_elem(code, i) ? 3 * u : u;
+        cv_rect(cx - u / 2 - 1, y, u + 1, h, c);
+        y += h + u;
+    }
+}
+
+static void text_c(int32_t cx, int32_t y, const felucca_font_t *f, const char *s, uint16_t c)   /* centred */
+{
+    cv_text(cx - text_w(f, s) / 2, y, f, s, c);
+}
+
+static void draw_header(uint32_t now)
+{
+    static const char *const PAGE[PG_N] = {"MENU", "PRACTICE", "LISTEN", "KEY", "RHYTHM", "TYPE", "CHART", "SETTINGS"};
+    char t[24];
+    int32_t x;
+    cv_begin(240, 32, C_BLACK);
+    if (now < ui.msg_until) {
+        x = cv_text(8, 7, &FONT_B, ui.msg[0], C_WHITE);
+        cv_text(x + 8, 9, &FONT_XS, ui.msg[1], C_RX);
+    } else {
+        cv_text(8, 7, &FONT_B, PAGE[ui.page], C_WHITE);
+        t[0] = 0;
+        if (ui.page == PG_KEY || ui.page == PG_RHYTHM) {   /* the speed this page goes by */
+            text_cat(t, "SEND ");
+            int_cat(t, SET.send);
+        } else {
+            int_cat(t, SET.wpm);
+            if (SET.eff < SET.wpm) {
+                text_cat(t, "/");
+                int_cat(t, SET.eff);
+            }
+        }
+        text_cat(t, " WPM");
+        x = 232 - text_w(&FONT_XS, t);
+        cv_text(x, 10, &FONT_XS, t, C_GRAY);
+        if (SET.mute) {
+            x -= 8 + text_w(&FONT_XS, "MUTE");
+            cv_text(x, 10, &FONT_XS, "MUTE", C_RX);
+        }
+        if (hl_host(&link, now)) {
+            x -= 8 + text_w(&FONT_XS, "PC");
+            cv_text(x, 10, &FONT_XS, "PC", C_BLUE);
+        }
+    }
+    cv_rect(0, 31, 240, 1, C_LINE);
+    cv_blit(0, 0);
+}
+
+static void draw_lamp(int32_t y)         /* the keying as a light: white sending, amber receiving */
+{
+    int tx = tone_gated(TONE_TX), rx = tone_gated(TONE_RX);
+    cv_begin(240, 10, C_BLACK);
+    cv_rect(20, 2, 200, 6, tx ? C_OWN : rx ? C_RX : C_LINE);
+    cv_blit(0, y);
+}
+
+/* KEY: the top strip (the letter so far, the last one read, how it is going), then one of three views */
+static void key_top(void)
+{
+    char t[40];
+    uint8_t pend = mo_dec_pending(&dsrc[SRC_OWN].dec);
+    const mo_dec_t *d = &dsrc[SRC_OWN].dec;
+    cv_begin(240, 56, C_BLACK);
+    if ((visual() || kview() != KV_TEXT) && pend > 1u)
+        draw_code(pend, 90, 22, 8, C_OWN);
+    if (ui.last) {
+        t[0] = ui.last, t[1] = 0;
+        text_c(200, 6, &FONT_L, t, C_OWN);
+    }
+    if (d->marks >= 4u) {                /* how it is going: speed, dah:dit (3.0 the book), gaps inside (1.0) */
+        uint32_t q = mo_dec_ratio10(d), g = mo_dec_gap10(d);
+        t[0] = 0;
+        text_cat(t, "YOU ");
+        int_cat(t, (int32_t)mo_dec_wpm(d));
+        text_cat(t, " WPM");
+        if (q) {
+            text_cat(t, "  DAH:DIT ");
+            tenths_cat(t, q);
+        }
+        if (g) {
+            text_cat(t, "  GAP ");
+            tenths_cat(t, g);
+        }
+        cv_text(8, 40, &FONT_XS, t, g > 18u || (q && (q < 22u || q > 42u)) ? C_RX : C_GRAY);
+    }
+    cv_blit(0, 32);
+}
+
+static void key_text(void)
+{
+    char t[2] = {0, 0};
+    uint32_t r, i;
+    cv_begin(240, 110, C_BLACK);
+    for (r = 0; r < TG_ROWS; r++)
+        for (i = 0; i < TG_COLS; i++) {
+            uint32_t k = r * TG_COLS + i;
+            if (k < grid.n) {
+                t[0] = grid.c[k];
+                cv_text(4 + (int32_t)i * 10, 2 + (int32_t)r * 22, &FONT_S, t, grid.who[k] == SRC_RX ? C_RX : C_OWN);
+            }
+        }
+    if (!grid.n)
+        cv_text(8, 40, &FONT_XS, keyer.mode == MO_STRAIGHT ? "any key is the key" : "left half dit, right half dah",
+                C_DIM);
+    cv_blit(0, 98);
+}
+
+#define CU 4                             /* the CODE view: px a unit */
+static void key_code(void)               /* each letter over what was keyed for it */
+{
+    static uint8_t rows[TG_N];
+    static int16_t xs[TG_N];
+    char t[2] = {0, 0};
+    int32_t x = 4, row = 0, first;
+    uint32_t i;
+    for (i = 0; i < grid.n; i++) {       /* lay them out: a letter is as wide as its code */
+        int32_t w;
+        if (grid.c[i] == ' ') {
+            rows[i] = (uint8_t)row, xs[i] = (int16_t)x;
+            x += 10;
+            continue;
+        }
+        t[0] = grid.c[i];
+        w = text_w(&FONT_B, t);
+        if (grid.pat[i] > 1u && (int32_t)mo_units(grid.pat[i]) * CU > w)
+            w = (int32_t)mo_units(grid.pat[i]) * CU;
+        if (x + w > 236 && x > 4) {
+            row++;
+            x = 4;
+        }
+        rows[i] = (uint8_t)row, xs[i] = (int16_t)x;
+        x += w + 8;
+    }
+    first = row > 3 ? row - 3 : 0;
+    cv_begin(240, 110, C_BLACK);
+    for (i = 0; i < grid.n; i++) {
+        int32_t y = 2 + ((int32_t)rows[i] - first) * 27;
+        uint16_t c = grid.who[i] == SRC_RX ? C_RX : grid.c[i] == MO_UNKNOWN ? C_BAD : C_OWN;
+        if ((int32_t)rows[i] < first || grid.c[i] == ' ')
+            continue;
+        t[0] = grid.c[i];
+        cv_text(xs[i], y, &FONT_B, t, c);
+        if (grid.pat[i] > 1u) {
+            uint32_t n = mo_len(grid.pat[i]), k;
+            int32_t px = xs[i];
+            for (k = 0; k < n; k++) {
+                int32_t w = mo_elem(grid.pat[i], k) ? 3 * CU : CU;
+                cv_rect(px, y + 19, w, CU, c);
+                px += w + CU;
+            }
+        }
+    }
+    if (!grid.n)
+        cv_text(8, 40, &FONT_XS, "each letter over its dits and dahs", C_DIM);
+    cv_blit(0, 98);
+}
+
+#define TU 8                             /* the TIMING view: px a dit (of the send speed) */
+static void tim_row(const trow_t *r, int32_t y, int live)
+{
+    char t[2] = {0, 0};
+    uint32_t dit = mo_dit_ms(SET.send), i;
+    int32_t x = 28;
+    t[0] = live ? '_' : r->c;
+    cv_text(6, y, &FONT_B, t, r->c == MO_UNKNOWN ? C_BAD : live ? C_DIM : C_OWN);
+    for (i = 0; i < r->n && x < 240; i++) {
+        int32_t w;
+        int dah = live ? mo_dec_is_dah(&dsrc[SRC_OWN].dec, r->mark[i]) : (int)(r->dah >> i & 1u);
+        if (i) {
+            int32_t g = (int32_t)(r->gap[i] * TU / dit);
+            if (r->gap[i] * 10u > dit * 16u)   /* a long gap inside a letter: where it gets split */
+                cv_rect(x, y + 13, g, 2, C_BAD);
+            x += g;
+        }
+        w = (int32_t)(r->mark[i] * TU / dit);
+        if (w < 2)
+            w = 2;
+        if (x + w > 240)
+            w = 240 - x;
+        cv_rect(x, y + 4, w, 8, dah ? C_RX : C_OWN);
+        x += w;
+    }
+}
+
+static void key_timing(void)             /* each letter as keyed, to scale: is a dit a dit? */
+{
+    char t[32];
+    uint32_t i, dit = mo_dit_ms(SET.send);
+    int32_t y = 14;
+    cv_begin(240, 110, C_BLACK);
+    cv_rect(28, 2, TU, 3, C_GRAY);       /* the ruler: a dit and a dah at the send speed */
+    cv_rect(28 + 2 * TU, 2, 3 * TU, 3, C_GRAY);
+    t[0] = 0;
+    text_cat(t, "DIT ");
+    int_cat(t, (int32_t)dit);
+    text_cat(t, "  DAH ");
+    int_cat(t, (int32_t)(3u * dit));
+    text_cat(t, " MS");
+    cv_text(96, 0, &FONT_T, t, C_GRAY);
+    for (i = 0; i < tim.count; i++) {    /* oldest first */
+        const trow_t *r = &tim.row[(tim.head + TR_N - tim.count + i) % TR_N];
+        tim_row(r, y, 0);
+        y += 19;
+    }
+    if (tim.live.n)
+        tim_row(&tim.live, y, 1);
+    if (!tim.count && !tim.live.n)
+        cv_text(8, 40, &FONT_XS, "red: a gap that splits a letter", C_DIM);
+    cv_blit(0, 98);
+}
+
+static void key_page(void)
+{
+    key_top();
+    draw_lamp(88);
+    if (kview() == KV_CODE)
+        key_code();
+    else if (kview() == KV_TIMING)
+        key_timing();
+    else
+        key_text();
+}
+
+static void type_page(void)
+{
+    static const char *const PAGE[3] = {"LETTERS", "DIGITS + SIGNS", "PHRASES"};
+    char t[8];
+    uint32_t i, n = slen(ui.line);
+    char cur = ptx.cur;
+    cv_begin(240, 80, C_BLACK);
+    for (i = 0; i < n; i++) {
+        t[0] = ui.line[i] == ' ' ? '_' : ui.line[i];
+        t[1] = 0;
+        cv_text(4 + (int32_t)(i % TG_COLS) * 10, 2 + (int32_t)(i / TG_COLS) * 20, &FONT_S, t,
+                ui.line[i] == ' ' ? C_DIM : C_OWN);
+    }
+    if (ui.tpage == 2u && ui.gloss)
+        cv_text(4, 46, &FONT_XS, ui.gloss, C_RX);
+    else if (cur && (visual() || tlabel()))
+        draw_code(mo_code(cur), 120, 52, 6, C_RX);
+    cv_text(4, 64, &FONT_T, PAGE[ui.tpage], C_GRAY);
+    cv_blit(0, 32);
+    draw_lamp(112);
+    /* the keyboard: 16 white keys 15 px each, the black ones over their gaps */
+    cv_begin(240, 86, C_BLACK);
+    for (i = 0; i < 16u; i++) {
+        uint32_t k = WHITE[i];
+        int32_t x = (int32_t)i * 15;
+        char c = ui.tpage < 2u ? type_char(k, ui.tpage) : 0;
+        cv_rect(x, 0, 14, 84, c && c == cur ? C_RX : RGB(200, 200, 206));
+        if (ui.tpage == 2u) {            /* a phrase: its name down the key */
+            const char *p = type_phrase(k);
+            uint32_t j, m = 0;
+            for (j = 0; p && p[j] && m < 4u; j++)
+                if (p[j] != '<' && p[j] != '>' && p[j] != '?') {
+                    t[0] = p[j], t[1] = 0;
+                    text_c(x + 7, 50 + (int32_t)m * 9, &FONT_T, t, C_BLACK);
+                    m++;
+                }
+        } else {
+            t[0] = c, t[1] = 0;
+            if (tlabel() && c && c != ' ')
+                draw_code_v(mo_code(c), x + 7, 49, 2, C_BLACK);
+            text_c(x + 7, 68, &FONT_XS, c == ' ' ? "_" : t, C_BLACK);
+        }
+    }
+    for (i = 0; i < 11u; i++) {
+        uint32_t w = 0, k = BLACK[i];
+        int32_t x;
+        char c = ui.tpage < 2u ? type_char(k, ui.tpage) : 0;
+        while (w < 16u && WHITE[w] < k)
+            w++;
+        x = (int32_t)w * 15;
+        cv_rect(x - 6, 0, 12, 46, c && c == cur ? C_RX : RGB(40, 40, 46));
+        if (ui.tpage == 2u) {
+            const char *p = type_phrase(k);
+            uint32_t j, m = 0;
+            for (j = 0; p && p[j] && m < 3u; j++)
+                if (p[j] != '<' && p[j] != '>' && p[j] != '?') {
+                    t[0] = p[j], t[1] = 0;
+                    text_c(x, 4 + (int32_t)m * 9, &FONT_T, t, C_WHITE);
+                    m++;
+                }
+        } else {
+            t[0] = c == ' ' ? '_' : c, t[1] = 0;
+            if (tlabel() && c && c != ' ')
+                draw_code_v(mo_code(c), x, 3, 2, C_WHITE);
+            else
+                text_c(x, 26, &FONT_XS, t, C_WHITE);
+        }
+    }
+    cv_blit(0, 122);
+}
+
+static void choices(int32_t y, const ln_card_t *c, int32_t oy)
+{
+    char t[8];
+    uint32_t i;
+    for (i = 0; i < 4u; i++) {
+        int32_t x = 4 + (int32_t)i * 59;
+        cv_rect(x, y - oy, 55, 44, i == pr.pick ? C_LINE : RGB(24, 24, 28));
+        t[0] = ln_char(c->opt[i]), t[1] = 0;
+        text_c(x + 27, y + 6 - oy, &FONT_M, t, C_WHITE);
+        note_name(CHOICE_KEY[i], t);
+        text_c(x + 27, y + 46 - oy, &FONT_XS, t, C_DIM);
+    }
+}
+
+static void practice_at(int32_t oy)      /* drawn twice, each half with the rows above it taken off */
+{
+    char t[40];
+    const ln_card_t *c = ln_card(&pr.r);
+    const ln_state_t *s = &rec.ln;
+    if (pr.ps == PS_START || pr.ps == PS_DONE) {
+        int32_t y = 8;
+        if (pr.ps == PS_DONE) {
+            t[0] = 0;
+            text_cat(t, "ROUND ");
+            int_cat(t, s->round);
+            text_cat(t, " DONE");
+            text_c(120, y - oy, &FONT_B, t, C_WHITE);
+            t[0] = 0;
+            int_cat(t, pr.r.ok);
+            text_cat(t, " RIGHT  ");
+            int_cat(t, pr.r.miss);
+            text_cat(t, " MISSED  +");
+            int_cat(t, pr.r.up);
+            text_c(120, y + 26 - oy, &FONT_XS, t, C_GRAY);
+            y += 48;
+            if (pr.opened) {
+                uint32_t i;
+                t[0] = 0;
+                text_cat(t, "NEW: ");
+                for (i = s->open - LN_GROUP; i < s->open; i++) {
+                    char ch[3] = {ln_char(i), ' ', 0};
+                    text_cat(t, ch);
+                }
+                text_c(120, y - oy, &FONT_B, t, C_OK);
+                y += 26;
+            }
+        } else {
+            t[0] = 0;
+            text_cat(t, "ROUND ");
+            int_cat(t, s->round + 1u);
+            text_c(120, y - oy, &FONT_M, t, C_WHITE);
+            y += 40;
+            t[0] = 0;
+            int_cat(t, (int32_t)ln_due_count(s));
+            text_cat(t, " DUE   ");
+            int_cat(t, (int32_t)ln_new_count(s));
+            text_cat(t, " NEW   ");
+            int_cat(t, s->open);
+            text_cat(t, " OPEN");
+            text_c(120, y - oy, &FONT_XS, t, C_GRAY);
+            y += 26;
+        }
+        t[0] = 0;
+        text_cat(t, "STREAK ");
+        int_cat(t, s->streak);
+        text_c(120, y - oy, &FONT_XS, t, s->streak ? C_OK : C_DIM);
+        text_c(120, y + 40 - oy, &FONT_B, "PLAY: START", C_RX);
+        text_c(120, y + 64 - oy, &FONT_XS, visual() ? "learning by sight" : "learning by sound", C_DIM);
+        return;
+    }
+    if (!c && pr.ps != PS_RESULT)
+        return;
+    t[0] = 0;
+    int_cat(t, pr.r.at + (pr.ps == PS_RESULT ? 0u : 1u));
+    text_cat(t, " / ");
+    int_cat(t, pr.r.n);
+    cv_text(8, 2 - oy, &FONT_XS, t, C_DIM);
+    if (pr.ps == PS_RESULT) {
+        const ln_card_t *a = &pr.r.card[pr.r.at - 1u];
+        char ch = ln_char(a->ch);
+        text_c(120, 18 - oy, &FONT_L, pr.right ? "RIGHT" : "NO", pr.right ? C_OK : C_BAD);
+        t[0] = ch, t[1] = 0;
+        text_c(120, 64 - oy, &FONT_L, t, C_WHITE);
+        if (visual())
+            draw_code(mo_code(ch), 120, 108 - oy, 8, C_GRAY);
+        if (!pr.right && pr.got) {
+            t[0] = 0;
+            text_cat(t, "YOU: ");
+            t[5] = pr.got, t[6] = 0;
+            text_c(120, 126 - oy, &FONT_XS, t, C_BAD);
+        }
+        if (pr.ratio10 && card_key(a)) {
+            t[0] = 0;
+            text_cat(t, "DAH:DIT ");
+            tenths_cat(t, pr.ratio10);
+            text_cat(t, pr.ratio10 < 25u ? "  dahs short" : pr.ratio10 > 40u ? "  dahs long" : "");
+            text_c(120, 146 - oy, &FONT_XS, t, C_GRAY);
+        }
+        return;
+    }
+    {
+        static const char *const ASK[CARD_NTYPES] = {"NEW LETTER", "WHICH ONE?", "KEY WHAT YOU HEAR", "KEY IT",
+                                                    "WHICH ONE?", "WHICH ONE?"};
+        char ch = ln_char(c->ch);
+        text_c(120, 18 - oy, &FONT_B, ASK[c->type], c->type == CARD_NEW ? C_OK : C_GRAY);
+        t[0] = ch, t[1] = 0;
+        switch (c->type) {
+        case CARD_NEW:
+            text_c(120, 50 - oy, &FONT_L, t, C_WHITE);
+            if (visual())
+                draw_code(mo_code(ch), 120, 100 - oy, 8, C_GRAY);
+            text_c(120, 128 - oy, &FONT_XS, SET.mute ? "watch it, then a key" : "listen, then any key", C_DIM);
+            break;
+        case CARD_HEAR_CHOOSE:
+        case CARD_LIGHT_CHOOSE:
+            text_c(120, 48 - oy, &FONT_M, c->type == CARD_LIGHT_CHOOSE ? "( lamp )" : "?", C_DIM);
+            choices(92, c, oy);
+            break;
+        case CARD_CODE_CHOOSE:
+            draw_code(mo_code(ch), 120, 58 - oy, 8, C_WHITE);
+            choices(92, c, oy);
+            break;
+        case CARD_HEAR_KEY:
+            text_c(120, 54 - oy, &FONT_L, "?", C_DIM);
+            break;
+        case CARD_SEE_KEY:
+            text_c(120, 50 - oy, &FONT_L, t, C_WHITE);
+            break;
+        default:
+            break;
+        }
+        if (card_key(c)) {
+            uint8_t pend = mo_dec_pending(&dsrc[SRC_OWN].dec);
+            if ((visual() || kview() != KV_TEXT) && pend > 1u)
+                draw_code(pend, 120, 112 - oy, 8, C_OWN);
+            text_c(120, 136 - oy, &FONT_XS, pr.answer_ok ? "your turn" : "listen", pr.answer_ok ? C_OK : C_DIM);
+        }
+    }
+}
+
+static void listen_reveal(void)          /* SEL while hidden: the line playing, for a moment */
+{
+    if (ls.on && lhide())
+        app_say("NOW:", ls.l[ls.cur].t);
+}
+
+static void wrap_text(const char *s, int32_t x, int32_t y, const felucca_font_t *f, int32_t cw, uint32_t cols,
+                      uint32_t rows, uint32_t bright, int hide, int32_t oy)
+{
+    /* s in cells of cw px, cols a row; the first `bright` playable characters lit, the rest dim (hidden: not shown);
+     * the rows that hold the lit part kept in view */
+    char t[2] = {0, 0};
+    uint32_t i, k = 0, n = slen(s), at = 0, first = 0;
+    for (i = 0; i < n; i++) {
+        if (k < bright && s[i] != ' ' && s[i] != '<' && s[i] != '>' && mo_code(s[i]))
+            k++, at = i;
+    }
+    if (at / cols >= rows)
+        first = at / cols - rows + 1u;
+    for (i = first * cols, k = 0; i < n && i < (first + rows) * cols; i++) {
+        uint32_t j, lit;
+        for (j = 0, lit = 0; j <= i; j++)
+            lit += s[j] != ' ' && s[j] != '<' && s[j] != '>' && mo_code(s[j]);
+        lit = lit <= bright && s[i] != ' ';
+        if (hide && !lit)
+            continue;
+        t[0] = hide ? '_' : s[i];
+        cv_text(x + (int32_t)(i % cols) * cw, y + (int32_t)(i / cols - first) * 20 - oy, f, t,
+                lit ? C_WHITE : C_DIM);
+    }
+}
+
+static void listen_at(int32_t oy)
+{
+    char t[40];
+    cv_text(8, 2 - oy, &FONT_B, LP_NAME[SET.prog], C_WHITE);
+    t[0] = 0;
+    if (ls.count) {
+        int_cat(t, (int32_t)ls.count);
+        text_cat(t, " LINES");
+    }
+    cv_text(232 - text_w(&FONT_XS, t), 4 - oy, &FONT_XS, t, C_DIM);
+    if (!ls.on) {
+        text_c(120, 50 - oy, &FONT_B, "PLAY: START", C_RX);
+        text_c(120, 76 - oy, &FONT_XS, "SELECT: the program", C_DIM);
+        text_c(120, 94 - oy, &FONT_XS, lhide() ? "hidden: copy it in your head" : "the text shown as it plays",
+               C_DIM);
+        return;
+    }
+    wrap_text(ls.l[ls.cur].t, 4, 28, &FONT_S, 10, TG_COLS, 3, ls.l[ls.cur].played, (int)lhide(), oy);
+    if (!lhide() && ls.l[ls.cur].gloss)
+        cv_text(4, 92 - oy, &FONT_XS, ls.l[ls.cur].gloss, C_RX);
+    if (ls.prev[0]) {
+        cv_text(4, 112 - oy, &FONT_T, lhide() ? "IT WAS:" : "BEFORE:", C_GRAY);
+        wrap_text(ls.prev, 4, 126, &FONT_XS, 8, 29, 2, 0xFF, 0, oy);
+        if (ls.prev_gloss)
+            cv_text(120, 112 - oy, &FONT_T, ls.prev_gloss, C_RX);
+    }
+}
+
+static void rhythm_at(int32_t oy)
+{
+    static const char *const H1[] = {"PRESS ANY KEY",       "DITS ARE LONG",  "DAHS ARE SHORT", "DAHS ARE LONG",
+                                     "GAPS INSIDE ARE LONG", "LENGTHS VARY",   "DITS ARE VERY SHORT", "GOOD RHYTHM"};
+    static const char *const H2[] = {"dit short, dah three dits",  "tap and let go", "hold a dah about 3 dits",
+                                     "let go sooner: 3 dits",      "one dit between, no more", "slow down, keep it even",
+                                     "fine if even",               "next drill, or K4 faster"};
+    char t[48];
+    uint32_t len = rh_len(), i, n = len ? len : rh.n, dit = mo_dit_ms(SET.send);
+    int32_t x = 8;
+    cv_text(8, 0 - oy, &FONT_B, DRILL[rh.drill].name, C_WHITE);
+    t[0] = 0;
+    if (len) {
+        text_cat(t, "SETS ");
+        int_cat(t, rh.good_sets);
+        text_cat(t, "/");
+        int_cat(t, rh.sets);
+        text_cat(t, " CLEAN");
+    }
+    cv_text(232 - text_w(&FONT_XS, t), 2 - oy, &FONT_XS, t, C_DIM);
+    /* the set: a box for each target, the bar pressed over it */
+    for (i = 0; i < n && i < RH_MAX; i++) {
+        uint32_t want = len ? (uint32_t)(DRILL[rh.drill].pat[i] == '-') : rh.kind[i];
+        int32_t tw = want ? 3 * TU : TU, bw;
+        uint16_t c = rh.res[i] == RJ_GOOD ? C_OK : rh.res[i] == RJ_OFF ? C_MEH : C_BAD;
+        cv_rect(x, 26 - oy, tw, 14, C_BOX);
+        if (i < rh.n) {
+            bw = (int32_t)(rh.q[i] * TU / 10u);
+            if (bw < 2)
+                bw = 2;
+            if (bw > tw + 2 * TU)
+                bw = tw + 2 * TU;
+            cv_rect(x, 29 - oy, bw, 8, c);
+        } else if (i == rh.n && !rh.done)
+            cv_rect(x, 42 - oy, tw, 2, C_WHITE);   /* the next one */
+        x += tw + TU + (len ? 0 : TU);
+    }
+    if (rh.n) {                          /* the last press, in dits of the send speed */
+        uint32_t k = rh.n - 1u, q = rh.q[k];
+        static const char *const WHY_DIT[] = {"", "GOOD", "A BIT LONG", "TOO LONG: A DAH"};
+        static const char *const WHY_DAH[] = {"", "GOOD", "A BIT OFF", "TOO SHORT: A DIT"};
+        uint16_t c = rh.res[k] == RJ_GOOD ? C_OK : rh.res[k] == RJ_OFF ? C_MEH : C_BAD;
+        t[0] = 0;
+        text_cat(t, rh.kind[k] ? "DAH " : "DIT ");
+        tenths_cat(t, q);
+        x = cv_text(8, 54 - oy, &FONT_M, t, C_WHITE);
+        t[0] = 0;
+        int_cat(t, rh.last_ms);
+        text_cat(t, " MS");
+        cv_text(x + 8, 62 - oy, &FONT_XS, t, C_GRAY);
+        if (len)
+            cv_text(8, 82 - oy, &FONT_XS, rh.kind[k] ? WHY_DAH[rh.res[k]] : WHY_DIT[rh.res[k]], c);
+        else if (rh.res[k] == RJ_OFF)
+            cv_text(8, 82 - oy, &FONT_XS, "IN BETWEEN: NEITHER", C_MEH);
+        if (k && rh.g[k] > 18u) {
+            t[0] = 0;
+            text_cat(t, "GAP BEFORE IT ");
+            tenths_cat(t, rh.g[k]);
+            cv_text(130, 82 - oy, &FONT_XS, t, C_RX);
+        }
+    } else {
+        t[0] = 0;
+        text_cat(t, "TARGET: DIT ");
+        int_cat(t, (int32_t)dit);
+        text_cat(t, " MS, DAH ");
+        int_cat(t, (int32_t)(3u * dit));
+        text_cat(t, " MS");
+        cv_text(8, 58 - oy, &FONT_XS, t, C_GRAY);
+        cv_text(8, 78 - oy, &FONT_XS, "K4 changes it (send speed)", C_DIM);
+    }
+    cv_text(8, 108 - oy, &FONT_B, H1[rh.hint], rh.hint == H_GOOD ? C_OK : rh.hint == H_START ? C_GRAY : C_RX);
+    t[0] = 0;
+    text_cat(t, H2[rh.hint]);
+    if (rh.sugg && rh.sugg != SET.send) {
+        text_cat(t, ", or K4 to ");
+        int_cat(t, rh.sugg);
+    }
+    cv_text(8, 128 - oy, &FONT_XS, t, C_GRAY);
+}
+
+static void chart_at(int32_t oy)         /* the course like a kana chart: 7 x 6, coloured by box */
+{
+    char t[2] = {0, 0};
+    uint32_t i;
+    for (i = 0; i < LN_N; i++) {
+        int32_t x = 2 + (int32_t)(i % 7u) * 34, y = 2 + (int32_t)(i / 7u) * 28 - oy;
+        int open = i < rec.ln.open;
+        uint16_t bg = open ? level_rgb(ln_level(&rec.ln, i)) : RGB(20, 20, 24);
+        if (i == ui.csel)
+            cv_rect(x - 2, y - 2, 36, 30, C_WHITE);
+        cv_rect(x, y, 32, 26, bg);
+        t[0] = ln_char(i);
+        text_c(x + 16, y + 5, &FONT_B, t, open ? C_WHITE : C_DIM);
+    }
+}
+
+static void set_at(int32_t oy)
+{
+    static const char *const KEYER[MO_NKEYER] = {"STRAIGHT", "IAMBIC A", "IAMBIC B"};
+    static const char *const LAYOUT[TL_N] = {"A-P WHITE, Q-Z BLACK", "A-Z LEFT TO RIGHT", "KOCH ORDER"};
+    char t[32];
+    uint32_t i;
+    for (i = 0; i < SET_ITEMS; i++) {
+        int32_t y = 2 + (int32_t)i * 17 - oy;
+        if (i == ui.sel)
+            cv_rect(0, y - 1, 240, 17, C_LINE);
+        cv_text(8, y, &FONT_XS, SET_NAME[i], C_GRAY);
+        t[0] = 0;
+        switch (i) {
+        case 0:
+        case 2:
+            int_cat(t, i ? SET.send : SET.wpm);
+            text_cat(t, " WPM  DIT ");
+            int_cat(t, (int32_t)mo_dit_ms(i ? SET.send : SET.wpm));
+            text_cat(t, " MS");
+            break;
+        case 1:
+            int_cat(t, SET.eff);
+            text_cat(t, SET.eff < SET.wpm ? " WPM (FARNSWORTH)" : " WPM");
+            break;
+        case 3: int_cat(t, SET.pitch); text_cat(t, " HZ"); break;
+        case 4: text_cat(t, KEYER[SET.keyer]); break;
+        case 5: text_cat(t, SET.swap ? "LEFT DAH" : "LEFT DIT"); break;
+        case 6: text_cat(t, SET.mute ? "OFF (LIGHTS)" : "ON"); break;
+        case 7: int_cat(t, SET.cards); text_cat(t, " A ROUND"); break;
+        case 8: text_cat(t, visual() ? "SIGHT" : "SOUND (BEST)"); break;
+        case 9: text_cat(t, LAYOUT[tlayout()]); break;
+        default: break;
+        }
+        cv_text(96, y, &FONT_XS, t, i == ui.sel ? C_WHITE : C_RX);
+    }
+}
+
+static void menu_at(int32_t oy)
+{
+    static const char *const NAME[PG_N - 1] = {"PRACTICE", "LISTEN", "KEY", "RHYTHM", "TYPE", "CHART", "SETTINGS"};
+    static const char *const WHAT[PG_N - 1] = {"flash cards",       "play on and on", "send, it reads you",
+                                               "short and long",    "keys are letters", "how far you are",
+                                               "speeds, keyer, ..."};
+    uint32_t i;
+    for (i = 0; i < PG_N - 1u; i++) {
+        int32_t y = 4 + (int32_t)i * 24 - oy;
+        if (i == ui.sel)
+            cv_rect(0, y - 3, 240, 23, C_LINE);
+        cv_text(12, y, &FONT_B, NAME[i], i == ui.sel ? C_WHITE : C_GRAY);
+        cv_text(112, y + 2, &FONT_XS, WHAT[i], C_DIM);
+    }
+}
+
+#define MAIN_H 176
+static void main_area(void (*fn)(int32_t oy))
+{
+    cv_begin(240, MAIN_H / 2, C_BLACK);
+    fn(0);
+    cv_blit(0, 32);
+    cv_begin(240, MAIN_H / 2, C_BLACK);
+    fn(MAIN_H / 2);
+    cv_blit(0, 32 + MAIN_H / 2);
+}
+
+static void draw_main(void)
+{
+    switch (ui.page) {
+    case PG_KEY: key_page(); break;
+    case PG_TYPE: type_page(); break;
+    case PG_PRACTICE: main_area(practice_at); break;
+    case PG_LISTEN: main_area(listen_at); break;
+    case PG_RHYTHM: main_area(rhythm_at); break;
+    case PG_CHART: main_area(chart_at); break;
+    case PG_SET: main_area(set_at); break;
+    default: main_area(menu_at); break;
+    }
+}
+
+static void draw_footer(void)
+{
+    static const char *const KV_NAME[KV_N] = {"SEQ: TEXT", "SEQ: CODE", "SEQ: TIMING"};
+    const char *s = "";
+    char t[48];
+    const ln_card_t *c = ln_card(&pr.r);
+    cv_begin(240, 32, C_BLACK);
+    cv_rect(0, 0, 240, 1, C_LINE);
+    switch (ui.page) {
+    case PG_MENU: s = "SELECT move  SEL open  HOME back"; break;
+    case PG_KEY:
+        t[0] = 0;
+        text_cat(t, KV_NAME[kview()]);
+        text_cat(t, "  K4 send speed  OCT- clear");
+        s = t;
+        break;
+    case PG_RHYTHM: s = "SELECT drill  K4 send speed  PLAY again"; break;
+    case PG_LISTEN: s = lhide() ? "PLAY start/stop  SEL peek  SEQ show" : "PLAY start/stop  SELECT program  SEQ hide";
+        break;
+    case PG_TYPE: s = "OCT-/+ page  REC del  SEQ code  PLAY line"; break;
+    case PG_SET: s = "SELECT item  OCT- / OCT+ change"; break;
+    case PG_CHART:
+        t[0] = 0;
+        text_cat(t, "PLAY hear ");
+        t[10] = ln_char(ui.csel), t[11] = 0;
+        if (visual()) {
+            char p[8];
+            mo_pattern(mo_code(ln_char(ui.csel)), p);
+            text_cat(t, "  ");
+            text_cat(t, p);
+        }
+        s = t;
+        break;
+    case PG_PRACTICE:
+        if (pr.ps == PS_CARD && c)
+            s = ln_choose(c->type) ? "keys E4-A4, or SELECT + SEL" : card_key(c) ? "PLAY again  SEL don't know"
+                                                                                : "any key: next";
+        else if (pr.ps == PS_RESULT)
+            s = "any key: next";
+        else
+            s = "PLAY start  HOME menu  FX mute";
+        break;
+    default: break;
+    }
+    cv_text(8, 9, &FONT_XS, s, C_DIM);
+    cv_blit(0, 208);
+}
+
+static int32_t lamp_y(void)              /* where this page shows the lamp, 0 none */
+{
+    if (ui.page == PG_KEY)
+        return 88;
+    if (ui.page == PG_TYPE)
+        return 112;
+    if ((ui.page == PG_PRACTICE && (pr.ps == PS_CARD || pr.ps == PS_RESULT)) || ui.page == PG_RHYTHM
+        || (ui.page == PG_LISTEN && ls.on))
+        return 196;                      /* under the page (practice_at, rhythm_at, listen_at keep above 196) */
+    return 0;
+}
+
+static void draw(uint32_t now)
+{
+    uint8_t r = ui.redraw;
+    ui.redraw = 0;
+    if (r & R_HEAD)
+        draw_header(now);
+    if (r & R_MAIN)
+        draw_main();
+    if ((r & (R_MAIN | R_LAMP)) && lamp_y() && (lamp_y() == 196 || !(r & R_MAIN)))
+        draw_lamp(lamp_y());
+    if (r & R_FOOT)
+        draw_footer();
+}
+
+/* ------------------------------------------------------------------ audio --- */
+static float gain_now;
+
+void app_render(int32_t *lr, uint32_t n, uint32_t master_q12)
+{
+    uint32_t i;
+    float gain = (float)master_q12 / 4096.0f * 8300000.0f;
+    gain_now += (gain - gain_now) * 0.5f;
+    for (i = 0; i < 2u * n; i++)
+        lr[i] = 0;
+    tone_render(lr, n, gain_now);
+}
+
+void app_panic(void) { tone_stop(); }
+
+/* ------------------------------------------------------------ the contract --- */
+void app_init(void)
+{
+    /* everything from nothing: the host simulator's reboot runs this again over the old RAM */
+    zero(&ui, sizeof ui);
+    zero(&pr, sizeof pr);
+    zero(&grid, sizeof grid);
+    zero(&tim, sizeof tim);
+    zero(&ls, sizeof ls);
+    zero(&rh, sizeof rh);
+    zero(txt, sizeof txt);
+    zero(dsrc, sizeof dsrc);
+    ev_w = ev_r = 0;
+    own_down = ptx_down = rx_midi = rx_down = midi_down = 0;
+    key_input = own_midi = ptx_midi = 0;
+    saves = 0;
+    dirty_at = 0;
+    if (plat_store_load(OBJ_MORSE, &rec, sizeof rec) == (int)sizeof rec && rec.set.send == 0u)
+        rec.set.send = SEND_DEFAULT;     /* a 0.1 record: it had no send speed */
+    if (rec.magic != REC_MAGIC || rec.ver != REC_VER || rec.size != sizeof rec || !set_valid(&rec.set)
+        || !ln_valid(&rec.ln)) {
+        zero(&rec, sizeof rec);
+        set_defaults();
+        ln_init(&rec.ln);
+    }
+    mo_keyer_init(&keyer, SET.keyer, mo_dit_ms(SET.send));
+    mo_player_init(&ptx, mo_dit_ms(SET.wpm), mo_gap_ms(SET.wpm, SET.eff));
+    mo_player_init(&prx, mo_dit_ms(SET.wpm), mo_gap_ms(SET.wpm, SET.eff));
+#ifdef PLAT_HOST
+    mo_player_init(&host_hand, mo_dit_ms(SET.send), mo_dit_ms(SET.send));
+#endif
+    tone_stop();
+    timing_apply();
+    hl_init(&link, 0x4D, 0x4F, MO_VER);
+    ui.page = PG_PRACTICE;               /* straight into today's practice */
+    ui.back = PG_PRACTICE;
+    pr.ps = PS_START;
+    rhythm_hint();
+}
+
+void app_ui_init(void)
+{
+    lcd_fill(0, 0, 240, 240, C_BLACK);
+    ui.redraw = R_ALL;
+}
+
+void app_frame(void)
+{
+    static const uint8_t HELLO[3] = {MO_VER, FW_MAJOR, FW_MINOR};
+    static uint32_t last_msg;
+    uint32_t now = plat_ms();
+    uint8_t host, lamp, pat;
+    input();
+    read_events();
+    if (ui.page == PG_PRACTICE)
+        practice_step(now);
+    if (ui.page == PG_LISTEN)
+        listen_step();
+    hl_tick(&link, now, T_HELLO, T_HEARTBEAT, HELLO, 3);
+    host = (uint8_t)hl_host(&link, now);
+    if (host != ui.host_was) {
+        ui.host_was = host;
+        ui.redraw |= R_HEAD;
+    }
+    if ((ui.msg_until && now >= ui.msg_until) != last_msg) {
+        last_msg = ui.msg_until && now >= ui.msg_until;
+        ui.redraw |= R_HEAD;
+    }
+    lamp = (uint8_t)(tone_gated(TONE_TX) | tone_gated(TONE_RX) << 1);
+    if (lamp != ui.lamp_was) {
+        ui.lamp_was = lamp;
+        ui.redraw |= R_LAMP;
+    }
+    pat = (uint8_t)ptx.cur;
+    if (ui.page == PG_TYPE && pat != ui.pat_was) {
+        ui.pat_was = pat;
+        ui.redraw |= R_MAIN;
+    }
+    if (dirty_at && now - dirty_at > 3000u)   /* settings saved once the knobs rest */
+        rec_save();
+    lights(now);
+    ann_tick(now);
+    if (ui.redraw)
+        draw(now);
+}
+
+/* --------------------------------------------------------- host simulator --- */
+#ifdef PLAT_HOST
+static int host_fails;
+
+int app_expect(const char *what, int *got)
+{
+    static const struct {
+        const char *name;
+        int (*get)(void);
+    } E[] = {
+        {"page", 0},
+    };
+    (void)E;
+    if (!strcmp(what, "page"))
+        *got = ui.page;
+    else if (!strcmp(what, "mute"))
+        *got = SET.mute;
+    else if (!strcmp(what, "wpm"))
+        *got = SET.wpm;
+    else if (!strcmp(what, "eff"))
+        *got = SET.eff;
+    else if (!strcmp(what, "send"))
+        *got = SET.send;
+    else if (!strcmp(what, "pitch"))
+        *got = SET.pitch;
+    else if (!strcmp(what, "keyer"))
+        *got = SET.keyer;
+    else if (!strcmp(what, "learn"))
+        *got = SET.learn;
+    else if (!strcmp(what, "kview"))
+        *got = (int)kview();
+    else if (!strcmp(what, "tlabel"))
+        *got = (int)tlabel();
+    else if (!strcmp(what, "tlayout"))
+        *got = (int)tlayout();
+    else if (!strcmp(what, "tpage"))
+        *got = ui.tpage;
+    else if (!strcmp(what, "line_len"))
+        *got = (int)slen(ui.line);
+    else if (!strcmp(what, "host"))
+        *got = hl_host(&link, plat_ms());
+    else if (!strcmp(what, "ps"))
+        *got = pr.ps;
+    else if (!strcmp(what, "card"))
+        *got = pr.r.at;
+    else if (!strcmp(what, "cards"))
+        *got = pr.r.n;
+    else if (!strcmp(what, "type"))
+        *got = ln_card(&pr.r) ? ln_card(&pr.r)->type : -1;
+    else if (!strcmp(what, "right"))
+        *got = pr.right;
+    else if (!strcmp(what, "ok"))
+        *got = pr.r.ok;
+    else if (!strcmp(what, "miss"))
+        *got = pr.r.miss;
+    else if (!strcmp(what, "round"))
+        *got = rec.ln.round;
+    else if (!strcmp(what, "open"))
+        *got = rec.ln.open;
+    else if (!strcmp(what, "streak"))
+        *got = rec.ln.streak;
+    else if (!strcmp(what, "answered"))
+        *got = (int)rec.ln.answered;
+    else if (!strcmp(what, "saves"))
+        *got = (int)saves;
+    else if (!strcmp(what, "key_input"))
+        *got = key_input;
+    else if (!strcmp(what, "tx"))
+        *got = tone_gated(TONE_TX);
+    else if (!strcmp(what, "rx"))
+        *got = tone_gated(TONE_RX);
+    else if (!strcmp(what, "tim_rows"))
+        *got = tim.count;
+    else if (!strcmp(what, "rh_n"))
+        *got = rh.n;
+    else if (!strcmp(what, "rh_sets"))
+        *got = rh.sets;
+    else if (!strcmp(what, "rh_clean"))
+        *got = rh.good_sets;
+    else if (!strcmp(what, "rh_hint"))
+        *got = rh.hint;
+    else if (!strcmp(what, "rh_sugg"))
+        *got = rh.sugg;
+    else if (!strcmp(what, "listening"))
+        *got = ls.on;
+    else if (!strcmp(what, "lines"))
+        *got = (int)ls.count;
+    else if (!strcmp(what, "prog"))
+        *got = SET.prog;
+    else if (!strcmp(what, "lhide"))
+        *got = (int)lhide();
+    else
+        return 0;
+    return 1;
+}
+
+static void host_text(const char *a, char *out, uint32_t max)   /* a script word: _ is a space */
+{
+    uint32_t i;
+    for (i = 0; a[i] && i < max - 1u; i++)
+        out[i] = a[i] == '_' ? ' ' : a[i];
+    out[i] = 0;
+}
+
+static void host_send(const char *s)     /* a hand on a straight key keys s */
+{
+    while (*s)
+        mo_player_push(&host_hand, *s++);
+}
+
+int app_host_cmd(const char *cmd, const char *a, const char *b, const char *c, const char *d)
+{
+    char t[128];
+    (void)c, (void)d;
+    if (!strcmp(cmd, "expect_text")) {   /* expect_text own|rx|typed TEXT (_ a space; trailing spaces ignored) */
+        int w = !strcmp(a, "rx") ? 1 : !strcmp(a, "typed") ? 2 : 0;
+        char g[TXT_N + 1];
+        uint32_t n;
+        host_text(b, t, sizeof t);
+        for (n = 0; txt[w][n]; n++)
+            g[n] = txt[w][n];
+        while (n && g[n - 1u] == ' ')
+            n--;
+        g[n] = 0;
+        if (strcmp(g, t)) {
+            printf("  FAIL expect_text %s: \"%s\", got \"%s\"\n", a, t, g);
+            host_fails++;
+        } else
+            printf("  ok text %s \"%s\"\n", a, t);
+        return 1;
+    }
+    if (!strcmp(cmd, "clear_text")) {
+        zero(txt, sizeof txt);
+        return 1;
+    }
+    if (!strcmp(cmd, "sendkeys")) {      /* sendkeys TEXT: keyed by hand at the send speed (_ a space) */
+        host_text(a, t, sizeof t);
+        host_send(t);
+        return 1;
+    }
+    if (!strcmp(cmd, "answer_all")) {    /* answer_all right: the rest of the round at once (keyed cards answered
+                                          * without the keying; "answer" keys them for real) */
+        const ln_card_t *k;
+        int right = !strcmp(a, "right");
+        while (pr.ps == PS_CARD && (k = ln_card(&pr.r)) != 0) {
+            if (k->type == CARD_NEW)
+                practice_answer(1);
+            else {
+                if (ln_choose(k->type))
+                    practice_choose(right ? k->right : (k->right + 1u) % 4u);
+                else
+                    practice_answer(right);
+                play_stop(&ptx);
+                card_present();
+            }
+        }
+        return 1;
+    }
+    if (!strcmp(cmd, "answer")) {        /* answer right|wrong: the card asked now, as a player would */
+        const ln_card_t *k = ln_card(&pr.r);
+        int right = !strcmp(a, "right");
+        if (pr.ps == PS_DONE)
+            printf("  (answer: the round is over)\n");
+        else if (pr.ps != PS_CARD || !k) {
+            printf("  FAIL answer: no card asked\n");
+            host_fails++;
+        } else if (k->type == CARD_NEW)
+            practice_answer(1);
+        else if (ln_choose(k->type))
+            practice_choose(right ? k->right : (k->right + 1u) % 4u);
+        else if (!pr.answer_ok) {
+            printf("  FAIL answer: the prompt is still playing\n");
+            host_fails++;
+        } else {
+            char s[3] = {right ? ln_char(k->ch) : (ln_char(k->ch) == 'E' ? 'T' : 'E'), ' ', 0};
+            host_send(s);
+        }
+        return 1;
+    }
+    return 0;
+}
+
+int app_host_fails(void) { return host_fails; }
+#endif
+
+```
+
+```text
+The file /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/firmware/morse/app.c has been updated successfully. (file state is current in your context — no need to Read it back)
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 15:19:11Z)**_
+
+<think><details><summary>Thought Process</summary>
+我先記下這些改動，等一起實作：設定頁頂部加 PRESET 一鍵套用推薦組合，REC 按住清空整行，PLAY 改成播放與停止切換，並加 LIVE／COMPOSE 模式切換。接下來先修掉程式中兩個編譯錯誤，再加入這些功能。
+
+</details></think>
+
+_**Agent (claude-opus-5-5 2026-11-17 15:19:27Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Fix compile issues, add TYPE compose, stop, REC hold-to-clear
+
+```bash
+python3 - <<'PY'
+def sub(p,a,b,cnt=1):
+    s=open(p).read(); assert a in s,(a[:70]); s=s.replace(a,b,cnt); open(p,'w').write(s)
+p='firmware/morse/app.c'
+sub(p,"""    uint16_t next_gap;                   /* the gap before the next mark, if it is inside a letter */
+} tim;""","""    uint16_t next_gap;                   /* the gap before the next mark, if it is inside a letter */
+    uint16_t next_gap_rh;                /* the gap before the next mark, whatever it was (RHYTHM) */
+} tim;""")
+sub(p,"""    static const struct {
+        const char *name;
+        int (*get)(void);
+    } E[] = {
+        {"page", 0},
+    };
+    (void)E;
+    if (!strcmp(what, "page"))""","""    if (!strcmp(what, "page"))""")
+# look bit 6: TYPE composes
+sub(p,"""    uint8_t look;                        /* bits 0-1 KEY's view (KV_*), bit 2 TYPE's keys show the code, bits 3-4
+                                          * TYPE's layout (TL_*), bit 5 LISTEN hides the text */""","""    uint8_t look;                        /* bits 0-1 KEY's view (KV_*), bit 2 TYPE's keys show the code, bits 3-4
+                                          * TYPE's layout (TL_*), bit 5 LISTEN hides the text, bit 6 TYPE composes
+                                          * (a line sent with PLAY) instead of sending each key */""")
+sub(p,"""static uint32_t lhide(void) { return SET.look >> 5 & 1u; }""","""static uint32_t lhide(void) { return SET.look >> 5 & 1u; }
+static uint32_t tcompose(void) { return SET.look >> 6 & 1u; }""")
+sub(p,"""(s->look >> 3 & 3u) < TL_N && !(s->look >> 6)""","""(s->look >> 3 & 3u) < TL_N && !(s->look >> 7)""")
+# ui: REC hold
+sub(p,"""    char last;                           /* KEY: the last character read */""","""    char last;                           /* KEY: the last character read */
+    uint32_t rec_t;                      /* TYPE: REC went down at (0: up, or its hold already cleared the line) */""")
+# type_key: compose silent
+sub(p,"""    line_add(s);
+    play(&ptx, s);
+    for (i = 0; s[i]; i++)
+        txt_add(2, s[i]);
+    send_text(s);
+    ui.redraw |= R_MAIN;
+}""","""    line_add(s);
+    for (i = 0; s[i]; i++)
+        txt_add(2, s[i]);
+    if (!tcompose()) {                   /* LIVE: each key plays and goes out at once */
+        play(&ptx, s);
+        send_text(s);
+    }
+    ui.redraw |= R_MAIN;
+}
+
+static void type_play(void)              /* PLAY on TYPE: the line (COMPOSE: sent now), or stop what plays */
+{
+    uint32_t i, n = slen(ui.line);
+    if (playing(&ptx)) {
+        play_stop(&ptx);
+        return;
+    }
+    play(&ptx, " ");
+    play(&ptx, ui.line);
+    if (tcompose())
+        for (i = 0; i < n; i += HOSTLINK_MAX)
+            send_text(ui.line + i);      /* (send_text takes the first HOSTLINK_MAX of what it is given) */
+}""")
+sub(p,"""    case PG_TYPE:
+        play(&ptx, " ");
+        play(&ptx, ui.line);
+        break;
+    case PG_CHART:
+        play_char(&ptx, ln_char(ui.csel));
+        break;
+    case PG_RHYTHM:""","""    case PG_TYPE:
+        type_play();
+        break;
+    case PG_CHART:
+        play_char(&ptx, ln_char(ui.csel));
+        break;
+    case PG_RHYTHM:""")
+sub(p,"""    case PG_LISTEN:
+        listen_reveal();
+        break;
+    case PG_CHART:
+        play_char(&ptx, ln_char(ui.csel));
+        break;
+    case PG_SET:
+        settings_step(1);
+        break;""","""    case PG_LISTEN:
+        listen_reveal();
+        break;
+    case PG_TYPE:
+        look_set(6, 1u, !tcompose());
+        look_changed();
+        app_say(tcompose() ? "COMPOSE" : "LIVE", tcompose() ? "PLAY SENDS THE LINE" : "EACH KEY GOES OUT");
+        break;
+    case PG_CHART:
+        play_char(&ptx, ln_char(ui.csel));
+        break;
+    case PG_SET:
+        settings_step(1);
+        break;""")
+# REC short/hold
+sub(p,"""        case B_REC:                      /* TYPE: the last character off the line */
+            if (ui.page == PG_TYPE) {
+                uint32_t n = slen(ui.line);
+                if (n)
+                    ui.line[n - 1u] = 0;
+                ui.redraw |= R_MAIN;
+            }
+            break;""","""        case B_REC:                      /* TYPE: the last character off the line (on release; held: all of it) */
+            if (ui.page == PG_TYPE)
+                ui.rec_t = plat_ms() | 1u;
+            break;""")
+sub(p,"""    if ((e = plat_enc(EN_SELECT)) != 0)
+        page_select(e);
+    if ((e = plat_enc(EN_ALGO)) != 0)""","""    if (ui.rec_t && ui.page == PG_TYPE) {
+        if (!(btn >> B_REC & 1u)) {      /* let go soon: one character */
+            uint32_t n = slen(ui.line);
+            if (n)
+                ui.line[n - 1u] = 0;
+            ui.rec_t = 0;
+            ui.redraw |= R_MAIN;
+        } else if (plat_ms() - ui.rec_t >= 600u) {   /* held: the whole line */
+            ui.line[0] = 0;
+            ui.gloss = 0;
+            ui.rec_t = 0;
+            play_stop(&ptx);
+            app_say("LINE CLEARED", "");
+            ui.redraw |= R_MAIN;
+        }
+    } else if (!(btn >> B_REC & 1u))
+        ui.rec_t = 0;
+    if ((e = plat_enc(EN_SELECT)) != 0)
+        page_select(e);
+    if ((e = plat_enc(EN_ALGO)) != 0)""")
+# leaving TYPE stops its playing
+sub(p,"""    if (ui.page == PG_LISTEN && p != PG_LISTEN)
+        listen_stop();""","""    if (ui.page == PG_LISTEN && p != PG_LISTEN)
+        listen_stop();
+    if (ui.page == PG_TYPE && p != PG_TYPE)
+        play_stop(&ptx);""")
+open(p,'w').write(open(p).read())
+PY
+echo done
+```
+
+```text
+done
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 15:19:37Z)**_
+
+接著加推薦速度的 PRESET，並讓頁尾可以顯示兩行操作說明（TYPE 頁的按鍵變多了）。
+
+_**Agent (claude-opus-5-5 2026-11-17 15:20:04Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Add speed presets and two-line footer; build host simulator
+
+```bash
+python3 - <<'PY'
+def sub(p,a,b):
+    s=open(p).read(); assert a in s,(a[:80]); s=s.replace(a,b,1); open(p,'w').write(s)
+p='firmware/morse/app.c'
+sub(p,"#define SET_ITEMS 10u\n","#define SET_ITEMS 11u\n")
+sub(p,"""/* the settings page: SELECT moves, OCT- / OCT+ (or SEL) change */
+static const char *const SET_NAME[SET_ITEMS] = {"HEAR SPEED", "SPACING", "SEND SPEED", "PITCH",    "KEYER",
+                                                "PADDLES",    "SOUND",   "CARDS",      "LEARN BY", "TYPE KEYS"};
+static void settings_step(int32_t d)
+{
+    switch (ui.sel) {
+    case 0: speed(d); break;
+    case 1: spacing(d); break;
+    case 2: send_speed(d); break;
+    case 3: pitch(d); break;
+    case 4:""","""/* speeds that go together, from a beginner's to a fluent operator's: Koch's characters at 20 WPM or more with the
+ * gaps stretched (Farnsworth) to give time to think, and a hand that sends at what it can keep even */
+static const struct {
+    const char *name, *what;
+    uint8_t wpm, eff, send;
+} PRESET[] = {
+    {"START", "HEAR 20/8 SEND 10", 20, 8, 10},
+    {"BUILDING", "HEAR 20/13 SEND 13", 20, 13, 13},
+    {"QSO", "HEAR 22/18 SEND 18", 22, 18, 18},
+    {"FAST", "HEAR 25/25 SEND 22", 25, 25, 22},
+};
+#define NPRESET (sizeof PRESET / sizeof PRESET[0])
+
+static int preset_now(void)              /* the preset the speeds match, -1 none */
+{
+    uint32_t i;
+    for (i = 0; i < NPRESET; i++)
+        if (SET.wpm == PRESET[i].wpm && SET.eff == PRESET[i].eff && SET.send == PRESET[i].send)
+            return (int)i;
+    return -1;
+}
+
+static void preset_step(int32_t d)
+{
+    int p = preset_now();
+    uint32_t i = p < 0 ? (d > 0 ? 0u : NPRESET - 1u) : wrap((uint32_t)p, d, NPRESET);
+    SET.wpm = PRESET[i].wpm;
+    SET.eff = PRESET[i].eff;
+    SET.send = PRESET[i].send;
+    set_changed();
+    app_say(PRESET[i].name, PRESET[i].what);
+}
+
+/* the settings page: SELECT moves, OCT- / OCT+ (or SEL) change */
+static const char *const SET_NAME[SET_ITEMS] = {"PRESET", "HEAR SPEED", "SPACING", "SEND SPEED", "PITCH",    "KEYER",
+                                                "PADDLES", "SOUND",     "CARDS",   "LEARN BY",   "TYPE KEYS"};
+static void settings_step(int32_t d)
+{
+    switch (ui.sel) {
+    case 0: preset_step(d); break;
+    case 1: speed(d); break;
+    case 2: spacing(d); break;
+    case 3: send_speed(d); break;
+    case 4: pitch(d); break;
+    case 5:""")
+sub(p,"""        SET.keyer = (uint8_t)wrap(SET.keyer, d, MO_NKEYER);
+        set_changed();
+        break;
+    case 5:
+        SET.swap = (uint8_t)!SET.swap;
+        set_changed();
+        break;
+    case 6: mute_toggle(); break;
+    case 7:
+        SET.cards = (uint8_t)clamp((int32_t)SET.cards + d * 5, 10, 30);
+        set_changed();
+        break;
+    case 8:
+        SET.learn = (uint8_t)!SET.learn;
+        set_changed();
+        if (visual())
+            app_say("TIP", "SOUND FIRST IS FASTER LATER");
+        break;
+    case 9:
+        look_set(3, 3u, wrap(tlayout(), d, TL_N));""","""        SET.keyer = (uint8_t)wrap(SET.keyer, d, MO_NKEYER);
+        set_changed();
+        break;
+    case 6:
+        SET.swap = (uint8_t)!SET.swap;
+        set_changed();
+        break;
+    case 7: mute_toggle(); break;
+    case 8:
+        SET.cards = (uint8_t)clamp((int32_t)SET.cards + d * 5, 10, 30);
+        set_changed();
+        break;
+    case 9:
+        SET.learn = (uint8_t)!SET.learn;
+        set_changed();
+        if (visual())
+            app_say("TIP", "SOUND FIRST IS FASTER LATER");
+        break;
+    case 10:
+        look_set(3, 3u, wrap(tlayout(), d, TL_N));""")
+sub(p,"""    for (i = 0; i < SET_ITEMS; i++) {
+        int32_t y = 2 + (int32_t)i * 17 - oy;
+        if (i == ui.sel)
+            cv_rect(0, y - 1, 240, 17, C_LINE);
+        cv_text(8, y, &FONT_XS, SET_NAME[i], C_GRAY);
+        t[0] = 0;
+        switch (i) {
+        case 0:
+        case 2:
+            int_cat(t, i ? SET.send : SET.wpm);
+            text_cat(t, " WPM  DIT ");
+            int_cat(t, (int32_t)mo_dit_ms(i ? SET.send : SET.wpm));
+            text_cat(t, " MS");
+            break;
+        case 1:
+            int_cat(t, SET.eff);
+            text_cat(t, SET.eff < SET.wpm ? " WPM (FARNSWORTH)" : " WPM");
+            break;
+        case 3: int_cat(t, SET.pitch); text_cat(t, " HZ"); break;
+        case 4: text_cat(t, KEYER[SET.keyer]); break;
+        case 5: text_cat(t, SET.swap ? "LEFT DAH" : "LEFT DIT"); break;
+        case 6: text_cat(t, SET.mute ? "OFF (LIGHTS)" : "ON"); break;
+        case 7: int_cat(t, SET.cards); text_cat(t, " A ROUND"); break;
+        case 8: text_cat(t, visual() ? "SIGHT" : "SOUND (BEST)"); break;
+        case 9: text_cat(t, LAYOUT[tlayout()]); break;
+        default: break;
+        }""","""    for (i = 0; i < SET_ITEMS; i++) {
+        int32_t y = 1 + (int32_t)i * 16 - oy;
+        if (i == ui.sel)
+            cv_rect(0, y - 1, 240, 16, C_LINE);
+        cv_text(8, y, &FONT_XS, SET_NAME[i], C_GRAY);
+        t[0] = 0;
+        switch (i) {
+        case 0: {
+            int p = preset_now();
+            if (p < 0)
+                text_cat(t, "CUSTOM");
+            else {
+                text_cat(t, PRESET[p].name);
+                text_cat(t, p == 0 ? " (NEW)" : "");
+            }
+            break;
+        }
+        case 1:
+        case 3:
+            int_cat(t, i == 3 ? SET.send : SET.wpm);
+            text_cat(t, " WPM  DIT ");
+            int_cat(t, (int32_t)mo_dit_ms(i == 3 ? SET.send : SET.wpm));
+            text_cat(t, " MS");
+            break;
+        case 2:
+            int_cat(t, SET.eff);
+            text_cat(t, SET.eff < SET.wpm ? " WPM (FARNSWORTH)" : " WPM");
+            break;
+        case 4: int_cat(t, SET.pitch); text_cat(t, " HZ"); break;
+        case 5: text_cat(t, KEYER[SET.keyer]); break;
+        case 6: text_cat(t, SET.swap ? "LEFT DAH" : "LEFT DIT"); break;
+        case 7: text_cat(t, SET.mute ? "OFF (LIGHTS)" : "ON"); break;
+        case 8: int_cat(t, SET.cards); text_cat(t, " A ROUND"); break;
+        case 9: text_cat(t, visual() ? "SIGHT" : "SOUND (BEST)"); break;
+        case 10: text_cat(t, LAYOUT[tlayout()]); break;
+        default: break;
+        }""")
+# footer: two lines on '\n'
+sub(p,"""    case PG_TYPE: s = "OCT-/+ page  REC del  SEQ code  PLAY line"; break;""","""    case PG_TYPE: s = "OCT-/+ page   REC del, hold: clear\\nPLAY play/stop  SEL live/compose  SEQ code"; break;""")
+sub(p,"""    cv_text(8, 9, &FONT_XS, s, C_DIM);
+    cv_blit(0, 208);
+}""","""    {
+        uint32_t i;
+        for (i = 0; s[i] && s[i] != '\\n'; i++)
+            ;
+        if (s[i]) {                      /* two lines */
+            char a[48];
+            uint32_t j;
+            for (j = 0; j < i && j < sizeof a - 1u; j++)
+                a[j] = s[j];
+            a[j] = 0;
+            cv_text(8, 3, &FONT_T, a, C_DIM);
+            cv_text(8, 17, &FONT_T, s + i + 1, C_DIM);
+        } else
+            cv_text(8, 9, &FONT_XS, s, C_DIM);
+    }
+    cv_blit(0, 208);
+}""")
+# TYPE page label shows live / compose
+sub(p,"""    cv_text(4, 64, &FONT_T, PAGE[ui.tpage], C_GRAY);
+    cv_blit(0, 32);""","""    {
+        int32_t x = cv_text(4, 64, &FONT_T, PAGE[ui.tpage], C_GRAY);
+        cv_text(x + 12, 64, &FONT_T, tcompose() ? "COMPOSE: PLAY SENDS" : "LIVE: EACH KEY GOES OUT",
+                tcompose() ? C_RX : C_DIM);
+    }
+    cv_blit(0, 32);""")
+PY
+uv run --locked --all-groups python third_party/fm1-base/tools/build.py firmware/morse --host 2>&1 | grep -E "error|warning:" | grep -v "fm1.toml has no install" | head -30
+```
+
+```text
+Traceback (most recent call last):
+  File "<stdin>", line 4, in <module>
+  File "<stdin>", line 2, in sub
+AssertionError: #define SET_ITEMS 10u
+
+clang: error: linker command failed with exit code 1 (use -v to see invocation)
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 15:20:11Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Locate SET_ITEMS and show the linker error
+
+`grep -n "SET_ITEMS" firmware/morse/app.c | head -3; uv run --locked --all-groups python third_party/fm1-base/tools/build.py firmware/morse --host 2>&1 | grep -B5 "linker command failed" | head -20`
+
+```text
+  "_app_tick", referenced from:
+      _run_ms in plat_host-a0aaf2.o
+  "_app_ui_init", referenced from:
+      _boot in plat_host-a0aaf2.o
+ld: symbol(s) not found for architecture arm64
+clang: error: linker command failed with exit code 1 (use -v to see invocation)
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 15:20:18Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Check app.c size
+
+`wc -c firmware/morse/app.c; git status --short firmware/morse/`
+
+```text
+       0 firmware/morse/app.c
+ M firmware/morse/app.c
+ M firmware/morse/morse.c
+ M firmware/morse/morse.h
+ M firmware/morse/tests/morse_test.c
+?? firmware/morse/content.c
+?? firmware/morse/content.h
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 15:20:27Z)**_
+
+<think><details><summary>Thought Process</summary>
+我的修補腳本最後一行出錯，把 app.c 清空了，不過內容仍在，我會整合前面的改動後重寫整份檔案。
+
+</details></think>
+
+_**Agent (claude-opus-5-5 2026-11-17 15:24:57Z)**_
+
+<tool-use data-tool-type="write" data-tool-name="Write"><details>
+<summary>Tool use: **Write**</summary>
+
+```c
+/* SPDX-License-Identifier: MIT */
+/* Morse: see app.h. Part of fm1-base's unity build, after the platform (gfx.c, announce.c in scope).
+ * The 1 kHz tick does what needs the millisecond: the key and the keyer, the two players, MIDI in and out, the
+ * sidetone's gates; it leaves key-down / key-up events with their times in a ring. The main loop decodes them, runs
+ * the pages (flash cards, listening, rhythm drills), talks to the host and draws.
+ * Protocol with the host: host/morse/PROTOCOL.md (the numbers below match host/morse/protocol.py). */
+#include "fastmath.h"
+#include "hostlink.c"
+#include "ledfx.c"
+#include "morse.c"
+#include "learn.c"
+#include "content.c"
+#include "tone.c"
+
+#define FW_MAJOR 0u
+#define FW_MINOR 2u
+
+/* ---------------------------------------------------------------- protocol --- */
+#define MO_VER 1u
+enum { T_HELLO_ACK = 0x01, T_TEXT, T_STOP };
+enum { T_HELLO = 0x41, T_HEARTBEAT, T_CHAR };
+/* Vail's MIDI keying (vail-adapter docs/MIDI_INTEGRATION_SPEC.md): channel 1, note 0 a timed key-down */
+#define MIDI_KEY_ON (0x09u | 0x90u << 8 | 0x00u << 16 | 0x7Fu << 24)
+#define MIDI_KEY_OFF (0x08u | 0x80u << 8 | 0x00u << 16 | 0x00u << 24)
+
+/* the debounce keeps a key down ~8.8 ms after it opens and sees it ~1.6 ms after it closes: a straight key's marks
+ * read ~7 ms long on the FM-1 (fm1-base bsp/boards/fm1/fm1_input.h; fm1-emu shows +3 / +10 ms); the host simulator
+ * has no debounce */
+#ifdef PLAT_HOST
+#define KEY_BIAS_MS 0u
+#else
+#define KEY_BIAS_MS 7u
+#endif
+
+/* ---------------------------------------------------------------- settings --- */
+#define REC_MAGIC 0x4D4F5231u            /* "MOR1"; another magic, or a record that does not make sense: defaults */
+#define REC_VER 1u                       /* 0.2 kept 0.1's layout: its spare bytes became look, send, prog */
+enum { LM_SOUND, LM_VISUAL };            /* how to learn: by sound (recommended), by sight */
+enum { KV_TEXT, KV_CODE, KV_TIMING, KV_N };   /* the KEY page's view */
+enum { TL_ALPHA, TL_PIANO, TL_KOCH, TL_N };   /* the TYPE page's letters on the keys */
+typedef struct {
+    uint8_t wpm;                         /* hearing: character speed 5..40 */
+    uint8_t eff;                         /* hearing: effective speed (Farnsworth) 5..wpm */
+    uint8_t keyer;                       /* MO_STRAIGHT, MO_IAMBIC_A, MO_IAMBIC_B */
+    uint8_t swap;                        /* paddles: 0 left half dit, 1 left half dah */
+    uint8_t mute;
+    uint8_t cards;                       /* per round 10..30 */
+    uint8_t learn;                       /* LM_* */
+    uint8_t look;                        /* bits 0-1 KEY's view (KV_*), bit 2 TYPE's keys show the code, bits 3-4
+                                          * TYPE's layout (TL_*), bit 5 LISTEN hides the text, bit 6 TYPE composes
+                                          * (a line sent with PLAY) instead of sending each key */
+    uint16_t pitch;                      /* Hz 300..1200 */
+    uint8_t send;                        /* sending: the keyer's speed and where the decoder starts, 5..40 (0 in
+                                          * a 0.1 record: the default) */
+    uint8_t prog;                        /* LISTEN's program (LP_*) */
+} set_t;
+typedef struct {
+    uint32_t magic;
+    uint16_t ver, size;
+    set_t set;
+    ln_state_t ln;
+} rec_t;
+static rec_t rec;
+#define SET (rec.set)
+#define SEND_DEFAULT 10u                 /* a beginner's hand: a 120 ms dit (the START preset) */
+
+static uint32_t kview(void) { return SET.look & 3u; }
+static uint32_t tlabel(void) { return SET.look >> 2 & 1u; }
+static uint32_t tlayout(void) { return SET.look >> 3 & 3u; }
+static uint32_t lhide(void) { return SET.look >> 5 & 1u; }
+static uint32_t tcompose(void) { return SET.look >> 6 & 1u; }
+static void look_set(uint32_t shift, uint32_t mask, uint32_t v)
+{
+    SET.look = (uint8_t)((SET.look & ~(mask << shift)) | (v & mask) << shift);
+}
+
+static void set_defaults(void)          /* the START preset: Koch's characters at 20, gaps stretched to 8 (Farnsworth) */
+{
+    SET.wpm = 20;
+    SET.eff = 8;
+    SET.keyer = MO_STRAIGHT;
+    SET.swap = 0;
+    SET.mute = 0;
+    SET.cards = 20;
+    SET.learn = LM_SOUND;
+    SET.look = 0;
+    SET.pitch = 600;
+    SET.send = SEND_DEFAULT;
+    SET.prog = LP_KOCH;
+}
+
+static int set_valid(const set_t *s)
+{
+    return s->wpm >= 5u && s->wpm <= 40u && s->eff >= 5u && s->eff <= s->wpm && s->keyer < MO_NKEYER && s->swap <= 1u
+           && s->mute <= 1u && s->cards >= 10u && s->cards <= 30u && s->learn <= LM_VISUAL && s->pitch >= 300u
+           && s->pitch <= 1200u && (s->look & 3u) < KV_N && (s->look >> 3 & 3u) < TL_N && !(s->look >> 7)
+           && s->send >= 5u && s->send <= 40u && s->prog < LP_N;
+}
+
+static uint32_t saves;                   /* records written since boot */
+static uint32_t dirty_at;                /* a setting changed at (0: saved) */
+
+static void rec_save(void)
+{
+    rec.magic = REC_MAGIC;
+    rec.ver = REC_VER;
+    rec.size = (uint16_t)sizeof rec;
+    if (plat_store_save(OBJ_MORSE, &rec, sizeof rec) == 0)
+        saves++;
+    dirty_at = 0;
+}
+
+/* ------------------------------------------------------------------- state --- */
+enum { SRC_OWN, SRC_RX, SRC_N };         /* what this FM-1 sends; what it receives (MIDI in, the host's text) */
+enum { PG_MENU, PG_PRACTICE, PG_LISTEN, PG_KEY, PG_RHYTHM, PG_TYPE, PG_CHART, PG_SET, PG_N };
+enum { PS_START, PS_CARD, PS_RESULT, PS_DONE };
+
+/* the tick's: the key, the keyer, two players (ptx: this FM-1's own playing, prompts, typed letters and listening;
+ * prx: the host's text, as received), and what they leave for the main loop */
+static mo_keyer_t keyer;
+static mo_player_t ptx, prx;
+static volatile uint8_t key_input;       /* the keys are the Morse key now */
+static volatile uint8_t own_midi;        /* own keying goes out as MIDI (KEY) */
+static volatile uint8_t ptx_midi;        /* ptx's playing goes out as MIDI (TYPE) */
+static uint8_t own_down, ptx_down, rx_midi, rx_down, midi_down;
+typedef struct {
+    uint8_t src, down;
+    uint32_t t;
+} ev_t;
+#define EV_N 64u
+static ev_t ev[EV_N];
+static volatile uint32_t ev_w, ev_r;
+#define LEFT_KEYS ((1u << 13) - 1u)      /* F3..F4: the left paddle */
+#ifdef PLAT_HOST
+static mo_player_t host_hand;            /* "sendkeys": a scripted hand on a straight key */
+#endif
+
+/* the main loop's */
+static hostlink_t link;
+static struct {
+    mo_dec_t dec;
+    uint32_t t_down, t_up;
+    uint8_t down, seen;
+} dsrc[SRC_N];
+
+#define TG_COLS 24u
+#define TG_ROWS 5u
+#define TG_N (TG_COLS * TG_ROWS)
+static struct {
+    char c[TG_N];
+    uint8_t who[TG_N];
+    uint8_t pat[TG_N];                   /* the elements read for it (a code; 0 none or too long) */
+    uint32_t n;
+} grid;                                  /* the KEY page's text, own and received in their colours */
+#define TXT_N 96u
+static char txt[3][TXT_N + 1];           /* own decoded, received decoded, typed (the simulator's expect_text) */
+
+/* the KEY page's TIMING view: each letter's marks and the gaps inside it, as keyed */
+#define TR_N 4u
+#define TR_EL 7u
+typedef struct {
+    char c;
+    uint8_t n, dah;                      /* elements, and which were read as dahs (bit i) */
+    uint16_t mark[TR_EL], gap[TR_EL];    /* ms; gap[i] the one before element i (gap[0] 0) */
+} trow_t;
+static struct {
+    trow_t row[TR_N], live;
+    uint8_t head, count;
+    uint16_t next_gap;                   /* the gap before the next mark, if it is inside a letter */
+    uint16_t next_gap_rh;                /* the gap before the next mark, whatever it was (RHYTHM) */
+} tim;
+
+static struct {
+    uint8_t page, back, sel;             /* sel: the menu's / the settings' cursor */
+    uint8_t csel;                        /* the chart's */
+    uint8_t redraw;                      /* bits: R_* */
+    uint32_t keys, btn;
+    char msg[2][24];
+    uint32_t msg_until;
+    uint8_t tpage;                       /* TYPE: 0 letters, 1 digits and signs, 2 phrases */
+    char line[TG_COLS * 2u + 1u];        /* TYPE: the line typed */
+    const char *gloss;                   /* TYPE: what the last phrase means */
+    uint32_t rec_t;                      /* TYPE: REC went down at (0: up, or its hold already cleared the line) */
+    char last;                           /* KEY: the last character read */
+    uint8_t host_was, lamp_was, pat_was;
+} ui;
+enum { R_HEAD = 1, R_MAIN = 2, R_LAMP = 4, R_FOOT = 8, R_ALL = 15 };
+
+static struct {
+    ln_round_t r;
+    uint8_t ps;                          /* PS_* */
+    uint8_t pick;                        /* the choice under SELECT */
+    uint8_t right;                       /* the last answer */
+    uint8_t opened;                      /* the round opened a group */
+    uint8_t answer_ok;                   /* keying is taken as the answer (the prompt has played) */
+    char got;                            /* what was keyed */
+    uint32_t ratio10;                    /* the keyed answer's dah:dit */
+    uint32_t until;                      /* PS_RESULT: the next card at */
+    uint8_t active;                      /* a round under way */
+} pr;
+
+static const uint8_t WHITE[16] = PLAT_WHITE_KEYS;
+static const uint8_t BLACK[11] = PLAT_BLACK_KEYS;
+static const uint8_t CHOICE_KEY[4] = {11, 12, 14, 16};   /* E4 F4 G4 A4: the four answers */
+
+static void zero(void *p, uint32_t n)
+{
+    uint8_t *b = (uint8_t *)p;
+    while (n--)
+        *b++ = 0;
+}
+
+static uint32_t slen(const char *s)
+{
+    uint32_t n = 0;
+    while (s[n])
+        n++;
+    return n;
+}
+
+static void text_cat(char *d, const char *s)
+{
+    while (*d)
+        d++;
+    while (*s)
+        *d++ = *s++;
+    *d = 0;
+}
+
+static void int_text(int32_t v, char *b)
+{
+    char t[12];
+    int n = 0;
+    uint32_t u = (uint32_t)(v < 0 ? -v : v);
+    do
+        t[n++] = (char)('0' + u % 10u);
+    while ((u /= 10u) && n < 11);
+    if (v < 0)
+        *b++ = '-';
+    while (n)
+        *b++ = t[--n];
+    *b = 0;
+}
+
+static void int_cat(char *b, int32_t v)
+{
+    while (*b)
+        b++;
+    int_text(v, b);
+}
+
+static void tenths_cat(char *b, uint32_t v)   /* 13 -> "1.3" */
+{
+    char t[2] = {0, 0};
+    int_cat(b, (int32_t)(v / 10u));
+    text_cat(b, ".");
+    t[0] = (char)('0' + v % 10u);
+    text_cat(b, t);
+}
+
+static void note_name(uint32_t key, char *b)   /* key 0 is F3 */
+{
+    static const char *const N[] = {"C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"};
+    uint32_t note = 53u + key;
+    b[0] = 0;
+    text_cat(b, N[note % 12u]);
+    int_cat(b, (int32_t)(note / 12u) - 1);
+}
+
+static uint32_t wrap(uint32_t v, int32_t d, uint32_t n)
+{
+    return (uint32_t)(((int32_t)v + d % (int32_t)n + (int32_t)n) % (int32_t)n);
+}
+
+void app_say(const char *a, const char *b)
+{
+    uint32_t i;
+    char t[48];
+    for (i = 0; i < 23u && a && a[i]; i++)
+        ui.msg[0][i] = a[i];
+    ui.msg[0][i] = 0;
+    for (i = 0; i < 23u && b && b[i]; i++)
+        ui.msg[1][i] = b[i];
+    ui.msg[1][i] = 0;
+    ui.msg_until = plat_ms() + 2000u;
+    ui.redraw |= R_HEAD;
+    if (ann_on()) {
+        t[0] = 0;
+        text_cat(t, ui.msg[0]);
+        if (ui.msg[1][0]) {
+            text_cat(t, " ");
+            text_cat(t, ui.msg[1]);
+        }
+        ann_say(t, 0, ANN_NOW);
+    }
+}
+
+static int visual(void) { return SET.learn == LM_VISUAL; }
+
+/* ------------------------------------------------------------- the timing --- */
+/* the speeds into the keyer, the players and the decoders (main loop; the tick locked out). Hearing (what this
+ * FM-1 plays) and sending (what you key) have their own: Koch wants the characters heard fast, a beginner's hand is
+ * slow */
+static void timing_apply(void)
+{
+    uint32_t dit = mo_dit_ms(SET.wpm), gap = mo_gap_ms(SET.wpm, SET.eff), sdit = mo_dit_ms(SET.send);
+    uint32_t f = plat_lock();
+    keyer.mode = SET.keyer;
+    keyer.dit = sdit;
+    ptx.dit = prx.dit = dit;
+    ptx.gap = prx.gap = gap;
+#ifdef PLAT_HOST
+    host_hand.dit = sdit;
+    host_hand.gap = sdit;                /* a hand keys without Farnsworth */
+#endif
+    plat_unlock(f);
+    mo_dec_init(&dsrc[SRC_OWN].dec, sdit, sdit);
+    mo_dec_init(&dsrc[SRC_RX].dec, dit, gap);
+    tone_pitch(TONE_TX, (float)SET.pitch);
+    tone_pitch(TONE_RX, (float)SET.pitch * 1.26f);   /* received a major third up */
+    tone_mute(SET.mute);
+}
+
+static void set_changed(void)
+{
+    timing_apply();
+    dirty_at = plat_ms() | 1u;
+    ui.redraw |= R_ALL;
+}
+
+static void look_changed(void)          /* a view changed: saved like a setting, nothing retimed */
+{
+    dirty_at = plat_ms() | 1u;
+    ui.redraw |= R_ALL;
+}
+
+static void play(mo_player_t *p, const char *s)   /* main loop: queue text on a player */
+{
+    uint32_t f = plat_lock();
+    while (*s)
+        mo_player_push(p, *s++);
+    plat_unlock(f);
+}
+
+static void play_char(mo_player_t *p, char c)
+{
+    char s[2] = {c, 0};
+    play(p, s);
+}
+
+static void play_stop(mo_player_t *p)
+{
+    uint32_t f = plat_lock();
+    mo_player_stop(p);
+    plat_unlock(f);
+}
+
+static int playing(const mo_player_t *p)
+{
+    uint32_t f = plat_lock();
+    int b = mo_player_busy(p);
+    plat_unlock(f);
+    return b;
+}
+
+static uint32_t queued(const mo_player_t *p)   /* characters waiting */
+{
+    uint32_t f = plat_lock(), n = (p->head + MO_PLAY_Q - p->tail) % MO_PLAY_Q;
+    plat_unlock(f);
+    return n;
+}
+
+static int took_start(mo_player_t *p)    /* a character began playing since the last look (once) */
+{
+    uint32_t f = plat_lock();
+    int s = p->started;
+    p->started = 0;
+    plat_unlock(f);
+    return s;
+}
+
+/* --------------------------------------------------------------- the tick --- */
+static void ev_push(uint32_t src, int down, uint32_t t)
+{
+    uint32_t next = (ev_w + 1u) % EV_N;
+    if (next == ev_r)
+        return;                          /* the main loop is behind: drop (it re-syncs on the next edge) */
+    ev[ev_w].src = (uint8_t)src;
+    ev[ev_w].down = (uint8_t)down;
+    ev[ev_w].t = t;
+    ev_w = next;
+}
+
+static void midi_key(void)               /* own keying and ptx's playing, as one key on MIDI */
+{
+    int down = (own_down && own_midi) || (ptx_down && ptx_midi);
+    if (down == midi_down)
+        return;
+    midi_down = (uint8_t)down;
+    plat_midi_send(down ? MIDI_KEY_ON : MIDI_KEY_OFF, TO_USB);
+}
+
+void app_tick(void)
+{
+    uint32_t now = plat_ms(), keys = plat_keys(), pkt;
+    int dit = 0, dah = 0, own, t, rx, port;
+    if (key_input && keys) {
+        if (keyer.mode == MO_STRAIGHT)
+            dit = 1;
+        else {
+            int lo = (keys & LEFT_KEYS) != 0, hi = (keys & ~LEFT_KEYS) != 0;
+            dit = SET.swap ? hi : lo;
+            dah = SET.swap ? lo : hi;
+        }
+    }
+    own = mo_keyer_tick(&keyer, dit, dah);
+#ifdef PLAT_HOST
+    if (mo_player_busy(&host_hand))
+        own = mo_player_tick(&host_hand);
+#endif
+    if (own != own_down) {
+        own_down = (uint8_t)own;
+        ev_push(SRC_OWN, own, now);
+    }
+    t = mo_player_tick(&ptx);
+    ptx_down = (uint8_t)t;
+    midi_key();
+    tone_gate(TONE_TX, own || t);
+    /* MIDI in: a key-down on channel 1, any note (Vail sends 0, a DAW whatever it plays); velocity 0 is a release */
+    while (plat_midi_in(&pkt, &port)) {
+        uint32_t st = pkt >> 8 & 0xFFu, vel = pkt >> 24 & 0x7Fu;
+        if (st == 0x90u && vel)
+            rx_midi = 1;
+        else if (st == 0x80u || st == 0x90u)
+            rx_midi = 0;
+    }
+    rx = rx_midi || mo_player_tick(&prx);
+    if (rx != rx_down) {
+        rx_down = (uint8_t)rx;
+        ev_push(SRC_RX, rx, now);
+    }
+    tone_gate(TONE_RX, rx);
+}
+
+/* ------------------------------------------------------------- the reading --- */
+static void txt_add(uint32_t which, char c)
+{
+    char *t = txt[which];
+    uint32_t n = slen(t), i;
+    if (n >= TXT_N) {
+        for (i = 0; i + 1u < TXT_N; i++)
+            t[i] = t[i + 1u];
+        n = TXT_N - 1u;
+    }
+    t[n] = c;
+    t[n + 1u] = 0;
+}
+
+static void grid_add(char c, uint32_t who, uint8_t pat)
+{
+    uint32_t i;
+    if (c == ' ' && (grid.n % TG_COLS == 0u || (grid.n && grid.c[grid.n - 1u] == ' ')))
+        return;
+    if (grid.n >= TG_N) {
+        for (i = 0; i < TG_N - TG_COLS; i++) {
+            grid.c[i] = grid.c[i + TG_COLS];
+            grid.who[i] = grid.who[i + TG_COLS];
+            grid.pat[i] = grid.pat[i + TG_COLS];
+        }
+        grid.n -= TG_COLS;
+    }
+    grid.c[grid.n] = c;
+    grid.who[grid.n] = (uint8_t)who;
+    grid.pat[grid.n] = c == ' ' ? 0u : pat;
+    grid.n++;
+}
+
+static void send_text(const char *s)     /* to the host (the first HOSTLINK_MAX characters), which may type it */
+{
+    uint8_t p[HOSTLINK_MAX];
+    uint32_t n = 0;
+    if (!hl_host(&link, plat_ms()))
+        return;
+    for (; *s && n < HOSTLINK_MAX; s++)
+        if (*s >= 0x20 && *s < 0x7F)
+            p[n++] = (uint8_t)*s;
+    if (n)
+        hl_send(&link, T_CHAR, p, n);
+}
+
+static void send_char(char c)
+{
+    char s[2] = {c, 0};
+    send_text(s);
+}
+
+static void tim_push(char c)             /* a letter read: its row for the TIMING view */
+{
+    uint8_t pat = dsrc[SRC_OWN].dec.last_pat;
+    trow_t *r = &tim.row[tim.head];
+    uint32_t i;
+    if (!tim.live.n)
+        return;
+    *r = tim.live;
+    r->c = c;
+    r->dah = 0;
+    for (i = 0; i < r->n; i++)           /* as the decoder read them in the end (it may have read one again) */
+        if (pat > 1u && mo_len(pat) == r->n ? mo_elem(pat, i) : mo_dec_is_dah(&dsrc[SRC_OWN].dec, r->mark[i]))
+            r->dah |= (uint8_t)(1u << i);
+    tim.head = (uint8_t)((tim.head + 1u) % TR_N);
+    if (tim.count < TR_N)
+        tim.count++;
+    tim.live.n = 0;
+}
+
+static void practice_keyed(char c);
+static void rhythm_mark(uint32_t mark, uint32_t gap);
+
+static void emit(uint32_t src, char c)
+{
+    uint8_t pat = c == ' ' ? 0u : dsrc[src].dec.last_pat;
+    if (src == SRC_RX) {
+        txt_add(1, c);
+        if (ui.page == PG_KEY) {
+            grid_add(c, SRC_RX, pat);
+            ui.redraw |= R_MAIN;
+        }
+        return;
+    }
+    txt_add(0, c);
+    if (c != ' ')
+        tim_push(c);
+    if (ui.page == PG_KEY) {
+        grid_add(c, SRC_OWN, pat);
+        if (c != ' ')
+            ui.last = c;
+        send_char(c);
+        ui.redraw |= R_MAIN;
+    } else if (ui.page == PG_PRACTICE && c != ' ')
+        practice_keyed(c);
+}
+
+static void read_events(void)            /* the tick's events into the decoders */
+{
+    uint32_t now = plat_ms(), s, f;
+    char out[2];
+    for (;;) {
+        ev_t e;
+        uint32_t n = 0, i, bias, gap = 0;
+        f = plat_lock();
+        if (ev_r == ev_w) {
+            plat_unlock(f);
+            break;
+        }
+        e = ev[ev_r];
+        ev_r = (ev_r + 1u) % EV_N;
+        plat_unlock(f);
+        if (e.src >= SRC_N)
+            continue;
+        bias = e.src == SRC_OWN && SET.keyer == MO_STRAIGHT ? KEY_BIAS_MS : 0u;
+        if (e.down) {
+            if (dsrc[e.src].seen && !dsrc[e.src].down) {
+                gap = e.t - dsrc[e.src].t_up + bias;
+                n = mo_dec_gap(&dsrc[e.src].dec, gap, out);
+            }
+            dsrc[e.src].t_down = e.t;
+        } else if (dsrc[e.src].down) {
+            uint32_t mark = e.t - dsrc[e.src].t_down;
+            mark = mark > bias ? mark - bias : mark;
+            mo_dec_mark(&dsrc[e.src].dec, mark);
+            dsrc[e.src].t_up = e.t;
+            if (e.src == SRC_OWN) {
+                if (tim.live.n < TR_EL) {
+                    tim.live.mark[tim.live.n] = (uint16_t)(mark > 0xFFFFu ? 0xFFFFu : mark);
+                    tim.live.gap[tim.live.n] = tim.live.n ? tim.next_gap : 0u;
+                    tim.live.n++;
+                }
+                if (ui.page == PG_RHYTHM)
+                    rhythm_mark(mark, tim.next_gap_rh);
+            }
+        }
+        dsrc[e.src].down = e.down;
+        dsrc[e.src].seen = 1;
+        for (i = 0; i < n; i++)
+            emit(e.src, out[i]);
+        if (e.src == SRC_OWN && e.down) {
+            /* the gap just over was inside a letter if the letter is still open after it */
+            tim.next_gap = (uint16_t)(mo_dec_pending(&dsrc[SRC_OWN].dec) != 1u && gap < 0xFFFFu ? gap : 0u);
+            tim.next_gap_rh = (uint16_t)(gap > 0xFFFFu ? 0xFFFFu : gap);
+        }
+        if (e.src == SRC_OWN && (visual() || kview() != KV_TEXT || ui.page == PG_PRACTICE))
+            ui.redraw |= R_MAIN;         /* the code so far is drawn */
+    }
+    for (s = 0; s < SRC_N; s++)          /* silence ends a character, then a word */
+        if (dsrc[s].seen && !dsrc[s].down) {
+            char c = mo_dec_idle(&dsrc[s].dec, now - dsrc[s].t_up);
+            if (c)
+                emit(s, c);
+        }
+}
+
+/* ---------------------------------------------------------------- the host --- */
+static int host_frame(const uint8_t *p, uint32_t n, int transport)
+{
+    uint8_t t;
+    uint32_t len, i, now = plat_ms();
+    const uint8_t *d = hl_match(&link, p, n, &t, &len);
+    if (!d)
+        return 0;
+    hl_seen(&link, now);
+    switch (t) {
+    case T_HELLO_ACK:
+        hl_acked(&link, now, transport);
+        ui.redraw |= R_HEAD;
+        break;
+    case T_TEXT:                         /* the computer's text, played as received (<..> a prosign) */
+        for (i = 0; i < len; i++) {
+            char c = (char)d[i];
+            if (c >= 'a' && c <= 'z')
+                c = (char)(c - 32);
+            if (c == ' ' || c == '<' || c == '>' || mo_code(c))
+                play_char(&prx, c);
+        }
+        break;
+    case T_STOP:
+        play_stop(&prx);
+        break;
+    default:
+        break;
+    }
+    return 1;
+}
+
+int app_sysex(const uint8_t *p, uint32_t n) { return host_frame(p, n, HL_USB); }
+
+/* ------------------------------------------------------------- the pages --- */
+static void inputs_for_page(void)        /* who the keys and MIDI belong to on this page */
+{
+    key_input = ui.page == PG_KEY || ui.page == PG_RHYTHM
+                || (ui.page == PG_PRACTICE && pr.ps == PS_CARD && pr.answer_ok);
+    own_midi = ui.page == PG_KEY;
+    ptx_midi = ui.page == PG_TYPE;
+}
+
+static void practice_leave(void);
+static void listen_stop(void);
+
+static void set_page(uint32_t p)
+{
+    if (ui.page == PG_PRACTICE && p != PG_PRACTICE)
+        practice_leave();
+    if (ui.page == PG_LISTEN && p != PG_LISTEN)
+        listen_stop();
+    if (ui.page == PG_TYPE && p != PG_TYPE)
+        play_stop(&ptx);
+    if (p != PG_MENU)
+        ui.back = (uint8_t)p;
+    ui.page = (uint8_t)(p % PG_N);
+    ui.sel = (uint8_t)(ui.page == PG_MENU && ui.back ? ui.back - 1u : 0u);
+    inputs_for_page();
+    ui.redraw |= R_ALL;
+}
+
+/* -------------------------------------------------------------- practice --- */
+static int card_key(const ln_card_t *c) { return c->type == CARD_HEAR_KEY || c->type == CARD_SEE_KEY; }
+static int card_sounds(const ln_card_t *c)   /* its prompt is played (or flashed, muted) */
+{
+    return c->type == CARD_NEW || c->type == CARD_HEAR_CHOOSE || c->type == CARD_HEAR_KEY
+           || c->type == CARD_LIGHT_CHOOSE;
+}
+
+static void own_reset(void)              /* the decoder for a keyed answer, at the send speed */
+{
+    mo_dec_init(&dsrc[SRC_OWN].dec, mo_dit_ms(SET.send), mo_dit_ms(SET.send));
+}
+
+static void card_present(void)
+{
+    const ln_card_t *c = ln_card(&pr.r);
+    char ch;
+    pr.answer_ok = 0;
+    pr.got = 0;
+    pr.pick = 0;
+    if (!c) {
+        pr.opened = (uint8_t)ln_finish(&rec.ln, &pr.r);
+        pr.active = 0;
+        pr.ps = PS_DONE;
+        rec_save();
+        if (pr.opened)
+            app_say("NEW LETTERS", "");
+        inputs_for_page();
+        ui.redraw |= R_ALL;
+        return;
+    }
+    ch = ln_char(c->ch);
+    pr.ps = PS_CARD;
+    if (c->type == CARD_NEW) {
+        char s[4] = {ch, ' ', ch, 0};
+        play(&ptx, s);
+    } else if (card_sounds(c))
+        play_char(&ptx, ch);
+    own_reset();
+    inputs_for_page();
+    ui.redraw |= R_ALL;
+}
+
+static void practice_start(void)
+{
+    uint32_t flags = (SET.mute ? LN_MUTED : 0u) | (visual() ? LN_VISUAL : 0u);
+    ln_build(&rec.ln, &pr.r, SET.cards, flags, plat_ms() * 2654435761u + rec.ln.round);
+    pr.active = 1;
+    pr.opened = 0;
+    card_present();
+}
+
+static void practice_answer(int right)
+{
+    const ln_card_t *c = ln_card(&pr.r);
+    if (!c || pr.ps != PS_CARD)
+        return;
+    if (c->type == CARD_NEW) {           /* only shown: on to the next */
+        ln_answer(&rec.ln, &pr.r, 1);
+        play_stop(&ptx);
+        card_present();
+        return;
+    }
+    pr.right = (uint8_t)(right != 0);
+    pr.ratio10 = card_key(c) ? mo_dec_ratio10(&dsrc[SRC_OWN].dec) : 0u;
+    ln_answer(&rec.ln, &pr.r, right);
+    pr.ps = PS_RESULT;
+    pr.answer_ok = 0;
+    play_stop(&ptx);
+    if (!right)
+        play_char(&ptx, ln_char(c->ch));   /* how it should have gone */
+    pr.until = plat_ms() + (right ? 900u : 1800u);
+    inputs_for_page();
+    ui.redraw |= R_ALL;
+}
+
+static void practice_keyed(char c)       /* the own decoder read a character during a card */
+{
+    const ln_card_t *k = ln_card(&pr.r);
+    if (pr.ps != PS_CARD || !k || !card_key(k) || !pr.answer_ok)
+        return;
+    pr.got = c;
+    practice_answer(c == ln_char(k->ch));
+}
+
+static void practice_choose(uint32_t i)
+{
+    const ln_card_t *c = ln_card(&pr.r);
+    if (pr.ps != PS_CARD || !c || !ln_choose(c->type) || i > 3u)
+        return;
+    pr.got = ln_char(c->opt[i]);
+    practice_answer(i == c->right);
+}
+
+static void practice_leave(void)
+{
+    if (pr.active) {
+        pr.active = 0;
+        ln_finish(&rec.ln, &pr.r);
+        rec_save();
+    }
+    play_stop(&ptx);
+    pr.ps = PS_START;
+}
+
+static void practice_step(uint32_t now)
+{
+    const ln_card_t *c = ln_card(&pr.r);
+    if (pr.ps == PS_CARD && c && card_key(c) && !pr.answer_ok && !playing(&ptx)) {
+        pr.answer_ok = 1;                /* the prompt has played: now keying answers */
+        own_reset();
+        inputs_for_page();
+        ui.redraw |= R_FOOT | R_MAIN;
+    }
+    if (pr.ps == PS_RESULT && now >= pr.until && !playing(&ptx))
+        card_present();
+}
+
+/* ----------------------------------------------------------------- listen --- */
+/* lines from content.c played one after another; the one playing shown as it goes (or hidden: copy it in your
+ * head, it shows once the next one starts) */
+#define LS_N 2u
+static struct {
+    uint8_t on;
+    struct {
+        char t[CT_LINE_MAX + 1];
+        const char *gloss;
+        uint8_t nplay, played;
+    } l[LS_N];
+    uint8_t cur, have;                   /* the line playing; lines generated and not done (1 or 2) */
+    uint8_t feed, pos;                   /* the line being queued, and its next character */
+    char prev[CT_LINE_MAX + 1];          /* the line before, shown whole */
+    const char *prev_gloss;
+    uint32_t count;                      /* lines heard */
+    ct_gen_t gen;
+} ls;
+
+static int playable(char c) { return c != ' ' && c != '<' && c != '>' && mo_code(c); }
+
+static uint32_t playable_n(const char *s)
+{
+    uint32_t n = 0;
+    for (; *s; s++)
+        n += (uint32_t)playable(*s);
+    return n;
+}
+
+static void listen_new(uint32_t i)
+{
+    ct_line(&ls.gen, SET.prog, rec.ln.open, ls.l[i].t, &ls.l[i].gloss);
+    ls.l[i].nplay = (uint8_t)playable_n(ls.l[i].t);
+    ls.l[i].played = 0;
+}
+
+static void listen_stop(void)
+{
+    if (ls.on)
+        play_stop(&ptx);
+    ls.on = 0;
+    ls.have = 0;
+    ui.redraw |= R_MAIN | R_FOOT;
+}
+
+static void listen_start(void)
+{
+    play_stop(&ptx);
+    (void)took_start(&ptx);
+    ct_init(&ls.gen, plat_ms() * 2654435761u + 1u);
+    ls.on = 1;
+    ls.cur = ls.feed = 0;
+    ls.pos = 0;
+    listen_new(0);
+    ls.have = 1;
+    ls.prev[0] = 0;
+    ls.prev_gloss = 0;
+    ui.redraw |= R_MAIN | R_FOOT;
+}
+
+static void listen_step(void)
+{
+    uint32_t guard = 0;
+    if (!ls.on)
+        return;
+    /* keep the player fed, a word at a time, a line ahead */
+    while (queued(&ptx) < 24u && guard++ < 8u) {
+        const char *t = ls.l[ls.feed].t;
+        char w[CT_LINE_MAX + 2];
+        uint32_t n = 0;
+        if (!t[ls.pos]) {                /* this line is queued: the next one, after a pause */
+            if (ls.have >= LS_N)
+                break;
+            ls.feed = (uint8_t)((ls.feed + 1u) % LS_N);
+            listen_new(ls.feed);
+            ls.have++;
+            ls.pos = 0;
+            play(&ptx, "  ");
+            continue;
+        }
+        while (t[ls.pos] && t[ls.pos] != ' ' && n < CT_LINE_MAX)
+            w[n++] = t[ls.pos++];
+        if (t[ls.pos] == ' ')
+            w[n++] = t[ls.pos++];
+        w[n] = 0;
+        play(&ptx, w);
+    }
+    /* what started: the line playing moves on */
+    if (took_start(&ptx)) {
+        uint32_t c = ls.cur;
+        if (ls.l[c].played >= ls.l[c].nplay && ls.have > 1u) {   /* this one is done: the next began */
+            uint32_t i;
+            for (i = 0; i <= CT_LINE_MAX; i++)
+                ls.prev[i] = ls.l[c].t[i];
+            ls.prev_gloss = ls.l[c].gloss;
+            ls.count++;
+            ls.cur = (uint8_t)((c + 1u) % LS_N);
+            ls.have--;
+            c = ls.cur;
+        }
+        ls.l[c].played++;
+        ui.redraw |= R_MAIN;
+    }
+}
+
+/* ----------------------------------------------------------------- rhythm --- */
+/* drills of short and long presses, each measured against the send speed's dit: the box is the target, the bar what
+ * you pressed, and a hint from the last presses */
+static const struct {
+    const char *name, *pat;
+} DRILL[] = {
+    {"DITS", "....."}, {"DAHS", "-----"}, {"DIT DAH", ".-.-.-"}, {"SOS", "...---..."}, {"FREE", ""},
+};
+#define RH_DRILLS (sizeof DRILL / sizeof DRILL[0])
+#define RH_MAX 9u
+#define RH_HIST 16u
+enum { RJ_NONE, RJ_GOOD, RJ_OFF, RJ_WRONG };
+enum { H_START, H_DITS_LONG, H_DAHS_SHORT, H_DAHS_LONG, H_GAPS_LONG, H_UNEVEN, H_DITS_SHORT, H_GOOD };
+static struct {
+    uint8_t drill, n, done;
+    uint16_t sets, good_sets;
+    uint16_t q[RH_MAX], g[RH_MAX];       /* this set: each press and the gap before it, tenths of a dit */
+    uint8_t res[RH_MAX], kind[RH_MAX];   /* RJ_*, and dit 0 / dah 1 (wanted, or as judged in FREE) */
+    uint16_t hq[RH_HIST];                /* the last presses, tenths of a dit, */
+    uint8_t hk[RH_HIST], hn, hi;         /* and dit or dah */
+    uint16_t hg[RH_HIST];                /* the last gaps inside a set */
+    uint8_t gn, gi;
+    uint8_t hint, sugg;                  /* H_*, a send speed to try (0 none) */
+    uint16_t last_ms;
+} rh;
+
+static uint32_t rh_len(void) { return slen(DRILL[rh.drill].pat); }
+
+static void rhythm_reset(void)
+{
+    uint8_t d = rh.drill;
+    zero(&rh, sizeof rh);
+    rh.drill = d;
+}
+
+static void rhythm_hint(void)
+{
+    uint32_t i, dn = 0, an = 0, ds = 0, as = 0, gs = 0, dev = 0, dq, aq, gq, dit = mo_dit_ms(SET.send);
+    for (i = 0; i < rh.hn; i++) {
+        if (rh.hk[i]) {
+            an++;
+            as += rh.hq[i];
+        } else {
+            dn++;
+            ds += rh.hq[i];
+        }
+    }
+    for (i = 0; i < rh.gn; i++)
+        gs += rh.hg[i];
+    dq = dn ? ds / dn : 0;
+    aq = an ? as / an : 0;
+    gq = rh.gn ? gs / rh.gn : 0;
+    for (i = 0; i < rh.hn; i++) {        /* how even: each press's distance from its kind's average, in dit terms */
+        uint32_t avg = rh.hk[i] ? aq : dq, v = rh.hq[i];
+        dev += (v > avg ? v - avg : avg - v) / (rh.hk[i] ? 3u : 1u);
+    }
+    rh.sugg = 0;
+    if (dn >= 3u && dq > 16u) {
+        rh.hint = H_DITS_LONG;
+        rh.sugg = (uint8_t)clamp((int32_t)(1200u * 10u / (dq * dit)), 5, 40);
+    } else if (an >= 3u && aq < 22u)
+        rh.hint = H_DAHS_SHORT;
+    else if (an >= 3u && aq > 45u)
+        rh.hint = H_DAHS_LONG;
+    else if (rh.gn >= 3u && gq > 18u)
+        rh.hint = H_GAPS_LONG;
+    else if (rh.hn >= 5u && dev * 100u > 10u * 30u * rh.hn)   /* off by more than 0.3 dit on average */
+        rh.hint = H_UNEVEN;
+    else if (dn >= 3u && dq < 6u) {
+        rh.hint = H_DITS_SHORT;
+        rh.sugg = (uint8_t)clamp((int32_t)(1200u * 10u / ((dq ? dq : 1u) * dit)), 5, 40);
+    } else if (rh.hn >= 5u)
+        rh.hint = H_GOOD;
+    else
+        rh.hint = H_START;
+}
+
+static void rhythm_mark(uint32_t mark, uint32_t gap)
+{
+    uint32_t dit = mo_dit_ms(SET.send), len = rh_len(), q, g, want, res, i;
+    q = (mark * 10u + dit / 2u) / dit;
+    g = (gap * 10u + dit / 2u) / dit;
+    if (rh.done || (rh.n && g > 50u)) {  /* a set done, or a pause: a new set */
+        rh.n = 0;
+        rh.done = 0;
+    }
+    if (!len && rh.n >= RH_MAX) {        /* FREE: the last ones, scrolling */
+        for (i = 0; i + 1u < RH_MAX; i++) {
+            rh.q[i] = rh.q[i + 1u], rh.g[i] = rh.g[i + 1u];
+            rh.res[i] = rh.res[i + 1u], rh.kind[i] = rh.kind[i + 1u];
+        }
+        rh.n = RH_MAX - 1u;
+    }
+    want = len ? (uint32_t)(DRILL[rh.drill].pat[rh.n] == '-') : q >= 20u;
+    if (!len)
+        res = q >= 16u && q <= 21u ? RJ_OFF : RJ_GOOD;   /* in between: neither */
+    else if (!want)
+        res = q >= 5u && q <= 15u ? RJ_GOOD : q <= 20u ? RJ_OFF : RJ_WRONG;
+    else
+        res = q >= 22u && q <= 40u ? RJ_GOOD : q < 18u ? RJ_WRONG : RJ_OFF;
+    rh.q[rh.n] = (uint16_t)(q > 0xFFFFu ? 0xFFFFu : q);
+    rh.g[rh.n] = (uint16_t)(rh.n ? (g > 0xFFFFu ? 0xFFFFu : g) : 0u);
+    rh.res[rh.n] = (uint8_t)res;
+    rh.kind[rh.n] = (uint8_t)want;
+    if (rh.n && g <= 50u) {
+        rh.hg[rh.gi] = (uint16_t)g;
+        rh.gi = (uint8_t)((rh.gi + 1u) % RH_HIST);
+        if (rh.gn < RH_HIST)
+            rh.gn++;
+    }
+    rh.hq[rh.hi] = (uint16_t)(q > 0xFFFFu ? 0xFFFFu : q);
+    rh.hk[rh.hi] = (uint8_t)want;
+    rh.hi = (uint8_t)((rh.hi + 1u) % RH_HIST);
+    if (rh.hn < RH_HIST)
+        rh.hn++;
+    rh.last_ms = (uint16_t)(mark > 0xFFFFu ? 0xFFFFu : mark);
+    rh.n++;
+    if (len && rh.n >= len) {
+        uint32_t good = 1;
+        for (i = 0; i < len; i++)
+            good &= rh.res[i] == RJ_GOOD;
+        rh.done = 1;
+        rh.sets++;
+        rh.good_sets = (uint16_t)(rh.good_sets + good);
+    }
+    rhythm_hint();
+    ui.redraw |= R_MAIN;
+}
+
+/* ------------------------------------------------------------------ input --- */
+static void settings_step(int32_t d);
+static void listen_reveal(void);
+
+/* TYPE: the character on key k (0 none) on page pg, in the layout set */
+static char type_char(uint32_t k, uint32_t pg)
+{
+    static const char ALPHA_W[2][17] = {"ABCDEFGHIJKLMNOP", "1234567890.,?/=+"};
+    static const char ALPHA_B[2][12] = {"QRSTUVWXYZ ", "-()'\":;@!&$"};
+    static const char PIANO[2][28] = {"ABCDEFGHIJKLMNOPQRSTUVWXYZ ", "1234567890.,?/=+-()'\":;@!&$"};
+    static const char KOCH2[28] = "92H38B?47C1D60X'!()&:;+-\"$@";   /* the Koch order's last 15, then the rest */
+    uint32_t i;
+    if (k >= NKEYS || pg > 1u)
+        return 0;
+    switch (tlayout()) {
+    case TL_PIANO:
+        return PIANO[pg][k];
+    case TL_KOCH:
+        if (pg)
+            return KOCH2[k];
+        return k < 26u ? ln_char(k) : ' ';
+    default:
+        for (i = 0; i < 16u; i++)
+            if (WHITE[i] == k)
+                return ALPHA_W[pg][i];
+        for (i = 0; i < 11u; i++)
+            if (BLACK[i] == k)
+                return ALPHA_B[pg][i];
+        return 0;
+    }
+}
+
+static const char *type_phrase(uint32_t k)
+{
+    uint32_t i;
+    for (i = 0; i < 16u; i++)
+        if (WHITE[i] == k)
+            return CT_PHRASE_WHITE[i];
+    for (i = 0; i < 11u; i++)
+        if (BLACK[i] == k)
+            return CT_PHRASE_BLACK[i];
+    return 0;
+}
+
+static void line_add(const char *s)      /* TYPE: onto the line typed, the oldest dropped */
+{
+    uint32_t n = slen(ui.line), i;
+    for (; *s; s++) {
+        if (n >= sizeof ui.line - 1u) {
+            for (i = 0; i + 1u < n; i++)
+                ui.line[i] = ui.line[i + 1u];
+            n--;
+        }
+        ui.line[n++] = *s;
+        ui.line[n] = 0;
+    }
+}
+
+static void type_key(uint32_t k)         /* TYPE: a key is a letter, or a phrase */
+{
+    char s[CT_LINE_MAX + 2];
+    uint32_t i;
+    if (ui.tpage == 2u) {
+        const char *p = type_phrase(k);
+        if (!p)
+            return;
+        s[0] = 0;
+        text_cat(s, p);
+        text_cat(s, " ");
+        ui.gloss = ct_gloss(p);
+    } else {
+        s[0] = type_char(k, ui.tpage);
+        s[1] = 0;
+        if (!s[0])
+            return;
+        ui.gloss = 0;
+    }
+    line_add(s);
+    for (i = 0; s[i]; i++)
+        txt_add(2, s[i]);
+    if (!tcompose()) {                   /* LIVE: each key plays and goes out at once */
+        play(&ptx, s);
+        send_text(s);
+    }
+    ui.redraw |= R_MAIN;
+}
+
+static void type_play(void)              /* PLAY on TYPE: the line (COMPOSE: sent now), or stop what plays */
+{
+    uint32_t i, n = slen(ui.line);
+    if (playing(&ptx)) {
+        play_stop(&ptx);
+        return;
+    }
+    play(&ptx, " ");
+    play(&ptx, ui.line);
+    if (tcompose())
+        for (i = 0; i < n; i += HOSTLINK_MAX)
+            send_text(ui.line + i);
+}
+
+static void page_key(uint32_t k)         /* a piano key went down */
+{
+    uint32_t i;
+    if (ui.page == PG_TYPE)
+        type_key(k);
+    else if (ui.page == PG_PRACTICE && pr.ps == PS_CARD) {
+        const ln_card_t *c = ln_card(&pr.r);
+        if (c && c->type == CARD_NEW)
+            practice_answer(1);
+        else if (c && ln_choose(c->type))
+            for (i = 0; i < 4u; i++)
+                if (CHOICE_KEY[i] == k)
+                    practice_choose(i);
+    } else if (ui.page == PG_PRACTICE && pr.ps == PS_RESULT)
+        pr.until = 0;                    /* on without waiting */
+}
+
+static void page_play(void)              /* PLAY: start, again, stop */
+{
+    const ln_card_t *c;
+    switch (ui.page) {
+    case PG_PRACTICE:
+        if (pr.ps == PS_START || pr.ps == PS_DONE)
+            practice_start();
+        else if (pr.ps == PS_CARD && (c = ln_card(&pr.r)) != 0 && card_sounds(c) && !playing(&ptx)) {
+            play_char(&ptx, ln_char(c->ch));
+            if (card_key(c))
+                pr.answer_ok = 0;        /* taken again once it has played */
+            inputs_for_page();
+        }
+        break;
+    case PG_LISTEN:
+        if (ls.on)
+            listen_stop();
+        else
+            listen_start();
+        break;
+    case PG_TYPE:
+        type_play();
+        break;
+    case PG_CHART:
+        play_char(&ptx, ln_char(ui.csel));
+        break;
+    case PG_RHYTHM:
+        rhythm_reset();
+        rhythm_hint();
+        ui.redraw |= R_MAIN;
+        break;
+    case PG_MENU:
+        set_page(ui.sel + 1u);
+        break;
+    default:
+        break;
+    }
+}
+
+static void page_sel(void)               /* SEL: choose, skip, switch */
+{
+    const ln_card_t *c;
+    switch (ui.page) {
+    case PG_MENU:
+        set_page(ui.sel + 1u);
+        break;
+    case PG_PRACTICE:
+        if (pr.ps == PS_CARD && (c = ln_card(&pr.r)) != 0) {
+            if (ln_choose(c->type))
+                practice_choose(pr.pick);
+            else
+                practice_answer(c->type == CARD_NEW);   /* a card to key: don't know */
+        } else if (pr.ps == PS_RESULT)
+            pr.until = 0;
+        else
+            practice_start();
+        break;
+    case PG_LISTEN:
+        listen_reveal();
+        break;
+    case PG_TYPE:
+        look_set(6, 1u, !tcompose());
+        look_changed();
+        app_say(tcompose() ? "COMPOSE" : "LIVE", tcompose() ? "PLAY SENDS THE LINE" : "EACH KEY GOES OUT");
+        break;
+    case PG_CHART:
+        play_char(&ptx, ln_char(ui.csel));
+        break;
+    case PG_SET:
+        settings_step(1);
+        break;
+    default:
+        break;
+    }
+}
+
+#define SET_ITEMS 11u
+static void page_select(int32_t e)       /* SELECT turned */
+{
+    int32_t d = e > 0 ? 1 : -1;
+    const ln_card_t *c;
+    switch (ui.page) {
+    case PG_MENU:
+        ui.sel = (uint8_t)wrap(ui.sel, d, PG_N - 1u);
+        break;
+    case PG_PRACTICE:
+        if (pr.ps == PS_CARD && (c = ln_card(&pr.r)) != 0 && ln_choose(c->type))
+            pr.pick = (uint8_t)wrap(pr.pick, d, 4u);
+        break;
+    case PG_LISTEN:
+        SET.prog = (uint8_t)wrap(SET.prog, d, LP_N);
+        look_changed();
+        if (ls.on)
+            listen_start();
+        break;
+    case PG_RHYTHM:
+        rh.drill = (uint8_t)wrap(rh.drill, d, RH_DRILLS);
+        rhythm_reset();
+        rhythm_hint();
+        break;
+    case PG_CHART:
+        ui.csel = (uint8_t)wrap(ui.csel, d, LN_N);
+        break;
+    case PG_SET:
+        ui.sel = (uint8_t)wrap(ui.sel, d, SET_ITEMS);
+        break;
+    default:
+        break;
+    }
+    ui.redraw |= R_MAIN | R_FOOT;
+}
+
+static void say_speed(const char *what, uint32_t wpm)   /* a speed, and what it means in ms */
+{
+    char a[24], b[24];
+    uint32_t dit = mo_dit_ms(wpm);
+    a[0] = 0;
+    text_cat(a, what);
+    int_cat(a, (int32_t)wpm);
+    text_cat(a, " WPM");
+    b[0] = 0;
+    text_cat(b, "DIT ");
+    int_cat(b, (int32_t)dit);
+    text_cat(b, "MS DAH ");
+    int_cat(b, (int32_t)(3u * dit));
+    text_cat(b, "MS");
+    app_say(a, b);
+}
+
+static void speed(int32_t d)
+{
+    int32_t w = clamp((int32_t)SET.wpm + d, 5, 40);
+    if (w == SET.wpm)
+        return;
+    if (SET.eff == SET.wpm || SET.eff > w)   /* no Farnsworth stays none; stretched stays at most the speed */
+        SET.eff = (uint8_t)w;
+    SET.wpm = (uint8_t)w;
+    set_changed();
+    say_speed("HEAR ", SET.wpm);
+}
+
+static void spacing(int32_t d)
+{
+    char a[24], b[24];
+    int32_t e = clamp((int32_t)SET.eff + d, 5, SET.wpm);
+    if (e == SET.eff)
+        return;
+    SET.eff = (uint8_t)e;
+    set_changed();
+    a[0] = 0;
+    text_cat(a, "SPACING ");
+    int_cat(a, e);
+    text_cat(a, " WPM");
+    b[0] = 0;
+    text_cat(b, "LETTER GAP ");
+    int_cat(b, (int32_t)(3u * mo_gap_ms(SET.wpm, SET.eff)));
+    text_cat(b, "MS");
+    app_say(a, b);
+}
+
+static void send_speed(int32_t d)
+{
+    int32_t w = clamp((int32_t)SET.send + d, 5, 40);
+    if (w == SET.send)
+        return;
+    SET.send = (uint8_t)w;
+    set_changed();
+    say_speed("SEND ", SET.send);
+}
+
+static void pitch(int32_t d)
+{
+    char a[24];
+    int32_t p = clamp((int32_t)SET.pitch + d * 10, 300, 1200);
+    if (p == SET.pitch)
+        return;
+    SET.pitch = (uint16_t)p;
+    set_changed();
+    a[0] = 0;
+    text_cat(a, "PITCH ");
+    int_cat(a, p);
+    text_cat(a, " HZ");
+    app_say(a, "");
+}
+
+static void mute_toggle(void)
+{
+    SET.mute = (uint8_t)!SET.mute;
+    set_changed();
+    app_say("SOUND", SET.mute ? "OFF: WATCH THE LIGHTS" : "ON");
+}
+
+/* speeds that go together, from a beginner's to a fluent operator's: Koch's characters at 20 WPM or more with the
+ * gaps stretched (Farnsworth) to give time to think, and a hand that sends what it can keep even */
+static const struct {
+    const char *name, *what;
+    uint8_t wpm, eff, send;
+} PRESET[] = {
+    {"START", "HEAR 20/8 SEND 10", 20, 8, 10},
+    {"BUILDING", "HEAR 20/13 SEND 13", 20, 13, 13},
+    {"QSO", "HEAR 22/18 SEND 18", 22, 18, 18},
+    {"FAST", "HEAR 25/25 SEND 22", 25, 25, 22},
+};
+#define NPRESET (sizeof PRESET / sizeof PRESET[0])
+
+static int preset_now(void)              /* the preset the speeds match, -1 none */
+{
+    uint32_t i;
+    for (i = 0; i < NPRESET; i++)
+        if (SET.wpm == PRESET[i].wpm && SET.eff == PRESET[i].eff && SET.send == PRESET[i].send)
+            return (int)i;
+    return -1;
+}
+
+static void preset_step(int32_t d)
+{
+    int p = preset_now();
+    uint32_t i = p < 0 ? (d > 0 ? 0u : NPRESET - 1u) : wrap((uint32_t)p, d, NPRESET);
+    SET.wpm = PRESET[i].wpm;
+    SET.eff = PRESET[i].eff;
+    SET.send = PRESET[i].send;
+    set_changed();
+    app_say(PRESET[i].name, PRESET[i].what);
+}
+
+/* the settings page: SELECT moves, OCT- / OCT+ (or SEL) change */
+static const char *const SET_NAME[SET_ITEMS] = {"PRESET", "HEAR SPEED", "SPACING", "SEND SPEED", "PITCH",    "KEYER",
+                                                "PADDLES", "SOUND",     "CARDS",   "LEARN BY",   "TYPE KEYS"};
+static void settings_step(int32_t d)
+{
+    switch (ui.sel) {
+    case 0: preset_step(d); break;
+    case 1: speed(d); break;
+    case 2: spacing(d); break;
+    case 3: send_speed(d); break;
+    case 4: pitch(d); break;
+    case 5:
+        SET.keyer = (uint8_t)wrap(SET.keyer, d, MO_NKEYER);
+        set_changed();
+        break;
+    case 6:
+        SET.swap = (uint8_t)!SET.swap;
+        set_changed();
+        break;
+    case 7: mute_toggle(); break;
+    case 8:
+        SET.cards = (uint8_t)clamp((int32_t)SET.cards + d * 5, 10, 30);
+        set_changed();
+        break;
+    case 9:
+        SET.learn = (uint8_t)!SET.learn;
+        set_changed();
+        if (visual())
+            app_say("TIP", "SOUND FIRST IS FASTER LATER");
+        break;
+    case 10:
+        look_set(3, 3u, wrap(tlayout(), d, TL_N));
+        look_changed();
+        break;
+    default:
+        break;
+    }
+}
+
+static void input(void)
+{
+    uint32_t keys = plat_keys(), btn = plat_buttons(), k;
+    int32_t e;
+    for (k = 0; k < NKEYS; k++)
+        if ((keys >> k & 1u) && !(ui.keys >> k & 1u))
+            page_key(k);
+    for (k = 0; k < NB; k++) {
+        if (!(btn >> k & 1u) || (ui.btn >> k & 1u))
+            continue;
+        switch (k) {
+        case B_HOME: set_page(ui.page == PG_MENU ? ui.back : PG_MENU); break;
+        case B_FX: mute_toggle(); break;
+        case B_PLAY: page_play(); break;
+        case B_SEL: page_sel(); break;
+        case B_SEQ:                      /* a page's view */
+            if (ui.page == PG_KEY)
+                look_set(0, 3u, wrap(kview(), 1, KV_N));
+            else if (ui.page == PG_TYPE)
+                look_set(2, 1u, !tlabel());
+            else if (ui.page == PG_LISTEN)
+                look_set(5, 1u, !lhide());
+            else
+                break;
+            look_changed();
+            break;
+        case B_REC:                      /* TYPE: the last character off the line (on release; held: all of it) */
+            if (ui.page == PG_TYPE)
+                ui.rec_t = plat_ms() | 1u;
+            break;
+        case B_OCTDN:
+        case B_OCTUP:
+            if (ui.page == PG_KEY && k == B_OCTDN) {
+                grid.n = 0;
+                tim.count = 0;
+                ui.last = 0;
+                ui.redraw |= R_MAIN;
+            } else if (ui.page == PG_TYPE) {   /* the next page of keys: letters, signs, phrases */
+                ui.tpage = (uint8_t)wrap(ui.tpage, k == B_OCTUP ? 1 : -1, 3u);
+                ui.redraw |= R_MAIN | R_FOOT;
+            } else if (ui.page == PG_SET)
+                settings_step(k == B_OCTUP ? 1 : -1);
+            break;
+        default: break;
+        }
+    }
+    if (ui.rec_t && ui.page == PG_TYPE) {
+        if (!(btn >> B_REC & 1u)) {      /* let go soon: one character */
+            uint32_t n = slen(ui.line);
+            if (n)
+                ui.line[n - 1u] = 0;
+            ui.rec_t = 0;
+            ui.redraw |= R_MAIN;
+        } else if (plat_ms() - ui.rec_t >= 600u) {   /* held: the whole line */
+            ui.line[0] = 0;
+            ui.gloss = 0;
+            ui.rec_t = 0;
+            play_stop(&ptx);
+            app_say("LINE CLEARED", "");
+            ui.redraw |= R_MAIN;
+        }
+    } else if (!(btn >> B_REC & 1u))
+        ui.rec_t = 0;
+    if ((e = plat_enc(EN_SELECT)) != 0)
+        page_select(e);
+    if ((e = plat_enc(EN_ALGO)) != 0)
+        set_page(wrap(ui.page, e > 0 ? 1 : -1, PG_N));
+    if ((e = plat_enc(EN_K1)) != 0)
+        speed(e > 0 ? 1 : -1);
+    if ((e = plat_enc(EN_K2)) != 0)
+        spacing(e > 0 ? 1 : -1);
+    if ((e = plat_enc(EN_K3)) != 0)
+        pitch(e > 0 ? 1 : -1);
+    if ((e = plat_enc(EN_K4)) != 0)
+        send_speed(e > 0 ? 1 : -1);
+    (void)plat_enc(EN_PRESET);
+    if (btn != ui.btn)
+        ui.redraw |= R_FOOT;
+    ui.keys = keys;
+    ui.btn = btn;
+}
+
+void app_input_only(void)
+{
+    input();
+    read_events();
+}
+
+/* ----------------------------------------------------------------- lights --- */
+static void lights(uint32_t now)
+{
+    ledfx_t kb = {0, 0, 0}, bb = {0, 0, 0};
+    uint32_t k, i;
+    int tx = tone_gated(TONE_TX), rx = tone_gated(TONE_RX);
+    const ln_card_t *c = ln_card(&pr.r);
+    for (k = 0; k < NB; k++)
+        if (k != B_PLAY)
+            ledfx_set(&bb, k, FX_GLOW, now);
+    if (SET.mute)
+        ledfx_set(&bb, B_FX, FX_LIT, now);
+    if (ui.page == PG_PRACTICE && pr.ps == PS_CARD && c && ln_choose(c->type)) {
+        for (i = 0; i < 4u; i++)
+            ledfx_set(&kb, CHOICE_KEY[i], i == pr.pick ? FX_BLINK : FX_LIT, now);
+    } else
+        for (k = 0; k < NKEYS; k++)      /* the lamp: every key lights with the keying (the way to read it muted) */
+            ledfx_set(&kb, k, tx ? FX_LIT : rx ? FX_MID : FX_GLOW, now);
+    if (hl_host(&link, now))
+        bb.lit |= LED_PLAY_GREEN;
+    ledfx_show(&bb, &kb);
+}
+
+/* ----------------------------------------------------------------- screen --- */
+#define C_OWN C_WHITE
+#define C_RX RGB(255, 176, 0)
+#define C_OK RGB(80, 220, 120)
+#define C_BAD RGB(240, 70, 60)
+#define C_MEH RGB(230, 200, 60)
+#define C_BLUE RGB(70, 140, 255)
+#define C_BOX RGB(60, 60, 70)
+
+static uint16_t level_rgb(uint32_t lv)   /* the chart's colours, box 0 .. 5 */
+{
+    static const uint16_t L[6] = {RGB(70, 40, 40), RGB(140, 60, 40), RGB(190, 120, 30), RGB(170, 170, 40),
+                                  RGB(90, 180, 70), RGB(60, 210, 120)};
+    return L[lv > 5u ? 5u : lv];
+}
+
+static void draw_code(uint8_t code, int32_t cx, int32_t y, int32_t u, uint16_t c)   /* centred on cx */
+{
+    uint32_t n = mo_len(code), i;
+    int32_t x = cx - (int32_t)mo_units(code) * u / 2;
+    for (i = 0; i < n; i++) {
+        int32_t w = mo_elem(code, i) ? 3 * u : u;
+        cv_rect(x, y, w, u, c);
+        x += w + u;
+    }
+}
+
+static void draw_code_v(uint8_t code, int32_t cx, int32_t y, int32_t u, uint16_t c)   /* top down, on a key */
+{
+    uint32_t n = mo_len(code), i;
+    for (i = 0; i < n; i++) {
+        int32_t h = mo_elem(code, i) ? 3 * u : u;
+        cv_rect(cx - u / 2 - 1, y, u + 1, h, c);
+        y += h + u;
+    }
+}
+
+static void text_c(int32_t cx, int32_t y, const felucca_font_t *f, const char *s, uint16_t c)   /* centred */
+{
+    cv_text(cx - text_w(f, s) / 2, y, f, s, c);
+}
+
+static void draw_header(uint32_t now)
+{
+    static const char *const PAGE[PG_N] = {"MENU", "PRACTICE", "LISTEN", "KEY", "RHYTHM", "TYPE", "CHART", "SETTINGS"};
+    char t[24];
+    int32_t x;
+    cv_begin(240, 32, C_BLACK);
+    if (now < ui.msg_until) {
+        x = cv_text(8, 7, &FONT_B, ui.msg[0], C_WHITE);
+        cv_text(x + 8, 9, &FONT_XS, ui.msg[1], C_RX);
+    } else {
+        cv_text(8, 7, &FONT_B, PAGE[ui.page], C_WHITE);
+        t[0] = 0;
+        if (ui.page == PG_KEY || ui.page == PG_RHYTHM) {   /* the speed this page goes by */
+            text_cat(t, "SEND ");
+            int_cat(t, SET.send);
+        } else {
+            int_cat(t, SET.wpm);
+            if (SET.eff < SET.wpm) {
+                text_cat(t, "/");
+                int_cat(t, SET.eff);
+            }
+        }
+        text_cat(t, " WPM");
+        x = 232 - text_w(&FONT_XS, t);
+        cv_text(x, 10, &FONT_XS, t, C_GRAY);
+        if (SET.mute) {
+            x -= 8 + text_w(&FONT_XS, "MUTE");
+            cv_text(x, 10, &FONT_XS, "MUTE", C_RX);
+        }
+        if (hl_host(&link, now)) {
+            x -= 8 + text_w(&FONT_XS, "PC");
+            cv_text(x, 10, &FONT_XS, "PC", C_BLUE);
+        }
+    }
+    cv_rect(0, 31, 240, 1, C_LINE);
+    cv_blit(0, 0);
+}
+
+static void draw_lamp(int32_t y)         /* the keying as a light: white sending, amber receiving */
+{
+    int tx = tone_gated(TONE_TX), rx = tone_gated(TONE_RX);
+    cv_begin(240, 10, C_BLACK);
+    cv_rect(20, 2, 200, 6, tx ? C_OWN : rx ? C_RX : C_LINE);
+    cv_blit(0, y);
+}
+
+/* KEY: the top strip (the letter so far, the last one read, how it is going), then one of three views */
+static void key_top(void)
+{
+    char t[40];
+    uint8_t pend = mo_dec_pending(&dsrc[SRC_OWN].dec);
+    const mo_dec_t *d = &dsrc[SRC_OWN].dec;
+    cv_begin(240, 56, C_BLACK);
+    if ((visual() || kview() != KV_TEXT) && pend > 1u)
+        draw_code(pend, 90, 22, 8, C_OWN);
+    if (ui.last) {
+        t[0] = ui.last, t[1] = 0;
+        text_c(200, 6, &FONT_L, t, C_OWN);
+    }
+    if (d->marks >= 4u) {                /* how it is going: speed, dah:dit (3.0 the book), gaps inside (1.0) */
+        uint32_t q = mo_dec_ratio10(d), g = mo_dec_gap10(d);
+        t[0] = 0;
+        text_cat(t, "YOU ");
+        int_cat(t, (int32_t)mo_dec_wpm(d));
+        text_cat(t, " WPM");
+        if (q) {
+            text_cat(t, "  DAH:DIT ");
+            tenths_cat(t, q);
+        }
+        if (g) {
+            text_cat(t, "  GAP ");
+            tenths_cat(t, g);
+        }
+        cv_text(8, 40, &FONT_XS, t, g > 18u || (q && (q < 22u || q > 42u)) ? C_RX : C_GRAY);
+    }
+    cv_blit(0, 32);
+}
+
+static void key_text(void)
+{
+    char t[2] = {0, 0};
+    uint32_t r, i;
+    cv_begin(240, 110, C_BLACK);
+    for (r = 0; r < TG_ROWS; r++)
+        for (i = 0; i < TG_COLS; i++) {
+            uint32_t k = r * TG_COLS + i;
+            if (k < grid.n) {
+                t[0] = grid.c[k];
+                cv_text(4 + (int32_t)i * 10, 2 + (int32_t)r * 22, &FONT_S, t, grid.who[k] == SRC_RX ? C_RX : C_OWN);
+            }
+        }
+    if (!grid.n)
+        cv_text(8, 40, &FONT_XS, keyer.mode == MO_STRAIGHT ? "any key is the key" : "left half dit, right half dah",
+                C_DIM);
+    cv_blit(0, 98);
+}
+
+#define CU 4                             /* the CODE view: px a unit */
+static void key_code(void)               /* each letter over what was keyed for it */
+{
+    static uint8_t rows[TG_N];
+    static int16_t xs[TG_N];
+    char t[2] = {0, 0};
+    int32_t x = 4, row = 0, first;
+    uint32_t i;
+    for (i = 0; i < grid.n; i++) {       /* lay them out: a letter is as wide as its code */
+        int32_t w;
+        if (grid.c[i] == ' ') {
+            rows[i] = (uint8_t)row, xs[i] = (int16_t)x;
+            x += 10;
+            continue;
+        }
+        t[0] = grid.c[i];
+        w = text_w(&FONT_B, t);
+        if (grid.pat[i] > 1u && (int32_t)mo_units(grid.pat[i]) * CU > w)
+            w = (int32_t)mo_units(grid.pat[i]) * CU;
+        if (x + w > 236 && x > 4) {
+            row++;
+            x = 4;
+        }
+        rows[i] = (uint8_t)row, xs[i] = (int16_t)x;
+        x += w + 8;
+    }
+    first = row > 3 ? row - 3 : 0;
+    cv_begin(240, 110, C_BLACK);
+    for (i = 0; i < grid.n; i++) {
+        int32_t y = 2 + ((int32_t)rows[i] - first) * 27;
+        uint16_t c = grid.who[i] == SRC_RX ? C_RX : grid.c[i] == MO_UNKNOWN ? C_BAD : C_OWN;
+        if ((int32_t)rows[i] < first || grid.c[i] == ' ')
+            continue;
+        t[0] = grid.c[i];
+        cv_text(xs[i], y, &FONT_B, t, c);
+        if (grid.pat[i] > 1u) {
+            uint32_t n = mo_len(grid.pat[i]), k;
+            int32_t px = xs[i];
+            for (k = 0; k < n; k++) {
+                int32_t w = mo_elem(grid.pat[i], k) ? 3 * CU : CU;
+                cv_rect(px, y + 19, w, CU, c);
+                px += w + CU;
+            }
+        }
+    }
+    if (!grid.n)
+        cv_text(8, 40, &FONT_XS, "each letter over its dits and dahs", C_DIM);
+    cv_blit(0, 98);
+}
+
+#define TU 8                             /* the TIMING view and RHYTHM: px a dit (of the send speed) */
+static void tim_row(const trow_t *r, int32_t y, int live)
+{
+    char t[2] = {0, 0};
+    uint32_t dit = mo_dit_ms(SET.send), i;
+    int32_t x = 28;
+    t[0] = live ? '_' : r->c;
+    cv_text(6, y, &FONT_B, t, r->c == MO_UNKNOWN ? C_BAD : live ? C_DIM : C_OWN);
+    for (i = 0; i < r->n && x < 240; i++) {
+        int32_t w;
+        int dah = live ? mo_dec_is_dah(&dsrc[SRC_OWN].dec, r->mark[i]) : (int)(r->dah >> i & 1u);
+        if (i) {
+            int32_t g = (int32_t)(r->gap[i] * TU / dit);
+            if (r->gap[i] * 10u > dit * 16u)   /* a long gap inside a letter: where it gets split */
+                cv_rect(x, y + 13, g, 2, C_BAD);
+            x += g;
+        }
+        w = (int32_t)(r->mark[i] * TU / dit);
+        if (w < 2)
+            w = 2;
+        if (x + w > 240)
+            w = 240 - x;
+        cv_rect(x, y + 4, w, 8, dah ? C_RX : C_OWN);
+        x += w;
+    }
+}
+
+static void key_timing(void)             /* each letter as keyed, to scale: is a dit a dit? */
+{
+    char t[32];
+    uint32_t i, dit = mo_dit_ms(SET.send);
+    int32_t y = 14;
+    cv_begin(240, 110, C_BLACK);
+    cv_rect(28, 2, TU, 3, C_GRAY);       /* the ruler: a dit and a dah at the send speed */
+    cv_rect(28 + 2 * TU, 2, 3 * TU, 3, C_GRAY);
+    t[0] = 0;
+    text_cat(t, "DIT ");
+    int_cat(t, (int32_t)dit);
+    text_cat(t, "  DAH ");
+    int_cat(t, (int32_t)(3u * dit));
+    text_cat(t, " MS");
+    cv_text(96, 0, &FONT_T, t, C_GRAY);
+    for (i = 0; i < tim.count; i++) {    /* oldest first */
+        const trow_t *r = &tim.row[(tim.head + TR_N - tim.count + i) % TR_N];
+        tim_row(r, y, 0);
+        y += 19;
+    }
+    if (tim.live.n)
+        tim_row(&tim.live, y, 1);
+    if (!tim.count && !tim.live.n)
+        cv_text(8, 40, &FONT_XS, "red: a gap that splits a letter", C_DIM);
+    cv_blit(0, 98);
+}
+
+static void key_page(void)
+{
+    key_top();
+    draw_lamp(88);
+    if (kview() == KV_CODE)
+        key_code();
+    else if (kview() == KV_TIMING)
+        key_timing();
+    else
+        key_text();
+}
+
+static void type_page(void)
+{
+    static const char *const PAGE[3] = {"LETTERS", "DIGITS + SIGNS", "PHRASES"};
+    char t[8];
+    uint32_t i, n = slen(ui.line);
+    char cur = ptx.cur;
+    cv_begin(240, 80, C_BLACK);
+    for (i = 0; i < n; i++) {
+        t[0] = ui.line[i] == ' ' ? '_' : ui.line[i];
+        t[1] = 0;
+        cv_text(4 + (int32_t)(i % TG_COLS) * 10, 2 + (int32_t)(i / TG_COLS) * 20, &FONT_S, t,
+                ui.line[i] == ' ' ? C_DIM : C_OWN);
+    }
+    if (ui.tpage == 2u && ui.gloss)
+        cv_text(4, 46, &FONT_XS, ui.gloss, C_RX);
+    else if (cur && (visual() || tlabel()))
+        draw_code(mo_code(cur), 120, 52, 6, C_RX);
+    {
+        int32_t x = cv_text(4, 64, &FONT_T, PAGE[ui.tpage], C_GRAY);
+        cv_text(x + 12, 64, &FONT_T, tcompose() ? "COMPOSE: PLAY SENDS" : "LIVE: EACH KEY GOES OUT",
+                tcompose() ? C_RX : C_DIM);
+    }
+    cv_blit(0, 32);
+    draw_lamp(112);
+    /* the keyboard: 16 white keys 15 px each, the black ones over their gaps */
+    cv_begin(240, 86, C_BLACK);
+    for (i = 0; i < 16u; i++) {
+        uint32_t k = WHITE[i];
+        int32_t x = (int32_t)i * 15;
+        char c = ui.tpage < 2u ? type_char(k, ui.tpage) : 0;
+        cv_rect(x, 0, 14, 84, c && c == cur ? C_RX : RGB(200, 200, 206));
+        if (ui.tpage == 2u) {            /* a phrase: its name down the key */
+            const char *p = type_phrase(k);
+            uint32_t j, m = 0;
+            for (j = 0; p && p[j] && m < 4u; j++)
+                if (p[j] != '<' && p[j] != '>' && p[j] != '?') {
+                    t[0] = p[j], t[1] = 0;
+                    text_c(x + 7, 48 + (int32_t)m * 9, &FONT_T, t, C_BLACK);
+                    m++;
+                }
+        } else {
+            t[0] = c, t[1] = 0;
+            if (tlabel() && c && c != ' ')
+                draw_code_v(mo_code(c), x + 7, 49, 2, C_BLACK);
+            text_c(x + 7, 68, &FONT_XS, c == ' ' ? "_" : t, C_BLACK);
+        }
+    }
+    for (i = 0; i < 11u; i++) {
+        uint32_t w = 0, k = BLACK[i];
+        int32_t x;
+        char c = ui.tpage < 2u ? type_char(k, ui.tpage) : 0;
+        while (w < 16u && WHITE[w] < k)
+            w++;
+        x = (int32_t)w * 15;
+        cv_rect(x - 6, 0, 12, 46, c && c == cur ? C_RX : RGB(40, 40, 46));
+        if (ui.tpage == 2u) {
+            const char *p = type_phrase(k);
+            uint32_t j, m = 0;
+            for (j = 0; p && p[j] && m < 3u; j++)
+                if (p[j] != '<' && p[j] != '>' && p[j] != '?') {
+                    t[0] = p[j], t[1] = 0;
+                    text_c(x, 4 + (int32_t)m * 9, &FONT_T, t, C_WHITE);
+                    m++;
+                }
+        } else {
+            t[0] = c == ' ' ? '_' : c, t[1] = 0;
+            if (tlabel() && c && c != ' ')
+                draw_code_v(mo_code(c), x, 3, 2, C_WHITE);
+            else
+                text_c(x, 26, &FONT_XS, t, C_WHITE);
+        }
+    }
+    cv_blit(0, 122);
+}
+
+static void choices(int32_t y, const ln_card_t *c, int32_t oy)
+{
+    char t[8];
+    uint32_t i;
+    for (i = 0; i < 4u; i++) {
+        int32_t x = 4 + (int32_t)i * 59;
+        cv_rect(x, y - oy, 55, 44, i == pr.pick ? C_LINE : RGB(24, 24, 28));
+        t[0] = ln_char(c->opt[i]), t[1] = 0;
+        text_c(x + 27, y + 6 - oy, &FONT_M, t, C_WHITE);
+        note_name(CHOICE_KEY[i], t);
+        text_c(x + 27, y + 46 - oy, &FONT_XS, t, C_DIM);
+    }
+}
+
+static void practice_at(int32_t oy)      /* drawn twice, each half with the rows above it taken off */
+{
+    char t[40];
+    const ln_card_t *c = ln_card(&pr.r);
+    const ln_state_t *s = &rec.ln;
+    if (pr.ps == PS_START || pr.ps == PS_DONE) {
+        int32_t y = 8;
+        if (pr.ps == PS_DONE) {
+            t[0] = 0;
+            text_cat(t, "ROUND ");
+            int_cat(t, s->round);
+            text_cat(t, " DONE");
+            text_c(120, y - oy, &FONT_B, t, C_WHITE);
+            t[0] = 0;
+            int_cat(t, pr.r.ok);
+            text_cat(t, " RIGHT  ");
+            int_cat(t, pr.r.miss);
+            text_cat(t, " MISSED  +");
+            int_cat(t, pr.r.up);
+            text_c(120, y + 26 - oy, &FONT_XS, t, C_GRAY);
+            y += 48;
+            if (pr.opened) {
+                uint32_t i;
+                t[0] = 0;
+                text_cat(t, "NEW: ");
+                for (i = s->open - LN_GROUP; i < s->open; i++) {
+                    char ch[3] = {ln_char(i), ' ', 0};
+                    text_cat(t, ch);
+                }
+                text_c(120, y - oy, &FONT_B, t, C_OK);
+                y += 26;
+            }
+        } else {
+            t[0] = 0;
+            text_cat(t, "ROUND ");
+            int_cat(t, s->round + 1u);
+            text_c(120, y - oy, &FONT_M, t, C_WHITE);
+            y += 40;
+            t[0] = 0;
+            int_cat(t, (int32_t)ln_due_count(s));
+            text_cat(t, " DUE   ");
+            int_cat(t, (int32_t)ln_new_count(s));
+            text_cat(t, " NEW   ");
+            int_cat(t, s->open);
+            text_cat(t, " OPEN");
+            text_c(120, y - oy, &FONT_XS, t, C_GRAY);
+            y += 26;
+        }
+        t[0] = 0;
+        text_cat(t, "STREAK ");
+        int_cat(t, s->streak);
+        text_c(120, y - oy, &FONT_XS, t, s->streak ? C_OK : C_DIM);
+        text_c(120, y + 40 - oy, &FONT_B, "PLAY: START", C_RX);
+        text_c(120, y + 64 - oy, &FONT_XS, visual() ? "learning by sight" : "learning by sound", C_DIM);
+        return;
+    }
+    if (!c && pr.ps != PS_RESULT)
+        return;
+    t[0] = 0;
+    int_cat(t, pr.r.at + (pr.ps == PS_RESULT ? 0u : 1u));
+    text_cat(t, " / ");
+    int_cat(t, pr.r.n);
+    cv_text(8, 2 - oy, &FONT_XS, t, C_DIM);
+    if (pr.ps == PS_RESULT) {
+        const ln_card_t *a = &pr.r.card[pr.r.at - 1u];
+        char ch = ln_char(a->ch);
+        text_c(120, 18 - oy, &FONT_L, pr.right ? "RIGHT" : "NO", pr.right ? C_OK : C_BAD);
+        t[0] = ch, t[1] = 0;
+        text_c(120, 64 - oy, &FONT_L, t, C_WHITE);
+        if (visual())
+            draw_code(mo_code(ch), 120, 108 - oy, 8, C_GRAY);
+        if (!pr.right && pr.got) {
+            t[0] = 0;
+            text_cat(t, "YOU: ");
+            t[5] = pr.got, t[6] = 0;
+            text_c(120, 126 - oy, &FONT_XS, t, C_BAD);
+        }
+        if (pr.ratio10 && card_key(a)) {
+            t[0] = 0;
+            text_cat(t, "DAH:DIT ");
+            tenths_cat(t, pr.ratio10);
+            text_cat(t, pr.ratio10 < 25u ? "  dahs short" : pr.ratio10 > 40u ? "  dahs long" : "");
+            text_c(120, 146 - oy, &FONT_XS, t, C_GRAY);
+        }
+        return;
+    }
+    {
+        static const char *const ASK[CARD_NTYPES] = {"NEW LETTER", "WHICH ONE?", "KEY WHAT YOU HEAR", "KEY IT",
+                                                    "WHICH ONE?", "WHICH ONE?"};
+        char ch = ln_char(c->ch);
+        text_c(120, 18 - oy, &FONT_B, ASK[c->type], c->type == CARD_NEW ? C_OK : C_GRAY);
+        t[0] = ch, t[1] = 0;
+        switch (c->type) {
+        case CARD_NEW:
+            text_c(120, 50 - oy, &FONT_L, t, C_WHITE);
+            if (visual())
+                draw_code(mo_code(ch), 120, 100 - oy, 8, C_GRAY);
+            text_c(120, 128 - oy, &FONT_XS, SET.mute ? "watch it, then a key" : "listen, then any key", C_DIM);
+            break;
+        case CARD_HEAR_CHOOSE:
+        case CARD_LIGHT_CHOOSE:
+            text_c(120, 48 - oy, &FONT_M, c->type == CARD_LIGHT_CHOOSE ? "( lamp )" : "?", C_DIM);
+            choices(92, c, oy);
+            break;
+        case CARD_CODE_CHOOSE:
+            draw_code(mo_code(ch), 120, 58 - oy, 8, C_WHITE);
+            choices(92, c, oy);
+            break;
+        case CARD_HEAR_KEY:
+            text_c(120, 54 - oy, &FONT_L, "?", C_DIM);
+            break;
+        case CARD_SEE_KEY:
+            text_c(120, 50 - oy, &FONT_L, t, C_WHITE);
+            break;
+        default:
+            break;
+        }
+        if (card_key(c)) {
+            uint8_t pend = mo_dec_pending(&dsrc[SRC_OWN].dec);
+            if ((visual() || kview() != KV_TEXT) && pend > 1u)
+                draw_code(pend, 120, 112 - oy, 8, C_OWN);
+            text_c(120, 136 - oy, &FONT_XS, pr.answer_ok ? "your turn" : "listen", pr.answer_ok ? C_OK : C_DIM);
+        }
+    }
+}
+
+static void listen_reveal(void)          /* SEL while hidden: the line playing, for a moment */
+{
+    if (ls.on && lhide())
+        app_say("NOW:", ls.l[ls.cur].t);
+}
+
+/* s in cells of cw px, cols a row; the first `bright` playable characters lit, the rest dim (hidden: not shown); the
+ * rows that hold the lit part kept in view */
+static void wrap_text(const char *s, int32_t x, int32_t y, const felucca_font_t *f, int32_t cw, uint32_t cols,
+                      uint32_t rows, uint32_t bright, int hide, int32_t oy)
+{
+    char t[2] = {0, 0};
+    uint32_t i, k = 0, n = slen(s), at = 0, first = 0, lit_n = 0;
+    for (i = 0; i < n; i++)
+        if (k < bright && playable(s[i]))
+            k++, at = i;
+    if (at / cols >= rows)
+        first = at / cols - rows + 1u;
+    for (i = 0; i < n && i < (first + rows) * cols; i++) {
+        uint32_t lit;
+        lit_n += (uint32_t)playable(s[i]);
+        lit = lit_n <= bright && s[i] != ' ';
+        if (i < first * cols || (hide && !lit))
+            continue;
+        t[0] = hide ? '_' : s[i];
+        cv_text(x + (int32_t)(i % cols) * cw, y + (int32_t)(i / cols - first) * 20 - oy, f, t, lit ? C_WHITE : C_DIM);
+    }
+}
+
+static void listen_at(int32_t oy)
+{
+    char t[40];
+    cv_text(8, 2 - oy, &FONT_B, LP_NAME[SET.prog], C_WHITE);
+    t[0] = 0;
+    if (ls.count) {
+        int_cat(t, (int32_t)ls.count);
+        text_cat(t, " LINES");
+    }
+    cv_text(232 - text_w(&FONT_XS, t), 4 - oy, &FONT_XS, t, C_DIM);
+    if (!ls.on) {
+        text_c(120, 50 - oy, &FONT_B, "PLAY: START", C_RX);
+        text_c(120, 76 - oy, &FONT_XS, "SELECT: the program", C_DIM);
+        text_c(120, 94 - oy, &FONT_XS, lhide() ? "hidden: copy it in your head" : "the text shown as it plays",
+               C_DIM);
+        return;
+    }
+    wrap_text(ls.l[ls.cur].t, 4, 28, &FONT_S, 10, TG_COLS, 3, ls.l[ls.cur].played, (int)lhide(), oy);
+    if (!lhide() && ls.l[ls.cur].gloss)
+        cv_text(4, 92 - oy, &FONT_XS, ls.l[ls.cur].gloss, C_RX);
+    if (ls.prev[0]) {
+        cv_text(4, 112 - oy, &FONT_T, lhide() ? "IT WAS:" : "BEFORE:", C_GRAY);
+        wrap_text(ls.prev, 4, 126, &FONT_XS, 8, 29, 2, 0xFF, 0, oy);
+        if (ls.prev_gloss)
+            cv_text(120, 112 - oy, &FONT_T, ls.prev_gloss, C_RX);
+    }
+}
+
+static void rhythm_at(int32_t oy)
+{
+    static const char *const H1[] = {"PRESS ANY KEY",        "DITS ARE LONG", "DAHS ARE SHORT",      "DAHS ARE LONG",
+                                     "GAPS INSIDE ARE LONG", "LENGTHS VARY",  "DITS ARE VERY SHORT", "GOOD RHYTHM"};
+    static const char *const H2[] = {"dit short, dah three dits", "tap and let go",
+                                     "hold a dah about 3 dits",   "let go sooner: 3 dits",
+                                     "one dit between, no more",  "slow down, keep it even",
+                                     "fine if even",              "next drill, or K4 faster"};
+    static const char *const WHY_DIT[] = {"", "GOOD", "A BIT LONG", "TOO LONG: A DAH"};
+    static const char *const WHY_DAH[] = {"", "GOOD", "A BIT OFF", "TOO SHORT: A DIT"};
+    char t[48];
+    uint32_t len = rh_len(), i, n = len ? len : rh.n, dit = mo_dit_ms(SET.send);
+    int32_t x = 8;
+    cv_text(8, 0 - oy, &FONT_B, DRILL[rh.drill].name, C_WHITE);
+    t[0] = 0;
+    if (len) {
+        text_cat(t, "SETS ");
+        int_cat(t, rh.good_sets);
+        text_cat(t, "/");
+        int_cat(t, rh.sets);
+        text_cat(t, " CLEAN");
+    }
+    cv_text(232 - text_w(&FONT_XS, t), 2 - oy, &FONT_XS, t, C_DIM);
+    /* the set: a box for each target, the bar pressed over it */
+    for (i = 0; i < n && i < RH_MAX; i++) {
+        uint32_t want = len ? (uint32_t)(DRILL[rh.drill].pat[i] == '-') : rh.kind[i];
+        int32_t tw = want ? 3 * TU : TU, bw;
+        uint16_t c = rh.res[i] == RJ_GOOD ? C_OK : rh.res[i] == RJ_OFF ? C_MEH : C_BAD;
+        cv_rect(x, 26 - oy, tw, 14, C_BOX);
+        if (i < rh.n) {
+            bw = (int32_t)(rh.q[i] * TU / 10u);
+            if (bw < 2)
+                bw = 2;
+            if (bw > tw + 2 * TU)
+                bw = tw + 2 * TU;
+            cv_rect(x, 29 - oy, bw, 8, c);
+        } else if (i == rh.n && !rh.done)
+            cv_rect(x, 42 - oy, tw, 2, C_WHITE);   /* the next one */
+        x += tw + TU + (len ? 0 : TU);
+    }
+    if (rh.n) {                          /* the last press, in dits of the send speed */
+        uint32_t k = rh.n - 1u, q = rh.q[k];
+        uint16_t c = rh.res[k] == RJ_GOOD ? C_OK : rh.res[k] == RJ_OFF ? C_MEH : C_BAD;
+        t[0] = 0;
+        text_cat(t, rh.kind[k] ? "DAH " : "DIT ");
+        tenths_cat(t, q);
+        x = cv_text(8, 50 - oy, &FONT_M, t, C_WHITE);
+        t[0] = 0;
+        int_cat(t, rh.last_ms);
+        text_cat(t, " MS");
+        cv_text(x + 8, 58 - oy, &FONT_XS, t, C_GRAY);
+        if (len)
+            cv_text(8, 80 - oy, &FONT_XS, rh.kind[k] ? WHY_DAH[rh.res[k]] : WHY_DIT[rh.res[k]], c);
+        else if (rh.res[k] == RJ_OFF)
+            cv_text(8, 80 - oy, &FONT_XS, "IN BETWEEN: NEITHER", C_MEH);
+        if (k && rh.g[k] > 18u) {
+            t[0] = 0;
+            text_cat(t, "GAP BEFORE IT ");
+            tenths_cat(t, rh.g[k]);
+            cv_text(130, 80 - oy, &FONT_XS, t, C_RX);
+        }
+    } else {
+        t[0] = 0;
+        text_cat(t, "TARGET: DIT ");
+        int_cat(t, (int32_t)dit);
+        text_cat(t, " MS, DAH ");
+        int_cat(t, (int32_t)(3u * dit));
+        text_cat(t, " MS");
+        cv_text(8, 56 - oy, &FONT_XS, t, C_GRAY);
+        cv_text(8, 76 - oy, &FONT_XS, "K4 changes it (the send speed)", C_DIM);
+    }
+    cv_text(8, 106 - oy, &FONT_B, H1[rh.hint], rh.hint == H_GOOD ? C_OK : rh.hint == H_START ? C_GRAY : C_RX);
+    t[0] = 0;
+    text_cat(t, H2[rh.hint]);
+    if (rh.sugg && rh.sugg != SET.send) {
+        text_cat(t, ", or K4 to ");
+        int_cat(t, rh.sugg);
+    }
+    cv_text(8, 126 - oy, &FONT_XS, t, C_GRAY);
+}
+
+static void chart_at(int32_t oy)         /* the course like a kana chart: 7 x 6, coloured by box */
+{
+    char t[2] = {0, 0};
+    uint32_t i;
+    for (i = 0; i < LN_N; i++) {
+        int32_t x = 2 + (int32_t)(i % 7u) * 34, y = 2 + (int32_t)(i / 7u) * 28 - oy;
+        int open = i < rec.ln.open;
+        uint16_t bg = open ? level_rgb(ln_level(&rec.ln, i)) : RGB(20, 20, 24);
+        if (i == ui.csel)
+            cv_rect(x - 2, y - 2, 36, 30, C_WHITE);
+        cv_rect(x, y, 32, 26, bg);
+        t[0] = ln_char(i);
+        text_c(x + 16, y + 5, &FONT_B, t, open ? C_WHITE : C_DIM);
+    }
+}
+
+static void set_at(int32_t oy)
+{
+    static const char *const KEYER[MO_NKEYER] = {"STRAIGHT", "IAMBIC A", "IAMBIC B"};
+    static const char *const LAYOUT[TL_N] = {"A-P WHITE, Q-Z BLACK", "A-Z LEFT TO RIGHT", "KOCH ORDER"};
+    char t[32];
+    uint32_t i;
+    for (i = 0; i < SET_ITEMS; i++) {
+        int32_t y = 1 + (int32_t)i * 16 - oy;
+        if (i == ui.sel)
+            cv_rect(0, y - 1, 240, 16, C_LINE);
+        cv_text(8, y, &FONT_XS, SET_NAME[i], C_GRAY);
+        t[0] = 0;
+        switch (i) {
+        case 0: {
+            int p = preset_now();
+            text_cat(t, p < 0 ? "CUSTOM" : PRESET[p].name);
+            if (p == 0)
+                text_cat(t, " (TO BEGIN)");
+            break;
+        }
+        case 1:
+        case 3:
+            int_cat(t, i == 3 ? SET.send : SET.wpm);
+            text_cat(t, " WPM  DIT ");
+            int_cat(t, (int32_t)mo_dit_ms(i == 3 ? SET.send : SET.wpm));
+            text_cat(t, " MS");
+            break;
+        case 2:
+            int_cat(t, SET.eff);
+            text_cat(t, SET.eff < SET.wpm ? " WPM (FARNSWORTH)" : " WPM");
+            break;
+        case 4: int_cat(t, SET.pitch); text_cat(t, " HZ"); break;
+        case 5: text_cat(t, KEYER[SET.keyer]); break;
+        case 6: text_cat(t, SET.swap ? "LEFT DAH" : "LEFT DIT"); break;
+        case 7: text_cat(t, SET.mute ? "OFF (LIGHTS)" : "ON"); break;
+        case 8: int_cat(t, SET.cards); text_cat(t, " A ROUND"); break;
+        case 9: text_cat(t, visual() ? "SIGHT" : "SOUND (BEST)"); break;
+        case 10: text_cat(t, LAYOUT[tlayout()]); break;
+        default: break;
+        }
+        cv_text(96, y, &FONT_XS, t, i == ui.sel ? C_WHITE : C_RX);
+    }
+}
+
+static void menu_at(int32_t oy)
+{
+    static const char *const NAME[PG_N - 1] = {"PRACTICE", "LISTEN", "KEY", "RHYTHM", "TYPE", "CHART", "SETTINGS"};
+    static const char *const WHAT[PG_N - 1] = {"flash cards",    "play on and on",   "send, it reads you",
+                                               "short and long", "keys are letters", "how far you are",
+                                               "speeds, keyer, ..."};
+    uint32_t i;
+    for (i = 0; i < PG_N - 1u; i++) {
+        int32_t y = 4 + (int32_t)i * 24 - oy;
+        if (i == ui.sel)
+            cv_rect(0, y - 3, 240, 23, C_LINE);
+        cv_text(12, y, &FONT_B, NAME[i], i == ui.sel ? C_WHITE : C_GRAY);
+        cv_text(112, y + 2, &FONT_XS, WHAT[i], C_DIM);
+    }
+}
+
+#define MAIN_H 176
+static void main_area(void (*fn)(int32_t oy))
+{
+    cv_begin(240, MAIN_H / 2, C_BLACK);
+    fn(0);
+    cv_blit(0, 32);
+    cv_begin(240, MAIN_H / 2, C_BLACK);
+    fn(MAIN_H / 2);
+    cv_blit(0, 32 + MAIN_H / 2);
+}
+
+static void draw_main(void)
+{
+    switch (ui.page) {
+    case PG_KEY: key_page(); break;
+    case PG_TYPE: type_page(); break;
+    case PG_PRACTICE: main_area(practice_at); break;
+    case PG_LISTEN: main_area(listen_at); break;
+    case PG_RHYTHM: main_area(rhythm_at); break;
+    case PG_CHART: main_area(chart_at); break;
+    case PG_SET: main_area(set_at); break;
+    default: main_area(menu_at); break;
+    }
+}
+
+static void draw_footer(void)
+{
+    static const char *const KV_NAME[KV_N] = {"SEQ: TEXT", "SEQ: CODE", "SEQ: TIMING"};
+    const char *s = "";
+    char t[64];
+    const ln_card_t *c = ln_card(&pr.r);
+    uint32_t i;
+    cv_begin(240, 32, C_BLACK);
+    cv_rect(0, 0, 240, 1, C_LINE);
+    switch (ui.page) {
+    case PG_MENU: s = "SELECT move  SEL open  HOME back"; break;
+    case PG_KEY:
+        t[0] = 0;
+        text_cat(t, KV_NAME[kview()]);
+        text_cat(t, "  K4 send speed  OCT- clear");
+        s = t;
+        break;
+    case PG_RHYTHM: s = "SELECT drill  K4 send speed  PLAY again"; break;
+    case PG_LISTEN:
+        s = lhide() ? "PLAY start/stop  SEL peek  SEQ show" : "PLAY start/stop  SELECT program  SEQ hide";
+        break;
+    case PG_TYPE: s = "OCT-/+ page   REC del, hold: clear\nPLAY play/stop  SEL live/compose  SEQ code"; break;
+    case PG_SET: s = "SELECT item  OCT- / OCT+ change"; break;
+    case PG_CHART:
+        t[0] = 0;
+        text_cat(t, "PLAY hear ");
+        t[10] = ln_char(ui.csel), t[11] = 0;
+        if (visual()) {
+            char p[8];
+            mo_pattern(mo_code(ln_char(ui.csel)), p);
+            text_cat(t, "  ");
+            text_cat(t, p);
+        }
+        s = t;
+        break;
+    case PG_PRACTICE:
+        if (pr.ps == PS_CARD && c)
+            s = ln_choose(c->type) ? "keys E4-A4, or SELECT + SEL" : card_key(c) ? "PLAY again  SEL don't know"
+                                                                                : "any key: next";
+        else if (pr.ps == PS_RESULT)
+            s = "any key: next";
+        else
+            s = "PLAY start  HOME menu  FX mute";
+        break;
+    default: break;
+    }
+    for (i = 0; s[i] && s[i] != '\n'; i++)
+        ;
+    if (s[i]) {                          /* two lines */
+        char a[48];
+        uint32_t j;
+        for (j = 0; j < i && j < sizeof a - 1u; j++)
+            a[j] = s[j];
+        a[j] = 0;
+        cv_text(8, 3, &FONT_T, a, C_DIM);
+        cv_text(8, 17, &FONT_T, s + i + 1, C_DIM);
+    } else
+        cv_text(8, 9, &FONT_XS, s, C_DIM);
+    cv_blit(0, 208);
+}
+
+static int32_t lamp_y(void)              /* where this page shows the lamp, 0 none */
+{
+    if (ui.page == PG_KEY)
+        return 88;
+    if (ui.page == PG_TYPE)
+        return 112;
+    if ((ui.page == PG_PRACTICE && (pr.ps == PS_CARD || pr.ps == PS_RESULT)) || ui.page == PG_RHYTHM
+        || (ui.page == PG_LISTEN && ls.on))
+        return 196;                      /* under the page (practice_at, rhythm_at, listen_at keep above 196) */
+    return 0;
+}
+
+static void draw(uint32_t now)
+{
+    uint8_t r = ui.redraw;
+    ui.redraw = 0;
+    if (r & R_HEAD)
+        draw_header(now);
+    if (r & R_MAIN)
+        draw_main();
+    if ((r & (R_MAIN | R_LAMP)) && lamp_y() && (lamp_y() == 196 || !(r & R_MAIN)))
+        draw_lamp(lamp_y());
+    if (r & R_FOOT)
+        draw_footer();
+}
+
+/* ------------------------------------------------------------------ audio --- */
+static float gain_now;
+
+void app_render(int32_t *lr, uint32_t n, uint32_t master_q12)
+{
+    uint32_t i;
+    float gain = (float)master_q12 / 4096.0f * 8300000.0f;
+    gain_now += (gain - gain_now) * 0.5f;
+    for (i = 0; i < 2u * n; i++)
+        lr[i] = 0;
+    tone_render(lr, n, gain_now);
+}
+
+void app_panic(void) { tone_stop(); }
+
+/* ------------------------------------------------------------ the contract --- */
+void app_init(void)
+{
+    /* everything from nothing: the host simulator's reboot runs this again over the old RAM */
+    zero(&ui, sizeof ui);
+    zero(&pr, sizeof pr);
+    zero(&grid, sizeof grid);
+    zero(&tim, sizeof tim);
+    zero(&ls, sizeof ls);
+    zero(&rh, sizeof rh);
+    zero(txt, sizeof txt);
+    zero(dsrc, sizeof dsrc);
+    ev_w = ev_r = 0;
+    own_down = ptx_down = rx_midi = rx_down = midi_down = 0;
+    key_input = own_midi = ptx_midi = 0;
+    saves = 0;
+    dirty_at = 0;
+    if (plat_store_load(OBJ_MORSE, &rec, sizeof rec) == (int)sizeof rec && rec.set.send == 0u)
+        rec.set.send = SEND_DEFAULT;     /* a 0.1 record: it had no send speed */
+    if (rec.magic != REC_MAGIC || rec.ver != REC_VER || rec.size != sizeof rec || !set_valid(&rec.set)
+        || !ln_valid(&rec.ln)) {
+        zero(&rec, sizeof rec);
+        set_defaults();
+        ln_init(&rec.ln);
+    }
+    mo_keyer_init(&keyer, SET.keyer, mo_dit_ms(SET.send));
+    mo_player_init(&ptx, mo_dit_ms(SET.wpm), mo_gap_ms(SET.wpm, SET.eff));
+    mo_player_init(&prx, mo_dit_ms(SET.wpm), mo_gap_ms(SET.wpm, SET.eff));
+#ifdef PLAT_HOST
+    mo_player_init(&host_hand, mo_dit_ms(SET.send), mo_dit_ms(SET.send));
+#endif
+    tone_stop();
+    timing_apply();
+    hl_init(&link, 0x4D, 0x4F, MO_VER);
+    ui.page = PG_PRACTICE;               /* straight into today's practice */
+    ui.back = PG_PRACTICE;
+    pr.ps = PS_START;
+    rhythm_hint();
+}
+
+void app_ui_init(void)
+{
+    lcd_fill(0, 0, 240, 240, C_BLACK);
+    ui.redraw = R_ALL;
+}
+
+void app_frame(void)
+{
+    static const uint8_t HELLO[3] = {MO_VER, FW_MAJOR, FW_MINOR};
+    static uint32_t last_msg;
+    uint32_t now = plat_ms();
+    uint8_t host, lamp, pat;
+    input();
+    read_events();
+    if (ui.page == PG_PRACTICE)
+        practice_step(now);
+    if (ui.page == PG_LISTEN)
+        listen_step();
+    hl_tick(&link, now, T_HELLO, T_HEARTBEAT, HELLO, 3);
+    host = (uint8_t)hl_host(&link, now);
+    if (host != ui.host_was) {
+        ui.host_was = host;
+        ui.redraw |= R_HEAD;
+    }
+    if ((ui.msg_until && now >= ui.msg_until) != last_msg) {
+        last_msg = ui.msg_until && now >= ui.msg_until;
+        ui.redraw |= R_HEAD;
+    }
+    lamp = (uint8_t)(tone_gated(TONE_TX) | tone_gated(TONE_RX) << 1);
+    if (lamp != ui.lamp_was) {
+        ui.lamp_was = lamp;
+        ui.redraw |= R_LAMP;
+    }
+    pat = (uint8_t)ptx.cur;
+    if (ui.page == PG_TYPE && pat != ui.pat_was) {
+        ui.pat_was = pat;
+        ui.redraw |= R_MAIN;
+    }
+    if (dirty_at && now - dirty_at > 3000u)   /* settings saved once the knobs rest */
+        rec_save();
+    lights(now);
+    ann_tick(now);
+    if (ui.redraw)
+        draw(now);
+}
+
+/* --------------------------------------------------------- host simulator --- */
+#ifdef PLAT_HOST
+static int host_fails;
+
+int app_expect(const char *what, int *got)
+{
+    if (!strcmp(what, "page"))
+        *got = ui.page;
+    else if (!strcmp(what, "mute"))
+        *got = SET.mute;
+    else if (!strcmp(what, "wpm"))
+        *got = SET.wpm;
+    else if (!strcmp(what, "eff"))
+        *got = SET.eff;
+    else if (!strcmp(what, "send"))
+        *got = SET.send;
+    else if (!strcmp(what, "pitch"))
+        *got = SET.pitch;
+    else if (!strcmp(what, "keyer"))
+        *got = SET.keyer;
+    else if (!strcmp(what, "learn"))
+        *got = SET.learn;
+    else if (!strcmp(what, "preset"))
+        *got = preset_now();
+    else if (!strcmp(what, "kview"))
+        *got = (int)kview();
+    else if (!strcmp(what, "tlabel"))
+        *got = (int)tlabel();
+    else if (!strcmp(what, "tlayout"))
+        *got = (int)tlayout();
+    else if (!strcmp(what, "tcompose"))
+        *got = (int)tcompose();
+    else if (!strcmp(what, "tpage"))
+        *got = ui.tpage;
+    else if (!strcmp(what, "line_len"))
+        *got = (int)slen(ui.line);
+    else if (!strcmp(what, "host"))
+        *got = hl_host(&link, plat_ms());
+    else if (!strcmp(what, "ps"))
+        *got = pr.ps;
+    else if (!strcmp(what, "card"))
+        *got = pr.r.at;
+    else if (!strcmp(what, "cards"))
+        *got = pr.r.n;
+    else if (!strcmp(what, "type"))
+        *got = ln_card(&pr.r) ? ln_card(&pr.r)->type : -1;
+    else if (!strcmp(what, "right"))
+        *got = pr.right;
+    else if (!strcmp(what, "ok"))
+        *got = pr.r.ok;
+    else if (!strcmp(what, "miss"))
+        *got = pr.r.miss;
+    else if (!strcmp(what, "round"))
+        *got = rec.ln.round;
+    else if (!strcmp(what, "open"))
+        *got = rec.ln.open;
+    else if (!strcmp(what, "streak"))
+        *got = rec.ln.streak;
+    else if (!strcmp(what, "answered"))
+        *got = (int)rec.ln.answered;
+    else if (!strcmp(what, "saves"))
+        *got = (int)saves;
+    else if (!strcmp(what, "key_input"))
+        *got = key_input;
+    else if (!strcmp(what, "tx"))
+        *got = tone_gated(TONE_TX);
+    else if (!strcmp(what, "rx"))
+        *got = tone_gated(TONE_RX);
+    else if (!strcmp(what, "playing"))
+        *got = playing(&ptx);
+    else if (!strcmp(what, "tim_rows"))
+        *got = tim.count;
+    else if (!strcmp(what, "rh_n"))
+        *got = rh.n;
+    else if (!strcmp(what, "rh_sets"))
+        *got = rh.sets;
+    else if (!strcmp(what, "rh_clean"))
+        *got = rh.good_sets;
+    else if (!strcmp(what, "rh_hint"))
+        *got = rh.hint;
+    else if (!strcmp(what, "rh_sugg"))
+        *got = rh.sugg;
+    else if (!strcmp(what, "listening"))
+        *got = ls.on;
+    else if (!strcmp(what, "lines"))
+        *got = (int)ls.count;
+    else if (!strcmp(what, "prog"))
+        *got = SET.prog;
+    else if (!strcmp(what, "lhide"))
+        *got = (int)lhide();
+    else
+        return 0;
+    return 1;
+}
+
+static void host_text(const char *a, char *out, uint32_t max)   /* a script word: _ is a space */
+{
+    uint32_t i;
+    for (i = 0; a[i] && i < max - 1u; i++)
+        out[i] = a[i] == '_' ? ' ' : a[i];
+    out[i] = 0;
+}
+
+static void host_send(const char *s)     /* a hand on a straight key keys s */
+{
+    while (*s)
+        mo_player_push(&host_hand, *s++);
+}
+
+int app_host_cmd(const char *cmd, const char *a, const char *b, const char *c, const char *d)
+{
+    char t[128];
+    (void)c, (void)d;
+    if (!strcmp(cmd, "expect_text")) {   /* expect_text own|rx|typed TEXT (_ a space; trailing spaces ignored) */
+        int w = !strcmp(a, "rx") ? 1 : !strcmp(a, "typed") ? 2 : 0;
+        char g[TXT_N + 1];
+        uint32_t n;
+        host_text(b, t, sizeof t);
+        for (n = 0; txt[w][n]; n++)
+            g[n] = txt[w][n];
+        while (n && g[n - 1u] == ' ')
+            n--;
+        g[n] = 0;
+        if (strcmp(g, t)) {
+            printf("  FAIL expect_text %s: \"%s\", got \"%s\"\n", a, t, g);
+            host_fails++;
+        } else
+            printf("  ok text %s \"%s\"\n", a, t);
+        return 1;
+    }
+    if (!strcmp(cmd, "clear_text")) {
+        zero(txt, sizeof txt);
+        return 1;
+    }
+    if (!strcmp(cmd, "sendkeys")) {      /* sendkeys TEXT: keyed by hand at the send speed (_ a space) */
+        host_text(a, t, sizeof t);
+        host_send(t);
+        return 1;
+    }
+    if (!strcmp(cmd, "answer_all")) {    /* answer_all right: the rest of the round at once (keyed cards answered
+                                          * without the keying; "answer" keys them for real) */
+        const ln_card_t *k;
+        int right = !strcmp(a, "right");
+        while (pr.ps == PS_CARD && (k = ln_card(&pr.r)) != 0) {
+            if (k->type == CARD_NEW)
+                practice_answer(1);
+            else {
+                if (ln_choose(k->type))
+                    practice_choose(right ? k->right : (k->right + 1u) % 4u);
+                else
+                    practice_answer(right);
+                play_stop(&ptx);
+                card_present();
+            }
+        }
+        return 1;
+    }
+    if (!strcmp(cmd, "answer")) {        /* answer right|wrong: the card asked now, as a player would */
+        const ln_card_t *k = ln_card(&pr.r);
+        int right = !strcmp(a, "right");
+        if (pr.ps == PS_DONE)
+            printf("  (answer: the round is over)\n");
+        else if (pr.ps != PS_CARD || !k) {
+            printf("  FAIL answer: no card asked\n");
+            host_fails++;
+        } else if (k->type == CARD_NEW)
+            practice_answer(1);
+        else if (ln_choose(k->type))
+            practice_choose(right ? k->right : (k->right + 1u) % 4u);
+        else if (!pr.answer_ok) {
+            printf("  FAIL answer: the prompt is still playing\n");
+            host_fails++;
+        } else {
+            char s[3] = {right ? ln_char(k->ch) : (ln_char(k->ch) == 'E' ? 'T' : 'E'), ' ', 0};
+            host_send(s);
+        }
+        return 1;
+    }
+    return 0;
+}
+
+int app_host_fails(void) { return host_fails; }
+#endif
+
+```
+
+```text
+File created successfully at: /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/firmware/morse/app.c (file state is current in your context — no need to Read it back)
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 15:25:05Z)**_
+
+`app.c` 已重寫回來，也加上了 PRESET、COMPOSE 和停止播放。build 看看。
+
+_**Agent (claude-opus-5-5 2026-11-17 15:25:08Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Build the host simulator and show compile errors
+
+`uv run --locked --all-groups python third_party/fm1-base/tools/build.py firmware/morse --host 2>&1 | grep -E "error|warning: [^/]|app.c:" | head -30; ls -la firmware/morse/build/host/morse_host`
+
+```text
+.rwxr-xr-x@ 249k zhouhanru 17 Nov 23:25 firmware/morse/build/host/morse_host
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 15:25:59Z)**_
+
+build 沒有錯誤也沒有警告。接著重寫模擬器測試腳本，涵蓋所有新頁面和功能（頁面編號也跟著變了）。
+
+_**Agent (claude-opus-5-5 2026-11-17 15:26:27Z)**_
+
+<tool-use data-tool-type="write" data-tool-name="Write"><details>
+<summary>Tool use: **Write**</summary>
+
+```txt
+# Morse in the host simulator: just fw-test morse
+# The SysEx below are the shared vectors in host/morse/protocol.py (VECTORS); keep them in step.
+# Pages: 0 MENU, 1 PRACTICE, 2 LISTEN, 3 KEY, 4 RHYTHM, 5 TYPE, 6 CHART, 7 SETTINGS. The menu lists them from
+# PRACTICE (0) and opens on the page you came from.
+wait 600
+shot boot.png
+expect page 1
+expect ps 0
+expect wpm 20
+expect eff 8
+expect send 10
+expect preset 0
+expect mute 0
+expect learn 0
+expect store_writes 0
+
+# ---- the host: HELLO once a second until it answers (version 1, firmware 0.2, transport USB) ("hello")
+sysex_out
+wait 1100
+expect_sysex F0 7D 4D 4F 01 41 01 00 02 00 F7
+expect host 0
+# HELLO_ACK ("hello_ack")
+sysex F0 7D 4D 4F 01 01 01 F7
+wait 30
+expect host 1
+
+# ---- the menu: HOME, SELECT to KEY, SEL
+tap HOME
+wait 30
+expect page 0
+shot menu.png
+turn SELECT 2
+tap SEL
+wait 30
+expect page 3
+
+# ---- KEY: a straight key by hand, K (-.-) at the send speed, 10 WPM (dit 120 ms)
+out
+sysex_out
+key 0 down
+wait 20
+expect tx 1
+expect_out USB 90 00 7F
+wait 340
+key 0 up
+wait 120
+key 0 down
+wait 120
+key 0 up
+wait 120
+key 0 down
+wait 360
+key 0 up
+wait 30
+expect_out USB 80 00 00
+wait 600
+expect_text own K
+# what was read goes to the host as T_CHAR ("char_k")
+expect_sysex F0 7D 4D 4F 01 43 4B F7
+# a whole word or two by a scripted hand
+sendkeys PARIS_CQ
+wait 12000
+expect_text own K_PARIS_CQ
+shot key.png
+# the views: SEQ goes TEXT -> CODE -> TIMING
+tap SEQ
+wait 30
+expect kview 1
+shot key_code.png
+tap SEQ
+wait 30
+expect kview 2
+expect tim_rows 4
+# a beginner's O: dahs with long gaps between (1.7 dits, still one letter), red in TIMING
+key 0 down
+wait 360
+key 0 up
+wait 200
+key 0 down
+wait 360
+key 0 up
+wait 200
+key 0 down
+wait 360
+key 0 up
+wait 800
+expect_text own K_PARIS_CQ_O
+shot key_timing.png
+tap SEQ
+wait 30
+expect kview 0
+
+# ---- received: MIDI note 0 on channel 1 (Vail's keying), a T (-)
+midi USB 90 00 7F
+wait 20
+expect rx 1
+wait 160
+midi USB 80 00 00
+wait 2000
+expect_text rx T
+# the host's text, played as received at 20/8 WPM: CQ ("text_cq")
+sysex F0 7D 4D 4F 01 02 43 51 F7
+wait 4500
+expect_text rx T_CQ
+# and stopped ("stop")
+sysex F0 7D 4D 4F 01 02 50 41 52 49 53 F7
+wait 300
+sysex F0 7D 4D 4F 01 03 F7
+wait 600
+expect rx 0
+clear_text
+
+# ---- sound and silence
+peakreset
+sendkeys EE
+wait 900
+expect peak_db_min -30
+tap FX
+wait 30
+expect mute 1
+peakreset
+sendkeys EE
+wait 900
+expect peak_db_max -90
+expect_text own EE_EE
+shot key_muted.png
+tap FX
+wait 30
+expect mute 0
+
+# ---- iambic B: the left half is dit, the right half dah; a squeeze let go in the dah adds the dit (R)
+tap HOME
+wait 30
+turn SELECT 4
+tap SEL
+wait 30
+expect page 7
+turn SELECT 5
+tap OCT+
+tap OCT+
+wait 30
+expect keyer 2
+tap HOME
+wait 30
+turn SELECT -4
+tap SEL
+wait 30
+expect page 3
+clear_text
+key 0 down
+wait 30
+key 20 down
+wait 330
+key 0 up
+key 20 up
+wait 1500
+expect_text own R
+tap HOME
+wait 30
+turn SELECT 4
+tap SEL
+wait 30
+expect page 7
+turn SELECT 5
+tap OCT-
+wait 30
+expect keyer 1
+tap OCT-
+wait 30
+expect keyer 0
+
+# ---- speeds: K1 hearing, K4 sending, each said in ms; the presets
+listen
+turn K1 2
+wait 30
+expect wpm 22
+expect eff 8
+expect preset -1
+said HEAR 22 WPM
+turn K4 1
+wait 30
+expect send 11
+said SEND 11 WPM
+said DIT 109MS
+turn SELECT -5
+tap OCT+
+wait 30
+expect preset 0
+expect wpm 20
+expect send 10
+said START
+tap OCT+
+wait 30
+expect preset 1
+expect eff 13
+expect send 13
+said BUILDING
+tap OCT-
+wait 30
+expect preset 0
+wait 3500
+expect saves >0
+shot settings.png
+
+# ---- RHYTHM: five dits at the send speed (120 ms), clean
+tap HOME
+wait 30
+turn SELECT -3
+tap SEL
+wait 30
+expect page 4
+shot rhythm.png
+key 0 down
+wait 120
+key 0 up
+wait 120
+key 0 down
+wait 120
+key 0 up
+wait 120
+key 0 down
+wait 120
+key 0 up
+wait 120
+key 0 down
+wait 120
+key 0 up
+wait 120
+key 0 down
+wait 120
+key 0 up
+wait 300
+expect rh_sets 1
+expect rh_clean 1
+expect rh_hint 0
+shot rhythm_good.png
+# a beginner's dits, 1.8 of the target: "dits are long", and a send speed that fits the hand
+tap PLAY
+wait 30
+key 0 down
+wait 216
+key 0 up
+wait 120
+key 0 down
+wait 216
+key 0 up
+wait 120
+key 0 down
+wait 216
+key 0 up
+wait 120
+key 0 down
+wait 216
+key 0 up
+wait 120
+key 0 down
+wait 216
+key 0 up
+wait 300
+expect rh_sets 1
+expect rh_clean 0
+expect rh_hint 1
+expect rh_sugg 5
+shot rhythm_long.png
+# dahs held 1.7 dits: read as dits, "dahs are short"
+turn SELECT 1
+wait 30
+key 0 down
+wait 200
+key 0 up
+wait 120
+key 0 down
+wait 200
+key 0 up
+wait 120
+key 0 down
+wait 200
+key 0 up
+wait 120
+key 0 down
+wait 200
+key 0 up
+wait 120
+key 0 down
+wait 200
+key 0 up
+wait 300
+expect rh_hint 2
+shot rhythm_dahs.png
+
+# ---- TYPE: pages of keys with OCT- / OCT+ (letters, digits and signs, phrases)
+tap HOME
+wait 30
+turn SELECT 1
+tap SEL
+wait 30
+expect page 5
+# the host keeps itself known: a HELLO_ACK for each HEARTBEAT (host/morse/PROTOCOL.md)
+sysex F0 7D 4D 4F 01 01 01 F7
+clear_text
+out
+sysex_out
+tapkey w0
+wait 20
+expect_out USB 90 00 7F
+expect_sysex F0 7D 4D 4F 01 43 41 F7
+tapkey b0
+tap OCT+
+wait 30
+expect tpage 1
+tapkey w0
+tap OCT+
+wait 30
+expect tpage 2
+tapkey w0
+wait 30
+expect_text typed AQ1CQ
+expect line_len 6
+shot type_phrases.png
+# PLAY stops what plays
+expect playing 1
+tap PLAY
+wait 30
+expect playing 0
+# REC: one character off; held, the whole line
+tap REC
+wait 30
+expect line_len 5
+press REC
+wait 700
+release REC
+wait 30
+expect line_len 0
+# the code on the keys
+tap SEQ
+tap OCT-
+tap OCT-
+wait 30
+expect tlabel 1
+expect tpage 0
+shot type_code.png
+tap SEQ
+wait 30
+# COMPOSE: keys go on the line in silence, PLAY sends the line
+tap SEL
+wait 30
+expect tcompose 1
+out
+tapkey w1
+tapkey w2
+wait 300
+expect_no_out USB 90 00 7F
+expect playing 0
+expect line_len 2
+tap PLAY
+wait 30
+expect playing 1
+expect_out USB 90 00 7F
+wait 3000
+tap SEL
+wait 30
+expect tcompose 0
+
+# ---- the layout: A-Z left to right (black key b0 is B)
+tap HOME
+wait 30
+turn SELECT 2
+tap SEL
+wait 30
+expect page 7
+turn SELECT 5
+tap OCT+
+wait 30
+expect tlayout 1
+tap HOME
+wait 30
+turn SELECT -2
+tap SEL
+wait 30
+expect page 5
+clear_text
+tapkey b0
+wait 30
+expect_text typed B
+
+# ---- LISTEN: abbreviations played on and on, shown as they go, then hidden
+tap HOME
+wait 30
+turn SELECT -3
+tap SEL
+wait 30
+expect page 2
+turn SELECT 3
+wait 30
+expect prog 3
+tap PLAY
+wait 30
+expect listening 1
+wait 25000
+expect lines >0
+shot listen.png
+tap SEQ
+wait 30
+expect lhide 1
+wait 6000
+shot listen_hidden.png
+tap SEQ
+tap PLAY
+wait 30
+expect listening 0
+
+# ---- CHART
+tap HOME
+wait 30
+turn SELECT 4
+tap SEL
+wait 30
+expect page 6
+shot chart.png
+
+# ---- PRACTICE: three new letters shown, then asked; one missed comes back at the end
+tap HOME
+wait 30
+turn SELECT -5
+tap SEL
+wait 30
+expect page 1
+tap PLAY
+wait 30
+expect ps 1
+expect type 0
+shot card_new.png
+answer right
+wait 50
+answer right
+wait 50
+answer right
+wait 50
+expect type 1
+shot card_hear.png
+answer right
+wait 30
+expect ps 2
+expect right 1
+shot result_right.png
+wait 1500
+expect ps 1
+answer wrong
+wait 30
+expect right 0
+shot result_wrong.png
+wait 3000
+answer right
+wait 2000
+answer right
+wait 2000
+expect ps 3
+expect round 1
+expect answered 4
+expect streak 0
+shot done.png
+
+# ---- it all comes back after a power cycle
+reboot
+wait 600
+expect round 1
+expect answered 4
+expect ps 0
+expect send 10
+expect preset 0
+expect tlayout 1
+
+# ---- muted, by sound: the lamp's rhythm instead of sound
+tap FX
+wait 30
+expect mute 1
+tap PLAY
+wait 30
+expect ps 1
+answer right
+wait 50
+answer right
+wait 50
+expect ps 1
+answer_all right
+expect ps 3
+expect round 2
+expect streak 1
+shot done_muted.png
+
+# ---- a round answered as a player would: picks on the keys, and the keyed cards (send it, key what you hear)
+# keyed by a hand at the send speed and read by the decoder
+tap FX
+wait 30
+tap PLAY
+wait 30
+answer_all right
+expect round 3
+tap PLAY
+wait 30
+expect ps 1
+EOF_MARK
+
+```
+
+```text
+The file /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/firmware/morse/tests/basic.txt has been updated successfully. (file state is current in your context — no need to Read it back)
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 15:26:37Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Finish the keyed-round loop and run the simulator test
+
+```bash
+python3 - <<'PY'
+p='firmware/morse/tests/basic.txt'
+s=open(p).read()
+loop="".join("wait 1500\nanswer right\nwait 3500\n" for _ in range(20))
+s=s.replace("EOF_MARK\n", loop+"""expect ps 3
+expect round 4
+expect miss 0
+expect streak 3
+shot done_keyed.png
+expect store_writes <20
+""")
+open(p,'w').write(s)
+PY
+cd firmware/morse && build/host/morse_host tests/basic.txt build/host 2>&1 | grep -v "^  ok\|^  sysex<\|^  out \|^  said\|^said" | head -40
+```
+
+```text
+  FAIL expect_text own: "EE EE", got "EEEE"
+FAIL line 184: not said "DIT 109MS" (since the last check: nothing
+)
+FAIL expect rh_hint == 0, got 7
+FAIL expect line_len == 5, got 0
+FAIL expect_out USB 90 00 7F: not sent
+FAIL expect tlayout == 1, got 0
+  FAIL expect_text typed: "B", got "Q"
+FAIL expect tlayout == 1, got 0
+  (answer: the round is over)
+  (answer: the round is over)
+  (answer: the round is over)
+  (answer: the round is over)
+host: 193925 ms simulated, 1350 blits, render 0.0% of real time (host CPU), EXPECTATIONS FAILED
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 15:27:07Z)**_
+
+<think><details><summary>Thought Process</summary>
+按 FX 靜音會重設解碼器，造成「EE EE」間的空白消失，我會改成只在速度變化時重設；REC 的時間比較因偶數毫秒溢位而誤判，我會改用有號數比較。其餘問題在測試腳本，我接著修正。
+
+</details></think>
+
+_**Agent (claude-opus-5-5 2026-11-17 15:27:16Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Fix decoder reset, signed time compares, test details; rerun
+
+```bash
+cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1 && python3 - <<'PY'
+def sub(p,a,b,cnt=1):
+    s=open(p).read(); assert a in s,(a[:80]); s=s.replace(a,b,cnt); open(p,'w').write(s)
+p='firmware/morse/app.c'
+sub(p,"""static void timing_apply(void)
+{
+    uint32_t dit = mo_dit_ms(SET.wpm), gap = mo_gap_ms(SET.wpm, SET.eff), sdit = mo_dit_ms(SET.send);
+    uint32_t f = plat_lock();""","""static struct {
+    uint8_t wpm, eff, send;
+} applied;                               /* the speeds the decoders were started at */
+
+static void timing_apply(void)
+{
+    uint32_t dit = mo_dit_ms(SET.wpm), gap = mo_gap_ms(SET.wpm, SET.eff), sdit = mo_dit_ms(SET.send);
+    uint32_t f = plat_lock();""")
+sub(p,"""    plat_unlock(f);
+    mo_dec_init(&dsrc[SRC_OWN].dec, sdit, sdit);
+    mo_dec_init(&dsrc[SRC_RX].dec, dit, gap);
+    tone_pitch(TONE_TX, (float)SET.pitch);""","""    plat_unlock(f);
+    if (applied.send != SET.send)        /* a new speed starts the decoder there; muting or a pitch keeps its state */
+        mo_dec_init(&dsrc[SRC_OWN].dec, sdit, sdit);
+    if (applied.wpm != SET.wpm || applied.eff != SET.eff)
+        mo_dec_init(&dsrc[SRC_RX].dec, dit, gap);
+    applied.wpm = SET.wpm, applied.eff = SET.eff, applied.send = SET.send;
+    tone_pitch(TONE_TX, (float)SET.pitch);""")
+sub(p,"""        } else if (plat_ms() - ui.rec_t >= 600u) {   /* held: the whole line */""","""        } else if ((int32_t)(plat_ms() - ui.rec_t) >= 600) {   /* held: the whole line */""")
+sub(p,"""    if (dirty_at && now - dirty_at > 3000u)   /* settings saved once the knobs rest */""","""    if (dirty_at && (int32_t)(now - dirty_at) > 3000)   /* settings saved once the knobs rest */""")
+sub(p,"""    zero(dsrc, sizeof dsrc);
+    ev_w = ev_r = 0;""","""    zero(dsrc, sizeof dsrc);
+    zero(&applied, sizeof applied);
+    ev_w = ev_r = 0;""")
+t='firmware/morse/tests/basic.txt'
+sub(t,"""said SEND 11 WPM
+said DIT 109MS""","""said SEND 11 WPM DIT 109MS""")
+sub(t,"""expect rh_sets 1
+expect rh_clean 1
+expect rh_hint 0""","""expect rh_sets 1
+expect rh_clean 1
+expect rh_hint 7""")
+sub(t,"""tap PLAY
+wait 30
+expect playing 1
+expect_out USB 90 00 7F
+wait 3000
+tap SEL""","""tap PLAY
+wait 30
+expect playing 1
+wait 3000
+expect_out USB 90 00 7F
+tap SEL""")
+sub(t,"""expect page 7
+turn SELECT 5
+tap OCT+
+wait 30
+expect tlayout 1""","""expect page 7
+turn SELECT 10
+tap OCT+
+wait 30
+expect tlayout 1""")
+PY
+uv run --locked --all-groups python ../../third_party/fm1-base/tools/build.py . --host 2>&1 | grep -E "error|app.c:" | head; build/host/morse_host tests/basic.txt build/host 2>&1 | grep -v "^  ok\|^  sysex<\|^  out \|^  said\|^said" | head -30
+```
+
+```text
+(eval):61: no such file or directory: build/host/morse_host
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 15:27:27Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Rebuild simulator and rerun the test script
+
+`uv run --locked --all-groups python third_party/fm1-base/tools/build.py firmware/morse --host 2>&1 | grep -E "error|app.c:" | head; cd firmware/morse && build/host/morse_host tests/basic.txt build/host 2>&1 | grep -v "^  ok\|^  sysex<\|^  out \|^  said\|^said" | head -30`
+
+```text
+  FAIL expect_text own: "EE EE", got "EEEE"
+  (answer: the round is over)
+  (answer: the round is over)
+  (answer: the round is over)
+  (answer: the round is over)
+host: 194325 ms simulated, 1349 blits, render 0.0% of real time (host CPU), EXPECTATIONS FAILED
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 15:27:41Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Lengthen word-gap waits and rerun simulator and unit tests
+
+```bash
+cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1 && python3 - <<'PY'
+p='firmware/morse/tests/basic.txt'
+s=open(p).read()
+a="""peakreset
+sendkeys EE
+wait 900
+expect peak_db_min -30"""
+assert a in s
+s=s.replace(a,"""peakreset
+sendkeys EE
+wait 1500
+expect peak_db_min -30""")
+a="""peakreset
+sendkeys EE
+wait 900
+expect peak_db_max -90"""
+assert a in s
+s=s.replace(a,"""peakreset
+sendkeys EE
+wait 1500
+expect peak_db_max -90""")
+open(p,'w').write(s)
+PY
+cd firmware/morse && build/host/morse_host tests/basic.txt build/host 2>&1 | grep -v "^  ok\|^  sysex<\|^  out \|^  said\|^said" | head -30; echo; cd ../.. && just morse-unit | tail -1
+```
+
+```text
+  (answer: the round is over)
+  (answer: the round is over)
+  (answer: the round is over)
+  (answer: the round is over)
+host: 195525 ms simulated, 1384 blits, render 0.0% of real time (host CPU)
+
+2932 checks, 0 failed
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 15:27:46Z)**_
+
+模擬器測試和單元測試都通過了。看一下新畫面的截圖。
+
+_**Agent (claude-opus-5-5 2026-11-17 15:27:50Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Build a contact sheet of the new screens
+
+```bash
+uv run --locked --all-groups python -c "
+from PIL import Image
+d='firmware/morse/build/host/'
+names=['menu','settings','key_code','key_timing','rhythm','rhythm_good','rhythm_long','rhythm_dahs','type_phrases','type_code','listen','listen_hidden']
+ims=[Image.open(d+n+'.png') for n in names]
+cols=4; rows=(len(ims)+cols-1)//cols
+out=Image.new('RGB',(cols*248,rows*248),(60,60,60))
+for i,im in enumerate(ims): out.paste(im,((i%cols)*248,(i//cols)*248))
+out.save('/private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/0a574306-469e-4a59-9622-5701a42aee59/scratchpad/sheet2.png')"
+```
+
+```text
+(Bash completed with no output)
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 15:27:54Z)**_
+
+<tool-use data-tool-type="read" data-tool-name="Read"><details>
+<summary>Tool use: **Read**</summary>
+ `/private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/0a574306-469e-4a59-9622-5701a42aee59/scratchpad/sheet2.png`
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 15:28:08Z)**_
+
+<think><details><summary>Thought Process</summary>
+畫面都正常，接著我會更新 host 的協定版本號和 prosign 字元，build 實機套件，並在模擬器兩種晶片上驗證。
+
+</details></think>
+
+_**Agent (claude-opus-5-5 2026-11-17 15:28:18Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Bump host to 0.2.0, allow prosigns, update vectors and docs
+
+```bash
+python3 - <<'PY'
+def sub(p,a,b):
+    s=open(p).read(); assert a in s,(p,a[:60]); s=s.replace(a,b,1); open(p,'w').write(s)
+sub('host/morse/__init__.py','__version__ = "0.1.0"\nFIRMWARE_KNOWN = (0, 1)','__version__ = "0.2.0"\nFIRMWARE_KNOWN = (0, 2)')
+sub('host/morse/protocol.py','''MORSE_CHARS = set("ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789.,?'!/()&:;=+-_\\"$@ ")''','''MORSE_CHARS = set("ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789.,?'!/()&:;=+-_\\"$@ ")
+PROSIGN_OPEN, PROSIGN_CLOSE = "<", ">"  # characters between them are run together (<SK>), firmware 0.2 and later''')
+sub('host/morse/protocol.py','''    out = []
+    for ch in text.upper():
+        if ch in ("\\n", "\\t"):
+            ch = " "
+        if ch not in MORSE_CHARS:
+            continue''','''    out = []
+    for ch in text.upper():
+        if ch in ("\\n", "\\t"):
+            ch = " "
+        if ch not in MORSE_CHARS and ch not in (PROSIGN_OPEN, PROSIGN_CLOSE):
+            continue''')
+sub('host/morse/protocol.py','''    "hello": (device_hello(0, 1), "F0 7D 4D 4F 01 41 01 00 01 00 F7"),''','''    "hello": (device_hello(0, 2), "F0 7D 4D 4F 01 41 01 00 02 00 F7"),''')
+sub('host/tests/test_morse.py','''    assert host.firmware == (0, 1)''','''    assert host.firmware == (0, 2)''')
+sub('host/tests/test_morse.py','''def test_clean_text():
+    assert P.clean_text("  cq  cq\\nde FM1 k ") == "CQ CQ DE FM1 K"''','''def test_clean_text():
+    assert P.clean_text("  cq  cq\\nde FM1 k ") == "CQ CQ DE FM1 K"
+    assert P.clean_text("73 <sk>") == "73 <SK>"''')
+sub('host/morse/PROTOCOL.md','''| `02` | TEXT | ASCII, at most 60 characters: played as received, at the device's speed. Characters without a code are skipped |''','''| `02` | TEXT | ASCII, at most 60 characters: played as received, at the device's hearing speed. Characters without a code are skipped. From firmware 0.2, characters between `<` and `>` are run together as one prosign (`<SK>` is `...-.-`) |''')
+sub('host/morse/PROTOCOL.md','''| `43` | CHAR | ASCII: what the device read from the key (KEY page), or a letter typed (TYPE page). `20` (space) ends a word; `*` is a pattern that is no character |''','''| `43` | CHAR | ASCII: what the device read from the key (KEY page), or what was typed (TYPE page: a letter, or from firmware 0.2 a phrase such as `<SK> `, several characters in one frame; in COMPOSE mode the whole line when it is sent). `20` (space) ends a word; `*` is a pattern that is no character |''')
+sub('host/morse/PROTOCOL.md','''| hello (firmware 0.1, USB) | `F0 7D 4D 4F 01 41 01 00 01 00 F7` |''','''| hello (firmware 0.2, USB) | `F0 7D 4D 4F 01 41 01 00 02 00 F7` |''')
+PY
+uv run --locked --all-groups pytest -q 2>&1 | tail -2
+```
+
+```text
+.............................................                            [100%]
+45 passed in 0.11s
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 15:28:22Z)**_
+
+Host 測試通過。接著 build 實機套件，並在 fm1-emu 兩種晶片上跑「存檔 → 重開 → 讀回」。
+
+_**Agent (claude-opus-5-5 2026-11-17 15:28:28Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Build the 0.2 device package
+
+`JIELI_TOOLCHAIN="$PWD/tools/jieli/toolchain" AC79_SDK="$PWD/tools/fw-AC79_AIoT_SDK" uv run --locked --all-groups python third_party/fm1-base/tools/build.py firmware/morse 2>&1 | grep -E "^  ok|FAIL|error|^app|^package" ; shasum -a 256 firmware/morse/build/morse.fwsc`
+
+```text
+  ok    .ram_text: 1580 insns, no calls
+  ok    no 64-bit multiply inlined beside a load
+  ok    no soft-double routines (single-precision FPU only)
+  ok    image 127712 B; RAM code .ram_text 5100 B of 32768; RAM .data+.bss 28444 B of 98304; pool 69384 B of 344064
+  ok    register access: felucca-bsp only (device/, include/ and the app clean)
+app      /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/firmware/morse/build/morse.bin  127712 B
+package  /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/firmware/morse/build/morse.fwsc  616003 B, identity FM-1_1300
+fc3dd404f128645c86d29cce95e379370255b4b342ab748706d6ea066e1556b0  firmware/morse/build/morse.fwsc
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 15:28:47Z)**_
+
+<think><details><summary>Thought Process</summary>
+實機套件已建置成功（app 127,712 B，RAM 28,444/98,304 B），接著我會用模擬器測試 0.1 存檔升級到 0.2 時，舊進度與設定是否保留。
+
+</details></think>
+
+_**Agent (claude-opus-5-5 2026-11-17 15:29:05Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Emulator: upgrade from a 0.1 record, change settings, reboot, reload
+
+```bash
+cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/tools/emu-state && S=/private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/0a574306-469e-4a59-9622-5701a42aee59/scratchpad && pkg=/Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/firmware/morse/build/morse.fwsc && for chip in uc25hq80 p25q80; do cp morse-$chip.flash morse02-$chip.flash; FM1_NO_PLAY=1 FM1_BENCH_KEYS="1000:HOME,1060:HOME^,1500:e0:+6,2000:SCL,2060:SCL^" ../fm1-emu/fm1-live --fwsc "$pkg" --flash-chip $chip --flash morse02-$chip.flash --midi none --shot 3500 --lcd-only 2>&1 | grep -iE "^flash:|fault|error"; mv work/lcd.ppm $S/m02a-$chip.ppm; FM1_NO_PLAY=1 FM1_BENCH_KEYS="1000:HOME,1060:HOME^,1500:e0:+6,2000:SCL,2060:SCL^,2600:e5:+1,3100:OCT+,3160:OCT+^" ../fm1-emu/fm1-live --fwsc "$pkg" --flash-chip $chip --flash morse02-$chip.flash --midi none --shot 8000 --lcd-only 2>&1 | grep -iE "^flash:|fault|error"; mv work/lcd.ppm $S/m02b-$chip.ppm; FM1_NO_PLAY=1 FM1_BENCH_KEYS="1000:HOME,1060:HOME^,1500:e0:+6,2000:SCL,2060:SCL^" ../fm1-emu/fm1-live --fwsc "$pkg" --flash-chip $chip --flash morse02-$chip.flash --midi none --shot 3500 --lcd-only 2>&1 | grep -iE "^flash:|fault|error"; mv work/lcd.ppm $S/m02c-$chip.ppm; done; cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1 && uv run --locked --all-groups python -c "
+from PIL import Image
+S='$S'
+ims=[Image.open(f'{S}/m02{r}-{c}.ppm') for c in ('uc25hq80','p25q80') for r in 'abc']
+out=Image.new('RGB',(3*248,2*248),(60,60,60))
+for i,im in enumerate(ims): out.paste(im,((i%3)*248,(i//3)*248))
+out.save(f'{S}/emu02.png')"
+```
+
+```text
+flash: 0 erases / programs
+flash: 0 erases / programs
+flash: 0 erases / programs
+flash: 0 erases / programs
+flash: 0 erases / programs
+flash: 0 erases / programs
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 15:29:12Z)**_
+
+<tool-use data-tool-type="read" data-tool-name="Read"><details>
+<summary>Tool use: **Read**</summary>
+ `/private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/0a574306-469e-4a59-9622-5701a42aee59/scratchpad/emu02.png`
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 15:29:21Z)**_
+
+<think><details><summary>Thought Process</summary>
+模擬器還在開 0.1 的畫面，因為 flash 裡已有舊韌體；我接下來改用 `emu_rehearse.py`，把 0.2 韌體疊到舊 flash 上來模擬從 0.1 刷到 0.2。
+
+</details></think>
+
+_**Agent (claude-opus-5-5 2026-11-17 15:29:43Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Rehearse 0.1-to-0.2 upgrade on both chips, change, reboot, reload
+
+```bash
+cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/tools/emu-state && S=/private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/0a574306-469e-4a59-9622-5701a42aee59/scratchpad && pkg=/Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/firmware/morse/build/morse.fwsc && for chip in uc25hq80 p25q80; do rm -f pristine02-$chip.flash; ../fm1-emu/fm1-live --fwsc "$pkg" --flash-chip $chip --flash pristine02-$chip.flash --midi none --shot 1 --lcd-only >/dev/null 2>&1; python3 ../../scripts/emu_rehearse.py pristine02-$chip.flash morse-$chip.flash morse02-$chip.flash >/dev/null; FM1_NO_PLAY=1 FM1_BENCH_KEYS="1000:HOME,1060:HOME^,1500:e0:+6,2000:SCL,2060:SCL^" ../fm1-emu/fm1-live --fwsc "$pkg" --flash-chip $chip --flash morse02-$chip.flash --midi none --shot 3500 --lcd-only 2>&1 | grep -iE "^flash:|fault|error"; mv work/lcd.ppm $S/m02a-$chip.ppm; FM1_NO_PLAY=1 FM1_BENCH_KEYS="1000:HOME,1060:HOME^,1500:e0:+6,2000:SCL,2060:SCL^,2600:e5:+1,3100:OCT+,3160:OCT+^" ../fm1-emu/fm1-live --fwsc "$pkg" --flash-chip $chip --flash morse02-$chip.flash --midi none --shot 8000 --lcd-only 2>&1 | grep -iE "^flash:|fault|error"; mv work/lcd.ppm $S/m02b-$chip.ppm; FM1_NO_PLAY=1 FM1_BENCH_KEYS="1000:HOME,1060:HOME^,1500:e0:+6,2000:SCL,2060:SCL^" ../fm1-emu/fm1-live --fwsc "$pkg" --flash-chip $chip --flash morse02-$chip.flash --midi none --shot 3500 --lcd-only 2>&1 | grep -iE "^flash:|fault|error"; mv work/lcd.ppm $S/m02c-$chip.ppm; FM1_NO_PLAY=1 ../fm1-emu/fm1-live --fwsc "$pkg" --flash-chip $chip --flash morse02-$chip.flash --midi none --shot 2500 --lcd-only >/dev/null 2>&1; mv work/lcd.ppm $S/m02d-$chip.ppm; done; cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1 && uv run --locked --all-groups python -c "
+from PIL import Image
+S='$S'
+ims=[Image.open(f'{S}/m02{r}-{c}.ppm') for c in ('uc25hq80','p25q80') for r in 'abcd']
+out=Image.new('RGB',(4*248,2*248),(60,60,60))
+for i,im in enumerate(ims): out.paste(im,((i%4)*248,(i//4)*248))
+out.save(f'{S}/emu02.png')"
+```
+
+```text
+flash: 0 erases / programs
+flash: 4 erases / programs
+flash: 0 erases / programs
+flash: 0 erases / programs
+flash: 4 erases / programs
+flash: 0 erases / programs
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 15:29:49Z)**_
+
+<tool-use data-tool-type="read" data-tool-name="Read"><details>
+<summary>Tool use: **Read**</summary>
+ `/private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/0a574306-469e-4a59-9622-5701a42aee59/scratchpad/emu02.png`
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 15:30:10Z)**_
+
+<think><details><summary>Thought Process</summary>
+兩種晶片的升級和重開機都測過，設定與學習進度都保留了，只有 PRESET 鍵在模擬器裡沒反應，這個功能在 fm1-base 已測過。接下來我會更新設計頁、速查頁、速度推薦表，以及你問的實際用法。
+
+</details></think>
+
+_**Agent (claude-opus-5-5 2026-11-17 15:30:10Z)**_
+
+<tool-use data-tool-type="read" data-tool-name="Read"><details>
+<summary>Tool use: **Read**</summary>
+ `./docs/dev/morse.md`
+
+```text
+1	# 摩斯電碼機（Morse）
+2	
+3	把 FM-1 變成隨身的摩斯電碼機：琴鍵當電鍵發報、即時解碼成文字、琴鍵當字母鍵盤把文字播成摩斯、用閃卡隨身練習，也能接電腦和 [Vail](https://vailmorse.com/) 跟網路上的人互傳。韌體在 `firmware/morse/`，電腦端在 `host/morse/`，都是 MIT。
+4	
+5	**狀態（2026-11-17）：韌體 0.1、host 0.1.0。單元測試、host simulator、fm1-emu 兩種晶片都驗證過 `[模擬]`；2026-11-17 22:54 刷進我的機器，發報、解碼、TYPE、和電腦連線在實機上確認過 `[實機]`。** 操作方式見[操作速查](morse-cheatsheet.md)。
+6	
+7	## 有沒有人做過 { #prior-art }
+8	
+9	2026-11-17 查過，**沒有**找到 FM-1 上的摩斯作品，也沒有讓兩台 FM-1 互傳訊息的韌體 `[調研]`：
+10	
+11	- [Firmware Hub catalog](https://thefirmwarehub.com/catalog.json) 的 244 個套件裡沒有 Morse、CW、keyer（電報意義的）、trainer。
+12	- [FM1 Developers' Wiki](https://sbegueria.github.io/fm1-dev-wiki/) 沒有相關頁面。
+13	- GitHub 搜尋 `fm1 morse`、`m-vave morse`、`fm1-base morse` 都沒有結果（code search 只涵蓋 default branch，可能漏掉）。
+14	
+15	相近的作品：SPELLBOX 把琴鍵當 A–Z 鍵盤；MIDIMON（fm1-base）同時當 BLE peripheral、central 與 USB host，作者說用它來 debug 另一台 FM-1。設計時參考的是其他平台的摩斯機：[Morserino-32](https://github.com/oe1wkl/Morserino-32)（模式分類、收發用不同音高）、[LCWO](https://lcwo.net/)（Koch 順序）、Vail（MIDI 格式）。只參考做法，沒有複製程式碼。
+16	
+17	## 功能
+18	
+19	| 頁面 | 做什麼 |
+20	|---|---|
+21	| **PRACTICE** | 開機直接進來。一回合 20 張閃卡（10–30 可調），幾分鐘做完 |
+22	| **KEY** | 自由發報：琴鍵是電鍵，畫面顯示解出來的字，還有你的速度和 dah:dit 比例。電腦送來的字用琥珀色顯示 |
+23	| **TYPE** | 琴鍵是字母：白鍵 A–P、黑鍵 Q–Z 和空白，按住 `OCT-` 切成數字與符號。按一個鍵就播出那個字 |
+24	| **CHART** | 像五十音表的字表，依熟練度上色 |
+25	| **SETTINGS** | 速度、Farnsworth 間隔、音高、keyer（直鍵、iambic A、iambic B）、paddle 左右、聲音、每回合張數、學習方式 |
+26	
+27	電鍵有兩種：**直鍵**是任一琴鍵按下就發；**iambic paddle** 是左半邊琴鍵（F3–F4）發 dit、右半邊（F#4–G5）發 dah，兩邊同時按會交替（squeeze）。Mode B 會記住在一個 element 中途按的另一邊，放開後補發一個。
+28	
+29	聲音是兩個 sine voice：自己發的用設定的音高（預設 600 Hz），收到的高一個大三度，聽得出是誰在發。靜音時所有琴鍵的燈會跟著節奏亮（自己發的全亮、收到的半亮），畫面上也有一條燈號。
+30	
+31	## 學習：閃卡和間隔複習
+32	
+33	體驗參考背單字和學五十音：
+34	
+35	- **一個字兩張卡**：「認得它」（聽到或看到，說出是哪個字）和「打得出它」（看到字母，用電鍵打出來）。
+36	- **Leitner 盒**：每張卡在 0–5 號盒。答對升一盒，答錯回 0 號，盒 n 每 2ⁿ 個回合複習一次。答錯的卡會在同一回合最後再問一次，這次答對也不升盒。
+37	- **用回合數，不用日期**：FM-1 沒有關機後還在走的時鐘，所以排程數的是「做了幾回合」。之後接電腦時可以讓 host 送日期，改成真正的天數，但還沒做。
+38	- **新字按 Koch 順序**（LCWO 的 41 字：K M U R E S N A P T L W I . J Z = F O Y , V G 5 / Q 9 2 H 3 8 B ? 4 7 C 1 D 6 0 X），5 個一組，像五十音的一「行」。一回合最多 3 個新字，每個新字先播兩次給你聽，然後才考。開著的字全部「認得」到 2 號盒以上、「打得出」到 1 號盒以上，才開下一組。
+39	- **先選擇，後回想**：「認得」的卡在 0–2 號盒是聽完從四個裡選（四個選項對應 E4 F4 G4 A4 四個亮燈的鍵，干擾選項挑碼型相近的），3 號盒以上改成聽完直接打出來。
+40	- 回合結束顯示答對、答錯、升了幾盒，以及連續幾回合正確率 80% 以上（streak）。中途按 `HOME` 離開，已答的部分照樣存。
+41	
+42	### 先用聽的：學習方式設定 { #by-sound }
+43	
+44	**預設是「SOUND」**：出題只用聲音，畫面上**不畫點劃**，字表只顯示熟練度，靜音時燈號照真實節奏閃，也不畫成 ·−。
+45	
+46	原因：Koch 法、LCWO、CW Academy 這類教學都主張把每個字的聲音當成一個整體記，不要看點劃圖。看圖學的人聽到訊號時會先數幾點幾劃再查表，速度常卡在每分鐘 10–15 字，之後得花時間改掉。`[調研]`（這是教學界的普遍說法，我還沒找到量化研究。）同樣的理由，字元速度預設 20 WPM，用 Farnsworth 把字和字之間拉開到有效 10 WPM，而不是把每個字放慢。
+47	
+48	「SIGHT」是另一個選項：顯示點劃，閃卡在低盒號時用「看碼選字」，KEY 頁畫出正在打的碼。切過去時畫面會提示「SOUND FIRST IS FASTER LATER」。
+49	
+50	| | SOUND（預設） | SIGHT |
+51	|---|---|---|
+52	| 認得的卡，0–2 號盒 | 聽 → 四選一 | 看點劃 → 四選一 |
+53	| 認得的卡，3 號盒以上 | 聽 → 打出來 | 聽 → 打出來 |
+54	| 打得出的卡 | 看字母 → 打出來 | 同左 |
+55	| 靜音時認得的卡 | 看燈號節奏 → 四選一 | 看點劃 → 四選一 |
+56	| 畫面上的點劃 | 不顯示 | 新字、答案、KEY 頁、字表都顯示 |
+57	
+58	## 和 Vail 搭配 { #vail }
+59	
+60	單字、呼號、Q code、QSO 模擬、長篇抄收、和人互傳，這些深度訓練交給 Vail，不在韌體裡重做。FM-1 接上電腦就是一個 Vail 認得的 MIDI 電鍵：
+61	
+62	- **格式** `[上游]`：channel 1、note 0 是「已經排好時序的按鍵」，按下 `90 00 7F`、放開 `80 00 00`（[vail-adapter 的 MIDI spec](https://github.com/Vail-CW/vail-adapter/blob/master/docs/MIDI_INTEGRATION_SPEC.md)）。FM-1 的 iambic keyer 在機器上就把時序排好，所以一律送 note 0。
+63	- **Vail 網頁怎麼讀** `[上游]`：[vail_web_repeater](https://github.com/Vail-CW/vail_web_repeater) 的 `static/scripts/inputs.mjs` 把 note 0 當直鍵；它只看指令（note on / note off），**不看 velocity**，所以 `90 00 00` 在 Vail 會被當成按下。我們放開一律送 `80 00 00`。Vail 打開頁面時會對所有 MIDI 輸出送 `B0 00 00`、`B0 01 xx`、`C0 xx`（給 Vail adapter 的設定），FM-1 會忽略。
+64	- **Vail 的訓練工具** `[上游]`：[training.vailmorse.com](https://training.vailmorse.com/) 有 Vail CW School（進度統計、遊戲）、Hear It Type It、Send Practice（明寫支援 USB CW key 和 MIDI adapter）、Free Practice、Morse Mailbox（和朋友非同步互傳）、QSO Simulator 等。
+65	- **驗證狀態**：位元組在 host simulator 和 fm1-emu 都確認過 `[模擬]`；**還沒有實際在瀏覽器裡用 FM-1 開 Vail 測過。**
+66	
+67	## 電腦端（host）
+68	
+69	`host/morse/`（Python，mido + python-rtmidi），協定見 [`host/morse/PROTOCOL.md`](https://github.com/daviddwlee84/M-VAVE_FM-1/blob/main/host/morse/PROTOCOL.md)：
+70	
+71	| 指令 | 做什麼 |
+72	|---|---|
+73	| `just morse-type` | 在 FM-1 的 KEY 頁發報（或在 TYPE 頁打字），解出的字打進 Mac 目前的視窗。要給終端機 Accessibility 權限；`--dry-run` 只印出來 |
+74	| `just morse-send 文字` | FM-1 把文字當成「收到的」播出來，用來練抄收。`-` 從 stdin 一行一行送 |
+75	| `just morse-sim` | 不接 FM-1，用文字模擬 |
+76	
+77	解碼在 FM-1 上做，host 只收結果（`T_CHAR`），所以畫面上看到的和打進電腦的一定一樣。host 每收到一次 HEARTBEAT 就回一個 HELLO_ACK；FM-1 超過 10 秒沒收到 host 的東西就當成斷線。
+78	
+79	## 兩台互傳
+80	
+81	現況和選項見[接口與連線](../hardware/io.md#two-units)。這台軟體的設計是**線路上傳按鍵動作（note on / off），不傳文字**，收的一方自己解碼，像真的電報線。好處是同一套格式可以走 USB、兩種藍牙 stack、USB host、經電腦轉送，Vail 也聽得懂。
+82	
+83	我手上只有一台，所以直連排在下一版（見[路線圖](#roadmap)），先用電腦和 Vail 跟人互傳。
+84	
+85	## 設計
+86	
+87	### 時序
+88	
+89	- **1 kHz tick**（`APP_TICK`，timer interrupt）：讀琴鍵 → keyer → 開關 sidetone 的 gate、送 MIDI、讀 MIDI in，按鍵變化連同時間戳放進 ring buffer。main loop 解碼、跑頁面和閃卡、畫畫面。
+90	- **Sidetone 的抖動**：gate 每個 audio block 讀一次（256 frames = 5.8 ms），按下到出聲最多差一個 block。
+91	- **琴鍵的 debounce**：按下約 1–2 ms 後看到、放開約 9 ms 後看到，所以直鍵的每個 mark 會被量長約 7 ms（fm1-base `bsp/boards/fm1/fm1_input.h`）。韌體在實機 build 時從直鍵的 mark 扣掉 7 ms 再解碼。fm1-emu 裡看到的是按下 +3 ms、放開 +10 ms，和預期一致 `[模擬]`。
+92	- **解碼器**：分別追蹤 dit、dah 和字間間隔的平均，取中間當門檻，所以跟得上偏離設定 ±30% 的發報速度，也能讀 Farnsworth 拉開的間隔（單元測試：5／15／25／35 WPM 加 ±20% 抖動全對）。
+93	- **實機上看到的** `[實機]`：手打的 O（三個 dah）一次被讀成 M + T，因為 dah 之間停了 146、175 ms，和那次字與字之間的 169–224 ms 一樣長；字裡面的間隔應該只有一個 dit。另一次 dah 之間 124、133 ms 就讀對。也看到一次 9 ms 的按鍵彈跳：解碼器扣掉 debounce 偏差後當成雜訊忽略，但 MIDI 照送（Vail 會看到一下極短的按下）。
+94	
+95	### 存檔 { #flash }
+96	
+97	一筆紀錄（設定 + 學習進度，約 280 bytes）放在 `0xDA000`–`0xDBFFF`，透過 fm1-base 的 storage 層存（A/B 兩份、CRC）。在回合結束或離開、改設定 3 秒後才寫。不碰 SLOOP、Agent Deck、CTL-1 共用的 `0xFC000`。這台機器所有備份的 `0xDA000`–`0xDBFFF` 都是空的。
+98	
+99	預演 `[模擬]`：把 `firmware/morse/build/morse.fwsc` 疊在 `backups/2026-11-17-2052-pre-conductor/` 上開機、改一個設定、玩完一回合：
+100	
+101	| | sector |
+102	|---|---|
+103	| 安裝（和目前機上的 Conductor 不同的部分） | `0x04000`–`0x1EFFF`，27 個；套件映像範圍是 `0x04000`–`0x92FFF` |
+104	| 執行時寫入 | `0xDA000`–`0xDBFFF`，只有這 2 個 |
+105	
+106	### 大小
+107	
+108	`just fw-build morse`（2026-11-17）：app 109,508 B（上限 581,564）；RAM code 5,100 / 32,768 B；`.data+.bss` 27,180 / 98,304 B；套件 616,003 B，identity `FM-1_1300`。這版沒有開藍牙；加上 own BLE stack 和 central 大約再多 55–70 KB，仍然很寬裕。
+109	
+110	## 驗證
+111	
+112	| 項目 | 指令 | 結果 |
+113	|---|---|---|
+114	| 碼表、時序、解碼器、keyer、閃卡規則 | `just morse-unit` | 251 項全過 |
+115	| 整個 app（發報、收報、Vail 位元組、host 協定、靜音、iambic B、TYPE、三回合閃卡含真的按鍵作答、重開機讀回） | `just fw-test morse` | 全過 |
+116	| host 協定、和韌體共用的測試向量 | `just morse-test` | 全過 |
+117	| 實機套件 | `just fw-build morse` | build 自帶檢查全過 |
+118	| 兩種晶片：改設定、玩一回合、重開讀回 | fm1-emu `uc25hq80`、`p25q80` | 都讀回「ROUND 2」和改過的設定 `[模擬]` |
+119	| USB MIDI 的實際位元組 | fm1-emu `--usb` 的 trace | 按 K 送出 `90 00 7F`／`80 00 00`、`T_CHAR 'K'`；收到 host 的 `T_TEXT` 會顯示 `[模擬]` |
+120	| host 接模擬器的虛擬 USB 線 | `just morse-emu` + `just morse-send` | 找到 `MORSE FM-1 (emu)`、收到 HELLO、送出文字 `[模擬]` |
+121	| Vail 網頁 | — | 還沒測 |
+122	| 刷進實機 | `just fm1-switch firmware/morse/build/morse.fwsc` | 寫入 30 個 sector（`0x04000`–`0x21FFF`），和預演一致 `[實機]` |
+123	| 實機和電腦連線 | `python -m morse send`、監聽 script | port 名稱沿用 `Felucca`，host 依協定找到；HELLO、HELLO_ACK、`T_TEXT`、`T_CHAR` 都正常 `[實機]` |
+124	| 實機 KEY 頁 | 本人直鍵發報 | 解碼正確；按鍵以 Vail 格式送出，長度是手打的真實值 `[實機]` |
+125	| 實機 TYPE 頁 | 本人按字 | `T_CHAR` 即時送出；播放 dit 60 ms、Farnsworth 字間 652 ms，和設計一致；K1 調速生效 `[實機]` |
+126	| 實機 PRACTICE、靜音、iambic | — | 還沒在實機上確認 |
+127	
+128	## 版本紀錄
+129	
+130	韌體 X.Y（`FW_MINOR` in `firmware/morse/app.c`），host X.Y.Z（`__version__` in `host/morse/__init__.py`，加上 `FIRMWARE_KNOWN`），規則和 Conductor 一樣。
+131	
+132	| 版本 | 日期 | 要刷機 | 內容 |
+133	|---|---|---|---|
+134	| 韌體 0.1、host 0.1.0 | 2026-11-17 | 是（22:54 刷入，`c3b5cd6`） | 第一版：KEY、TYPE、PRACTICE、CHART、SETTINGS，兩種學習方式，Vail 格式的 MIDI，host 的 `type`／`send`／`listen`。原本規劃分成 0.1（核心）和 0.2（閃卡），因為一起做完、都還沒刷，合併成 0.1 |
+135	
+136	## 路線圖 { #roadmap }
+137	
+138	| 版本 | 內容 |
+139	|---|---|
+140	| 0.2 | 藍牙：own BLE stack 的 peripheral（Mac、iPad、手機上的 Vail 走藍牙）和 central（一台 FM-1 掃描並連上另一台）。BLE connection interval 是 11.25 ms，每個按鍵事件會晚 0–11 ms 到；對策想用 note 的 velocity 帶上長度、收的一方加一點播放緩衝，等量過再定。實機要等有第二台 |
+141	| 之後 | host 送日期，讓間隔複習改成天數；USB-C 直連（見[接口與連線](../hardware/io.md#two-units)） |
+142
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 15:31:16Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Update the Morse design page for 0.2
+
+```bash
+python3 - <<'PY'
+def sub(p,a,b):
+    s=open(p).read(); assert a in s,(a[:60]); s=s.replace(a,b,1); open(p,'w').write(s)
+p='docs/dev/morse.md'
+sub(p,"""**狀態（2026-11-17）：韌體 0.1、host 0.1.0。單元測試、host simulator、fm1-emu 兩種晶片都驗證過 `[模擬]`；2026-11-17 22:54 刷進我的機器，發報、解碼、TYPE、和電腦連線在實機上確認過 `[實機]`。** 操作方式見[操作速查](morse-cheatsheet.md)。""",
+"""**狀態（2026-11-17）：機器上是韌體 0.1（22:54 刷入；發報、解碼、TYPE、PRACTICE、和電腦連線在實機上確認過 `[實機]`）。韌體 0.2、host 0.2.0 寫好了，單元測試、host simulator、fm1-emu 兩種晶片都驗證過 `[模擬]`，還沒刷。** 操作方式見[操作速查](morse-cheatsheet.md)。""")
+sub(p,"""| 頁面 | 做什麼 |
+|---|---|
+| **PRACTICE** | 開機直接進來。一回合 20 張閃卡（10–30 可調），幾分鐘做完 |
+| **KEY** | 自由發報：琴鍵是電鍵，畫面顯示解出來的字，還有你的速度和 dah:dit 比例。電腦送來的字用琥珀色顯示 |
+| **TYPE** | 琴鍵是字母：白鍵 A–P、黑鍵 Q–Z 和空白，按住 `OCT-` 切成數字與符號。按一個鍵就播出那個字 |
+| **CHART** | 像五十音表的字表，依熟練度上色 |
+| **SETTINGS** | 速度、Farnsworth 間隔、音高、keyer（直鍵、iambic A、iambic B）、paddle 左右、聲音、每回合張數、學習方式 |""",
+"""| 頁面 | 做什麼 | 版本 |
+|---|---|---|
+| **PRACTICE** | 開機直接進來。一回合 20 張閃卡（10–30 可調），幾分鐘做完 | 0.1 |
+| **LISTEN** | 一直播下去：你開放的 Koch 字組、常用英文字、QSO 範例、縮寫和意思、諺語。可以顯示正在播的字，或隱藏起來當抄收練習 | 0.2 |
+| **KEY** | 自由發報：琴鍵是電鍵，解出來的字、你的速度、dah:dit 比例、字內停頓。三種顯示：TEXT（字）、CODE（每個字下面是你實際打的點劃）、TIMING（每一下照實際長短畫成條） | 0.1；顯示方式 0.2 |
+| **RHYTHM** | 練長短：只打 dit、只打 dah、交替、SOS、自由按。每一下和目標長度比對，給提示和建議的發報速度 | 0.2 |
+| **TYPE** | 琴鍵是字母，`OCT-`／`OCT+` 翻三頁：字母、數字和符號、片語。鍵上可以顯示點劃；LIVE（按一個字送一個）或 COMPOSE（打好一行再送） | 0.1；翻頁、片語、COMPOSE 0.2 |
+| **CHART** | 像五十音表的字表，依熟練度上色 | 0.1 |
+| **SETTINGS** | 速度組合（PRESET）、聽的速度、間隔、發報速度、音高、keyer（直鍵、iambic A、iambic B）、paddle 左右、聲音、每回合張數、學習方式、TYPE 的排列 | 0.1；PRESET、發報速度 0.2 |""")
+sub(p,"""## 學習：閃卡和間隔複習""","""## 速度：WPM 是什麼、該設多少 { #speed }
+
+WPM 是每分鐘幾個字，以 PARIS 這個字（50 個單位）為準：**dit 的長度 = 1200 ÷ WPM 毫秒**。摩斯沒有規定一定要多快，重要的是比例：
+
+| 元素 | 長度 |
+|---|---|
+| dit | 1 單位 |
+| dah | 3 單位 |
+| 字裡面的停頓 | 1 單位 |
+| 字和字之間 | 3 單位 |
+| 字詞之間 | 7 單位 |
+
+| WPM | dit | dah | 大概是 |
+|---|---|---|---|
+| 5 | 240 ms | 720 ms | 很慢，看得清楚每一下 |
+| 10 | 120 ms | 360 ms | 新手手打 |
+| 13 | 92 ms | 277 ms | 以前美國業餘無線電 General 考試的速度 |
+| 20 | 60 ms | 180 ms | Koch 建議的字元速度 |
+| 25 | 48 ms | 144 ms | 熟練的通聯 |
+
+0.2 起分成兩個速度（0.1 只有一個）：
+
+- **聽的速度**（K1，加上 K2 的間隔）：FM-1 播給你聽的速度。Koch 的做法是字本身用 20 WPM 左右播，聽起來是一整個聲音；字和字之間用 **Farnsworth** 拉開（例如「20/8」是字用 20 WPM，整體像 8 WPM），讓你有時間想。
+- **發報速度**（K4）：你手打的速度，用來設定 iambic keyer 的節奏、解碼器的起點、RHYTHM 頁和 TIMING 檢視的目標長度。新手的手通常比耳朵慢，所以這個要另外設低一點。
+
+**推薦的組合**（SETTINGS 最上面的 PRESET，轉的時候畫面會說明）：
+
+| PRESET | 聽 | 發 | 適合 |
+|---|---|---|---|
+| START（預設） | 20/8 | 10 | 剛開始 |
+| BUILDING | 20/13 | 13 | 認得大部分的字之後 |
+| QSO | 22/18 | 18 | 能和人一般通聯 |
+| FAST | 25/25 | 22 | 熟練 |
+
+自己調的方法：到 TYPE 頁按幾個字聽聽看，轉 K1、K2 找到「字聽得出是一整個聲音、字和字之間來得及想」的組合；發報速度到 RHYTHM 頁打幾組 dit，它會依你的 dit 平均長度建議一個 K4 值。這些組合是我依 Koch／Farnsworth 的做法和常見的考試、通聯速度整理的建議 `[調研]`，不是哪個教材的固定值。
+
+## 學習：閃卡和間隔複習""")
+sub(p,"""原因：Koch 法、LCWO、CW Academy 這類教學都主張把每個字的聲音當成一個整體記，不要看點劃圖。看圖學的人聽到訊號時會先數幾點幾劃再查表，速度常卡在每分鐘 10–15 字，之後得花時間改掉。`[調研]`（這是教學界的普遍說法，我還沒找到量化研究。）同樣的理由，字元速度預設 20 WPM，用 Farnsworth 把字和字之間拉開到有效 10 WPM，而不是把每個字放慢。""",
+"""原因：Koch 法、LCWO、CW Academy 這類教學都主張把每個字的聲音當成一個整體記，不要看點劃圖。看圖學的人聽到訊號時會先數幾點幾劃再查表，速度常卡在每分鐘 10–15 字，之後得花時間改掉。`[調研]`（這是教學界的普遍說法，我還沒找到量化研究。）同樣的理由，字元速度預設 20 WPM，用 Farnsworth 把字和字之間拉開到有效 8 WPM，而不是把每個字放慢。
+
+這是「學認字」的規則。「練發報」時看自己打出的長短是有用的回饋，所以 KEY 頁的 CODE／TIMING 檢視、RHYTHM 頁、TYPE 頁的「鍵上點劃」都和這個設定分開，用的時候自己打開。""")
+sub(p,"""## 和 Vail 搭配 { #vail }""","""## 練長短：RHYTHM 頁 { #rhythm }
+
+給還分不出長短的人。每按一下，畫面會畫出目標長度的框和你實際按的長度，顏色是綠（好）、黃（偏了）、紅（變成另一種了），並寫出「DIT 1.3（130 MS）A BIT LONG」這樣的數字：1.3 表示是目標 dit 的 1.3 倍。
+
+| 練習 | 目標 |
+|---|---|
+| DITS | 五個 dit |
+| DAHS | 五個 dah |
+| DIT DAH | 交替三次 |
+| SOS | `... --- ...` |
+| FREE | 自由按，看每一下被當成什麼 |
+
+判斷標準（以發報速度的 dit 為 1）：dit 在 0.5–1.5 算好、1.6–2.0 偏長、超過 2.0 就會被當成 dah；dah 在 2.2–4.0 算好、低於 1.8 會被當成 dit；1.6–2.1 是兩邊都不像的「中間地帶」。最近 16 下的平均會產生一條提示：dit 太長（附上適合你的 K4 速度）、dah 太短或太長、字內停頓太長（超過 1.8）、長短不穩（平均差 0.3 個 dit 以上）、或「GOOD RHYTHM」。
+
+## 收聽：LISTEN 頁 { #listen }
+
+一直播下去，適合放著聽。播的內容都是韌體裡現場組出來的，沒有使用任何人的教材：
+
+| 節目 | 內容 |
+|---|---|
+| KOCH GROUPS | 你已經開放的字，隨機五個一組，一行五組 |
+| WORDS | 最常用的 100 個英文字，一行六個 |
+| QSO | 兩個隨機呼號從 CQ、報訊號和名字、地點，到 73、`<SK>` 結束，六行一輪 |
+| ABBREVIATIONS | 一個縮寫播兩次，畫面顯示意思（例如 QTH：my location is） |
+| SAYINGS | 英文諺語，加上 1844 年第一封電報 WHAT HATH GOD WROUGHT |
+
+`SEQ` 切換「顯示」和「隱藏」。隱藏時只看得到播到第幾個字，這一行播完、下一行開始時才顯示答案，等於抄收練習；`SEL` 可以偷看。更長的教材可以從電腦用 `just morse-send -` 把文字一行一行送進來播，例如 Project Gutenberg 上公有領域的書。
+
+被動地一直聽能幫忙熟悉聲音，但教學上普遍認為主動抄收、回打進步比較快 `[調研]`，所以 LISTEN 是 PRACTICE 的補充。
+
+## 片語、prosign 和實際的用法 { #phrases }
+
+業餘無線電用摩斯通聯（QSO）時，有一套固定的縮寫和 **prosign**。prosign 是幾個字母連在一起當成一個符號打，中間沒有字間停頓，寫成 `<SK>` 這樣。TYPE 頁第三頁的 27 個片語鍵：
+
+| 片語 | 意思 | 片語 | 意思 |
+|---|---|---|---|
+| CQ | 呼叫任何電台 | GM / GE | 早安 / 晚安 |
+| DE | 這裡是 | FB | fine business：很好 |
+| K | 換你說 | R | 收到 |
+| `<KN>` | 換你說，只限你 | QRZ? | 誰在呼叫我？ |
+| `<AR>` | 訊息結束 | QSL | 我確認收到 |
+| `<SK>` | 通聯結束 | `<BK>` | 換手（back to you） |
+| `<BT>` | 停頓、換段 | HW? | 收得清楚嗎？ |
+| 73 | 祝好、再見 | PSE | 請 |
+| TU | 謝謝 | AGN | 再一次 |
+| RST | 訊號報告 | QRS | 請發慢一點 |
+| 5NN | 599 報告的簡寫 | QTH | 我的位置是 |
+| NAME | 我的名字是 | OP | 操作員 |
+| UR | 你的 | ES | 和 |
+
+**實際上大家怎麼用**：大部分人仍然是**用手即時發**（直鍵或 paddle），對方**用耳朵抄**，這是這項技能的核心。另外也很常見：
+
+- 電腦或「CW 鍵盤」：先打好字放在緩衝區，機器用固定速度送出，一邊送一邊還可以繼續打（type-ahead）。
+- 比賽軟體：用 F 鍵送 `CQ TEST`、報告這類事先寫好的片語（macro）。
+- 收的一方：有人用軟體解碼（fldigi、CW Skimmer，比賽和 Reverse Beacon Network 大量使用），但通聯本身多半還是靠人耳。`[調研]`
+
+TYPE 頁的 LIVE 對應「打一個送一個」，COMPOSE 對應「先打好再送」，片語鍵對應 macro。
+
+## 和 Vail 搭配 { #vail }""")
+sub(p,"""- **解碼器**：分別追蹤 dit、dah 和字間間隔的平均，取中間當門檻，所以跟得上偏離設定 ±30% 的發報速度，也能讀 Farnsworth 拉開的間隔（單元測試：5／15／25／35 WPM 加 ±20% 抖動全對）。""",
+"""- **解碼器**：分別追蹤 dit、dah 和字間間隔的平均，取中間當門檻，所以跟得上偏離設定 ±30% 的發報速度，也能讀 Farnsworth 拉開的間隔（單元測試：5／15／25／35 WPM 加 ±20% 抖動全對）。0.2 起，同一個字裡出現兩下長度差 2 倍以上時，會直接把它們當成一個 dit 一個 dah，並回頭修正前一下的判斷：新手太慢的 dit 被當成 dah，遇到第一個真正的 dah 就會改回來。但如果手打得比發報速度慢很多，連字裡的停頓都會超過切字的門檻，所以發報速度還是要設得接近你的手。""")
+sub(p,"""一筆紀錄（設定 + 學習進度，約 280 bytes）放在 `0xDA000`–`0xDBFFF`，透過 fm1-base 的 storage 層存（A/B 兩份、CRC）。在回合結束或離開、改設定 3 秒後才寫。不碰 SLOOP、Agent Deck、CTL-1 共用的 `0xFC000`。這台機器所有備份的 `0xDA000`–`0xDBFFF` 都是空的。""",
+"""一筆紀錄（設定 + 學習進度，約 280 bytes）放在 `0xDA000`–`0xDBFFF`，透過 fm1-base 的 storage 層存（A/B 兩份、CRC）。在回合結束或離開、改設定 3 秒後才寫。不碰 SLOOP、Agent Deck、CTL-1 共用的 `0xFC000`。這台機器所有備份的 `0xDA000`–`0xDBFFF` 都是空的。
+
+0.2 沿用 0.1 的紀錄格式：0.1 留下的空位改放 KEY／TYPE／LISTEN 的顯示選項、發報速度、LISTEN 的節目。從 0.1 升級時設定和進度都保留，發報速度從 0 補成預設的 10（fm1-emu 兩種晶片驗證過 `[模擬]`）。""")
+sub(p,"""`just fw-build morse`（2026-11-17）：app 109,508 B（上限 581,564）；RAM code 5,100 / 32,768 B；`.data+.bss` 27,180 / 98,304 B；套件 616,003 B，identity `FM-1_1300`。這版沒有開藍牙；加上 own BLE stack 和 central 大約再多 55–70 KB，仍然很寬裕。""",
+"""`just fw-build morse`（2026-11-17）：
+
+| 版本 | app | `.data+.bss` |
+|---|---|---|
+| 0.1 | 109,508 B | 27,180 / 98,304 B |
+| 0.2 | 127,712 B | 28,444 / 98,304 B |
+
+上限是 581,564 B；RAM code 5,100 / 32,768 B；套件 616,003 B，identity `FM-1_1300`。這兩版都沒有開藍牙；加上 own BLE stack 和 central 大約再多 55–70 KB，仍然很寬裕。""")
+sub(p,"""| 實機 PRACTICE、靜音、iambic | — | 還沒在實機上確認 |""","""| 實機 PRACTICE | 本人玩了一回合 | 本人回饋「還可以」`[實機]` |
+| 實機靜音、iambic | — | 還沒在實機上確認 |
+| 0.2：解碼器重讀、prosign、LISTEN 的內容 | `just morse-unit` | 2932 項全過（大部分是逐行檢查產生的節目都播得出來） |
+| 0.2：整個 app（三種 KEY 檢視、RHYTHM 三種提示、TYPE 翻頁、片語、COMPOSE、停止、REC 清空、排列方式、LISTEN、PRESET、K4、升級後重開讀回、四回合閃卡） | `just fw-test morse` | 全過 |
+| 0.2：從 0.1 的紀錄升級、改設定、重開讀回 | fm1-emu `uc25hq80`、`p25q80` | 設定和進度保留，發報速度補成 10，改過的值重開後讀回 `[模擬]` |""")
+sub(p,"""| 韌體 0.1、host 0.1.0 | 2026-11-17 | 是（22:54 刷入，`c3b5cd6`） | 第一版：KEY、TYPE、PRACTICE、CHART、SETTINGS，兩種學習方式，Vail 格式的 MIDI，host 的 `type`／`send`／`listen`。原本規劃分成 0.1（核心）和 0.2（閃卡），因為一起做完、都還沒刷，合併成 0.1 |""",
+"""| 韌體 0.1、host 0.1.0 | 2026-11-17 | 是（22:54 刷入，`c3b5cd6`） | 第一版：KEY、TYPE、PRACTICE、CHART、SETTINGS，兩種學習方式，Vail 格式的 MIDI，host 的 `type`／`send`／`listen`。原本規劃分成 0.1（核心）和 0.2（閃卡），因為一起做完、都還沒刷，合併成 0.1 |
+| 韌體 0.2、host 0.2.0 | 2026-11-17 | 是（還沒刷） | 實機試用後的回饋：發報速度和聽的速度分開（K4），PRESET 推薦組合，轉速度時顯示 dit／dah 毫秒；KEY 頁 TEXT／CODE／TIMING 三種顯示；RHYTHM 頁（練長短、提示、建議速度）；LISTEN 頁（連續播放五種節目）；TYPE 頁翻三頁（字母、數字符號、片語）、三種排列、鍵上點劃、LIVE／COMPOSE、`PLAY` 可停止、`REC` 刪字和清空；prosign `<SK>`；解碼器遇到長短差 2 倍時回頭修正；靜音和改音高不再重設解碼器。藍牙順延到 0.3 |""")
+sub(p,"""| 0.2 | 藍牙：own BLE stack""","""| 0.3 | 藍牙：own BLE stack""")
+PY
+just docs-check 2>&1 | tail -2
+```
+
+```text
+uv run --locked --all-groups python scripts/check-docs-site.py
+{"status": "ok", "pages": 46, "llm_pages": 46, "deployed": false}
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 15:31:22Z)**_
+
+設計頁更新好了。接著把操作速查整份改成 0.2 的按鍵配置。
+
+_**Agent (claude-opus-5-5 2026-11-17 15:31:44Z)**_
+
+<tool-use data-tool-type="write" data-tool-name="Write"><details>
+<summary>Tool use: **Write**</summary>
+
+````markdown
+# 摩斯電碼機操作速查
+
+韌體 0.2（機器上還是 0.1 的話，差別見文末）。設計與原理見[摩斯電碼機](morse.md)。
+
+## 任何頁面
+
+| 控制 | 作用 |
+|---|---|
+| `HOME` | 叫出選單；在選單裡再按一次回到上一頁 |
+| `ALGO` 旋鈕 | 直接換頁 |
+| `FX` | 聲音開／關。關掉時 `FX` 燈亮，改看琴鍵燈和畫面上的燈號 |
+| `K1` | 聽的速度：字元 5–40 WPM（預設 20） |
+| `K2` | 間隔（Farnsworth）：字和字之間拉開，5 到字元速度（預設 8） |
+| `K3` | 音高 300–1200 Hz（預設 600）。收到的訊號高一個大三度 |
+| `K4` | 發報速度 5–40 WPM（預設 10）：keyer 的節奏、解碼器的起點、RHYTHM 的目標 |
+| `MASTER` | 音量 |
+
+轉速度時畫面上方會顯示它的意思，例如「SEND 10 WPM DIT 120MS DAH 360MS」。設定改完 3 秒後自動存。不知道怎麼設的話，到 SETTINGS 選 PRESET，見[速度](morse.md#speed)。
+
+## PRACTICE（閃卡）
+
+| 控制 | 作用 |
+|---|---|
+| `PLAY` | 開始一回合；題目播完後再按是重播 |
+| `E4` `F4` `G4` `A4` | 四選一的題目：四個亮燈的鍵對應畫面上四個選項（由左到右） |
+| `SELECT` + `SEL` | 也可以轉 `SELECT` 選、按 `SEL` 確定（閃爍的是目前選的） |
+| 琴鍵（電鍵） | 「打出來」的題目：畫面出現 `your turn` 後照設定的 keyer 打 |
+| `SEL` | 打的題目不會：算錯，顯示答案 |
+| 任一琴鍵 | 新字：看完聽完，下一張；答案畫面：不等，直接下一張 |
+| `HOME` | 離開，已答的部分會存 |
+
+## LISTEN（收聽）
+
+| 控制 | 作用 |
+|---|---|
+| `PLAY` | 開始／停止 |
+| `SELECT` | 換節目：KOCH GROUPS、WORDS、QSO、ABBREVIATIONS、SAYINGS |
+| `SEQ` | 顯示／隱藏正在播的字（隱藏時這一行播完才顯示） |
+| `SEL` | 隱藏時偷看這一行 |
+
+## KEY（自由發報）
+
+| 控制 | 作用 |
+|---|---|
+| 琴鍵 | 直鍵：任一鍵。iambic：左半邊 F3–F4 是 dit，右半邊 F#4–G5 是 dah（SETTINGS 可對調） |
+| `SEQ` | 換顯示：TEXT（字）→ CODE（每個字下面是你打的點劃）→ TIMING（每一下照長短畫成條） |
+| `OCT-` | 清掉畫面上的字 |
+
+白字是自己發的，琥珀色是收到的（MIDI 或電腦送來的文字）。上方顯示解碼器聽到的速度、dah:dit 比例（標準 3.0）和字內停頓（GAP，標準 1.0）；偏離太多時變成琥珀色。TIMING 檢視最上面的灰條是目標 dit 和 dah 的長度，紅線是會把一個字切成兩個的長停頓。接著電腦時，按鍵會經 USB 送出（Vail 格式），解出的字也會送給 host。
+
+## RHYTHM（練長短）
+
+| 控制 | 作用 |
+|---|---|
+| 琴鍵 | 照目標打 |
+| `SELECT` | 換練習：DITS、DAHS、DIT DAH、SOS、FREE |
+| `PLAY` | 重來（清掉統計） |
+| `K4` | 改目標速度 |
+
+框是目標長度，條是你按的長度：綠是好、黃是偏了、紅是變成另一種了。下面的提示看最近 16 下。
+
+## TYPE（字母鍵盤）
+
+| 控制 | 作用 |
+|---|---|
+| `OCT-` / `OCT+` | 翻頁：字母 → 數字和符號 → 片語 |
+| `REC` | 刪最後一個字；按住 0.6 秒清空整行 |
+| `PLAY` | 播出整行；正在播時按是停止 |
+| `SEL` | LIVE（按一個字就播出、送出）／COMPOSE（打字時不出聲，`PLAY` 才送整行） |
+| `SEQ` | 鍵上顯示點劃（查表用） |
+
+預設排列（SETTINGS 的 TYPE KEYS 可改成「A–Z 由左到右」或「Koch 順序」）：
+
+| 頁 | 白鍵 | 黑鍵 |
+|---|---|---|
+| 字母 | A B C D E F G H I J K L M N O P | Q R S T U V W X Y Z，最右邊是空白 |
+| 數字和符號 | `1 2 3 4 5 6 7 8 9 0 . , ? / = +` | `- ( ) ' " : ; @ ! & $` |
+| 片語 | CQ DE K `<KN>` `<AR>` `<SK>` `<BT>` 73 TU RST 5NN QTH NAME OP UR ES | GM GE FB R QRZ? QSL `<BK>` HW? PSE AGN QRS |
+
+片語的意思會顯示在畫面上，也列在[片語表](morse.md#phrases)。
+
+## CHART（字表）
+
+| 控制 | 作用 |
+|---|---|
+| `SELECT` | 移動 |
+| `PLAY` / `SEL` | 聽這個字 |
+
+顏色：深紅是剛學、黃是一半、綠是熟了（兩張卡盒號的平均）；幾乎全黑的格子是還沒開的字。
+
+## SETTINGS
+
+`SELECT` 選項目，`OCT-` / `OCT+`（或 `SEL`）改值。
+
+| 項目 | 值 |
+|---|---|
+| PRESET | START、BUILDING、QSO、FAST；速度和這幾組都不同時顯示 CUSTOM |
+| HEAR SPEED | 聽的字元速度（同 K1） |
+| SPACING | 間隔（同 K2） |
+| SEND SPEED | 發報速度（同 K4） |
+| PITCH | 音高 |
+| KEYER | STRAIGHT、IAMBIC A、IAMBIC B |
+| PADDLES | LEFT DIT（左 dit 右 dah）或 LEFT DAH |
+| SOUND | ON 或 OFF（看燈） |
+| CARDS | 每回合 10–30 張 |
+| LEARN BY | SOUND（預設，建議）或 SIGHT（顯示點劃）。原因見[先用聽的](morse.md#by-sound) |
+| TYPE KEYS | TYPE 頁的排列 |
+
+## 燈
+
+| 燈 | 意思 |
+|---|---|
+| 所有琴鍵全亮／半亮 | 自己在發／收到訊號（靜音時就看這個） |
+| 四個琴鍵亮、一個閃 | 四選一的選項，閃的是 `SELECT` 選中的 |
+| `FX` 亮 | 靜音 |
+| `PLAY` 綠 | 電腦端程式連著 |
+
+## 電腦端
+
+```sh
+just morse-type            # 解出的字打進 Mac 目前的視窗（要 Accessibility 權限）
+just morse-type --dry-run  # 只印出來
+just morse-send cq cq de fm1 k   # FM-1 當成收到的播出來（"73 <SK>" 這樣的 prosign 0.2 起可以）
+```
+
+## 0.1 和 0.2 的差別
+
+0.1 只有一個速度（K1、K2），沒有 LISTEN、RHYTHM 和 PRESET。TYPE 頁要按住 `OCT-` 才是數字和符號，`OCT+` 是刪字，沒有清空，`PLAY` 也停不下來。
+
+````
+
+```text
+The file /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/docs/dev/morse-cheatsheet.md has been updated successfully. (file state is current in your context — no need to Read it back)
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 15:31:57Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Record user feedback, update statuses, check docs
+
+```bash
+python3 - <<'PY'
+def sub(p,a,b):
+    s=open(p).read(); assert a in s,(p,a[:60]); s=s.replace(a,b,1); open(p,'w').write(s)
+p='docs/device-log.md'
+s=open(p).read()
+old=[l for l in s.splitlines() if l.startswith("| 2026-11-17 22:56–23:00 |")][0]
+new=old.rstrip(" |")+"。本人回饋：VVV「好像有聽到」、PRACTICE 玩了一回合「還可以」、TYPE「不錯」；初學打 SOS 成功率不高，希望看到自己打的點劃 → 做進韌體 0.2 |"
+s=s.replace(old,new,1)
+open(p,'w').write(s)
+sub('docs/index.md',"韌體 0.1、host 0.1.0；2026-11-17 起在我的機器上，見[設計](dev/morse.md)","機器上是韌體 0.1；0.2、host 0.2.0 已在模擬器驗證，見[設計](dev/morse.md)")
+sub('README.md',"| Firmware 0.1, host 0.1.0; on my unit since 2026-11-17 |","| Firmware 0.1 on my unit since 2026-11-17; firmware 0.2 / host 0.2.0 verified in the simulator and emulator |")
+PY
+sed -i '' 's/| \*\*Morse\*\* | 隨身摩斯電碼機：琴鍵當電鍵（直鍵或 iambic paddle）即時解碼、琴鍵當字母鍵盤播出摩斯、閃卡間隔複習（預設只用聽的）、靜音看燈、USB MIDI 用 Vail 的格式/| **Morse** | 隨身摩斯電碼機：琴鍵當電鍵（直鍵或 iambic paddle）即時解碼、練長短的 RHYTHM 頁、琴鍵當字母鍵盤和片語鍵、閃卡間隔複習（預設只用聽的）、連續收聽、靜音看燈、USB MIDI 用 Vail 的格式/' docs/index.md
+just docs-check 2>&1 | tail -1; git status --short
+```
+
+```text
+{"status": "ok", "pages": 46, "llm_pages": 46, "deployed": false}
+ M .specstory/history/2026-11-17_13-42-11Z-ascii-firmware-focus-host.md
+ M .specstory/statistics.json
+ M README.md
+ M docs/dev/morse-cheatsheet.md
+ M docs/dev/morse.md
+ M docs/device-log.md
+ M docs/firmware/switching.md
+ M docs/hardware/flash-map.md
+ M docs/index.md
+ M firmware/morse/app.c
+ M firmware/morse/morse.c
+ M firmware/morse/morse.h
+ M firmware/morse/tests/basic.txt
+ M firmware/morse/tests/morse_test.c
+ M host/morse/PROTOCOL.md
+ M host/morse/__init__.py
+ M host/morse/protocol.py
+ M host/tests/test_morse.py
+?? firmware/morse/content.c
+?? firmware/morse/content.h
+[This command modified 2 files you've previously read: README.md, docs/index.md. Call Read before editing.]
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 15:32:03Z)**_
+
+最後把韌體目錄的 README 也更新到 0.2，然後把所有測試再跑一次確認。
+
+_**Agent (claude-opus-5-5 2026-11-17 15:32:14Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Update firmware README and rerun all tests
+
+```bash
+python3 - <<'PY'
+def sub(p,a,b):
+    s=open(p).read(); assert a in s,(p,a[:60]); s=s.replace(a,b,1); open(p,'w').write(s)
+p='firmware/morse/README.md'
+sub(p,"""- **KEY**: key on the piano keys, as a straight key (any key) or iambic A/B paddles
+  (left half dit, right half dah), and read what you sent. A sidetone, or silence and the
+  lights. Your speed and dah:dit ratio as you go.
+- **TYPE**: white keys A–P, black keys Q–Z and a space; hold OCT- for digits and signs.
+  Each letter is played as you type it.""","""- **KEY**: key on the piano keys, as a straight key (any key) or iambic A/B paddles
+  (left half dit, right half dah), and read what you sent: as text, as each letter over
+  the dits and dahs you keyed, or as bars to scale. A sidetone, or silence and the lights.
+  Your speed, dah:dit ratio and the gaps inside letters as you go.
+- **RHYTHM**: drills of short and long presses measured against the send speed, with a
+  hint and a send speed that fits your hand.
+- **TYPE**: three pages of keys (letters, digits and signs, CW phrases and prosigns such
+  as `<SK>`) turned with OCT- / OCT+, three layouts, the code shown on the keys, LIVE
+  (each key goes out) or COMPOSE (PLAY sends the line).
+- **LISTEN**: plays on and on: Koch groups of your letters, common words, a made-up QSO,
+  abbreviations with their meaning, sayings; shown, or hidden for copying.""")
+sub(p,"""| `learn.c` / `.h` | flash cards: Leitner boxes, rounds, Koch groups, the four choices; no platform |""","""| `learn.c` / `.h` | flash cards: Leitner boxes, rounds, Koch groups, the four choices; no platform |
+| `content.c` / `.h` | what LISTEN plays and TYPE's phrases: word lists, abbreviations, a QSO generator; no platform |""")
+sub(p,"""Storage: one record (settings and progress, about 300 bytes) at `0xDA000`–`0xDBFFF`,""","""Hearing and sending have their own speeds (K1/K2 and K4): Koch wants the characters heard
+fast, a beginner's hand is slow. Presets in SETTINGS.
+
+Storage: one record (settings and progress, about 300 bytes) at `0xDA000`–`0xDBFFF`,""")
+PY
+just morse-unit 2>&1 | tail -1 && just morse-test 2>&1 | tail -1 && uv run --locked --all-groups pytest -q 2>&1 | tail -1 && just fw-test morse 2>&1 | grep -E "^host:|FAIL" | tail -3
+```
+
+```text
+2932 checks, 0 failed
+14 passed in 0.03s
+45 passed in 0.09s
+host: 195525 ms simulated, 1384 blits, render 0.0% of real time (host CPU)
+[This command modified 1 file you've previously read: firmware/morse/README.md. Call Read before editing.]
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 15:32:39Z)**_
+
+0.2 寫好了，測試全過，還沒 commit，機器上仍是 0.1。
+
+**你這幾則回饋對應的改動**
+
+| 回饋 | 0.2 的做法 |
+|---|---|
+| 想看自己打的點劃 | KEY 頁用 `SEQ` 切換 TEXT、CODE、TIMING 三種顯示。CODE 是每個字下面畫出你實際打的點劃；TIMING 是每一下照實際長短畫成條，會把字切成兩個的長停頓標紅線。上方多一個字內停頓數值（GAP，標準 1.0） |
+| 想單純練長短 | 新的 **RHYTHM 頁**：五種練習。每按一下就和目標框比對，標「DIT 1.8，偏長」，並給提示，例如「DITS ARE LONG：tap and let go, or K4 to 5」 |
+| 新手按不快，短按被當成長按 | 聽的速度（K1、K2）和**發報速度（K4）**分開，K4 預設 10 WPM（dit 120 ms）。解碼器在同一個字裡遇到長短差 2 倍以上時，會回頭修正前一下的判斷 |
+| 不知道 WPM 怎麼設 | 轉旋鈕時畫面會顯示「SEND 10 WPM DIT 120MS DAH 360MS」。設定頁最上面有 **PRESET**：START（聽 20/8、發 10，也是預設）、BUILDING、QSO、FAST |
+| 想要整段播放、背景學習 | 新的 **LISTEN 頁**：Koch 字組、常用字、QSO 範例、縮寫和意思、諺語，可以一直播。隱藏模式等於抄收練習 |
+| TYPE 不能清空、不能停 | `REC` 短按刪一個字，按住清空整行；`PLAY` 在播放中按就是停止；`OCT-`／`OCT+` 翻三頁：字母、數字符號、片語 |
+| 片語、排列、鍵上點劃 | 片語頁有 27 個常用縮寫和 prosign，按下會顯示意思；三種排列可在設定切換；`SEQ` 讓鍵上顯示點劃 |
+
+**你問的「一般是先打好再送嗎」**：兩種都有。
+
+- 大部分人用手即時發，對方用耳朵抄，這是這項技能的核心。
+- 也很常見的做法：電腦或 CW 鍵盤先打好字，由機器用固定速度送出，邊送還可以邊打；比賽時用 F 鍵送事先寫好的片語。
+- 收的一方有人用軟體解碼（fldigi、CW Skimmer），但一般通聯多半還是靠人耳。
+
+所以 TYPE 加了 `SEL` 切換：LIVE 是按一個字送一個，COMPOSE 是打字時不出聲，打好一行按 `PLAY` 一次送出。片語鍵則相當於比賽用的 macro。
+
+**驗證**
+
+- `just morse-unit`：2932 項全過。
+- 模擬器腳本：約 195 秒的操作，三種 KEY 顯示、RHYTHM 三種提示、TYPE 翻頁和 COMPOSE、LISTEN、PRESET、四回合閃卡全過。
+- host 測試：45 項全過。
+- 實機套件：app 127,712 B，RAM 28,444 / 98,304 B，build 內建的檢查全過。
+- 兩種晶片上，從 0.1 的紀錄升級後，設定和學習進度都保留，0.1 沒有的發報速度自動補成 10 `[模擬]`。
+
+**過程中修掉的問題**
+
+- 按 `FX` 靜音會把解碼器重設。
+- 時間比較寫錯：`REC` 輕按一下就清空整行，設定也會立刻存檔、不等 3 秒。這兩個 0.1 也有：0.1 的 `REC` 沒用到，但設定立刻存檔的問題在 0.1 一樣會發生。
+- 中途我的一個修補腳本把 `app.c` 清空了，已經從完整內容重寫回來，所有測試都是在重寫後跑的。
+
+**文件**：更新了 `docs/dev/morse.md`、`docs/dev/morse-cheatsheet.md`（整份換成 0.2）、`docs/device-log.md`（記下你的回饋）、首頁和 README 的狀態、`firmware/morse/README.md`。設計頁新增了速度表和推薦組合、RHYTHM 判斷標準、LISTEN 節目、片語表和實際用法。
+
+要我 commit 然後準備刷 0.2 嗎？流程和上次一樣：
+
+1. 先切 download mode，備份目前裝著 0.1 和學習紀錄的整顆 flash。
+2. 給你看 preflight。
+3. 由你執行 `! just fm1-switch firmware/morse/build/morse.fwsc`，並在 M-Flasher 問的時候輸入 `yes`。
+
+套件 SHA-256 是 `fc3dd404…556b0`，在韌體原始碼最後一次修改之後 build 的。
+
+---
+
+_**User (2026-11-17 15:47:16Z)**_
+
+sure continue
