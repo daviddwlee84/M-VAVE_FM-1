@@ -206,9 +206,9 @@ cond-sim backend="fake" *args:
 cond-run backend="auto" *args:
     PYTHONPATH=host uv run --locked --all-groups python -m conductor --backend "{{backend}}" {{args}}
 
-# Bluetooth MIDI without Audio MIDI Setup (macOS 13+): connect an advertising FM-1, or disconnect it.
-cond-ble action="connect":
-    PYTHONPATH=host uv run --locked --all-groups python -m conductor.blelink "{{action}}"
+# macOS's Bluetooth MIDI window, opened by itself (click Connect next to FM-1 XXXX); waits for the port.
+cond-ble:
+    PYTHONPATH=host uv run --locked --all-groups python -m conductor.blelink
 
 # The firmware in the emulator with the virtual USB cable plugged in (pair with `just cond-run`).
 cond-emu chip="uc25hq80":

@@ -84,7 +84,7 @@ def main(argv=None) -> int:
     ap.add_argument("--herdr-session")
     ap.add_argument("--poll", type=float, default=2.0, help="seconds between full refreshes")
     ap.add_argument("--no-ble-connect", action="store_true",
-                    help="do not try to connect an FM-1 over Bluetooth when no MIDI port is found")
+                    help="no MIDI port: exit, instead of opening the Bluetooth MIDI window and waiting")
     ap.add_argument("--no-voice", action="store_true", help="ARP does not press the dictation hotkey")
     ap.add_argument("--slots", help="slot memory file (default ~/.config/conductor/slots-BACKEND.json)")
     args = ap.parse_args(argv)
@@ -107,19 +107,19 @@ def main(argv=None) -> int:
         except RuntimeError as e:
             link = None
             if sys.platform == "darwin" and not args.no_ble_connect and not args.port:
-                # macOS does not reconnect a Bluetooth MIDI device after it restarts: do it here
-                from .blelink import BleError, connect
+                # macOS does not reconnect a Bluetooth MIDI device after it restarts: open its window and wait
+                from .blelink import open_panel, wait_for_port
 
-                print("[ble] no MIDI port; looking for an FM-1 over Bluetooth ...")
-                try:
-                    name = connect(memo=CONFIG_DIR / "ble.json")
-                    if name:
-                        print(f"[ble] connected: {name}")
-                        link = MidiLink(args.port)
-                    else:
-                        print("[ble] none advertising", file=sys.stderr)
-                except (BleError, RuntimeError) as be:
-                    print(f"[ble] {be}", file=sys.stderr)
+                panel = open_panel()
+                print("[ble] no MIDI port. In the Bluetooth MIDI window, click Connect next to FM-1 XXXX "
+                      "(or plug in USB). Waiting up to 5 minutes ...")
+                port = wait_for_port()
+                if panel and panel.poll() is None:
+                    panel.terminate()
+                if port:
+                    print(f"[ble] port appeared: {port}; starting again")
+                    # a fresh process: this one's CoreMIDI client may not see the new port
+                    os.execv(sys.executable, [sys.executable, "-m", "conductor", *(argv or sys.argv[1:]), "--no-ble-connect"])
             if link is None:
                 print(e, file=sys.stderr)
                 return 2
