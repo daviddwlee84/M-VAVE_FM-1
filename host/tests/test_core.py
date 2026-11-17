@@ -284,3 +284,15 @@ def test_missing_glyphs_become_question_marks():
 
     r = LineRenderer()
     assert r.clean("ok 中文 \U0001F9EA") == "ok 中文 ?"
+
+
+def test_silent_until_hello(tmp_path):
+    be = FakeBackend.demo()
+    sent = []
+    c = Conductor(backend=be, send=sent.append, slots=SlotMap(tmp_path / "s.json"), log=lambda *_: None)
+    c.on_frame(P.device_heartbeat())  # still attached to the last daemon
+    c.refresh()
+    c.on_frame(P.device_action(P.OP_APPROVE, 0, 1))
+    assert sent == [] and be.sent == []  # nothing out, no keys pressed
+    c.on_frame(P.device_hello(0, 2))
+    assert c.device_fw == (0, 2) and P.parse(sent[0]).type == P.T_HELLO_ACK

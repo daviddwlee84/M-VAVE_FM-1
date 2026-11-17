@@ -167,6 +167,12 @@ macOS 會記住這台機器之前的 MIDI 名稱，刷了 Conductor 之後 port 
 
 **同一時間只開一個 daemon。** 兩個 daemon 對著同一台機器時，裝置會收到兩邊的表；daemon 每 30 秒重送一次完整的表，最多 30 秒就會恢復。
 
+### 重開 daemon 後中文變成 `?` { #restart }
+
+韌體版本只寫在裝置的 HELLO 裡，而裝置只在認為 host 不在時才送 HELLO（最後一個 frame 之後 10 秒）。2026-11-17 我停掉 daemon 後馬上重開，新 daemon 只收到 HEARTBEAT，不知道裝置是 0.2，DETAIL 就退回 ASCII `[實機]`。
+
+現在 daemon 在收到 HELLO 前什麼都不送、也不執行任何按鍵，裝置 10 秒內就會判定 host 離線並重新 HELLO。等待時會印 `[device] still attached to the last daemon; waiting for its HELLO (up to 10 s)`；之後出現 `[device] hello, protocol 1, firmware 0.2` 就對了。
+
 ### 螢幕顯示 `NO AGENTS` { #no-agents }
 
 daemon 已經連上（標頭有 backend 名稱），但那個 backend 裡沒有 agent。2026-11-17 我第一次用 `just cond-run hc` 就是這樣：我的 hc 裡只有兩個 `zsh`，shell 不佔琴鍵，agent 全在 classic Herdr `[實機]` host 端。daemon 啟動時會印出每個 backend 看到什麼：

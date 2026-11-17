@@ -144,7 +144,16 @@ class Conductor:
     device_seen: float = 0.0
     voice: object = None  # a VoiceKey, or None: the button does nothing
     device_fw: tuple = (0, 0)  # from the device's HELLO
+    synced: bool = False  # the device said HELLO to this daemon; until then nothing is sent
+    _waiting_said: bool = False
     renderer: object = None  # a render.LineRenderer: DETAIL as pictures (any script) for firmware >= 0.2
+
+    def out(self, frame: bytes) -> None:
+        """Nothing goes out before the device's HELLO. A device still attached to a daemon
+        that just quit only sends HEARTBEATs (no firmware version in them); kept silent,
+        it decides within 10 s that the host left and says HELLO again."""
+        if self.synced:
+            self.send(frame)
 
     # ------------------------------------------------------------ backend -> device
     def refresh(self) -> None:
@@ -169,11 +178,11 @@ class Conductor:
             )
             if self._slot_frames.get(s) != f:
                 self._slot_frames[s] = f
-                self.send(f)
+                self.out(f)
         m = P.meta(len(fresh), self.hidden, self.backend.name)
         if m != self._meta or now - self._meta_at >= self.config["meta_every"]:
             self._meta, self._meta_at = m, now
-            self.send(m)
+            self.out(m)
         if self.selected is not None and now - self._detail_at >= self.config["detail_every"]:
             self.send_detail()
 
@@ -198,17 +207,17 @@ class Conductor:
             self._detail = lines
             for i, ln in enumerate(lines):
                 if pictures:
-                    self.send(P.detail_bmp(self.selected, i, self.renderer.bitmap(ln)))
+                    self.out(P.detail_bmp(self.selected, i, self.renderer.bitmap(ln)))
                 else:
-                    self.send(P.detail(self.selected, i, ln))
+                    self.out(P.detail(self.selected, i, ln))
 
     def resync(self) -> None:
         """The device (re)started: send it everything."""
         self._slot_frames.clear()
         self._meta = b""
         self._detail = []
-        self.send(P.hello_ack())
-        self.send(P.clear())
+        self.out(P.hello_ack())
+        self.out(P.clear())
         self.refresh()
 
     # ------------------------------------------------------------ device -> host
@@ -226,15 +235,21 @@ class Conductor:
             self.log(f"[device] hello, protocol {m.payload[0] if m.payload else '?'}, firmware {'.'.join(map(str, self.device_fw))}")
             if self.voice:
                 self.voice.let_go()  # the device restarted: its button is not held any more
+            self.synced = True
             self.resync()
+        elif m.type == P.T_HEARTBEAT and not self.synced and not self._waiting_said:
+            self._waiting_said = True
+            self.log("[device] still attached to the last daemon; waiting for its HELLO (up to 10 s)")
         elif m.type == P.T_SELECT and m.payload:
             self.selected = m.payload[0] if m.payload[0] < P.NSLOTS else None
             self.scroll = m.payload[1] * 4 if len(m.payload) > 1 else 0  # KNOB 1: four lines a detent
             self.send_detail(force=True)
+        elif m.type == P.T_ACTION and not self.synced:
+            self.log("[action] ignored: the device has not said HELLO to this daemon yet")
         elif m.type == P.T_ACTION:
             out = self.act(P.parse_action(m))
             self.log(f"[action] {out.text}")
-            self.send(P.footer(out.text))
+            self.out(P.footer(out.text))
             return out
         return None
 
