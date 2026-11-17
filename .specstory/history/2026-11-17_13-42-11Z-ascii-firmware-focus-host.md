@@ -49009,3 +49009,345 @@ firmware.json 1083 sha256:02772eeb496fb1b6aaeab69f18521488e79d09b26f146863a65913
 morse-0.3.fwsc 616003 sha256:1c563fdaeca50b95a782eac6252049564fbabb608b5859960e7d0f2470c0f1b3
 ```
 </details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 18:54:14Z)**_
+
+<think><details><summary>Thought Process</summary>
+Release v0.3 已發布，本機與 GitHub 上 morse-0.3.fwsc 的 SHA-256 一致。接下來我會把這個 release 記進文件再 commit。
+
+</details></think>
+
+_**Agent (claude-opus-5-5 2026-11-17 18:54:25Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Record the release in docs and commit
+
+```bash
+cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1 && python3 - <<'PY'
+def sub(p,a,b):
+    s=open(p).read(); assert a in s,(p,a[:60]); s=s.replace(a,b,1); open(p,'w').write(s)
+p='docs/dev/morse.md'
+sub(p,"2. 發一個附 `morse-0.3.fwsc` 的 GitHub release。\n3. 用 #check 確認 identity。\n4. 寄信給 Hub。",
+"2. 發一個附 `morse-0.3.fwsc` 的 GitHub release：2026-11-18 發布 [v0.3](https://github.com/daviddwlee84/fm1-morse/releases/tag/v0.3)（tag 在 `748402f`），附 `morse-0.3.fwsc`（SHA-256 `1c563fda…c0f1b3`，GitHub 的 asset digest 相符）和 `firmware.json`。\n3. 用 #check 確認 identity：2026-11-18 本人確認 `FM-1_41000300` 是空的；KB 的「Check your file」讀得到 `fmhub.json`，回報 Fine，卡片圖 240×240、169 KB。\n4. 用 Hub 的送審表單或 email 送審（本人）。")
+sub(p,"| 韌體 0.3、host 0.3.0 | 2026-11-18 | 是（02:12 刷入，`02b0ea2`） |","| 韌體 0.3 release（`FM-1_41000300`） | 2026-11-18 | 是（Hub 測試時用 USB-MIDI 裝過三次） | fm1-morse 的第一個 release [v0.3](https://github.com/daviddwlee84/fm1-morse/releases/tag/v0.3)：identity 改成 `FM-1_41`，授權改成 GPL-3.0-or-later，程式和 0.3 相同 |\n| 韌體 0.3、host 0.3.0 | 2026-11-18 | 是（02:12 刷入，`02b0ea2`） |")
+sub('docs/firmware/hub.md',"**注意同名**：","**自己的進度**：Morse 照這份清單準備，2026-11-18 完成三項實機測試、發布 v0.3 release，identity 檢查和 `fmhub.json` 檢查都通過，接下來送審。過程見 [Morse](../dev/morse.md#release)。\n\n**注意同名**：")
+PY
+just docs-check 2>&1 | tail -1 && git add docs AGENTS.md README.md Justfile firmware/morse .specstory/history/2026-11-17_13-42-11Z-ascii-firmware-focus-host.md .specstory/statistics.json && git status --short && git commit -q -F - <<'EOF'
+Morse v0.3 released; the three Hub hardware tests passed
+
+On the unit (newer flash chip), all over the USB-MIDI update with
+fm1-base's fm1_install.py, the Firmware Hub web installer's protocol:
+Morse 0.3 to SLOOP 2.8.5 (classic install, songs kept), SLOOP to the
+Morse release FM-1_41000300 (fast install, the Morse record kept while
+SLOOP ran), and from stock 015, restored by the owner from the 11/17
+backup and read back identical, to the Morse release (fast install).
+
+fm1-morse v0.3 published (tag at 748402f) with morse-0.3.fwsc, digest
+matching the local build, and firmware.json. The Hub's identity check
+and fmhub.json check pass. Docs: the two write paths compared
+(download mode vs USB-MIDI update), the backups and steps in the
+device log, the listing status.
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+EOF
+git log --oneline -1; git status --short
+```
+
+```text
+{"status": "ok", "pages": 46, "llm_pages": 46, "deployed": false}
+M  .specstory/history/2026-11-17_13-42-11Z-ascii-firmware-focus-host.md
+ M .specstory/history/2026-11-17_17-51-27Z-edge-computing-text-to.md
+M  .specstory/statistics.json
+M  docs/dev/morse.md
+M  docs/device-log.md
+M  docs/firmware/hub.md
+M  docs/firmware/switching.md
+?? .claude/plans/edge-computing-text-to-speech-moose-abstract-thacker.md
+abf72ca Morse v0.3 released; the three Hub hardware tests passed
+ M .specstory/history/2026-11-17_17-51-27Z-edge-computing-text-to.md
+?? .claude/plans/edge-computing-text-to-speech-moose-abstract-thacker.md
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 18:54:37Z)**_
+
+v0.3 release 已經發布，這個 repo 也 commit 了。
+
+**已完成**
+- **Release**：https://github.com/daviddwlee84/fm1-morse/releases/tag/v0.3 ，附 `morse-0.3.fwsc` 和 `firmware.json`。GitHub 上套件的 digest 和三項測試用的檔案一致（`1c563fda…`）。
+- **送審前檢查**：identity `FM-1_41000300` 確認沒人用；Hub 也讀得到 `fmhub.json`，檢查結果是 Fine。
+- **commit**：這個 repo 是 `abf72ca`，內容是三項實機測試的紀錄、兩種寫入路徑的比較和上架進度。另一個工作階段的檔案（`edge-computing-…` 那份 plan 和它的 `.specstory`）沒有一起 commit。
+- **還沒 push**：這個 repo 推到 `main` 會部署文件網站，所以還沒推，要推時跟我說。fm1-morse 已經推上去了。
+
+**剩下你要做的：送審**
+
+到 https://thefirmwarehub.com/submit/ 填表單，或寄信到 zven@thefirmwarehub.com，內容用我上一則擬好的那段就可以。「Maker」目前是 `daviddwlee84`，要改成本名的話，我會先改 `fmhub.json` 的 `author`。
+
+Hub 審核通過後，fm1-emu 和 RemoteFM1 的清單會自動帶進去。awesome-fm-1、aroum/fm1-custom-fw 這些社群清單要另外提交，到時候你決定要不要送。
+
+收錄之後，我會照你說的，把這次上架的流程、踩過的坑和檢查清單整理成這個 repo 的 agent skill。這件事我已經記在 memory 裡了。
+
+---
+
+_**User (2026-11-17 18:56:32Z)**_
+
+https://thefirmwarehub.com/lab/rules/ [Image #12] 我填得差不多了 幫我final review一下
+
+---
+
+_**User (2026-11-17 18:56:32Z)**_
+
+[Image: source: /private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/0a574306-469e-4a59-9622-5701a42aee59/images/12.png]
+
+---
+
+_**Agent (claude-opus-5-5 2026-11-17 18:56:46Z)**_
+
+送出前有幾個地方要先確認。最大的疑問是那個「VIBE Box Challenge」：粉紅虛線框裡的欄位和勾選，看起來是參加某個比賽用的。我先讀你給的規則頁再判斷。
+
+_**Agent (claude-opus-5-5 2026-11-17 18:56:59Z)**_
+
+<tool-use data-tool-type="read" data-tool-name="WebFetch"><details>
+<summary>Tool use: **WebFetch**</summary>
+ `https://thefirmwarehub.com/lab/rules/`
+
+```text
+**What is the VIBE Box Challenge?** It's a skill-based competition run by The Firmware Hub (a project of Sven Trogus / Designburg, Hamburg) for Vibes, firmware built with the VIBE FM SDK. Winners receive a VIBE Box, a developer kit prototype.
+
+**Who can enter:** Anyone 18 or over, anywhere in the world, except where EU sanctions or local law don't let them ship a prize. Entrants can work solo or in a team, with up to three entries per person or team. People running the challenge or building the VIBE Box can't enter.
+
+**What a qualifying entry must do:**
+- Be built with the VIBE FM SDK, as an instrument, effect, tool or game.
+- Run in the VIBE FM Playground and the VIBE FM plugin without crashing in normal use.
+- Use "at least one or two things the FM-1 can't do," such as audio inputs, the 480 × 320 screen, pads, four knobs, CV, DAW song position, or extra memory.
+- Publish its source under an OSI-approved open-source license by the time submissions close.
+
+FM-1 ports are welcome, but they must credit the original authors, respect the original license, and add that VIBE touch.
+
+**Deadlines:**
+- Submissions close 18 December 2026, 23:59 CET.
+- Voting runs 19 to 26 December 2026.
+- Winners are announced 27 December 2026.
+
+**Prizes:** Two VIBE Boxes: a community pick (most votes) and a hub pick chosen by The Firmware Hub. Shipping is free for the winner, but customs and import fees are the winner's responsibility. The challenge needs at least 20 qualifying entries.
+
+**The FM-1 Morse code trainer:** It wouldn't qualify as described. The rules require a VIBE FM SDK build that uses at least one thing the FM-1 can't do, and a trainer that uses no VIBE-specific features doesn't meet that. It could enter if it were ported to VIBE with a VIBE-specific feature added.
+
+**The two fields:** The rules require a one-line description ("What it is, in one line") and a list of the VIBE features used ("Which VIBE features does it use?") as part of submission. The page doesn't explain how these fields are used beyond that. For questions, the page gives zven@thefirmwarehub.com.
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 18:57:25Z)**_
+
+看完規則了，有一個地方一定要改：
+
+**1. 取消勾選「Enter it in the VIBE Box Challenge」**
+
+那是 Hub 另外辦的比賽，參賽作品要符合幾個條件：
+
+- 用 **VIBE FM SDK** 做；
+- 能在 VIBE FM Playground 和 plugin 上跑；
+- 至少用到一兩樣 FM-1 做不到的事（音訊輸入、480×320 螢幕、pads、CV 等）。
+
+MORSE 是用 fm1-base 做給 FM-1 的，不符合資格，勾了反而可能讓審核混亂。粉紅虛線框裡的「What it is, in one line」「Which VIBE features does it use?」都是比賽用的欄位。你把測試說明填在「Which VIBE features」裡了，請把它清空，或取消勾選後讓它隱藏。
+
+**2. 測試說明要放在「How you tested it」**
+
+這一欄現在是空的。照它範例的格式，可以這樣寫：
+
+```
+From V15 (015) and from SLOOP 2.8.5; left to SLOOP 2.8.5 and back. All over USB-MIDI with fm1-base's fm1_install.py (the web installer's protocol), on an FM-1 with the newer flash chip (B36014).
+```
+
+**3. 名字要前後一致**
+
+表單寫「Da-Wei Lee」，但卡片上的「By:」是從 `fmhub.json` 的 `author` 來的，剛才檢查顯示的是 `daviddwlee84`。想讓卡片也顯示本名的話，我把 `fmhub.json` 改成 `Da-Wei Lee` 並推上去（三小時內生效）；不然就把表單的名字改成 `daviddwlee84`。你選哪個？
+
+**4.「Anything Sven should know」建議填上**
+
+這些資訊可以讓審核少問幾句，特別是 MORSE 算「會出聲的工具」，和 Hub「收樂器」的原則有點邊緣：
+
+```
+Built on fm1-base (MPL-2.0); MORSE itself is GPL-3.0-or-later. It is a Morse code trainer that makes sound (sidetone, ear training, listening practice), so I filed it as kind "other". The release was built locally with fm1-base's build.py --release, not the fm1-build workflow, so it will not have the built-from-source badge. Tested only on the newer chip; the build saves and updates on both 856014 and B36014. It keeps its settings and progress at 0xDA000-0xDBFFF, as the README says.
+```
+
+**其他欄位都沒問題**
+
+- 裝置選 M-VAVE FM-1、repo 網址、名稱 MORSE，都對。
+- email 只用來聯絡、不會公開。
+- 「I installed this release on a real FM-1, and leaving it again works」：三項測試都做過，勾選屬實。
+- 聲音那一格可以勾：`fmhub.json` 寫的是 `sounds: none`，所有聲音都是程式即時產生的。
+
+改完第 1、2 點就可以按「Check and send」。送出後它會給一個頁面，列出還缺什麼、接下來會怎樣，那一頁可以貼給我看。
+
+---
+
+_**User (2026-11-17 19:01:00Z)**_
+
+fmhub.json 改成 Da-Wei Lee 然後推上去
+右上角 Which device還需要填寫嗎？ 還是只有Another device才要填
+[Image #13] 再幫我review一下 （感覺oneline feature描述留著應該也沒差？）
+
+---
+
+_**User (2026-11-17 19:01:00Z)**_
+
+[Image: source: /private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/0a574306-469e-4a59-9622-5701a42aee59/images/13.png]
+
+---
+
+_**Agent (claude-opus-5-5 2026-11-17 19:01:12Z)**_
+
+先改 `fmhub.json` 的作者並推上去。
+
+_**Agent (claude-opus-5-5 2026-11-17 19:01:22Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Set fmhub.json author, push fm1-morse, bump the submodule
+
+```bash
+cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/firmware/morse && python3 - <<'PY'
+import json
+d=json.load(open('fmhub.json'))
+d['author']='Da-Wei Lee'
+open('fmhub.json','w').write(json.dumps(d, indent=2)+"\n")
+PY
+python3 -m json.tool fmhub.json >/dev/null && grep author fmhub.json && git add fmhub.json && git commit -q -m "fmhub.json: author Da-Wei Lee
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>" && git push -q origin main 2>&1 | tail -1; git log --oneline -1; cd ../.. && git add firmware/morse && git commit -q -m "fm1-morse: fmhub.json author Da-Wei Lee
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>" && git log --oneline -1; curl -fsSL https://raw.githubusercontent.com/daviddwlee84/fm1-morse/main/fmhub.json | grep author
+```
+
+```text
+  "author": "Da-Wei Lee",
+81a6e9a fmhub.json: author Da-Wei Lee
+f8f0c1c fm1-morse: fmhub.json author Da-Wei Lee
+  "author": "Da-Wei Lee",
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 19:01:32Z)**_
+
+`fmhub.json` 的作者改成 `Da-Wei Lee` 並推上去了，GitHub 上已經讀得到新值。Hub 每三小時讀一次，卡片會在那之內更新。現在送出沒問題，「Check your file」的結果之後也會跟著變。這個 repo 的 submodule 指標也一起 commit 了（`f8f0c1c`）。
+
+**「Which device?」**：不用填。它的範例是「a Pi with a Launchpad」，是上面選 Another device 時才要寫的。你選了 M-VAVE FM-1，留空就好。
+
+**這一版的 review：可以送出了。**
+- **VIBE Box Challenge**：已經取消勾選，VIBE features 也清空了。
+- **How you tested it**：內容完整也正確，三項測試、晶片、安裝方式都寫到了。
+- **Anything Sven should know**：OK。
+- **兩個勾選**（安裝測試、聲音）：都屬實。
+
+**One-line 那一欄**：在虛線框裡，屬於比賽的區塊，沒勾參賽應該會被忽略，留著不影響。但如果它在別處被顯示出來，「(kind: other; it makes sound: …)」讀起來有點像內部備註。想保險的話可以換成：
+
+```
+A Morse code trainer and keyer for the FM-1: key on the piano keys, rhythm drills, flash cards by ear, listening practice.
+```
+
+不換也沒關係。
+
+送出後 Hub 會先自動檢查 repo、授權、`fmhub.json`、套件、identity 和晶片，再給你一個結果頁。可以把那頁貼給我，有缺的我們再補。
+
+---
+
+_**User (2026-11-17 19:06:48Z)**_
+
+已送出，這是結果頁 [Image #14] [Image #15]
+
+---
+
+_**User (2026-11-17 19:06:48Z)**_
+
+[Image: source: /private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/0a574306-469e-4a59-9622-5701a42aee59/images/14.png]
+
+[Image: source: /private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/0a574306-469e-4a59-9622-5701a42aee59/images/15.png]
+
+---
+
+_**Agent (claude-opus-5-5 2026-11-17 19:07:04Z)**_
+
+送出成功了。Hub 的 8 項自動檢查**全部通過**：
+
+| 檢查 | 結果 |
+|---|---|
+| repo 裡的原始碼 | 16 個原始檔 |
+| 授權檔 | `LICENSE` |
+| fmhub.json | author、cheat、color、image、kind、sounds、what 都讀到了 |
+| 聲音 | none（沒有 sample、bank、錄音） |
+| 附 .fwsc 的 release | 0.3 |
+| 自己的 identity | `FM-1_41000300` |
+| update loader | Felucca's |
+| flash 晶片 | 兩種都支援 |
+
+現在的狀態是「waiting for Sven」，等維護者本人審核。結果頁上 release 日期顯示 2026-11-17，是因為 Hub 用 UTC，台灣時間是 11/18。
+
+**提醒**：結果頁的網址只有你有，頁面上也寫了要保存好。之後的進度會寄到你的 email，也可以回那一頁看。
+
+把這次送審的經過補進文件，之後寫 skill 時會用到。
+
+_**Agent (claude-opus-5-5 2026-11-17 19:07:15Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Record the submission experience in the Hub and Morse docs
+
+```bash
+python3 - <<'PY'
+def sub(p,a,b):
+    s=open(p).read(); assert a in s,(p,a[:60]); s=s.replace(a,b,1); open(p,'w').write(s)
+sub('docs/firmware/hub.md',"**自己的進度**：Morse 照這份清單準備，2026-11-18 完成三項實機測試、發布 v0.3 release，identity 檢查和 `fmhub.json` 檢查都通過，接下來送審。過程見 [Morse](../dev/morse.md#release)。",
+"""**實際送審的經驗**（Morse，2026-11-18）：
+
+- **表單**：送審頁的表單（不是 email）。
+  - 裝置選 M-VAVE FM-1 時，旁邊的「Which device?」留空，那是選 Another device 時才要填的。
+  - 「Your name, as it should appear」最好和 `fmhub.json` 的 `author` 一致，卡片的「By:」用的是後者。
+  - **粉紅虛線框是 VIBE Box Challenge 的參賽欄位**（「What it is, in one line」「Which VIBE features does it use?」和參賽勾選）。那個比賽只收用 VIBE FM SDK 做、而且用到 FM-1 沒有的功能（音訊輸入、大螢幕、pads、CV 等）的作品，規則見 [lab/rules](https://thefirmwarehub.com/lab/rules/)。FM-1 韌體不要勾。
+  - 測試寫在「How you tested it」（從哪個韌體裝、換回哪個）；建置方式、授權、聲音的說明寫在「Anything Sven should know」。
+- **送出後**：會立刻得到一個只有自己有網址的狀態頁，Hub 自動檢查 8 項：
+  1. repo 裡的原始碼；
+  2. `LICENSE`；
+  3. `fmhub.json` 的欄位；
+  4. sounds 的聲明；
+  5. 附 `.fwsc` 的 release；
+  6. 自己的 identity；
+  7. update loader；
+  8. flash 晶片。
+
+  Morse 8 項全過，狀態是 **waiting for Sven**：等維護者本人審核。之後的變化會寄到填寫的 email。
+- **進度**：Morse 照這份清單準備，2026-11-18 完成三項實機測試、發布 v0.3 release、通過 identity 和 `fmhub.json` 檢查，接著送審。過程見 [Morse](../dev/morse.md#release)。""")
+sub('docs/dev/morse.md',"4. 用 Hub 的送審表單或 email 送審（本人）。",
+"4. 送審：2026-11-18 本人用 Hub 的送審表單送出（Hub 的紀錄是 UTC 2026-11-17 19:03）。自動檢查 8 項全過（原始碼、`LICENSE`、`fmhub.json`、sounds、release、identity、update loader、兩種晶片），狀態是 waiting for Sven，等維護者審核。")
+PY
+just docs-check 2>&1 | tail -1; git status --short | grep -v specstory | grep -v edge-computing
+```
+
+```text
+{"status": "ok", "pages": 46, "llm_pages": 46, "deployed": false}
+ M docs/dev/morse.md
+ M docs/firmware/hub.md
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 19:07:25Z)**_
+
+送審已經完成，Hub 的 8 項自動檢查全過，現在是 waiting for Sven，等維護者本人審核。
+
+文件也補上了：`docs/firmware/hub.md` 記下實際填表的經驗，包括 VIBE Box Challenge 那塊不要勾、「Which device?」什麼時候填、8 項自動檢查的內容；`docs/dev/morse.md` 記下送審狀態。這兩個改動還沒 commit。
+
+**接下來**
+1. **等審核**：結果會寄到你的 email，或回那個只有你有網址的狀態頁看。如果被要求修改，修好之後在狀態頁按「Check again」，或用同一個 repo 再送一次表單，會更新原本的送審，不會重複。
+2. **agent skill**：你之前說要把上架經驗整理成 skill。從準備到送審的整個流程已經走完、也記在文件裡了，可以現在先寫，等審核結果出來再補最後一段；也可以等上架後一次寫完。你想要哪一種？
+3. **社群清單**：上架後要不要送 awesome-fm-1、aroum/fm1-custom-fw 等清單，到時候再決定。
+
+要我現在 commit 文件，或順便寫 skill 嗎？這個 repo 目前還沒 push，push 到 `main` 會部署文件網站。
+
+---
+
+_**User (2026-11-17 19:10:17Z)**_
+
+sure commit & 寫上架skill
+
+順便也可以整理一下你說的社群清單（如果足夠權威/popular也可以去蹭一下）

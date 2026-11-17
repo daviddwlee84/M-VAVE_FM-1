@@ -99,6 +99,24 @@ M-VAVE 官方的產品頁與下載在 [cuvave.com](https://www.cuvave.com/produc
 
 上架之後，fm1-emu 和 RemoteFM1 的清單會自動從 Hub 帶進去。awesome-fm-1（每個 PR 一筆）、aroum/fm1-custom-fw、fm1-editor.com（開 issue）、FM-1 Firmware Atlas（PR 改 `data/firmwares.json`）則要另外提交。公告通常發在 r/MVaveFM1。
 
-**自己的進度**：Morse 照這份清單準備，2026-11-18 完成三項實機測試、發布 v0.3 release，identity 檢查和 `fmhub.json` 檢查都通過，接下來送審。過程見 [Morse](../dev/morse.md#release)。
+**實際送審的經驗**（Morse，2026-11-18）：
+
+- **表單**：送審頁的表單（不是 email）。
+  - 裝置選 M-VAVE FM-1 時，旁邊的「Which device?」留空，那是選 Another device 時才要填的。
+  - 「Your name, as it should appear」最好和 `fmhub.json` 的 `author` 一致，卡片的「By:」用的是後者。
+  - **粉紅虛線框是 VIBE Box Challenge 的參賽欄位**（「What it is, in one line」「Which VIBE features does it use?」和參賽勾選）。那個比賽只收用 VIBE FM SDK 做、而且用到 FM-1 沒有的功能（音訊輸入、大螢幕、pads、CV 等）的作品，規則見 [lab/rules](https://thefirmwarehub.com/lab/rules/)。FM-1 韌體不要勾。
+  - 測試寫在「How you tested it」（從哪個韌體裝、換回哪個）；建置方式、授權、聲音的說明寫在「Anything Sven should know」。
+- **送出後**：會立刻得到一個只有自己有網址的狀態頁，Hub 自動檢查 8 項：
+  1. repo 裡的原始碼；
+  2. `LICENSE`；
+  3. `fmhub.json` 的欄位；
+  4. sounds 的聲明；
+  5. 附 `.fwsc` 的 release；
+  6. 自己的 identity；
+  7. update loader；
+  8. flash 晶片。
+
+  Morse 8 項全過，狀態是 **waiting for Sven**：等維護者本人審核。之後的變化會寄到填寫的 email。
+- **進度**：Morse 照這份清單準備，2026-11-18 完成三項實機測試、發布 v0.3 release、通過 identity 和 `fmhub.json` 檢查，接著送審。過程見 [Morse](../dev/morse.md#release)。
 
 **注意同名**：Hub 上的 CONDUCTOR 是 MammothCheese 的 groovebox（`MammothCheese/conductor`，GPL-3.0，identity `FM-1_1812`），不是本 repo 的 [Conductor](../agentic/conductor.md)。Hub 和 fm1-emu 上的 id `conductor` 已經被它用了。
