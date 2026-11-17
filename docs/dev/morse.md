@@ -269,6 +269,11 @@ TYPE 頁的 LIVE 對應「打一個送一個」，COMPOSE 對應「先打好再�
 2. 發一個附 `morse-0.3.fwsc` 的 GitHub release：2026-11-18 發布 [v0.3](https://github.com/daviddwlee84/fm1-morse/releases/tag/v0.3)（tag 在 `748402f`），附 `morse-0.3.fwsc`（SHA-256 `1c563fda…c0f1b3`，GitHub 的 asset digest 相符）和 `firmware.json`。
 3. 用 #check 確認 identity：2026-11-18 本人確認 `FM-1_41000300` 是空的；KB 的「Check your file」讀得到 `fmhub.json`，回報 Fine，卡片圖 240×240、169 KB。
 4. 送審：2026-11-18 本人用 Hub 的送審表單送出（Hub 的紀錄是 UTC 2026-11-17 19:03）。自動檢查 8 項全過（原始碼、`LICENSE`、`fmhub.json`、sounds、release、identity、update loader、兩種晶片），狀態是 waiting for Sven，等維護者審核。
+5. 社群清單：2026-11-18 送了兩個最熱門的清單，都是一筆一個 PR。
+    - [awesome-fm-1 #30](https://github.com/cicloid/awesome-fm-1/pull/30)（93 stars，放 *Not a synth* 段）
+    - [aroum/fm1-custom-fw #36](https://github.com/aroum/fm1-custom-fw/pull/36)（424 stars，放 1.1.4 的第 126 筆，和 CTL-1、MIDIMON 同段）
+
+    fm1-emu、RemoteFM1、FMDB 會自動跟著 Hub 或 GitHub，不用送。fm1-editor.com 等 Hub 上架後看它會不會自己出現。整套流程整理成 repo 的 skill `fm1-hub-listing`。
 
 ## 路線圖 { #roadmap }
 

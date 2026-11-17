@@ -49,8 +49,19 @@ FM1 Developers' Wiki 列出 skill 和 wiki 不一致的地方（截至 2026-10-2
 - **不整包複製社群 skill。** 它們是參考來源，不是規則來源；有用的事實查核後寫進 `docs/`，並標上來源。
 - **之後再做一個很薄的 repo-owned skill + 固定 scripts。** 原則是 **Skill decides, script executes**：skill 決定要做什麼、讀結果、向擁有者報告；每個實際動作都由固定、可測試的 script 執行，不讓 LLM 自己拼 flash 位址、USB 指令或 erase 操作。
 
+**已經有的 repo-owned skill**：`fm1-hub-listing`（2026-11-18）。它記錄把自己的韌體上架到 [The Firmware Hub](../firmware/hub.md#listing) 和社群清單的完整流程：
+
+- 獨立 repo、`LICENSE`、`fmhub.json`；
+- 找空的 identity；
+- release；
+- 走 USB-MIDI 更新路徑的三項實機測試；
+- 送審表單怎麼填、結果頁的 8 項檢查；
+- awesome-fm-1 和 aroum 的收錄格式。
+
+內容來自 Morse 實際上架的經驗。它放在 `.agents/skills/fm1-hub-listing/`，從 `.claude/skills/` 連過去。
+
 !!! note "還不存在"
-    下面是規劃，不是現況。repo 裡目前沒有 `fm1` skill、沒有 `fm1` CLI wrapper，也沒有 build toolchain（見 `AGENTS.md` 的 Not set up yet）。
+    下面是規劃，不是現況：操作機器的 `fm1` skill 和 `fm1` CLI wrapper 還沒做，目前由 `Justfile` 的 recipe 代替（見 `AGENTS.md` 的 Not set up yet）。
 
 預計的結構草圖：
 

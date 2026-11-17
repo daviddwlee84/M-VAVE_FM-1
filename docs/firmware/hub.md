@@ -117,6 +117,6 @@ M-VAVE 官方的產品頁與下載在 [cuvave.com](https://www.cuvave.com/produc
   8. flash 晶片。
 
   Morse 8 項全過，狀態是 **waiting for Sven**：等維護者本人審核。之後的變化會寄到填寫的 email。
-- **進度**：Morse 照這份清單準備，2026-11-18 完成三項實機測試、發布 v0.3 release、通過 identity 和 `fmhub.json` 檢查，接著送審。過程見 [Morse](../dev/morse.md#release)。
+- **進度**：Morse 照這份清單準備，2026-11-18 完成三項實機測試、發布 v0.3 release、通過 identity 和 `fmhub.json` 檢查，接著送審，也對 awesome-fm-1 和 aroum 各開了一個 PR。過程見 [Morse](../dev/morse.md#release)。這套流程整理成 repo 的 agent skill `fm1-hub-listing`（`.agents/skills/`）。
 
 **注意同名**：Hub 上的 CONDUCTOR 是 MammothCheese 的 groovebox（`MammothCheese/conductor`，GPL-3.0，identity `FM-1_1812`），不是本 repo 的 [Conductor](../agentic/conductor.md)。Hub 和 fm1-emu 上的 id `conductor` 已經被它用了。

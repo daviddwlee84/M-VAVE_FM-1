@@ -36,7 +36,7 @@ experimental firmware apps under `firmware/`, built on the `fm1-base` submodule.
 | `docs/watch.md` | Ledger of upstream checks for things on hold (m-bootloader on the new chip, SLOOP 3). Append, do not rewrite. |
 | `backups/`, `downloads/` | Git-ignored. Flash backups and downloaded installers/firmware. Never commit. Off-machine copies of backups go to GitHub Release assets (`just fm1-backup-release`). |
 | `zensical.toml`, `scripts/check-docs-site.py`, `Justfile` | Site config, output checker, task runner. |
-| `.agents/skills/` | Installed agent skills (`zensical-site-bootstrap`). |
+| `.agents/skills/` | Agent skills, linked from `.claude/skills/`: `zensical-site-bootstrap` (installed) and `fm1-hub-listing` (repo-owned: listing an own firmware on The Firmware Hub and the community lists). |
 
 ## Commands
 
@@ -233,5 +233,5 @@ from a test. There is no auto-approve; do not add one without the owner asking.
 
 ## Not set up yet
 
-A repo-owned FM-1 skill and an `fm1` CLI wrapper (the `Justfile` covers it for
-now). No own build has been flashed to hardware yet; see `docs/dev/index.md`. `fm1-emu` is a downloaded binary, not a source checkout.
+A repo-owned skill for operating the unit and an `fm1` CLI wrapper (the `Justfile` covers it for now;
+`fm1-hub-listing` covers publishing only). `fm1-emu` is a downloaded binary, not a source checkout.
