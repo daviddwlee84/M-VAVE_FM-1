@@ -235,6 +235,36 @@ agtdeck-emu chip="uc25hq80": agtdeck-fetch
 agtdeck-run backend="herdr" *args: agtdeck-clone
     uv run --locked --all-groups python vendor/fm-1-agent-deck/host/agtdeck.py --backend "{{backend}}" {{args}}
 
+# ---- Morse: pocket Morse code machine (firmware/morse + host/morse) ----------
+
+# morse.c and learn.c on this computer: code table, timing, player, keyer, decoder, flash cards.
+morse-unit:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    mkdir -p build
+    cc -Wall -Wextra -o build/morse_test firmware/morse/tests/morse_test.c
+    build/morse_test
+
+# Host unit tests (protocol vectors shared with firmware/morse/tests/basic.txt, the host's answers).
+morse-test:
+    uv run --locked --all-groups pytest -q host/tests/test_morse.py
+
+# The firmware in the emulator with the virtual USB cable plugged in (pair with `just morse-type` / `morse-send`).
+morse-emu chip="uc25hq80":
+    just emu-run firmware/morse/build/morse.fwsc "{{chip}}" --usb
+
+# What you key or type on the FM-1, typed into the focused app (macOS, Accessibility). --dry-run prints it.
+morse-type *args:
+    PYTHONPATH=host uv run --locked --all-groups python -m morse type {{args}}
+
+# The FM-1 plays TEXT as received ("-": lines from stdin).
+morse-send +text:
+    PYTHONPATH=host uv run --locked --all-groups python -m morse send {{text}}
+
+# The host against a text stand-in for the FM-1 (lines you type are what it "read").
+morse-sim:
+    PYTHONPATH=host uv run --locked --all-groups python -m morse --simulate type --dry-run
+
 # ---- upstream watch -----------------------------------------------------------
 
 # Latest upstream releases, to compare with the version table in docs/resources.md.

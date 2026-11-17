@@ -10,6 +10,7 @@
 third_party/fm1-base/      git submodule（它自己再帶 felucca-bsp 於 bsp/）
 firmware/hello/            fm1-base template 的原樣複本，用來驗證整條鏈
 firmware/conductor/        agent 控制台（見 Conductor 頁）
+firmware/morse/            摩斯電碼機（見摩斯電碼機頁）
 firmware/common/           app 之間共用的模組（hostlink、ledfx、chime）
 firmware/<app>/            之後的 app
 tools/jieli/               JieLi toolchain（gitignore）

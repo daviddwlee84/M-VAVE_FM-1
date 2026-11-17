@@ -41,6 +41,19 @@ FM-1 是 USB device。USB 鍵盤直接插在 FM-1 上不會動，因為兩邊都
 
 注意不同韌體的 MIDI mapping 不同。不能假設每個實體按鍵在原廠韌體下都會送出獨立事件。`[調研]`
 
+## 兩台 FM-1 互連 { #two-units }
+
+有沒有辦法讓兩台 FM-1 直接互傳？硬體和 fm1-base 都留了路，但 2026-11-17 為止沒有找到有人在兩台實機上做過的紀錄。`[上游]` `[調研]`
+
+| 方式 | 怎麼接 | 限制 | 狀態 |
+|---|---|---|---|
+| **藍牙直連** | 一台開 `ble_central = true` 去掃描、連上另一台（它以 `FM-1 XXXX` 廣播 BLE MIDI） | fm1-base 自己的 BLE stack（`ble_stack = "own"`）一次只能有一條藍牙 MIDI 連線，連著另一台時電腦就不能走藍牙（USB 還可以）；JieLi 的 stack 可以兩條同時連，但會丟掉收到的 SysEx。central 的 connection interval 是 11.25 ms | fm1-base 只在模擬的無線電上測過（`docs/bt/BLE-DEVICES-DESIGN.md`、`tests/bt/ble_f2f_test.c`），沒有在兩台實機上測過 `[上游]` |
+| **USB-C 線** | 一台切成 USB host（fm1-base `usb_host = true`，或 ChoralRoot 的 Options → USB Host） | FM-1 的 USB 口不供電；兩台都有電池，所以被接的那台可能不需要，但 FM-1 在沒有 VBUS 時會不會被列舉，沒有文件。fm1-base 的 host 模式收不到 SysEx，也不送 SysEx，note 和 CC 可以；它的 host 輸出路徑還沒在實機驗證 | ChoralRoot 0.31 的 release notes 說可以用 USB-C 線把兩台互接；[MIDIMON](https://github.com/ignis32/midimonitor_fm1) 的作者說接的裝置要有自己的電源（「例如另一台 FM-1」），並用它 debug 另一台 `[上游]` |
+| **經過電腦** | 兩台都接電腦（USB 或藍牙），由電腦轉送；也可以經網路，例如 Vail | 要有電腦 | 最可靠 |
+| TRS MIDI | — | FM-1 只有 MIDI IN，沒有 OUT，做不到雙向 | 不可行 |
+
+要讓同一個程式走得過以上每一條路，最穩的是只用 note on / off 這類一般 MIDI 訊息，不要依賴 SysEx。自製的[摩斯電碼機](../dev/morse.md)就是這樣設計：線上只傳按鍵的按下與放開。
+
 ## TRS MIDI IN
 
 需要 **TRS-to-DIN MIDI 轉接線**。沒聲音時試另一種型式（Type A / Type B）。

@@ -22,6 +22,7 @@ M-Flasher 的 flash map 用顏色標的就是這些：BOOT `00–03`、FIRMWARE 
 |---|---|---|
 | SLOOP 2.8.5、Agent Deck 0.7、CTL-1 1.0.3 | `0x04000`–`0x92FFF`（實際寫入到 `0x8FFFF`） | `[實機]` |
 | Conductor 0.1（自製，fm1-base） | `0x04000`–`0x92FFF`（實際寫入 `0x04000`–`0x8EFFF`、`0x91000`–`0x91FFF`） | `[實機]` M-Flasher 的計畫：140 sectors |
+| Morse 0.1（自製，fm1-base） | `0x04000`–`0x92FFF` | `[模擬]` 預演，還沒刷 |
 | **ChoralRoot 0.41** | `0x04000`–**`0x9EFFF`** | `[實機]` M-Flasher 的計畫：152 sectors |
 | **原廠 V16** | 到 **`0xA8FFF`** | `[上游]` Unbricker |
 
@@ -36,6 +37,7 @@ Felucca、SLOOP、ChoralRoot 以及 Dinghy、fm1-base 系的韌體大多沿用�
 | `0x97000` 起 | project（曲子） |
 | `0x9F000` | SLOOP 的 autosave（和 ChoralRoot 的 FM6 bank 是同一個物件編號） |
 | `0xA0000` 起 | samples |
+| `0xDA000`–`0xDBFFF` | 自製 [Morse](../dev/morse.md#flash) 的設定與學習進度（這台機器的備份裡這兩個 sector 都是空的） |
 | `0xDC000` 起 | user preset bank；CTL-1 與 fm1-base 的 app（含 Conductor）用來放面板校正 |
 | `0xDE000` | CTL-1 的 Bluetooth 設定 |
 | `0xE0000` | 更新時暫存 update loader |

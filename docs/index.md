@@ -19,6 +19,7 @@
 | 讓 agent 幫忙刷機或開發 | [Agentic 工作流](agentic/index.md) |
 | 自己寫韌體 | [自製韌體環境](dev/index.md) |
 | 用 FM-1 管 coding agent（自製） | [Conductor](agentic/conductor.md)、[操作速查](agentic/conductor-cheatsheet.md) |
+| 用 FM-1 學摩斯電碼、跟人互傳（自製） | [摩斯電碼機](dev/morse.md)、[操作速查](dev/morse-cheatsheet.md)、[兩台互連](hardware/io.md#two-units) |
 | 試 Agent Deck | [Agent Deck 試用](firmware/agent-deck/index.md) |
 | 搞懂官方、社群、Hub、VIBE 的關係 | [生態是怎麼來的](ecosystem.md) |
 | 找某個 repo 或目前版本 | [資源地圖](resources.md) |
@@ -47,8 +48,9 @@
 | 專案 | 是什麼 | 韌體 | 電腦端 | 狀態 |
 |---|---|---|---|---|
 | **Conductor** | coding agent 的桌上控制台：一個琴鍵一個 agent，LED 表示急不急，螢幕顯示狀態與輸出（含中文），提示音，按鈕批准 / 拒絕 / 中斷，按住說話的語音輸入，USB 或藍牙 | `firmware/conductor/` | `host/conductor/`（接 hc 與 classic Herdr 的 Python daemon） | 韌體 0.3、host 0.3.2；2026-11-17 起在我的機器上，見[設計](agentic/conductor.md)、[速查](agentic/conductor-cheatsheet.md)、[版本紀錄](agentic/conductor-changelog.md) |
+| **Morse** | 隨身摩斯電碼機：琴鍵當電鍵（直鍵或 iambic paddle）即時解碼、琴鍵當字母鍵盤播出摩斯、閃卡間隔複習（預設只用聽的）、靜音看燈、USB MIDI 用 Vail 的格式 | `firmware/morse/` | `host/morse/`（把發的字打進電腦、電腦送字給 FM-1 播） | 韌體 0.1、host 0.1.0；模擬器驗證過，還沒刷進實機，見[設計](dev/morse.md)、[速查](dev/morse-cheatsheet.md) |
 | `hello` | fm1-base 的 template 原樣複本，用來驗證工具鏈 | `firmware/hello/` | — | 模擬器開得起來 |
-| 共用模組 | `hostlink`（經 USB / 藍牙和電腦的 SysEx 連線）、`ledfx`（LED 動態）、`chime`（FM 提示音） | `firmware/common/` | — | Conductor 在用 |
+| 共用模組 | `hostlink`（經 USB / 藍牙和電腦的 SysEx 連線）、`ledfx`（LED 動態）、`chime`（FM 提示音） | `firmware/common/` | — | Conductor 在用；Morse 用 `hostlink`、`ledfx` |
 
 ## 這台機器是什麼
 

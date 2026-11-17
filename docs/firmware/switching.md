@@ -81,6 +81,7 @@ Felucca 系的韌體（SLOOP、ChoralRoot、Dinghy 系的 Agent Deck）與 fm1-b
 | CTL-1 1.0.3 | `0xDE000`–`0xDFFFF` | 在我的映像裡原本是空的。存設定時還會寫 `0xFC000` |
 | RemoteFM1 0.3.6 | `0xF2000`–`0xF3FFF` | `0xF2000` 有原廠留下的資料，會被蓋掉 |
 | ChoralRoot 0.41 | 沒有改寫；正常開機 | **韌體映像本身較大（到 `0x9EFFF`），安裝時就會蓋掉 SLOOP 在 `0x97000` 的 project。** 上游另記載過舊版在 SLOOP 資料上掉進 ROM boot mode，見 [ChoralRoot](choralroot/index.md) |
+| Morse 0.1（自製） | 開機不寫；改設定或玩完一回合才寫 `0xDA000`–`0xDBFFF` `[模擬]`；還沒刷進實機 | 韌體映像 `0x04000`–`0x92FFF`。和目前機上的 Conductor 只差 27 個 sector（`0x04000`–`0x1EFFF`）。預演疊在 `2026-11-17-2052-pre-conductor` 備份上，見 [Morse](../dev/morse.md#flash) |
 | Conductor 0.1（自製） | 沒有改寫，重開再讀回也是 0 次寫入 `[模擬]`；2026-11-17 已刷進實機 | 韌體映像 `0x04000`–`0x92FFF`，不到 `0x97000`。只讀 panel calibration（`0xDC000`），不碰 `0xFC000`。預演是疊在 `2026-11-17-0413-pre-choralroot-0.41` 備份上做的，見 [Conductor](../agentic/conductor.md#flash) |
 
 ### 先在模擬器預演
