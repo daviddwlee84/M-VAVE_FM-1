@@ -1,0 +1,24 @@
+# voicelab's test words: one item a line ("#" starts a comment). Pairs that differ by one sound a learner must
+# hear (th/s, th/t, sh/s, v/b, l/r), sounds 8 kHz blurs (s, f, th), long words with stress, two sentences.
+think
+sink
+three
+tree
+ship
+sip
+very
+berry
+light
+right
+world
+thought
+measure
+judge
+rhythm
+vocabulary
+pronunciation
+comfortable
+schedule
+necessary
+Practice makes perfect.
+The weather is nice today.

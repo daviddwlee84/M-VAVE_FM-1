@@ -45,6 +45,10 @@ FM-1 同一時間只跑一套主要韌體，換韌體就是重刷。可以先在
 | [Macropad Patch](https://github.com/smememe/fm1-macropad-patch) | 把原廠 V15 patch 成 MIDI macro pad | host 端自訂所有按鍵行為 |
 | [MIDI Processor](https://midihax.github.io/fm1-midi-processor/html/index.html) | MIDI filter、remap、monitor | MIDI routing、debug `[調研]` |
 
+## 會講話的韌體
+
+Speak37、SPELLBOX、386DX、Chimera Vocal、EVIL GENIUS 都能在 FM-1 上合成英文語音（LPC、共振峰、聲道模型、SAM）。做法、licence 與試聽比較見[裝置端語音合成](../dev/tts.md#community)。
+
 ## Agent 類
 
 | 韌體 | 變成什麼 |

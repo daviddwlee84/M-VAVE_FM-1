@@ -1,0 +1,36 @@
+# Voice Lab in the host simulator (just fw-test voicelab, after just voice-fw): a word in each engine, recorded.
+wait 600
+shot boot.png
+expect engine 0
+key 0 down
+wait 20
+key 0 up
+expect word 0
+expect playing 1
+wav lpc_key0.wav
+wait 900
+wavstop
+expect playing 0
+expect peak_db_min -30
+shot lpc.png
+turn PRESET 1
+wait 30
+expect engine 1
+key 15 down
+wait 20
+key 15 up
+expect word 15
+wav adpcm_key15.wav
+wait 1100
+wavstop
+expect playing 0
+expect peak_db_min -30
+shot adpcm.png
+tap PLAY
+wait 20
+expect playing 1
+wait 1200
+expect playing 0
+tap OCT-
+wait 30
+expect engine 0

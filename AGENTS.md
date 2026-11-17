@@ -27,9 +27,11 @@ experimental firmware apps under `firmware/`, built on the `fm1-base` submodule.
 | `firmware/<app>/` | Own firmware apps (fm1-base template layout: `app.c`, `app.h`, `fm1.toml`, `tests/`). `firmware/hello` is the unmodified template, kept as the toolchain smoke test. |
 | `firmware/conductor/` | Own agent-console firmware (MIT). Design: `docs/agentic/conductor.md`. |
 | `firmware/morse/` | Submodule: [fm1-morse](https://github.com/daviddwlee84/fm1-morse), own pocket Morse code machine (GPL-3.0-or-later since 2026-11-18, MIT before; `common/` in it stays MIT; its own repo for The Firmware Hub, with `LICENSE` and `fmhub.json`). Built here with `third_party/fm1-base`; commit inside it, then bump the pointer here. Design: `docs/dev/morse.md`. |
-| `firmware/common/` | Modules shared by own apps (`hostlink`, `ledfx`, `chime`; MIT). Apps add `include = ["../common"]`. |
+| `firmware/common/` | Modules shared by own apps (`hostlink`, `ledfx`, `chime`, and the speech decoders `lpc`, `adpcm`; MIT). Apps add `include = ["../common"]`. |
+| `firmware/voicelab/` | Spike app (MIT): each key says a test word with the `lpc` / `adpcm` decoders. Not for installing. Its data (`gen/`) is generated and git-ignored. Design: `docs/dev/tts.md`. |
 | `host/conductor/` | Conductor's host daemon (Python, MIT): backends `hc`, `herdr`, `fake`. Protocol spec in `PROTOCOL.md`; tests in `host/tests/`. |
 | `host/morse/` | Morse's host (Python, MIT): types what the FM-1 reads into the Mac, sends text for it to play. Protocol in `PROTOCOL.md` (keying is Vail-format MIDI note 0). |
+| `host/voicelab/` | Listening lab (Python, MIT): renders test words with every speech option (macOS `say`, Moonshine Klatt, 386DX, LPC, ADPCM, SPELLBOX in fm1-emu) into `build/voicelab/`, scores them with Whisper. GPL engines stay in `vendor/`; generated audio is never committed. |
 | `third_party/fm1-base` | Git submodule (MPL-2.0, beta). Do not edit; bump deliberately. |
 | `docs/dev/` | Firmware development environment and its current state. |
 | `docs/hardware/flash-map.md` | Who stores what where in the 1 MiB flash, with sector diffs from this unit's backups. Update it when a new firmware is tried. |
@@ -69,6 +71,13 @@ just morse-test        # Morse host unit tests (protocol vectors shared with tes
 just morse-emu [CHIP]  # Morse firmware in fm1-emu with the virtual USB cable
 just morse-type [--dry-run]  # what the FM-1 reads, typed into the focused Mac app
 just morse-send TEXT   # the FM-1 plays TEXT as received
+
+just voice-vendor      # Moonshine Klatt, python_wizard, CMUdict, 386DX engine into vendor/ (pinned commits)
+just voice-fetch       # community firmwares that speak (Speak37, SPELLBOX, 386DX, ...), digest-verified, for the emulator
+just voice-lab [ENGINE...]  # render host/voicelab/words.txt with every speech option -> build/voicelab/
+just voice-score       # Whisper (base.en) as a stand-in listener, onto the page
+just voice-open        # the listening page, build/voicelab/index.html
+just voice-fw          # the test words into firmware/voicelab (gen/, git-ignored) + its host simulator test
 
 just fw-setup          # submodules + Python tools (needs `brew install libraqm`)
 just fw-test [APP]     # host simulator build + tests/basic.txt; no toolchain, no hardware
@@ -235,3 +244,6 @@ from a test. There is no auto-approve; do not add one without the owner asking.
 
 A repo-owned skill for operating the unit and an `fm1` CLI wrapper (the `Justfile` covers it for now;
 `fm1-hub-listing` covers publishing only). `fm1-emu` is a downloaded binary, not a source checkout.
+A vocabulary app is at the idea stage (`docs/dev/vocab.md`). A deck written to the flash data area would need
+the firmware-development rule "never compute flash addresses or call erase/program directly" changed first,
+with the owner's approval; the proposed wording is in that page.

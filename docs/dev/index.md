@@ -2,7 +2,7 @@
 
 目標是把 **改 code → host simulator → fm1-emu → 批准 → 實機** 整條鏈跑通，再談功能。基礎是 [fm1-base](https://github.com/charlesvestal/fm1-base)（MPL-2.0，beta）：它在 felucca-bsp 之上提供螢幕、按鍵、LED、音訊、MIDI、storage，以及跑同一份 app 的 host simulator。
 
-**狀態（2026-11-17）：host simulator、實機套件 build、fm1-emu 兩種晶片開機都已跑通；還沒刷進實機。**
+**狀態（2026-11-18）：host simulator、實機套件 build、fm1-emu 兩種晶片開機都已跑通；自己的 build 已經刷進實機過（Conductor 0.1、0.2，Morse 0.1–0.3，紀錄見[我的機器](../device-log.md)）。**
 
 ## 結構
 
@@ -11,7 +11,8 @@ third_party/fm1-base/      git submodule（它自己再帶 felucca-bsp 於 bsp/�
 firmware/hello/            fm1-base template 的原樣複本，用來驗證整條鏈
 firmware/conductor/        agent 控制台（見 Conductor 頁）
 firmware/morse/            摩斯電碼機（見摩斯電碼機頁）
-firmware/common/           app 之間共用的模組（hostlink、ledfx、chime）
+firmware/common/           app 之間共用的模組（hostlink、ledfx、chime、lpc、adpcm）
+firmware/voicelab/         語音解碼器的驗證 app（見裝置端語音合成頁；不刷實機）
 firmware/<app>/            之後的 app
 tools/jieli/               JieLi toolchain（gitignore）
 tools/fw-AC79_AIoT_SDK/    JieLi AC79 SDK，固定 tag（gitignore）

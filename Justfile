@@ -16,6 +16,12 @@ ctl_version := "1.0.3"
 choralroot_tag := "v0.41"
 choralroot_pkg := "choralroot-0.41.fwsc"
 remote_version := "0.3.6"
+# firmwares that speak (docs/dev/tts.md): listened to in the emulator only
+speak37_version := "1.0"
+spellbox_version := "0.3"
+dx386_version := "2.0"
+chimera_version := "0.8.0"
+evilgenius_version := "0.1.4"
 
 default:
     @just --list
@@ -65,6 +71,24 @@ fm1-fetch-more:
     fetch charlesvestal/fm1-ctl "v{{ctl_version}}" "ctl-{{ctl_version}}.fwsc"
     fetch Quixotic7/ChoralRootFM1 "{{choralroot_tag}}" "{{choralroot_pkg}}"
     fetch Quixotic7/RemoteFM1 "v{{remote_version}}" "remote-{{remote_version}}.fwsc"
+
+# Download the community firmwares that speak (docs/dev/tts.md) and verify them against the release digests.
+# For listening in the emulator (`just emu-run downloads/FILE`); none is planned for the unit.
+voice-fetch:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    mkdir -p downloads && cd downloads
+    fetch() { # repo tag asset
+      gh release download "$2" -R "$1" -p "$3" --clobber
+      want=$(gh api "repos/$1/releases/tags/$2" --jq ".assets[] | select(.name==\"$3\") | .digest" | sed 's/^sha256://')
+      got=$(shasum -a 256 "$3" | cut -d' ' -f1)
+      if [ -n "$want" ] && [ "$want" = "$got" ]; then echo "ok   $3  $got"; else echo "FAIL $3: got $got, release says ${want:-<no digest>}" >&2; exit 1; fi
+    }
+    fetch genkigenki/Speak37 "v{{speak37_version}}" "speak37-fm1-{{speak37_version}}.fwsc"
+    fetch pjac1810/spellbox "v{{spellbox_version}}" "spellbox-{{spellbox_version}}.fwsc"
+    fetch seajaysec/386-DX-FM1-KaraokeBot "v{{dx386_version}}" "386dx-{{dx386_version}}.fwsc"
+    fetch shan-sherif/fm-1-chimera-vocal "v{{chimera_version}}" "chimera-{{chimera_version}}.fwsc"
+    fetch Quixotic7/evilgenius "v{{evilgenius_version}}" "evilgenius-{{evilgenius_version}}.fwsc"
 
 # Open the M-Flasher disk image (drag the app to Applications yourself).
 fm1-install-flasher: fm1-fetch
@@ -215,13 +239,17 @@ cond-ble:
 cond-emu chip="uc25hq80":
     just emu-run firmware/conductor/build/conductor.fwsc "{{chip}}" --usb
 
-# firmware/common's own tests on this computer (hostlink's Bluetooth SysEx packets).
+# firmware/common's own tests on this computer (hostlink's Bluetooth SysEx packets, the LPC and ADPCM speech decoders).
 fw-common-test:
     #!/usr/bin/env bash
     set -euo pipefail
     mkdir -p build
     cc -Wall -Wextra -I firmware/common -o build/hostlink_test firmware/common/tests/hostlink_test.c
     build/hostlink_test
+    cc -Wall -Wextra -I firmware/common -o build/lpc_test firmware/common/tests/lpc_test.c
+    build/lpc_test
+    cc -Wall -Wextra -I firmware/common -o build/adpcm_test firmware/common/tests/adpcm_test.c
+    build/adpcm_test
 
 # hc end to end: two fake agents (label conductor-test=1), approve / deny / continue, then kill them.
 cond-it:
@@ -272,6 +300,52 @@ morse-send +text:
 # The host against a text stand-in for the FM-1 (lines you type are what it "read").
 morse-sim:
     PYTHONPATH=host uv run --locked --all-groups python -m morse --simulate type --dry-run
+
+# ---- voice lab: speech options for a vocabulary app (host/voicelab, docs/dev/tts.md) ----
+
+# Upstream code the lab builds on, at pinned commits, into vendor/ (git-ignored): Moonshine's Klatt TTS (MIT),
+# python_wizard (MIT), CMUdict (BSD), and the 386DX engine (GPL-3.0) with eSpeak NG 1.52.0, built for this computer.
+voice-vendor:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    mkdir -p vendor
+    pin() { # dir url sha [sparse paths...]
+      local dir=$1 url=$2 sha=$3; shift 3
+      if [ ! -d "vendor/$dir/.git" ]; then
+        git init -q "vendor/$dir" && git -C "vendor/$dir" remote add origin "$url"
+        if [ $# -gt 0 ]; then git -C "vendor/$dir" sparse-checkout set --no-cone "$@"; fi
+      fi
+      git -C "vendor/$dir" fetch -q --depth 1 --filter=blob:none origin "$sha"
+      git -C "vendor/$dir" checkout -q FETCH_HEAD
+      echo "ok   vendor/$dir  $(git -C "vendor/$dir" rev-parse --short HEAD)"
+    }
+    pin moonshine https://github.com/moonshine-ai/moonshine.git d8d8fa29d05ca67441a7719e70099f9f48917a93 \
+      /micro/klatt-tts/ /micro/g2p/ /micro/LICENSE
+    pin python_wizard https://github.com/ptwz/python_wizard.git add73ebf3c8fed306225dffd2e0229aee1a38e8f
+    pin cmudict https://github.com/cmusphinx/cmudict.git 74790861f652b15e4ac49015a90074ad62a27690
+    pin 386dx-engine https://github.com/seajaysec/386-DX-ENGINE.git 595eb7d9e9200e97b7fbc09ff7e1fdb771bf5f11
+    test -d vendor/386dx-engine/vendor/espeak-ng || git -c advice.detachedHead=false clone -q --depth 1 \
+      --branch 1.52.0 https://github.com/espeak-ng/espeak-ng.git vendor/386dx-engine/vendor/espeak-ng
+    test -x vendor/386dx-engine/build/sing || (cd vendor/386dx-engine && uv run --no-project --with ninja python3 tools/build.py)
+
+# Render the test words (host/voicelab/words.txt) with every option; build/voicelab/index.html to listen.
+# `just voice-lab lpc10 adpcm16` renders only those engines.
+voice-lab *engines:
+    PYTHONPATH=host uv run --no-project --with numpy --with scipy python -m voicelab build {{engines}}
+
+# Whisper (base.en) as a stand-in listener: what it hears in each rendering, onto the page.
+voice-score:
+    PYTHONPATH=host uv run --no-project --with faster-whisper python -m voicelab score
+
+# Open the listening page.
+voice-open:
+    open build/voicelab/index.html
+
+# The test words into firmware/voicelab (gen/voicedata.h, git-ignored), then its host simulator test (WAVs in
+# firmware/voicelab/build/host/). `just fw-build voicelab` makes the device package; `just emu-run` plays it.
+voice-fw:
+    PYTHONPATH=host uv run --no-project --with numpy --with scipy python -m voicelab firmware
+    just fw-test voicelab
 
 # ---- upstream watch -----------------------------------------------------------
 

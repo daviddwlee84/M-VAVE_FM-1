@@ -16,3 +16,6 @@
 # Python caches (host/conductor)
 __pycache__/
 /.pytest_cache/
+
+# Generated app data (firmware/voicelab/gen: speech made from a voice that is not ours to share)
+/firmware/*/gen/

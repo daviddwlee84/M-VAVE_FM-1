@@ -88,6 +88,11 @@ GitHub stars 只代表關注度，**不是刷機安全性的證據**。
 | [fm-1-agent-deck](https://github.com/kevinelliott/fm-1-agent-deck) | v0.7 | 2026-11-14 | 作者實機跑的是 0.6.2 |
 | [herdr-core](https://github.com/herdrdev/herdr-core/blob/master/CHANGELOG.md) | 0.1.21 | 2026-11-12 | 本機安裝的版本（`hc --version`）；Conductor 對它測過 |
 | [herdr](https://github.com/herdrdev/herdr) | 0.9.5 | 沒查 | 本機安裝的版本，classic Herdr；socket protocol 22 |
+| [Speak37](https://github.com/genkigenki/Speak37/releases) | v1.0 | 2026-10-17 | 用 `speak37-fm1-1.0.fwsc`；只在模擬器裡聽，見[語音合成](dev/tts.md#community)（2026-11-18 查核） |
+| [SPELLBOX](https://github.com/pjac1810/spellbox/releases) | v0.3 | 2026-10-28 | 同上 |
+| [386DX](https://github.com/seajaysec/386-DX-FM1-KaraokeBot/releases) | v2.0 | 2026-11-04 | 同上；引擎 [386-DX-ENGINE](https://github.com/seajaysec/386-DX-ENGINE) 固定在 `595eb7d` |
+| [Chimera Vocal](https://github.com/shan-sherif/fm-1-chimera-vocal/releases) | v0.8.0 | 2026-11-17 | 同上 |
+| [EVIL GENIUS](https://github.com/Quixotic7/evilgenius/releases) | v0.1.4 | 2026-11-17 | 同上 |
 
 一次列出全部：`just fm1-versions`。重新查某個 repo 的最新 release：
 

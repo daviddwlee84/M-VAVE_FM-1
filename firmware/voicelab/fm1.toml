@@ -1,0 +1,15 @@
+# Voice Lab's build settings (fm1-base tools/build.py). A spike for docs/dev/tts.md: not for installing.
+name = "VOICELAB"
+id_prefix = "FM-1_14"          # package identity: dev FM-1_1400 (dev builds only; never released)
+usb_manufacturer = "fm1-base"
+usb_product = "VOICELAB FM-1"
+o2 = []
+include = ["../common"]        # lpc, adpcm: the speech decoders
+words = "words.tsv"
+tagline = "the speech decoders a vocabulary app would carry"
+repo = "https://github.com/daviddwlee84/M-VAVE_FM-1"
+licence = "MIT"
+credits = "Built on fm1-base by Charles Vestal. LPC tables from python_wizard (MIT), from MAME."
+author = "daviddwlee84"
+description = "A listening test, not an instrument: each key says a test word with LPC (the Speak & Spell's format) or IMA ADPCM, decoded on the FM-1 as it plays."
+tags = ["utility"]

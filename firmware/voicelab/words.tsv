@@ -1,0 +1,6 @@
+# SPDX-License-Identifier: MIT
+# Voice Lab's words for a screen reader (fm1-reader): the text on the screen <TAB> what to say.
+# url: https://daviddwlee84.github.io/M-VAVE_FM-1/dev/tts/
+VOICELAB	voice lab
+LPC 25 MS	L P C, 25 milliseconds
+ADPCM 11 KHZ	A D P C M, 11 kilohertz
