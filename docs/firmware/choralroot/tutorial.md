@@ -16,6 +16,8 @@ ChoralRoot 仿的是 Telepathic Instruments 的 Orchid。它的操作邏輯和�
 
     `FX`、`EDIT`、`HOME`、`SAVE`、`SEQ`、`REC` 名稱不變。完整對照在本頁最下面的「面板對照」。
 
+    **為什麼要換名字**：面板上的字是為原廠韌體印的（`SEL`、`ENV`、`LFO`、`ARP` 是原廠合成器的功能），上游手冊直說 "The printed labels belong to the stock firmware"。ChoralRoot 的功能是另一套，所以用它自己的名稱，上游建議貼貼紙。`[上游]` 名稱本身（KEY、BASS、LOCK、PERF、LOOP）應該是沿用 Orchid 的功能名，這點是我的推測，沒有查證。另外 Options 裡有 **Classic** 配置，是 Orchid 原本的 chord 鍵位（SUS 獨立在 C#4、9 在 C4、LOCK 在 B3）；預設的是為 FM-1 鍵盤重排過的配置。
+
 ## 觀念：一隻手決定「什麼和弦」，另一隻手決定「哪個音」
 
 一般鍵盤上，彈 Dm7 要同時按 D、F、A、C 四個鍵，換和弦就要換一組指型。Orchid 式的樂器把這件事拆開：
@@ -53,6 +55,50 @@ ChoralRoot 仿的是 Telepathic Instruments 的 Orchid。它的操作邏輯和�
 
 - **chord 鍵要在根音按下去之前就按著。** 預設的 Play Style 是 Simple，和弦在根音落下的那一刻就定了。
 - **延伸音可以疊。** MAJ + 6 + 9 會顯示 `D` `6 9`。疊三個顯示 `JAZZ`，四個全按顯示 `WTF`。
+- **同時按兩個種類鍵時，後按的那個算數。** 例外是 G#3 + A#3，永遠是 SUS。
+
+### `JAZZ` 和 `WTF` 是什麼 `[上游]`
+
+不算隱藏彩蛋，是 Orchid 原本的命名規則，ChoralRoot 照搬。它的預設命名（Options → Chord Names = **Orchid**）依「你按了哪些鍵」取名：延伸音一個寫成上標、兩個並排、**三個寫 `JAZZ`、四個寫 `WTF`**。和種類鍵按了幾個無關，只看 6、m7、M7、9 這四個延伸鍵按了幾個。
+
+所以 chord block 七個全按（三個種類鍵 + 四個延伸鍵）一定是 `WTF`。按六個時，如果是三個種類鍵 + 三個延伸鍵就是 `JAZZ`，兩個種類鍵 + 四個延伸鍵還是 `WTF`。
+
+所有組合不用背：
+
+| 延伸鍵按了幾個 | 螢幕（Orchid 命名，根音 D、MAJ） |
+|---|---|
+| 0 | `DM` |
+| 1 | `D` 加小字 `7`、`6`、`M7` 或 `9` |
+| 2 | `D` 加兩個小字，例如 `6 9`、`7 9`、`M7 9` |
+| 3 | `D` `JAZZ` |
+| 4 | `D` `WTF` |
+
+種類有 MAJ、MIN、DIM、SUS 四種，四個延伸鍵開關有 16 種，合計 64 種。每一種的組成音，上游列在 [CHORD-NAMES.md](https://github.com/Quixotic7/ChoralRootFM1/blob/main/docs/CHORD-NAMES.md)。
+
+想看正常的和弦名稱，把 **Options → Chord Names** 改成 **Standard**。它照樂譜上的寫法命名，例如 MAJ + 7 + 6 + 9 會寫成 `D13`。只改顯示，聲音、MIDI 和錄好的 loop 都不變。只有同時按了 m7 和 M7（兩種七度）的和弦，Standard 也找不到名字，仍然顯示 `JAZZ` 或 `WTF`。
+
+| 按住（根音 D） | Orchid（預設） | Standard |
+|---|---|---|
+| MAJ + 9 | `D` `9` | `Dadd9` |
+| MAJ + 7 + 9 | `D` `7 9` | `D9` |
+| MAJ + 6 + 9 | `D` `6 9` | `D6/9` |
+| MAJ + 7 + 6 + 9 | `D` `JAZZ` | `D13` |
+| MIN + 7 + 9 | `Dm` `7 9` | `Dm9` |
+| SUS + 7 | `Dsus` `m7` | `D7sus4` |
+| DIM + 7 | `Ddim` `7` | `Dm7b5` |
+| MAJ + 7 + M7 | `D` `7 M7` | `D` `7 M7` |
+
+### Secret Chords：真正藏起來的三個和弦 `[上游]`
+
+這個比較像彩蛋，預設是關的。打開 **Options → Secret Chords**（Simple 或 All）之後，同時按住兩三個種類鍵會得到第三種和弦：
+
+| 同時按住 | 和弦 | 螢幕 |
+|---|---|---|
+| F#3 + A#3（DIM + MAJ） | augmented 增和弦 | `D+` |
+| F#3 + G#3（DIM + MIN） | 小和弦，五音換成四音 | `Dm` 加紅色小字 `add4` |
+| F#3 + G#3 + A#3（三個都按） | power chord（根音、五度、八度） | `D` 加紅色小字 `5` |
+
+延伸鍵可以照常疊上去。關掉時這些組合就是「後按的種類鍵算數」。
 
 螢幕上：大三和弦單獨出現時寫成大寫 M（`DM`），小三和弦是小寫 m（`Dm`）；加了延伸音後大和弦的 M 省略（`D` 加一個小的 `7`）。延伸音用橘色顯示。
 
@@ -112,6 +158,26 @@ ChoralRoot 仿的是 Telepathic Instruments 的 Orchid。它的操作邏輯和�
 **換調**：按住 KEY 並同時按一個根音，那個音就成為主音。要小調就同時按 MIN。然後 `OCT-` 關閉 layer。
 
 按住 KEY 會開 **KEY layer**：KNOB 1 選主音、KNOB 2 選音階（共 23 種：大小調、各種 mode、五聲、藍調…）、KNOB 3 移調（±24 半音）。
+
+### 用 C 的指法彈 F：只要 Transpose，不用改主音 `[上游]`
+
+主音（Tonic）和移調（Transpose）是兩件事：
+
+- **Tonic** 決定「哪個鍵是一級」，也就是你的指法以哪個調為準。
+- **Transpose** 把彈出來的所有音整體移高或移低，指法不變。
+
+想用 C 大調的指法、聽到的是 F 大調（按 C 鍵得到一級和弦 F）：**主音留在 C，只把 Transpose 設成 +5**。
+
+1. 按住 `SEL`（KEY）打開 KEY layer。
+2. KNOB 1 確認主音是 C、KNOB 2 是 Major。
+3. KNOB 3 轉到 **+5**。
+4. `OCT-` 關閉 layer。
+
+之後按 C 鍵響的是 F、按 G 鍵響的是 C、按 A 鍵響的是 Dm。螢幕上的和弦名稱寫的是**聽到的**（`FM`），琴鍵的燈也顯示實際發出的音。Options 打開 Numerals 的話，級數寫的是**你按的**，所以按 C 永遠是 `I`。
+
+如果反過來把主音設成 F、Transpose 留 0，聽到的一樣是 F 大調，但你要用 F 大調的指法彈（按 F 鍵才是一級）。兩個同時設（主音 F、Transpose +5）就會變成 B♭ 大調，通常不是你要的。
+
+Transpose 在 Key Mode 關掉時也有效。要關機後還在，**按住 `SAVE`**（全部存檔）：主音、音階、Transpose 都會存進去；沒存的話下次開機回到上次存的狀態。哪天發現和弦全部不在對的調上，先檢查 KEY layer 的 KNOB 3 有沒有歸零。
 
 **練習：流行進行 I–V–vi–IV（C 大調）**
 
@@ -214,4 +280,4 @@ layer 的通則：點一下是開關，按住約半秒是打開 layer（放開�
 
 ## 沒寫到的
 
-手冊還有很多：三種 Play Style（Simple、Advanced、Free）、Secret Chords（同時按兩三個種類鍵得到 power chord、augmented、add4）、Classic 配置（Orchid 原本的鍵位）、鼓、loop 編輯器、音色編輯器、MIDI out 三個 channel、USB audio 三組立體聲。需要時查[上游手冊](https://github.com/Quixotic7/ChoralRootFM1/blob/main/docs/MANUAL.md)。
+手冊還有很多：三種 Play Style（Simple、Advanced、Free）、Classic 配置（Orchid 原本的鍵位）、鼓、loop 編輯器、音色編輯器、MIDI out 三個 channel、USB audio 三組立體聲。需要時查[上游手冊](https://github.com/Quixotic7/ChoralRootFM1/blob/main/docs/MANUAL.md)。

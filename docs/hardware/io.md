@@ -4,14 +4,32 @@
 
 | 接口 | 能做 | 不能做 |
 |---|---|---|
-| **USB-C** | 充電、USB MIDI in/out、韌體更新、USB audio（依韌體）、自訂 HID 裝置（依韌體） | 當 USB host |
+| **USB-C** | 充電、USB MIDI in/out、韌體更新、USB audio（依韌體）、自訂 HID 裝置（依韌體）、USB host（只有少數韌體，見下） | 供電給接上的裝置 |
 | **3.5 mm TRS MIDI IN** | 接收其他設備的 note、CC、clock | 不是 MIDI OUT |
 | **3.5 mm 音訊輸出** | 立體聲類比輸出到耳機、mixer、錄音介面 | 不是 audio in，也不是 MIDI |
-| **Bluetooth MIDI** | 硬體本身有無線電（SoC 內建 Bluetooth 與 WiFi）。原廠、CTL-1、Melodee、RemoteFM1、ChoralRoot 會用 | 要韌體開啟才有。SLOOP 不支援，它不開無線電 |
+| **Bluetooth MIDI** | 硬體本身有無線電（SoC 內建 Bluetooth 與 WiFi）。原廠、CTL-1、Melodee、RemoteFM1、ChoralRoot 會用 | 要韌體開啟才有。SLOOP 不支援，它不開無線電。Agent Deck 也不支援：它的基底 Dinghy 完全沒有藍牙程式 `[上游]` |
+
+## 沒有音訊輸入：能不能當 sampler { #no-audio-in }
+
+FM-1 **沒有任何類比音訊輸入**，沒有麥克風，3.5 mm 孔只是輸出。所以不能像一般 sampler 那樣把線接進來錄。`[上游]`
+
+聲音要進到 FM-1，只能**從電腦或手機用數位方式送進去**，而且要韌體支援：
+
+| 方式 | 例子 | 狀態 |
+|---|---|---|
+| 從網頁上傳 sample 檔案 | SLOOP 的 [Web Editor](../firmware/sloop/web-editor.md)（4 個 slot，可以丟長錄音進去 CHOP）、官方 Workbench、Mini-Grain、ECHOFIELD 的 companion web app | `[上游]` |
+| 讓 FM-1 當 USB 音效卡的**輸出端**，收主機播的聲音 | CTL-1（iPad 的聲音會從 FM-1 播出來，我實測過）、FM1 Audio Router | `[實機]` CTL-1 |
+| 收主機的 USB 音訊並錄成 sample | ECHOFIELD 的說明寫 "your own samples (or recorded over USB)"，但沒說是哪個方向 | 沒查證 `[調研]` |
+
+所以「手機或網頁 + FM-1」的組合可以做到 sampler 的效果：在手機或電腦上錄好、剪好，再上傳到支援 sample 的韌體。ChoralRoot 做不到，它的聲音全是合成的，沒有 sample 引擎（GRAIN 引擎是對它自己生成的素材做 granular，不能載入外部 sample），USB 音訊也只有輸出到主機的方向。`[上游]` `[實機]`
+
+Firmware Hub 上找 sampler 類韌體：在 [catalog](https://thefirmwarehub.com/) 搜尋 sample、granular。
 
 ## USB-C：device，不是 host
 
 FM-1 是 USB device。USB 鍵盤直接插在 FM-1 上不會動，因為兩邊都是 device，中間需要一個 host：電腦、手機或 USB MIDI host box。
+
+**例外（更正 2026-11-17）**：ChoralRoot 0.31 起有 **Options → USB Host**，打開後 USB-C 變成 USB MIDI host，可以直接接一台 USB MIDI 鍵盤，或用一條 USB-C 線把兩台 FM-1 互接。限制：FM-1 不供電，鍵盤要透過有供電的 hub 或 OTG 轉接頭；只支援 full-speed；開著時電腦、USB audio、更新都不能用；每次開機都回到一般 device 模式，不會存。`[上游]`（[release notes](https://github.com/Quixotic7/ChoralRootFM1/blob/main/docs/releases/0.31.md)）其他韌體預設仍是 device。
 
 反過來，電腦對 FM-1 可以做的事很多：
 

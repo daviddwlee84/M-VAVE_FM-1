@@ -128,6 +128,28 @@ macOS 上這台裝置的 MIDI 名稱可能仍顯示成 `Felucca`（系統快取�
 | `nag_minutes` | agent 一直 BLOCKED 時每隔幾分鐘再提醒 |
 | `follow` | 有 agent 被 block 時選取自動跳過去 |
 
+## 一定要插 USB：沒有藍牙 `[上游]`
+
+FM-1 的晶片有藍牙，但 Agent Deck 用不到。上游寫明 "USB-MIDI only"：它的基底 Dinghy 完全沒有藍牙程式，要支援 BLE MIDI 得從頭寫無線電 driver，不是開個開關。協定本身不挑傳輸方式，所以將來可能加，目前（0.7）不行。
+
+## Herdr 裡為什麼會突然出現 `continue` { #continue }
+
+`continue` 不是 daemon 自己亂送的，下面幾個動作都會送出它：`[上游]`（對照 `host/agtdeck.py`）
+
+| 你做了什麼 | 結果 |
+|---|---|
+| 對一個**已經有 agent** 的 slot 按 `PLAY`（或 `PLAY` + 鍵） | `PLAY` 的意思是「開始 / 繼續」：pane 裡已經有 agent 時就送 `continue`；是空的 shell 才啟動新 agent |
+| 按 `SEQ` | 送出目前選好的 preset。**預設 preset 清單的第一個就是 `continue`**，沒轉過 PRESETS 就是它 |
+| 對 BLOCKED 的 agent 按 `SEQ` | 不會立刻送，**排隊**（列上出現 `Q`），等 agent 有空才送出。所以會在你按完一段時間之後才冒出來，看起來像自己送的 |
+| 按住 `SEQ` 約 1 秒 | repeat mode（列上出現 `R`）：agent 每做完一輪就再送一次，最多 `repeat_max`（預設 10）次 |
+| `GLO` + `SEQ` | 送給所有 IDLE / DONE 的 agent（有標記時只送給標記的） |
+
+要避免：
+
+- 先看列上有沒有 `Q` 或 `R`。`R` 再按住 `SEQ` 一次就停。`Q` 是排隊中的 prompt，在 MENU → THIS AGENT 的 queued prompts 可以清掉。
+- 不想要 `continue` 當預設，在設定檔的 `presets` 把它拿掉或換到後面。
+- 想開新 agent 要對**空的** slot 按 `PLAY`。
+
 ## 我遇到的
 
 - Herdr 裡 shell pane 也會佔 slot，我的 50 個 pane 大半是 shell，真正的 agent 被擠到後面。沒有隱藏 shell 的設定，目前只能用 `SAVE` + 鍵手動整理，或用 **KNOB 4** 直接跳到需要處理的 agent。`[實機]` host 端

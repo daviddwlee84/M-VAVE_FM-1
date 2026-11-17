@@ -59,6 +59,35 @@ CLI 一樣會跳出系統密碼對話框，或用 `sudo` 執行。完整指令�
 
 細節以上游的 [Using M-Flasher](https://github.com/jvitkauskas/m-flasher/blob/main/docs/usage.md) 為準。
 
+## 也有網頁版的燒錄工具，為什麼還用 M-Flasher { #web-installers }
+
+有。很多韌體附網頁 installer，用 Chrome 或 Edge 打開、接上 FM-1、按 Install 就好，電腦不用裝任何東西：
+
+| 工具 | 做什麼 |
+|---|---|
+| [官方 Workbench](https://open.m-vave.com/fm1-workbench) | 更新原廠韌體、管理 project 與 sample（見[官方資源](../official.md)） |
+| 各韌體自己的 installer | 例如 [ChoralRoot](https://quixotic7.github.io/ChoralRootFM1/webapp/installer/)、Melodee、FMDj；Firmware Hub 的 `catalog.json` 有 `install` 欄位的就是 |
+| SLOOP 的 [Web Editor](../firmware/sloop/web-editor.md) | 在 SLOOP 之間升級 |
+
+**原理不同**，這是重點。`[上游]` 網頁 installer 走的是 **Web MIDI**：它跟**機器上正在跑的韌體**對話，請那個韌體自己把新韌體寫進 flash（OTA）。M-Flasher 走的是晶片 ROM 內建的 **USB download mode**，完全不靠現在的韌體。
+
+| | 網頁 installer（Web MIDI） | M-Flasher（ROM download mode） |
+|---|---|---|
+| 要裝東西 | 不用，Chrome / Edge 即可 | 要裝 app，第一次要授權 |
+| 機器要能正常開機 | **要**，現在的韌體得聽得懂它的更新協定 | 不用，黑畫面也能用 |
+| 備份 | 只備份那個韌體認得的資料（設定、音色、loop），存成 JSON 之類的檔案 | **整顆 1 MiB flash**，可以完整還原 |
+| 能從哪個韌體裝過去 | 看 installer 的規則。ChoralRoot 的會拒絕從 SLOOP、Felucca 0.x 安裝 | 任何狀態 |
+| 晶片檢查 | 由各 installer 自己決定 | 讀 JEDEC ID，並列出寫入計畫給你確認 |
+| 中途斷掉 | 新一點的 installer 有續傳；舊的可能讓機器黑掉，要靠 M-Flasher 救 | 可以重來 |
+
+**我這台用 M-Flasher**，原因：
+
+- 整機備份與還原只有它做得到。這個 repo 的切換流程（`just fm1-switch`）每次寫入前都先整機備份。
+- 它有 CLI，`Justfile` 可以把流程包起來，agent 也能做唯讀檢查。
+- 網頁 installer 壞了要回頭用 M-Flasher 救，反過來不需要。
+
+網頁 installer 適合的情況：不在自己的電腦前、只是要升級同一個韌體的新版本，而且那個韌體的作者只提供網頁 installer。用之前一樣先用 M-Flasher 做整機備份。
+
 ## 下一步
 
 [備份原廠與確認晶片](backup-and-chip.md)。
