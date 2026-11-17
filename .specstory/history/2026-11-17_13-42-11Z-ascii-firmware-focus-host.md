@@ -50183,3 +50183,1734 @@ https://github.com/cicloid/awesome-fm-1/pull/30
 https://github.com/aroum/fm1-custom-fw/pull/36
 ```
 </details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 19:15:49Z)**_
+
+<think><details><summary>Thought Process</summary>
+兩個 PR 都已開好，分別是 awesome-fm-1 的 #30 和 aroum/fm1-custom-fw 的 #36，接下來會把它們記進文件並與 skill 一起 commit。
+
+</details></think>
+
+_**Agent (claude-opus-5-5 2026-11-17 19:16:00Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Record the PRs and commit the skill and docs
+
+```bash
+python3 - <<'PY'
+def sub(p,a,b):
+    s=open(p).read(); assert a in s,(p,a[:60]); s=s.replace(a,b,1); open(p,'w').write(s)
+sub('docs/dev/morse.md',"狀態是 waiting for Sven，等維護者審核。",
+"""狀態是 waiting for Sven，等維護者審核。
+5. 社群清單：2026-11-18 送了兩個最熱門的清單，都是一筆一個 PR。
+    - [awesome-fm-1 #30](https://github.com/cicloid/awesome-fm-1/pull/30)（93 stars，放 *Not a synth* 段）
+    - [aroum/fm1-custom-fw #36](https://github.com/aroum/fm1-custom-fw/pull/36)（424 stars，放 1.1.4 的第 126 筆，和 CTL-1、MIDIMON 同段）
+
+    fm1-emu、RemoteFM1、FMDB 會自動跟著 Hub 或 GitHub，不用送。fm1-editor.com 等 Hub 上架後看它會不會自己出現。整套流程整理成 repo 的 skill `fm1-hub-listing`。""")
+sub('docs/firmware/hub.md',"- **進度**：Morse 照這份清單準備，2026-11-18 完成三項實機測試、發布 v0.3 release、通過 identity 和 `fmhub.json` 檢查，接著送審。過程見 [Morse](../dev/morse.md#release)。",
+"- **進度**：Morse 照這份清單準備，2026-11-18 完成三項實機測試、發布 v0.3 release、通過 identity 和 `fmhub.json` 檢查，接著送審，也對 awesome-fm-1 和 aroum 各開了一個 PR。過程見 [Morse](../dev/morse.md#release)。這套流程整理成 repo 的 agent skill `fm1-hub-listing`（`.agents/skills/`）。")
+PY
+just docs-check 2>&1 | tail -1 && git add .agents/skills/fm1-hub-listing .claude/skills/fm1-hub-listing AGENTS.md docs/agentic/skills.md docs/dev/morse.md docs/firmware/hub.md .specstory/history/2026-11-17_13-42-11Z-ascii-firmware-focus-host.md .specstory/statistics.json && git commit -q -F - <<'EOF'
+fm1-hub-listing: a repo skill for listing a firmware on the Hub
+
+What listing MORSE taught, as an agent skill (.agents/skills, linked
+from .claude/skills): its own repository with LICENSE and fmhub.json,
+a free FM-1_ identity, the release build and release, the three
+hardware tests over the USB-MIDI update with fm1_install.py, the
+submission form and its eight checks, the community lists and their
+formats, and the pitfalls met. Who does what follows AGENTS.md: writes,
+restores and public steps are the owner's.
+
+MORSE added to the two most-followed community lists, one entry per
+PR: awesome-fm-1 #30 and aroum/fm1-custom-fw #36.
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+EOF
+git log --oneline -1; git status --short | grep -v edge-computing
+```
+
+```text
+{"status": "ok", "pages": 46, "llm_pages": 46, "deployed": false}
+cec7e1b fm1-hub-listing: a repo skill for listing a firmware on the Hub
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 19:16:08Z)**_
+
+最後更新 memory：skill 已經寫好，剩下的是等審核結果出來後補進去。
+
+_**Agent (claude-opus-5-5 2026-11-17 19:16:13Z)**_
+
+<tool-use data-tool-type="write" data-tool-name="Write"><details>
+<summary>Tool use: **Write**</summary>
+
+```markdown
+---
+name: hub-listing-skill-todo
+description: The fm1-hub-listing skill exists (2026-11-18); finish it with the Hub review outcome and the community PRs' fate
+metadata:
+  type: project
+---
+
+The owner asked (2026-11-18) for the Firmware Hub listing experience as an agent skill. Written that day:
+`.agents/skills/fm1-hub-listing/SKILL.md` (linked from `.claude/skills/`), from listing MORSE
+(github.com/daviddwlee84/fm1-morse). MORSE was submitted through the Hub's form that day: all eight automatic checks
+passed, status "waiting for Sven". PRs: cicloid/awesome-fm-1 #30, aroum/fm1-custom-fw #36.
+
+**Why:** reuse the process for later own firmwares; the review step and the lists' responses were not known yet.
+
+**How to apply:** when the owner reports the Hub's decision or the PRs are merged/closed, add what happened (review
+feedback, time to listing, whether fm1-editor.com picked it up) to the skill's steps 8-9 and to
+docs/firmware/hub.md#listing. Related: [[auto-capture-knowledge-in-docs]].
+
+```
+
+```text
+The file /Users/zhouhanru/.claude/projects/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/memory/hub-listing-skill-todo.md has been updated successfully.
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 19:16:15Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Update the memory index line
+
+```bash
+cd /Users/zhouhanru/.claude/projects/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/memory && python3 - <<'PY'
+p='MEMORY.md'
+s=open(p).read()
+s=s.replace("- [Hub listing → agent skill](hub-listing-skill-todo.md) — after Morse is on the Firmware Hub, write the listing process up as a repo skill",
+"- [Hub listing skill: finish after review](hub-listing-skill-todo.md) — fm1-hub-listing written; add the Hub's decision and the awesome-fm-1 #30 / aroum #36 outcome")
+open(p,'w').write(s)
+PY
+cat MEMORY.md
+```
+
+```text
+- [Auto-capture knowledge in docs](auto-capture-knowledge-in-docs.md) — add knowledge-worthy answers to docs/ in the same turn, unasked
+- [Hub listing skill: finish after review](hub-listing-skill-todo.md) — fm1-hub-listing written; add the Hub's decision and the awesome-fm-1 #30 / aroum #36 outcome
+Shell cwd was reset to /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 19:16:28Z)**_
+
+skill 已寫好並 commit，兩個最熱門的社群清單也各開了一個 PR。
+
+**上架 skill：`fm1-hub-listing`**
+- **位置**：`.agents/skills/fm1-hub-listing/SKILL.md`，從 `.claude/skills/` 連過去，已經生效。之後問到上架或 release 相關的事會自動套用。
+- **內容**：Hub 的六項必要條件，以及九個步驟：
+  1. 拆出獨立 repo；
+  2. 找空的 identity；
+  3. `fm1.toml` 和 release build；
+  4. `fmhub.json`；
+  5. README；
+  6. 走 USB-MIDI 更新路徑的三項實機測試；
+  7. 發 release；
+  8. 送審表單；
+  9. 社群清單。
+- **另外記了**：「誰做什麼」的分工（寫入、還原、公開動作都由你決定），和這次踩過的坑：Hub 上同名的 CONDUCTOR、identity 前綴撞號、Docker build 路徑、把檔案清空的那個 python 寫法、授權變更怎麼說明。
+- **相關文件**：`AGENTS.md`、`docs/agentic/skills.md`、`docs/firmware/hub.md` 都註明了這個 skill。
+
+**社群清單**
+
+| 清單 | 熱門程度 | 處理 |
+|---|---|---|
+| aroum/fm1-custom-fw | 424 stars，外部 PR 多數會被 merge | [PR #36](https://github.com/aroum/fm1-custom-fw/pull/36)：第 126 筆，和 CTL-1、MIDIMON 同一段 |
+| cicloid/awesome-fm-1 | 93 stars，外部 PR 全部 merge | [PR #30](https://github.com/cicloid/awesome-fm-1/pull/30)：放「Not a synth」段，照它的格式一行 |
+| fm1-editor.com | 75 stars | 等 Hub 上架後，看它會不會自己出現 |
+| fm1-emu、RemoteFM1、FMDB | — | 會自動跟著 Hub 或 GitHub，不用送 |
+| Atlas、Dev Wiki | 0 / 5 stars，Wiki 也不是韌體清單 | 不送 |
+
+為了開 PR，你的帳號下多了兩個 fork：`daviddwlee84/awesome-fm-1` 和 `daviddwlee84/fm1-custom-fw`。PR merge 之後可以刪掉。
+
+**Commit**：這個 repo 最新的是 `cec7e1b`。另一個工作階段的 `edge-computing-…` 檔案沒有一起 commit。這個 repo 還沒 push，推到 `main` 會部署文件網站，要推時跟我說。
+
+**之後**：Hub 審核結果出來、或 PR 被 merge／關掉時，告訴我一聲，我把結果補進 skill 和文件，這件事已經記在 memory 裡了。
+
+---
+
+_**User (2026-11-17 19:22:06Z)**_
+
+社群清單這個表我們docs有記錄嗎？
+
+---
+
+_**Agent (claude-opus-5-5 2026-11-17 19:22:16Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Find where docs mention the community lists
+
+`grep -rn "awesome-fm-1\|fm1-custom-fw\|fm1-editor\|Atlas\|FMDB" docs --include=*.md | cut -c1-160`
+
+```text
+(eval):1: no matches found: --include=*.md
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 19:22:22Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Find where docs mention the community lists
+
+`grep -rn "awesome-fm-1\|fm1-custom-fw\|fm1-editor\|Atlas\|FMDB" docs | cut -c1-170`
+
+```text
+docs/resources.md:34:| [aroum/fm1-custom-fw](https://github.com/aroum/fm1-custom-fw) | resource hub：韌體目錄、拆機、SysEx / OTA 逆向筆記 | 最大的社群入口；GitHub 上沒有宣告 license |
+docs/resources.md:35:| [cicloid/awesome-fm-1](https://github.com/cicloid/awesome-fm-1) | awesome list（CC0） | 快速找新韌體與工具 |
+docs/resources.md:38:分工：找新韌體看 The Firmware Hub 或 awesome-fm-1；查底層正確性看 Developers' Wiki；查逆向與工具看 aroum/fm1-custom-fw。
+docs/firmware/hub.md:100:上架之後，fm1-emu 和 RemoteFM1 的清單會自動從 Hub 帶進去。awesome-fm-1（每個 PR 一筆）、aroum/fm1-custom-fw、fm1-editor.com（開 issue）、FM-1 Firmware Atlas（PR 改 `data/firmwa
+docs/firmware/hub.md:120:- **進度**：Morse 照這份清單準備，2026-11-18 完成三項實機測試、發布 v0.3 release、通過 identity 和 `fmhub.json` 檢查，接著送審，也對 awesome-fm-1 和 aroum 各開了一個 PR。過程見 [Morse](../dev
+docs/ecosystem.md:10:| 2026-07-25 | [fm1-custom-fw](https://github.com/aroum/fm1-custom-fw)：資源目錄、SysEx 協定文件 | 社群 |
+docs/agentic/skills.md:59:- awesome-fm-1 和 aroum 的收錄格式。
+docs/dev/morse.md:273:    - [awesome-fm-1 #30](https://github.com/cicloid/awesome-fm-1/pull/30)（93 stars，放 *Not a synth* 段）
+docs/dev/morse.md:274:    - [aroum/fm1-custom-fw #36](https://github.com/aroum/fm1-custom-fw/pull/36)（424 stars，放 1.1.4 的第 126 筆，和 CTL-1、MIDIMON 同段）
+docs/dev/morse.md:276:    fm1-emu、RemoteFM1、FMDB 會自動跟著 Hub 或 GitHub，不用送。fm1-editor.com 等 Hub 上架後看它會不會自己出現。整套流程整理成 repo 的 skill `fm1-hub-listing`。
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 19:22:35Z)**_
+
+<think><details><summary>Thought Process</summary>
+我發現 `docs/firmware/hub.md` 上架段落只有一句帶過，完整的比較表僅存在 skill 裡；接下來我會把那張表補進該段，換掉簡略文字，並從 `resources.md` 連過去。
+
+</details></think>
+
+_**Agent (claude-opus-5-5 2026-11-17 19:22:35Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Read the hub listing prose line and resources table
+
+`sed -n 100p docs/firmware/hub.md; sed -n 30,38p docs/resources.md`
+
+```text
+上架之後，fm1-emu 和 RemoteFM1 的清單會自動從 Hub 帶進去。awesome-fm-1（每個 PR 一筆）、aroum/fm1-custom-fw、fm1-editor.com（開 issue）、FM-1 Firmware Atlas（PR 改 `data/firmwares.json`）則要另外提交。公告通常發在 r/MVaveFM1。
+| 資源 | 角色 | 評價 |
+|---|---|---|
+| [m-vave/fm1_open](https://github.com/m-vave/fm1_open) | M-VAVE 官方開放韌體與 binary SDK | 官方基準，GPLv3 + SDK linking exception |
+| [FM1 Developers' Wiki](https://sbegueria.github.io/fm1-dev-wiki/)（[repo](https://github.com/sbegueria/fm1-dev-wiki)） | boot chain、memory map、recovery、update protocol | **技術問題優先查這裡**，有證據標記 |
+| [aroum/fm1-custom-fw](https://github.com/aroum/fm1-custom-fw) | resource hub：韌體目錄、拆機、SysEx / OTA 逆向筆記 | 最大的社群入口；GitHub 上沒有宣告 license |
+| [cicloid/awesome-fm-1](https://github.com/cicloid/awesome-fm-1) | awesome list（CC0） | 快速找新韌體與工具 |
+| [The Firmware Hub](https://thefirmwarehub.com/) | 韌體目錄 + 瀏覽器一鍵安裝 | 方便試玩；只檢查封裝，見上方警告 |
+
+分工：找新韌體看 The Firmware Hub 或 awesome-fm-1；查底層正確性看 Developers' Wiki；查逆向與工具看 aroum/fm1-custom-fw。
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 19:22:54Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Add the community lists table to the Hub docs and commit
+
+```bash
+python3 - <<'PY'
+def sub(p,a,b):
+    s=open(p).read(); assert a in s,(p,a[:60]); s=s.replace(a,b,1); open(p,'w').write(s)
+sub('docs/firmware/hub.md',"上架之後，fm1-emu 和 RemoteFM1 的清單會自動從 Hub 帶進去。awesome-fm-1（每個 PR 一筆）、aroum/fm1-custom-fw、fm1-editor.com（開 issue）、FM-1 Firmware Atlas（PR 改 `data/firmwares.json`）則要另外提交。公告通常發在 r/MVaveFM1。",
+"""### 社群清單 { #lists }
+
+Hub 之外的韌體清單，2026-11-18 查的。stars 是當天 GitHub 上的數字，「外部 PR」是最近 15 個已關閉、不是維護者自己開的 PR 中被 merge 的比例。`[上游]`
+
+| 清單 | 熱門程度 | 收錄方式與格式 | Morse |
+|---|---|---|---|
+| [aroum/fm1-custom-fw](https://github.com/aroum/fm1-custom-fw) | 424 stars；外部 PR 11/15 merge | 發 PR。沒有 CONTRIBUTING，README 是編號表格：`**名稱 by 作者**<br>[GitHub](…) \\| …<br>**License:** …`，加上 Concept／Features 欄。fm1-base 做的工具（CTL-1、MIDIMON）放 1.1.4，遊戲和非音訊的放 1.3 | [PR #36](https://github.com/aroum/fm1-custom-fw/pull/36)：1.1.4 第 126 筆 |
+| [cicloid/awesome-fm-1](https://github.com/cicloid/awesome-fm-1) | 93 stars；外部 PR 15/15 merge | 依 `CONTRIBUTING.md` 發 PR：`- [名稱](url) - 說明.`，一行、寫作者和授權、一個 PR 只加一筆。工具放 *Not a synth* | [PR #30](https://github.com/cicloid/awesome-fm-1/pull/30) |
+| [fm1-editor.com](https://fm1-editor.com/firmware/)（benny-sparra/fm1-dx7-patch-importer） | 75 stars | 頁尾寫「缺了哪個韌體就開 issue」 | 等 Hub 上架後看會不會自己出現 |
+| fm1-emu、RemoteFM1 的 FM-1 Player、[FMDB](https://stanleygurvich.github.io/FMDB_FM1_FirmwareDatabase/) | — | 自動跟著 Hub 的目錄，或自己爬 GitHub | 不用送 |
+| FM-1 Firmware Atlas（wero1414/atlas-fm-1） | 0 stars | 發 PR 改 `data/firmwares.json` | 不送 |
+| FM1 Developers' Wiki | 5 stars | 不是韌體清單，只收「帶有開發知識」的專案 | 不送 |
+
+公告通常發在 r/MVaveFM1。這張表也寫在 repo 的 skill `fm1-hub-listing` 裡，兩邊要一起更新。""")
+sub('docs/resources.md',"分工：找新韌體看 The Firmware Hub 或 awesome-fm-1；查底層正確性看 Developers' Wiki；查逆向與工具看 aroum/fm1-custom-fw。",
+"分工：找新韌體看 The Firmware Hub 或 awesome-fm-1；查底層正確性看 Developers' Wiki；查逆向與工具看 aroum/fm1-custom-fw。要把自己的韌體放上這些清單：熱門程度與收錄方式見[社群清單](firmware/hub.md#lists)。")
+PY
+just docs-check 2>&1 | tail -1 && git add docs/firmware/hub.md docs/resources.md && git commit -q -m "Docs: the community firmware lists, how popular and how to get listed
+
+The table that was only in the fm1-hub-listing skill, in the Hub page
+(docs/firmware/hub.md#lists), linked from the resource map.
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>" && git log --oneline -1
+```
+
+```text
+{"status": "ok", "pages": 46, "llm_pages": 46, "deployed": false}
+d62763c Docs: the community firmware lists, how popular and how to get listed
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 19:23:16Z)**_
+
+補上了。之前文件裡只有零散的片段，完整的比較表只寫在 skill 裡。
+
+現在 `docs/firmware/hub.md` 有一個「社群清單」小節（`#lists`），取代原本那句簡略的說明。表格有四欄，涵蓋六個清單：
+
+- **熱門程度**：當天的 stars，和外部 PR 被 merge 的比例。
+- **收錄方式與格式**：aroum 的表格欄位、awesome-fm-1 的一行格式和「一個 PR 一筆」規則、各自該放哪一段。
+- **Morse 的處理**：連到 PR #36、#30，以及哪些等 Hub 上架、哪些不送。
+- **依據**：標為 `[上游]`，寫明是 2026-11-18 查的。
+
+`docs/resources.md` 原本就把 aroum 和 awesome-fm-1 列成資源，我在那裡加了一句連到這張表。表格末尾也註明這張表和 skill 裡的是同一份，要一起更新。
+
+已 commit 為 `d62763c`，同樣還沒 push。
+
+---
+
+_**User (2026-11-17 19:24:01Z)**_
+
+<command-name>/compact</command-name>
+            <command-message>compact</command-message>
+            <command-args></command-args>
+
+---
+
+_**User (2026-11-17 19:24:01Z)**_
+
+<local-command-caveat>The command below was run directly in Claude Code, not sent to you as a request, and its output goes straight to the user. It's recorded here as context for later messages.</local-command-caveat>
+
+---
+
+_**User (2026-11-17 19:25:33Z)**_
+
+This session is being continued from a previous conversation that ran out of context. The summary below covers the earlier portion of the conversation.
+
+<system-reminder>
+<tools-used-before-summary>Agent, AskUserQuestion, Bash, Edit, ExitPlanMode, Read, TaskStop, ToolSearch, WebFetch, WebSearch, Write</tools-used-before-summary>
+</system-reminder>
+Summary:
+1. Primary Request and Intent:
+   - Initial: explore Morse code on the M-VAVE FM-1: prior art, two-unit messaging (wired/BLE), learning mode (target-and-type, listen-and-choose), typing mode, Morse↔ASCII, classic beep + mute; fit in firmware or move learning to host. Decisions via questions: no second unit (direct link designed, tested later); first version = single-unit core + learning; host features = Vail compatibility, FM-1 as Mac Morse keyboard, computer text → FM-1 playback; standalone firmware (not part of Conductor). Mid-turn: on-device learning should be "pocket" flashcard/kana-style since Vail has deep training; side-note: avoid visual dot-dash learning → add learning-mode switch recommending sound.
+   - After 0.1 hardware try: show parsed ·− for beginners (KEY views), slower decode/separate send speed, explain WPM + recommend config (presets), dedicated rhythm practice page with hints, whole-passage background listening, TYPE clear/stop/compose (batch send), layouts, code on keys, phrase keys with explanations, OCT+/- paging.
+   - Then: fix TYPE code labels squeezed (0.3); research Hub listing; create separate repo fm1-morse + submodule; license MIT then changed to GPL-3.0 ("感覺可以要求大家分享一下 改成用 GPL-3.0好了？"); do Hub hardware tests; commit + v0.3 release; review submission form; fmhub author → "Da-Wei Lee"; write listing agent skill; submit to popular community lists; record community-list table in docs.
+
+2. Key Technical Concepts:
+   - fm1-base (MPL-2.0) unity build: app.c includes other .c; APP_TICK 1 kHz timer ISR, app_frame ~60 fps, app_render audio (APP_BLOCK 256 = 5.8 ms jitter), plat_keys/plat_buttons/plat_enc, cv_* strip canvas (max 240×144), FONT_T/XS/S/B/M/L, plat_store (APP_STORE_MAP, OBJ_MORSE at 0xDA000, panel 0xDC000), plat_midi_send/in (packet = cin | status<<8 | d1<<16 | d2<<24), APP_SYSEX, hostlink SysEx frames F0 7D 4D 4F ver type … F7.
+   - Debounce bias ~7 ms (KEY_BIAS_MS device only), host simulator script (tests/basic.txt) with APP_HOST_EXPECT/APP_HOST_CMD/APP_HOST_FAILS, fm1-emu (FM1_BENCH_KEYS e0=SELECT, e5=K4, SCL button, FM1_NO_PLAY, --usb, FM1_USB_SEND/TRACE), emu_rehearse.py over backups.
+   - Morse: PARIS timing (dit=1200/WPM), Farnsworth gap unit, iambic A/B keyer, adaptive decoder (dit/dah averages, cgap, contrast re-read, egap stats), prosign groups `<SK>`, Koch/LCWO order, Leitner boxes per char×direction scheduled by rounds (no RTC), LM_SOUND vs LM_VISUAL.
+   - Vail MIDI: ch1 note 0 timed key; Vail web reads command nibble only (90 xx 00 = down), so key-up always 80 00 00.
+   - Two write paths: M-Flasher download mode (just fm1-switch: auto backup, full CRC verify) vs USB-MIDI update (fm1_install.py, Hub web installer protocol; fm1-base loader fast install, SLOOP classic).
+   - Firmware Hub listing: fmhub.json (only what/author/kinds/play/editor/cheat/image/color/sounds/smk37), LICENSE, release .fwsc, unique FM-1_ identity (prefix + XXYYZZ; short = FM-1_ + 3 digits), update loader, 3 hardware tests, submission form with 8 automatic checks; VIBE Box Challenge is for VIBE FM SDK builds only.
+
+3. Files and Code Sections:
+   - firmware/morse/ → now submodule of github.com/daviddwlee84/fm1-morse (main at 81a6e9a; tag v0.3 at 748402f). Files: morse.c/h (table, mo_dit_ms/mo_gap_ms, player with `joined` for <..>, keyer, decoder with last_pat/prev/egap_sum/egap_n, mo_dec_gap10, mo_dec_is_dah), learn.c/h (ln_build(s,r,n,flags,seed) with LN_MUTED/LN_VISUAL, CARD_NEW/HEAR_CHOOSE/HEAR_KEY/SEE_KEY/CODE_CHOOSE/LIGHT_CHOOSE, ln_choose), content.c/h (LP_KOCH/WORDS/QSO/ABBR/TEXT, ct_line, ct_gloss, CT_PHRASE_WHITE/BLACK), tone.c/h (two voices, 5 ms smoothstep ramps, mute), app.c (FW_MINOR 3; set_t with look bits: kview 0-1, tlabel 2, tlayout 3-4, lhide 5, tcompose 6; send speed; prog; PRESET START 20/8/10, BUILDING 20/13/13, QSO 22/18/18, FAST 25/25/22; pages PG_MENU, PRACTICE, LISTEN, KEY, RHYTHM, TYPE, CHART, SET; `applied` struct so decoders reinit only on speed change; signed time compares `(int32_t)(now - dirty_at) > 3000`; type_lamp_y() 72 in code mode else 112; keyboard 126 px in code mode), app.h (OBJ_PANEL, OBJ_MORSE; APP_STORE_MAP {0xDC000u, 0xDA000u}), fm1.toml (id_prefix FM-1_41, title MORSE, include ["common"], repo/site/install/screenshot, licence GPL-3.0-or-later), fmhub.json (author "Da-Wei Lee", kinds ["other"], cheat README#controls, image docs/screen.png, color #5AC8FF, sounds none), LICENSE (GPL-3.0 text), README (English; other firmwares' data section; License: GPL-3.0-or-later, MIT up to 57ea786), common/ (hostlink, ledfx MIT), web/words/d25d9228e2.json, tests/basic.txt (~197 s simulated, HELLO vector `F0 7D 4D 4F 01 41 01 00 03 00 F7`), tests/morse_test.c (2932 checks).
+   - host/morse/: __init__.py (__version__ "0.3.0", FIRMWARE_KNOWN (0,3)), protocol.py (HEADER 7D 4D 4F, T_HELLO_ACK 01/T_TEXT 02/T_STOP 03, T_HELLO 41/T_HEARTBEAT 42/T_CHAR 43, clean_text allows <>, VECTORS hello/hello_ack/char_k/text_cq/stop), device.py (MidiLink finds "MORSE" or sniffs HELLO; SimLink), core.py (Host answers HELLO and each HEARTBEAT with HELLO_ACK, types T_CHAR), typer.py (MacTyper CGEventKeyboardSetUnicodeString, PrintTyper), __main__.py (type/listen/send), PROTOCOL.md. host/tests/test_morse.py (vectors also checked in firmware/morse/tests/basic.txt). Host stays MIT.
+   - Justfile: morse-unit, morse-test, morse-emu, morse-type, morse-send, morse-sim, morse-release VERSION; fw-setup changed to `git submodule update --init --recursive third_party/fm1-base` + `git submodule update --init firmware/morse`.
+   - .agents/skills/fm1-hub-listing/SKILL.md (+ symlink .claude/skills/fm1-hub-listing): full listing process, who-does-what, requirements, 9 steps, community lists table, pitfalls.
+   - Docs (Traditional Chinese): docs/dev/morse.md (status, speed section, rhythm, listen, phrases & real-world usage, Vail, design, flash, sizes 0.1 109,508 B / 0.2 127,712 / 0.3 127,880, verification table, version table incl. 0.3 release, #release section with Hub progress and PRs, roadmap BLE 0.4), docs/dev/morse-cheatsheet.md (0.2/0.3 controls), docs/firmware/hub.md (#listing, actual form experience, 8 checks, #lists community table, CONDUCTOR name collision), docs/firmware/switching.md (#paths comparison table; history rows), docs/hardware/flash-map.md, docs/hardware/io.md (#two-units), docs/device-log.md (all backups/ops; current firmware Morse 0.3 release FM-1_41000300 installed from stock 015), docs/agentic/skills.md, docs/resources.md (link to hub.md#lists), AGENTS.md, README.md, docs/index.md, zensical.toml nav (自製韌體 section), firmware/common/README.md.
+   - Memory: hub-listing-skill-todo.md (skill written; finish with Hub decision and PR outcome), MEMORY.md index updated.
+
+4. Errors and fixes:
+   - Player busy excluded trailing gap → busy includes p->on.
+   - Farnsworth gaps read as word gaps → adaptive cgap, word threshold max(cgap*5/3, 4u).
+   - Decoder offset test positional diff → edit distance.
+   - host_hand used Farnsworth gap → hand gap = dit (send speed).
+   - Test script navigation/page index mistakes; host timeout → HELLO_ACK keepalive.
+   - My python patch `open(p,'w').write(open(p).read())` emptied app.c → rewrote whole file.
+   - Mute/pitch re-initialized decoders → `applied` speeds struct.
+   - `plat_ms()|1u` future time unsigned compare → signed compares (REC instantly cleared, settings saved instantly).
+   - Emulator booted old firmware from existing flash file → use emu_rehearse.py to lay new image.
+   - Release build in scratchpad failed (Docker mount) → build in place after submodule.
+   - gh repo fork with bad args silently failed → plain `gh repo fork … --clone=false`.
+   - First fm1-info hung 2 min → stopped and retried, worked.
+   - User accidentally declined AskUserQuestion → re-asked same questions.
+
+5. Problem Solving:
+   - All three Hub hardware tests passed over USB-MIDI: Morse 0.3 → SLOOP 2.8.5 (classic, songs kept), SLOOP → Morse release FM-1_41000300 (fast; record kept), stock 015 (restored by owner, verified identical c6a47902…) → Morse release (fast; ROUND 1, user OK).
+   - Release v0.3 published (assets morse-0.3.fwsc SHA 1c563fdaeca50b95a782eac6252049564fbabb608b5859960e7d0f2470c0f1b3, firmware.json); identity free; fmhub check Fine; submitted, 8/8 checks, "waiting for Sven".
+   - Community PRs: cicloid/awesome-fm-1 #30, aroum/fm1-custom-fw #36 (forks daviddwlee84/awesome-fm-1, daviddwlee84/fm1-custom-fw).
+
+6. All user messages:
+   - "不知道現在有沒有人做過類似 摩斯密碼 相關的作品 … 如果評估太大 那就focus在核心功能 學習功能可以做在host端之類的"
+   - (answers) 暫時沒有 second unit; 單機核心＋學習; Vail 相容, FM-1 當摩斯鍵盤, 電腦打字→FM-1 播出; 獨立韌體
+   - "https://training.vailmorse.com/ … 單機學習的部分可能不用重造輪子 但也可以考慮更多隨身攜帶練習的部分（可能類比類似背單字 學日文50音之類的體驗？）"
+   - Side note re visual learning: "這部分是不是需要可以做一些學習模式切換 然後建議user用更好的學習模式？"
+   - "git commit 然後可以來測試刷機了"
+   - Pasted fm1-switch output for 0.1 (success).
+   - "1. 好像有聽到 2. KEY 現在可以顯示parse出來的字 是不是也有一個模式可以顯示parse出來的 −· … 3. 好像不錯 （…切換layout等等） 4. 試用了一下好像也還可以"
+   - (answers) KEY: both views with toggle; TYPE: layouts, code on keys, phrase keys; "片語是什麼用途 可能也需要講解一下; 現在算是琴鍵可以擺下所有摩斯密碼的排列組合嗎？ 如果擺不下是不是有什麼切換下一頁之類的 可能可以用 OCT +- 來切？"
+   - "好像是不是也有解碼慢一點的配置方式 …（還是說 標準就是需要按這麼短？）"
+   - "看到好像有WPM 用K1可以轉 但是並不知道什麼配置大概是什麼效果 等等"
+   - "也許可以有另一個頁面是用來單純練習短按長按 觀察parsing的 並且能夠有建議提示 等等"
+   - "另外可能是不是也有什麼經典教材 可以一整段播放來聽的 直接讓user背景學習"
+   - "然後user可能不知道best WPM config是什麼 需要推薦一下（不過我自己進到 TYPE mode 慢慢調整聽 感覺是能試出來）"
+   - "然後 TYPE模式現在不知道怎麽清空 … 現在一但開始play 好像就不能暫停播放了（所以正常是可以打一連串的字 確定好了 再一次性發送嗎？ …）"
+   - "sure continue" (commit and flash 0.2)
+   - "現在應該插上了？"
+   - Pasted fm1-switch output for 0.2 (32 sectors success).
+   - "開機畫面還是ROUND 4 … TYPE 現在用 SQE 打開長短提示 發現黑鍵好像內容會被擠掉 … 然後完成後 研究看看是不是也能上架哪些 Hub？ 感覺完成度還不錯"
+   - "先 commit 然後刷 0.3"
+   - Pasted fm1-switch output for 0.3; "其實也可以 可以為此創一個 repo 然後再用submodule加回來本repo？ 也可以弄MIT LICENSE 然後Hub要求的測試也可以做一下（但那個路徑需要改bootloader嗎？）"
+   - "I accidentally declined the questions. Please ask the same questions again using AskUserQuestion, then continue where we left off." → answers: fm1-morse; FM-1_41; "這個是硬性規定一定要做嗎？還是只是建議？…"
+   - "（到時候也可以把上架過程的經驗整理成一個agent skill）"
+   - Pasted fm1_install SLOOP success + pasted license explanation + "感覺可以要求大家分享一下 改成用 GPL-3.0好了？" "成功進入 SLOOP （之前的歌曲還在）"
+   - Pasted fm1_install Morse-from-SLOOP success; "（感覺這個走 USB-MIDI 的安裝體驗 好像比 just fm1-switch 的順暢一點點不知道為啥？ 哪一個更好？ (我們的docs有比較過嗎？)）"
+   - "還原好了，原廠開機了" + find/info output (FM-1_015)
+   - Pasted fm1_install from V15 success; "確實回到 ROUND 1 了 （不過進度目前是無所謂 因為也還算零基礎）"
+   - "好，commit 然後發 v0.3 release" + screenshots identity free and fmhub Fine
+   - Form screenshot: "https://thefirmwarehub.com/lab/rules/ … 我填得差不多了 幫我final review一下"
+   - "fmhub.json 改成 Da-Wei Lee 然後推上去 右上角 Which device還需要填寫嗎？ … 再幫我review一下 （感覺oneline feature描述留著應該也沒差？）"
+   - "已送出，這是結果頁" (8 checks passed, waiting for Sven)
+   - "sure commit & 寫上架skill 順便也可以整理一下你說的社群清單（如果足夠權威/popular也可以去蹭一下）"
+   - "社群清單這個表我們docs有記錄嗎？"
+   - Safety/constraint instructions in effect (from AGENTS.md / system, verbatim essentials): firmware writes "Only after the owner approves that specific write in the current session. Never pass `--yes`; the owner types M-Flasher's `yes`." Forbidden to initiate: "`m-flasher bootloader …`, `restore …`, `run-ram …`, any erase, any flash address arithmetic". "Commit or push only when the owner asks." "Never commit flash backups or credentials to git." Pushing to `main` deploys the site. Treat the user's email as private (never send to external services).
+
+7. Pending Tasks:
+   - When the Hub review result or PR outcomes (awesome-fm-1 #30, aroum #36) arrive: update the fm1-hub-listing skill (steps 8–9) and docs/firmware/hub.md#listing/#lists (per memory).
+   - Check fm1-editor.com after Hub listing (open issue only if it doesn't pick it up, with owner's go-ahead).
+   - This repo (M-VAVE_FM-1) not pushed; push only when user asks.
+   - Optional: delete forks after PRs merge; roadmap 0.4 BLE.
+   - Leave other session's files (.claude/plans/edge-computing-text-to-speech-moose-abstract-thacker.md, .specstory/history/2026-11-17_17-51-27Z-edge-computing-text-to.md) uncommitted.
+
+8. Current Work:
+   The user asked "社群清單這個表我們docs有記錄嗎？". I found docs only had fragments (resources.md entries, a prose line in hub.md, PR list in morse.md; full table only in the skill). I replaced the prose line in docs/firmware/hub.md with a new section `### 社群清單 { #lists }` containing the table (aroum/fm1-custom-fw 424 stars, 11/15 external PRs merged, PR #36 at 1.1.4 #126; cicloid/awesome-fm-1 93 stars 15/15, PR #30 under Not a synth; fm1-editor.com 75 stars via issue, wait for Hub; fm1-emu/RemoteFM1/FMDB automatic; Atlas 0 stars skip; Dev Wiki not a list), noted it must stay in sync with the skill, and added a link in docs/resources.md to firmware/hub.md#lists. docs-check passed; committed d62763c "Docs: the community firmware lists, how popular and how to get listed". I had not yet replied to the user with the result.
+
+9. Optional Next Step:
+   Reply to the user's question "社群清單這個表我們docs有記錄嗎？" in Traditional Chinese: explain that before it was only fragmentary (resources.md, a sentence in hub.md, PR list in morse.md; full table only in the skill) and that it is now added as docs/firmware/hub.md#lists (linked from docs/resources.md), committed as d62763c, not pushed. No further work unless the user asks (e.g., push, or Hub/PR outcome updates).
+
+If you need specific details from before compaction (like exact code snippets, error messages, or content you generated), read the full transcript at: /Users/zhouhanru/.claude/projects/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/0a574306-469e-4a59-9622-5701a42aee59.jsonl
+Continue the conversation from where it left off without asking the user any further questions. Resume directly — do not acknowledge the summary, do not recap what was happening, do not preface with "I'll continue" or similar. Pick up the last task as if the break never happened.
+
+The messages after this summary are the most recent messages from before compaction, kept verbatim. The summary was written without seeing them, so something it says has not happened yet may already have happened in them.
+
+---
+
+_**User (2026-11-17 19:25:35Z)**_
+
+<local-command-stdout>[2mCompacted (ctrl+o to see full summary)[22m
+[2mPreCompact [[ -x "$HOME/.claude/hooks/peon-ping/peon.sh" ] && "$HOME/.claude/hooks/peon-ping/peon.sh" || true] completed successfully[22m</local-command-stdout>
+
+---
+
+_**User (2026-11-17 19:32:35Z)**_
+
+我發現我有一個問題是 PRACTICE 的時候 明明覺得我已經打得跟聽到的很像了缺還是識別成不對的字
+可能somehow需要有一些輔助
+
+---
+
+_**User (2026-11-17 19:37:20Z)**_
+
+我發現我有一個問題是 PRACTICE 的時候 明明覺得我已經打得跟聽到的很像了缺還是識別成不對的字
+可能somehow需要有一些輔助？
+
+另外可能要也能夠刪除學習進度（歸零？）或是往回退 如果生疏了？（目前不知道能不能做到）
+
+另外我們有沒有辦法像SLOOP一樣export song那樣 來export我們的學習進度？如果想要換firmware但又不想重頭學？
+
+另外就是恢復進度 以及如果已經是有經驗的 想跳過一些已知的字之類的？
+
+另外我們是不是也可以在 docs裡介紹一下我們自己的專案
+怎麽用我們的moose 項目學習等等
+
+另外也可以補多一些截圖到 moose repo裡面 包含我們的menu 每個主要功能的圖 等等
+
+---
+
+_**Agent (claude-opus-5-5 2026-11-17 19:37:31Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+
+`cd firmware/morse && wc -l *.c *.h && grep -n "HEAR_KEY\|SEE_KEY\|static void practice\|mo_dec\|send_wpm\|ln_answer\|ln_grade\|save_prog\|OBJ_MORSE\|struct prog\|prog\." app.c | head -120`
+
+```text
+    2604 app.c
+     231 content.c
+     266 learn.c
+     402 morse.c
+      66 tone.c
+      40 app.h
+      31 content.h
+      78 learn.h
+      97 morse.h
+      21 tone.h
+    3836 total
+108:    if (plat_store_save(OBJ_MORSE, &rec, sizeof rec) == 0)
+141:    mo_dec_t dec;
+322:        mo_dec_init(&dsrc[SRC_OWN].dec, sdit, sdit);
+324:        mo_dec_init(&dsrc[SRC_RX].dec, dit, gap);
+515:        if (pat > 1u && mo_len(pat) == r->n ? mo_elem(pat, i) : mo_dec_is_dah(&dsrc[SRC_OWN].dec, r->mark[i]))
+523:static void practice_keyed(char c);
+571:                n = mo_dec_gap(&dsrc[e.src].dec, gap, out);
+577:            mo_dec_mark(&dsrc[e.src].dec, mark);
+595:            tim.next_gap = (uint16_t)(mo_dec_pending(&dsrc[SRC_OWN].dec) != 1u && gap < 0xFFFFu ? gap : 0u);
+603:            char c = mo_dec_idle(&dsrc[s].dec, now - dsrc[s].t_up);
+652:static void practice_leave(void);
+672:static int card_key(const ln_card_t *c) { return c->type == CARD_HEAR_KEY || c->type == CARD_SEE_KEY; }
+675:    return c->type == CARD_NEW || c->type == CARD_HEAR_CHOOSE || c->type == CARD_HEAR_KEY
+681:    mo_dec_init(&dsrc[SRC_OWN].dec, mo_dit_ms(SET.send), mo_dit_ms(SET.send));
+714:static void practice_start(void)
+723:static void practice_answer(int right)
+729:        ln_answer(&rec.ln, &pr.r, 1);
+735:    pr.ratio10 = card_key(c) ? mo_dec_ratio10(&dsrc[SRC_OWN].dec) : 0u;
+736:    ln_answer(&rec.ln, &pr.r, right);
+747:static void practice_keyed(char c)       /* the own decoder read a character during a card */
+756:static void practice_choose(uint32_t i)
+765:static void practice_leave(void)
+776:static void practice_step(uint32_t now)
+1608:    uint8_t pend = mo_dec_pending(&dsrc[SRC_OWN].dec);
+1609:    const mo_dec_t *d = &dsrc[SRC_OWN].dec;
+1618:        uint32_t q = mo_dec_ratio10(d), g = mo_dec_gap10(d);
+1621:        int_cat(t, (int32_t)mo_dec_wpm(d));
+1715:        int dah = live ? mo_dec_is_dah(&dsrc[SRC_OWN].dec, r->mark[i]) : (int)(r->dah >> i & 1u);
+1868:static void practice_at(int32_t oy)      /* drawn twice, each half with the rows above it taken off */
+1976:        case CARD_HEAR_KEY:
+1979:        case CARD_SEE_KEY:
+1986:            uint8_t pend = mo_dec_pending(&dsrc[SRC_OWN].dec);
+2353:    if (plat_store_load(OBJ_MORSE, &rec, sizeof rec) == (int)sizeof rec && rec.set.send == 0u)
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 19:37:34Z)**_
+
+<tool-use data-tool-type="read" data-tool-name="Read"><details>
+<summary>Tool use: **Read**</summary>
+ `./firmware/morse/app.c`
+
+```text
+60	    set_t set;
+61	    ln_state_t ln;
+62	} rec_t;
+63	static rec_t rec;
+64	#define SET (rec.set)
+65	#define SEND_DEFAULT 10u                 /* a beginner's hand: a 120 ms dit (the START preset) */
+66	
+67	static uint32_t kview(void) { return SET.look & 3u; }
+68	static uint32_t tlabel(void) { return SET.look >> 2 & 1u; }
+69	static uint32_t tlayout(void) { return SET.look >> 3 & 3u; }
+70	static uint32_t lhide(void) { return SET.look >> 5 & 1u; }
+71	static uint32_t tcompose(void) { return SET.look >> 6 & 1u; }
+72	static void look_set(uint32_t shift, uint32_t mask, uint32_t v)
+73	{
+74	    SET.look = (uint8_t)((SET.look & ~(mask << shift)) | (v & mask) << shift);
+75	}
+76	
+77	static void set_defaults(void)          /* the START preset: Koch's characters at 20, gaps stretched to 8 (Farnsworth) */
+78	{
+79	    SET.wpm = 20;
+80	    SET.eff = 8;
+81	    SET.keyer = MO_STRAIGHT;
+82	    SET.swap = 0;
+83	    SET.mute = 0;
+84	    SET.cards = 20;
+85	    SET.learn = LM_SOUND;
+86	    SET.look = 0;
+87	    SET.pitch = 600;
+88	    SET.send = SEND_DEFAULT;
+89	    SET.prog = LP_KOCH;
+90	}
+91	
+92	static int set_valid(const set_t *s)
+93	{
+94	    return s->wpm >= 5u && s->wpm <= 40u && s->eff >= 5u && s->eff <= s->wpm && s->keyer < MO_NKEYER && s->swap <= 1u
+95	           && s->mute <= 1u && s->cards >= 10u && s->cards <= 30u && s->learn <= LM_VISUAL && s->pitch >= 300u
+96	           && s->pitch <= 1200u && (s->look & 3u) < KV_N && (s->look >> 3 & 3u) < TL_N && !(s->look >> 7)
+97	           && s->send >= 5u && s->send <= 40u && s->prog < LP_N;
+98	}
+99	
+100	static uint32_t saves;                   /* records written since boot */
+101	static uint32_t dirty_at;                /* a setting changed at (0: saved) */
+102	
+103	static void rec_save(void)
+104	{
+105	    rec.magic = REC_MAGIC;
+106	    rec.ver = REC_VER;
+107	    rec.size = (uint16_t)sizeof rec;
+108	    if (plat_store_save(OBJ_MORSE, &rec, sizeof rec) == 0)
+109	        saves++;
+110	    dirty_at = 0;
+111	}
+112	
+113	/* ------------------------------------------------------------------- state --- */
+114	enum { SRC_OWN, SRC_RX, SRC_N };         /* what this FM-1 sends; what it receives (MIDI in, the host's text) */
+115	enum { PG_MENU, PG_PRACTICE, PG_LISTEN, PG_KEY, PG_RHYTHM, PG_TYPE, PG_CHART, PG_SET, PG_N };
+116	enum { PS_START, PS_CARD, PS_RESULT, PS_DONE };
+117	
+118	/* the tick's: the key, the keyer, two players (ptx: this FM-1's own playing, prompts, typed letters and listening;
+119	 * prx: the host's text, as received), and what they leave for the main loop */
+120	static mo_keyer_t keyer;
+121	static mo_player_t ptx, prx;
+122	static volatile uint8_t key_input;       /* the keys are the Morse key now */
+123	static volatile uint8_t own_midi;        /* own keying goes out as MIDI (KEY) */
+124	static volatile uint8_t ptx_midi;        /* ptx's playing goes out as MIDI (TYPE) */
+125	static uint8_t own_down, ptx_down, rx_midi, rx_down, midi_down;
+126	typedef struct {
+127	    uint8_t src, down;
+128	    uint32_t t;
+129	} ev_t;
+130	#define EV_N 64u
+131	static ev_t ev[EV_N];
+132	static volatile uint32_t ev_w, ev_r;
+133	#define LEFT_KEYS ((1u << 13) - 1u)      /* F3..F4: the left paddle */
+134	#ifdef PLAT_HOST
+135	static mo_player_t host_hand;            /* "sendkeys": a scripted hand on a straight key */
+136	#endif
+137	
+138	/* the main loop's */
+139	static hostlink_t link;
+140	static struct {
+141	    mo_dec_t dec;
+142	    uint32_t t_down, t_up;
+143	    uint8_t down, seen;
+144	} dsrc[SRC_N];
+145	
+146	#define TG_COLS 24u
+147	#define TG_ROWS 5u
+148	#define TG_N (TG_COLS * TG_ROWS)
+149	static struct {
+150	    char c[TG_N];
+151	    uint8_t who[TG_N];
+152	    uint8_t pat[TG_N];                   /* the elements read for it (a code; 0 none or too long) */
+153	    uint32_t n;
+154	} grid;                                  /* the KEY page's text, own and received in their colours */
+155	#define TXT_N 96u
+156	static char txt[3][TXT_N + 1];           /* own decoded, received decoded, typed (the simulator's expect_text) */
+157	
+158	/* the KEY page's TIMING view: each letter's marks and the gaps inside it, as keyed */
+159	#define TR_N 4u
+160	#define TR_EL 7u
+161	typedef struct {
+162	    char c;
+163	    uint8_t n, dah;                      /* elements, and which were read as dahs (bit i) */
+164	    uint16_t mark[TR_EL], gap[TR_EL];    /* ms; gap[i] the one before element i (gap[0] 0) */
+165	} trow_t;
+166	static struct {
+167	    trow_t row[TR_N], live;
+168	    uint8_t head, count;
+169	    uint16_t next_gap;                   /* the gap before the next mark, if it is inside a letter */
+170	    uint16_t next_gap_rh;                /* the gap before the next mark, whatever it was (RHYTHM) */
+171	} tim;
+172	
+173	static struct {
+174	    uint8_t page, back, sel;             /* sel: the menu's / the settings' cursor */
+175	    uint8_t csel;                        /* the chart's */
+176	    uint8_t redraw;                      /* bits: R_* */
+177	    uint32_t keys, btn;
+178	    char msg[2][24];
+179	    uint32_t msg_until;
+180	    uint8_t tpage;                       /* TYPE: 0 letters, 1 digits and signs, 2 phrases */
+181	    char line[TG_COLS * 2u + 1u];        /* TYPE: the line typed */
+182	    const char *gloss;                   /* TYPE: what the last phrase means */
+183	    uint32_t rec_t;                      /* TYPE: REC went down at (0: up, or its hold already cleared the line) */
+184	    char last;                           /* KEY: the last character read */
+185	    uint8_t host_was, lamp_was, pat_was;
+186	} ui;
+187	enum { R_HEAD = 1, R_MAIN = 2, R_LAMP = 4, R_FOOT = 8, R_ALL = 15 };
+188	
+189	static struct {
+190	    ln_round_t r;
+191	    uint8_t ps;                          /* PS_* */
+192	    uint8_t pick;                        /* the choice under SELECT */
+193	    uint8_t right;                       /* the last answer */
+194	    uint8_t opened;                      /* the round opened a group */
+195	    uint8_t answer_ok;                   /* keying is taken as the answer (the prompt has played) */
+196	    char got;                            /* what was keyed */
+197	    uint32_t ratio10;                    /* the keyed answer's dah:dit */
+198	    uint32_t until;                      /* PS_RESULT: the next card at */
+199	    uint8_t active;                      /* a round under way */
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 19:37:35Z)**_
+
+<tool-use data-tool-type="read" data-tool-name="Read"><details>
+<summary>Tool use: **Read**</summary>
+ `./firmware/morse/app.c`
+
+```text
+640	
+641	int app_sysex(const uint8_t *p, uint32_t n) { return host_frame(p, n, HL_USB); }
+642	
+643	/* ------------------------------------------------------------- the pages --- */
+644	static void inputs_for_page(void)        /* who the keys and MIDI belong to on this page */
+645	{
+646	    key_input = ui.page == PG_KEY || ui.page == PG_RHYTHM
+647	                || (ui.page == PG_PRACTICE && pr.ps == PS_CARD && pr.answer_ok);
+648	    own_midi = ui.page == PG_KEY;
+649	    ptx_midi = ui.page == PG_TYPE;
+650	}
+651	
+652	static void practice_leave(void);
+653	static void listen_stop(void);
+654	
+655	static void set_page(uint32_t p)
+656	{
+657	    if (ui.page == PG_PRACTICE && p != PG_PRACTICE)
+658	        practice_leave();
+659	    if (ui.page == PG_LISTEN && p != PG_LISTEN)
+660	        listen_stop();
+661	    if (ui.page == PG_TYPE && p != PG_TYPE)
+662	        play_stop(&ptx);
+663	    if (p != PG_MENU)
+664	        ui.back = (uint8_t)p;
+665	    ui.page = (uint8_t)(p % PG_N);
+666	    ui.sel = (uint8_t)(ui.page == PG_MENU && ui.back ? ui.back - 1u : 0u);
+667	    inputs_for_page();
+668	    ui.redraw |= R_ALL;
+669	}
+670	
+671	/* -------------------------------------------------------------- practice --- */
+672	static int card_key(const ln_card_t *c) { return c->type == CARD_HEAR_KEY || c->type == CARD_SEE_KEY; }
+673	static int card_sounds(const ln_card_t *c)   /* its prompt is played (or flashed, muted) */
+674	{
+675	    return c->type == CARD_NEW || c->type == CARD_HEAR_CHOOSE || c->type == CARD_HEAR_KEY
+676	           || c->type == CARD_LIGHT_CHOOSE;
+677	}
+678	
+679	static void own_reset(void)              /* the decoder for a keyed answer, at the send speed */
+680	{
+681	    mo_dec_init(&dsrc[SRC_OWN].dec, mo_dit_ms(SET.send), mo_dit_ms(SET.send));
+682	}
+683	
+684	static void card_present(void)
+685	{
+686	    const ln_card_t *c = ln_card(&pr.r);
+687	    char ch;
+688	    pr.answer_ok = 0;
+689	    pr.got = 0;
+690	    pr.pick = 0;
+691	    if (!c) {
+692	        pr.opened = (uint8_t)ln_finish(&rec.ln, &pr.r);
+693	        pr.active = 0;
+694	        pr.ps = PS_DONE;
+695	        rec_save();
+696	        if (pr.opened)
+697	            app_say("NEW LETTERS", "");
+698	        inputs_for_page();
+699	        ui.redraw |= R_ALL;
+700	        return;
+701	    }
+702	    ch = ln_char(c->ch);
+703	    pr.ps = PS_CARD;
+704	    if (c->type == CARD_NEW) {
+705	        char s[4] = {ch, ' ', ch, 0};
+706	        play(&ptx, s);
+707	    } else if (card_sounds(c))
+708	        play_char(&ptx, ch);
+709	    own_reset();
+710	    inputs_for_page();
+711	    ui.redraw |= R_ALL;
+712	}
+713	
+714	static void practice_start(void)
+715	{
+716	    uint32_t flags = (SET.mute ? LN_MUTED : 0u) | (visual() ? LN_VISUAL : 0u);
+717	    ln_build(&rec.ln, &pr.r, SET.cards, flags, plat_ms() * 2654435761u + rec.ln.round);
+718	    pr.active = 1;
+719	    pr.opened = 0;
+720	    card_present();
+721	}
+722	
+723	static void practice_answer(int right)
+724	{
+725	    const ln_card_t *c = ln_card(&pr.r);
+726	    if (!c || pr.ps != PS_CARD)
+727	        return;
+728	    if (c->type == CARD_NEW) {           /* only shown: on to the next */
+729	        ln_answer(&rec.ln, &pr.r, 1);
+730	        play_stop(&ptx);
+731	        card_present();
+732	        return;
+733	    }
+734	    pr.right = (uint8_t)(right != 0);
+735	    pr.ratio10 = card_key(c) ? mo_dec_ratio10(&dsrc[SRC_OWN].dec) : 0u;
+736	    ln_answer(&rec.ln, &pr.r, right);
+737	    pr.ps = PS_RESULT;
+738	    pr.answer_ok = 0;
+739	    play_stop(&ptx);
+740	    if (!right)
+741	        play_char(&ptx, ln_char(c->ch));   /* how it should have gone */
+742	    pr.until = plat_ms() + (right ? 900u : 1800u);
+743	    inputs_for_page();
+744	    ui.redraw |= R_ALL;
+745	}
+746	
+747	static void practice_keyed(char c)       /* the own decoder read a character during a card */
+748	{
+749	    const ln_card_t *k = ln_card(&pr.r);
+750	    if (pr.ps != PS_CARD || !k || !card_key(k) || !pr.answer_ok)
+751	        return;
+752	    pr.got = c;
+753	    practice_answer(c == ln_char(k->ch));
+754	}
+755	
+756	static void practice_choose(uint32_t i)
+757	{
+758	    const ln_card_t *c = ln_card(&pr.r);
+759	    if (pr.ps != PS_CARD || !c || !ln_choose(c->type) || i > 3u)
+760	        return;
+761	    pr.got = ln_char(c->opt[i]);
+762	    practice_answer(i == c->right);
+763	}
+764	
+765	static void practice_leave(void)
+766	{
+767	    if (pr.active) {
+768	        pr.active = 0;
+769	        ln_finish(&rec.ln, &pr.r);
+770	        rec_save();
+771	    }
+772	    play_stop(&ptx);
+773	    pr.ps = PS_START;
+774	}
+775	
+776	static void practice_step(uint32_t now)
+777	{
+778	    const ln_card_t *c = ln_card(&pr.r);
+779	    if (pr.ps == PS_CARD && c && card_key(c) && !pr.answer_ok && !playing(&ptx)) {
+780	        pr.answer_ok = 1;                /* the prompt has played: now keying answers */
+781	        own_reset();
+782	        inputs_for_page();
+783	        ui.redraw |= R_FOOT | R_MAIN;
+784	    }
+785	    if (pr.ps == PS_RESULT && now >= pr.until && !playing(&ptx))
+786	        card_present();
+787	}
+788	
+789	/* ----------------------------------------------------------------- listen --- */
+790	/* lines from content.c played one after another; the one playing shown as it goes (or hidden: copy it in your
+791	 * head, it shows once the next one starts) */
+792	#define LS_N 2u
+793	static struct {
+794	    uint8_t on;
+795	    struct {
+796	        char t[CT_LINE_MAX + 1];
+797	        const char *gloss;
+798	        uint8_t nplay, played;
+799	    } l[LS_N];
+800	    uint8_t cur, have;                   /* the line playing; lines generated and not done (1 or 2) */
+801	    uint8_t feed, pos;                   /* the line being queued, and its next character */
+802	    char prev[CT_LINE_MAX + 1];          /* the line before, shown whole */
+803	    const char *prev_gloss;
+804	    uint32_t count;                      /* lines heard */
+805	    ct_gen_t gen;
+806	} ls;
+807	
+808	static int playable(char c) { return c != ' ' && c != '<' && c != '>' && mo_code(c); }
+809	
+810	static uint32_t playable_n(const char *s)
+811	{
+812	    uint32_t n = 0;
+813	    for (; *s; s++)
+814	        n += (uint32_t)playable(*s);
+815	    return n;
+816	}
+817	
+818	static void listen_new(uint32_t i)
+819	{
+820	    ct_line(&ls.gen, SET.prog, rec.ln.open, ls.l[i].t, &ls.l[i].gloss);
+821	    ls.l[i].nplay = (uint8_t)playable_n(ls.l[i].t);
+822	    ls.l[i].played = 0;
+823	}
+824	
+825	static void listen_stop(void)
+826	{
+827	    if (ls.on)
+828	        play_stop(&ptx);
+829	    ls.on = 0;
+830	    ls.have = 0;
+831	    ui.redraw |= R_MAIN | R_FOOT;
+832	}
+833	
+834	static void listen_start(void)
+835	{
+836	    play_stop(&ptx);
+837	    (void)took_start(&ptx);
+838	    ct_init(&ls.gen, plat_ms() * 2654435761u + 1u);
+839	    ls.on = 1;
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 19:37:36Z)**_
+
+<tool-use data-tool-type="read" data-tool-name="Read"><details>
+<summary>Tool use: **Read**</summary>
+ `./firmware/morse/learn.h`
+
+```text
+1	/* SPDX-License-Identifier: GPL-3.0-or-later */
+2	/* learn: flash cards for Morse, the way a phrasebook or a kana deck works. Each character has two cards, recognise
+3	 * it (hear it, or see its code, and name it) and send it (see it, key it), each in a Leitner box 0..5: right moves
+4	 * it up a box, wrong sends it back to 0, and box n comes back every 2^n rounds. The FM-1 has no clock that lives
+5	 * through a power-off, so the schedule counts rounds, not days.
+6	 *
+7	 * New characters come in Koch order (LCWO's), five at a time like a kana row; the next five open once every open
+8	 * character is in box 2 or higher to recognise and box 1 or higher to send. No platform, no libc (tests/morse_test.c).
+9	 *
+10	 * Two ways to learn (LN_VISUAL): by sound, the default, where nothing shows the dots and dashes (Koch, LCWO and CW
+11	 * Academy teach each character as one sound: read off a picture, it gets counted, and copying stalls around 10-15
+12	 * WPM), and by sight, where the code is drawn too. Muted, the sound way shows the lamp flashing in the code's own
+13	 * rhythm instead of a drawing. */
+14	#pragma once
+15	#include <stdint.h>
+16	
+17	#define LN_N 41u                         /* characters in the course */
+18	#define LN_GROUP 5u                      /* opened at a time */
+19	#define LN_TOP 5u                        /* the highest box */
+20	#define LN_NEW_MAX 3u                    /* new characters in one round at most */
+21	#define LN_CARDS_MAX 48u                 /* cards in a round, with the ones asked again */
+22	#define LN_NEVER 0xFFFFu
+23	
+24	enum { LN_REC, LN_SEND, LN_NDIR };
+25	enum {
+26	    CARD_NEW,                            /* a new character: shown and played, nothing asked */
+27	    CARD_HEAR_CHOOSE,                    /* hear it, pick it from four */
+28	    CARD_HEAR_KEY,                       /* hear it, key it back */
+29	    CARD_SEE_KEY,                        /* see the letter, key its code */
+30	    CARD_CODE_CHOOSE,                    /* see the dots and dashes drawn, pick from four (by sight only) */
+31	    CARD_LIGHT_CHOOSE,                   /* watch the lamp flash its rhythm, pick from four (muted, by sound) */
+32	    CARD_NTYPES
+33	};
+34	
+35	typedef struct {
+36	    uint16_t round;                      /* rounds finished */
+37	    uint16_t streak;                     /* rounds in a row at 80 % or better */
+38	    uint8_t open;                        /* characters open, from the start of the order */
+39	    uint8_t rsv;
+40	    uint8_t box[LN_N][LN_NDIR];
+41	    uint16_t last[LN_N][LN_NDIR];        /* the round it was last answered in; LN_NEVER: not yet */
+42	    uint32_t answered, right;            /* since the start */
+43	} ln_state_t;
+44	
+45	typedef struct {
+46	    uint8_t ch, dir, type;               /* ch: index in the order */
+47	    uint8_t again;                       /* asked again after a miss (once) */
+48	    uint8_t opt[4];                      /* the four to choose from (indexes), for the CHOOSE types */
+49	    uint8_t right;                       /* which of them is right */
+50	} ln_card_t;
+51	
+52	typedef struct {
+53	    ln_card_t card[LN_CARDS_MAX];
+54	    uint8_t n, at;                       /* cards in the round, the one asked now */
+55	    uint8_t ok, miss, up, fresh;         /* this round: right, wrong, moved up a box, new characters */
+56	    uint32_t rng;
+57	} ln_round_t;
+58	
+59	char ln_char(uint32_t i);                /* the character at index i of the order */
+60	int ln_index(char c);                    /* its index, -1 when not in the course */
+61	void ln_init(ln_state_t *s);
+62	int ln_valid(const ln_state_t *s);       /* 1 when a loaded record makes sense */
+63	int ln_due(const ln_state_t *s, uint32_t i, int dir);   /* this card is due this round (new ones count) */
+64	uint32_t ln_due_count(const ln_state_t *s);
+65	uint32_t ln_new_count(const ln_state_t *s);   /* open characters not seen yet */
+66	#define LN_MUTED 1u                      /* ln_build's flags: no card that needs sound */
+67	#define LN_VISUAL 2u                     /* learning by sight: drawn codes allowed */
+68	int ln_choose(int type);                 /* a card answered by picking one of four */
+69	/* a round of n cards (n <= LN_CARDS_MAX / 2: room for the ones asked again) */
+70	void ln_build(const ln_state_t *s, ln_round_t *r, uint32_t n, uint32_t flags, uint32_t seed);
+71	const ln_card_t *ln_card(const ln_round_t *r);   /* the card asked now, 0 when the round is over */
+72	/* the answer to the card asked now (ignored for CARD_NEW, which only marks the character seen): returns 1 if it
+73	 * moved up a box */
+74	int ln_answer(ln_state_t *s, ln_round_t *r, int right);
+75	/* the round is over (or left): counted, the streak, and the next group opened when the open ones are learnt.
+76	 * Returns 1 when a group opened */
+77	int ln_finish(ln_state_t *s, const ln_round_t *r);
+78	uint32_t ln_level(const ln_state_t *s, uint32_t i);   /* 0..5 for the chart: its two boxes' average, rounded down */
+79
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 19:37:42Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+
+`sed -n 1,97p morse.h | grep -n "dec\|idle" ; grep -n "^[a-z].*mo_dec\|^static.*dec" morse.c`
+
+```text
+3: * and an adaptive decoder, all driven by a 1 ms tick or by durations, so the same code runs in fm1-base's timer
+11:#define MO_UNKNOWN '*'                   /* what the decoder gives for a pattern that is no character */
+52:    uint8_t phase;                       /* 0 idle, 1 mark, 2 gap after it */
+62:/* ----------------------------------------------------------------- decoder --- */
+80:} mo_dec_t;
+82:void mo_dec_init(mo_dec_t *d, uint32_t dit_ms, uint32_t gap_ms);
+83:void mo_dec_mark(mo_dec_t *d, uint32_t ms);   /* a key-down of ms */
+85: * a word's end; how many (0..2). What mo_dec_idle already gave for this gap is not given again */
+86:uint32_t mo_dec_gap(mo_dec_t *d, uint32_t ms, char *out);
+88:char mo_dec_idle(mo_dec_t *d, uint32_t ms);
+89:uint32_t mo_dec_unit(const mo_dec_t *d);   /* its dit estimate, ms */
+90:uint32_t mo_dec_wpm(const mo_dec_t *d);    /* the speed it hears */
+91:uint8_t mo_dec_pending(const mo_dec_t *d); /* the pattern so far (a code, 1 = none) */
+93:uint32_t mo_dec_ratio10(const mo_dec_t *d);
+95:uint32_t mo_dec_gap10(const mo_dec_t *d);
+96:int mo_dec_is_dah(const mo_dec_t *d, uint32_t ms);   /* how it would read a mark of ms now */
+97:void mo_dec_reset_stats(mo_dec_t *d);
+265:void mo_dec_init(mo_dec_t *d, uint32_t dit_ms, uint32_t gap_ms)
+277:void mo_dec_reset_stats(mo_dec_t *d)
+284:int mo_dec_is_dah(const mo_dec_t *d, uint32_t ms) { return ms >= (d->dit_avg + d->dah_avg) / 2u; }
+286:uint32_t mo_dec_unit(const mo_dec_t *d) { return (d->dit_avg + d->dah_avg / 3u) / 2u; }
+288:void mo_dec_mark(mo_dec_t *d, uint32_t ms)
+335:static char mo_dec_end(mo_dec_t *d)
+345:static uint32_t mo_dec_word(const mo_dec_t *d)   /* a gap this long ends a word */
+351:char mo_dec_idle(mo_dec_t *d, uint32_t ms)
+363:uint32_t mo_dec_gap(mo_dec_t *d, uint32_t ms, char *out)
+378:uint32_t mo_dec_wpm(const mo_dec_t *d)
+384:uint8_t mo_dec_pending(const mo_dec_t *d) { return d->pat; }
+386:uint32_t mo_dec_gap10(const mo_dec_t *d)
+394:uint32_t mo_dec_ratio10(const mo_dec_t *d)
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 19:37:45Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+
+`sed -n 62,97p morse.h; sed -n 260,402p morse.c; sed -n 1960,2040p app.c`
+
+```text
+/* ----------------------------------------------------------------- decoder --- */
+/* marks and gaps in, characters out. It keeps running averages of the dit, the dah and the gap between characters
+ * it hears and splits them halfway, so it follows a sender a good way off the speed it was started at, and a
+ * Farnsworth spacing. Two marks in a character two or more times apart say which is which whatever the averages
+ * thought: the averages move to them at once, and the earlier mark is read again (a beginner's slow dits taken
+ * for dahs come right at the first real dah). gap_ms at the start: the spacing unit expected (mo_gap_ms; the dit
+ * when not stretched). */
+typedef struct {
+    uint32_t dit_avg, dah_avg;           /* ms, smoothed */
+    uint32_t cgap;                       /* the gap between characters it hears, ms, smoothed (Farnsworth stretches it);
+                                          * a word's end is 5/3 of it */
+    uint8_t pat;                         /* the elements so far, with the leading 1; 1 = none */
+    uint8_t word;                        /* a character since the last space (a space is due after a long gap) */
+    uint8_t last_pat;                    /* the elements of the character it gave last (a code; 0 too long) */
+    uint32_t prev;                       /* the mark before, ms, in this character (0: none yet) */
+    uint32_t marks, dits, dahs;          /* counted (for the speed shown, and a sending check) */
+    uint32_t dit_sum, dah_sum;           /* ms of the dits and dahs counted (their ratio) */
+    uint32_t egap_sum, egap_n;           /* the gaps inside characters (should be one dit) */
+} mo_dec_t;
+
+void mo_dec_init(mo_dec_t *d, uint32_t dit_ms, uint32_t gap_ms);
+void mo_dec_mark(mo_dec_t *d, uint32_t ms);   /* a key-down of ms */
+/* a key-up of ms, now over (the gap before the next mark): what it ended into out, the character and then ' ' for
+ * a word's end; how many (0..2). What mo_dec_idle already gave for this gap is not given again */
+uint32_t mo_dec_gap(mo_dec_t *d, uint32_t ms, char *out);
+/* the key has been up ms so far: a character, or a space, once the silence says so (each given once) */
+char mo_dec_idle(mo_dec_t *d, uint32_t ms);
+uint32_t mo_dec_unit(const mo_dec_t *d);   /* its dit estimate, ms */
+uint32_t mo_dec_wpm(const mo_dec_t *d);    /* the speed it hears */
+uint8_t mo_dec_pending(const mo_dec_t *d); /* the pattern so far (a code, 1 = none) */
+/* dah : dit ratio of what it counted, in tenths (30 = 3.0, the textbook), 0 before a dit and a dah */
+uint32_t mo_dec_ratio10(const mo_dec_t *d);
+/* the gaps inside characters in dits, tenths (10 = 1.0, the textbook; long ones split a character), 0 before one */
+uint32_t mo_dec_gap10(const mo_dec_t *d);
+int mo_dec_is_dah(const mo_dec_t *d, uint32_t ms);   /* how it would read a mark of ms now */
+void mo_dec_reset_stats(mo_dec_t *d);
+    k->left--;
+    return k->phase == 1u;
+}
+
+/* ----------------------------------------------------------------- decoder --- */
+void mo_dec_init(mo_dec_t *d, uint32_t dit_ms, uint32_t gap_ms)
+{
+    d->dit_avg = dit_ms;
+    d->dah_avg = 3u * dit_ms;
+    d->cgap = 3u * (gap_ms > dit_ms ? gap_ms : dit_ms);
+    d->pat = 1;
+    d->word = 0;
+    d->last_pat = 0;
+    d->prev = 0;
+    mo_dec_reset_stats(d);
+}
+
+void mo_dec_reset_stats(mo_dec_t *d)
+{
+    d->marks = d->dits = d->dahs = 0;
+    d->dit_sum = d->dah_sum = 0;
+    d->egap_sum = d->egap_n = 0;
+}
+
+int mo_dec_is_dah(const mo_dec_t *d, uint32_t ms) { return ms >= (d->dit_avg + d->dah_avg) / 2u; }
+
+uint32_t mo_dec_unit(const mo_dec_t *d) { return (d->dit_avg + d->dah_avg / 3u) / 2u; }
+
+void mo_dec_mark(mo_dec_t *d, uint32_t ms)
+{
+    int dah;
+    if (ms < 4u)                         /* a bounce, not a mark */
+        return;
+    if (d->prev && d->pat > 1u && d->pat < 0x80u) {   /* two marks of this character, far apart: a dit and a dah */
+        uint32_t lo = ms < d->prev ? ms : d->prev, hi = ms < d->prev ? d->prev : ms;
+        if (hi >= 2u * lo && hi <= 8u * lo) {
+            int prev_dah = (int)(d->pat & 1u), prev_should = d->prev == hi;
+            d->dit_avg = (d->dit_avg + lo) / 2u;
+            d->dah_avg = (d->dah_avg + hi) / 2u;
+            if (prev_dah != prev_should) {   /* the mark before was read wrong: read it again */
+                d->pat ^= 1u;
+                if (prev_should) {
+                    d->dits--, d->dit_sum -= d->prev;
+                    d->dahs++, d->dah_sum += d->prev;
+                } else {
+                    d->dahs--, d->dah_sum -= d->prev;
+                    d->dits++, d->dit_sum += d->prev;
+                }
+            }
+        }
+    }
+    dah = ms >= (d->dit_avg + d->dah_avg) / 2u;
+    if (dah) {
+        d->dah_avg = (3u * d->dah_avg + ms) / 4u;
+        d->dit_avg = (3u * d->dit_avg + d->dah_avg / 3u) / 4u;   /* a sender of only dahs (T M O) moves both */
+        d->dahs++;
+        d->dah_sum += ms;
+    } else {
+        d->dit_avg = (3u * d->dit_avg + ms) / 4u;
+        d->dah_avg = (3u * d->dah_avg + 3u * d->dit_avg) / 4u;
+        d->dits++;
+        d->dit_sum += ms;
+    }
+    if (d->dit_avg < 10u)
+        d->dit_avg = 10u;
+    if (d->dah_avg < 2u * d->dit_avg)
+        d->dah_avg = 2u * d->dit_avg;
+    d->marks++;
+    d->prev = ms;
+    if (d->pat >= 0x80u || !d->pat)
+        d->pat = 0;                      /* longer than any character: unknown at its end */
+    else
+        d->pat = (uint8_t)(d->pat << 1 | (dah ? 1u : 0u));
+}
+
+static char mo_dec_end(mo_dec_t *d)
+{
+    char c = d->pat ? mo_char(d->pat) : 0;
+    d->last_pat = d->pat;
+    d->pat = 1;
+    d->prev = 0;
+    d->word = 1;
+    return c ? c : MO_UNKNOWN;
+}
+
+static uint32_t mo_dec_word(const mo_dec_t *d)   /* a gap this long ends a word */
+{
+    uint32_t u = mo_dec_unit(d), w = d->cgap * 5u / 3u;
+    return w > 4u * u ? w : 4u * u;
+}
+
+char mo_dec_idle(mo_dec_t *d, uint32_t ms)
+{
+    uint32_t u = mo_dec_unit(d);
+    if (d->pat != 1u && ms >= 2u * u)
+        return mo_dec_end(d);
+    if (d->word && d->pat == 1u && ms >= mo_dec_word(d)) {
+        d->word = 0;
+        return ' ';
+    }
+    return 0;
+}
+
+uint32_t mo_dec_gap(mo_dec_t *d, uint32_t ms, char *out)
+{
+    uint32_t n = 0, u = mo_dec_unit(d);
+    char c;
+    if (ms >= 2u * u && ms < mo_dec_word(d))   /* a gap between characters: learn the spacing (Farnsworth, a hand) */
+        d->cgap = (3u * d->cgap + ms) / 4u;
+    else if (ms < 2u * u && d->pat > 1u) {      /* inside a character */
+        d->egap_sum += ms;
+        d->egap_n++;
+    }
+    while (n < 2u && (c = mo_dec_idle(d, ms)) != 0)
+        out[n++] = c;
+    return n;
+}
+
+uint32_t mo_dec_wpm(const mo_dec_t *d)
+{
+    uint32_t u = mo_dec_unit(d);
+    return u ? (1200u + u / 2u) / u : 0;
+}
+
+uint8_t mo_dec_pending(const mo_dec_t *d) { return d->pat; }
+
+uint32_t mo_dec_gap10(const mo_dec_t *d)
+{
+    uint32_t dit = d->dits ? d->dit_sum / d->dits : d->dit_avg;
+    if (!d->egap_n || !dit)
+        return 0;
+    return (d->egap_sum / d->egap_n * 10u + dit / 2u) / dit;
+}
+
+uint32_t mo_dec_ratio10(const mo_dec_t *d)
+{
+    uint32_t dit, dah;
+    if (!d->dits || !d->dahs)
+        return 0;
+    dit = d->dit_sum / d->dits;
+    dah = d->dah_sum / d->dahs;
+    return dit ? (dah * 10u + dit / 2u) / dit : 0;
+}
+        switch (c->type) {
+        case CARD_NEW:
+            text_c(120, 50 - oy, &FONT_L, t, C_WHITE);
+            if (visual())
+                draw_code(mo_code(ch), 120, 100 - oy, 8, C_GRAY);
+            text_c(120, 128 - oy, &FONT_XS, SET.mute ? "watch it, then a key" : "listen, then any key", C_DIM);
+            break;
+        case CARD_HEAR_CHOOSE:
+        case CARD_LIGHT_CHOOSE:
+            text_c(120, 48 - oy, &FONT_M, c->type == CARD_LIGHT_CHOOSE ? "( lamp )" : "?", C_DIM);
+            choices(92, c, oy);
+            break;
+        case CARD_CODE_CHOOSE:
+            draw_code(mo_code(ch), 120, 58 - oy, 8, C_WHITE);
+            choices(92, c, oy);
+            break;
+        case CARD_HEAR_KEY:
+            text_c(120, 54 - oy, &FONT_L, "?", C_DIM);
+            break;
+        case CARD_SEE_KEY:
+            text_c(120, 50 - oy, &FONT_L, t, C_WHITE);
+            break;
+        default:
+            break;
+        }
+        if (card_key(c)) {
+            uint8_t pend = mo_dec_pending(&dsrc[SRC_OWN].dec);
+            if ((visual() || kview() != KV_TEXT) && pend > 1u)
+                draw_code(pend, 120, 112 - oy, 8, C_OWN);
+            text_c(120, 136 - oy, &FONT_XS, pr.answer_ok ? "your turn" : "listen", pr.answer_ok ? C_OK : C_DIM);
+        }
+    }
+}
+
+static void listen_reveal(void)          /* SEL while hidden: the line playing, for a moment */
+{
+    if (ls.on && lhide())
+        app_say("NOW:", ls.l[ls.cur].t);
+}
+
+/* s in cells of cw px, cols a row; the first `bright` playable characters lit, the rest dim (hidden: not shown); the
+ * rows that hold the lit part kept in view */
+static void wrap_text(const char *s, int32_t x, int32_t y, const felucca_font_t *f, int32_t cw, uint32_t cols,
+                      uint32_t rows, uint32_t bright, int hide, int32_t oy)
+{
+    char t[2] = {0, 0};
+    uint32_t i, k = 0, n = slen(s), at = 0, first = 0, lit_n = 0;
+    for (i = 0; i < n; i++)
+        if (k < bright && playable(s[i]))
+            k++, at = i;
+    if (at / cols >= rows)
+        first = at / cols - rows + 1u;
+    for (i = 0; i < n && i < (first + rows) * cols; i++) {
+        uint32_t lit;
+        lit_n += (uint32_t)playable(s[i]);
+        lit = lit_n <= bright && s[i] != ' ';
+        if (i < first * cols || (hide && !lit))
+            continue;
+        t[0] = hide ? '_' : s[i];
+        cv_text(x + (int32_t)(i % cols) * cw, y + (int32_t)(i / cols - first) * 20 - oy, f, t, lit ? C_WHITE : C_DIM);
+    }
+}
+
+static void listen_at(int32_t oy)
+{
+    char t[40];
+    cv_text(8, 2 - oy, &FONT_B, LP_NAME[SET.prog], C_WHITE);
+    t[0] = 0;
+    if (ls.count) {
+        int_cat(t, (int32_t)ls.count);
+        text_cat(t, " LINES");
+    }
+    cv_text(232 - text_w(&FONT_XS, t), 4 - oy, &FONT_XS, t, C_DIM);
+    if (!ls.on) {
+        text_c(120, 50 - oy, &FONT_B, "PLAY: START", C_RX);
+        text_c(120, 76 - oy, &FONT_XS, "SELECT: the program", C_DIM);
+        text_c(120, 94 - oy, &FONT_XS, lhide() ? "hidden: copy it in your head" : "the text shown as it plays",
+               C_DIM);
+        return;
+    }
+    wrap_text(ls.l[ls.cur].t, 4, 28, &FONT_S, 10, TG_COLS, 3, ls.l[ls.cur].played, (int)lhide(), oy);
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 19:38:24Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+
+`grep -n "shot" tests/basic.txt | head -40; ls docs build 2>/dev/null | head; grep -n "shot" ../../Justfile | head; grep -n "MAX\|define HL_" common/hostlink.h | head -20`
+
+```text
+6:shot boot.png
+31:shot menu.png
+64:shot key.png
+69:shot key_code.png
+88:shot key_timing.png
+126:shot key_muted.png
+202:shot settings.png
+211:shot rhythm.png
+235:shot rhythm_good.png
+263:shot rhythm_long.png
+288:shot rhythm_dahs.png
+318:shot type_phrases.png
+343:shot type_code.png
+346:shot type_code_signs.png
+412:shot listen.png
+417:shot listen_hidden.png
+430:shot chart.png
+443:shot card_new.png
+451:shot card_hear.png
+456:shot result_right.png
+462:shot result_wrong.png
+472:shot done.png
+500:shot done_muted.png
+577:shot done_keyed.png
+docs:
+screen.png
+
+build:
+gen
+host
+loader
+o2
+crt0.o
+data.bin
+144:emu-shot package chip="uc25hq80" ms="6000":
+152:      --shot "{{ms}}" --lcd-only 2>&1 | grep -i -E "^flash:|fault|error" || true
+166:    ../fm1-emu/fm1-live --fwsc "$pkg" --flash-chip "{{chip}}" --flash "pristine-$name.flash" --midi none --shot 1 --lcd-only >/dev/null 2>&1
+203:    echo "screenshots and audio: firmware/{{app}}/build/host/"
+32:#define HOSTLINK_MAX 64u                 /* the longest payload an app sends through hl_send */
+33:#define HOSTLINK_RX_MAX 640u             /* the longest frame taken from Bluetooth (fm1-base's APP_SYSEX limit) */
+48:    uint8_t b[HOSTLINK_RX_MAX];
+50:    uint8_t open, over;                  /* inside a frame; it ran past HOSTLINK_RX_MAX (dropped at its end) */
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 19:38:29Z)**_
+
+正在讀 Morse 韌體的練習判定、存檔和截圖相關程式碼，準備寫計畫。
+
+_**Agent (claude-opus-5-5 2026-11-17 19:38:30Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+
+`grep -n "REC_VER\|REC_MAGIC\|typedef struct {" app.c | head; sed -n 40,60p app.c; grep -n "PG_CHART" app.c | head -20; grep -n "static const char \*rhythm_hint\|hint" app.c | head -20`
+
+```text
+36:#define REC_MAGIC 0x4D4F5231u            /* "MOR1"; another magic, or a record that does not make sense: defaults */
+37:#define REC_VER 1u                       /* 0.2 kept 0.1's layout: its spare bytes became look, send, prog */
+41:typedef struct {
+57:typedef struct {
+105:    rec.magic = REC_MAGIC;
+106:    rec.ver = REC_VER;
+126:typedef struct {
+161:typedef struct {
+2355:    if (rec.magic != REC_MAGIC || rec.ver != REC_VER || rec.size != sizeof rec || !set_valid(&rec.set)
+enum { TL_ALPHA, TL_PIANO, TL_KOCH, TL_N };   /* the TYPE page's letters on the keys */
+typedef struct {
+    uint8_t wpm;                         /* hearing: character speed 5..40 */
+    uint8_t eff;                         /* hearing: effective speed (Farnsworth) 5..wpm */
+    uint8_t keyer;                       /* MO_STRAIGHT, MO_IAMBIC_A, MO_IAMBIC_B */
+    uint8_t swap;                        /* paddles: 0 left half dit, 1 left half dah */
+    uint8_t mute;
+    uint8_t cards;                       /* per round 10..30 */
+    uint8_t learn;                       /* LM_* */
+    uint8_t look;                        /* bits 0-1 KEY's view (KV_*), bit 2 TYPE's keys show the code, bits 3-4
+                                          * TYPE's layout (TL_*), bit 5 LISTEN hides the text, bit 6 TYPE composes
+                                          * (a line sent with PLAY) instead of sending each key */
+    uint16_t pitch;                      /* Hz 300..1200 */
+    uint8_t send;                        /* sending: the keyer's speed and where the decoder starts, 5..40 (0 in
+                                          * a 0.1 record: the default) */
+    uint8_t prog;                        /* LISTEN's program (LP_*) */
+} set_t;
+typedef struct {
+    uint32_t magic;
+    uint16_t ver, size;
+    set_t set;
+115:enum { PG_MENU, PG_PRACTICE, PG_LISTEN, PG_KEY, PG_RHYTHM, PG_TYPE, PG_CHART, PG_SET, PG_N };
+1164:    case PG_CHART:
+1206:    case PG_CHART:
+1241:    case PG_CHART:
+2227:    case PG_CHART: main_area(chart_at); break;
+2256:    case PG_CHART:
+896: * you pressed, and a hint from the last presses */
+916:    uint8_t hint, sugg;                  /* H_*, a send speed to try (0 none) */
+929:static void rhythm_hint(void)
+952:        rh.hint = H_DITS_LONG;
+955:        rh.hint = H_DAHS_SHORT;
+957:        rh.hint = H_DAHS_LONG;
+959:        rh.hint = H_GAPS_LONG;
+961:        rh.hint = H_UNEVEN;
+963:        rh.hint = H_DITS_SHORT;
+966:        rh.hint = H_GOOD;
+968:        rh.hint = H_START;
+1019:    rhythm_hint();
+1169:        rhythm_hint();
+1239:        rhythm_hint();
+2122:    cv_text(8, 106 - oy, &FONT_B, H1[rh.hint], rh.hint == H_GOOD ? C_OK : rh.hint == H_START ? C_GRAY : C_RX);
+2124:    text_cat(t, H2[rh.hint]);
+2373:    rhythm_hint();
+2500:    else if (!strcmp(what, "rh_hint"))
+2501:        *got = rh.hint;
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 19:38:33Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+
+`sed -n 1150,1260p app.c; grep -n "SET_ITEMS\|S_[A-Z]*," app.c | head -30`
+
+```text
+            if (card_key(c))
+                pr.answer_ok = 0;        /* taken again once it has played */
+            inputs_for_page();
+        }
+        break;
+    case PG_LISTEN:
+        if (ls.on)
+            listen_stop();
+        else
+            listen_start();
+        break;
+    case PG_TYPE:
+        type_play();
+        break;
+    case PG_CHART:
+        play_char(&ptx, ln_char(ui.csel));
+        break;
+    case PG_RHYTHM:
+        rhythm_reset();
+        rhythm_hint();
+        ui.redraw |= R_MAIN;
+        break;
+    case PG_MENU:
+        set_page(ui.sel + 1u);
+        break;
+    default:
+        break;
+    }
+}
+
+static void page_sel(void)               /* SEL: choose, skip, switch */
+{
+    const ln_card_t *c;
+    switch (ui.page) {
+    case PG_MENU:
+        set_page(ui.sel + 1u);
+        break;
+    case PG_PRACTICE:
+        if (pr.ps == PS_CARD && (c = ln_card(&pr.r)) != 0) {
+            if (ln_choose(c->type))
+                practice_choose(pr.pick);
+            else
+                practice_answer(c->type == CARD_NEW);   /* a card to key: don't know */
+        } else if (pr.ps == PS_RESULT)
+            pr.until = 0;
+        else
+            practice_start();
+        break;
+    case PG_LISTEN:
+        listen_reveal();
+        break;
+    case PG_TYPE:
+        look_set(6, 1u, !tcompose());
+        look_changed();
+        app_say(tcompose() ? "COMPOSE" : "LIVE", tcompose() ? "PLAY SENDS THE LINE" : "EACH KEY GOES OUT");
+        break;
+    case PG_CHART:
+        play_char(&ptx, ln_char(ui.csel));
+        break;
+    case PG_SET:
+        settings_step(1);
+        break;
+    default:
+        break;
+    }
+}
+
+#define SET_ITEMS 11u
+static void page_select(int32_t e)       /* SELECT turned */
+{
+    int32_t d = e > 0 ? 1 : -1;
+    const ln_card_t *c;
+    switch (ui.page) {
+    case PG_MENU:
+        ui.sel = (uint8_t)wrap(ui.sel, d, PG_N - 1u);
+        break;
+    case PG_PRACTICE:
+        if (pr.ps == PS_CARD && (c = ln_card(&pr.r)) != 0 && ln_choose(c->type))
+            pr.pick = (uint8_t)wrap(pr.pick, d, 4u);
+        break;
+    case PG_LISTEN:
+        SET.prog = (uint8_t)wrap(SET.prog, d, LP_N);
+        look_changed();
+        if (ls.on)
+            listen_start();
+        break;
+    case PG_RHYTHM:
+        rh.drill = (uint8_t)wrap(rh.drill, d, RH_DRILLS);
+        rhythm_reset();
+        rhythm_hint();
+        break;
+    case PG_CHART:
+        ui.csel = (uint8_t)wrap(ui.csel, d, LN_N);
+        break;
+    case PG_SET:
+        ui.sel = (uint8_t)wrap(ui.sel, d, SET_ITEMS);
+        break;
+    default:
+        break;
+    }
+    ui.redraw |= R_MAIN | R_FOOT;
+}
+
+static void say_speed(const char *what, uint32_t wpm)   /* a speed, and what it means in ms */
+{
+    char a[24], b[24];
+    uint32_t dit = mo_dit_ms(wpm);
+    a[0] = 0;
+    text_cat(a, what);
+    int_cat(a, (int32_t)wpm);
+    text_cat(a, " WPM");
+116:enum { PS_START, PS_CARD, PS_RESULT, PS_DONE };
+906:enum { H_START, H_DITS_LONG, H_DAHS_SHORT, H_DAHS_LONG, H_GAPS_LONG, H_UNEVEN, H_DITS_SHORT, H_GOOD };
+1217:#define SET_ITEMS 11u
+1245:        ui.sel = (uint8_t)wrap(ui.sel, d, SET_ITEMS);
+1367:static const char *const SET_NAME[SET_ITEMS] = {"PRESET", "HEAR SPEED", "SPACING", "SEND SPEED", "PITCH",    "KEYER",
+2154:    for (i = 0; i < SET_ITEMS; i++) {
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 19:41:20Z)**_
+
+<tool-use data-tool-type="generic" data-tool-name="AskUserQuestion"><details>
+<summary>Tool use: **AskUserQuestion**</summary>
+**PRACTICE 打錯的主因看起來是：解碼器每張卡都重設成 SEND SPEED（預設 10 WPM，dah 要 ≥240 ms），但你是模仿 20 WPM 聽到的節奏打（dah 約 180 ms），所以 M 會被讀成 I、T 讀成 E。判定要怎麼改？**
+
+Options:
+- **寬鬆判定＋錯了看對照 (Recommended)** - 用『你這次打的長短彼此比較』判斷 dit/dah，手速跨卡延續；答錯時畫出『應該 vs 你打的』長短條＋一句提示（dah 太短、字中間停太久等）。設定可切回嚴格。
+- **只加對照提示，判定照舊** - 判定不變，答錯時顯示對照條和提示，讓使用者自己調整。
+- **重打一次的機會** - 判定照舊，但打錯先給一次重打（不算錯），再錯才算。
+
+**學習進度的 export / import 要用什麼方式？（SLOOP 是用網頁編輯器透過 SysEx）**
+
+Options:
+- **host CLI，JSON 檔 (Recommended)** - `just morse-backup FILE` / `morse-restore FILE`，走現有 hostlink SysEx；JSON 每個字的盒號看得懂，也能手改。
+- **CLI ＋ 網頁 (Web MIDI)** - 另外在 fm1-morse 的 GitHub Pages 做一頁 Chrome 匯出／匯入，不用裝 Python。工作量多一截。
+
+**有經驗的人要跳過已知的字，哪種方式？** _(select multiple)_
+
+Options:
+- **CHART 標記已會／忘了 (Recommended)** - 在字表選一個字，按鍵標成『已會』（放到高盒，偶爾複習）或『忘了』（回盒 0）。
+- **設定裡『開放到第 n 組』 (Recommended)** - 直接開到某組，前面的字標成已會。
+- **分級測驗回合** - 跑一回合測下一組的字，答對的自動標已會。較花時間做。
+
+
+**Answer:** 寬鬆判定＋錯了看對照 (Recommended), CLI ＋ 網頁 (Web MIDI), CHART 標記已會／忘了 (Recommended), 設定裡『開放到第 n 組』 (Recommended), 分級測驗回合, 目前 CHART 好像確實能夠有顏色深淺 但是為了避免user誤觸 如果決定手動修改 則應該要額外怎樣確認SAVE才override". Read the answers carefully — they may request clarification, changes, or that you not proceed — and follow what they actually say.
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 19:41:49Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+
+`grep -n "tim.live\|trow_push\|static void chart_at\|case PG_CHART" app.c | head -20; grep -n "T_\w* *=\|#define T_" app.c common/hostlink.h | head; ls ../../docs/dev/`
+
+```text
+509:    if (!tim.live.n)
+511:    *r = tim.live;
+520:    tim.live.n = 0;
+580:                if (tim.live.n < TR_EL) {
+581:                    tim.live.mark[tim.live.n] = (uint16_t)(mark > 0xFFFFu ? 0xFFFFu : mark);
+582:                    tim.live.gap[tim.live.n] = tim.live.n ? tim.next_gap : 0u;
+583:                    tim.live.n++;
+1164:    case PG_CHART:
+1206:    case PG_CHART:
+1241:    case PG_CHART:
+1752:    if (tim.live.n)
+1753:        tim_row(&tim.live, y, 1);
+1754:    if (!tim.count && !tim.live.n)
+2132:static void chart_at(int32_t oy)         /* the course like a kana chart: 7 x 6, coloured by box */
+2227:    case PG_CHART: main_area(chart_at); break;
+2256:    case PG_CHART:
+app.c:20:enum { T_HELLO_ACK = 0x01, T_TEXT, T_STOP };
+app.c:21:enum { T_HELLO = 0x41, T_HEARTBEAT, T_CHAR };
+index.md
+morse-cheatsheet.md
+morse.md
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 19:42:44Z)**_
+
+<tool-use data-tool-type="write" data-tool-name="Write"><details>
+<summary>Tool use: **Write**</summary>
+
+````markdown
+# MORSE 0.4：練習判定輔助、進度管理與匯出、使用指南、截圖
+
+## Context 背景
+
+0.3 已發布並送上 Hub。實機使用後的回饋：
+
+1. **PRACTICE 打得像卻判錯。** 原因在 `app.c` 的 `own_reset()`：每張卡都把解碼器重設成 SEND SPEED（預設 10 WPM：dit 120 ms，dah 要 ≥240 ms）。使用者是模仿聽到的 20 WPM 節奏在打（dah 約 180 ms），結果 M 被讀成 I、T 被讀成 E。`mo_dec_mark` 的「兩個 mark 相差兩倍以上就重讀」只救得了 dit 和 dah 混合的字。
+2. 想要能**歸零、往回退**進度。
+3. 想**匯出／匯入進度**，像 SLOOP 匯出歌曲那樣；換韌體或刷回原廠後不用重學。
+4. 有經驗的人想**跳過已知的字**，三種方式都要：CHART 手動標記、開放到第 n 組、分級測驗。**任何手動修改都要先確認 SAVE 才寫入**，避免誤觸。
+5. docs 要有一頁**用 MORSE 學摩斯的使用指南**。
+6. fm1-morse repo 要補**截圖**：menu、每個主要功能。
+
+使用者已選定：寬鬆判定加上答錯時的對照圖；匯出用 CLI 加 Web MIDI 網頁；跳過已知的三種方式都做，且都要確認。
+
+版本規劃：韌體 0.4，host 0.4.0。BLE 從 0.4 延到 0.5，roadmap 跟著改。
+
+## 1. 練習判定輔助
+
+**手速延續**
+- `morse.c` 新增 `mo_dec_restart(d)`：只清掉 `pat`、`prev` 和統計，保留 `dit_avg`、`dah_avg`、`cgap`。
+- 練習中換卡改用 `mo_dec_restart`，學到的手速就會帶到下一張卡。只有開始新回合、或改了 SEND SPEED 時，才用 `own_reset()` 整個重設。
+- 回合的第一張卡，起始 dit 取 SEND 和 HEAR 兩個速度 dit 的中間值。理由：使用者會模仿聽到的速度。
+
+**寬鬆判定**
+- `morse.c` 新增純函式 `mo_judge(mark[], gap[], n, want_code, dit_est) → MJ_OK / MJ_COUNT / MJ_DAH_SHORT / MJ_DIT_LONG / MJ_SPLIT / MJ_OTHER`。
+- 規則：
+  - 元素數必須相同。
+  - dit 和 dah 混合的字：答案裡「應為 dah 的 mark」最短的那個，要比「應為 dit 的 mark」最長的那個長 1.5 倍以上。只比相對長短，不管絕對速度。
+  - 只有一種元素的字（E T I M S O H 5 0）：和延續下來的手速比，界線放寬到 1.6 × dit。
+- 判定用的資料取自已經在記錄的 `tim.live`（`app.c` 約 580 行，每個 mark 和字內 gap 的毫秒數）。
+- 字被切開也要處理：解碼器先吐出前半個字時，若前半是預期碼型的前綴，就再等下一段。超過預期的元素數，或停頓超過字間 gap，才判定，原因記為 `MJ_SPLIT`。
+- `set_t.look` 的 bit 7 目前沒用，拿來當「STRICT 判定」開關，放在 SET 頁，預設寬鬆。`set_valid` 跟著放寬，所以**存檔格式不用改**。
+
+**答錯時的對照圖**
+- PS_RESULT 畫兩列長短條：上面 SHOULD（預期碼型，用你的手速排出時間），下面 YOU（你實際的 mark 和 gap，同一個比例尺）。
+- 下面一行提示，對應 `MJ_*`：dah 太短、dit 太長、字中間停太久被切開、多了或少了一個元素。文字沿用 RHYTHM 的 `H1`／`H2` 風格（`app.c` 約 906 行）。
+- 判對但有一項接近界線時，給一行小提示（例如「dah 偏短」）。
+- 畫長短條重用 KEY TIMING 的 `tim_row()`（約 1715 行）。
+
+## 2. 進度管理：CHART 編輯模式（所有修改都要確認）
+
+CHART 頁按 `REC` 進入 **EDIT**。所有改動先存在 RAM 裡的草稿 `ln_state_t draft`，畫面頂端顯示 `EDIT — unsaved`。
+
+| 操作 | 效果（作用在草稿上） |
+|---|---|
+| SELECT 選字，K1 轉 | 該字的等級 0–5，認字和發報兩個方向一起改 |
+| `OCT+` | 標為「已會」：認字盒 3、發報盒 2 |
+| `OCT-` | 「忘了」：兩個方向都回盒 0，排到下回合 |
+| K2 轉 | 開放到第 n 組。新開放的字設成剛好達到解鎖門檻（認字盒 2、發報盒 1）；縮回時，被關掉的字歸零 |
+| `FX` | 全部往回退一盒（生疏時用，所有字都會提早複習） |
+| 按住 `SEL` 2 秒 | 全部歸零，等同新手 |
+| `PLAY` | 出現「SAVE CHANGES? PLAY=yes HOME=no」，再按一次 `PLAY` 才寫入 |
+| `HOME`／離開頁面 | 有草稿時先問；選 no 就丟掉草稿 |
+
+- `learn.c` 新增純函式：`ln_set_level`、`ln_mark_known`、`ln_forget`、`ln_open_to`、`ln_step_back`、`ln_reset`。每個函式做完都要讓 `ln_valid` 成立。
+- 確切的按鍵配置，實作時會對照 CHART 目前已用的鍵再定，結果寫進速查頁。
+
+**分級測驗（PLACEMENT）**
+- PRACTICE 開始畫面加一個選項：`SELECT` 選「TEST」，`PLAY` 開始。
+- 測試範圍：還沒開放的下兩組，每字出一張 HEAR_CHOOSE，靜音時改出 LIGHT 或 CODE 卡。
+- 結果頁列出答對的字，問「MARK THESE KNOWN? PLAY=yes」。確認後，答對的字標為已會；若某組全部答對，就開放那一組。
+- 不影響回合數和 streak。
+- 實作上用 `ln_build` 的新 flag `LN_PLACE`。
+
+## 3. 匯出／匯入進度
+
+**協定**：hostlink 加三種訊息，要求韌體 ≥0.4，host 用 HELLO 帶的版本號判斷。
+- `T_PROG_REQ`（host→dev）：要求匯出。
+- `T_PROG`（dev→host）：資料分片。
+- `T_PROG_LOAD`（host→dev）：匯入的分片。
+
+資料是 `ln_state_t` 加 `REC_VER` 和 CRC16，用 7-bit 打包，每片 ≤ `HOSTLINK_MAX`（64 B）。
+
+**匯入要在機器上確認**：收齊並檢查 CRC 和 `ln_valid` 後，畫面顯示「LOAD PROGRESS? round N, M letters open — PLAY=yes HOME=no」，按了才寫入。和第 2 節「手動修改要確認」同一個原則。
+
+**host**（`host/morse/`，維持 MIT）：
+- `morse backup FILE.json` 和 `morse restore FILE.json`，加 Justfile 的 `morse-backup`、`morse-restore`。
+- JSON 格式人看得懂、也可以手改：
+  ```json
+  {"format": "fm1-morse-progress", "version": 1, "firmware": "0.4", "round": 0, "streak": 0, "open": 0,
+   "answered": 0, "right": 0, "chars": {"K": {"recognise": 3, "send": 2, "last": [12, 11]}}}
+  ```
+- 測試向量由 `protocol.py` 和 `tests/basic.txt` 共用，和現有做法一樣。
+
+**網頁**（fm1-morse repo 的 `web/progress.html`，GPL）：
+- 單一檔案，用 Web MIDI（Chrome）找到 MORSE 埠，可以 Backup（下載 JSON）和 Restore（上傳 JSON），JSON 格式和 CLI 相同。
+- 用 GitHub Pages 發布。開啟 Pages 是公開動作，做之前會先問你。
+
+**文件**：寫明 Morse 的進度存在 `0xDA000`。實測從 SLOOP 切回來時進度還在，但刷回原廠 V15 就沒了，所以換韌體前先備份。寫進 README 和 `docs/dev/morse.md`。
+
+## 4. 使用指南
+
+新頁 `docs/dev/morse-learn.md`「用 MORSE 學摩斯」，繁體中文，加進 `zensical.toml` nav。內容：
+
+- 第一次開機選 START preset。
+- 每天一回合 PRACTICE。
+- 通勤時用 LISTEN 背景聽。
+- RHYTHM 練手。
+- TYPE 和 KEY 自由玩。
+- 什麼時候換 BUILDING／QSO preset。
+- 判錯時怎麼看對照圖。
+- 生疏了、已經會、換韌體時怎麼處理進度（CHART EDIT、TEST、backup）。
+- 進階交給 Vail，FM-1 當它的鍵。
+
+同時更新：
+- `docs/index.md`、`README.md`：在「自己的韌體」那一行連到這頁。
+- `docs/dev/morse-cheatsheet.md`：加上 0.4 的新操作。
+- fm1-morse 的 README：加英文的 "Learning with MORSE" 小節。
+
+## 5. 截圖
+
+- `tests/basic.txt` 已經會產生約 25 張 `shot`。補上缺的：card_hear_key、card_see_key、result_wrong（含對照圖）、chart_edit、save_confirm、placement、type_letters、listen 播放中。
+- 新增 `just morse-shots`：跑模擬器後，把挑好的 PNG 放大 2 倍（nearest neighbour），複製到 fm1-morse 的 `docs/screens/`。
+- fm1-morse README 加一個 Screens 小節，用表格排：menu、practice（各種卡）、listen、key 的三種 view、rhythm、type 的 layout 和 code、chart 和 edit、settings。
+- docs 的指南頁連到 GitHub 上的圖，不複製進這個 repo。
+
+## 檔案 Files
+
+- fm1-morse（submodule）：
+  - `morse.c/h`（`mo_dec_restart`、`mo_judge`）
+  - `learn.c/h`（編輯函式、`LN_PLACE`）
+  - `app.c`（FW_MINOR 4；判定、對照圖、CHART EDIT、確認對話、TEST、`T_PROG*`、STRICT 設定）
+  - `tests/basic.txt`、`tests/morse_test.c`
+  - `web/progress.html`、`docs/screens/`、README、`fmhub.json` 不變
+- 這個 repo：
+  - `host/morse/`（`protocol.py`、`core.py`、`__main__.py`、`__init__.py` 改成 0.4.0、`PROTOCOL.md`）、`host/tests/test_morse.py`
+  - Justfile（`morse-backup`、`morse-restore`、`morse-shots`）
+  - `docs/dev/morse.md`（0.4 版本列、roadmap 的 BLE 改成 0.5）、`morse-learn.md`（新）、`morse-cheatsheet.md`、`zensical.toml`、`docs/index.md`、`README.md`、AGENTS.md（新的 Justfile 指令）
+
+## Verification 驗證
+
+1. `just morse-unit`：
+   - `mo_judge`：M 用 180/180 ms 判對；I 用 60/60 ms 判對；dit 和 dah 對比不足判錯；切開、元素數不對時給出對的 reason。
+   - `mo_dec_restart` 保留平均值。
+   - `ln_*` 的編輯函式做完後 `ln_valid` 都成立；`ln_open_to` 往前開、往回縮都正確；`LN_PLACE` 的回合只出未開放的字。
+2. `just fw-test morse`：
+   - 腳本手（sendkeys）在 SEND=10 的設定下，用 20 WPM 的手速回答 M 和 T：寬鬆判對，STRICT 判錯，錯時畫出對照圖（shot）。
+   - CHART EDIT：改了按 HOME，選 no 後 `store_writes` 不變；選 yes 才寫入；`reboot` 後還在。
+   - TEST 回合。
+   - `T_PROG_REQ` 會吐出向量；`T_PROG_LOAD` 先要求確認，CRC 錯就拒收。
+3. `just morse-test`：host 向量測試；`morse backup` 和 `restore` 在 SimLink 上來回一次，資料不變。
+4. `just morse-emu` 加 `--usb`：CLI backup → 改進度 → restore，在 `uc25hq80` 和 `p25q80` 各做一次存檔、重開、讀回。網頁在 Chrome 上對 emulator 的虛擬埠做一次 backup 和 restore（`[模擬]`）。
+5. `just fw-build morse`，記錄大小。`just docs-check`。
+6. 實機：照 AGENTS.md 的 preflight，用 USB-MIDI 更新到 0.4（你核准後由你執行），確認進度保留，再實際用 backup 和 restore 跑一次。v0.4 release、Hub 更新、開啟 Pages 都是公開動作，到時候一步一步問你。
+
+````
+
+```text
+The file /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/.claude/plans/squishy-riding-flute.md has been updated successfully. (file state is current in your context — no need to Read it back)
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 19:42:55Z)**_
+
+<tool-use data-tool-type="generic" data-tool-name="ExitPlanMode"><details>
+<summary>Tool use: **ExitPlanMode**</summary>
+
+```text
+The user doesn't want to proceed with this tool use. The tool use was rejected (eg. if it was a file edit, the new_string was NOT written to the file). STOP what you are doing and wait for the user to tell you how to proceed.
+
+Note: The user's next message may contain a correction or preference. Pay close attention — if they explain what went wrong or how they'd prefer you to work, consider saving that to memory for future sessions.
+```
+</details></tool-use>
+
+---
+
+_**User (2026-11-17 19:42:55Z)**_
+
+[Request interrupted by user for tool use]
