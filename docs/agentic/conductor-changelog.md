@@ -21,7 +21,7 @@
 
 | 版本 | 日期 | 要刷？ | 改了什麼 | commit |
 |---|---|---|---|---|
-| host 0.3.2 | 2026-11-17 | 否 | 版本號與這一頁；`ARP` 語音鍵只在 macOS 啟用；韌體比 host 新時提醒 | （這次） |
+| host 0.3.2 | 2026-11-17 | 否 | 版本號與這一頁；`ARP` 語音鍵只在 macOS 啟用；韌體比 host 新時提醒 | `b443c94` |
 | host 0.3.1 | 2026-11-17 | 否 | FM-1 重開後找不到 port：自動彈出 macOS 的藍牙 MIDI 視窗，按 Connect 後自動接上。純 CoreBluetooth 的做法試過不行 | `bf65a55` |
 | **0.3** | 2026-11-17 | **是** | 藍牙 MIDI（fm1-base own stack，不寫 flash）；`OCT+` 開關藍牙；HELLO / HEARTBEAT 帶傳輸方式；host 優先 USB、藍牙上 DETAIL 送文字 | `b7e0564` |
 | host 0.2.2 | 2026-11-17 | 否 | 收到 HELLO 前不送東西、不執行按鍵（重開 daemon 後才拿得到韌體版本） | `13c5352` |
