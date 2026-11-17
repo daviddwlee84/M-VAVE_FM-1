@@ -113,7 +113,7 @@ class HerdrBackend:
         return out
 
     def read_lines(self, agent_id: str, n: int) -> list[str]:
-        res = self.call("pane.read", {"pane_id": agent_id, "source": "recent", "lines": n * 3, "strip_ansi": True})
+        res = self.call("pane.read", {"pane_id": agent_id, "source": "recent", "lines": n, "strip_ansi": True})
         return tail((res.get("read") or {}).get("text") or "", n)
 
     def keys(self, agent_id: str, keys: list[str]) -> None:

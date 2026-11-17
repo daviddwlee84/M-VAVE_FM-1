@@ -75,6 +75,7 @@ host/conductor（Python daemon）
 - **用真正的 SysEx。** Agent Deck 把資料塞進 CC，是因為它的基底 Dinghy 把 SysEx 留給更新程式；fm1-base 讓 app 收發 SysEx（`APP_SYSEX`、`plat_sysex_send`）`[上游]`。前綴 `7D 43 4E` 避開 fm1-base 自己的 `7D 4C ..`。
 - **裝置只送意圖，host 再確認一次。** 裝置送 `ACTION(op, slot, tag)`；host 送鍵前重新讀一次 backend：tag 要還是那個鍵上的 agent，狀態也要對（approve / deny 只對 BLOCKED，continue 只對 IDLE / DONE）。避免「剛好換了一個 agent 到這個鍵上」時批准錯對象。
 - **沒有 auto-approve。**
+- **DETAIL 由電腦畫。** 裝置的字型只有 ASCII，中文字型也放不進韌體。所以 daemon 先去掉 agent 的介面（輸入框、狀態列），再用系統字型（macOS 的 STHeiti）把每一行畫成 240×16 的點陣圖送過去，一行一個 558 bytes 的 SysEx。韌體 0.1 收到的是 ASCII 文字。
 - **韌體不寫 flash。** 所有狀態都在 host；fm1-emu 裡兩種晶片都是 0 次 erase / program `[模擬]`。韌體只登記 fm1-base 必要的 panel calibration 物件（`0xDC000`），不用 SLOOP 的設定 sector `0xFC000`。
 - **授權**：`firmware/conductor`、`firmware/common`、`host/conductor` 都是 MIT。沒有複製 Agent Deck（GPL-3.0）的程式碼，只參考它的按鍵配置與行為。
 
@@ -105,7 +106,7 @@ host/conductor（Python daemon）
 
 ## USB 與 Bluetooth { #bluetooth }
 
-FM-1 的晶片有 Bluetooth，fm1-base 也支援 BLE MIDI（`ble = true`）`[上游]`。協定不挑傳輸方式，frame 都在 36 bytes 以內，BLE 封包裝得下。**目前的 build 只開 USB**（`fm1.toml` 的 `ble = false`），原因是：
+FM-1 的晶片有 Bluetooth，fm1-base 也支援 BLE MIDI（`ble = true`）`[上游]`。協定不挑傳輸方式。文字 frame 都很短；DETAIL 的點陣圖一行 558 bytes，走 BLE 時要分包，或改回只送文字。**目前的 build 只開 USB**（`fm1.toml` 的 `ble = false`），原因是：
 
 - fm1-base 文件寫明 `app_sysex` 收的是「從 USB 來的 SysEx」。BLE 送 SysEx 有路（packet 化後 `plat_midi_send`，或 `plat_ble_stream`），**從 BLE 收 SysEx 給 app 的路徑文件裡沒寫清楚** `[上游]`。要先在 host simulator 與 fm1-emu 確認再做。
 - BLE 配對要存 bond（fm1-base 的 `OBJ_BLE`），會開始寫 flash；USB 版完全不寫。

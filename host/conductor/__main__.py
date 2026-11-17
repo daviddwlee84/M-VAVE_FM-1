@@ -111,6 +111,12 @@ def main(argv=None) -> int:
     cfg = load_config()
     c = Conductor(backend=backend, send=link.send, slots=slots, config=cfg)
     report(backend)
+    try:
+        from .render import LineRenderer
+
+        c.renderer = LineRenderer(cfg.get("detail_font"), cfg.get("detail_font_size", 14))
+    except (ImportError, OSError) as e:
+        print(f"[detail] text only (ASCII): {e}", file=sys.stderr)
     if cfg.get("voice_keys") and not args.no_voice:
         from .voice import VoiceKey, accessibility_trusted
 

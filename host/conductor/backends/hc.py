@@ -158,7 +158,7 @@ class HcBackend:
         return out
 
     def read_lines(self, agent_id: str, n: int) -> list[str]:
-        res = self.rpc.call("terminal.read", {"terminal": agent_id, "lines": 0})
+        res = self.rpc.call("terminal.read", {"terminal": agent_id, "lines": n})  # the screen plus n of history
         return tail(res.get("text", ""), n)
 
     def keys(self, agent_id: str, keys: list[str]) -> None:

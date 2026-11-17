@@ -8,7 +8,7 @@
 
 /* ---------------------------------------------------------------- protocol --- */
 #define CN_VER 1u
-enum { T_HELLO_ACK = 0x01, T_CLEAR, T_SLOT, T_DETAIL, T_META, T_FOOTER, T_BEEP };
+enum { T_HELLO_ACK = 0x01, T_CLEAR, T_SLOT, T_DETAIL, T_META, T_FOOTER, T_BEEP, T_DETAIL_BMP };
 enum { T_HELLO = 0x41, T_HEARTBEAT, T_ACTION, T_SELECT };
 enum { S_EMPTY, S_IDLE, S_WORKING, S_BLOCKED, S_DONE, S_ERROR, S_UNKNOWN, S_N };
 enum { OP_APPROVE = 1, OP_ALWAYS, OP_DENY, OP_INTERRUPT, OP_ENTER, OP_CONTINUE, OP_FOCUS, OP_UP, OP_DOWN, OP_MODE,
@@ -16,10 +16,15 @@ enum { OP_APPROVE = 1, OP_ALWAYS, OP_DENY, OP_INTERRUPT, OP_ENTER, OP_CONTINUE, 
 #define F_QUESTION 0x01u
 #define F_REMOTE 0x02u
 #define FW_MAJOR 0u
-#define FW_MINOR 1u
+#define FW_MINOR 2u
 #define NAME_MAX 20u
 #define DETAIL_LINES 8u
-#define LINE_MAX 28u
+#define LINE_MAX 36u
+/* a DETAIL line drawn by the host (any script: our fonts are ASCII): 240 x 16 dots, 7 per byte, pixel i at bit
+ * 6 - i % 7 of byte i / 7 (host/conductor/render.py) */
+#define BMP_W 240u
+#define BMP_H 16u
+#define BMP_BYTES ((BMP_W * BMP_H + 6u) / 7u)
 
 typedef struct {
     uint8_t state, kind, flags, seen;    /* seen: a DONE looked at (selected) since it came */
@@ -36,6 +41,8 @@ static struct {
 static struct {
     uint8_t slot;
     char line[DETAIL_LINES][LINE_MAX + 1];
+    uint8_t is_bmp[DETAIL_LINES];
+    uint8_t bmp[DETAIL_LINES][BMP_BYTES];
 } detail;
 static uint32_t chimes;                  /* figures played since boot (the host simulator's "chimes") */
 
@@ -61,9 +68,11 @@ static uint16_t state_rgb(uint32_t s)
 }
 
 /* ---------------------------------------------------------------------- UI --- */
-enum { PG_GRID, PG_DETAIL, PG_APPROVALS, PG_N };
+enum { PG_GRID, PG_DETAIL, PG_APPROVALS, PG_HELP, PG_N };
 static struct {
     uint8_t page, sel, top;
+    uint8_t scroll;                      /* DETAIL: KNOB 1 detents back (the host turns them into lines) */
+    uint8_t back;                        /* the page HELP returns to */
     uint8_t redraw;
     uint32_t keys, btn;
     char msg[2][24];
@@ -194,6 +203,15 @@ int app_sysex(const uint8_t *p, uint32_t n)
         if (len >= 2u && d[1] < DETAIL_LINES) {
             detail.slot = d[0];
             copy_text(detail.line[d[1]], d + 2, len - 2u, LINE_MAX);
+            detail.is_bmp[d[1]] = 0;
+        }
+        break;
+    case T_DETAIL_BMP:
+        if (len == 2u + BMP_BYTES && d[1] < DETAIL_LINES) {
+            detail.slot = d[0];
+            for (i = 0; i < BMP_BYTES; i++)
+                detail.bmp[d[1]][i] = d[2 + i];
+            detail.is_bmp[d[1]] = 1;
         }
         break;
     case T_META:
@@ -221,9 +239,9 @@ int app_sysex(const uint8_t *p, uint32_t n)
 /* --------------------------------------------------------------- host out --- */
 static void send_select(void)
 {
-    uint8_t s = ui.sel;
+    uint8_t p[2] = {ui.sel, ui.scroll};
     if (hl_host(&link, plat_ms()))
-        hl_send(&link, T_SELECT, &s, 1);
+        hl_send(&link, T_SELECT, p, ui.scroll ? 2u : 1u);
 }
 
 static void act(uint32_t op)
@@ -270,6 +288,8 @@ static void voice(uint32_t op)
 
 static void select_slot(uint32_t k)
 {
+    if (ui.sel != k)
+        ui.scroll = 0;
     ui.sel = (uint8_t)k;
     if (slots[k].state == S_DONE)
         slots[k].seen = 1;
@@ -337,6 +357,14 @@ static void input(void)
             break;
         case B_HOME: set_page(PG_GRID); break;
         case B_GLO: set_page(PG_APPROVALS); break;
+        case B_SEQ:                      /* help, and back to where we were */
+            if (ui.page == PG_HELP)
+                set_page(ui.back);
+            else {
+                ui.back = ui.page;
+                set_page(PG_HELP);
+            }
+            break;
         case B_ARP: voice(OP_VOICE_DOWN); break;
         default: break;
         }
@@ -351,7 +379,15 @@ static void input(void)
         act(e > 0 ? OP_DOWN : OP_UP);
     if ((e = plat_enc(EN_K4)) != 0)
         next_attention();
-    (void)plat_enc(EN_PRESET), (void)plat_enc(EN_K1), (void)plat_enc(EN_K3);
+    if ((e = plat_enc(EN_K1)) != 0 && ui.page == PG_DETAIL) {   /* back through the agent's output */
+        int32_t v = clamp((int32_t)ui.scroll - e, 0, 30);   /* counter-clockwise: further back */
+        if (v != ui.scroll) {
+            ui.scroll = (uint8_t)v;
+            send_select();
+            ui.redraw = 1;
+        }
+    }
+    (void)plat_enc(EN_PRESET), (void)plat_enc(EN_K3);
     if (keys != ui.keys || btn != ui.btn)
         ui.redraw = 1;
     ui.keys = keys;
@@ -405,7 +441,7 @@ static void draw_header(uint32_t now)
         int32_t x = cv_text(8, 7, &FONT_B, ui.msg[0], C_WHITE);
         cv_text(x + 8, 7, &FONT_B, ui.msg[1], state_rgb(S_BLOCKED));
     } else {
-        static const char *const PAGE[PG_N] = {"AGENTS", "DETAIL", "WAITING"};
+        static const char *const PAGE[PG_N] = {"AGENTS", "DETAIL", "WAITING", "HELP"};
         cv_text(8, 7, &FONT_B, PAGE[ui.page], C_WHITE);
         for (k = 0; k < NKEYS; k++) {
             waiting += slots[k].state == S_BLOCKED;
@@ -484,27 +520,83 @@ static void draw_list(void)
         draw_row(r, ui.top + r < n ? list[ui.top + r] : -1);
 }
 
-static void draw_detail(void)
+/* the main area, 240 x 176, is taller than fm1-base's canvas (240 x 144): drawn in two halves, each pass with the
+ * rows above it taken off (oy), so a line across the seam is cut in two and shown whole */
+#define MAIN_H (ROW_H * ROWS)
+static void main_area(void (*fn)(int32_t oy))
+{
+    cv_begin(240, MAIN_H / 2, C_BLACK);
+    fn(0);
+    cv_blit(0, 32);
+    cv_begin(240, MAIN_H / 2, C_BLACK);
+    fn(MAIN_H / 2);
+    cv_blit(0, 32 + MAIN_H / 2);
+}
+
+static void bmp_line(const uint8_t *b, int32_t y0, uint16_t c)
+{
+    uint32_t i;
+    for (i = 0; i < BMP_W * BMP_H; i++)
+        if (b[i / 7u] >> (6u - i % 7u) & 1u)
+            cv_pset((int32_t)(i % BMP_W), y0 + (int32_t)(i / BMP_W), c);
+}
+
+static void detail_at(int32_t oy)
 {
     const slot_t *s = &slots[ui.sel];
     char t[24];
     uint32_t i;
-    cv_begin(240, ROW_H * ROWS, C_BLACK);
     note_name(ui.sel, t);
-    cv_text(8, 2, &FONT_XS, t, C_GRAY);
+    cv_text(8, 2 - oy, &FONT_XS, t, C_GRAY);
     if (s->state == S_EMPTY) {
-        cv_text(40, 2, &FONT_XS, "EMPTY KEY", C_DIM);
-    } else {
-        cv_rect(36, 4, 4, 12, state_rgb(s->state));
-        cv_text(46, 2, &FONT_XS, KIND2[s->kind], C_DIM);
-        cv_text(66, 2, &FONT_XS, s->name, C_WHITE);
-        cv_text(234 - text_w(&FONT_XS, STATE_WORD[s->state]), 2, &FONT_XS, STATE_WORD[s->state], state_rgb(s->state));
-        if (detail.slot == ui.sel)
-            for (i = 0; i < DETAIL_LINES; i++)
-                cv_text(4, 24 + (int32_t)i * 18, &FONT_XS, detail.line[i], C_AMB);
+        cv_text(40, 2 - oy, &FONT_XS, "EMPTY KEY", C_DIM);
+        return;
     }
-    cv_blit(0, 32);
+    cv_rect(36, 4 - oy, 4, 12, state_rgb(s->state));
+    cv_text(46, 2 - oy, &FONT_XS, KIND2[s->kind], C_DIM);
+    cv_text(66, 2 - oy, &FONT_XS, s->name, C_WHITE);
+    cv_text(234 - text_w(&FONT_XS, STATE_WORD[s->state]), 2 - oy, &FONT_XS, STATE_WORD[s->state], state_rgb(s->state));
+    if (detail.slot == ui.sel)
+        for (i = 0; i < DETAIL_LINES; i++) {
+            if (detail.is_bmp[i])
+                bmp_line(detail.bmp[i], 22 + (int32_t)i * 18 - oy, C_AMB);
+            else
+                cv_text(4, 24 + (int32_t)i * 18 - oy, &FONT_XS, detail.line[i], C_AMB);
+        }
 }
+
+static void draw_detail(void) { main_area(detail_at); }
+
+static void help_at(int32_t oy)
+{
+    static const char *const L[][2] = {
+        {"REC", "approve"}, {"FX", "deny"},
+        {"SAVE", "always"}, {"ENV", "stop"},
+        {"SEL", "enter"}, {"PLAY", "continue"},
+        {"LFO", "mode"}, {"ARP", "hold: talk"},
+        {"EDIT", "output"}, {"K1", "scroll it"},
+        {"HOME", "all"}, {"GLO", "waiting"},
+        {"SELECT", "move"}, {"K4", "next"},
+        {"K2", "up / down"}, {"SEQ", "this help"},
+    };
+    static const char *const LIGHT[] = {"blink waits", "pulse works", "lit done", "2x error", "glow idle"};
+    static const uint8_t LS[] = {S_BLOCKED, S_WORKING, S_DONE, S_ERROR, S_IDLE};
+    uint32_t i;
+    int32_t x = 4;
+    for (i = 0; i < sizeof L / sizeof L[0]; i++) {
+        int32_t cx = (i & 1u) ? 122 : 4, y = 2 + (int32_t)(i / 2u) * 17 - oy;
+        cv_text(cx, y, &FONT_XS, L[i][0], C_WHITE);
+        cv_text(cx + 44, y, &FONT_XS, L[i][1], C_AMB);
+    }
+    for (i = 0; i < 5u; i++) {                 /* the keys' lights, in their state colours */
+        if (i == 3u)
+            x = 4;
+        cv_text(x, (i < 3u ? 142 : 158) - oy, &FONT_XS, LIGHT[i], state_rgb(LS[i]));
+        x += text_w(&FONT_XS, LIGHT[i]) + 12;
+    }
+}
+
+static void draw_help(void) { main_area(help_at); }
 
 static void draw_footer(uint32_t now)
 {
@@ -512,13 +604,22 @@ static void draw_footer(uint32_t now)
     cv_rect(0, 0, 240, 1, C_LINE);
     if (now < ui.footer_until)
         cv_text(8, 9, &FONT_XS, ui.footer, C_WHITE);
+    else if (ui.page == PG_DETAIL) {
+        char t[24] = "K1 scroll";
+        if (ui.scroll) {
+            text_cat(t, "  -");
+            int_text(ui.scroll * 4, t + 12);
+        }
+        cv_text(8, 9, &FONT_XS, t, C_DIM);
+    } else if (ui.page == PG_HELP)
+        cv_text(8, 9, &FONT_XS, "SEQ back  keys: one agent each", C_DIM);
     else if (meta.hidden) {
         char t[24] = "+";
         int_text(meta.hidden, t + 1);
         text_cat(t, " NOT ON KEYS");
         cv_text(8, 9, &FONT_XS, t, C_GRAY);
     } else
-        cv_text(8, 9, &FONT_XS, "REC ok  FX no  ENV stop  K4 next", C_DIM);
+        cv_text(8, 9, &FONT_XS, "REC ok  FX no  K4 next  SEQ help", C_DIM);
     cv_blit(0, 208);
 }
 
@@ -527,6 +628,8 @@ static void draw(uint32_t now)
     draw_header(now);
     if (ui.page == PG_DETAIL)
         draw_detail();
+    else if (ui.page == PG_HELP)
+        draw_help();
     else
         draw_list();
     draw_footer(now);
@@ -600,7 +703,12 @@ int app_expect(const char *what, int *got)
         *got = ui.sel;
     else if (!strcmp(what, "total"))
         *got = meta.total;
-    else if (!strcmp(what, "chimes"))
+    else if (!strcmp(what, "bmp0")) {           /* dots lit in DETAIL picture line 0 */
+        uint32_t i, n = 0;
+        for (i = 0; i < BMP_BYTES; i++)
+            n += (uint32_t)__builtin_popcount(detail.bmp[0][i]);
+        *got = detail.is_bmp[0] ? (int)n : -1;
+    } else if (!strcmp(what, "chimes"))
         *got = (int)chimes;
     else if (!strncmp(what, "state", 5))
         *got = slots[atoi(what + 5) % NKEYS].state;

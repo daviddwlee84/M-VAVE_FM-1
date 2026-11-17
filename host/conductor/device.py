@@ -92,7 +92,7 @@ class SimLink:
         self.selected = 0
         self.q: queue.Queue[bytes] = queue.Queue()
         self.dirty = False
-        self.q.put(P.device_hello())
+        self.q.put(P.device_hello(0, 1))  # as firmware 0.1: text DETAIL lines, readable here
         if interactive:
             print(self.HELP, file=self.out)
             threading.Thread(target=self._stdin, daemon=True).start()
@@ -129,6 +129,10 @@ class SimLink:
         elif m.type == P.T_DETAIL:
             self.detail[p[1]] = p[2:].decode("ascii", "replace")
             return  # shown by "show"
+        elif m.type == P.T_DETAIL_BMP:
+            lit = sum(bin(b).count("1") for b in p[2:])
+            self.detail[p[1]] = f"[picture, {lit} dots]"
+            return
         self.dirty = True
 
     def render(self) -> None:

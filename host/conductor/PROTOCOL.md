@@ -15,7 +15,8 @@ F0 7D 43 4E <ver> <type> <payload...> F7
 - `<ver>` is `01`. A frame with another version is rejected, not guessed at.
 - Every payload byte is 7-bit. Numbers above 127 are two bytes, low 7 bits first
   (`u14`). Text is printable ASCII; anything else becomes `?`.
-- Frames stay short (at most 36 bytes), so they fit BLE MIDI packets later.
+- Frames are at most 46 bytes, except DETAIL_BMP (558 bytes, inside fm1-base's
+  640-byte limit for a SysEx frame to the app).
 
 ## Host → device
 
@@ -24,10 +25,11 @@ F0 7D 43 4E <ver> <type> <payload...> F7
 | `01` | HELLO_ACK | `ver` |
 | `02` | CLEAR | — (every slot empty; sent before a full table) |
 | `03` | SLOT | `slot` (0–26), `state`, `kind`, `flags`, `tag` u14, `age_min` u14, `name` (≤ 20) |
-| `04` | DETAIL | `slot`, `line` (0–7), `text` (≤ 28) |
+| `04` | DETAIL | `slot`, `line` (0–7), `text` (≤ 36) |
 | `05` | META | `total` u14, `hidden` u14 (agents not on a key), `backend` (≤ 8) |
 | `06` | FOOTER | `text` (≤ 28): the result of the last action, shown for 3 s |
 | `07` | BEEP | `figure` (0 up, 1 done, 2 error, 3 tick) |
+| `08` | DETAIL_BMP | `slot`, `line` (0–7), 549 bytes: a 240 × 16 1-bit picture of the line, 7 dots a byte, dot *i* at bit `6 - i % 7` of byte `i / 7` (row-major). Firmware 0.2 and later; the host sends DETAIL text to 0.1 |
 
 States: `0` EMPTY, `1` IDLE, `2` WORKING, `3` BLOCKED, `4` DONE, `5` ERROR, `6` UNKNOWN.
 Kinds: `0` other, `1` claude, `2` codex, `3` opencode, `4` gemini, `5` cursor, `6` pi, `7` shell.
@@ -44,7 +46,7 @@ the device was showing.
 | `41` | HELLO | `ver`, `fw_major`, `fw_minor` — once a second until HELLO_ACK |
 | `42` | HEARTBEAT | `ver` — once a second after HELLO_ACK |
 | `43` | ACTION | `op`, `slot`, `tag` u14 |
-| `44` | SELECT | `slot` — the host answers with DETAIL lines for it |
+| `44` | SELECT | `slot`, optional `scroll` (KNOB 1 detents back, 4 lines each) — the host answers with DETAIL lines for it |
 
 ACTION ops: `1` approve, `2` approve always, `3` deny, `4` interrupt, `5` enter,
 `6` continue, `7` focus, `8` up, `9` down, `10` mode (shift+tab),

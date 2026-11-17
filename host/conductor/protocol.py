@@ -20,6 +20,7 @@ T_DETAIL = 0x04
 T_META = 0x05
 T_FOOTER = 0x06
 T_BEEP = 0x07
+T_DETAIL_BMP = 0x08  # a DETAIL line as a 240 x 16 1-bit picture (firmware 0.2 and later)
 
 # device -> host
 T_HELLO = 0x41
@@ -69,7 +70,8 @@ OP_NAMES = {
 NSLOTS = 27
 NAME_MAX = 20
 DETAIL_LINES = 8
-DETAIL_MAX = 28
+DETAIL_MAX = 36
+DETAIL_HISTORY = 120  # lines read back from the agent's screen and history, for scrolling
 FOOTER_MAX = 28
 
 
@@ -123,6 +125,11 @@ def slot(index: int, state: int, kind: int, flags: int, tag: int, age_min: int, 
 
 def detail(index: int, line: int, text: str) -> bytes:
     return frame(T_DETAIL, bytes([index, line]) + _text(text, DETAIL_MAX))
+
+
+def detail_bmp(index: int, line: int, packed: bytes) -> bytes:
+    """packed: 549 bytes, 7 bits each (render.pack7)."""
+    return frame(T_DETAIL_BMP, bytes([index, line]) + packed)
 
 
 def meta(total: int, hidden: int, backend: str) -> bytes:
@@ -189,8 +196,8 @@ def device_action(op: int, index: int, tag: int) -> bytes:
     return frame(T_ACTION, bytes([op, index]) + _u14(tag))
 
 
-def device_select(index: int) -> bytes:
-    return frame(T_SELECT, bytes([index]))
+def device_select(index: int, scroll: int = 0) -> bytes:
+    return frame(T_SELECT, bytes([index]) + (bytes([min(scroll, 127)]) if scroll else b""))
 
 
 def hexs(b: bytes) -> str:

@@ -1,6 +1,6 @@
 # Conductor 操作速查
 
-一頁看完怎麼用 [Conductor](conductor.md)。對應韌體 0.1、協定 v1（2026-11-17）。
+一頁看完怎麼用 [Conductor](conductor.md)。對應韌體 0.2、協定 v1（2026-11-17）。
 
 ## 三步開始
 
@@ -47,7 +47,7 @@ just cond-run        # 2. daemon：自動接 hc 與 classic Herdr 裡的 agent
 <rect x="240" y="110" width="4" height="16" style="fill:#50dc78"/><text x="350" y="123" style="fill:#50dc78;font-size:12px">G3 CL docs  DONE</text>
 <text x="343" y="228" style="fill:#888;font-size:11px">底部：上一個動作的結果</text>
 <!-- right knobs -->
-<circle class="off" cx="510" cy="50" r="18"/><text class="lab" x="510" y="22">KNOB1</text><text class="lab" x="510" y="84">—</text>
+<circle class="nav" cx="510" cy="50" r="18"/><text class="lab" x="510" y="22">KNOB1</text><text class="fn" x="510" y="84">往回捲</text>
 <circle class="ctl" cx="568" cy="50" r="18"/><text class="lab" x="568" y="22">KNOB2</text><text class="fn" x="568" y="84">↑ ↓</text>
 <circle class="off" cx="626" cy="50" r="18"/><text class="lab" x="626" y="22">KNOB3</text><text class="lab" x="626" y="84">—</text>
 <circle class="nav" cx="684" cy="50" r="18"/><text class="lab" x="684" y="22">KNOB4</text><text class="fn" x="684" y="84">下一個</text>
@@ -62,7 +62,7 @@ just cond-run        # 2. daemon：自動接 hc 與 classic Herdr 裡的 agent
 <rect class="nav" x="482" y="146" width="40" height="34" rx="6"/><text class="lab" x="502" y="160">HOME</text><text class="fn" x="502" y="175">全部</text>
 <rect class="ans" x="526" y="146" width="40" height="34" rx="6"/><text class="lab" x="546" y="160">SAVE</text><text class="fn" x="546" y="175">永遠</text>
 <rect class="voi" x="570" y="146" width="40" height="34" rx="6"/><text class="lab" x="590" y="160">ARP</text><text class="fn" x="590" y="175">按住說</text>
-<rect class="off" x="614" y="146" width="40" height="34" rx="6"/><text class="lab" x="634" y="160">SEQ</text><text class="lab" x="634" y="175">—</text>
+<rect class="nav" x="614" y="146" width="40" height="34" rx="6"/><text class="lab" x="634" y="160">SEQ</text><text class="fn" x="634" y="175">說明</text>
 <rect class="ctl" x="658" y="146" width="40" height="34" rx="6"/><text class="lab" x="678" y="160">PLAY</text><text class="fn" x="678" y="175">繼續</text>
 <rect class="ans" x="702" y="146" width="40" height="34" rx="6"/><text class="lab" x="722" y="160">REC</text><text class="fn" x="722" y="175">批准</text>
 <text class="lab" x="612" y="206">PLAY 的燈：紅 = 有人在等或出錯，綠 = 都好</text>
@@ -117,8 +117,18 @@ just cond-run        # 2. daemon：自動接 hc 與 classic Herdr 裡的 agent
 | KNOB 4 | 跳到下一個需要你的：BLOCKED → ERROR → 還沒看的 DONE |
 | `HOME` | 全部 agent |
 | `GLO` | 只列在等你的 |
-| `EDIT` | 選取 agent 的細節（輸出最後 8 行）；classic Herdr 下同時在電腦上 focus 那個 pane |
-| ALGORITHM | 三頁輪流 |
+| `EDIT` | 選取 agent 的輸出（見下面）；classic Herdr 下同時在電腦上 focus 那個 pane |
+| KNOB 1 | 在輸出裡往回捲（逆時針），一格 4 行；換 agent 會回到最底 |
+| `SEQ` | 裝置上的說明頁；再按一次回原本的頁 |
+| ALGORITHM | 四頁輪流：全部、輸出、等你的、說明 |
+
+### 看 agent 在做什麼 { #detail }
+
+`EDIT` 顯示選取 agent 畫面上的對話，最後 8 行：
+
+- daemon 會先去掉 agent 自己的介面：輸入框、狀態列、`bypass permissions` 這類提示。權限選單（`❯ 1. Yes`…）會留著，那正是要你回答的。
+- 中文、日文和符號由電腦用系統字型畫成點陣圖再送過去（韌體 0.2 起），裝置本身的字型只有 ASCII。舊韌體收到的是 ASCII 文字，中文會變成 `?`。
+- 要看更前面的內容，逆時針轉 KNOB 1。
 
 ## 語音輸入：按住 `ARP` { #voice }
 

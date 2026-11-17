@@ -182,3 +182,78 @@ def test_voice_times_out_and_toggle_mode():
     t.press()
     assert [d for _, d, _ in t.poster.events] == [True, True, False, False]
     assert t.release() == ""
+
+
+def test_device_lines_ascii_and_wrap():
+    from conductor.core import device_lines
+
+    out = device_lines(["╭─ Bash ─╮", "❯ 1. Yes", "", "x" * 50, "中文 ok"], 36)
+    assert out[0] == "+- Bash -+" and out[1] == "> 1. Yes"
+    assert out[2] == "x" * 36 and out[3].startswith("  x")
+    assert out[4] == "?? ok"
+    assert all(all(0x20 <= ord(c) < 0x7F for c in ln) for ln in out)
+
+
+def test_detail_scrolls_back(tmp_path):
+    be, sim, c = setup(tmp_path)
+    be.read_lines = lambda aid, n: [f"line {i}" for i in range(30)]
+    sim.q.put(P.device_select(0))
+    for f in sim.poll():
+        c.on_frame(f)
+    assert sim.detail[7] == "line 29"
+    sim.q.put(P.device_select(0, scroll=2))  # two detents: eight lines back
+    for f in sim.poll():
+        c.on_frame(f)
+    assert sim.detail[0] == "line 14" and sim.detail[7] == "line 21"
+
+
+CLAUDE_SCREEN = """\
+⏺ I re-tested it in hc; it looks fine now.
+✻ Worked for 1m 17s · done 6:46 PM
+─── History 54/54 ──────────────────────
+❯ 好像在 hc 裡面跑 codex 會 crash
+──────────────────────────────────────
+  [Opus 5.5 ◑ high] │ zhouhanru │ ⏱️  40m │ Cost $0.477
+  Context    █░░░░░░░░░ 6% (60k/1.0M)
+  Approx RAM ████░░░░░░ 8.9 GB / 24 GB (37%)
+  1 rules | 11 hooks
+  ✓ Bash ×9
+  Tokens 612k (in: 24, out: 5k, cache: 607k)
+  ⏵⏵ bypass permissions on (shift+tab to cycle)""".splitlines()
+
+
+def test_strip_chrome_keeps_the_conversation():
+    from conductor.core import strip_chrome
+
+    assert strip_chrome(CLAUDE_SCREEN) == CLAUDE_SCREEN[:2]
+
+
+def test_strip_chrome_keeps_a_permission_menu():
+    from conductor.core import strip_chrome
+
+    screen = ["⏺ Bash(make test)", "╭────────────────╮", "│ Do you want to proceed?", "──────────",
+              "❯ 1. Yes", "  2. Yes, and don't ask again", "  3. No", "  ⏵⏵ bypass permissions on (shift+tab to cycle)"]
+    out = strip_chrome(screen)
+    assert out[-1] == "  3. No" and "❯ 1. Yes" in out
+
+
+def test_detail_as_pictures_for_newer_firmware(tmp_path):
+    from conductor.render import PACKED, LineRenderer, unpack7
+
+    be, sim, c = setup(tmp_path)
+    c.renderer = LineRenderer()
+    be.read_lines = lambda aid, n: ["請把錯誤訊息重貼一次", "> 1. Yes"]
+    sent = []
+    c.send = sent.append
+    c.on_frame(P.device_hello(0, 2))
+    c.on_frame(P.device_select(0))
+    pics = [P.parse(f) for f in sent if P.parse(f).type == P.T_DETAIL_BMP]
+    assert len(pics) == P.DETAIL_LINES
+    assert all(len(m.payload) == 2 + PACKED for m in pics)
+    assert all(len(f) <= 640 + 2 for f in sent)  # fm1-base: 640 bytes between F0 and F7
+    assert sum(unpack7(pics[0].payload[2:])) > 50  # the Chinese line has ink
+    # firmware 0.1 still gets text
+    sent.clear()
+    c.on_frame(P.device_hello(0, 1))
+    c.on_frame(P.device_select(0))
+    assert not [f for f in sent if P.parse(f).type == P.T_DETAIL_BMP]

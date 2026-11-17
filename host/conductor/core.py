@@ -8,6 +8,8 @@ makes sense for (approve only when blocked).
 
 from __future__ import annotations
 
+import re
+import textwrap
 import time
 from collections.abc import Callable
 from dataclasses import dataclass, field
@@ -35,6 +37,65 @@ DEFAULT_CONFIG = {
     "voice_max_hold": 120.0,
 }
 
+# terminal UI marks to ASCII, so a Claude Code / Codex screen reads on the device
+TUI_ASCII = str.maketrans({
+    "─": "-", "━": "-", "│": "|", "┃": "|", "╭": "+", "╮": "+", "╰": "+", "╯": "+", "┌": "+", "┐": "+",
+    "└": "+", "┘": "+", "├": "+", "┤": "+", "❯": ">", "›": ">", "»": ">", "⏵": ">", "▶": ">", "→": "->",
+    "←": "<-", "●": "*", "•": "*", "✳": "*", "✻": "*", "✶": "*", "✽": "*", "·": ".", "…": "...",
+    "✓": "v", "✔": "v", "✗": "x", "✘": "x", "⎿": "L", "“": '"', "”": '"', "‘": "'", "’": "'", "\t": " ",
+})
+
+
+_RULE = re.compile(r"^\s*[─━-]{3}")
+_PROMPT = re.compile(r"^\s*[❯›>]")
+_OPTION = re.compile(r"^\s*[❯›>]?\s*\d+\.\s")
+_CHROME = re.compile(
+    r"bypass permissions|shift\+tab|\? for shortcuts|esc to interrupt|context left|⏎|ctrl\+[a-z] |"
+    r"^\s*(Context|Tokens|Cache|Approx RAM|Started:|Usage|Weekly)\b|\d+ rules \||\d+ hooks|"
+    r"[█▓▒░]{3,}|^\s*\[(Opus|Sonnet|Haiku|Fable|gpt|o\d)|^\s*✓ \w+ ×\d"
+)
+
+
+def strip_chrome(lines: list[str]) -> list[str]:
+    """The conversation without the agent's own interface: the input box (from the rule
+    above an empty prompt down), and status lines at the bottom. A permission menu
+    (numbered choices) is kept: it is what the person is asked."""
+    cut = len(lines)
+    for i in range(len(lines) - 1, max(-1, len(lines) - 40), -1):
+        nxt = next((ln for ln in lines[i + 1 : i + 3] if ln.strip()), "")
+        if _RULE.match(lines[i]) and _PROMPT.match(nxt) and not _OPTION.match(nxt):
+            cut = i
+    out = lines[:cut]
+    while out and (not out[-1].strip() or _CHROME.search(out[-1]) or _RULE.match(out[-1])):
+        out.pop()
+    return out
+
+
+def tui_lines(raw: list[str]) -> list[str]:
+    """Screen lines with TUI marks folded to ASCII and control / private-use characters
+    dropped, but other scripts (CJK) kept: for lines the host draws as pictures."""
+    out = []
+    for ln in raw:
+        t = ln.translate(TUI_ASCII)
+        t = "".join(ch for ch in t if ch.isprintable() and not 0xE000 <= ord(ch) <= 0xF8FF).rstrip()
+        if t.strip():
+            out.append(t)
+    return out
+
+
+def device_lines(raw: list[str], width: int) -> list[str]:
+    """Screen lines as the device can show them: ASCII marks, other characters dropped,
+    long lines wrapped, blank runs left out."""
+    out: list[str] = []
+    for ln in raw:
+        t = ln.translate(TUI_ASCII)
+        t = "".join(ch if 0x20 <= ord(ch) < 0x7F else ("?" if ord(ch) > 0x2FFF else "") for ch in t).rstrip()
+        if not t.strip():
+            continue
+        out.extend(textwrap.wrap(t, width, drop_whitespace=False, subsequent_indent="  ") or [""])
+    return out
+
+
 KIND_WORD = {v: k for k, v in {"claude": P.K_CLAUDE, "codex": P.K_CODEX, "opencode": P.K_OPENCODE}.items()}
 
 
@@ -59,6 +120,7 @@ class Conductor:
     agents: dict = field(default_factory=dict)
     hidden: int = 0
     selected: int | None = None
+    scroll: int = 0  # wrapped lines back from the end, set by KNOB 1 on the device
     _slot_frames: dict = field(default_factory=dict)
     _detail: list = field(default_factory=list)
     _detail_at: float = 0.0
@@ -67,6 +129,8 @@ class Conductor:
     _full_at: float = 0.0
     device_seen: float = 0.0
     voice: object = None  # a VoiceKey, or None: the button does nothing
+    device_fw: tuple = (0, 0)  # from the device's HELLO
+    renderer: object = None  # a render.LineRenderer: DETAIL as pictures (any script) for firmware >= 0.2
 
     # ------------------------------------------------------------ backend -> device
     def refresh(self) -> None:
@@ -102,17 +166,27 @@ class Conductor:
     def send_detail(self, force: bool = False) -> None:
         self._detail_at = time.time()
         aid = self.slots.agent_at(self.selected) if self.selected is not None else None
+        pictures = self.renderer is not None and self.device_fw >= (0, 2)
         lines: list[str] = []
         if aid:
             try:
-                lines = self.backend.read_lines(aid, P.DETAIL_LINES)
+                raw = strip_chrome(self.backend.read_lines(aid, P.DETAIL_HISTORY))
+                if pictures:
+                    lines = [w for ln in tui_lines(raw) for w in self.renderer.wrap(ln)]
+                else:
+                    lines = device_lines(raw, P.DETAIL_MAX)
             except BackendError as e:
                 lines = [f"read failed: {e}"]
+        end = max(len(lines) - self.scroll, min(len(lines), P.DETAIL_LINES))
+        lines = lines[max(0, end - P.DETAIL_LINES) : end]
         lines = (lines + [""] * P.DETAIL_LINES)[: P.DETAIL_LINES]
         if self.selected is not None and (lines != self._detail or force):
             self._detail = lines
             for i, ln in enumerate(lines):
-                self.send(P.detail(self.selected, i, ln))
+                if pictures:
+                    self.send(P.detail_bmp(self.selected, i, self.renderer.bitmap(ln)))
+                else:
+                    self.send(P.detail(self.selected, i, ln))
 
     def resync(self) -> None:
         """The device (re)started: send it everything."""
@@ -134,12 +208,14 @@ class Conductor:
             return None
         self.device_seen = time.time()
         if m.type == P.T_HELLO:
-            self.log(f"[device] hello, protocol {m.payload[0] if m.payload else '?'}")
+            self.device_fw = tuple(m.payload[1:3]) if len(m.payload) >= 3 else (0, 0)
+            self.log(f"[device] hello, protocol {m.payload[0] if m.payload else '?'}, firmware {'.'.join(map(str, self.device_fw))}")
             if self.voice:
                 self.voice.let_go()  # the device restarted: its button is not held any more
             self.resync()
         elif m.type == P.T_SELECT and m.payload:
             self.selected = m.payload[0] if m.payload[0] < P.NSLOTS else None
+            self.scroll = m.payload[1] * 4 if len(m.payload) > 1 else 0  # KNOB 1: four lines a detent
             self.send_detail(force=True)
         elif m.type == P.T_ACTION:
             out = self.act(P.parse_action(m))
