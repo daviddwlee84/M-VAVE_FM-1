@@ -275,6 +275,25 @@ Preflight：
 
 步驟和 0.1 相同：關掉模擬器與 daemon，跑 `just fm1-switch firmware/conductor/build/conductor.fwsc`，確認計畫後打 `yes`。
 
+### 0.3 的檢查 { #flash-0-3 }
+
+0.3 加了藍牙。換成 0.3 一樣要我本人批准。
+
+| 項目 | 值 |
+|---|---|
+| 檔案 | `firmware/conductor/build/conductor.fwsc`（616,003 B，identity `FM-1_1200`，app 122,120 B） |
+| 來源 | commit `b7e0564`，乾淨的工作區重新 build，兩次 SHA-256 相同 |
+| SHA-256 | `b48d6059b621c86cef3b84b29c2c023c6741ac04c68dc5d892a7ff77f8476609` |
+
+| 檢查 | 結果 | 標記 |
+|---|---|---|
+| `just fw-test conductor`、`just fw-common-test`、`just cond-test` | 全部通過 | `[模擬]` / 單元測試 |
+| fm1-emu 兩種晶片：開機 → 重開 → 再讀回 | 都 0 次 erase / program（藍牙開著） | `[模擬]` |
+| 疊在 `2026-11-17-1859-pre-conductor` 備份上開機 | 正常、0 個 sector 被改寫 | `[模擬]` |
+| 藍牙實際連線 | 模擬器沒有無線電，**只能在實機確認** | — |
+
+風險：藍牙是新程式碼，最壞的情況是開機後藍牙不正常。fm1-base 寫明「上一次藍牙執行當掉，下次開機就不自動啟動藍牙」`[上游]`，USB 照常可用，`fm1-switch` 也能換回 0.2 或別的韌體。
+
 ### 刷的步驟（由我本人執行）
 
 1. 關掉模擬器（`fm1-switch` 看到模擬器在 USB 上會拒絕執行，避免刷錯對象）。
