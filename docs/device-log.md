@@ -10,7 +10,7 @@
 | Flash 晶片 / JEDEC ID | **`0xB36014` (new)**，UCUN UC25HQ80，1 MiB |
 | Bootloader | stock (M-VAVE) |
 | 出廠韌體版本 | FM-1 015 (stock)，firmware check OK |
-| 目前韌體 | **Morse 0.1（自製）**（2026-11-17 22:54 刷入，套件識別 `FM-1_1300`，USB 產品名 `MORSE FM-1`；macOS 的 MIDI port 仍顯示 `Felucca`）。之前依序是原廠 015 → SLOOP 2.8.5 → Agent Deck 0.7 → SLOOP 2.8.5 → CTL-1 1.0.3 → ChoralRoot 0.41 → Conductor 0.1 → 0.2 → 0.3 |
+| 目前韌體 | **Morse 0.2（自製）**（2026-11-18 00:14 刷入，套件識別 `FM-1_1300`，USB 產品名 `MORSE FM-1`；macOS 的 MIDI port 仍顯示 `Felucca`）。之前依序是原廠 015 → SLOOP 2.8.5 → Agent Deck 0.7 → SLOOP 2.8.5 → CTL-1 1.0.3 → ChoralRoot 0.41 → Conductor 0.1 → 0.2 → 0.3 → Morse 0.1 |
 | SLOOP 的曲子 | **已不在機器上**（`0x97000` 被 ChoralRoot 的韌體蓋掉）。完整保存在 `2026-11-17-0341-pre-ctl-1.0.3` 備份裡；回 SLOOP 要在 M-Flasher GUI 還原那份備份 |
 | m-bootloader | 未安裝 |
 | 主機 | macOS，M-Flasher 0.12.1 |
@@ -39,6 +39,10 @@ M-Flasher 在兩次寫入前各自動存了一份：`~/Documents/M-Flasher/backu
 | 2026-11-17 22:52 | 刷 Morse 之前的 Conductor（identity `FM-1 120`；依 [Conductor 版本紀錄](agentic/conductor-changelog.md) 是 0.3） | `backups/2026-11-17-pre-morse/fm1-20261117-225206.bin` + `.json` | `fbcb47909c37828ec92dd890d3a80b26ab61899f59d1743013ad9bd4250ca0ef` | 尚未上傳 |
 
 `fm1-switch` 在寫入前又自動備份了一份 `backups/2026-11-17-2253-pre-morse/fm1-20261117-225404.bin`，SHA-256 和上面這份相同；M-Flasher 另存 `~/Documents/M-Flasher/backups/fm1-20261117-225412.bin`。
+
+| 日期 | 內容 | 檔名 | SHA-256 | 異地副本 |
+|---|---|---|---|---|
+| 2026-11-18 00:12 | 刷 Morse 0.2 之前的 Morse 0.1（含學習紀錄：玩過 3 回合、聽 15/14 WPM） | `backups/2026-11-18-pre-morse-0.2/fm1-20261118-001247.bin` + `.json` | `35457c78575749cdaed88cea833f5f8a45dd7cbabd79a6e8762f8677a338ada4` | 尚未上傳 |
 
 ## 下載的檔案
 
@@ -88,6 +92,9 @@ M-Flasher 在兩次寫入前各自動存了一份：`~/Documents/M-Flasher/backu
 | 2026-11-17 22:51 | agent 執行 `just fm1-download-mode`、`fm1-info`、`fm1-backup pre-morse`（刷 Morse 0.1 前的 preflight） | 切換成功（`WL82 UBOOT1.00`）。`info`：model FM-1、bootloader stock (M-VAVE)、firmware `FM-1 120`（Conductor）、app OK、flash `0xB36014`，晶片 CRC32 與讀取相符。備份 SHA-256 `fbcb4790…250ca0ef`。用這份備份預演：Morse 和它不同的是 `0x04000`–`0x21FFF` 的 30 個 sector，全在韌體區；`0xDA000`–`0xDBFFF` 是空的。機器留在 download mode 等本人執行寫入 |
 | 2026-11-17 22:54 | 本人執行 `just fm1-switch firmware/morse/build/morse.fwsc`（Morse 0.1，SHA-256 `dfb23a70…27c9a`，commit `c3b5cd6`） | 先自動備份 `backups/2026-11-17-2253-pre-morse/`（SHA-256 同 22:52 那份）。M-Flasher 的計畫：`Writes 30 sectors (120 KiB): 0x04000-0x21FFF`、`Installs FM-1_1300 (0x04000-0x92FFF)`，和預演一致；寫入後晶片 CRC32 相符，自動重開。重開後 `fm1-find` 顯示 `Felucca (running)`；`python -m morse send` 依協定找到 port，收到 Morse 的 HELLO（韌體 0.1）並送出文字 |
 | 2026-11-17 22:56–23:00 | Morse 0.1 實機測試：本人操作，agent 在電腦端記錄 MIDI 與 `T_CHAR`（4 分鐘） | KEY 頁直鍵發報解碼正確（S、H、O、T…），按鍵以 `90 00 7F`／`80 00 00` 送出；TYPE 頁每按一字送出 `T_CHAR`，播放時序精準（dit 60 ms、Farnsworth 字間 652 ms），K1 調速生效（之後 dit 57 ms）。一次 SOS 讀成 `S M T S`：O 的 dah 之間隔 146、175 ms，和字間（169–224 ms）一樣長。看到一次 9 ms 的按鍵彈跳：解碼器忽略了，MIDI 照送。本人回饋：VVV「好像有聽到」、PRACTICE 玩了一回合「還可以」、TYPE「不錯」；初學打 SOS 成功率不高，希望看到自己打的點劃 → 做進韌體 0.2 |
+| 2026-11-18 00:10 | agent 執行 `just fm1-download-mode`、`fm1-info`、`fm1-backup pre-morse-0.2`（刷 Morse 0.2 前的 preflight） | 切換前機器送出 Morse 0.1 的 HELLO。第一次 `fm1-info` 卡住超過 2 分鐘、沒有輸出（中止）；重試時 M-Flasher 重新載入 loader，1.3 s 讀完：model FM-1、bootloader stock、firmware `FM-1 130`（Morse）、app OK、flash `0xB36014`，CRC32 相符。備份 SHA-256 `35457c78…338ada4`。用這份備份預演 0.2：不同的是 `0x04000`–`0x23FFF` 的 32 個 sector，全在韌體區；0.1 的紀錄（`0xDA000`–`0xDBFFF`）升級後保留（ROUND 4、聽 15/14、發報速度補成 10）`[模擬]` |
+| 2026-11-18 00:14 | 本人執行 `just fm1-switch firmware/morse/build/morse.fwsc`（Morse 0.2，SHA-256 `fc3dd404…556b0`，commit `54ff440`） | 先自動備份 `backups/2026-11-18-0013-pre-morse/`（SHA-256 同 00:12 那份）。M-Flasher 的計畫：`Writes 32 sectors (128 KiB): 0x04000-0x23FFF`、`Installs FM-1_1300 (0x04000-0x92FFF)`，和預演一致；寫入後 CRC32 相符，自動重開，M-Flasher 另存 `fm1-20261118-001409.bin`。重開後 `python -m morse send` 收到 HELLO（韌體 0.2）並送出 `<SK>` |
+| 2026-11-18 | Morse 0.2 實機試用（本人） | 開機仍是 ROUND 4：升級保留學習進度。RHYTHM、KEY 三種顯示、TYPE 翻頁和片語、LISTEN、PRESET「感覺都還不錯」。TYPE 打開鍵上點劃時黑鍵的字母被擠掉 → 韌體 0.3 修正（還沒刷） |
 
 ## Phase 1 驗收
 

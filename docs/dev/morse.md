@@ -2,7 +2,7 @@
 
 把 FM-1 變成隨身的摩斯電碼機：琴鍵當電鍵發報、即時解碼成文字、琴鍵當字母鍵盤把文字播成摩斯、用閃卡隨身練習，也能接電腦和 [Vail](https://vailmorse.com/) 跟網路上的人互傳。韌體在 `firmware/morse/`，電腦端在 `host/morse/`，都是 MIT。
 
-**狀態（2026-11-17）：機器上是韌體 0.1（22:54 刷入；發報、解碼、TYPE、PRACTICE、和電腦連線在實機上確認過 `[實機]`）。韌體 0.2、host 0.2.0 寫好了，單元測試、host simulator、fm1-emu 兩種晶片都驗證過 `[模擬]`，還沒刷。** 操作方式見[操作速查](morse-cheatsheet.md)。
+**狀態（2026-11-18）：機器上是韌體 0.2（00:14 刷入）。0.1 時已在實機確認發報、解碼、TYPE、PRACTICE、和電腦連線；0.2 的 RHYTHM、KEY 三種顯示、TYPE、LISTEN、PRESET 本人試過覺得不錯，升級後學習進度也還在 `[實機]`。韌體 0.3（修 TYPE 鍵上點劃的排版）、host 0.3.0 已在模擬器驗證，還沒刷。** 操作方式見[操作速查](morse-cheatsheet.md)。
 
 ## 有沒有人做過 { #prior-art }
 
@@ -211,6 +211,7 @@ TYPE 頁的 LIVE 對應「打一個送一個」，COMPOSE 對應「先打好再�
 |---|---|---|
 | 0.1 | 109,508 B | 27,180 / 98,304 B |
 | 0.2 | 127,712 B | 28,444 / 98,304 B |
+| 0.3 | 127,880 B | 28,444 / 98,304 B |
 
 上限是 581,564 B；RAM code 5,100 / 32,768 B；套件 616,003 B，identity `FM-1_1300`。這兩版都沒有開藍牙；加上 own BLE stack 和 central 大約再多 55–70 KB，仍然很寬裕。
 
@@ -235,6 +236,11 @@ TYPE 頁的 LIVE 對應「打一個送一個」，COMPOSE 對應「先打好再�
 | 0.2：解碼器重讀、prosign、LISTEN 的內容 | `just morse-unit` | 2932 項全過（大部分是逐行檢查產生的節目都播得出來） |
 | 0.2：整個 app（三種 KEY 檢視、RHYTHM 三種提示、TYPE 翻頁、片語、COMPOSE、停止、REC 清空、排列方式、LISTEN、PRESET、K4、升級後重開讀回、四回合閃卡） | `just fw-test morse` | 全過 |
 | 0.2：從 0.1 的紀錄升級、改設定、重開讀回 | fm1-emu `uc25hq80`、`p25q80` | 設定和進度保留，發報速度補成 10，改過的值重開後讀回 `[模擬]` |
+| 0.2：疊在實機 0.1 的備份上 | `emu_rehearse.py` + fm1-emu | 真正的學習紀錄（ROUND 4、聽 15/14）升級後保留 `[模擬]` |
+| 0.2 刷進實機 | `just fm1-switch firmware/morse/build/morse.fwsc` | 寫入 32 個 sector（`0x04000`–`0x23FFF`），和預演一致；HELLO 回報 0.2，`<SK>` 送出 `[實機]` |
+| 0.2 升級後的進度 | 本人看 PRACTICE 頁 | 還是 ROUND 4：刷機只改寫韌體區，`0xDA000` 的紀錄留著 `[實機]` |
+| 0.2 新頁面 | 本人試用 RHYTHM、KEY 顯示、TYPE、LISTEN、PRESET | 「感覺都還不錯」；TYPE 鍵上點劃在黑鍵擠掉字母 → 0.3 修 `[實機]` |
+| 0.3：TYPE 鍵上點劃、從 0.2 升級、存檔重開讀回 | `just fw-test morse`、fm1-emu 兩種晶片 | 全過；字母頁和數字頁的碼與字母都放得下 `[模擬]` |
 
 ## 版本紀錄
 
@@ -243,11 +249,12 @@ TYPE 頁的 LIVE 對應「打一個送一個」，COMPOSE 對應「先打好再�
 | 版本 | 日期 | 要刷機 | 內容 |
 |---|---|---|---|
 | 韌體 0.1、host 0.1.0 | 2026-11-17 | 是（22:54 刷入，`c3b5cd6`） | 第一版：KEY、TYPE、PRACTICE、CHART、SETTINGS，兩種學習方式，Vail 格式的 MIDI，host 的 `type`／`send`／`listen`。原本規劃分成 0.1（核心）和 0.2（閃卡），因為一起做完、都還沒刷，合併成 0.1 |
-| 韌體 0.2、host 0.2.0 | 2026-11-17 | 是（還沒刷） | 實機試用後的回饋：發報速度和聽的速度分開（K4），PRESET 推薦組合，轉速度時顯示 dit／dah 毫秒；KEY 頁 TEXT／CODE／TIMING 三種顯示；RHYTHM 頁（練長短、提示、建議速度）；LISTEN 頁（連續播放五種節目）；TYPE 頁翻三頁（字母、數字符號、片語）、三種排列、鍵上點劃、LIVE／COMPOSE、`PLAY` 可停止、`REC` 刪字和清空；prosign `<SK>`；解碼器遇到長短差 2 倍時回頭修正；靜音和改音高不再重設解碼器。藍牙順延到 0.3 |
+| 韌體 0.3、host 0.3.0 | 2026-11-18 | 是（還沒刷） | TYPE 打開鍵上點劃時，鍵盤從 86 px 拉高到 126 px、上方輸入行縮成一行，黑鍵和白鍵都同時放得下碼和字母（0.2 黑鍵只剩碼、白鍵的碼壓到字母，數字頁的 `0` 放不下）。藍牙順延到 0.4 |
+| 韌體 0.2、host 0.2.0 | 2026-11-18 | 是（00:14 刷入，`54ff440`） | 實機試用後的回饋：發報速度和聽的速度分開（K4），PRESET 推薦組合，轉速度時顯示 dit／dah 毫秒；KEY 頁 TEXT／CODE／TIMING 三種顯示；RHYTHM 頁（練長短、提示、建議速度）；LISTEN 頁（連續播放五種節目）；TYPE 頁翻三頁（字母、數字符號、片語）、三種排列、鍵上點劃、LIVE／COMPOSE、`PLAY` 可停止、`REC` 刪字和清空；prosign `<SK>`；解碼器遇到長短差 2 倍時回頭修正；靜音和改音高不再重設解碼器。藍牙順延到 0.3 |
 
 ## 路線圖 { #roadmap }
 
 | 版本 | 內容 |
 |---|---|
-| 0.3 | 藍牙：own BLE stack 的 peripheral（Mac、iPad、手機上的 Vail 走藍牙）和 central（一台 FM-1 掃描並連上另一台）。BLE connection interval 是 11.25 ms，每個按鍵事件會晚 0–11 ms 到；對策想用 note 的 velocity 帶上長度、收的一方加一點播放緩衝，等量過再定。實機要等有第二台 |
+| 0.4 | 藍牙：own BLE stack 的 peripheral（Mac、iPad、手機上的 Vail 走藍牙）和 central（一台 FM-1 掃描並連上另一台）。BLE connection interval 是 11.25 ms，每個按鍵事件會晚 0–11 ms 到；對策想用 note 的 velocity 帶上長度、收的一方加一點播放緩衝，等量過再定。實機要等有第二台 |
 | 之後 | host 送日期，讓間隔複習改成天數；USB-C 直連（見[接口與連線](../hardware/io.md#two-units)） |

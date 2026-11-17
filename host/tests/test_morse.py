@@ -60,7 +60,7 @@ def test_host_answers_hello_and_types():
     for _ in range(3):
         host.pump(0.01)
     assert link.acked and host.connected
-    assert host.firmware == (0, 2)
+    assert host.firmware == (0, 3)
     assert typer.typed == "cq de fm1 "
     assert P.hello_ack() in link.sent
 

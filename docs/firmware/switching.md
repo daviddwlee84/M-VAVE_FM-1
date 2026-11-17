@@ -40,6 +40,7 @@ downloads/
 | 2026-11-17 | 原廠 015 → SLOOP 2.8.5 | M-Flasher GUI 安裝 `.fwsc` | 成功，存檔正常 |
 | 2026-11-17 | SLOOP 2.8.5 → Agent Deck 0.7 | `fm1-download-mode` → `fm1-backup` → `fm1-flash` → `fm1-restart`，全程不需要按機器上的鍵 | 成功 |
 | 2026-11-17 | CTL-1 1.0.3 → ChoralRoot 0.41 | `just fm1-switch <檔案>` | 成功。寫入 152 個 sector 到 `0x9EFFF`，**蓋掉了 SLOOP 的 project sector** |
+| 2026-11-18 | Morse 0.1 → 0.2（自製） | `just fm1-switch firmware/morse/build/morse.fwsc` | 成功。寫入 32 個 sector（`0x04000`–`0x23FFF`），學習紀錄 `0xDA000` 沒被寫，和預演一致 |
 | 2026-11-17 | Conductor 0.3 → Morse 0.1（自製） | `just fm1-switch firmware/morse/build/morse.fwsc` | 成功。寫入 30 個 sector（`0x04000`–`0x21FFF`），和模擬器預演一致 |
 | 2026-11-17 | ChoralRoot 0.41 → Conductor 0.1（自製） | `just fm1-switch firmware/conductor/build/conductor.fwsc` | 成功。寫入 140 個 sector（`0x04000`–`0x8EFFF`、`0x91000`–`0x91FFF`）。ChoralRoot 在 `0x93000`–`0x9EFFF` 的映像殘留還在，Conductor 不讀它 |
 | 2026-11-17 | SLOOP 2.8.5 → CTL-1 1.0.3 | `just fm1-switch ctl` | 成功 |

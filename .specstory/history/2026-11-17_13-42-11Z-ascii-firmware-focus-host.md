@@ -40941,3 +40941,5030 @@ _**Agent (claude-opus-5-5 2026-11-17 15:32:39Z)**_
 _**User (2026-11-17 15:47:16Z)**_
 
 sure continue
+
+---
+
+_**Agent (claude-opus-5-5 2026-11-17 15:47:37Z)**_
+
+先 commit。
+
+_**Agent (claude-opus-5-5 2026-11-17 15:47:45Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Verify package freshness and commit Morse 0.2
+
+```bash
+for f in firmware/morse/*.c firmware/morse/*.h firmware/morse/fm1.toml firmware/morse/words.tsv firmware/common/*.c firmware/common/*.h; do [ "$f" -nt firmware/morse/build/morse.fwsc ] && echo "NEWER THAN PACKAGE: $f"; done; shasum -a 256 firmware/morse/build/morse.fwsc; git add -A && git commit -q -F - <<'EOF'
+Morse 0.2: rhythm drills, listening, two speeds, KEY views, TYPE pages
+
+From trying 0.1 on the unit as a beginner:
+
+- Hearing (K1/K2) and sending (K4) have their own speeds; presets in
+  SETTINGS (START 20/8 send 10 by default); turning a speed shows its
+  dit and dah in ms.
+- KEY: TEXT, CODE (each letter over the dits and dahs keyed for it) and
+  TIMING (marks and gaps to scale, a splitting gap in red), with the gap
+  inside letters beside speed and dah:dit.
+- RHYTHM page: drills of short and long presses against the send speed,
+  a judgement per press, a hint and a send speed that fits the hand.
+- LISTEN page: Koch groups, common words, a made-up QSO, abbreviations
+  with their meaning, sayings, played on and on; shown or hidden.
+- TYPE: OCT-/OCT+ pages (letters, digits and signs, CW phrases with
+  their meaning), three layouts, the code on the keys, LIVE or COMPOSE,
+  PLAY stops, REC deletes (held: clears).
+- Prosigns <SK> in the player and the host's text; the decoder re-reads
+  a mark when a later one in the letter is twice as long or short.
+- Fixed: muting or a pitch change reset the decoders; the settings save
+  and REC's hold compared a time a millisecond in the future.
+
+Record layout unchanged (0.1's spare bytes used); a 0.1 record loads
+with its progress. Verified in just morse-unit, just fw-test morse, the
+host tests and fm1-emu on both chips (upgrade from a 0.1 record).
+Host 0.2.0: prosigns in TEXT, firmware 0.2 known.
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+EOF
+git log --oneline -1; git status --short | head -3
+```
+
+```text
+fc3dd404f128645c86d29cce95e379370255b4b342ab748706d6ea066e1556b0  firmware/morse/build/morse.fwsc
+54ff440 Morse 0.2: rhythm drills, listening, two speeds, KEY views, TYPE pages
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 15:47:51Z)**_
+
+已 commit 為 `54ff440`（套件是用相同的韌體原始碼 build 的，SHA-256 `fc3dd404…`）。接著做 preflight，先用唯讀的 `fm1-find` 看機器狀態。
+
+_**Agent (claude-opus-5-5 2026-11-17 15:47:52Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Find the unit (read-only)
+
+`pgrep -fl fm1-live || echo "no emulator running"; just fm1-find 2>&1 | tail -2`
+
+```text
+no emulator running
+"/Applications/M-Flasher.app/Contents/MacOS/M-Flasher" find
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 15:48:01Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Look for the unit on USB MIDI and the USB bus
+
+`just fm1-find 2>&1; PYTHONPATH=host uv run --locked --all-groups python -c "import mido; print('midi inputs:', mido.get_input_names())"; system_profiler SPUSBDataType 2>/dev/null | grep -iE "FM-1|MORSE|M-VAVE|JieLi|WL82|Felucca" | head`
+
+```text
+"/Applications/M-Flasher.app/Contents/MacOS/M-Flasher" find
+midi inputs: []
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 15:48:08Z)**_
+
+電腦現在找不到 FM-1：USB MIDI 沒有任何 port，USB 匯流排上也沒有看到它。可能是線拔掉了、機器關機或休眠了。
+
+請把 FM-1 用 **USB 資料線直接**接到電腦（不要經過 hub）並開機。畫面亮起來、出現 PRACTICE 之後告訴我，我就接著做：
+
+1. 切 download mode，這是模式切換，不寫 flash。
+2. 讀機器資訊，把目前的 0.1 連同學習紀錄完整備份。
+3. 用這份備份預演會寫哪些 sector。
+4. 給你看 preflight，再由你執行寫入。
+
+---
+
+_**User (2026-11-17 16:09:20Z)**_
+
+現在應該插上了？
+
+---
+
+_**Agent (claude-opus-5-5 2026-11-17 16:09:40Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Look for the unit again (read-only)
+
+`just fm1-find 2>&1 | tail -2; PYTHONPATH=host uv run --locked --all-groups python -c "import mido; print('midi inputs:', mido.get_input_names())"`
+
+```text
+"/Applications/M-Flasher.app/Contents/MacOS/M-Flasher" find
+midi	Felucca (running; download-mode switches it)
+midi inputs: ['Felucca']
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 16:09:46Z)**_
+
+找到了，機器正在執行。先用唯讀方式確認它回報的是 Morse 0.1，接著要**切到 download mode**（模式切換，不寫 flash），然後讀資訊、做完整備份。
+
+_**Agent (claude-opus-5-5 2026-11-17 16:11:49Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Confirm Morse HELLO, switch to download mode, read info
+
+```bash
+PYTHONPATH=host uv run --locked --all-groups python -c "
+import mido, time
+from morse import protocol as P
+seen=[]
+def cb(m):
+    if m.type=='sysex':
+        x=P.parse(bytes(m.data))
+        if x: seen.append((x.type, P.firmware_of(x)))
+i=mido.open_input('Felucca', callback=cb); time.sleep(2.5); i.close()
+print('frames:', seen[:3])
+"; just fm1-download-mode 2>&1 | tail -2 && just fm1-info 2>&1 | grep -v "%" | tail -12
+```
+
+```text
+frames: [(65, (0, 1)), (65, (0, 1)), (65, (0, 1))]
+Sent the Felucca the download-mode message over USB MIDI; waiting for it
+In download mode: usb:2-4	WL82 UBOOT1.00 (USB bus 2, device 4)
+Command did not complete within its 120s timeout and was moved to the background (ID: bsg6znxif). Output is being written to: /private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/5f461408-bbdd-44d0-bb3b-b0642eabaa31/tasks/bsg6znxif.output. You will be notified when it completes. It is running now: do not start a second copy while it runs. If it is no longer needed, stop it with TaskStop. To check interim output, use Read on that file path.
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 16:11:54Z)**_
+
+機器回報的是 Morse 0.1，download mode 也切換成功。讀機器資訊這一步超過 2 分鐘還沒完成（上次只要 2 秒），已經轉到背景，我看一下目前的輸出。
+
+_**Agent (claude-opus-5-5 2026-11-17 16:11:56Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Peek at the stuck info command output
+
+`tail -c 1500 /private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/5f461408-bbdd-44d0-bb3b-b0642eabaa31/tasks/bsg6znxif.output; echo; pgrep -fl M-Flasher | head`
+
+```text
+frames: [(65, (0, 1)), (65, (0, 1)), (65, (0, 1))]
+Sent the Felucca the download-mode message over USB MIDI; waiting for it
+In download mode: usb:2-4	WL82 UBOOT1.00 (USB bus 2, device 4)
+
+19916 /Applications/M-Flasher.app/Contents/MacOS/M-Flasher info
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 16:12:04Z)**_
+
+`M-Flasher info` 卡住了，連「Connecting」都沒印出來。上次同一步只要 2 秒。這一步只是讀取，中斷它是安全的，我停掉後重試一次。
+
+_**Agent (claude-opus-5-5 2026-11-17 16:12:04Z)**_
+
+<tool-use data-tool-type="unknown" data-tool-name="ToolSearch"><details>
+<summary>Tool use: **ToolSearch**</summary>
+
+**Input:**
+
+- max_results: `1`
+- query: `select:TaskStop`
+
+**Result:**
+
+```
+
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 16:12:09Z)**_
+
+<tool-use data-tool-type="unknown" data-tool-name="TaskStop"><details>
+<summary>Tool use: **TaskStop**</summary>
+
+```text
+{"message":"Successfully stopped task: bsg6znxif (PYTHONPATH=host uv run --locked --all-groups python -c \"\nimport mido, time\nfrom morse import protocol as P\nseen=[]\ndef cb(m):\n    if m.type=='sysex':\n        x=P.parse(bytes(m.data))\n        if x: seen.append((x.type, P.firmware_of(x)))\ni=mido.open_input('Felucca', callback=cb); time.sleep(2.5); i.close()\nprint('frames:', seen[:3])\n\"; just fm1-download-mode 2>&1 | tail -2 && just fm1-info 2>&1 | grep -v \"%\" | tail -12)","task_id":"bsg6znxif","task_type":"local_bash","command":"PYTHONPATH=host uv run --locked --all-groups python -c \"\nimport mido, time\nfrom morse import protocol as P\nseen=[]\ndef cb(m):\n    if m.type=='sysex':\n        x=P.parse(bytes(m.data))\n        if x: seen.append((x.type, P.firmware_of(x)))\ni=mido.open_input('Felucca', callback=cb); time.sleep(2.5); i.close()\nprint('frames:', seen[:3])\n\"; just fm1-download-mode 2>&1 | tail -2 && just fm1-info 2>&1 | grep -v \"%\" | tail -12"}
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 16:12:31Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Check leftover process, find unit, rerun info unpiped with timeout
+
+`pgrep -fl "M-Flasher" || echo "no M-Flasher process"; cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1 && just fm1-find 2>&1 | tail -1; timeout 45 /Applications/M-Flasher.app/Contents/MacOS/M-Flasher info < /dev/null 2>&1 | tr '\r' '\n' | grep -v "^ *[0-9]*%" | tail -20; echo "exit ${PIPESTATUS[0]}"`
+
+```text
+no M-Flasher process
+usb:2-4	WL82 UBOOT1.00 (USB bus 2, device 4)
+Connecting to usb:2-4
+Starting the M-Flasher loader 1.3
+Flash chip 0xB36014 (new)
+Reading the flash
+
+Read in 1.3 s (807 KB/s)
+Checked: the chip's CRC32 of the flash matches the read
+  model       FM-1
+  bootloader  stock (M-VAVE)
+  firmware    FM-1 130
+  app         OK
+  chip key    0x980F
+  flash       0xB36014
+  unit id     55227286a0cb022a
+  loader      M-Flasher 1.3, CPU at 96 MHz
+    - the firmware uses the FM-1 flash layout
+    - flash chip 0xB36014 (new)
+exit
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 16:12:39Z)**_
+
+<think><details><summary>Thought Process</summary>
+重試成功了：晶片 0xB36014 跑的是原廠 bootloader，韌體 FM-1 130 的 CRC32 也相符，第一次卡住的原因仍不明。我接著要做完整備份。
+
+</details></think>
+
+_**Agent (claude-opus-5-5 2026-11-17 16:12:47Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Full-flash backup before flashing Morse 0.2
+
+`timeout 90 just fm1-backup pre-morse-0.2 < /dev/null 2>&1 | tr '\r' '\n' | grep -E "Backup saved|^[0-9a-f]{64}|firmware|error|Error" ; d=$(ls -d backups/*pre-morse-0.2* | tail -1); echo "dir: $d"; shasum -a 256 $d/*.bin`
+
+```text
+  firmware    FM-1 130
+    - the firmware uses the FM-1 flash layout
+Backup saved: backups/2026-11-18-pre-morse-0.2/fm1-20261118-001247.bin
+35457c78575749cdaed88cea833f5f8a45dd7cbabd79a6e8762f8677a338ada4  backups/2026-11-18-pre-morse-0.2/fm1-20261118-001247.bin
+dir: backups/2026-11-18-pre-morse-0.2
+35457c78575749cdaed88cea833f5f8a45dd7cbabd79a6e8762f8677a338ada4  backups/2026-11-18-pre-morse-0.2/fm1-20261118-001247.bin
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 16:12:56Z)**_
+
+<think><details><summary>Thought Process</summary>
+備份已完成（SHA-256 以 35457c78 開頭）。接下來我會用這份實機備份做預演，疊上 0.2、在模擬器開機，確認你機器上的 0.1 紀錄能順利升級，並算出會寫入的 sector。
+
+</details></think>
+
+_**Agent (claude-opus-5-5 2026-11-17 16:13:06Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Rehearse 0.2 over the real backup; boot it in the emulator
+
+```bash
+B=$PWD/backups/2026-11-18-pre-morse-0.2/fm1-20261118-001247.bin && S=/private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/0a574306-469e-4a59-9622-5701a42aee59/scratchpad && pkg=$PWD/firmware/morse/build/morse.fwsc && cd tools/emu-state && rm -f pristine-hw02.flash && ../fm1-emu/fm1-live --fwsc "$pkg" --flash-chip uc25hq80 --flash pristine-hw02.flash --midi none --shot 1 --lcd-only >/dev/null 2>&1; python3 ../../scripts/emu_rehearse.py pristine-hw02.flash "$B" rehearse-hw02.flash && python3 - "$B" <<'PY'
+import sys
+S=4096
+bak=open(sys.argv[1],'rb').read(); new=open('rehearse-hw02.flash','rb').read()
+d=[i for i in range(256) if bak[i*S:(i+1)*S]!=new[i*S:(i+1)*S]]
+print("sectors that differ:", len(d), f"0x{d[0]*S:05X}-0x{(d[-1]+1)*S-1:05X}" if d else "")
+print("outside 0x04000-0x92FFF:", [hex(i*S) for i in d if not (0x04000 <= i*S <= 0x92FFF)])
+print("0.1 record present at 0xDA000/0xDB000:", [hex(a) for a in (0xDA000,0xDB000) if bak[a:a+S]!=b'\xff'*S])
+PY
+FM1_NO_PLAY=1 ../fm1-emu/fm1-live --fwsc "$pkg" --flash-chip uc25hq80 --flash rehearse-hw02.flash --midi none --shot 2500 --lcd-only 2>&1 | grep -iE "^flash:|fault|error"; mv work/lcd.ppm $S/hw02a.ppm; FM1_NO_PLAY=1 FM1_BENCH_KEYS="1000:HOME,1060:HOME^,1500:e0:+6,2000:SCL,2060:SCL^" ../fm1-emu/fm1-live --fwsc "$pkg" --flash-chip uc25hq80 --flash rehearse-hw02.flash --midi none --shot 3000 --lcd-only 2>&1 | grep -iE "^flash:|fault|error"; mv work/lcd.ppm $S/hw02b.ppm; cd ../.. && uv run --locked --all-groups python -c "
+from PIL import Image
+S='$S'
+ims=[Image.open(f'{S}/hw02{r}.ppm') for r in 'ab']
+out=Image.new('RGB',(2*248,240),(60,60,60))
+for i,im in enumerate(ims): out.paste(im,(i*248,0))
+out.save(f'{S}/hw02.png')"
+```
+
+```text
+package image 0x04000-0x92FFF laid over the backup
+sectors that differ: 32 0x04000-0x23FFF
+outside 0x04000-0x92FFF: []
+0.1 record present at 0xDA000/0xDB000: ['0xda000', '0xdb000']
+flash: 0 erases / programs
+flash: 0 erases / programs
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 16:13:12Z)**_
+
+<tool-use data-tool-type="read" data-tool-name="Read"><details>
+<summary>Tool use: **Read**</summary>
+ `/private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/0a574306-469e-4a59-9622-5701a42aee59/scratchpad/hw02.png`
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 16:13:20Z)**_
+
+<think><details><summary>Thought Process</summary>
+預演確認只會改寫韌體區的 32 個 sector，你的 0.1 紀錄與調過的速度升級後都會保留，開機時也不寫 flash。接下來先把結果記進 device log。
+
+</details></think>
+
+_**Agent (claude-opus-5-5 2026-11-17 16:13:26Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Record preflight in the device log; confirm download mode
+
+```bash
+python3 - <<'PY'
+p='docs/device-log.md'
+s=open(p).read()
+a="`fm1-switch` 在寫入前又自動備份了一份 `backups/2026-11-17-2253-pre-morse/fm1-20261117-225404.bin`，SHA-256 和上面這份相同；M-Flasher 另存 `~/Documents/M-Flasher/backups/fm1-20261117-225412.bin`。\n"
+assert a in s
+s=s.replace(a, a+"\n| 日期 | 內容 | 檔名 | SHA-256 | 異地副本 |\n|---|---|---|---|---|\n| 2026-11-18 00:12 | 刷 Morse 0.2 之前的 Morse 0.1（含學習紀錄：玩過 3 回合、聽 15/14 WPM） | `backups/2026-11-18-pre-morse-0.2/fm1-20261118-001247.bin` + `.json` | `35457c78575749cdaed88cea833f5f8a45dd7cbabd79a6e8762f8677a338ada4` | 尚未上傳 |\n",1)
+i=s.index("\n## Phase 1 驗收")
+row="| 2026-11-18 00:10 | agent 執行 `just fm1-download-mode`、`fm1-info`、`fm1-backup pre-morse-0.2`（刷 Morse 0.2 前的 preflight） | 切換前機器送出 Morse 0.1 的 HELLO。第一次 `fm1-info` 卡住超過 2 分鐘、沒有輸出（中止）；重試時 M-Flasher 重新載入 loader，1.3 s 讀完：model FM-1、bootloader stock、firmware `FM-1 130`（Morse）、app OK、flash `0xB36014`，CRC32 相符。備份 SHA-256 `35457c78…338ada4`。用這份備份預演 0.2：不同的是 `0x04000`–`0x23FFF` 的 32 個 sector，全在韌體區；0.1 的紀錄（`0xDA000`–`0xDBFFF`）升級後保留（ROUND 4、聽 15/14、發報速度補成 10）`[模擬]` |\n"
+s=s[:i].rstrip("\n")+"\n"+row+s[i:]
+open(p,'w').write(s)
+PY
+just fm1-find 2>&1 | tail -1
+```
+
+```text
+usb:2-4	WL82 UBOOT1.00 (USB bus 2, device 4)
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 16:13:37Z)**_
+
+Preflight 準備好了，機器停在 download mode。這一步會寫入 flash，所以要你自己執行。
+
+**Preflight**
+
+| 項目 | 狀態 |
+|---|---|
+| 1. 完整備份 | `backups/2026-11-18-pre-morse-0.2/fm1-20261118-001247.bin`，SHA-256 `35457c78575749cdaed88cea833f5f8a45dd7cbabd79a6e8762f8677a338ada4`，已記進 `docs/device-log.md`。內容是 Morse 0.1 加上你的學習紀錄。`fm1-switch` 寫入前還會自動再備份一次 |
+| 2. 晶片 | `0xB36014`（new）。同一個 fm1-base commit 的 0.1 已經在這台機器上跑，build 產生的 `firmware.json` 也宣告支援 `B36014` |
+| 3. 套件 | 自己 build 的，沒有上游 digest 可以比對。`firmware/morse/build/morse.fwsc`，SHA-256 `fc3dd404f128645c86d29cce95e379370255b4b342ab748706d6ea066e1556b0`，來自 commit `54ff440`，identity `FM-1_1300`。fm1-emu 兩種晶片上「升級、改設定、重開、讀回」都通過 `[模擬]` |
+| 4. 目前狀態和這次的改變 | 現在是 Morse 0.1（`FM-1 130`）、stock bootloader。預演結果是改寫 `0x04000`–`0x21FFF` 左右，最多到 `0x23FFF`，約 30–32 個 sector，全在韌體區，boot 區不動。學習紀錄 `0xDA000`–`0xDBFFF` 不會被寫入，升級後會保留 |
+
+請輸入：
+
+```
+! just fm1-switch firmware/morse/build/morse.fwsc
+```
+
+**輸入 `yes` 之前**：M-Flasher 印出的範圍應該從 `0x04000` 開始、在 `0x92FFF` 之內，大約 30 個 sector，而且不能碰到 `0x00000`–`0x03FFF`。如果不一樣，就不要輸入 `yes`，把輸出貼給我。
+
+寫完機器會重開，PRACTICE 頁應該顯示「ROUND 4」。想先不刷的話，執行 `just fm1-restart`，機器就會回到 0.1。
+
+---
+
+_**User (2026-11-17 16:15:25Z)**_
+
+```
+
+
+<pasted_content id="cc4a">
+❯ just fm1-switch firmware/morse/build/morse.fwsc
+usb:2-4 WL82 UBOOT1.00 (USB bus 2, device 4)
+  100%
+  firmware    FM-1 130
+  app         OK
+    - the firmware uses the FM-1 flash layout
+Backup saved: backups/2026-11-18-0013-pre-morse/fm1-20261118-001403.bin
+35457c78575749cdaed88cea833f5f8a45dd7cbabd79a6e8762f8677a338ada4  backups/2026-11-18-0013-pre-morse/fm1-20261118-001403.bin
+Backup before the switch: backups/2026-11-18-0013-pre-morse (not uploaded; just fm1-backup-release 2026-11-18-0013-pre-morse if you want it off this machine)
+Connecting to usb:2-4
+M-Flasher loader 1.3 already running
+Flash chip 0xB36014 (new)
+Reading the flash
+  100%
+Read in 1.3 s (805 KB/s)
+Checked: the chip's CRC32 of the flash matches the read
+  model       FM-1
+  bootloader  stock (M-VAVE)
+  firmware    FM-1 130
+  app         OK
+  chip key    0x980F
+  flash       0xB36014
+  unit id     55227286a0cb022a
+  loader      M-Flasher 1.3, CPU at 96 MHz
+    - the firmware uses the FM-1 flash layout
+    - flash chip 0xB36014 (new)
+
+Install firmware FM-1_1300
+Writes 32 sectors (128 KiB): 0x04000-0x23FFF
+Installs FM-1_1300 (0x04000-0x92FFF).
+Type "yes" to write: yes
+Backup saved: /Users/zhouhanru/Documents/M-Flasher/backups/fm1-20261118-001409.bin
+Writing 0x04000-0x23FFF
+  100%
+Done: everything written is verified (the chip's CRC32 matches)
+Sent the restart (a 34-byte program at 0x01C28000); waiting for the unit to reset
+Running: the Felucca is on USB MIDI
+</pasted_content id="cc4a">
+
+```
+
+---
+
+_**Agent (claude-opus-5-5 2026-11-17 16:15:31Z)**_
+
+寫入成功，結果和預演完全一樣：32 個 sector（`0x04000`–`0x23FFF`），CRC32 驗證通過，機器已經重開。確認一下機器回報的版本。
+
+_**Agent (claude-opus-5-5 2026-11-17 16:15:36Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Find the unit and send it a prosign through the host
+
+`sleep 1; just fm1-find 2>&1 | tail -1; PYTHONPATH=host timeout 20 uv run --locked --all-groups python -m morse send "<SK>" 2>&1`
+
+```text
+midi	Felucca (running; download-mode switches it)
+[morse] connected to Felucca
+[morse] FM-1 Morse firmware 0.2
+[morse] sent 1 frame(s); the FM-1 plays it at its own speed
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 16:15:43Z)**_
+
+機器回報 **Morse 0.2** `[實機]`，剛才送去的 `<SK>`（`...-.-`）應該有播出來。把這次刷機記進文件。
+
+_**Agent (claude-opus-5-5 2026-11-17 16:16:01Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Record the 0.2 flash in the docs and check the site
+
+```bash
+python3 - <<'PY'
+def sub(p,a,b):
+    s=open(p).read(); assert a in s,(p,a[:60]); s=s.replace(a,b,1); open(p,'w').write(s)
+p='docs/device-log.md'
+s=open(p).read()
+old=[l for l in s.splitlines() if l.startswith("| 目前韌體 |")][0]
+s=s.replace(old,"| 目前韌體 | **Morse 0.2（自製）**（2026-11-18 00:14 刷入，套件識別 `FM-1_1300`，USB 產品名 `MORSE FM-1`；macOS 的 MIDI port 仍顯示 `Felucca`）。之前依序是原廠 015 → SLOOP 2.8.5 → Agent Deck 0.7 → SLOOP 2.8.5 → CTL-1 1.0.3 → ChoralRoot 0.41 → Conductor 0.1 → 0.2 → 0.3 → Morse 0.1 |",1)
+i=s.index("\n## Phase 1 驗收")
+row="| 2026-11-18 00:14 | 本人執行 `just fm1-switch firmware/morse/build/morse.fwsc`（Morse 0.2，SHA-256 `fc3dd404…556b0`，commit `54ff440`） | 先自動備份 `backups/2026-11-18-0013-pre-morse/`（SHA-256 同 00:12 那份）。M-Flasher 的計畫：`Writes 32 sectors (128 KiB): 0x04000-0x23FFF`、`Installs FM-1_1300 (0x04000-0x92FFF)`，和預演一致；寫入後 CRC32 相符，自動重開，M-Flasher 另存 `fm1-20261118-001409.bin`。重開後 `python -m morse send` 收到 HELLO（韌體 0.2）並送出 `<SK>` |\n"
+s=s[:i].rstrip("\n")+"\n"+row+s[i:]
+open(p,'w').write(s)
+p='docs/dev/morse.md'
+sub(p,"**狀態（2026-11-17）：機器上是韌體 0.1（22:54 刷入；發報、解碼、TYPE、PRACTICE、和電腦連線在實機上確認過 `[實機]`）。韌體 0.2、host 0.2.0 寫好了，單元測試、host simulator、fm1-emu 兩種晶片都驗證過 `[模擬]`，還沒刷。**",
+"**狀態（2026-11-18）：機器上是韌體 0.2、host 0.2.0（00:14 刷入；0.1 時已在實機確認發報、解碼、TYPE、PRACTICE、和電腦連線 `[實機]`）。0.2 在單元測試、host simulator、fm1-emu 兩種晶片都驗證過 `[模擬]`；0.2 的新頁面還沒在實機上逐一確認。**")
+sub(p,"| 韌體 0.2、host 0.2.0 | 2026-11-17 | 是（還沒刷） |","| 韌體 0.2、host 0.2.0 | 2026-11-18 | 是（00:14 刷入，`54ff440`） |")
+sub(p,"| 0.2：從 0.1 的紀錄升級、改設定、重開讀回 | fm1-emu `uc25hq80`、`p25q80` | 設定和進度保留，發報速度補成 10，改過的值重開後讀回 `[模擬]` |",
+"| 0.2：從 0.1 的紀錄升級、改設定、重開讀回 | fm1-emu `uc25hq80`、`p25q80` | 設定和進度保留，發報速度補成 10，改過的值重開後讀回 `[模擬]` |\n| 0.2：疊在實機 0.1 的備份上 | `emu_rehearse.py` + fm1-emu | 真正的學習紀錄（ROUND 4、聽 15/14）升級後保留 `[模擬]` |\n| 0.2 刷進實機 | `just fm1-switch firmware/morse/build/morse.fwsc` | 寫入 32 個 sector（`0x04000`–`0x23FFF`），和預演一致；HELLO 回報 0.2，`<SK>` 送出 `[實機]` |")
+sub('docs/firmware/switching.md',"| 2026-11-17 | Conductor 0.3 → Morse 0.1（自製） |","| 2026-11-18 | Morse 0.1 → 0.2（自製） | `just fm1-switch firmware/morse/build/morse.fwsc` | 成功。寫入 32 個 sector（`0x04000`–`0x21FFF` 加兩個），學習紀錄 `0xDA000` 沒被寫，和預演一致 |\n| 2026-11-17 | Conductor 0.3 → Morse 0.1（自製） |")
+sub('docs/hardware/flash-map.md',"| Morse 0.1（自製，fm1-base） | `0x04000`–`0x92FFF`（從 Conductor 0.3 換過來時實際寫入 `0x04000`–`0x21FFF`） | `[實機]` M-Flasher 的計畫：30 sectors |",
+"| Morse 0.1 / 0.2（自製，fm1-base） | `0x04000`–`0x92FFF`（實際寫入：Conductor 0.3 → 0.1 是 `0x04000`–`0x21FFF`，0.1 → 0.2 是 `0x04000`–`0x23FFF`） | `[實機]` M-Flasher 的計畫：30、32 sectors |")
+sub('docs/index.md',"機器上是韌體 0.1；0.2、host 0.2.0 已在模擬器驗證，見[設計](dev/morse.md)","韌體 0.2、host 0.2.0；2026-11-17 起在我的機器上，見[設計](dev/morse.md)")
+sub('README.md',"| Firmware 0.1 on my unit since 2026-11-17; firmware 0.2 / host 0.2.0 verified in the simulator and emulator |","| Firmware 0.2, host 0.2.0; on my unit since 2026-11-17 |")
+PY
+sed -i '' 's/寫入 32 個 sector（`0x04000`–`0x21FFF` 加兩個），學習紀錄/寫入 32 個 sector（`0x04000`–`0x23FFF`），學習紀錄/' docs/firmware/switching.md
+just docs-check 2>&1 | tail -1
+```
+
+```text
+{"status": "ok", "pages": 46, "llm_pages": 46, "deployed": false}
+[This command modified 5 files you've previously read: docs/dev/morse.md, docs/hardware/flash-map.md, docs/firmware/switching.md, README.md, docs/index.md. Call Read before editing.]
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 16:16:12Z)**_
+
+Morse 0.2 已經刷進機器並確認在執行：寫入 32 個 sector（`0x04000`–`0x23FFF`），和預演一致，機器回報韌體 0.2 `[實機]`。剛才送去的 `<SK>` 應該有播出來（`···−·−`，比收到的一般訊號高一點的音）。
+
+照預演，你的學習進度（ROUND 4）和調過的聽力速度（15/14）都應該還在，發報速度補成 10。
+
+**建議依序試試看**（`HOME` 叫出選單）：
+
+1. **PRACTICE**：畫面是否還是 ROUND 4。
+2. **RHYTHM**：打五個 dit、再打五個 dah，看框和條的顏色、底下的提示，以及它建議的 K4 速度。
+3. **KEY**：按 `SEQ` 切到 CODE，再試一次 SOS，看每個字下面你實際打的點劃。再切到 TIMING，看停太久的地方有沒有紅線。
+4. **TYPE**：`OCT+` 翻到片語頁試幾個鍵；`SEL` 切 COMPOSE，打好一行按 `PLAY` 送出；按住 `REC` 清空。
+5. **LISTEN**：`SELECT` 選 ABBREVIATIONS 或 QSO，按 `PLAY` 放著聽，再按 `SEQ` 試隱藏模式。
+6. **SETTINGS**：選 PRESET 轉轉看，畫面會顯示每一組的意思。
+
+想要的話，我可以像上次一樣在背景開監聽，記錄你在 KEY 頁的實際按鍵長度，再和 RHYTHM 頁的提示對照。
+
+**文件**：`docs/device-log.md`（備份、preflight、刷機三筆紀錄）、`docs/dev/morse.md`（狀態、版本紀錄、驗證表）、`docs/firmware/switching.md`、`docs/hardware/flash-map.md`、首頁和 README 的狀態都更新了，`just docs-check` 通過。這些改動還沒 commit。試完之後的回饋我會一起記進去，再一起 commit。
+
+---
+
+_**User (2026-11-17 18:02:30Z)**_
+
+開機畫面還是ROUND 4 (估計意味著刷機還是有保存進度？）
+
+TYPE 現在用 SQE 打開長短提示 發現黑鍵好像內容會被擠掉 雖然可能符合預期
+不過字母部分應該能顯示得下？ 數字符號部分可能容易超出 片語大概現在這種 no-op 也算合理
+
+其他你讓我嘗試的感覺都還不錯
+
+然後完成後 研究看看是不是也能上架哪些 Hub？ 感覺完成度還不錯
+
+---
+
+_**Agent (claude-opus-5-5 2026-11-17 18:03:27Z)**_
+
+好消息：
+
+- **進度還在**：刷機時 M-Flasher 只改寫韌體區（`0x04000`–`0x23FFF`），學習紀錄存在另外的 `0xDA000`，所以 ROUND 4 會留下來。這正是預演算出來的結果，現在在實機上確認了。
+- **黑鍵被擠掉**：開啟點劃後，黑鍵上只畫點劃，字母不見了；白鍵的點劃也會壓到底下的字母。數字頁的 `0`（五個 dah）最長，空間更不夠。我會在開啟點劃時把鍵盤區拉高、上方的輸入行縮成一行，讓每個鍵上同時放得下點劃和字母。
+
+上架 Hub 的研究我請一個 agent 在背景平行查（只讀，不會送出任何東西），我這邊先修 TYPE。
+
+_**Agent (claude-opus-5-5 2026-11-17 18:03:41Z)**_
+
+<tool-use data-tool-type="unknown" data-tool-name="Agent"><details>
+<summary>Tool use: **Agent**</summary>
+Research FM-1 firmware hub listing
+
+```text
+Async agent launched successfully. (This tool result is internal metadata — never quote or paste any part of it, including the agentId below, into a user-facing reply.)
+agentId: aeaa6bd8f760590a8 (internal ID - do not mention to user. Use SendMessage with to: 'aeaa6bd8f760590a8', summary: '<5-10 word recap>' to continue this agent.)
+The agent is working in the background. You will be notified automatically when it completes. You know nothing about its results until that notification arrives — do not report, assume, or predict them; continue other work or respond to the user in the meantime.
+Do not duplicate this agent's work — avoid working with the same files or topics it is using.
+output_file: /private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/5f461408-bbdd-44d0-bb3b-b0642eabaa31/tasks/aeaa6bd8f760590a8.output
+Do NOT Read or tail this file via the shell tool — it is the full subagent JSONL transcript and reading it will overflow your context. If the user asks for progress, say the agent is still running; you'll get a completion notification.
+```
+</details></tool-use>
+
+_**Agent - sidechain (2026-11-17 18:03:41Z)**_
+
+Research task, read-only: how does an independent author get a custom firmware for the M-VAVE FM-1 pocket synth listed on the community hubs and lists? Do NOT submit, post, open issues/PRs, or contact anyone; only read and report.
+
+Context: the firmware is "Morse" (a Morse code trainer/keyer), built on fm1-base (https://github.com/charlesvestal/fm1-base, MPL-2.0; the app itself is MIT) in the public repo https://github.com/daviddwlee84/M-VAVE_FM-1 under firmware/morse/. fm1-base's build writes firmware/morse/build/firmware.json "for firmware hubs" and warns: "fm1.toml has no install, screenshot: firmware.json goes without them, and a release build refuses (docs/FIRMWARE-JSON.md)". The local checkout of fm1-base is at /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/third_party/fm1-base (read docs/FIRMWARE-JSON.md there, and in tools/build.py what `--release` requires/does; and README sections about publishing, if any). The current firmware.json is at /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/firmware/morse/build/firmware.json and the build config at firmware/morse/fm1.toml in that repo.
+
+Find out, for each of these, with URLs and quotes:
+1. The Firmware Hub (https://thefirmwarehub.com/): how firmwares get into catalog.json (submission form? GitHub repo with PRs? automatic crawl of firmware.json from releases?), required fields/assets (firmware.json fields, screenshots, install page, release asset naming, the "chip" field new/old/any and how it is determined), review/approval policy, any rules (licence, safety, tested-on-hardware). Check its KB pages and any "submit"/"add your firmware"/"for developers" page. The hub asks clients to read catalog.json at most once a day: fetch it at most once, only if needed (e.g. to see how an existing fm1-base firmware like CTL-1 or CONDUCTOR is described).
+2. fm1-emu's firmware list (https://joakimeriksson.github.io/fm1-emu/ and repo joakimeriksson/fm1-emu, e.g. tools/fetch_firmwares.mjs or a list file): how entries are added.
+3. FM1 Developers' Wiki (https://sbegueria.github.io/fm1-dev-wiki/, repo sbegueria/fm1-dev-wiki): is there a firmware list, and how to add to it.
+4. Community lists: https://github.com/cicloid/awesome-fm-1 and https://github.com/aroum/fm1-custom-fw (contribution guidelines).
+5. Anything else that is clearly a place FM-1 firmwares are announced/listed (e.g. a subreddit or Discord mentioned by those sites) — just name it and how, don't dig deep.
+
+Also note: how the "CONDUCTOR" firmware (same author, already in the Hub catalog per a check on 2026-11-17) got there, if you can tell from its catalog entry or the repo's history (git log in /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1, docs/agentic/conductor.md) — e.g. whether the hub picked it up automatically.
+
+Return a concise report: per hub, the submission path, required metadata/assets, review rules, and a checklist of what the Morse firmware still needs (e.g. install page URL, screenshot path, a GitHub Release with the .fwsc and firmware.json, version tag naming, chip support statement). Say clearly where something could not be verified. Do not invent steps.
+
+_**Agent - sidechain (claude-opus-5-5 2026-11-17 18:03:47Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Read fm1-base firmware.json docs and Morse config
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1; ls third_party/fm1-base/docs; cat third_party/fm1-base/docs/FIRMWARE-JSON.md; echo ----; cat firmware/morse/fm1.toml; echo ----; cat firmware/morse/build/firmware.json`
+
+````text
+bt
+FIRMWARE-JSON.md
+firmware.schema.json
+SECOND-CORE.md
+# firmware.json
+
+`firmware.json` describes a firmware for the places that list and install FM-1 firmwares: The Firmware Hub,
+RemoteFM1 and M-Flasher. It says what the firmware is called, who made it, its licence, what it is, where to install
+it and what the hardware needs to have. It sits at the root of the firmware's repository, and a release can attach it
+beside the package.
+
+tools/build.py writes it on every build, from fm1.toml and the parts the build turns on, to `APP_DIR/build/firmware.json`
+(`firmware-usb.json` from a `--no-ble` build). For an app in a firmware's repository (`APP_DIR` named `app`, as
+`fm1-ctl/app`) it also writes the repository's `firmware.json`, only when its content has changed. fm1-base's own
+template gets only `template/build/firmware.json`.
+
+It has no version: it describes the firmware, not a release, and the release's package carries its own.
+
+The format was shaped after Schwung's module catalog and RemoteFM1's metadata proposal
+(Quixotic7/RemoteFM1FW, docs/REMOTEFM1-METADATA.md). Its JSON Schema is [firmware.schema.json](firmware.schema.json).
+
+## An example
+
+CTL-1's:
+
+```json
+{
+  "schema": 1,
+  "id": "ctl",
+  "name": "CTL-1",
+  "author": "Charles Vestal",
+  "license": "MPL-2.0",
+  "tagline": "A MIDI controller for the FM-1",
+  "description": "CTL-1 turns the M-VAVE FM-1 into a MIDI controller. The keys play notes, with velocity and aftertouch read from the keys themselves, in any scale with its chords under the black keys; the knobs send controllers in four banks; an arpeggiator and a four-track Euclidean drum sequencer run on its clock. Everything goes out over USB and Bluetooth, MIDI from the TRS jack is passed along, and the FM-1 plays it all on its own General MIDI sounds too, so it works with nothing connected.",
+  "tags": ["controller", "midi", "sequencer", "chords", "general-midi"],
+  "install": "https://charlesvestal.github.io/fm1-ctl/install/",
+  "site": "https://charlesvestal.github.io/fm1-ctl/",
+  "source": "https://github.com/charlesvestal/fm1-ctl",
+  "screenshot": "docs/img/screen-cc.png",
+  "hardware": {
+    "models": ["FM-1"],
+    "flash": ["856014", "B36014"],
+    "features": ["bluetooth-midi", "bluetooth-midi-devices", "usb-audio-in", "usb-audio-out", "velocity", "pressure", "screen-reader"]
+  },
+  "credits": "Built on fm1-base and felucca-bsp, from Felucca by Leo Kuroshita (Hügelton Instruments); the sounds are Sonivox EAS."
+}
+```
+
+## Fields
+
+| Field | Type | From (fm1.toml) | Meaning |
+|---|---|---|---|
+| `schema` | number | | The format's version: 1. |
+| `id` | string | `name`, in lower case | The firmware's short name, the same as its package's file name (`ctl`). |
+| `name` | string | `title`, else `usb_manufacturer`, else app.h's `APP_NAME` | The name people see (`CTL-1`). |
+| `author` | string | `author`, else `authors` joined | Who made it. |
+| `license` | string | `licence` | Its licence, an SPDX expression (`MPL-2.0`). |
+| `tagline` | string | `tagline` | One line on what it is. |
+| `description` | string | `description` | One paragraph, at most 600 characters. |
+| `tags` | list of strings | `tags` | What it is, from the tag vocabulary. |
+| `install` | URL | `install` | The page that installs it. |
+| `site` | URL | `site` | Its site. |
+| `source` | URL | `repo` | Its source code. |
+| `screenshot` | path | `screenshot` | A picture of its screen for a hub's card: a PNG in its repository, relative to the repository's root (`docs/img/screen.png`). |
+| `hardware.models` | list of strings | | The models it runs on. A firmware on fm1-base says `FM-1`. |
+| `hardware.flash` | list of strings | device/fm1_flash_ok.h | The flash parts it can save to and update on, as their JEDEC IDs in upper-case hex. |
+| `hardware.features` | list of strings | the build's parts | What the build has, from the feature vocabulary. |
+| `credits` | string | `credits` | A sentence on what it is built from. |
+
+`title` is for a firmware whose USB name is not the name people know it by (Radio's USB name is `fm1-radio`);
+most leave it out.
+
+URLs are `https://` addresses. The build writes the keys in this order, with a 2-space indent and each list of
+strings on one line, in UTF-8 with a newline at the end.
+
+## The screenshot
+
+A hub shows the screenshot on the firmware's card. It fetches it from the firmware's repository at the release's
+commit: `source`, the release's tag and the path (on GitHub,
+`https://raw.githubusercontent.com/OWNER/REPO/vX.Y/docs/img/screen.png`).
+
+In fm1.toml, `screenshot` is a path relative to the repository's root, which is the folder that holds `app/` (for
+fm1-base's template, the template's folder). It uses `/` between folders, letters, digits, `.`, `_` and `-`, ends in
+`.png`, and has no `..` and no leading `/`. The build refuses any other path. It also checks the file: it has to
+exist, be a PNG, be square, be at least 240 × 240 and be at most 2 MiB. The build reads only the PNG's header, so it
+needs nothing installed.
+
+The FM-1's screen is 240 × 240, so a screenshot from the host simulator (its `shot FILE` command) or from screen
+mirroring fits as it is. A hub should scale it up with nearest-neighbour (CSS `image-rendering: pixelated`) to keep
+the pixels sharp.
+
+## What a release needs
+
+A release build (`tools/build.py APP_DIR --release X.Y`, as `./build.sh --release X.Y` and the release workflow run
+it) refuses until fm1.toml has all of these, and names the ones missing:
+
+`author` (or `authors`), `licence`, `tagline`, `description`, `tags`, `install`, `repo` and `screenshot`.
+
+It also refuses a screenshot that fails the checks above, and says which check.
+
+Any other build (a dev build, `--host`, `--web`, `--rfm1`) prints one warning line naming the missing keys, and one
+for a screenshot that fails a check, and writes the file without them. `site` and `credits` are never required.
+
+## Tags
+
+A firmware's tags come from this list, and the build refuses any other with a message that lists them:
+
+synth, drum-machine, groovebox, sequencer, sampler, controller, midi, chords, arranger, ambient, generative, fm, game,
+utility, general-midi, experimental.
+
+## Features
+
+Each of these is listed only when the build has it:
+
+| Feature | The build has it with |
+|---|---|
+| `bluetooth-midi` | `ble = true` (not with `--no-ble`): Bluetooth MIDI with a computer or a phone |
+| `bluetooth-midi-devices` | `ble_central = true`: the FM-1 connects to Bluetooth MIDI devices too |
+| `bluetooth-audio` | `bt_audio = true` on the own stack (`ble_stack = "own"`): sound out to Bluetooth speakers or headphones |
+| `usb-audio-in` | `usb_audio_in` (on unless set false): the computer records the FM-1 over USB |
+| `usb-audio-out` | `usb_audio_out` (on unless set false, with `usb_audio_in`): the computer plays through the FM-1 |
+| `usb-midi-host` | `usb_host = true`: USB MIDI controllers and synths plugged into the FM-1 |
+| `usb-disk` | `msc = true`: the FM-1 as a USB drive |
+| `wifi` | `wifi = true` |
+| `second-core` | `cpu2 = true` |
+| `velocity` | `APP_TOUCH` in app.h (lib/touch): velocity from the keys |
+| `pressure` | `APP_TOUCH` in app.h: pressure on held keys |
+| `screen-reader` | a words file with its `# url:` line (`words`): the screen reader says the screen in words |
+| `screen-mirror` | `mirror = true`: the screen and panel mirrored over USB |
+| `backup` | `backup = true`: the saved work backed up and restored over USB |
+| `resources` | `resources`: a resource region the package carries, written by the update loader after the firmware |
+
+The vocabularies live in tools/firmware_json.py, and tests/firmware_json_test.py checks that this page and the schema
+list the same ones.
+
+## Rules
+
+Readers ignore fields they do not know. A missing field means the firmware does not say: a firmware without `tags`
+has no tags given, and one without `hardware.features` says nothing about its features. A hub may keep its own data
+in the file under keys that start with `x-`, for example `x-remotefm1`, at the top level or in `hardware`; the format
+will never use such a key. A firmware not built on fm1-base may write the file by hand, to the same schema.
+
+## Changes
+
+Schema 1, 2026-11-05. `screenshot` and fm1.toml's `title` added on 2026-11-05, before any release used the schema.
+----
+# Morse's build settings (fm1-base tools/build.py)
+name = "MORSE"
+id_prefix = "FM-1_13"          # package identity: dev FM-1_1300
+usb_manufacturer = "fm1-base"
+usb_product = "MORSE FM-1"     # host/morse finds the MIDI port by "MORSE"
+o2 = []
+include = ["../common"]        # hostlink, ledfx: shared with Conductor
+tagline = "a pocket Morse code machine"
+repo = "https://github.com/daviddwlee84/M-VAVE_FM-1"
+licence = "MIT"
+credits = "Built on fm1-base by Charles Vestal. Koch order from LCWO; MIDI keying in the Vail adapter's format."
+author = "daviddwlee84"
+description = "Key Morse on the piano keys (straight key or iambic paddles) and read what you sent; type letters on the keys and hear them; learn the code with flash cards a few minutes a day, by sound, or silently by the lights. Keying goes over USB-MIDI in the Vail adapter's format."
+tags = ["utility"]
+----
+{
+  "schema": 1,
+  "id": "morse",
+  "name": "fm1-base",
+  "author": "daviddwlee84",
+  "license": "MIT",
+  "tagline": "a pocket Morse code machine",
+  "description": "Key Morse on the piano keys (straight key or iambic paddles) and read what you sent; type letters on the keys and hear them; learn the code with flash cards a few minutes a day, by sound, or silently by the lights. Keying goes over USB-MIDI in the Vail adapter's format.",
+  "tags": ["utility"],
+  "source": "https://github.com/daviddwlee84/M-VAVE_FM-1",
+  "hardware": {
+    "models": ["FM-1"],
+    "flash": ["856014", "B36014"],
+    "features": ["usb-audio-in", "usb-audio-out", "screen-reader"]
+  },
+  "credits": "Built on fm1-base by Charles Vestal. Koch order from LCWO; MIDI keying in the Vail adapter's format."
+}
+````
+</details></tool-use>
+
+_**Agent - sidechain (claude-opus-5-5 2026-11-17 18:03:48Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Search build.py and README for release/hub logic
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1; grep -n -i -E "release|firmware.json|install|screenshot|hub" third_party/fm1-base/tools/build.py | head -80; echo ----; grep -n -i -E "hub|publish|release|firmware.json|catalog" third_party/fm1-base/README.md`
+
+```text
+5:"""Build an fm1-base firmware: the app, the update loader (felucca-bsp's) and an installable .fwsc package.
+7:  tools/build.py APP_DIR [--release X.Y[.Z][-suffix]] [--no-ble]
+14:                                       docs/RFM1-FORMAT.md); host/rfm1.c, tools/rfm1_pack.py. With --release X.Y:
+15:                                       APP_DIR/build/NAME-X.Y.rfm1, beside the release's package
+19:  id_prefix = "FM-1_0"       package identity: dev builds are the prefix + "00", releases the prefix + XXYYZZ
+96:                             update's staging area's 0xE2000..0xE3FFF, which an install erases; read with F0 7D 4C 48 F7,
+104:                             synth, directly or behind one powered hub (the FM-1 gives no power). Boot is a device
+122:                             package is for the host's own write (tools/fm1_resources.py, fm1_install.py and the
+123:                             installer page: a region there already answers at once); the host and web builds have it
+125:                             resources_what_ja): what it holds, in the installer's words ("the 909 cymbals")
+128:                             fault, a late job) restarts the FM-1, the reason in the crash record (Melodee's releases)
+173:                             production: try it on several FM-1s before a release. Off by default (360)
+184:                               rate   frame   key press      release  knob: every step  LEDs (refresh; flicker)    freed
+248:The firmware described for firmware hubs (firmware.json, docs/FIRMWARE-JSON.md; tools/firmware_json.py): these keys, and
+253:  credits = "..."            a sentence: what it is built from (the installer's footer too)
+256:  tags = ["synth", "fm"]     what it is, from a fixed list (tools/firmware_json.py TAGS; the build refuses another)
+257:  install = "https://..."    the page that installs it
+260:  screenshot = "docs/img/x.png"  a picture for the hubs' cards: a square PNG, at least 240 x 240, at most 2 MiB,
+262:                             folders, no ".."; the build checks it (a host simulator's screenshot fits as it is)
+264:are the parts this build has (printed as "parts"). A --release build of the firmware refuses without author (or
+265:authors), licence, tagline, description, tags, install, repo and a screenshot that passes the checks; any other
+267:Outputs in APP_DIR/build/: NAME.bin (app), loader/ota.bin (update loader), NAME.fwsc (package), firmware.json
+269:repository (APP_DIR named app) also has the repository's firmware.json written, when it changes.
+294:import firmware_json  # noqa: E402
+317:VERSION = None                      # APP_VERSION for release builds (default: "DEV", device/unity.c)
+318:RELEASE = None                      # --release X.Y as given: the release's file names (NAME-X.Y.fwsc, NAME-X.Y.rfm1)
+687:          "-DCONFIG_RELEASE_ENABLE", "-DCONFIG_CPU_WL82", "-DCONFIG_FREE_RTOS_ENABLE", "-DCONFIG_THREAD_ENABLE",
+890:              "         Try it on several FM-1s before a release, and say so in the release notes.", file=sys.stderr)
+891:        if RELEASE:
+892:            print(f"WARNING: release {RELEASE} is built with cpu_clock = 396.", file=sys.stderr)
+1377:              f"         A key press takes up to {frame:g} ms to count, a release {max(round(8.8 / frame), 2) * frame:g} ms.\n"
+1573:        (emu / "reader" / "FROM.txt").write_text(f"From fm1-reader (https://github.com/charlesvestal/fm1-reader) web/, "
+1609:    url = CONF.get("repo") or re.sub(r"^git@github\.com:", "https://github.com/", git("remote", "get-url", "origin"))
+1669:                "glue_url": f"https://github.com/charlesvestal/fm1-base/tree/{base_head}" if base_head else None,
+1674:    # a release's beside its package, named as it is (NAME-X.Y.rfm1); a dev build's in rfm1/ with the commit
+1675:    dst = OUT / f"{STEM}-{RELEASE}.rfm1" if RELEASE else out / f"{rid}-{version}.rfm1"
+1687:    global PRODUCT, VERSION, RELEASE, APP, OUT, GEN, LDR, ROOT, CONF, NAME, BLE, OWN, WIFI, CPU2, STEM
+1690:    ap.add_argument("--release", metavar="X.Y[.Z]", help="release build: identity id_prefix + XXYYZZ, version string X.Y[.Z]")
+1717:    if a.release:
+1720:        m = re.fullmatch(r"(\d{1,2})\.(\d{1,2})(?:\.(\d{1,2}))?(-[A-Za-z0-9]+)?", a.release)
+1722:            raise SystemExit(f"--release {a.release}: use X.Y[.Z][-suffix], up to two digits each")
+1724:        VERSION = a.release.upper()
+1725:        RELEASE = a.release
+1726:        name = f"{STEM}-{a.release}.fwsc"
+1727:    # a release package needs firmware.json's keys; the simulator, the emulator, the .rfm1 and dev builds only warn
+1728:    firmware_json.require(CONF, bool(a.release) and not (a.host or a.web or a.rfm1), APP / "fm1.toml", APP)
+1731:    words = firmware_json.words_published(APP / CONF.get("words", "words.tsv"))
+1732:    have = firmware_json.parts(CONF, BLE, OWN, WIFI, CPU2, touch, words)
+1733:    fw_json = firmware_json.dumps(firmware_json.make(CONF, NAME, firmware_json.display_name(CONF, APP), have,
+1735:    for f in firmware_json.targets(APP, no_ble=bool(CONF.get("ble")) and not BLE):
+1736:        firmware_json.write(f, fw_json)        # (docs/FIRMWARE-JSON.md; a file already so is left alone)
+1761:    parts = [(label, have[f]) for f, label in firmware_json.FEATURES]
+1770:        res = OUT / (Path(name).stem + "-res.bin")   # the host's own write (fm1_resources.py, the installer page)
+1776:    print(f"about    {firmware_json.targets(APP, no_ble=bool(CONF.get('ble')) and not BLE)[0]}  (for firmware hubs)")
+----
+3:A base for M-VAVE FM-1 firmware, on [felucca-bsp](https://github.com/hugelton/felucca-bsp): the platform layer
+10:[CTL-1](https://github.com/charlesvestal/fm1-ctl) (with Bluetooth MIDI) and
+11:[Radio](https://github.com/charlesvestal/fm1-radio) (with WiFi). Expect the platform interface (`include/plat.h`)
+17:<https://charlesvestal.github.io/fm1-base/emu/>.
+19:    git clone --recursive https://github.com/charlesvestal/fm1-base
+68:`ble_stack = "own"` it runs instead on Henri David's stack from [Optimist](https://github.com/w0ts/optimist),
+199:The [FM-1 Screen Reader](https://github.com/charlesvestal/fm1-reader)'s page uses the same file, as a copy.
+210:from your release and put it in the app's firmware folder. The format is RemoteFM1IOS's
+211:[docs/RFM1-FORMAT.md](https://github.com/Quixotic7/RemoteFM1IOS/blob/main/docs/RFM1-FORMAT.md).
+214:    tools/build.py APP_DIR --rfm1 --release X.Y      # APP_DIR/build/NAME-X.Y.rfm1, beside NAME-X.Y.fwsc
+216:The ID is fm1.toml's `name` in lower case. Without `--release` the version is `dev+` and the app repository's commit.
+217:The template's release workflow builds the release's `.rfm1` and attests it with the package.
+227:## firmware.json: your firmware in hubs
+229:Every build writes `firmware.json`, a description of the firmware for the places that list and install FM-1
+230:firmwares (The Firmware Hub, RemoteFM1, M-Flasher): its name, author, licence, a paragraph on it, tags, the install
+234:The format, its fields and its vocabularies are in [docs/FIRMWARE-JSON.md](docs/FIRMWARE-JSON.md).
+```
+</details></tool-use>
+
+_**Agent - sidechain (claude-opus-5-5 2026-11-17 18:03:53Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Read README hub section and find release workflow
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/third_party/fm1-base; sed -n 200,245p README.md; echo ----; ls -a template; ls template/.github/workflows 2>/dev/null; find . -path ./vendor -prune -o -name "*.yml" -print | grep -i workflow | head; git log -1 --format='%H %ci'`
+
+```text
+The screen reader's firmware side lives here too: `device/announce.c` and `tools/gen_words.py` (MPL-2.0, like the
+rest; see LICENSING.md) are the one copy. fm1-reader keeps the page, the voice, the protocol (its PROTOCOL.md), the audit and the skill, and its
+`tools/sync_announce.sh` copies these two files into the firmwares not on fm1-base.
+
+## .rfm1: your firmware in host apps
+
+An `.rfm1` file is your firmware built to run inside an app instead of on the FM-1: RemoteFM1 for iOS first, as
+an instrument or an AUv3. It is the host simulator compiled to WebAssembly, the same app as on the FM-1, with a
+manifest (name, version, licence, the source at its commit), your credits and the licence texts. Users download it
+from your release and put it in the app's firmware folder. The format is RemoteFM1IOS's
+[docs/RFM1-FORMAT.md](https://github.com/Quixotic7/RemoteFM1IOS/blob/main/docs/RFM1-FORMAT.md).
+
+    tools/build.py APP_DIR --rfm1                    # APP_DIR/build/rfm1/ID-dev+COMMIT.rfm1 (emcc, as --web)
+    tools/build.py APP_DIR --rfm1 --release X.Y      # APP_DIR/build/NAME-X.Y.rfm1, beside NAME-X.Y.fwsc
+
+The ID is fm1.toml's `name` in lower case. Without `--release` the version is `dev+` and the app repository's commit.
+The template's release workflow builds the release's `.rfm1` and attests it with the package.
+The manifest's `source_url` is fm1.toml's `repo` at that commit, so commit (and push) what you build. Its `license`
+is fm1.toml's `licence`, and its authors are `authors = ["..."]` or the repository's first author. The memory is fixed
+at 8 MiB (`rfm1_memory_mib`, at most 32). The build checks the module against the format before it writes the file.
+
+In the app, the panel, screen, LEDs, sound, MIDI both ways, velocity and pressure (`APP_TOUCH`) and the screen
+reader (over SysEx) work as in the browser emulator. Saved objects and the data area are kept by the app with its
+state. There is no radio, no USB host and no environment (`getenv` returns nothing). `tests/rfm1_test.mjs FILE`
+drives a file as a host app does.
+
+## firmware.json: your firmware in hubs
+
+Every build writes `firmware.json`, a description of the firmware for the places that list and install FM-1
+firmwares (The Firmware Hub, RemoteFM1, M-Flasher): its name, author, licence, a paragraph on it, tags, the install
+page, and the hardware it needs (the flash parts it saves to, the parts the build has, such as Bluetooth MIDI or USB
+audio). It comes from fm1.toml (`author`, `description`, `tags`, `install`, `site`, with the site's `tagline`, `repo`,
+`licence` and `credits`) and lands in `APP_DIR/build/` and, for an app in `app/`, at the repository's root, to commit.
+The format, its fields and its vocabularies are in [docs/FIRMWARE-JSON.md](docs/FIRMWARE-JSON.md).
+
+## Moving a Felucca-based firmware here
+
+A Felucca-based firmware (GPL-3.0) can move onto fm1-base and felucca-bsp and keep its licence: their MPL-2.0 files
+may be part of a GPL work, and stay MPL-2.0 file by file. It then has the platform's parts and fixes with every other
+firmware, instead of its own copy of Felucca. `skill/felucca-to-fm1-base/` is a Claude skill that walks through the
+move: the inventory (what is platform, what is the app), what fm1-base needs, the port, the checks (the app's
+scenarios compared byte for byte with the old simulator's, then the FM-1), and the licensing files. It never changes
+the firmware's licence: it asks. Relicensing to MPL-2.0 is needed only to link JieLi's Bluetooth or WiFi libraries;
+`skill/felucca-to-fm1-base/RULES.md` has what it takes (`tools/provenance.py` finds Felucca's lines and whose they
+are). To move a firmware with Claude Code, run this from inside its repository (Node.js's `npx` fetches the skill
+----
+.github
+docs
+site
+tests
+.gitignore
+app.c
+app.h
+fm1.toml
+README.md
+words.tsv
+release.yml
+./template/.github/workflows/release.yml
+./bsp/.github/workflows/jack.yml
+./bsp/.github/workflows/dim.yml
+./bsp/.github/workflows/sysex-queue.yml
+./bsp/.github/workflows/board-tests.yml
+./bsp/.github/workflows/flash-tests.yml
+./bsp/.github/workflows/usb-host.yml
+./bsp/.github/workflows/cpu1-stack.yml
+./bsp/.github/workflows/ota.yml
+./bsp/.github/workflows/input-rate.yml
+c8e05997ce970875038156d2bbd69e712eac1543 2026-11-13 08:32:01 +0100
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 18:03:55Z)**_
+
+接著修 TYPE 的鍵上點劃：開啟時把鍵盤從 86 px 拉高到 126 px，上方輸入行縮成一行。這樣黑鍵和白鍵上都能同時放下最長的碼（5–6 個元素）和字母。
+
+_**Agent - sidechain (claude-opus-5-5 2026-11-17 18:03:56Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Read template release workflow and README
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/third_party/fm1-base/template; cat .github/workflows/release.yml; echo ----; cat README.md | head -120; echo; ls site docs`
+
+```text
+# SPDX-License-Identifier: MPL-2.0
+# A firmware's release: built from source on GitHub by the shared FM-1 builder, its packages signed with build
+# provenance, so the FM-1 Firmware Hub shows them as built from source. From fm1-base's template, as LOOM-8's;
+# after X0X's (charlesvestal/fm1-x0x#25, by Kerem Kilic) and Melodee's (keremimo/melodee 4f5fb6d).
+#
+# For a firmware laid out as fm1-base's template expects (the app in app/, fm1-base in base/ with felucca-bsp in
+# base/bsp/, ./build.sh running base/tools/build.py app, tests/run_tests.sh). Move this file to the repository's
+# root, as .github/workflows/release.yml. The lines a firmware changes are marked "# <- yours":
+#   - the concurrency group and the release title: the firmware's name (TEMPLATE)
+#   - pkg=template, twice (build and test): fm1.toml's name in lower case, which names the build's files
+#     (app/build/template.fwsc, template-X.Y.fwsc, template.bin, template-X.Y.rfm1)
+#   - any other assets beside the package, the app, the .rfm1 and firmware.json (LOOM-8's resource region, CTL-1's
+#     build without Bluetooth)
+#   - the tests: anything they need beside this repository (reference sources at fixed commits), or tests-block
+name: Build and attest firmware
+
+on:
+  push:
+    tags: ['v[0-9]*']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: template-release-${{ github.ref }}             # <- yours
+  cancel-in-progress: false
+
+jobs:
+  prepare:
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    steps:
+      - name: Prepare a draft without replacing a public release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          TITLE: TEMPLATE                                  # <- yours
+        run: |
+          set -euo pipefail
+          if [[ "$GITHUB_REF" != refs/tags/* ]]; then exit 0; fi
+          version=${GITHUB_REF_NAME#v}
+          # (the versions base/tools/build.py --release takes)
+          [[ "$version" =~ ^[0-9]{1,2}\.[0-9]{1,2}(\.[0-9]{1,2})?(-[A-Za-z0-9]+)?$ ]]
+          flags=(--prerelease=false)
+          if [[ "$version" == *-* ]]; then flags=(--prerelease --latest=false); fi
+          if draft=$(gh release view "$GITHUB_REF_NAME" --json isDraft --jq .isDraft); then
+            [[ "$draft" == true ]] || { echo 'Refusing to rebuild a public release'; exit 1; }
+          else
+            gh release create "$GITHUB_REF_NAME" --verify-tag --draft \
+              --title "$TITLE $version" --generate-notes "${flags[@]}"
+          fi
+
+  firmware:
+    needs: prepare
+    # The Firmware Hub recognises attestations from this reviewed builder tag.
+    uses: zvenson/fm1-build/.github/workflows/build.yml@v1
+    permissions:
+      contents: write
+      id-token: write
+      attestations: write
+    with:
+      sdk: true
+      tests-block: true
+      build: |
+        set -euo pipefail
+        pkg=template                                       # <- yours
+        # the builder checks out without submodules: fm1-base (base/) and its felucca-bsp (base/bsp/), at the
+        # commits this one links
+        git submodule update --init --recursive
+        # the fonts' OpenType features (base/tools/gen_font.py): Pillow's raqm, which loads the system's FriBiDi
+        sudo apt-get install -y -qq libfribidi0
+        python3 -c "from PIL import features; assert features.check('raqm'), 'Pillow without raqm'"
+        test "$(git -C "$AC79_SDK" rev-parse HEAD)" = d179b4484759423312073f5fbb232501aa491047
+        # Emscripten for the .rfm1 (host apps: RemoteFM1), a fixed version from emsdk at a fixed commit
+        git clone -q https://github.com/emscripten-core/emsdk.git "$RUNNER_TEMP/emsdk"
+        git -C "$RUNNER_TEMP/emsdk" checkout -q a2b92777574c2feda07994cd4f1079a3dfc151f8   # emsdk 6.0.10
+        "$RUNNER_TEMP/emsdk/emsdk" install 6.0.10
+        "$RUNNER_TEMP/emsdk/emsdk" activate 6.0.10
+        set +u; source "$RUNNER_TEMP/emsdk/emsdk_env.sh"; set -u
+        emcc --version
+        mkdir -p build/release-assets
+        if [[ "$GITHUB_REF" == refs/tags/* ]]; then
+          version=${GITHUB_REF_NAME#v}
+          ./build.sh --release "$version"
+          cp "app/build/$pkg-$version.fwsc" build/release-assets/
+          cp "app/build/$pkg.bin" "build/release-assets/$pkg-$version-app.bin"
+          # (the tests check the update path against app/build/$pkg.fwsc: there, the release package itself)
+          cp "app/build/$pkg-$version.fwsc" "app/build/$pkg.fwsc"
+          # the app for host apps (base/README.md, .rfm1)
+          ./build.sh --rfm1 --release "$version"
+          cp "app/build/$pkg-$version.rfm1" build/release-assets/
+        else
+          ./build.sh
+          cp "app/build/$pkg.fwsc" build/release-assets/
+          cp "app/build/$pkg.bin" "build/release-assets/$pkg-app.bin"
+          ./build.sh --rfm1
+          cp app/build/rfm1/"$pkg"-dev+*.rfm1 "build/release-assets/$pkg.rfm1"
+        fi
+        # the firmware described for hubs (base/docs/FIRMWARE-JSON.md), from the build with Bluetooth
+        cp app/build/firmware.json build/release-assets/
+        # <- yours: any other assets, into build/release-assets/
+      test: |
+        set -euo pipefail
+        pkg=template                                       # <- yours
+        [ -f "app/build/$pkg.fwsc" ]
+        # <- yours: anything the tests need beside this repository, fetched at fixed commits
+        sh tests/run_tests.sh
+      packages: build/release-assets/*
+
+  verify:
+    needs: firmware
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+      attestations: read
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: packages
+          path: build/attested
+      - name: Verify checksums and signed source provenance
+        working-directory: build/attested
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          sha256sum --check SHA256SUMS
+          for package in build/release-assets/*.fwsc build/release-assets/*-app.bin build/release-assets/*.rfm1 \
+              build/release-assets/firmware.json; do
+            gh attestation verify "$package" --repo "$GITHUB_REPOSITORY" \
+              --signer-workflow zvenson/fm1-build/.github/workflows/build.yml \
+              --source-ref "$GITHUB_REF" --source-digest "$GITHUB_SHA"
+          done
+      - name: Publish the verified draft
+        if: startsWith(github.ref, 'refs/tags/')
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: gh release edit "$GITHUB_REF_NAME" --draft=false
+----
+# The template
+
+The smallest complete fm1-base firmware. Copy this directory to start your own: it builds, installs, updates, runs
+in the host simulator and in the browser, speaks to a screen reader, and publishes a site with an installer and a
+manual.
+
+| File | What |
+| --- | --- |
+| `app.h` | The app's settings (name, block size, the store's objects) and its half of the contract with the platform |
+| `app.c` | The app: input, sound, screen, saving |
+| `fm1.toml` | Build and site settings: name, package identity, USB names, tagline, source, licence, and firmware.json's |
+| `words.tsv` | The screen reader's words (fm1-reader): the screen's text and how to say it |
+| `tests/basic.txt` | Host simulator checks: keys, MIDI, settings across a reboot, the sound, the screen reader |
+| `tests/screens.txt` | The manual's screenshots |
+| `docs/MANUAL.md` | The manual (an example to rewrite) |
+| `site/landing.md` | The site's front page |
+| `.github/workflows/release.yml` | Signed releases built on GitHub (moved to the repository's root: Make it your own) |
+
+## Build, test, install
+
+From the fm1-base directory:
+
+    tools/build.py template                     # template/build/template.fwsc (JieLi toolchain, AC79 SDK)
+    tools/build.py template --host              # the host simulator, then:
+    template/build/host/template_host template/tests/basic.txt template/build/host
+    tools/build.py template --web               # the browser emulator: template/build/emu/
+    python3 tools/fm1_install.py template/build/template.fwsc
+
+For the toolchain, the SDK and the container the build runs in, see fm1-base's README.
+
+## Release and site
+
+    tools/build.py template --release 0.1       # template/build/template-0.1.fwsc, identity FM-1_11000100
+    tools/publish_site.sh template 0.1          # builds the release, the emulator and the site; pushes gh-pages
+
+The site has the front page, the installer, the emulator, the manual and the screen reader's words. To build it
+without publishing, run `tools/make_site.py template template/build/template-0.1.fwsc 0.1 OUT_DIR`.
+
+In a firmware's own repository, a release is built on GitHub from its tag by `.github/workflows/release.yml`, which
+calls the shared FM-1 builder ([`zvenson/fm1-build` at `v1`](https://github.com/zvenson/fm1-build/tree/v1)). The
+builder runs `./build.sh --release X.Y` and `tests/run_tests.sh` (a failing test stops the release) and signs build
+provenance for `NAME-X.Y.fwsc` and `NAME-X.Y-app.bin`; the FM-1 Firmware Hub shows such packages as built from
+source. It also builds `NAME-X.Y.rfm1` for host apps such as RemoteFM1, with Emscripten 6.0.10 from emsdk, and
+releases and signs it with `firmware.json`. The workflow makes a draft release (or keeps the one you wrote, with its notes), checks the sums and the
+signatures, then publishes it. A tag with a suffix (`v0.2-beta`) is a prerelease; a published release is never
+rebuilt. For the site, download that package and give it to `publish_site.sh`, so the site has the attested one:
+
+    gh release download v0.1 --pattern '*.fwsc' --dir app/build
+    base/tools/publish_site.sh app 0.1 app/build/NAME-0.1.fwsc
+
+## Make it your own
+
+1. Copy `template/` to your firmware's repository, with fm1-base beside it as a git submodule.
+2. In `app.h`, set `APP_NAME`, and the store's objects and their flash offsets (`APP_STORE_MAP`).
+3. In `fm1.toml`, set the name, an `id_prefix` of your own (`FM-1_` and digits; each firmware has its own), the USB
+   names, the site's tagline, source and credits, and your name, a description, tags, your install page and a
+   screenshot. The build writes them to `firmware.json` at your repository's root, which firmware hubs read
+   (fm1-base's docs/FIRMWARE-JSON.md); commit it. A release build refuses until your name, the description, the
+   tags, the install page, the tagline, the source, the licence and the screenshot are set. The screenshot is a
+   square PNG of at least 240 × 240 in your repository, its path relative to the repository's root; one of the
+   manual's screenshots (`tests/screens.txt`) fits as it is.
+4. In `words.tsv`, set the `# url:` line to where your site publishes its words.
+5. Write your app in `app.c`: `app_render` for the sound, `app_frame` for the screen and the controls, and the rest
+   of the contract in `app.h`.
+6. Rewrite `docs/MANUAL.md` and `site/landing.md`, and the tests.
+7. For signed releases, move `.github/workflows/release.yml` to the repository's root (`.github/workflows/`) and
+   change the lines marked `# <- yours`: the name in the release title and the concurrency group, `pkg=` (fm1.toml's
+   name in lower case), any other assets, and what the tests need. Then a pushed tag `vX.Y` builds, tests, attests
+   and publishes the release.
+
+fm1-base is MPL-2.0: changes to its files are published under MPL-2.0, and your own files may use any licence.
+
+site:
+landing.md
+
+docs:
+img
+MANUAL.md
+```
+</details></tool-use>
+
+_**Agent - sidechain (claude-opus-5-5 2026-11-17 18:04:02Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Check Conductor config and hub mentions in repo
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1; cat firmware/conductor/fm1.toml; echo ----; grep -rn -i -E "firmware ?hub|catalog" docs/ README.md AGENTS.md --include=*.md | head -40; echo ----; git log --oneline | grep -i -E "hub|catalog|release|firmware.json" | head; git tag; ls .github/workflows`
+
+```text
+# Conductor's build settings (fm1-base tools/build.py)
+name = "CONDUCTOR"
+id_prefix = "FM-1_12"          # package identity: dev FM-1_1200
+usb_manufacturer = "fm1-base"
+usb_product = "CONDUCTOR FM-1" # the daemon finds the MIDI port by "CONDUCTOR"
+o2 = []
+include = ["../common"]        # hostlink, ledfx, chime: shared with later firmwares
+words = "words.tsv"
+ble = true                     # Bluetooth MIDI beside USB (OCT+ turns it off until the next power-on)
+ble_stack = "own"              # fm1-base's own stack: it hands incoming SysEx to the app (JieLi's drops it)
+ble_diag = false               # no link-layer diagnostics: 2.4 KB of RAM back
+tagline = "a desk console for coding agents"
+repo = "https://github.com/daviddwlee84/M-VAVE_FM-1"
+licence = "MIT"
+credits = "Built on fm1-base by Charles Vestal."
+author = "daviddwlee84"
+description = "The keys are your coding agents: their lights say who needs you, the screen says what they are doing, a chime tells you without looking. Talks to hc or Herdr through a host daemon over USB-MIDI."
+tags = ["utility"]
+----
+(eval):1: no matches found: --include=*.md
+----
+287db4f Fix ChoralRoot package (was the SMK-37 build), rehearse the FM-1 one, explain Hub vs RemoteFM1 vs fm1-emu
+aed4bc1 Document the Firmware Hub and compare the flash-chip video's claims with upstream
+df71ea9 Record SLOOP backup, let fm1-backup-release accept a path
+7cce214 Publish stock backup as a release asset, document the shortcut
+backup-2026-11-17-0341-pre-ctl-1.0.3
+backup-2026-11-17-pre-agtdeck
+backup-2026-11-17-sloop-2.8.5
+backup-2026-11-17-stock
+docs.yml
+```
+</details></tool-use>
+
+_**Agent - sidechain (claude-opus-5-5 2026-11-17 18:04:06Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Grep repo docs for Firmware Hub mentions
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1; grep -rn -i -E "firmware ?hub|catalog" docs README.md AGENTS.md | head -50`
+
+```text
+docs/resources.md:15:!!! warning "The Firmware Hub 不是安全認證"
+docs/resources.md:16:    [The Firmware Hub](https://thefirmwarehub.com/) 的首頁寫明：它不跑測試也不做審查，只檢查檔案是不是 FM-1 package（2026-11-17 查核）。一鍵安裝很方便，但相容性與品質要自己看各專案的說明。
+docs/resources.md:36:| [The Firmware Hub](https://thefirmwarehub.com/) | 韌體目錄 + 瀏覽器一鍵安裝 | 方便試玩；只檢查封裝，見上方警告 |
+docs/resources.md:38:分工：找新韌體看 The Firmware Hub 或 awesome-fm-1；查底層正確性看 Developers' Wiki；查逆向與工具看 aroum/fm1-custom-fw。
+docs/official.md:5:連結多數取自上游 repo 的 README 與 Firmware Hub（2026-11-17），我沒有逐一開啟確認內容，官方網站的頁面是動態載入的。
+docs/official.md:14:| [fm1_open](https://github.com/m-vave/fm1_open) | 官方的**開放韌體** FM1 Open V14：8 軌、8 個 sample slot、16 個效果示範。app 是 GPL-3.0 加 SDK linking exception；Firmware Hub 註明它的聲音引擎是閉源的 binary SDK。build 需要 Windows 與 JieLi 的 Windows toolchain | 沒有 |
+docs/official.md:37:- 我的機器是新晶片，社群工具與 Firmware Hub 對新晶片的標示比官方資料清楚。
+docs/index.md:17:| 選一套韌體來玩 | [韌體地圖](firmware/index.md)、[The Firmware Hub](firmware/hub.md) |
+docs/ecosystem.md:20:也就是說：自製韌體的爆發集中在 2026 年 10 月之後，到我拿到機器時只有六週左右。Firmware Hub 上的 228 個韌體大多是這段時間出現的。
+docs/ecosystem.md:27:- **官方隨後跟進。** M-VAVE 在 10 月中發布 `fm1_open`：一份 GPLv3（附 SDK linking exception）的開放韌體「FM1 Open V14」。Firmware Hub 對它的描述是 app 開源、**聲音引擎是閉源的**（binary SDK）。它含 binary SDK、8 軌、8 個 sample slot、16 個效果示範，以及一個網頁版的 [Workbench](https://open.m-vave.com/fm1-workbench)（更新韌體、預覽、管理 project 與 sample）。它的 build 需要 Windows 與 JieLi 的 Windows toolchain。
+docs/ecosystem.md:39:- **社群逆向或改造的**：Zoom 效果器的自製 effect、Elektron Model:Cycles 的 mod（Firmware Hub 也有收）。
+docs/ecosystem.md:50:- **門檻被幾個基礎專案壓低了。** Felucca / felucca-bsp 解決硬體層，Dinghy 與 fm1-base 提供可以直接複製的 template，fm1-emu 讓人不用實機就能測，Web MIDI installer 讓安裝變成按一個按鈕，Firmware Hub 提供目錄與散布。
+docs/ecosystem.md:52:- **AI 輔助寫程式。** Firmware Hub 自己的說法是「now anyone can vibe code firmware」。不少專案的 README 直接寫明是用 AI 協作完成的，有些（例如 Trireme）也坦白沒有逐項手測。這解釋了數量，也是品質參差的原因。
+docs/ecosystem.md:82:**不是 FM-1，也不是 FM-1 的模擬器。** 它是 Firmware Hub 那群人（zvenson / Designburg）正在籌備的**另一台硬體**：一台「官方支援開放韌體」的機器，網站寫 Coming 2027、即將 crowdfunding，目前只能登記名單，規格與價格未公布。它與 M-VAVE 無關。`[上游]` 平台、相容性與我對這個模式的看法見[相關硬體](hardware/related.md)。
+docs/firmware/index.md:34:清單來自 Firmware Hub 目錄的描述（2026-11-17），除了 SLOOP 與 ChoralRoot 以外我都沒有實際用過。
+docs/playground.md:9:| [fm1-emu](https://joakimeriksson.github.io/fm1-emu/) | 晶片層級的 FM-1 模擬器，選一個韌體按 Start | 原封不動地跑 `.fwsc`。Firmware Hub 的 Try、RemoteFM1 的 Emulated 模式用的都是它 |
+docs/playground.md:11:| [The Firmware Hub](https://thefirmwarehub.com/) | 韌體目錄，每張卡片有 Try | 可篩選「Saves on newer FM-1s」。見 [The Firmware Hub](firmware/hub.md) |
+docs/playground.md:12:| [VIBE FM Playground](https://play.thefirmwarehub.com/) | VIBE FM 的網頁版 | **不是 FM-1**，是另一台尚未上市的機器的面板；跑的是為它轉換過的 FM-1 韌體。見[相關硬體](hardware/related.md) |
+docs/firmware/hub.md:1:# The Firmware Hub
+docs/firmware/hub.md:3:[The Firmware Hub](https://thefirmwarehub.com/) 是目前最大的 FM-1 社群韌體目錄：列出韌體、在瀏覽器裡一鍵安裝（Chrome / Edge，Web MIDI）、連到模擬器試玩，並附救援教學。安裝不需要帳號。
+docs/firmware/hub.md:5:以下數字來自它的 `catalog.json`，查核於 **2026-11-17**（目錄自己標的更新時間是 2026-11-16 18:01 UTC）。`[上游]`
+docs/firmware/hub.md:57:- **救援教學**：Hub 的 [FM-1 rescue](https://thefirmwarehub.com/tools/rescue/) 依「你看到什麼」分步驟寫，和[救援](../getting-started/recovery.md)互補。
+docs/firmware/hub.md:67:| **The Firmware Hub** | **目錄**：有哪些韌體、套件在哪、認不認得新晶片 | zvenson / Designburg |
+docs/firmware/hub.md:71:FM-1 Player 的頁面自己寫明：韌體清單來自 Firmware Hub 的即時目錄（我看到時列了 243 個）；帶圓點的韌體以 `.rfm1` 原生執行（韌體的原始碼編成 WebAssembly）；其餘每一個都能用 fm1-emu 模擬執行，套件從 Hub 指向的位置抓。`[上游]`
+docs/firmware/ctl-1/index.md:65:| Firmware Hub 目錄 | 標為認得新晶片（從套件判讀） |
+docs/hardware/flash-chips.md:58:| 在 Firmware Hub 篩選支援新晶片的韌體 | 一致。見 [The Firmware Hub](../firmware/hub.md)。影片說 157 款相容、73 款不相容；我 2026-11-17 從目錄算到 152 與 71（另有 5 個不檢查晶片） |
+docs/hardware/io.md:26:Firmware Hub 上找 sampler 類韌體：在 [catalog](https://thefirmwarehub.com/) 搜尋 sample、granular。
+docs/hardware/related.md:10:| **M-VAVE SMK-37 Pro / Elite** | 37 鍵鍵盤，裡面是 FM-1 的晶片：flash 配置、音訊、更新路徑相同，只有面板接線不同。16 個 RGB pad、8 個旋鈕、4 個 fader、pitch / mod wheel、螢幕 | Firmware Hub 上有 26 個；多數是用 [fm1-to-smk37](https://github.com/genkigenki/fm1-to-smk37) 從 FM-1 韌體移植 |
+docs/hardware/related.md:17:## Firmware Hub 收錄的其他機器
+docs/hardware/related.md:28:Firmware Hub 背後的 Designburg（德國漢堡，Sven Trogus）正在做的自有硬體。它的頁面寫 **Coming 2027**，會走 crowdfunding，目前只能登記名單。規格與價格未公布，平台頁提到有一台 VIBE Box prototype。它**與 M-VAVE 無關**，網站自己寫明 not affiliated with M-VAVE。
+docs/hardware/mobile.md:62:- Firmware Hub 的目錄把 RemoteFM1 0.3.6 標為認得新晶片（從套件判讀，不是實機測試）。
+docs/hardware/mobile.md:85:如果主要目的是控制 iPad 上的 app，我會刷 CTL-1；如果是讓 SLOOP 和 iPad 一起玩（SLOOP 出鼓與 bass，iPad 出別的音色並錄音），維持 SLOOP 就可以。CTL-1 在 Firmware Hub 的目錄標為認得新晶片，還沒在我的機器上試過。
+docs/agentic/skills.md:16:兩個 skill：`mvave-fm1-firmware`（備份、以 ORBIT 為例的刷機、還原、unbrick、protocol、flash map、安全規則）與 `mvave-fm1-software-development`（hardware API、memory map、build / package、firmware catalog）。另有 `docker/Containerfile` 與 `mvave-build.sh`，在容器裡用 JieLi toolchain build；刷機一律在 host 上做，不在容器內。`[上游]`
+docs/agentic/emulator.md:58:| `?fw=ID` | 指定韌體，也接受 The Firmware Hub 的 id |
+docs/getting-started/cautions.md:11:- **從上游 release 下載，核對 hash。** [The Firmware Hub](https://thefirmwarehub.com/) 的一鍵安裝很方便，但它自己聲明只檢查套件格式，不逐一測試硬體相容性或品質。
+docs/getting-started/bricking.md:59:5. **還能動的機器**：M-Flasher 的 DOWNLOAD MODE、Unbricker 的 `softkey`、Firmware Hub 的 Rescue 都是送一個訊息叫它進去。各韌體的按鍵組合不同，見[救援](recovery.md)。
+docs/getting-started/bricking.md:86:- **新晶片機只裝認得新晶片的韌體**，見 [The Firmware Hub](../firmware/hub.md)。
+docs/getting-started/bricking.md:97:| [Firmware Hub 的 FM-1 rescue](https://thefirmwarehub.com/tools/rescue/) | 依「你看到什麼」分步驟，含瀏覽器裡的 Rescue 按鈕 |
+docs/dev/morse.md:11:- [Firmware Hub catalog](https://thefirmwarehub.com/catalog.json) 的 244 個套件裡沒有 Morse、CW、keyer（電報意義的）、trainer。
+docs/getting-started/install-m-flasher.md:69:| 各韌體自己的 installer | 例如 [ChoralRoot](https://quixotic7.github.io/ChoralRootFM1/webapp/installer/)、Melodee、FMDj；Firmware Hub 的 `catalog.json` 有 `install` 欄位的就是 |
+docs/dev/index.md:70:fm1-base template 附的 release workflow（透過共用的 [zvenson/fm1-build](https://github.com/zvenson/fm1-build) 產生 build attestation，Firmware Hub 才會標 built from source）假設的是**獨立的 firmware repo**：app 在 `app/`、fm1-base 在 `base/`、根目錄有 `./build.sh`。放在這個筆記 repo 的子目錄不符合那個配置，所以我把複本裡的 `.github/` 拿掉了。
+AGENTS.md:122:   "does firmware X know the new flash chip", the Firmware Hub's
+AGENTS.md:123:   `https://thefirmwarehub.com/catalog.json` has a per-package `chip` field
+```
+</details></tool-use>
+
+_**Agent - sidechain (claude-opus-5-5 2026-11-17 18:04:10Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Read hub notes, dev index and Morse/Conductor docs
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1; cat docs/firmware/hub.md; echo -----; sed -n 55,95p docs/dev/index.md; echo ----; grep -n -i -E "hub|catalog|release|publish|list" docs/dev/morse.md docs/agentic/conductor.md | head -40`
+
+```text
+# The Firmware Hub
+
+[The Firmware Hub](https://thefirmwarehub.com/) 是目前最大的 FM-1 社群韌體目錄：列出韌體、在瀏覽器裡一鍵安裝（Chrome / Edge，Web MIDI）、連到模擬器試玩，並附救援教學。安裝不需要帳號。
+
+以下數字來自它的 `catalog.json`，查核於 **2026-11-17**（目錄自己標的更新時間是 2026-11-16 18:01 UTC）。`[上游]`
+
+## 有什麼
+
+FM-1 共 **228** 個韌體：
+
+| 類別 | 數量 |
+|---|---|
+| synth | 89 |
+| groove（groovebox） | 76 |
+| other（控制器、工具、遊戲等） | 26 |
+| drums | 16 |
+| tracker | 11 |
+| chords | 8 |
+
+安裝次數最多的幾個：SLOOP（約 11,500）、JIANT FM、Skiff、Felucca、Melodee、OberVave、FMini-1、Clipper。很多條目是這幾個主幹的衍生版。
+
+除了 FM-1，Hub 也收 M-VAVE SMK-37、Elektron Model:Cycles、Erica Synths LXR-02 的韌體，並有工具區（模擬器、editor、備份與救援、自己 build）、Knowledge Base 與 creator 名單。
+
+## 新晶片篩選：對我這台最重要的功能
+
+Hub 會從每個套件裡讀出它認得哪些 flash 晶片，並提供篩選 **Saves on newer FM-1s**。我的機器是新晶片 `0xB36014`，裝東西前先看這一欄。
+
+| Hub 的標示 | 意思 | 數量 |
+|---|---|---|
+| Every FM-1, the newer chip too | 套件認得新晶片 | 152 |
+| The first FM-1s only | 只認得舊晶片：在新機上存檔只留在 RAM，更新也可能失敗 | 71 |
+| Every FM-1: it does not check the chip | 不檢查晶片；Hub 註明他們沒在新晶片上試過 | 5 |
+
+我在用或考慮過的：
+
+| 韌體 | Hub 版本 | 新晶片 |
+|---|---|---|
+| SLOOP | 2.8.5 | 認得 |
+| Felucca | 1.8.2 | 認得 |
+| Melodee | 1.6.1 | 認得 |
+| Clipper | 1.3.1 | 認得 |
+| X0X | 1.2.2 | 認得 |
+| CTL-1 | 1.0.3 | 認得 |
+| AGTDECK（Agent Deck） | 0.6.3 | 認得（Hub 版本比上游 release 的 0.7 舊） |
+| SLOOP DX7 Banks、SLOOP Floyd FM、X0X-RMX、Felucca [Salt] | — | **只認舊晶片**，不要裝 |
+
+衍生版不一定跟上主幹：SLOOP 本身支援新晶片，但基於舊版 SLOOP 的幾個 fork 還沒有。
+
+!!! warning "「認得晶片」不等於「測過」"
+    這一欄是從套件內容判讀出來的，不是實機測試結果。Hub 自己聲明它不跑測試也不做 review，只檢查檔案是不是 FM-1 套件。還是要自己備份、刷完做存檔測試。
+
+## 我怎麼用它
+
+- **找東西、看新晶片標示**：用 Hub。
+- **下載與安裝**：仍然從韌體作者自己的 GitHub release 下載、對 digest，再用 `just fm1-flash`。這樣版本最新（例如 Agent Deck），而且寫入前有 M-Flasher 的檢查與自動備份。
+- **試玩**：Hub 的 Try 與 [fm1-emu](../agentic/emulator.md) 是同一個模擬器。
+- **救援教學**：Hub 的 [FM-1 rescue](https://thefirmwarehub.com/tools/rescue/) 依「你看到什麼」分步驟寫，和[救援](../getting-started/recovery.md)互補。
+
+Hub 上標「Built from source」的套件有 build attestation（由共用的 [zvenson/fm1-build](https://github.com/zvenson/fm1-build) 產生）。那代表檔案確實是從那個 commit build 出來的，不代表韌體安全。
+
+## 和 remotefm1.com、fm1-emu 的關係
+
+三個網站看起來功能重疊，其實是三層：
+
+| 東西 | 角色 | 誰做的 |
+|---|---|---|
+| **The Firmware Hub** | **目錄**：有哪些韌體、套件在哪、認不認得新晶片 | zvenson / Designburg |
+| **[fm1-emu](../agentic/emulator.md)** | **模擬器引擎**：模擬 FM-1 的晶片，原封不動地跑 `.fwsc` | joakimeriksson |
+| **[remotefm1.com](https://remotefm1.com/)（FM-1 Player）** | **播放器**：用上面兩者，再加上自己的原生執行方式與「把實機當面板」 | Quixotic7 |
+
+FM-1 Player 的頁面自己寫明：韌體清單來自 Firmware Hub 的即時目錄（我看到時列了 243 個）；帶圓點的韌體以 `.rfm1` 原生執行（韌體的原始碼編成 WebAssembly）；其餘每一個都能用 fm1-emu 模擬執行，套件從 Hub 指向的位置抓。`[上游]`
+
+所以來源確實是 Hub，模擬的部分是 fm1-emu。Hub 自己的 Try、Agent Deck 的線上展示頁、我本機的 `just emu-run` 用的也都是 fm1-emu。差別在 FM-1 Player 多了原生核心（比較快、延遲低）以及搭配 [RemoteFM1](remotefm1/index.md) 把實機當面板。
+
+## 官方網站
+
+M-VAVE 官方的產品頁與下載在 [cuvave.com](https://www.cuvave.com/product?id=fm-1)（Cuvave 是 M-VAVE 的公司網站）。官方韌體 `FM-1.fwsc` 與更新工具 M-UPGRADE 從那裡的 Download 取得。頁面內容是 JavaScript 動態載入的，我沒有逐項核對上面目前列的版本。
+-----
+|---|---|
+| `uc25hq80` | 開機到 TEMPLATE 畫面，5 秒內 12 次 flash erase / program |
+| `p25q80` | 同上，12 次 |
+
+兩種晶片行為一致。這只是開機與寫入次數，「改設定 → 重開 → 讀回」還沒做。
+
+!!! note "之前卡住的地方"
+    第一次 build 失敗是因為 Docker daemon 的 proxy 連不上，拉不到 `debian:bookworm-slim`（`build: cannot start the toolchain container`）。修好 Docker 的網路後就正常。遇到同樣訊息先查 `docker pull --platform linux/amd64 debian:bookworm-slim` 能不能成功。
+
+## 預設的 template 帶 Bluetooth
+
+`firmware/hello/fm1.toml` 是 `ble = true`，會用到 SDK 裡 JieLi 的 Bluetooth library（binary only）。如果第一次 build 想降低變數，可以加 `--no-ble`（產出 `NAME-usb.fwsc`）。
+
+## Release 與另開 repo 的問題
+
+fm1-base template 附的 release workflow（透過共用的 [zvenson/fm1-build](https://github.com/zvenson/fm1-build) 產生 build attestation，Firmware Hub 才會標 built from source）假設的是**獨立的 firmware repo**：app 在 `app/`、fm1-base 在 `base/`、根目錄有 `./build.sh`。放在這個筆記 repo 的子目錄不符合那個配置，所以我把複本裡的 `.github/` 拿掉了。
+
+結論：在本機迭代、刷自己的機器，子目錄就夠。**等某個 app 要正式 release 時，再把它搬到獨立 repo，並以 submodule 引回這裡。**
+
+## 自製韌體的規則
+
+寫在 `AGENTS.md`，重點：
+
+1. 先 `just fw-test`，再用 `just emu-run` 在**兩種晶片**各跑一次，才提實刷。
+2. 存檔只走 fm1-base 的 storage 層，它處理新舊晶片的 JEDEC ID。不自己寫 flash 位址。
+3. 自製韌體每一次實刷都要我批准，和裝別人的韌體一樣。
+4. build 產物不進 git。
+
+## 下一步
+
+- [x] 跑通 `just fw-build hello`
+- [x] `just emu-shot firmware/hello/build/template.fwsc` 兩種晶片都開機
+- [ ] `just emu-run firmware/hello/build/template.fwsc` 兩種晶片各一次，改設定、重開、確認保存
+- [ ] 批准後刷進實機，按鍵 → USB MIDI → host 端 `mido` 腳本收得到
+- [ ] 開第一個自己的 app：最小的 MIDI controller / macro pad（按鍵送 MIDI、螢幕顯示 layer）
+- [x] 依 [Agent Deck 試用](../firmware/agent-deck/index.md)的心得，決定 agent 控制台是 fork Agent Deck 還是在 fm1-base 上重寫：**在 fm1-base 上重寫**，見 [Conductor](../agentic/conductor.md)（`firmware/conductor`，共用模組在 `firmware/common`）
+----
+docs/dev/morse.md:11:- [Firmware Hub catalog](https://thefirmwarehub.com/catalog.json) 的 244 個套件裡沒有 Morse、CW、keyer（電報意義的）、trainer。
+docs/dev/morse.md:12:- [FM1 Developers' Wiki](https://sbegueria.github.io/fm1-dev-wiki/) 沒有相關頁面。
+docs/dev/morse.md:13:- GitHub 搜尋 `fm1 morse`、`m-vave morse`、`fm1-base morse` 都沒有結果（code search 只涵蓋 default branch，可能漏掉）。
+docs/dev/morse.md:15:相近的作品：SPELLBOX 把琴鍵當 A–Z 鍵盤；MIDIMON（fm1-base）同時當 BLE peripheral、central 與 USB host，作者說用它來 debug 另一台 FM-1。設計時參考的是其他平台的摩斯機：[Morserino-32](https://github.com/oe1wkl/Morserino-32)（模式分類、收發用不同音高）、[LCWO](https://lcwo.net/)（Koch 順序）、Vail（MIDI 格式）。只參考做法，沒有複製程式碼。
+docs/dev/morse.md:22:| **LISTEN** | 一直播下去：你開放的 Koch 字組、常用英文字、QSO 範例、縮寫和意思、諺語。可以顯示正在播的字，或隱藏起來當抄收練習 | 0.2 |
+docs/dev/morse.md:112:## 收聽：LISTEN 頁 { #listen }
+docs/dev/morse.md:126:被動地一直聽能幫忙熟悉聲音，但教學上普遍認為主動抄收、回打進步比較快 `[調研]`，所以 LISTEN 是 PRACTICE 的補充。
+docs/dev/morse.md:160:- **格式** `[上游]`：channel 1、note 0 是「已經排好時序的按鍵」，按下 `90 00 7F`、放開 `80 00 00`（[vail-adapter 的 MIDI spec](https://github.com/Vail-CW/vail-adapter/blob/master/docs/MIDI_INTEGRATION_SPEC.md)）。FM-1 的 iambic keyer 在機器上就把時序排好，所以一律送 note 0。
+docs/dev/morse.md:161:- **Vail 網頁怎麼讀** `[上游]`：[vail_web_repeater](https://github.com/Vail-CW/vail_web_repeater) 的 `static/scripts/inputs.mjs` 把 note 0 當直鍵；它只看指令（note on / note off），**不看 velocity**，所以 `90 00 00` 在 Vail 會被當成按下。我們放開一律送 `80 00 00`。Vail 打開頁面時會對所有 MIDI 輸出送 `B0 00 00`、`B0 01 xx`、`C0 xx`（給 Vail adapter 的設定），FM-1 會忽略。
+docs/dev/morse.md:167:`host/morse/`（Python，mido + python-rtmidi），協定見 [`host/morse/PROTOCOL.md`](https://github.com/daviddwlee84/M-VAVE_FM-1/blob/main/host/morse/PROTOCOL.md)：
+docs/dev/morse.md:197:0.2 沿用 0.1 的紀錄格式：0.1 留下的空位改放 KEY／TYPE／LISTEN 的顯示選項、發報速度、LISTEN 的節目。從 0.1 升級時設定和進度都保留，發報速度從 0 補成預設的 10（fm1-emu 兩種晶片驗證過 `[模擬]`）。
+docs/dev/morse.md:235:| 0.2：解碼器重讀、prosign、LISTEN 的內容 | `just morse-unit` | 2932 項全過（大部分是逐行檢查產生的節目都播得出來） |
+docs/dev/morse.md:236:| 0.2：整個 app（三種 KEY 檢視、RHYTHM 三種提示、TYPE 翻頁、片語、COMPOSE、停止、REC 清空、排列方式、LISTEN、PRESET、K4、升級後重開讀回、四回合閃卡） | `just fw-test morse` | 全過 |
+docs/dev/morse.md:247:| 韌體 0.1、host 0.1.0 | 2026-11-17 | 是（22:54 刷入，`c3b5cd6`） | 第一版：KEY、TYPE、PRACTICE、CHART、SETTINGS，兩種學習方式，Vail 格式的 MIDI，host 的 `type`／`send`／`listen`。原本規劃分成 0.1（核心）和 0.2（閃卡），因為一起做完、都還沒刷，合併成 0.1 |
+docs/dev/morse.md:248:| 韌體 0.2、host 0.2.0 | 2026-11-18 | 是（00:14 刷入，`54ff440`） | 實機試用後的回饋：發報速度和聽的速度分開（K4），PRESET 推薦組合，轉速度時顯示 dit／dah 毫秒；KEY 頁 TEXT／CODE／TIMING 三種顯示；RHYTHM 頁（練長短、提示、建議速度）；LISTEN 頁（連續播放五種節目）；TYPE 頁翻三頁（字母、數字符號、片語）、三種排列、鍵上點劃、LIVE／COMPOSE、`PLAY` 可停止、`REC` 刪字和清空；prosign `<SK>`；解碼器遇到長短差 2 倍時回頭修正；靜音和改音高不再重設解碼器。藍牙順延到 0.3 |
+docs/agentic/conductor.md:58:按鈕的位置沿用 Agent Deck，換過來不用重新記。**預設只有 agent 會佔琴鍵，shell 不會**：hc 只放有回報狀態或前景是已知 agent 的 terminal，classic Herdr 用 `agent.list`（它本來就只列 agent）。我的 classic Herdr 當下有 48 個 pane，`agent.list` 是 20 個，27 鍵放得下 `[實機]` host 端。放不下的數量顯示在底部（`+N NOT ON KEYS`）。
+docs/agentic/conductor.md:88:| 列出 agent | `terminal.list`；沒回報狀態的當 shell | `agent.list`，只有 agent |
+docs/agentic/conductor.md:99:[scf4/codex-midi](https://github.com/scf4/codex-midi) 把 MIDI controller 偽裝成 OpenAI × Work Louder 的 Codex Micro。我讀過它的原始碼 `[上游]`，決定不當主線：
+docs/agentic/conductor.md:212:[backend] hc: 0 agents, 2 shells not shown (--show-shells to list them)
+docs/agentic/conductor.md:236:| classic Herdr（唯讀） | `agent.list` 20 個 agent、`pane.read` 讀得到輸出；**沒有對 classic Herdr 送過任何鍵** | `[實機]` host 端 |
+docs/agentic/conductor.md:313:2. FM-1 用 USB **資料線**直接接 Mac，不經過 hub。
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 18:04:11Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Rework the TYPE keyboard layout for code labels
+
+```bash
+python3 - <<'PY'
+p='firmware/morse/app.c'
+s=open(p).read()
+start=s.index("static void type_page(void)\n{")
+end=s.index("static void choices(int32_t y, const ln_card_t *c, int32_t oy)")
+new='''/* TYPE: the line typed over a keyboard of 16 white keys 15 px each, the black ones over their gaps. With the code
+ * on the keys the keyboard grows (126 px instead of 86) and the line shrinks to its last row, so each key holds its
+ * code down the key and its letter under it: the longest, 0 ----- and , --..--, are 38 px at 2 px a unit */
+static int32_t type_lamp_y(void) { return tlabel() ? 72 : 112; }
+
+static void type_page(void)
+{
+    static const char *const PAGE[3] = {"LETTERS", "DIGITS + SIGNS", "PHRASES"};
+    char t[8];
+    uint32_t i, n = slen(ui.line), first = 0;
+    char cur = ptx.cur;
+    int code = (int)tlabel();
+    int32_t top_h = code ? 40 : 80, kb_h = code ? 126 : 86, wh = kb_h - 2, bh = code ? 62 : 46, ly = code ? 24 : 64;
+    cv_begin(240, top_h, C_BLACK);
+    if (code && n > TG_COLS)
+        first = n - TG_COLS;
+    for (i = first; i < n; i++) {
+        uint32_t k = i - first;
+        t[0] = ui.line[i] == ' ' ? '_' : ui.line[i];
+        t[1] = 0;
+        cv_text(4 + (int32_t)(k % TG_COLS) * 10, 2 + (int32_t)(k / TG_COLS) * 20, &FONT_S, t,
+                ui.line[i] == ' ' ? C_DIM : C_OWN);
+    }
+    if (ui.tpage == 2u && ui.gloss)
+        cv_text(4, code ? ly : 46, &FONT_XS, ui.gloss, C_RX);
+    else if (cur && !code && visual())
+        draw_code(mo_code(cur), 120, 52, 6, C_RX);
+    if (!code || !(ui.tpage == 2u && ui.gloss)) {
+        int32_t x = cv_text(4, ly, &FONT_T, PAGE[ui.tpage], C_GRAY);
+        cv_text(x + 12, ly, &FONT_T, tcompose() ? "COMPOSE: PLAY SENDS" : "LIVE: EACH KEY GOES OUT",
+                tcompose() ? C_RX : C_DIM);
+    }
+    cv_blit(0, 32);
+    draw_lamp(type_lamp_y());
+    cv_begin(240, kb_h, C_BLACK);
+    for (i = 0; i < 16u; i++) {
+        uint32_t k = WHITE[i];
+        int32_t x = (int32_t)i * 15;
+        char c = ui.tpage < 2u ? type_char(k, ui.tpage) : 0;
+        cv_rect(x, 0, 14, wh, c && c == cur ? C_RX : RGB(200, 200, 206));
+        if (ui.tpage == 2u) {            /* a phrase: its name down the key */
+            const char *p = type_phrase(k);
+            uint32_t j, m = 0;
+            for (j = 0; p && p[j] && m < 4u; j++)
+                if (p[j] != '<' && p[j] != '>' && p[j] != '?') {
+                    t[0] = p[j], t[1] = 0;
+                    text_c(x + 7, wh - 36 + (int32_t)m * 9, &FONT_T, t, C_BLACK);
+                    m++;
+                }
+        } else {
+            t[0] = c, t[1] = 0;
+            if (code && c && c != ' ')   /* under the black keys' reach (they end at 62) */
+                draw_code_v(mo_code(c), x + 7, 64, 2, C_BLACK);
+            text_c(x + 7, wh - (code ? 18 : 16), &FONT_XS, c == ' ' ? "_" : t, C_BLACK);
+        }
+    }
+    for (i = 0; i < 11u; i++) {
+        uint32_t w = 0, k = BLACK[i];
+        int32_t x;
+        char c = ui.tpage < 2u ? type_char(k, ui.tpage) : 0;
+        while (w < 16u && WHITE[w] < k)
+            w++;
+        x = (int32_t)w * 15;
+        cv_rect(x - 6, 0, 12, bh, c && c == cur ? C_RX : RGB(40, 40, 46));
+        if (ui.tpage == 2u) {
+            const char *p = type_phrase(k);
+            uint32_t j, m = 0;
+            for (j = 0; p && p[j] && m < 3u; j++)
+                if (p[j] != '<' && p[j] != '>' && p[j] != '?') {
+                    t[0] = p[j], t[1] = 0;
+                    text_c(x, 4 + (int32_t)m * 9, &FONT_T, t, C_WHITE);
+                    m++;
+                }
+        } else {
+            t[0] = c == ' ' ? '_' : c, t[1] = 0;
+            if (code && c && c != ' ')   /* the code down the key, the letter under it */
+                draw_code_v(mo_code(c), x, 3, 2, C_WHITE);
+            text_c(x, code ? bh - 17 : 26, &FONT_XS, t, C_WHITE);
+        }
+    }
+    cv_blit(0, type_lamp_y() + 10);
+}
+
+'''
+s=s[:start]+new+s[end:]
+a="""    if (ui.page == PG_TYPE)
+        return 112;"""
+assert a in s
+s=s.replace(a,"""    if (ui.page == PG_TYPE)
+        return type_lamp_y();""")
+open(p,'w').write(s)
+PY
+grep -n "static int32_t type_lamp_y\|static int32_t lamp_y" firmware/morse/app.c
+```
+
+```text
+1774:static int32_t type_lamp_y(void) { return tlabel() ? 72 : 112; }
+2294:static int32_t lamp_y(void)              /* where this page shows the lamp, 0 none */
+[This command modified 1 file you've previously read: firmware/morse/app.c. Call Read before editing.]
+```
+</details></tool-use>
+
+_**Agent - sidechain (claude-opus-5-5 2026-11-17 18:04:16Z)**_
+
+<tool-use data-tool-type="unknown" data-tool-name="ToolSearch"><details>
+<summary>Tool use: **ToolSearch**</summary>
+
+**Input:**
+
+- max_results: `2`
+- query: `select:WebFetch,WebSearch`
+
+**Result:**
+
+```
+
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 18:04:18Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Sanity-check app.c length and no duplicated functions
+
+`wc -l firmware/morse/app.c && grep -c "^static void type_page" firmware/morse/app.c && grep -c "^void app_init" firmware/morse/app.c`
+
+```text
+    2604 firmware/morse/app.c
+1
+1
+```
+</details></tool-use>
+
+_**Agent - sidechain (claude-opus-5-5 2026-11-17 18:04:23Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Fetch Firmware Hub home page and list links
+
+`D=/private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/0a574306-469e-4a59-9622-5701a42aee59/scratchpad/web; mkdir -p $D; cd $D; curl -sL -A "Mozilla/5.0 (research)" https://thefirmwarehub.com/ -o hub.html; wc -c hub.html; grep -o -i -E 'href="[^"]*"' hub.html | sort -u | head -80`
+
+```text
+  261167 hub.html
+href=""
+href="/"
+href="/#app"
+href="/app/apple-touch-icon.png"
+href="/app/manifest.webmanifest"
+href="/convert/?fw=${encodeURIComponent(v.id)}#plugdl"
+href="/convert/"
+href="/creators/"
+href="/creators/#${esc(b.repo.split("
+href="/creators/#${esc(f.repo.split("
+href="/cycles/"
+href="/dj/"
+href="/dj/#send"
+href="/firmware/${esc(f.id)}/"
+href="/impressum/"
+href="/impressum/#datenschutz"
+href="/kb/"
+href="/kb/#data"
+href="/kb/#fmhub"
+href="/kb/#provenance"
+href="/kb/#usb-hid"
+href="/lab/"
+href="/lab/#contest"
+href="/lxr/"
+href="/platform/"
+href="/platform/#${esc(f.card)}"
+href="/smk37/"
+href="/smk37/#${esc(smk)}"
+href="/submit/"
+href="/tools/"
+href="/tools/rescue/"
+href="/tools/rescue/#chip"
+href="/tools/rescue/#mac"
+href="/vibe/?ref=hub-account"
+href="/vibe/?ref=hub-install"
+href="/vibe/?ref=hub"
+href="/vibe/?ref=menu"
+href="/vibe/"
+href="/wishes/"
+href="#baudgirl"
+href="#fm1open"
+href="#fw-${esc(b.id)}"
+href="#fw-${esc(f.id)}"
+href="#newchip"
+href="#newflash"
+href="#official"
+href="#rescue"
+href="${build(f)}"
+href="${commitUrl(p)}"
+href="${esc(f.install)}"
+href="${esc(f.mirror)}"
+href="${esc(f.play)}"
+href="${esc(f.release || f.site)}"
+href="${esc(f.site)}"
+href="${esc(f.source)}"
+href="${esc(n.page)}"
+href="${esc(p.href)}"
+href="${href}"
+href="${runUrl(p)}"
+href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23151213'/%3E%3Ctext x='16' y='21' font-family='Arial' font-weight='900' font-size='12' text-anchor='middle' fill='%2342f5f5'%3EFM1%3C/text%3E%3C/svg%3E"
+href="fw/mvave/LICENSE-Apache-2.0.txt"
+href="fw/mvave/NOTICE.txt"
+href="fw/mvave/THIRD_PARTY.md"
+href="https://amzn.to/3TYjR7V"
+href="https://amzn.to/4yZizIY"
+href="https://baudgirl.com/work/FM-1+VA/install"
+href="https://designburg-net-shop.fourthwall.com/products/fm-1-make-firmware-not-war-community-shirt-2026"
+href="https://designburg.net/"
+href="https://forum.m-vave.com"
+href="https://github.com/${esc(f.repo)}"
+href="https://github.com/${esc(f.repo)}/blob/HEAD/fmhub.json"
+href="https://github.com/${esc(f.repo)}/commit/${esc(p.commit)}"
+href="https://github.com/kagaimiq/jl-uboot-tool"
+href="https://github.com/m-vave/fm1_open"
+href="https://github.com/m-vave/fm1_open/releases/tag/V14"
+href="https://github.com/Quixotic7/MvaveFM1Unbricker"
+href="https://github.com/Quixotic7/MvaveFM1Unbricker/blob/main/TRANSPORTER-GUIDE.md"
+href="https://github.com/zvenson"
+href="https://link.amazon/B08QY1yVZ"
+href="https://link.amazon/B0f2qKAUl"
+```
+</details></tool-use>
+
+_**Agent - sidechain (claude-opus-5-5 2026-11-17 18:04:32Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Fetch Hub submit and KB pages, convert to text
+
+```bash
+D=/private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/0a574306-469e-4a59-9622-5701a42aee59/scratchpad/web; cd $D; curl -sL -A "Mozilla/5.0 (research)" https://thefirmwarehub.com/submit/ -o submit.html; curl -sL -A "Mozilla/5.0 (research)" https://thefirmwarehub.com/kb/ -o kb.html; wc -c submit.html kb.html; python3 -I -c "
+import sys,re,html
+for f in sys.argv[1:]:
+    s=open(f,encoding='utf-8').read()
+    s=re.sub(r'(?is)<(script|style)[^>]*>.*?</\1>','',s)
+    s=re.sub(r'(?i)<br\s*/?>|</(p|div|li|h[1-6]|tr|section|pre)>','\n',s)
+    s=re.sub(r'<[^>]+>','',s)
+    s=html.unescape(s)
+    s=re.sub(r'\n\s*\n+','\n\n',s)
+    open(f+'.txt','w').write(s)
+" submit.html kb.html; wc -c submit.html.txt kb.html.txt; cat submit.html.txt
+```
+
+```text
+   84573 submit.html
+  101825 kb.html
+  186398 total
+   22893 submit.html.txt
+   35019 kb.html.txt
+   57912 total
+
+
+Submit your firmware – The Firmware Hub
+
+  VIBE FM Mk1 Open firmware, officially supported.
+  The first 100 get 10% off Join the list →
+
+The Firmware HubFH
+
+    Devices▼
+
+        The Firmware Hub
+
+        Open-source firmware for small music machines, from their makers, installed in the browser.
+
+        All FM-1 firmwaresKnowledge BaseWall of CreatorsSubmit a firmwareVIBE FM Mk1VIBE FMVIBE FM Lab
+        App
+        Made firmware for another device?
+
+        zven@thefirmwarehub.com
+
+          M-VAVE FM-1All firmwares
+
+          VIBE FM VSTFM-1 firmwares in your DAW · open beta
+
+          VIBE FMOne Vibe, every device · browser, DAW, hardware
+
+          VIBE FM LabBuild a Vibe · port your FM-1 firmware · win a VIBE Box
+
+          M-VAVE SMK-37 Pro27 firmwares · Pro, Elite, MKE-P37
+
+          Elektron Model:Cycles6 mods · Model:Samples too
+
+          Erica Synths LXR-02Open source since 23 Oct · its firmware and mods
+
+          VIBE FM Mk1Hardware with open firmware · join the list
+        +
+          Your deviceFirmware for another machine? Tell us.
+
+    Tools▼
+
+        Tools
+
+        Everything around the firmwares: emulators, editors, backup and rescue, building your own. Open source, from their makers.
+
+          All toolsEmulators, editors, backup, building your own
+
+          FM-1 rescueDoes not start, update or save? What to do
+
+          Knowledge BaseHow to install, rescue, play
+
+    Community▼
+
+        Community
+
+        The people behind the firmwares, and what the players wish for next. Installing is free and needs no account; a hub
+           account (no password, a link by mail) keeps your favourites, ratings and wishes.
+
+        A question, a firmware, a device?
+
+        zven@thefirmwarehub.com
+
+          Wall of CreatorsThe people who make the firmwares
+
+          Knowledge BaseHow to install, rescue, play
+
+          Submit a firmwareMade one? Put it on the hub
+
+          FM-1 JukeboxYour FM-1 tunes on two decks – upload yours
+
+          Wish listA synth, a feature, a device: wish and vote
+
+          Imprint & privacyWho runs the hub
+
+    Shop▼
+
+        Shop
+
+        Firmwear, the hub's community shirt, on Fourthwall, and the machines the firmwares run on, from Amazon.de.
+
+        Firmwear: the hub's community shirt, on Fourthwall.
+
+        Firmwear, the hub's community shirt, on Fourthwall, and the machines the firmwares run on, from Amazon.com.
+
+        * Affiliate link (ad, Anzeige): as an Amazon Associate I earn from qualifying purchases; it costs you nothing extra. Als Amazon-Partner verdiene ich an qualifizierten Verkäufen.
+
+        * Affiliate link (ad). As an Amazon Associate I earn from qualifying purchases; it costs you nothing extra.
+
+          Firmwear
+
+          Get the M-VAVE FM-1on Amazon.de · Ad (Anzeige) *
+
+          Get the M-VAVE SMK-37 Proon Amazon.de · Ad (Anzeige) *
+
+          Get the M-VAVE FM-1on Amazon.com · Ad *
+
+          Get the M-VAVE SMK-37 Proon Amazon.com · Ad *
+
+  /
+
+  designburg.net
+
+  Submit your firmware
+
+  Made a firmware for the FM-1, the SMK-37 – or a native Vibe for VIBE FM? Put it on the hub. It goes here with your name and
+    your links, and the hub follows every release you make. Open source gets the most: one-click install from the hub itself.
+    Questions? Check the FAQ / read the requirements, and see if your identity is free.
+
+    Heads-up: newer FM-1s have a different flash chip
+
+    Units sold since autumn 2026 (mostly AliExpress) carry a UC25HQ80 flash, JEDEC ID 0xB36014, instead of
+      the Puya P25Q80 (0x856014). Same size (1 MiB), the same plain SPI NOR commands.
+
+    If your firmware checks the flash ID – anything built on sloopDX, Dinghy or Felucca-base does – it takes these units
+      for unknown: saves stay in RAM ("flash error") and the update loader refuses to install.
+      The fix: accept both. Search your source for 0x856014, the update loader too (ldr_flash_known),
+      not just the app:
+
+#define FL_JEDEC_OK(id) ((id) == 0x856014u || (id) == 0xB36014u)
+flash_ok = FL_JEDEC_OK(FL_FAR(fl_jedec_ram)());
+
+    OberVave 3.3.1, sloopDX and Dinghy have it already.
+
+    Requirements for listing / updating
+
+    Six things, all of them needed – and a seventh if your firmware carries sounds. They keep the hub safe for players and keep your card up to date without a single mail.
+
+      1Open source
+
+        GPL-3.0, MPL-2.0 or another open licence, the complete source public. Then the hub installs it in one click and keeps a copy of the source.
+
+      2A release on GitHub
+
+        With the .fwsc attached. Every new release goes on your card by itself, within three hours.
+
+      3Its own identity
+
+        An FM-1_ number no other firmware uses: how to pick one, is mine free?
+
+      4The update loader
+
+        In the package, so players can leave your firmware again: what that is.
+
+      5Tested on a real FM‑1
+
+        Installed from V15 and from another firmware, and you can leave it again. Untested firmwares are not listed.
+
+      6An fmhub.json
+
+        Your card's text, in your repository's root. Change it any time: edit, push, your card follows within three hours.
+
+{
+  "what": "What it is and what you can do with it.",
+  "author": "Your Name",
+  "kinds": ["groove"],
+  "play": "https://you.github.io/yours/emu/",
+  "editor": "https://you.github.io/yours/editor/",
+  "cheat": "https://you.github.io/yours/cheatsheet.pdf",
+  "image": "docs/card.png",
+  "color": "#FF7A00",
+  "sounds": "own"
+}
+
+        what: plain English, up to 300 characters, no HTML, code or links. author: optional, your name as the card shows it, up to 60 characters. kinds: one of synth
+          groove drums chords tracker other. play, editor and
+          cheat (a web page or a PDF) are optional links. image: a file in your repository, square, 240 × 240 to
+          1024 × 1024, PNG, WebP or JPEG, 300 KB at most (best: a 240 × 240 PNG capture of the screen). color: optional, your card's colour – the line under the picture
+          and your firmware's name – as #RRGGBB, bright enough for the dark page (a very dark one is refused).
+          sounds: required when it carries sounds (none: leave it out or empty) – where every sample, bank, ROM and recording your firmware carries comes from:
+          "none", "own", "CC0: <source>", "public domain: <source>" or
+          "licensed: <source>, <licence>". You confirm with it that you may share them all, and you – not
+          the hub – answer for it; on a rights holder's complaint the card comes off until it is solved (more). Please keep it friendly:
+          no advertising, nothing hostile. Check your file. Using an AI to help? Give it
+          fmhub.md.
+
+        SMK-37 builds too? A repository only for the SMK-37: the same fields are its SMK-37 card.
+          A repository shared with the FM-1 build: add "smk37": {"what": …, "image": …, "install": …, "guide": …} for
+          what differs there (all four optional, the same rules; install and guide are https:// addresses).
+
+      7Sounds you may share
+
+        Only if your firmware carries samples, sample banks, sound banks, ROMs or recordings – in the repository or
+          inside the package. Then your fmhub.json says where they come from, in one line:
+
+"sounds": "own: recorded on my own drum machine"
+
+        Or "CC0: <source>", "public domain: <source>",
+          "licensed: <source>, <licence>". Check your repository before you send it: every
+          .wav, .aif, .flac, .mp3, .ogg, .syx and
+          .sf2 counts – the hub's check finds them and stops without this line. With it you answer for the
+          rights, not the hub. Breaks from records, sample CDs, other companies' factory banks or game music are not yours to
+          share: take them out. No sounds at all? Leave the line out. More.
+
+    Closed source? Welcome too, as a link card: like M-VAVE's FM1 Open or Baud Girl, it installs from your own
+      page. The hub shows it and links to it, but does not host or mirror it. New to it? Start from a template:
+      Dinghy, the plumbing done and documented,
+      or foma by konsumer, Dinghy made smaller.
+
+    What to send
+
+      Names: the firmware's, and yours as it should appear on the card and the Wall of Creators.
+
+      The repository with the release (closed source: your page), its FM-1_ identity and its licence.
+
+      What it does: in your repository's fmhub.json, not in the form.
+
+      A picture and a cheat sheet: in your fmhub.json too (image, cheat), so you can change them yourself.
+
+      If you have them: a version that plays in the browser, an editor, a video, a cheat sheet.
+
+    Everything goes through the form below: no attachments needed, the hub reads your repository.
+
+    What happens then
+
+      I look at it and write back if something is missing.
+
+      It goes on the test site first, then live: your card on the hub, your name on the Wall of Creators.
+
+      Every release from then on is checked (identity, update loader, checksum) and listed by itself, and a copy of its
+        source is kept next to the package.
+
+      Players rate it, keep it as a favourite, and reach you through your repository.
+
+    Optional, and worth it: let GitHub build and sign your release. Five minutes, once,
+      and your card shows Built from source on GitHub.
+
+    Questions makers ask
+
+      Does the hub pick up my new release by itself?
+        Yes, within three hours: the newest GitHub release with a .fwsc attached, pre-releases too. A version with
+          beta, alpha, rc or a 0.x number gets a beta tag on its card. Nothing to mail me.
+
+      Can the file name and the identity stay the same from release to release?
+        Yes. Same asset name, same FM-1_ number: players press Install and are on the new version. Or put the
+          version into the number, as many do (FM-1_378009): that works too, as long as the part in front stays yours.
+
+      Does the hub keep my older versions?
+        The card always offers the newest. Older ones stay on your GitHub releases for anyone who wants them.
+
+      How do I keep my card's text up to date myself?
+        With the fmhub.json in your repository's root: edit it and push. The hub reads it every three hours and
+          your card shows the new text by itself, no approval, no mail. Longer than 300 characters is cut at a word.
+
+        {
+  "what": "Two or three sentences: what it is, what it does.",
+  "author": "Your Name",
+  "kinds": ["groove"],
+  "play": "https://you.github.io/yours/emu/",
+  "editor": "https://you.github.io/yours/editor/",
+  "cheat": "https://you.github.io/yours/cheatsheet.pdf",
+  "image": "docs/card.png",
+  "color": "#FF7A00",
+  "sounds": "own"
+}
+
+        Kinds, one of: synth, groove, drums, chords, tracker,
+          other. play, editor, cheat and color (your card's colour,
+          #RRGGBB) are optional.
+
+      What picture do you need, and how do I change it?
+        Put it in your repository and name it in your fmhub.json:
+          "image": "docs/card.png". Square, 240 × 240 to 1024 × 1024, PNG, WebP or JPEG, 300 KB at most; best a
+          capture of the screen at 240 × 240 as PNG. A new one: replace the file and push, no mail. Your picture on the
+          Wall of Creators is your GitHub profile picture, taken by itself.
+
+      Which identity should I pick?
+        One nobody else uses: check it below. Do not keep the number of the firmware you started from (Felucca's
+          FM-1_980, FM-1_900 and so on). Long numbers with a part of your own are safest, e.g.
+          FM-1_47 + your version digits. Two firmwares with one number install fine, but the hub cannot tell
+          which one is on a connected FM-1. More.
+
+      Is a source ZIP in the release enough?
+        No: the source must be in the repository itself, browsable, at the tag of each release. The hub keeps a copy of it
+          next to every package. An attached archive is fine as an extra, not instead.
+
+      What does "Built from source on GitHub" mean, and how do I get it?
+        GitHub built your package from your tagged source and signed it, and the hub verified that signature. Five minutes,
+          once, with fm1-build:
+          how.
+
+      What counts as tested?
+        The list above, on your own FM-1: installing from V15 and from another firmware, leaving it again, the USB identity.
+          "It builds" or "it runs in the emulator" is not enough: such firmwares wait until they have run on a real one.
+
+      My firmware writes more than its package (data, samples).
+        Tell me. Its card then gets Install on its page ↗, which leads to your own installer that writes all of it;
+          the hub still checks, lists and mirrors the package, but never writes it itself.
+
+      My firmware has samples or banks. What do I need?
+        One line in your fmhub.json saying where they come from: "sounds": "own" (made or recorded
+          by you), "CC0: <source>", "public domain: <source>" or
+          "licensed: <source>, <licence>". Own, CC0 and public domain go through by themselves;
+          someone else's licensed sounds are looked at first. With the line you confirm you may share them all, and you answer
+          for it, not the hub. If a rights holder complains, the card comes off until it is solved.
+
+      I have no GitHub releases yet.
+        The hub can take the package your installer page serves, or one committed in the repository. A release is better:
+          it gives the card a date, a version and the source at its tag.
+
+      What about the SMK-37?
+        Builds for the SMK-37 go on the SMK-37 page, one per model (Pro, Elite, MKE-P37), installed
+          from your installer. The same rule: tested on a real SMK-37 first.
+
+      How do I take my firmware off the hub?
+        Mail fw@thefirmwarehub.com. A repository that is deleted or made private leaves the hub by itself at the next run.
+
+    Is my identity free?
+
+    Type the number your firmware answers with. It is checked against every firmware on the hub right now
+      (all identities).
+
+    Send it
+
+    Fill this in and the hub checks your repository and release right away: source, licence, fmhub.json, the
+      package, its identity and flash chip. You get a page that shows what is missing and what happens next. Sven
+      looks at every firmware himself – nothing goes on the hub without him. For VIBE FM and other devices there is
+      no automatic check yet: Sven looks at it directly.
+
+        For which device?
+          M-VAVE FM-1
+          SMK-37
+          VIBE FM – a native Vibe
+          Another device
+
+        Which device?
+
+      Repository
+
+        Name of the firmware
+        Your name, as it should appear
+
+      Your address (only for news about this firmware, never shown)
+
+        What it is, in one line
+        Which VIBE features does it use?
+         Enter it in the VIBE Box Challenge – I've read the rules
+
+       I installed this release on a real FM-1, and leaving it again works
+      How you tested it (from which firmware, and back to which)
+       If it carries sounds, samples, banks or ROMs: I may share them all,
+        as the sounds line of my fmhub.json says – I answer for it, not the hub
+      Anything Sven should know (optional: what it is built on …)
+      What it does, the picture and your links come from your repository's fmhub.json,
+        the version from your newest release. Sent again for the same repository: it updates your submission, no duplicate.
+
+      Check and send
+
+    Closed source, or something the form can't say? fw@thefirmwarehub.com
+
+    The hub is free and stays free. If it saved you an evening: ☕ buy me a coffee.
+
+  Disclaimer. Every firmware here belongs to its authors, each under its own license (GPL-3.0:
+  the license); only zp12, sloopDX, OberVave, Shine On, Dinghy and VIBE FM Link are ours
+  (zvenson). We do not develop, test or support the others and take no
+  responsibility for them, for what they do on your device or for lost data: questions and bug reports go to each project, linked on
+  its card. The FM-1 firmwares are taken automatically and unchanged from their releases; the FM-1 page only checks that a package is
+  an FM-1 firmware with the update loader before it writes it, and keeps a copy of its source next to it. The SMK-37 firmwares install
+  from their makers' own installers. The pictures on the cards are from each project's repository.
+  FM-1: Hortator, Hortator (Bluetooth) and FMDj by DEADACTIVE; Felucca by Leo Kuroshita (Hügelton Instruments); Felucca [Salt] by Chance Roth (ChanceTheMaker); Jangada by zednaked; GHOULBOX by Jason Persinger; Melodee by keremimo; SLOOP and Clipper by isod89; Bubba Machine by Erbubar23; SLOOP Floyd FM by René Bohne; SLOOP DX7 Banks by majnikool; X0X, FoMni, AMB-1, CTL-1, Polly, LOOM-8 and MONK-1 by Charles Vestal; X0X-RMX by Mr-Roboto (Oliver); ChoralRoot, PurpleMonkey, FIZZ, RemoteFM1 and EVIL GENIUS by Quixotic7; WaveLoop FM-1 by ELI7VH; FiMba-1 by jadamsowers; JIANT FM by juanjiant-bit; fm1-chord by math0ne; FuMi-1 by cartesive; MAKU by okumurari; Rainbow Mode by joshbartlettband-web; winampFM Synth, No Man Sky FM and FM1 Quest by Hericdk; MYCELIUM by Mandalars; ETCH and RUPTURE by SikkenWorks; FM-106 by PatttF; TRIBE by apiel; DUELL and L/RRY by OSCILL/R; Skiff by illuminus5; Fart Machine One by adamcharleswilsonmusic-code; ORBIT and MC-1 by dspaudio; Felucca 8 Patterns and Argo by echoe; PIGEON by The Shrimp Blimp; CS-1 by twochannels; HYP-1 by RedtailWorks; Tonitor and Bigorna by Nuno Zimas; bocjuhn by ryuji kanagawa; AISLING and AISLING FX-1 by CU_STE; Demake by Sequencist; NOIZ DEMONS by SPIKE the Percussionist; CoralFlower by FicusFicusov; Vector37 by genkigenki; BEETLE, BEETLE BLUE and B1 by Joppe Sikken (SikkenWorks); MIN-1 by Reytian; Pocket GammaWave by ShadowTune (GammaWave Audio); Tuna, Flyfish, Makohai, Daurade, Sill, Sardine and Manta by delirioux; Frodhes by Leonardo Mirabal; FOMAJAM by konsumer; KAWA and K-WASUB by Omnipotard (Guizmoh); GR!MM by GRiMMBIENT; Cut-A-Dor, Mutable Dreams and Bunker Evolved by Kid Bunka; FM1-GM and FM1-TRAX by jartificer; 386DX by seajaysec; OPN-1 and SID-1 by putchdev; Mini-Tone and Mini-Ju08 by Stéphane Schmitz; MORPHEUS and HERA by Ben Badio; FMini-1 by Ruppert; DUB-1 by sbegueria; Ketch by risseraka; FMEL-1 by Antonio Altea; ZEN-1 by aceyprime; Golana by Gadlele; Golana DZ Edition, analogBEAST and keySTEP ONE by dzwerg; MODELAR by Hirakos; Niagara Drift by Evan Yerburgh; Unholy Union by actuallysparky; Evander's Music Box by Michail Tsakiroglou; Chipbox, Smileyface and Drumlab by pbarilla; Bytemania by lloyd (llozd); FRASIL by Styves Goupil; Tessera by Theo Dainis (Rastapopolix); Del Rio by Jess Del Rio; Carnac OS by OrbVorgis; DRIFT by FBNFRTG; SIDOU by Denis Sablić; MONO2K by Iñigo Hernandez; Caravel by BonszaiMusic; MIDIMON by ignis32; ESTAMPIE by Drew Robinson; Matryoshka by glvno; Loom FM-1 by Co-oscillator; TastyWaves by marksweiss; Arctic Scream by p0larpatch; S1Vave by Andrew GG; GATOR by ivanvoid; Monohull by Mark White; PERF-1 by deamonSLINKY; J6 by JackieAlacrity2373; GuitChordi by Stoogs; Ravel and VISCERA:TAPE by De-Pattern; Berlinan by Jiří Píša; MNM-1 and Veffbox by Veff; MOPE-1 by slothpallas; Kitten Synths and Kitten Rack by Black Kitten Devices; Nauclerus by Mr. Roboto; PT/FM by hitosu; SPAMPY by Spampy-Droid; SPELLBOX by Philippe Jaccoud; Dungeon Tracker by Bourbon Weather; NACHTFAHRT by Cranky Man; LUXR by HOLODECK AUDIOTOOLS; VESPER by Fat Cat Studios; Penumbra and Ombak by Lunar Eclipse Forge; Jam Playground by Bob Perry; XMOD by Kot Morderca; SiDJ by thomasj (tubesockor); hawk-chua by plieuwski; BB1 by Ole Big Beat / TexasRADIO; KARMA by Ariel Muchnik; LSDJ Burrito by Dreamy_bacon; fm1-dock, Scintilla and FM-1 SID by Joakim Eriksson; DARK-1 and HADAL-1 by Polystellarflow; Wanderer by Nicholas James / Low Vision Music; PULHRA by 646timur-cell; Amenity and FMLarynx by Presethead; Arcturus S6 by Zeptosecond DSP; Blop by Obsimo; CLATTER Pocket by allmyfriendsaresynths; CHOPPAH by Laurens Profittlich; B3 ORGAN by R-Jeb; GIO-1 by Guinan; Elixir by Dan Majka; FM1 DRUM OS by skufee; QUADRO by Matt Allison; DX747 by Esben von Buchwald; Skiff Atlatl by LIkst4; COQUÍ and glitch by saulofilho; ARTIHIVE by KHAV; CULTBOX by Pete Sasqwax / BEAT CULT; Piterfly by Piotr Woźniak; ATEK303 by Animatek; FM1 Audio Router by MAX RAVE; M-Vance by BK40; Patchwerk by Matt Kuebrich; Compás by Big Beat Studio; Rhythmer by Jazzy Rhythmer; Miku-FM and Astra by Michael Perry; ECHOFIELD and JAMTRACK by PhilipsKnobs; XENOLITH by Unit_v743; Hungry Travis, RAMBEAVER and Trumpagotchi by Trust This Mechanism; FM-FAM by davidamomusic; Quartet, SPLITMILK, Clavioline and CONDUCTOR by MammothCheese; M-PYRE by History Of Sky; ASS-ID, sloop-DUB and DUB-BOX by altessproduction; fm1-amy by Dan Ellis; SATIE-1 by OCKM Studio; Guru-600 by Marc Massé; PLAYA by JFS; Kris Jangle by w33tSnx; CORD and RAKT by Chase DeAnda; Pocket Band by elpabl0; Mighty Arp by Nick Culbertson; fm1-sf2 by mwedmark; DEEP FIELD by Kyle McCann; KRIECHSTROM by Grigorii Bezborodov; PaperLagoon by hacha; Tack by oikoaudio; Manifold by stets43; LOAF BREAKER by FLEXOR; FM-1 Midi-Mania and FM-1 Chimera Vocal by Shan-Sherif; FM1 YOGA by Michael Milz; AGTDECK by Kevin Elliott; RHYTM-SEC-1 by James Hampshire; Adrift by Romain Guy; Drumtonic by Federico Ciapi; ARP WAV 09 by Wav.09.02; Golf and Tekstuur by BARNIR; Kurzhaar, der Basshund by JazzMasterT; Atl-Atl: The Atltuner by Jason Scheirer; Mini-Grain by eldontyrellcorp; M-Vsynth2 by Kris (bk40-home); TRAPSTATION OS by Schlensog Audio Lab; QUARTZ by f0nski; FMav-1 by wootr0p; Juicy by Daniel Gilbert; Fernbedienung and Beiwagen by Kabelmaier; OrGigs by Bobo; DABKE by STUDIOMORPHIK; ObsSynth FM-1 by Orian Beltrame; NCC – Novation Circuit Companion by Fenderberg; Blues Box by Brian Provost. SMK-37: Felucca SMK by Chance Roth (ChanceTheMaker); Makkuro37, Vector37, Speak37, Erik37 and the SMK-37 builds of the FM-1 firmwares by genkigenki; Skiff by illuminus5; FOMAJAM by konsumer; Frodhes by Leonardo Mirabal; FMini-1 SMK by Guilherme Ruppert; AISLING by CU_STE. Baud Girl (FM-1+VA) by Madeline is only linked: not open source, not hosted or mirrored
+  here, it installs from baudgirl.com. FM1 Open is M-VAVE's official open firmware (app GPL-3.0 with an SDK exception, sound engine
+  closed source): only linked, it installs from M-VAVE's Workbench. The update path is Felucca's, as sloopDX carries it. M-VAVE, FM-1 and SMK-37 are trademarks of
+  their owners; not affiliated with M-VAVE. E-mu and SP-1200 are trademarks of their owners. Unofficial firmware, free and without
+  warranty: you install it at your own risk.
+
+designburg.net · Tools · Creators · Wish list · Knowledge Base · Impressum · Datenschutz
+  · ▶ YouTube: @sonzven
+  · ☕ Buy me a coffee
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 18:04:34Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Rebuild, run tests, and capture TYPE screens with code labels
+
+```bash
+python3 - <<'PY'
+p='firmware/morse/tests/basic.txt'
+s=open(p).read()
+a="""expect tlabel 1
+expect tpage 0
+shot type_code.png
+tap SEQ"""
+assert a in s
+s=s.replace(a,"""expect tlabel 1
+expect tpage 0
+tapkey w9
+tapkey b7
+wait 30
+shot type_code.png
+tap OCT+
+wait 30
+shot type_code_signs.png
+tap OCT-
+press REC
+wait 700
+release REC
+wait 30
+expect line_len 0
+tap SEQ""")
+open(p,'w').write(s)
+PY
+uv run --locked --all-groups python third_party/fm1-base/tools/build.py firmware/morse --host 2>&1 | grep -E "error|app.c:" | head; cd firmware/morse && build/host/morse_host tests/basic.txt build/host 2>&1 | grep -v "^  ok\|^  sysex<\|^  out \|^  said\|^said\|round is over" | tail -5; cd ../.. && uv run --locked --all-groups python -c "
+from PIL import Image
+d='firmware/morse/build/host/'
+ims=[Image.open(d+n+'.png') for n in ('type_code','type_code_signs','type_phrases')]
+out=Image.new('RGB',(3*248,240),(60,60,60))
+for i,im in enumerate(ims): out.paste(im,(i*248,0))
+out.save('/private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/0a574306-469e-4a59-9622-5701a42aee59/scratchpad/type3.png')"
+```
+
+```text
+host: 196659 ms simulated, 1388 blits, render 0.0% of real time (host CPU)
+```
+</details></tool-use>
+
+_**Agent - sidechain (claude-opus-5-5 2026-11-17 18:04:40Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+List links on the Hub submit page
+
+`D=/private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/0a574306-469e-4a59-9622-5701a42aee59/scratchpad/web; cd $D; grep -o -i -E 'href="[^"]*"' submit.html | sort -u | grep -v -E 'amzn|amazon' ; grep -o -E '"/[a-z0-9_./-]+\.(json|md|txt)"|/[a-z0-9_-]+\.(json|md)' submit.html | sort -u`
+
+```text
+href="/"
+href="/#app"
+href="/app/apple-touch-icon.png"
+href="/app/manifest.webmanifest"
+href="/convert/"
+href="/creators/"
+href="/cycles/"
+href="/dj/"
+href="/fmhub.md"
+href="/impressum/"
+href="/impressum/#datenschutz"
+href="/kb/"
+href="/kb/#fmhub"
+href="/kb/#identity"
+href="/kb/#ids"
+href="/kb/#loader"
+href="/kb/#sign"
+href="/kb/#sounds"
+href="/lab/"
+href="/lab/rules/"
+href="/lxr/"
+href="/platform/"
+href="/smk37/"
+href="/submit/"
+href="/tools/"
+href="/tools/rescue/"
+href="/vibe/?ref=menu"
+href="/vibe/?ref=submit"
+href="/wishes/"
+href="#check"
+href="#faq"
+href="#fmhub"
+href="#sounds"
+href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23151213'/%3E%3Ctext x='16' y='22' font-family='Arial' font-weight='900' font-size='15' text-anchor='middle' fill='%2342f5f5'%3EFH%3C/text%3E%3C/svg%3E"
+href="https://designburg-net-shop.fourthwall.com/products/fm-1-make-firmware-not-war-community-shirt-2026"
+href="https://designburg.net/"
+href="https://github.com/konsumer/foma#readme"
+href="https://github.com/zvenson"
+href="https://github.com/zvenson/dinghy#readme"
+href="https://github.com/zvenson/fm1-build"
+href="https://paypal.me/zvenson"
+href="https://thefirmwarehub.com/"
+href="https://thefirmwarehub.com/submit/"
+href="https://www.gnu.org/licenses/gpl-3.0.html"
+href="https://www.youtube.com/@sonzven?sub_confirmation=1"
+href="mailto:zven@thefirmwarehub.com?subject=The%20Firmware%20Hub"
+href="mailto:zven@thefirmwarehub.com?subject=The%20Firmware%20Hub%3A%20my%20device"
+"/fmhub.md"
+/catalog.json
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 18:04:42Z)**_
+
+<tool-use data-tool-type="read" data-tool-name="Read"><details>
+<summary>Tool use: **Read**</summary>
+ `/private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/0a574306-469e-4a59-9622-5701a42aee59/scratchpad/type3.png`
+</details></tool-use>
+
+_**Agent - sidechain (claude-opus-5-5 2026-11-17 18:04:46Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Fetch the Hub's fmhub.md and look for check API
+
+`D=/private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/0a574306-469e-4a59-9622-5701a42aee59/scratchpad/web; cd $D; curl -sL -A "Mozilla/5.0 (research)" https://thefirmwarehub.com/fmhub.md -o fmhub.md; wc -c fmhub.md; cat fmhub.md; echo; echo ====; grep -n -o -E 'catalog\.json[^"]{0,120}' submit.html | head; grep -n -E "fetch\(|/api/" submit.html | head -20`
+
+````text
+    8387 fmhub.md
+# Putting an FM-1 firmware on The Firmware Hub – instructions for an AI assistant
+
+You are helping a firmware maker list their M-VAVE FM-1 (or SMK-37) firmware on **The Firmware Hub**
+(https://thefirmwarehub.com) and keep its card up to date. The maker may not be a programmer. Do the work for them where
+you can, explain each step in plain words, and check everything against the rules below before they push.
+
+## 1. What the hub needs before it lists a firmware
+
+All six are required:
+
+1. **Open source.** GPL-3.0, MPL-2.0 or another open licence, with the complete source public in the GitHub repository
+   (a zip of the source is not enough). A `LICENSE` file in the repository root.
+2. **A release on GitHub** with the firmware package (`.fwsc`) attached as a release asset. The hub picks up every new
+   release by itself within three hours. A version with *beta*, *alpha*, *rc* or a 0.x number gets a beta tag.
+3. **Its own identity:** an `FM-1_<number>` product name no other firmware uses. Check it at
+   https://thefirmwarehub.com/submit/#check. Do not keep the number of the firmware it started from (Felucca's
+   `FM-1_900` / `FM-1_980` …). Long numbers with a part of your own are safest, e.g. `FM-1_47` + version digits.
+4. **The update loader** in the package, so players can install another firmware afterwards:
+   https://thefirmwarehub.com/kb/#loader
+5. **Tested on a real FM-1:** installed from the stock V15 firmware and from another firmware, and from this firmware
+   another one installs again. Untested firmwares are not listed. If it cannot read other firmwares' projects or
+   samples, the README says so.
+6. **An `fmhub.json`** in the repository root, on the default branch (section 2). **No file, no listing.**
+
+## 2. fmhub.json – the card, written by the maker
+
+The hub reads this file every three hours and puts it on the firmware's card by itself, no mail, no approval. Changing
+the card later = editing this file and pushing.
+
+```json
+{
+  "what": "A six-track groovebox: TR drums, a sampler with a mic input, a step sequencer and song mode.",
+  "author": "Your Name",
+  "kinds": ["groove"],
+  "play": "https://you.github.io/yourfirmware/play/",
+  "editor": "https://you.github.io/yourfirmware/editor/",
+  "cheat": "https://you.github.io/yourfirmware/cheatsheet.pdf",
+  "image": "docs/card.png",
+  "color": "#FF7A00",
+  "sounds": "own"
+}
+```
+
+Only these nine fields (and `smk37`, below) are allowed – any other field makes the whole file unused. A new firmware needs
+at least `what`, `kinds` and `image`, and **`sounds`** when it carries any sounds.
+
+| Field | Rule |
+|---|---|
+| `what` | The card's text. **English**, plain words: no HTML, no code, no links or web addresses (no `example.com`). At least 20 characters; more than 300 are cut at a word, so aim for 150–280. Say what it is and what you can do with it, for this version – not plans. **No advertising** (prices, discounts, "buy", sponsors, donation links) and **nothing hostile against anyone** – such a text is refused. |
+| `author` | The maker's name as the card shows it under the title (without it: the name the hub wrote down at listing). Plain text, 2–60 characters, no links or web addresses, nothing hostile. |
+| `kinds` | A list with one of `synth`, `groove` (groovebox), `drums` (drums and samplers), `chords`, `tracker`, `other`. If several are given, only the first counts. Pick the one people would look under. |
+| `play` | `https://` address of the firmware running in a browser (an emulator), if there is one. |
+| `editor` | `https://` address of a web editor for its sounds or settings, if there is one. |
+| `cheat` | `https://` address of a cheat sheet: a web page or a PDF (e.g. on GitHub Pages). |
+| `image` | The card's picture: a **path inside the repository** (not a URL), e.g. `docs/card.png`. See section 3. |
+| `sounds` | **Required when the firmware carries sounds** – none at all: leave it out, or `""`. Where every sample, sample bank, sound bank, ROM and recording the firmware carries comes from – in the repository and inside the package, also when converted to C arrays. Exactly one of: `""` or `"none"` (everything is made in code, optionally `"none – all synthesised"`), `"own"` or `"own: <what>"` (made or recorded by the maker), `"CC0: <source>"`, `"public domain: <source>"`, `"licensed: <source>, <licence>"` (someone else's, under a licence that allows sharing – looked at before listing). Plain text, ≤ 300 characters, no links (name the source). **With this line the maker confirms they may share all of it and that they, not the hub, answer for it**; on a rights holder's complaint the card comes off until it is solved. Ask the maker – never guess this line for them. Sounds from commercial instruments, sample CDs, games or records ("the Amen break") are not "own". |
+| `color` | The card's colour line (under the picture): `#RRGGBB`, e.g. `#FF7A00`. Bright enough for the dark page – a very dark colour is refused. |
+
+Valid JSON matters: double quotes, commas between fields, no comma after the last one, no comments.
+
+### The SMK-37 card (https://thefirmwarehub.com/smk37/)
+
+A firmware with builds for the M-VAVE SMK-37 has a card there too, from the same file:
+
+- **A repository only for the SMK-37:** `what` and `image` above are the SMK-37 card's – nothing else to do.
+- **A repository shared with the FM-1 build** (one `fmhub.json` for both): the fields above stay the FM-1 card's; add an
+  optional `smk37` block for what differs on the SMK-37. It wins over the fields above on the SMK-37 card either way.
+
+```json
+"smk37": {
+  "what": "An electric piano for the SMK-37's 37 keys, with vibraphone and marimba engines and an arpeggiator.",
+  "image": "docs/smk37-card.png",
+  "install": "https://you.github.io/yourfirmware/smk37/",
+  "guide": "https://github.com/you/yourfirmware/blob/main/docs/SMK37.md"
+}
+```
+
+`what` and `image` follow the same rules as above; `install` (the SMK-37 installer) and `guide` are `https://` addresses.
+No other fields inside `smk37`.
+
+## 3. The picture (`image`)
+
+- **Square**, between **240 × 240 and 1024 × 1024 pixels**.
+- **PNG, WebP or JPEG** (checked by the file's bytes, not its name). No SVG, no GIF.
+- **300 KB at most.**
+- Best: a capture of the FM-1's screen at exactly **240 × 240 as PNG** – a few KB, pixel-sharp (the hub scales it up
+  without blurring). A photo of the device: square, 480–1024 px, as WebP or JPEG, well under 300 KB.
+- Many firmwares have a browser emulator or a host build that can save its 240 × 240 screen – use that, don't take a
+  phone photo of the screen.
+- To change it later: replace the file, keep the path, push. The hub copies the picture and serves it itself.
+
+## 4. Check before pushing
+
+1. Validate the JSON (e.g. `python3 -m json.tool fmhub.json`).
+2. Count the `what` text: ≤ 300 characters, English, no links, no `<` `>` `{` `}` or backticks.
+3. Check the image: square, 240–1024 px, ≤ 300 KB, PNG/WebP/JPEG.
+3a. Check `sounds` against the repository: a `"none"` with `.wav`/`.syx`/`.sf2` files (or sample arrays in the source) is refused.
+4. After pushing, the maker enters the repository at **https://thefirmwarehub.com/kb/#fmhub** ("Check your file"): it
+   shows exactly what the card will show, or what is wrong.
+5. On the hub, every card says under its text whether it comes from the maker's `fmhub.json`, and if the file or the
+   picture is not used, why.
+
+## 5. Submitting a new firmware
+
+When all of section 1 is done, the maker sends one short mail to **zven@thefirmwarehub.com** (https://thefirmwarehub.com/submit/):
+
+- the firmware's name and the maker's name as it should appear,
+- the repository link,
+- its `FM-1_` identity and its licence,
+- that it was tested on a real FM-1 and leaving it again works.
+
+Text, picture, cheat sheet and links do **not** go in the mail – they come from `fmhub.json`.
+
+## 6. Afterwards
+
+- New versions: just publish a GitHub release with the `.fwsc` attached. Same asset name and same identity is fine.
+- Card text, picture, cheat sheet, browser version, editor: edit `fmhub.json` (and the image file), push, wait up to
+  three hours. Never mail text changes.
+- The maker's face on the Wall of Creators (https://thefirmwarehub.com/creators/) is their GitHub profile picture; a
+  YouTube channel added to their GitHub profile's social accounts shows up there too.
+
+====
+426:catalog.json?
+728:catalog.json?
+58:  /* Shop (Amazon.de affiliate links): shown by web/hubapp.js in DE / AT only (/api/cc), beside the Knowledge Base */
+426:    fetch("/catalog.json?" + new Date().toISOString().slice(0, 10)).then((r) => r.json())     // (the hub's daily key: one cache)
+671:// the submission: /api/submit/new (hubapi/submit.php), then its status page – the check runs on the hub within minutes
+678:    const r = await fetch("/api/submit/new", { method: "POST", credentials: "same-origin", headers: { "Content-Type": "application/json", "X-Hub": "1" },
+728:fetch("/catalog.json?" + new Date().toISOString().slice(0, 10)).then((r) => r.json())
+756:  // country Cloudflare sees (/api/cc, nothing kept) Amazon affiliate links for DE / AT (amazon.de) and the US (amazon.com)
+758:  fetch("/api/cc", { cache: "no-store" }).then((r) => r.json()).then((j) => {
+````
+</details></tool-use>
+
+_**Agent - sidechain (claude-opus-5-5 2026-11-17 18:04:51Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Find relevant KB sections on the Hub
+
+`D=/private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/0a574306-469e-4a59-9622-5701a42aee59/scratchpad/web; cd $D; grep -o -E 'id="[a-z0-9_-]+"' kb.html | tr '\n' ' '; echo; grep -n -i -E "fmhub|identity|loader|sign|provenance|built from source|chip|firmware\.json|catalog|submit|tested" kb.html.txt | head -80`
+
+```text
+id="dd" id="mega" id="getapp" id="dd-fm1" id="toolsdd" id="toolsm" id="aboutdd" id="aboutm" id="shopdd" id="shopm" id="q" id="sign" id="package" id="identity" id="loader" id="install" id="checks" id="provenance" id="usb-hid" id="try" id="data" id="back" id="listed" id="fmhub" id="sounds" id="fhcheck" id="fhrepo" id="fhout" id="fh-body" id="catalog" id="ids" id="ids-body" id="updated" 
+16:        All FM-1 firmwaresKnowledge BaseWall of CreatorsSubmit a firmwareVIBE FM Mk1VIBE FMVIBE FM Lab
+67:          Submit a firmwareMade one? Put it on the hub
+101:  designburg.net
+112:  How to sign your release
+114:  The identity
+115:  The update loader
+118:  Built from source
+128:  How to sign your release
+131:  Let GitHub build your firmware from your source and sign it. Then everyone can check that the .fwsc they
+134:    Built from source on GitHub. You need nothing but your repository: the hub's shared build workflow
+136:    toolchain, the build, the signature and the release.
+148:      id-token: write        # the signing certificate
+162:      with the signed .fwsc attached. Do not replace or add the file by hand afterwards.
+164:    On the hub: the next sync (every three hours) takes the release, checks the signature and shows the key on
+169:  --signer-workflow zvenson/fm1-build/.github/workflows/build.yml
+174:    A file uploaded or rebuilt by hand after the run does not either: the hub compares its SHA-256 with the signed one.
+178:  What the key means, and what it does not: Built from source on GitHub.
+184:    custom firmware uses it too. Inside are two programs: the update loader, a small helper that writes the firmware,
+187:  The first bytes of the file also carry the package's identity, a short name such as FM-1_015. The
+190:  The identity: which firmware is this?
+193:  A running FM-1 answers over USB with the identity of the firmware it runs. The hub uses that answer for one thing only:
+197:    Then two or more firmwares answer with the same identity, and the hub cannot know which of them is on your FM-1.
+199:  A shared identity breaks nothing. Installing, updating and going back work exactly the same.
+201:    which identity it sees, and you know which one you installed.
+205:  Pick an identity no other firmware uses. The table below shows every identity on the hub right now.
+210:  The update loader
+214:    starts the update loader from the new package, and the loader then writes the new firmware. The loader comes from the
+217:  Felucca's loader
+219:  Almost every custom firmware uses the loader from Felucca by Hügelton Instruments. While it waits in update mode, the
+220:    loader reports the new package's identity. For identities of the form FM-1_9NN, the hub picks up an
+223:  M-VAVE's own loader
+225:  The official V15 brings M-VAVE's loader. A firmware can also be built on top of the official V15 with only the
+226:    instrument replaced, as Bubba Machine is. Then it brings M-VAVE's loader too. The hub installs it the same way it
+236:    CheckedThe page loads the package from the hub and compares it with the catalogue: identity and SHA-256 fingerprint.
+238:    LoaderThe running firmware reads the package over USB MIDI and starts the new update loader. The FM-1 restarts.
+240:    WrittenThe loader writes the firmware, the FM-1 restarts again and reports its new identity.
+251:    It is an FM-1 package. Its identity starts with FM-1_ and matches what the project reports.
+253:    It has its update loader. Felucca's loader, or M-VAVE's own for a firmware built on the official V15.
+280:  Built from source on GitHub
+285:    GitHub then signs a statement: this exact file (its SHA-256 fingerprint) was built by this workflow from
+286:    this commit. That signed statement is an artifact attestation.
+288:  The hub looks for one for every package it offers and checks it properly: the signature, Sigstore's certificate and
+292:    Built from source on GitHub, which opens the exact commit.
+295:    GitHub would still sign it. One build workflow for everybody, published and reviewed once, only checks out the
+296:    tagged source and runs the project's build. So the signature means what it says.
+304:  Step by step at the top of this page: How to sign your release. The shared workflow is
+308:    The hub checks the release asset's SHA-256: the file the workflow attested is the file on the release. A file
+314:    Check it yourself with gh attestation verify myfw-1.2.fwsc --repo you/myfw --signer-workflow zvenson/fm1-build/.github/workflows/build.yml.
+346:  fm1-emulator by Simon Johansson emulates the FM-1 itself: its chip
+360:    still stop at an instruction or a chip part the emulator does not have yet (in our tests AMB-1, TRIBE, Bubba Machine,
+397:  Saves gone after power-off, or every update fails? A newer FM-1 with the flash chip 0xB36014 and a
+404:  If no installer finds it and the computer only sees a USB disk "WL82 UBOOT1.00", the chip's bootloader in ROM still
+427:    The package has an update loader and an identity starting with FM-1_. See the
+428:      identity section for why your own number helps.
+431:    Built from source on GitHub. How to sign your release: five minutes, once.
+432:    You can write your card's text yourself, too: fmhub.json.
+440:    Untested firmwares are not listed; a listed one that breaks this is taken off until it is fixed.
+446:      update loader when asked (see What happens when you press Install). If it does not, players
+449:    USB. The FM-1 shows up as a MIDI device, answers the identity request with your own FM-1_
+453:      (which loaders allow it: the update loader).
+471:  You write your card's text. Put a file named fmhub.json in the root of your repository, on its default branch.
+524:  Using an AI assistant? Give it fmhub.md: everything it needs to write this file, the picture and
+533:  Every firmware on the hub with an fmhub.json, as the last run read it.
+535:    FirmwareIts fmhub.json
+542:  The hub's list of firmwares is open for your app, store, installer or tool: catalog.json
+543:    (name, maker, text, picture, version, release, sha256, identity, flash chip, update loader – only firmwares that passed
+544:    the hub's checks). Its compilation – the selection, the checks, identities, chips, loaders and versions – is licensed under
+552:    The makers' texts and pictures are theirs (from their fmhub.json and their repositories), not the hub's and not
+555:    Read catalog.json at most once a day, with a User-Agent that says who you are. Don't read the pages,
+558:    Keep players safe: install only a package whose sha256 matches the list, never one marked "chip": "old"
+559:      on an FM-1 with the newer flash chip, and drop what drops out of the list.
+565:    uses this identity. shared means the hub cannot tell these firmwares apart on a connected
+566:    FM-1. M-VAVE loader marks a firmware built on the official V15.
+568:    IdentityFirmwareVersion
+570:    Loading the catalogue…
+579:  an FM-1 firmware with the update loader before it writes it, and keeps a copy of its source next to it. The SMK-37 firmwares install
+581:  FM-1: Hortator, Hortator (Bluetooth) and FMDj by DEADACTIVE; Felucca by Leo Kuroshita (Hügelton Instruments); Felucca [Salt] by Chance Roth (ChanceTheMaker); Jangada by zednaked; GHOULBOX by Jason Persinger; Melodee by keremimo; SLOOP and Clipper by isod89; Bubba Machine by Erbubar23; SLOOP Floyd FM by René Bohne; SLOOP DX7 Banks by majnikool; X0X, FoMni, AMB-1, CTL-1, Polly, LOOM-8 and MONK-1 by Charles Vestal; X0X-RMX by Mr-Roboto (Oliver); ChoralRoot, PurpleMonkey, FIZZ, RemoteFM1 and EVIL GENIUS by Quixotic7; WaveLoop FM-1 by ELI7VH; FiMba-1 by jadamsowers; JIANT FM by juanjiant-bit; fm1-chord by math0ne; FuMi-1 by cartesive; MAKU by okumurari; Rainbow Mode by joshbartlettband-web; winampFM Synth, No Man Sky FM and FM1 Quest by Hericdk; MYCELIUM by Mandalars; ETCH and RUPTURE by SikkenWorks; FM-106 by PatttF; TRIBE by apiel; DUELL and L/RRY by OSCILL/R; Skiff by illuminus5; Fart Machine One by adamcharleswilsonmusic-code; ORBIT and MC-1 by dspaudio; Felucca 8 Patterns and Argo by echoe; PIGEON by The Shrimp Blimp; CS-1 by twochannels; HYP-1 by RedtailWorks; Tonitor and Bigorna by Nuno Zimas; bocjuhn by ryuji kanagawa; AISLING and AISLING FX-1 by CU_STE; Demake by Sequencist; NOIZ DEMONS by SPIKE the Percussionist; CoralFlower by FicusFicusov; Vector37 by genkigenki; BEETLE, BEETLE BLUE and B1 by Joppe Sikken (SikkenWorks); MIN-1 by Reytian; Pocket GammaWave by ShadowTune (GammaWave Audio); Tuna, Flyfish, Makohai, Daurade, Sill, Sardine and Manta by delirioux; Frodhes by Leonardo Mirabal; FOMAJAM by konsumer; KAWA and K-WASUB by Omnipotard (Guizmoh); GR!MM by GRiMMBIENT; Cut-A-Dor, Mutable Dreams and Bunker Evolved by Kid Bunka; FM1-GM and FM1-TRAX by jartificer; 386DX by seajaysec; OPN-1 and SID-1 by putchdev; Mini-Tone and Mini-Ju08 by Stéphane Schmitz; MORPHEUS and HERA by Ben Badio; FMini-1 by Ruppert; DUB-1 by sbegueria; Ketch by risseraka; FMEL-1 by Antonio Altea; ZEN-1 by aceyprime; Golana by Gadlele; Golana DZ Edition, analogBEAST and keySTEP ONE by dzwerg; MODELAR by Hirakos; Niagara Drift by Evan Yerburgh; Unholy Union by actuallysparky; Evander's Music Box by Michail Tsakiroglou; Chipbox, Smileyface and Drumlab by pbarilla; Bytemania by lloyd (llozd); FRASIL by Styves Goupil; Tessera by Theo Dainis (Rastapopolix); Del Rio by Jess Del Rio; Carnac OS by OrbVorgis; DRIFT by FBNFRTG; SIDOU by Denis Sablić; MONO2K by Iñigo Hernandez; Caravel by BonszaiMusic; MIDIMON by ignis32; ESTAMPIE by Drew Robinson; Matryoshka by glvno; Loom FM-1 by Co-oscillator; TastyWaves by marksweiss; Arctic Scream by p0larpatch; S1Vave by Andrew GG; GATOR by ivanvoid; Monohull by Mark White; PERF-1 by deamonSLINKY; J6 by JackieAlacrity2373; GuitChordi by Stoogs; Ravel and VISCERA:TAPE by De-Pattern; Berlinan by Jiří Píša; MNM-1 and Veffbox by Veff; MOPE-1 by slothpallas; Kitten Synths and Kitten Rack by Black Kitten Devices; Nauclerus by Mr. Roboto; PT/FM by hitosu; SPAMPY by Spampy-Droid; SPELLBOX by Philippe Jaccoud; Dungeon Tracker by Bourbon Weather; NACHTFAHRT by Cranky Man; LUXR by HOLODECK AUDIOTOOLS; VESPER by Fat Cat Studios; Penumbra and Ombak by Lunar Eclipse Forge; Jam Playground by Bob Perry; XMOD by Kot Morderca; SiDJ by thomasj (tubesockor); hawk-chua by plieuwski; BB1 by Ole Big Beat / TexasRADIO; KARMA by Ariel Muchnik; LSDJ Burrito by Dreamy_bacon; fm1-dock, Scintilla and FM-1 SID by Joakim Eriksson; DARK-1 and HADAL-1 by Polystellarflow; Wanderer by Nicholas James / Low Vision Music; PULHRA by 646timur-cell; Amenity and FMLarynx by Presethead; Arcturus S6 by Zeptosecond DSP; Blop by Obsimo; CLATTER Pocket by allmyfriendsaresynths; CHOPPAH by Laurens Profittlich; B3 ORGAN by R-Jeb; GIO-1 by Guinan; Elixir by Dan Majka; FM1 DRUM OS by skufee; QUADRO by Matt Allison; DX747 by Esben von Buchwald; Skiff Atlatl by LIkst4; COQUÍ and glitch by saulofilho; ARTIHIVE by KHAV; CULTBOX by Pete Sasqwax / BEAT CULT; Piterfly by Piotr Woźniak; ATEK303 by Animatek; FM1 Audio Router by MAX RAVE; M-Vance by BK40; Patchwerk by Matt Kuebrich; Compás by Big Beat Studio; Rhythmer by Jazzy Rhythmer; Miku-FM and Astra by Michael Perry; ECHOFIELD and JAMTRACK by PhilipsKnobs; XENOLITH by Unit_v743; Hungry Travis, RAMBEAVER and Trumpagotchi by Trust This Mechanism; FM-FAM by davidamomusic; Quartet, SPLITMILK, Clavioline and CONDUCTOR by MammothCheese; M-PYRE by History Of Sky; ASS-ID, sloop-DUB and DUB-BOX by altessproduction; fm1-amy by Dan Ellis; SATIE-1 by OCKM Studio; Guru-600 by Marc Massé; PLAYA by JFS; Kris Jangle by w33tSnx; CORD and RAKT by Chase DeAnda; Pocket Band by elpabl0; Mighty Arp by Nick Culbertson; fm1-sf2 by mwedmark; DEEP FIELD by Kyle McCann; KRIECHSTROM by Grigorii Bezborodov; PaperLagoon by hacha; Tack by oikoaudio; Manifold by stets43; LOAF BREAKER by FLEXOR; FM-1 Midi-Mania and FM-1 Chimera Vocal by Shan-Sherif; FM1 YOGA by Michael Milz; AGTDECK by Kevin Elliott; RHYTM-SEC-1 by James Hampshire; Adrift by Romain Guy; Drumtonic by Federico Ciapi; ARP WAV 09 by Wav.09.02; Golf and Tekstuur by BARNIR; Kurzhaar, der Basshund by JazzMasterT; Atl-Atl: The Atltuner by Jason Scheirer; Mini-Grain by eldontyrellcorp; M-Vsynth2 by Kris (bk40-home); TRAPSTATION OS by Schlensog Audio Lab; QUARTZ by f0nski; FMav-1 by wootr0p; Juicy by Daniel Gilbert; Fernbedienung and Beiwagen by Kabelmaier; OrGigs by Bobo; DABKE by STUDIOMORPHIK; ObsSynth FM-1 by Orian Beltrame; NCC – Novation Circuit Companion by Fenderberg; Blues Box by Brian Provost. SMK-37: Felucca SMK by Chance Roth (ChanceTheMaker); Makkuro37, Vector37, Speak37, Erik37 and the SMK-37 builds of the FM-1 firmwares by genkigenki; Skiff by illuminus5; FOMAJAM by konsumer; Frodhes by Leonardo Mirabal; FMini-1 SMK by Guilherme Ruppert; AISLING by CU_STE. Baud Girl (FM-1+VA) by Madeline is only linked: not open source, not hosted or mirrored
+587:designburg.net · Tools · Creators · Wish list · Knowledge Base · Impressum · Datenschutz
+```
+</details></tool-use>
+
+_**Agent - sidechain (claude-opus-5-5 2026-11-17 18:04:55Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Read KB sign, identity, loader, provenance sections
+
+`D=/private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/0a574306-469e-4a59-9622-5701a42aee59/scratchpad/web; cd $D; sed -n 125,320p kb.html.txt`
+
+```text
+  Using the hub's firmware list
+  All identities, live
+
+  How to sign your release
+For authors: five minutes, once
+
+  Let GitHub build your firmware from your source and sign it. Then everyone can check that the .fwsc they
+    install is exactly what your code builds, and your card on the hub gets the key
+
+    Built from source on GitHub. You need nothing but your repository: the hub's shared build workflow
+    zvenson/fm1-build does the
+    toolchain, the build, the signature and the release.
+
+    Add one file to your repository: .github/workflows/release.yml
+name: release
+on:
+  push:
+    tags: ["v*"]
+jobs:
+  build:
+    uses: zvenson/fm1-build/.github/workflows/build.yml@v1
+    permissions:
+      contents: write        # the release
+      id-token: write        # the signing certificate
+      attestations: write    # the attestation
+    with:
+      build: ./build.sh --release "${GITHUB_REF_NAME#v}"   # your build command
+      packages: build/*.fwsc                                # the package(s) it makes
+      # test: sh tests/run_tests.sh                       # optional
+
+      Change only the two lines build and packages to your project's build command and where
+      it puts the .fwsc. The JieLi toolchain is there ($JIELI_TOOLCHAIN), the AC79 SDK too
+      ($AC79_SDK). With a test line, a failing test stops the release.
+
+    Push a version tag: git tag v1.2 && git push origin v1.2
+
+    Watch it run in your repository's Actions tab (about two minutes). Green: your release is there,
+      with the signed .fwsc attached. Do not replace or add the file by hand afterwards.
+
+    On the hub: the next sync (every three hours) takes the release, checks the signature and shows the key on
+      your card, linked to the commit and the build log.
+
+    Check it yourself (or let your users):
+gh attestation verify myfw-1.2.fwsc --repo you/myfw \
+  --signer-workflow zvenson/fm1-build/.github/workflows/build.yml
+
+  If it does not work: the build must run on GitHub's Ubuntu runner, so a step that only works on
+    your computer fails there (look at the log in the Actions tab). The three permissions lines are needed.
+    The hub only trusts @v1 of the shared workflow, a package built by your own workflow does not get the key.
+    A file uploaded or rebuilt by hand after the run does not either: the hub compares its SHA-256 with the signed one.
+    Questions: an issue on fm1-build
+    or the FM-1 Discord.
+
+  What the key means, and what it does not: Built from source on GitHub.
+
+  The package: a .fwsc file
+For everyone
+
+  Every FM-1 firmware comes as one file ending in .fwsc. It is the format of M-VAVE's own updater, and every
+    custom firmware uses it too. Inside are two programs: the update loader, a small helper that writes the firmware,
+    and the firmware itself, the instrument you play.
+
+  The first bytes of the file also carry the package's identity, a short name such as FM-1_015. The
+    official firmware V15 is FM-1_015. Custom firmwares pick their own.
+
+  The identity: which firmware is this?
+For everyone, and important for authors
+
+  A running FM-1 answers over USB with the identity of the firmware it runs. The hub uses that answer for one thing only:
+    after you press Connect FM-1, the card of the firmware on your FM-1 gets the mark on your FM-1.
+
+  Many firmwares are built on Felucca, SLOOP or X0X, and several of them keep the number of the project they started from.
+    Then two or more firmwares answer with the same identity, and the hub cannot know which of them is on your FM-1.
+
+  A shared identity breaks nothing. Installing, updating and going back work exactly the same.
+    The only difference: the hub does not mark any card as on your FM-1 when more than one firmware fits. It says
+    which identity it sees, and you know which one you installed.
+
+  For authors: please give your firmware its own number
+
+  Pick an identity no other firmware uses. The table below shows every identity on the hub right now.
+    A number that also encodes your version works well, as Charles Vestal's firmwares do: FM-1_9010003 is X0X 1.0.3.
+    Keep the part before the version yours, so that no other project can collide with it. Change it in your build, release, and
+    tell us: your card then gets an exact check and the on your FM-1 mark.
+
+  The update loader
+For everyone
+
+  The FM-1 cannot overwrite the program it is running. So an update happens in two steps: the running firmware first
+    starts the update loader from the new package, and the loader then writes the new firmware. The loader comes from the
+    new package, so every package brings its own.
+
+  Felucca's loader
+
+  Almost every custom firmware uses the loader from Felucca by Hügelton Instruments. While it waits in update mode, the
+    loader reports the new package's identity. For identities of the form FM-1_9NN, the hub picks up an
+    interrupted update: plug the cable back in, press Install again, and it continues where it stopped.
+
+  M-VAVE's own loader
+
+  The official V15 brings M-VAVE's loader. A firmware can also be built on top of the official V15 with only the
+    instrument replaced, as Bubba Machine is. Then it brings M-VAVE's loader too. The hub installs it the same way it
+    installs V15 itself, and it can resume an interrupted update of that firmware as well.
+
+  An update stopped halfway? The FM-1 stays in update mode and waits. Plug it in again and
+    press Install on the same card. If the hub says the FM-1 is in another firmware's update mode, finish that update
+    with that firmware's own installer, or use the USB rescue described below.
+
+  What happens when you press Install
+For everyone
+
+    CheckedThe page loads the package from the hub and compares it with the catalogue: identity and SHA-256 fingerprint.
+
+    LoaderThe running firmware reads the package over USB MIDI and starts the new update loader. The FM-1 restarts.
+
+    WrittenThe loader writes the firmware, the FM-1 restarts again and reports its new identity.
+
+  All of this runs in your browser, over Web MIDI, which only Chrome and Edge have. Nothing is sent to a server. It takes
+    about a minute. Do not unplug while it says Writing.
+
+  What the hub checks, and what it does not
+For everyone
+
+  The hub looks at every listed project's GitHub repository several times a day and takes its newest release. Before a
+    package is offered, it must pass these checks:
+
+    It is an FM-1 package. Its identity starts with FM-1_ and matches what the project reports.
+
+    It has its update loader. Felucca's loader, or M-VAVE's own for a firmware built on the official V15.
+
+    It is unchanged. The hub mirrors the file byte for byte and pins its SHA-256 fingerprint. Your browser checks
+      that fingerprint again before it writes anything.
+
+  Two more facts are read from every package and shown on its card when they hold: whether GitHub
+    built it from its source, and whether it can act as a USB keyboard or
+    mouse. They inform, they do not judge.
+
+  A release that fails a check is not offered. The last good one stays on the card. If a repository disappears, its card
+    leaves the hub and comes back when the repository does.
+
+  What the hub does not check: whether a firmware works well, sounds good or keeps your
+    data. The hub does not test the firmwares of other authors. Questions and bug reports go to each project, linked on its
+    card.
+
+  Betas
+
+  A card says beta when the version is below 1.0 or its name says beta, alpha, rc or test. A beta may change how
+    it saves your work from one release to the next.
+
+  Why the hub mirrors the files
+
+  A browser is not allowed to download a release file from GitHub directly. So the hub keeps a copy of each package, and a
+    copy of its source code next to it. The firmwares are open source under the GPL-3.0, which allows passing them on
+    unchanged with their source.
+
+  Built from source on GitHub
+For everyone, and how authors get it
+
+  A .fwsc is a compiled file. Anyone can read a project's source code, but nothing in the file itself shows
+    that it was built from that code. Some projects let GitHub build their release instead of a computer at home, and
+    GitHub then signs a statement: this exact file (its SHA-256 fingerprint) was built by this workflow from
+    this commit. That signed statement is an artifact attestation.
+
+  The hub looks for one for every package it offers and checks it properly: the signature, Sigstore's certificate and
+    public transparency log, that the file is the one the hub serves, that it was built from the project's own repository
+    for a release tag, and that it was built by the hub's shared build workflow. When all of that holds, the card
+    gets the grey key 
+    Built from source on GitHub, which opens the exact commit.
+
+  Why a shared workflow: a project's own workflow can download anything during the build and put it into the file, and
+    GitHub would still sign it. One build workflow for everybody, published and reviewed once, only checks out the
+    tagged source and runs the project's build. So the signature means what it says.
+
+  What it does not say: that the firmware is safe or good. It says where the file came from,
+    so that what you read in the source is what you install. Whether the code does what it should is up to those who read
+    it. The hub does not review the firmwares' code.
+
+  For authors: get the key
+
+  Step by step at the top of this page: How to sign your release. The shared workflow is
+    zvenson/fm1-build: one short file,
+    every action pinned, open for review. Changes come as new tags, never by moving one.
+
+    The hub checks the release asset's SHA-256: the file the workflow attested is the file on the release. A file
+      changed, rebuilt or uploaded by hand afterwards does not get the key.
+
+    Your build has to run on GitHub's Ubuntu runner with what it can install there (the toolchain from its
+      download, for example).
+
+    Check it yourself with gh attestation verify myfw-1.2.fwsc --repo you/myfw --signer-workflow zvenson/fm1-build/.github/workflows/build.yml.
+
+    The hub checks each new package once. Releases without an attestation stay on the hub exactly as before.
+
+  “Can act as a USB keyboard / mouse”
+For everyone
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 18:04:56Z)**_
+
+<think><details><summary>Thought Process</summary>
+開啟點劃後黑白鍵都同時有碼和字母，數字頁的 `0` 也放得下，片語頁不變。依專案版本規則這是韌體 0.3，host 改為 0.3.0、藍牙順延到 0.4，接著改版本號、build 實機套件並在兩種晶片上驗證。
+
+</details></think>
+
+_**Agent - sidechain (claude-opus-5-5 2026-11-17 18:04:59Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Read KB listed, fmhub, catalog, ids sections
+
+`D=/private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/0a574306-469e-4a59-9622-5701a42aee59/scratchpad/web; cd $D; sed -n 390,578p kb.html.txt`
+
+```text
+    (PC Firmware, FM-1) and choose the file in the same box: only that exact file is accepted.
+
+  The USB rescue
+
+  Step by step, by what you see: FM-1 rescue. Charge the FM-1
+    fully first, and if a step does not help, stop and write to us before you try the next tool.
+
+  Saves gone after power-off, or every update fails? A newer FM-1 with the flash chip 0xB36014 and a
+    firmware that knows only the first units' 0x856014: it does not write the flash. The rescue page lists the
+    firmwares that know both and shows how to put one on, from Windows, Mac or Linux.
+
+  If the FM-1 does not start any more, hold OCT− while you switch it on. It then waits for an update over USB.
+    Connect it and install any firmware, or V15, from the hub.
+
+  If no installer finds it and the computer only sees a USB disk "WL82 UBOOT1.00", the chip's bootloader in ROM still
+    answers, and no update can erase it. M-Flasher
+    (Windows, macOS, Linux, MIT), MvaveFM1Unbricker
+    by Quixotic7 (Windows and Linux, MIT) and the hub's Rescue (Linux) put a
+    firmware back through it; M-Flasher and the Unbricker keep a full backup of the flash first. An FM-1 that never shows that disk can come back
+    with the FM-1 Transporter,
+    a small RP2040 board on the USB lines (step by step).
+
+  Getting your firmware listed
+For authors
+
+  The hub lists a firmware when all of this is true:
+
+    It makes music. Synths, grooveboxes, drum machines, samplers, chord instruments, controllers. Games and tools
+      without sound are not listed.
+
+    It is open source, with its source code public in the repository and a license that allows passing it on,
+      such as the GPL-3.0.
+
+    It has a .fwsc on a GitHub release. The hub checks the releases on its own several times a day, so every new
+      release appears without anyone doing anything. A project without releases can name its package in a web installer
+      instead. If your release has more than one .fwsc, tell us which one is the firmware.
+
+    The package has an update loader and an identity starting with FM-1_. See the
+      identity section for why your own number helps.
+
+  Optional, and recommended: let GitHub build the release and attest it, so the card can show
+    Built from source on GitHub. How to sign your release: five minutes, once.
+    You can write your card's text yourself, too: fmhub.json.
+
+  Before you send it: test it as a player will use it
+
+  This is the most important part. The hub runs no tests of its own: you are the only one
+    who tests your firmware. Players press Install trusting that it works. A firmware that installs but does not start the
+    next update leaves them with an FM-1 they cannot change any more, and most of them will not know how to get out.
+    Please do every check below on a real FM-1, with the very file from your release, before you mail us.
+    Untested firmwares are not listed; a listed one that breaks this is taken off until it is fixed.
+
+    Install it from the official V15 and from another custom firmware. Both must end with your firmware running
+      and the hub naming it after Connect.
+
+    Leave it again. With your firmware running, install another one. Your firmware must start the next package's
+      update loader when asked (see What happens when you press Install). If it does not, players
+      can only get away by holding OCT− at power-on, and most of them will not know that.
+
+    USB. The FM-1 shows up as a MIDI device, answers the identity request with your own FM-1_
+      number, and its port name is one the hub knows (FM-1, or your firmware's name: tell us).
+
+    An interrupted update. Unplug during Writing once, plug in again and press Install: the update should continue
+      (which loaders allow it: the update loader).
+
+    Projects and samples. If your firmware cannot read what another one saved, or overwrites it, say so in the
+      README: the hub tells players to back up first, your README tells them why.
+
+  Mail zven@thefirmwarehub.com
+    with the name, the repository and a sentence about what it does. A picture of its screen helps: the cards show each
+    project's real screen, taken from its repository.
+
+  Not ready yet?
+
+  A firmware without a release package can not be listed yet. Attach the .fwsc to a release, and it can go on the hub the
+    same day. Closed-source firmwares are not mirrored. A very popular one may get a link card that sends you to its
+    maker's own installer.
+
+  Your card's text, from your repository
+For authors: required for new firmwares
+
+  You write your card's text. Put a file named fmhub.json in the root of your repository, on its default branch.
+    New firmwares are only listed with it.
+
+{
+  "what": "A six-track groovebox: TR drums, a sampler with a mic input, a step sequencer and song mode.",
+  "author": "Your Name",
+  "kinds": ["groove"],
+  "play": "https://you.github.io/myfw/play/",
+  "editor": "https://you.github.io/myfw/editor/",
+  "cheat": "https://you.github.io/myfw/cheatsheet.pdf",
+  "image": "docs/card.png",
+  "color": "#FF7A00",
+  "sounds": "own"
+}
+
+    what: the card's text, in English. Plain words: no HTML, no code, no links or web addresses. Up to 300
+      characters: a longer text is cut at a word. Say what it is and what you can do with it. Write about this version, not your plans.
+
+    author: optional, your name as the card shows it under the title (otherwise the one we wrote down when your
+      firmware came on the hub). Plain text, 2 to 60 characters, no links.
+
+    kinds: one of synth, groove (groovebox), drums (drums and
+      samplers), chords, tracker and other (more than one: the first counts). It is the filter
+      above the cards; pick the one people would look under.
+
+    play: optional, your firmware running in the browser (the card's green ▶ key). An https:// address.
+
+    editor: optional, your web editor for its sounds or settings (the card's pink key). An https:// address.
+
+    cheat: optional, your cheat sheet (the card's sheet key): an https:// address of a web page or a PDF,
+      for example on your GitHub Pages.
+
+    image: optional, your card's picture: the path of a file in your repository, e.g. docs/card.png.
+      Square, 240 × 240 to 1024 × 1024 pixels, PNG, WebP or JPEG, 300 KB at most. Best: a capture of the FM-1's
+      screen at 240 × 240 as PNG (a few KB, pixel-sharp), or a photo as WebP. The hub copies it and serves it itself; replace the
+      file, keep the path, and the card follows within three hours.
+
+    sounds: required when your firmware carries sounds. Where the samples, sample banks, sound banks, ROMs and
+      recordings your firmware carries come from – in the repository and inside the package (converted to code too). One of:
+      "none" or "" or left out (everything is made in code), "own" or "own: recorded on my Elka Drummer One",
+      "CC0: <source>", "public domain: <source>", or
+      "licensed: <source>, <licence>" for someone else's sounds under a licence that lets you share them
+      (those are looked at before listing). With it you confirm that you may share every one of these sounds, and that you,
+      not the hub, answer for it. If a rights holder complains, your firmware comes off the hub until it is solved.
+
+    color: optional, your card's colour line (under the picture) as #RRGGBB, e.g. #FF7A00.
+      Bright enough to be seen on the dark page; a very dark one is refused.
+
+  Changing it: edit the file and push. The hub reads it every three hours and your card shows the new text by itself,
+    no mail. No advertising and nothing hostile against anyone: such a text is refused, and we read every new text that goes
+    on a card. A file that breaks this is taken off the card for good. Under its text every card says where the text comes from, and if your file has a mistake, the card
+    says which. The firmware's name and version always come from your repository and your releases, not from this file.
+
+  Using an AI assistant? Give it fmhub.md: everything it needs to write this file, the picture and
+    the rest of a listing for you.
+
+  Check your file
+
+    Check
+
+  What the hub read last
+
+  Every firmware on the hub with an fmhub.json, as the last run read it.
+
+    FirmwareIts fmhub.json
+
+    Loading…
+
+  Using the hub's firmware list
+For app and tool makers
+
+  The hub's list of firmwares is open for your app, store, installer or tool: catalog.json
+    (name, maker, text, picture, version, release, sha256, identity, flash chip, update loader – only firmwares that passed
+    the hub's checks). Its compilation – the selection, the checks, identities, chips, loaders and versions – is licensed under
+    CC BY 4.0.
+
+    Name the hub, with its address: “Firmware list: The Firmware Hub –
+      thefirmwarehub.com”. Where links work (a web page, an app with a browser) as a working link to
+      https://thefirmwarehub.com; on a device without a browser the address written out – once where people see it,
+      e.g. the list's title or info screen and its About, not all the time. Plus the licence and whether you changed anything.
+
+    The makers' texts and pictures are theirs (from their fmhub.json and their repositories), not the hub's and not
+      under this licence: name each firmware's maker and link its repository.
+
+    Read catalog.json at most once a day, with a User-Agent that says who you are. Don't read the pages,
+      and download the packages from the makers' releases, not from the hub.
+
+    Keep players safe: install only a package whose sha256 matches the list, never one marked "chip": "old"
+      on an FM-1 with the newer flash chip, and drop what drops out of the list.
+
+  All identities on the hub, live
+For authors
+
+  Each firmware as its newest package reports itself. own means no other firmware on the hub
+    uses this identity. shared means the hub cannot tell these firmwares apart on a connected
+    FM-1. M-VAVE loader marks a firmware built on the official V15.
+
+    IdentityFirmwareVersion
+
+    Loading the catalogue…
+
+  The official V15 reports FM-1_015. Please do not use it.
+
+  Disclaimer. Every firmware here belongs to its authors, each under its own license (GPL-3.0:
+  the license); only zp12, sloopDX, OberVave, Shine On, Dinghy and VIBE FM Link are ours
+  (zvenson). We do not develop, test or support the others and take no
+  responsibility for them, for what they do on your device or for lost data: questions and bug reports go to each project, linked on
+  its card. The FM-1 firmwares are taken automatically and unchanged from their releases; the FM-1 page only checks that a package is
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 18:05:09Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Bump to firmware 0.3/host 0.3.0, run all tests, build package
+
+```bash
+python3 - <<'PY'
+def sub(p,a,b):
+    s=open(p).read(); assert a in s,(p,a[:60]); s=s.replace(a,b,1); open(p,'w').write(s)
+sub('firmware/morse/app.c','#define FW_MINOR 2u','#define FW_MINOR 3u')
+sub('firmware/morse/tests/basic.txt','# ---- the host: HELLO once a second until it answers (version 1, firmware 0.2, transport USB) ("hello")\nsysex_out\nwait 1100\nexpect_sysex F0 7D 4D 4F 01 41 01 00 02 00 F7','# ---- the host: HELLO once a second until it answers (version 1, firmware 0.3, transport USB) ("hello")\nsysex_out\nwait 1100\nexpect_sysex F0 7D 4D 4F 01 41 01 00 03 00 F7')
+sub('host/morse/__init__.py','__version__ = "0.2.0"\nFIRMWARE_KNOWN = (0, 2)','__version__ = "0.3.0"\nFIRMWARE_KNOWN = (0, 3)')
+sub('host/morse/protocol.py','"hello": (device_hello(0, 2), "F0 7D 4D 4F 01 41 01 00 02 00 F7"),','"hello": (device_hello(0, 3), "F0 7D 4D 4F 01 41 01 00 03 00 F7"),')
+sub('host/tests/test_morse.py','assert host.firmware == (0, 2)','assert host.firmware == (0, 3)')
+sub('host/morse/PROTOCOL.md','| hello (firmware 0.2, USB) | `F0 7D 4D 4F 01 41 01 00 02 00 F7` |','| hello (firmware 0.3, USB) | `F0 7D 4D 4F 01 41 01 00 03 00 F7` |')
+PY
+just morse-unit | tail -1 && uv run --locked --all-groups pytest -q 2>&1 | tail -1 && just fw-test morse 2>&1 | grep -E "^host:|FAIL" | tail -3 && JIELI_TOOLCHAIN="$PWD/tools/jieli/toolchain" AC79_SDK="$PWD/tools/fw-AC79_AIoT_SDK" uv run --locked --all-groups python third_party/fm1-base/tools/build.py firmware/morse 2>&1 | grep -E "^  ok    image|FAIL|error|^package" ; shasum -a 256 firmware/morse/build/morse.fwsc
+```
+
+```text
+2932 checks, 0 failed
+45 passed in 0.09s
+host: 196659 ms simulated, 1388 blits, render 0.0% of real time (host CPU)
+  ok    image 127880 B; RAM code .ram_text 5100 B of 32768; RAM .data+.bss 28444 B of 98304; pool 69384 B of 344064
+package  /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/firmware/morse/build/morse.fwsc  616003 B, identity FM-1_1300
+64bfa57d9a3a6f433291ead9665167c39018e158bc556e7b4c0b096fadf8d4ea  firmware/morse/build/morse.fwsc
+```
+</details></tool-use>
+
+_**Agent - sidechain (claude-opus-5-5 2026-11-17 18:05:08Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Fetch Hub catalog.json once and inspect structure
+
+```bash
+D=/private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/0a574306-469e-4a59-9622-5701a42aee59/scratchpad/web; cd $D; curl -sL -A "fm1-notes-research/1.0 (one-off read, once a day at most)" "https://thefirmwarehub.com/catalog.json" -o catalog.json; wc -c catalog.json; python3 -I -c "
+import json,sys
+c=json.load(open(sys.argv[1]))
+print(type(c), list(c.keys())[:20] if isinstance(c,dict) else len(c))
+" catalog.json
+```
+
+```text
+  579980 catalog.json
+<class 'dict'> ['license', 'updated', 'firmwares', 'smk37', 'creators', 'stock']
+```
+</details></tool-use>
+
+_**Agent - sidechain (claude-opus-5-5 2026-11-17 18:05:14Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Show catalog entries for CONDUCTOR, CTL-1, AGTDECK
+
+```bash
+D=/private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/0a574306-469e-4a59-9622-5701a42aee59/scratchpad/web; cd $D; python3 -I -c "
+import json,sys
+c=json.load(open(sys.argv[1]))
+print(c['license'], c['updated'], len(c['firmwares']))
+fw=c['firmwares']
+for f in fw:
+    n=(f.get('name') or '')+' '+(f.get('repo') or '')+' '+str(f.get('id'))
+    if any(k in n.lower() for k in ['conductor','ctl','daviddwlee','m-vave_fm-1','morse','agtdeck']):
+        print(json.dumps(f,indent=1,ensure_ascii=False))
+" catalog.json
+```
+
+```text
+{'license': 'CC-BY-4.0', 'url': 'https://creativecommons.org/licenses/by/4.0/', 'attribution': 'Firmware list: The Firmware Hub – https://thefirmwarehub.com', 'terms': "Name The Firmware Hub with its address: a working link to https://thefirmwarehub.com where links work; on a device without a browser the address written out where people see it (the list's title or info screen, About). Card texts and pictures belong to their makers (their fmhub.json and repositories), not under this licence: name each maker and link its repository. Read this file at most once a day; rules: https://thefirmwarehub.com/kb/#catalog"} 2026-11-17 18:02 UTC 245
+{
+ "id": "ctl",
+ "kind": "other",
+ "name": "CTL-1",
+ "author": "Charles Vestal",
+ "repo": "charlesvestal/fm1-ctl",
+ "ident": "FM-1_60[01]0\\d{3}",
+ "what": "A MIDI controller: notes in any scale with its chords on the black keys, four banks of knobs, an arpeggiator and Euclidean drums, with General MIDI sounds of its own when nothing is connected.",
+ "editor": null,
+ "play": "https://charlesvestal.github.io/fm1-ctl/emu/",
+ "added": "2026-10-13",
+ "loader": null,
+ "cheat": null,
+ "install": null,
+ "card": null,
+ "color": null,
+ "vintage": false,
+ "ambient": false,
+ "fmhub": null,
+ "stars": 26,
+ "talk": "https://github.com/charlesvestal/fm1-ctl/issues",
+ "lic": "MPL-2.0",
+ "starsDay": "2026-11-17",
+ "site": "https://charlesvestal.github.io/fm1-ctl/",
+ "version": "1.0.3",
+ "date": "2026-11-06",
+ "published": "2026-11-06T16:39:27Z",
+ "pkg": "fw/ctl-1.0.3.fwsc",
+ "product": "FM-1_6010003",
+ "size": 614938,
+ "sha256": "1ecf7e3c2af255c7f404fa6232e9a55cdbaaf3e60cc1c549e14ecd310f7d5104",
+ "release": "https://github.com/charlesvestal/fm1-ctl/releases/tag/v1.0.3",
+ "tag": "v1.0.3",
+ "srcref": null,
+ "mirror": "src/ctl-1.0.3.tar.gz",
+ "beta": false,
+ "hid": {
+  "keyboard": false,
+  "mouse": false
+ },
+ "chip": "new",
+ "provenance": {
+  "sha256": "1ecf7e3c2af255c7f404fa6232e9a55cdbaaf3e60cc1c549e14ecd310f7d5104",
+  "repo": "charlesvestal/fm1-ctl",
+  "commit": "9bb5abcc6ef6e0af803a868ecda166e76e90d8d6",
+  "ref": "refs/tags/v1.0.3",
+  "workflow": "zvenson/fm1-build/.github/workflows/build.yml@refs/tags/v1",
+  "signer": "https://github.com/zvenson/fm1-build/.github/workflows/build.yml@refs/tags/v1",
+  "run": "https://github.com/charlesvestal/fm1-ctl/actions/runs/42253966643/attempts/1",
+  "verified": true,
+  "by": "cryptography"
+ },
+ "asset": "717803119 2026-11-06T16:38:59Z",
+ "assetPkg": "ctl-[\\d.]+\\.fwsc",
+ "base": [],
+ "dinghy": false,
+ "dinghyv": 2,
+ "source": "https://github.com/charlesvestal/fm1-ctl/tree/v1.0.3",
+ "installs": 63
+}
+{
+ "id": "agtdeck",
+ "kind": "other",
+ "name": "AGTDECK",
+ "author": "Kevin Elliott",
+ "repo": "kevinelliott/fm-1-agent-deck",
+ "ident": "FM-1_24356",
+ "what": "A control surface for coding agents, not an instrument: the keys and screen show which of your Claude Code, Codex or other command-line agents are working, finished or waiting on you, and the buttons approve, deny, interrupt and prompt them. It needs its daemon on the computer.",
+ "editor": "https://kevinelliott.github.io/fm-1-agent-deck/editor/",
+ "play": "https://kevinelliott.github.io/fm-1-agent-deck/play/?fw=agtdeck&script=demo.txt",
+ "added": "2026-11-13",
+ "loader": null,
+ "cheat": "https://kevinelliott.github.io/fm-1-agent-deck/cheatsheet.html",
+ "install": null,
+ "card": "fw/cards/agtdeck-d36e82f3.w640.webp",
+ "color": "#B48CFF",
+ "vintage": false,
+ "ambient": false,
+ "fmhub": {
+  "sha": "d97e1306",
+  "data": {
+   "what": "A control surface for coding agents, not an instrument: the keys and screen show which of your Claude Code, Codex or other command-line agents are working, finished or waiting on you, and the buttons approve, deny, interrupt and prompt them. It needs its daemon on the computer.",
+   "author": "Kevin Elliott",
+   "kind": "other",
+   "play": "https://kevinelliott.github.io/fm-1-agent-deck/play/?fw=agtdeck&script=demo.txt",
+   "editor": "https://kevinelliott.github.io/fm-1-agent-deck/editor/",
+   "cheat": "https://kevinelliott.github.io/fm-1-agent-deck/cheatsheet.html",
+   "color": "#B48CFF",
+   "image": "docs/card.png",
+   "sounds": "none"
+  }
+ },
+ "stars": 4,
+ "talk": "https://github.com/kevinelliott/fm-1-agent-deck/issues",
+ "lic": "GPL-3.0",
+ "starsDay": "2026-11-17",
+ "site": "https://github.com/kevinelliott/fm-1-agent-deck",
+ "version": "0.6.3",
+ "date": "2026-11-13",
+ "published": "2026-11-13T18:19:46Z",
+ "pkg": "fw/agtdeck-0.6.3.fwsc",
+ "product": "FM-1_24356",
+ "size": 612222,
+ "sha256": "015036f7858ace3e294504faa06f6b49a5029db57a00991a02fc0765fee40ef4",
+ "release": "https://github.com/kevinelliott/fm-1-agent-deck/releases/tag/v0.6.3",
+ "tag": "v0.6.3",
+ "srcref": null,
+ "mirror": "src/agtdeck-0.6.3.tar.gz",
+ "beta": true,
+ "hid": {
+  "keyboard": false,
+  "mouse": false
+ },
+ "chip": "new",
+ "provCheck": "015036f7858ace3e294504faa06f6b49a5029db57a00991a02fc0765fee40ef4 2026-11-13",
+ "provenance": {
+  "sha256": "015036f7858ace3e294504faa06f6b49a5029db57a00991a02fc0765fee40ef4",
+  "repo": "kevinelliott/fm-1-agent-deck",
+  "commit": "434e5f28f7478b30724d31696cc826427c6b1c60",
+  "ref": "refs/tags/v0.6.3",
+  "workflow": "zvenson/fm1-build/.github/workflows/build.yml@refs/tags/v1",
+  "signer": "https://github.com/zvenson/fm1-build/.github/workflows/build.yml@refs/tags/v1",
+  "run": "https://github.com/kevinelliott/fm-1-agent-deck/actions/runs/43481393092/attempts/1",
+  "verified": true,
+  "by": "cryptography"
+ },
+ "asset": "744690629 2026-11-13T18:19:47Z",
+ "assetPkg": "agentdeck-[\\d.]+\\.fwsc",
+ "base": [
+  "dinghy"
+ ],
+ "dinghy": true,
+ "dinghyv": 2,
+ "source": "https://github.com/kevinelliott/fm-1-agent-deck/tree/v0.6.3"
+}
+{
+ "id": "conductor",
+ "kind": "groove",
+ "name": "CONDUCTOR",
+ "author": "MammothCheese",
+ "repo": "MammothCheese/conductor",
+ "ident": "FM-1_1812",
+ "what": "A pocket symphony orchestra groovebox with strings, woodwinds, brass and percussion. Compose in piano roll or musical notation, conduct individual sections with articulations, dynamics and expression curves, and arrange patterns into complete pieces.",
+ "editor": null,
+ "play": "https://joakimeriksson.github.io/fm1-emu/?fw=conductor",
+ "added": "2026-11-17",
+ "loader": null,
+ "cheat": "https://mammothcheese.github.io/conductor/",
+ "install": null,
+ "card": "fw/cards/conductor-3111bc8f.w640.webp",
+ "color": "#BA9234",
+ "vintage": false,
+ "ambient": false,
+ "fmhub": {
+  "sha": "f8db7120",
+  "data": {
+   "what": "A pocket symphony orchestra groovebox with strings, woodwinds, brass and percussion. Compose in piano roll or musical notation, conduct individual sections with articulations, dynamics and expression curves, and arrange patterns into complete pieces.",
+   "author": "MammothCheese",
+   "kind": "groove",
+   "play": "https://joakimeriksson.github.io/fm1-emu/?fw=conductor",
+   "cheat": "https://mammothcheese.github.io/conductor/",
+   "color": "#BA9234",
+   "image": "docs/card.png",
+   "sounds": "none"
+  }
+ },
+ "stars": 0,
+ "talk": "https://github.com/MammothCheese/conductor/issues",
+ "lic": "GPL-3.0",
+ "starsDay": "2026-11-17",
+ "site": "https://github.com/MammothCheese/conductor",
+ "version": "1.0",
+ "date": "2026-11-17",
+ "published": "2026-11-17T05:39:24Z",
+ "pkg": "fw/conductor-1.0.fwsc",
+ "product": "FM-1_1812",
+ "size": 612228,
+ "sha256": "d59b3f9dd05bcd18b10dc2a0196204216468b54d1a31c8fa99770c6a4bc3089d",
+ "release": "https://github.com/MammothCheese/conductor/releases/tag/v1.0",
+ "tag": "v1.0",
+ "srcref": null,
+ "mirror": "src/conductor-1.0.tar.gz",
+ "beta": false,
+ "hid": {
+  "keyboard": false,
+  "mouse": false
+ },
+ "chip": "new",
+ "provCheck": "d59b3f9dd05bcd18b10dc2a0196204216468b54d1a31c8fa99770c6a4bc3089d 2026-11-17",
+ "provenance": {
+  "sha256": "d59b3f9dd05bcd18b10dc2a0196204216468b54d1a31c8fa99770c6a4bc3089d",
+  "verified": false,
+  "note": "present, not verified: signed by workflow 'https://github.com/MammothCheese/conductor/.github/workflows/release.yml@refs/tags/v1.0', not a trusted one"
+ },
+ "asset": "757808201 2026-11-17T05:42:53Z",
+ "assetPkg": "conductor-[\\d.]+\\.fwsc",
+ "base": [
+  "dinghy"
+ ],
+ "dinghy": true,
+ "dinghyv": 2,
+ "source": "https://github.com/MammothCheese/conductor/tree/v1.0",
+ "installs": 11
+}
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 18:05:22Z)**_
+
+<think><details><summary>Thought Process</summary>
+全部測試通過，實機套件也 build 成功。接下來我會在兩種模擬器晶片上驗證存檔、重開、讀回，並檢查實機韌體的 TYPE 點劃畫面。
+
+</details></think>
+
+_**Agent - sidechain (claude-opus-5-5 2026-11-17 18:05:27Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Analyze catalog keys, chip values, identities
+
+```bash
+D=/private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/0a574306-469e-4a59-9622-5701a42aee59/scratchpad/web; cd $D; python3 -I -c "
+import json,sys,re,collections
+c=json.load(open(sys.argv[1]))
+fw=c['firmwares']
+keys=collections.Counter(k for f in fw for k in f)
+print(keys)
+print(collections.Counter(f.get('chip') for f in fw))
+print(collections.Counter(f.get('kind') for f in fw))
+for f in fw:
+    p=f.get('product') or ''
+    if re.match(r'FM-1_1[23]',p) or re.match(r'FM-1_1[23]', f.get('ident') or ''):
+        print('ID', f['id'], p, f.get('ident'), f.get('repo'))
+    if f['id'] in ('morse','conductor') or 'morse' in (f.get('what') or '').lower():
+        print('NAME', f['id'], f['name'])
+# fm1-base based?
+print([ (f['id'],f.get('base')) for f in fw if f.get('base') and 'fm1-base' in str(f.get('base'))][:40])
+print(collections.Counter(b for f in fw for b in (f.get('base') or [])))
+print('fmhub present', sum(1 for f in fw if f.get('fmhub')), 'of', len(fw))
+added=sorted((f.get('added') or '', f['id'], bool(f.get('fmhub'))) for f in fw)[-25:]
+print(added)
+" catalog.json
+```
+
+```text
+Exit code 1
+Traceback (most recent call last):
+  File "<string>", line 8, in <module>
+    print(collections.Counter(f.get('kind') for f in fw))
+          ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/homebrew/Cellar/python@3.15/3.15.1/Frameworks/Python.framework/Versions/3.15/lib/python3.15/collections/__init__.py", line 617, in __init__
+    self.update(iterable, **kwds)
+    ~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+  File "/opt/homebrew/Cellar/python@3.15/3.15.1/Frameworks/Python.framework/Versions/3.15/lib/python3.15/collections/__init__.py", line 707, in update
+    _count_elements(self, iterable)
+    ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^
+TypeError: unhashable type: 'list'
+Counter({'id': 245, 'kind': 245, 'name': 245, 'author': 245, 'repo': 245, 'ident': 245, 'what': 245, 'editor': 245, 'play': 245, 'added': 245, 'loader': 245, 'cheat': 245, 'install': 245, 'card': 245, 'color': 245, 'vintage': 245, 'ambient': 245, 'fmhub': 245, 'stars': 245, 'talk': 245, 'lic': 245, 'starsDay': 245, 'site': 245, 'version': 245, 'date': 245, 'published': 245, 'pkg': 245, 'product': 245, 'size': 245, 'sha256': 245, 'release': 245, 'tag': 245, 'srcref': 245, 'mirror': 245, 'beta': 245, 'hid': 245, 'chip': 245, 'base': 245, 'dinghy': 245, 'source': 245, 'dinghyv': 241, 'provCheck': 231, 'asset': 218, 'installs': 211, 'assetPkg': 164, 'provenance': 82, 'relCheck': 27, 'externalInstall': 6, 'pkgFrom': 6, 'linkOnly': 1, 'noConvert': 1, 'notice': 1})
+Counter({'new': 168, 'old': 71, 'any': 6})
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 18:05:40Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Emulator: 0.2-to-0.3 upgrade, save, reboot, reload on both chips
+
+```bash
+cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/tools/emu-state && S=/private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/0a574306-469e-4a59-9622-5701a42aee59/scratchpad && pkg=/Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/firmware/morse/build/morse.fwsc && for chip in uc25hq80 p25q80; do rm -f pristine03-$chip.flash; ../fm1-emu/fm1-live --fwsc "$pkg" --flash-chip $chip --flash pristine03-$chip.flash --midi none --shot 1 --lcd-only >/dev/null 2>&1; python3 ../../scripts/emu_rehearse.py pristine03-$chip.flash morse02-$chip.flash morse03-$chip.flash >/dev/null; FM1_NO_PLAY=1 FM1_BENCH_KEYS="1000:e5:+2" ../fm1-emu/fm1-live --fwsc "$pkg" --flash-chip $chip --flash morse03-$chip.flash --midi none --shot 6000 --lcd-only 2>&1 | grep -iE "^flash:|fault|error"; FM1_NO_PLAY=1 FM1_BENCH_KEYS="1000:HOME,1060:HOME^,1500:e0:+6,2000:SCL,2060:SCL^" ../fm1-emu/fm1-live --fwsc "$pkg" --flash-chip $chip --flash morse03-$chip.flash --midi none --shot 3000 --lcd-only 2>&1 | grep -iE "^flash:|fault|error"; mv work/lcd.ppm $S/m03a-$chip.ppm; FM1_NO_PLAY=1 FM1_BENCH_KEYS="1000:HOME,1060:HOME^,1500:e0:+4,2000:SCL,2060:SCL^,2500:SEQ,2560:SEQ^,3000:A4,3060:A4^" ../fm1-emu/fm1-live --fwsc "$pkg" --flash-chip $chip --flash morse03-$chip.flash --midi none --shot 5000 --lcd-only 2>&1 | grep -iE "fault|error"; mv work/lcd.ppm $S/m03b-$chip.ppm; done; cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1 && uv run --locked --all-groups python -c "
+from PIL import Image
+S='$S'
+ims=[Image.open(f'{S}/m03{r}-{c}.ppm') for c in ('uc25hq80','p25q80') for r in 'ab']
+out=Image.new('RGB',(4*248,240),(60,60,60))
+for i,im in enumerate(ims): out.paste(im,(i*248,0))
+out.save(f'{S}/emu03.png')"
+```
+
+```text
+flash: 4 erases / programs
+flash: 0 erases / programs
+flash: 4 erases / programs
+flash: 0 erases / programs
+```
+</details></tool-use>
+
+_**Agent - sidechain (claude-opus-5-5 2026-11-17 18:05:35Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Analyze catalog kinds, identities, bases
+
+```bash
+D=/private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/0a574306-469e-4a59-9622-5701a42aee59/scratchpad/web; cd $D; python3 -I -c "
+import json,sys,re,collections
+c=json.load(open(sys.argv[1]))
+fw=c['firmwares']
+print(collections.Counter(str(f.get('kind')) for f in fw))
+for f in fw:
+    p=f.get('product') or ''
+    if re.match(r'FM-1_1[23]',p) or re.match(r'FM-1_1[23]', f.get('ident') or ''):
+        print('ID', f['id'], p, f.get('ident'), f.get('repo'))
+    if f['id'] in ('morse',) or re.search(r'morse|keyer', (f.get('what') or '').lower()):
+        print('NAME', f['id'], f['name'])
+print(collections.Counter(b for f in fw for b in (f.get('base') or [])))
+print('fmhub present', sum(1 for f in fw if f.get('fmhub')), 'of', len(fw))
+added=sorted((f.get('added') or '', f['id'], bool(f.get('fmhub'))) for f in fw)[-30:]
+print(added)
+for f in fw:
+    if f.get('relCheck') or f.get('notice') or f.get('externalInstall'):
+        pass
+ex=[f for f in fw if f.get('relCheck')][:2]
+for f in ex: print(f['id'], f.get('relCheck'))
+ex=[f for f in fw if f.get('notice')]
+for f in ex: print(f['id'], f.get('notice'))
+ex=[f for f in fw if f.get('pkgFrom')][:3]
+for f in ex: print(f['id'], f.get('pkgFrom'), f.get('externalInstall'), f.get('install'))
+print([ (f['id'],f['what'][:80]) for f in fw if f['kind']=='other'][:40])
+" catalog.json
+```
+
+```text
+Counter({'synth': 92, 'groove': 85, 'other': 30, 'drums': 16, 'tracker': 11, 'chords': 8, "['groove', 'dev']": 1, 'dev': 1, "['groove', 'synth']": 1})
+NAME shineon Shine On
+ID mpyre FM-1_123 FM-1_123 HistoryOfSky/m-pyre
+ID fm1midimania FM-1_137092 (?:FM-1_137090)|FM-1_137092 shan-sherif/fm-1-midi-mania
+Counter({'dinghy': 44, 'felucca': 15, 'sloop': 6, 'x0x': 2, 'tonitor': 2, 'hortator': 2, 'chipbox': 2, 'fm1dock': 2, 'perf1': 2, 'jiant': 2, 'fomni': 2, 'obervave': 1, 'amb': 1, 'nachtfahrt': 1, 'ghoulbox': 1, 'tuna': 1, 'matryoshka': 1, 'beetle': 1, 'skiff': 1, 'grimm': 1, 'penumbra': 1, 'choppah': 1, 'minitone': 1})
+fmhub present 158 of 245
+[('2026-11-14', 'arpwav09', True), ('2026-11-14', 'golf', True), ('2026-11-14', 'tekstuur', True), ('2026-11-15', 'kurzhaar', True), ('2026-11-16', 'astra', True), ('2026-11-16', 'atlatltheatltuner', True), ('2026-11-16', 'beiwagen', True), ('2026-11-16', 'bluesbox', True), ('2026-11-16', 'dabke', True), ('2026-11-16', 'evilgenius', True), ('2026-11-16', 'fernbedienung', True), ('2026-11-16', 'fm1chimeravocal', True), ('2026-11-16', 'fmav1', True), ('2026-11-16', 'fmlarynx', True), ('2026-11-16', 'glitch', True), ('2026-11-16', 'juicy', True), ('2026-11-16', 'minigrain', True), ('2026-11-16', 'mvsynth2', True), ('2026-11-16', 'nccnovationcircuitcompan', True), ('2026-11-16', 'obssynthfm1', True), ('2026-11-16', 'orgigs', True), ('2026-11-16', 'quartz', True), ('2026-11-16', 'trapstationos', True), ('2026-11-17', 'aetherfm1', True), ('2026-11-17', 'conductor', True), ('2026-11-17', 'cursedos', True), ('2026-11-17', 'quantumgammawave', True), ('2026-11-17', 'stallion', True), ('2026-11-17', 'vnl1', True), ('2026-11-17', 'yehnah', True)]
+zp12 2.5 2026-11-17
+sloopdx 4.0.1 2026-11-17
+mikufm Unofficial fan project. The singer depicts Crypton Future Media, INC.'s character Hatsune Miku under the Piapro Character License (© Crypton Future Media, INC. www.piapro.net) – free, non-commercial; installed from its maker's page.
+sloopdx release None None
+obervave release None None
+shineon release None None
+[('vibe-link', 'Play the VIBE FM VST plugin with your FM-1. Install this and the FM-1 is the con'), ('rainbow', 'A music toy for little children: 63 cartoon friends, every key in tune, chords, '), ('ctl', 'A MIDI controller: notes in any scale with its chords on the black keys, four ba'), ('fart', 'A questionable musical instrument: ten artisanal farts, reverb, delay and a sixt'), ('min1', 'A tiny minimalist ensemble after Philip Glass: it starts playing when you switch'), ('purplemonkey', 'A first instrument for toddlers: random key bashing and knob turning are rewarde'), ('nmsfm', 'A space adventure while you make music, built on SLOOP 2.7.1: fly between planet'), ('fm1quest', 'A pixel-art RPG while you make music, built on SLOOP: four heroes, one a track, '), ('386dx', 'A karaoke robot with a band: it sings songs from karaoke and MIDI files, or line'), ('morpheus', "A pattern sequencer after Reason's Matrix: up to four channels of MIDI sequence "), ('flyfish', "One piece on the FM-1: Chopin's Etude in C major, Op. 10 No. 1, on a sampled Ste"), ('midimon', 'A MIDI monitor for USB, the TRS jack and Bluetooth (as device and host at once):'), ('berlinan', 'A generative Berlin School MIDI sequencer: a small ensemble of voices that repea'), ('sidj', 'Plays C64 SID music from HVSC on an emulated 6581 or 8580 and lets you remix eve'), ('audiorouter', 'USB audio interface and Bluetooth audio receiver with FX'), ('ombak', 'A gamelan-inspired ensemble. Lead the core melody on the white keys and the ense'), ('hungrytravis', 'A spoon-feeding balance game with a beatless ambient soundtrack and voiced react'), ('rambeaver', 'A side-scrolling action game with synthesized music, sound effects and character'), ('trumpagotchi', 'An unofficial parody virtual pet with a playable pentatonic keyboard. Feed, prai'), ('krisjangle', 'Kris Jangle is a Christmas game for the FM-1: it plays the start of a carol and '), ('dubbox', "A dub station for the M-VAVE FM-1: the USB/BT audio router with sloop-DUB's dub "), ('fm1midimania', 'A rhythm game for the FM-1. Load songs from the browser Studio, turn any MIDI fi'), ('fm1yoga', 'A sound companion for Shavasana and meditation. Guided programs on 174, 396, 432'), ('hadal1', 'Generative dark ambient: drones, demonic and angelic choirs, bells and 135 sound'), ('agtdeck', 'A control surface for coding agents, not an instrument: the keys and screen show'), ('aislingfx1', 'Turns the FM-1 into an effects box. Sound from a computer, sent over USB, comes '), ('atlatltheatltuner', 'A USB audio interface and autotuner for the M-VAVE FM-1. Play computer audio int'), ('fernbedienung', 'Turns the FM-1 into a controller and USB audio interface for the iOS app Steckfe'), ('beiwagen', 'A USB sidecar for the OP-1 Field: the OP-1 streams its four tape tracks to the F'), ('orgigs', "It's an organ. Three manuals with 84 free-running tone generators and no voice s")]
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 18:05:45Z)**_
+
+<tool-use data-tool-type="read" data-tool-name="Read"><details>
+<summary>Tool use: **Read**</summary>
+ `/private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/0a574306-469e-4a59-9622-5701a42aee59/scratchpad/emu03.png`
+</details></tool-use>
+
+_**Agent - sidechain (claude-opus-5-5 2026-11-17 18:05:45Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Search Hub home page for chip field explanation
+
+```bash
+D=/private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/0a574306-469e-4a59-9622-5701a42aee59/scratchpad/web; cd $D; python3 -I -c "
+import sys,re,html
+s=open(sys.argv[1],encoding='utf-8').read()
+for m in re.finditer(r'(?i)(newchip|B36014|chip\s*===?\s*\"(new|old|any)\"|\"any\"|it does not check the chip|newer chip)', s):
+    a=max(0,m.start()-300); b=min(len(s),m.end()+400)
+    t=re.sub(r'<[^>]+>','',s[a:b]); t=html.unescape(re.sub(r'\s+',' ',t))
+    print('...',t,'...\n')
+" hub.html | head -60
+```
+
+```text
+... icial V15 or the Rescue always bring it back. What a firmware does once it runs is up to its maker – its code is there for anyone to read. My FM-1 says "save error" – or saves are gone after switching off. A newer chip? Probably. FM-1s sold since autumn 2026 have a different flash chip, 0xB36014 (the first ones: 0x856014). Your FM-1 is fine – but a firmware that only knows the old chip keeps your saves in RAM, gone when you switch off, and updates from it may fail. Tick Saves on newer FM-1s in the filter for the firmwares that know it (read from each ...
+
+... es once it runs is up to its maker – its code is there for anyone to read. My FM-1 says "save error" – or saves are gone after switching off. A newer chip? Probably. FM-1s sold since autumn 2026 have a different flash chip, 0xB36014 (the first ones: 0x856014). Your FM-1 is fine – but a firmware that only knows the old chip keeps your saves in RAM, gone when you switch off, and updates from it may fail. Tick Saves on newer FM-1s in the filter for the firmwares that know it (read from each package; the card's pop-up says it too). Already stuck on one that refuses every upda ...
+
+...  Probably. FM-1s sold since autumn 2026 have a different flash chip, 0xB36014 (the first ones: 0x856014). Your FM-1 is fine – but a firmware that only knows the old chip keeps your saves in RAM, gone when you switch off, and updates from it may fail. Tick Saves on newer FM-1s in the filter for the firmwares that know it (read from each package; the card's pop-up says it too). Already stuck on one that refuses every update? Don't install again and again: the rescue page shows the way, for Windows, Mac and Linux. My FM-1 is stuck: no installer finds it any mor ...
+
+... crollTo(0, el.getBoundingClientRect().top + scrollY - stuck() - 16); // (under the nav, which stays on top) else el.scrollIntoView({ block: "center" }); el.classList.add("flash"); }, 300); } addEventListener("hashchange", jump); // (5.11.) a link on this page to a filter key (the FAQ's #newchip): that key alone, then the cards addEventListener("hashchange", () => { const k = location.hash.slice(1); if (!isKey(k) || !cat.length) return; sel = new Set([k]); keepKind(); chips(); render(); $("grid").scrollIntoView({ behavior: "smooth", block: "start" }); }); // a link to the rescue (the header's "Stuck?", the FAQ): its steps unfolded const openRescue = () => { if (location.hash === "#resc ...
+
+... : "#afd9f4", vector37: "#5fc48a", makkuro37: "#d0524f" }; // (the SMK-37 page takes its colours from here too: tools/make_fm1.py) // (5.11.2026, Sven) the sound engines a firmware has, read from its own source (web/engines.json, put in by tools/make_fm1.py): // a row of the filter, "any" as Type const ENGINES = {"zp12":["sample"],"hortator":["va","sample"],"hortator-bt":["va","sample"],"felucca":["va","dx7","chip","sample","voice","organ","grain","phys"],"salt":["va","fm","chip","sample","voice","organ","grain"],"jangada":["va","fm","dx7","chip","sample","voice","organ","grain","phys"],"ghoulbox":["va","dx7","chip","sample","voice","organ","grain","phys"],"melodee":["va","dx7","c ...
+
+... EYS.some(([x]) => x === k); const enginesOf = (f) => ENGINES[f && f.id] || []; // the filter's groups: within a group any ticked one (synth or chords), between the groups all (a synth that is ambient and plays // in the browser); a group with nothing ticked does not filter const FGROUPS = [["Type", "any", [["synth", "Synths"], ["groove", "Grooveboxes"], ["drums", "Drums & samplers"], ["chords", "Chords"], ["tracker", "Trackers"], ["dev", "For devs"], ["other", "Other"]]], ["Style", "any", [["ambient", "Ambient & drone"], ["vintage", "Vintage"]]], ["Engine", "any", ENGINE_KEYS], ["More", "all", [["fav", "♥ Favourites"], ["play", "▶ Play in browser ...
+
+... plays // in the browser); a group with nothing ticked does not filter const FGROUPS = [["Type", "any", [["synth", "Synths"], ["groove", "Grooveboxes"], ["drums", "Drums & samplers"], ["chords", "Chords"], ["tracker", "Trackers"], ["dev", "For devs"], ["other", "Other"]]], ["Style", "any", [["ambient", "Ambient & drone"], ["vintage", "Vintage"]]], ["Engine", "any", ENGINE_KEYS], ["More", "all", [["fav", "♥ Favourites"], ["play", "▶ Play in browser"], ["src", "Built from source"], ["vst", "🎛 VST plugin ready"], ["newchip", "Saves on newer FM-1s"], ["hidden", "⊘ Hidden"]]]]; // (hidden: the ⊘ on a card, web/hubaccount.js – off the list unless the Hi ...
+
+... , "any", [["synth", "Synths"], ["groove", "Grooveboxes"], ["drums", "Drums & samplers"], ["chords", "Chords"], ["tracker", "Trackers"], ["dev", "For devs"], ["other", "Other"]]], ["Style", "any", [["ambient", "Ambient & drone"], ["vintage", "Vintage"]]], ["Engine", "any", ENGINE_KEYS], ["More", "all", [["fav", "♥ Favourites"], ["play", "▶ Play in browser"], ["src", "Built from source"], ["vst", "🎛 VST plugin ready"], ["newchip", "Saves on newer FM-1s"], ["hidden", "⊘ Hidden"]]]]; // (hidden: the ⊘ on a card, web/hubaccount.js – off the list unless the Hidden box is ticked, which shows those alone) const KINDS = [["all", "All"], ...FGROUPS.flatMap ...
+
+... ]]], ["Style", "any", [["ambient", "Ambient & drone"], ["vintage", "Vintage"]]], ["Engine", "any", ENGINE_KEYS], ["More", "all", [["fav", "♥ Favourites"], ["play", "▶ Play in browser"], ["src", "Built from source"], ["vst", "🎛 VST plugin ready"], ["newchip", "Saves on newer FM-1s"], ["hidden", "⊘ Hidden"]]]]; // (hidden: the ⊘ on a card, web/hubaccount.js – off the list unless the Hidden box is ticked, which shows those alone) const KINDS = [["all", "All"], ...FGROUPS.flatMap(([, , o]) => o)]; // (every key a #link can name: #drums, #ambient) const KIND_TAG = { synth: "synth", groove: "groovebox", drums: "drums · sampler", chords: "chords", track ...
+
+... nesOf(f).map((k) => ENGINE_KEYS.find(([x]) => x === k)[1])].join(" ")); const has = (f, k) => isEngine(k) ? enginesOf(f).includes(k) : k === "fav" ? isFav(f.id) : k === "hidden" ? isHidden(f.id) : k === "play" ? !!f.play : k === "src" ? !!prov(f) : k === "vst" ? !!(vstOf(f) || nativeOf(f)) : k === "newchip" ? f.chip === "new" || f.chip === "any" : kindsOf(f).includes(k); // (play: an emulator to try it without an FM-1) // a card through the ticks (skip: one group left out, for the counts beside its own boxes); has(k) answers for this card const passes = (hasK, skip) => FGROUPS.every(([g, how, o]) => { const on = g === skip ? [] : o.map(([k]) => k).filter((k) => sel.has(k)); return !on.length  ...
+
+... (k) => ENGINE_KEYS.find(([x]) => x === k)[1])].join(" ")); const has = (f, k) => isEngine(k) ? enginesOf(f).includes(k) : k === "fav" ? isFav(f.id) : k === "hidden" ? isHidden(f.id) : k === "play" ? !!f.play : k === "src" ? !!prov(f) : k === "vst" ? !!(vstOf(f) || nativeOf(f)) : k === "newchip" ? f.chip === "new" || f.chip === "any" : kindsOf(f).includes(k); // (play: an emulator to try it without an FM-1) // a card through the ticks (skip: one group left out, for the counts beside its own boxes); has(k) answers for this card const passes = (hasK, skip) => FGROUPS.every(([g, how, o]) => { const on = g === skip ? [] : o.map(([k]) => k).filter((k) => sel.has(k)); return !on.length || (how === "any" ?  ...
+
+... ind(([x]) => x === k)[1])].join(" ")); const has = (f, k) => isEngine(k) ? enginesOf(f).includes(k) : k === "fav" ? isFav(f.id) : k === "hidden" ? isHidden(f.id) : k === "play" ? !!f.play : k === "src" ? !!prov(f) : k === "vst" ? !!(vstOf(f) || nativeOf(f)) : k === "newchip" ? f.chip === "new" || f.chip === "any" : kindsOf(f).includes(k); // (play: an emulator to try it without an FM-1) // a card through the ticks (skip: one group left out, for the counts beside its own boxes); has(k) answers for this card const passes = (hasK, skip) => FGROUPS.every(([g, how, o]) => { const on = g === skip ? [] : o.map(([k]) => k).filter((k) => sel.has(k)); return !on.length || (how === "any" ? on.some(hasK) : on.e ...
+
+... FM-1) // a card through the ticks (skip: one group left out, for the counts beside its own boxes); has(k) answers for this card const passes = (hasK, skip) => FGROUPS.every(([g, how, o]) => { const on = g === skip ? [] : o.map(([k]) => k).filter((k) => sel.has(k)); return !on.length || (how === "any" ? on.some(hasK) : on.every(hasK)); }); const vis = (id) => sel.has("hidden") || !isHidden(id); // (a hidden one shows only with the Hidden box) const shows = (f) => passes((k) => has(f, k)) && vis(f.id); function chips() { for (const k of [...sel]) if (k !== "fav" && k !== "hidden" && (k !== "vst" || vstReady) && !cat.some((f) => has(f, k))) sel.delete(k); // (a fact no card has today: unti ...
+
+... e").onclick = () => fpanel(false); $("fn").hidden = !sel.size; $("fn").textContent = sel.size; // the choice in words beside the key: "Synths or Chords · Ambient & drone", none: all of them const words = FGROUPS.map(([g, how, o]) => o.filter(([k]) => sel.has(k)).map(([, l]) => l).join(how === "any" ? " or " : " · ")).filter(Boolean); $("fsum").innerHTML = words.length ? `${esc(words.join(" · "))}✕ Clear` : `All ${shownCount()} firmwares${nh ? `${nh} hidden` : ""}`; const x = $("fsum").querySelector("button:not(.hid)"); if (x) x.onclick = () => { showAll(); chips(); render() ...
+
+... arget="_blank" rel="noopener">Browser ↗`); why.push("Browser: an emulator, no FM-1 needed"); } return on.join(" · ") + (why.length ? `${why.join(" · ")}` : ""); }; // the flash chip (catalog.json "chip", tools/fm1_chip.py: read from the package): newer FM-1s carry a UC25HQ80 (0xB36014) const CHIP = { new: 'Every FM-1, the newer chip 0xB36014 too', any: 'Every FM-1: it does not check the chipNot tried by us on the newer chip 0xB36014', old: 'The first FM-1s onlyOn a newer FM-1 (flash 0xB36014) this version keeps your saves in RAM only, and updates from it may fail: <a href="/tools/rescue/#ch ...
+
+... ; why.push("Browser: an emulator, no FM-1 needed"); } return on.join(" · ") + (why.length ? `${why.join(" · ")}` : ""); }; // the flash chip (catalog.json "chip", tools/fm1_chip.py: read from the package): newer FM-1s carry a UC25HQ80 (0xB36014) const CHIP = { new: 'Every FM-1, the newer chip 0xB36014 too', any: 'Every FM-1: it does not check the chipNot tried by us on the newer chip 0xB36014', old: 'The first FM-1s onlyOn a newer FM-1 (flash 0xB36014) this version keeps your saves in RAM only, and updates from it may fail: what to do' }; function fwInfo(f, ...
+
+... : an emulator, no FM-1 needed"); } return on.join(" · ") + (why.length ? `${why.join(" · ")}` : ""); }; // the flash chip (catalog.json "chip", tools/fm1_chip.py: read from the package): newer FM-1s carry a UC25HQ80 (0xB36014) const CHIP = { new: 'Every FM-1, the newer chip 0xB36014 too', any: 'Every FM-1: it does not check the chipNot tried by us on the newer chip 0xB36014', old: 'The first FM-1s onlyOn a newer FM-1 (flash 0xB36014) this version keeps your saves in RAM only, and updates from it may fail: what to do' }; function fwInfo(f, el) { let d  ...
+
+... urn on.join(" · ") + (why.length ? `${why.join(" · ")}` : ""); }; // the flash chip (catalog.json "chip", tools/fm1_chip.py: read from the package): newer FM-1s carry a UC25HQ80 (0xB36014) const CHIP = { new: 'Every FM-1, the newer chip 0xB36014 too', any: 'Every FM-1: it does not check the chipNot tried by us on the newer chip 0xB36014', old: 'The first FM-1s onlyOn a newer FM-1 (flash 0xB36014) this version keeps your saves in RAM only, and updates from it may fail: what to do' }; function fwInfo(f, el) { let d = $("fwi"); if (!d) { document.body.insertAdjacentHTML ...
+
+... · ")}` : ""); }; // the flash chip (catalog.json "chip", tools/fm1_chip.py: read from the package): newer FM-1s carry a UC25HQ80 (0xB36014) const CHIP = { new: 'Every FM-1, the newer chip 0xB36014 too', any: 'Every FM-1: it does not check the chipNot tried by us on the newer chip 0xB36014', old: 'The first FM-1s onlyOn a newer FM-1 (flash 0xB36014) this version keeps your saves in RAM only, and updates from it may fail: what to do' }; function fwInfo(f, el) { let d = $("fwi"); if (!d) { document.body.insertAdjacentHTML("beforeend", '<dialog class="fwi" id="f ...
+
+... ); }; // the flash chip (catalog.json "chip", tools/fm1_chip.py: read from the package): newer FM-1s carry a UC25HQ80 (0xB36014) const CHIP = { new: 'Every FM-1, the newer chip 0xB36014 too', any: 'Every FM-1: it does not check the chipNot tried by us on the newer chip 0xB36014', old: 'The first FM-1s onlyOn a newer FM-1 (flash 0xB36014) this version keeps your saves in RAM only, and updates from it may fail: what to do' }; function fwInfo(f, el) { let d = $("fwi"); if (!d) { document.body.insertAdjacentHTML("beforeend", '<dialog class="fwi" id="fwi" aria-labell ...
+
+... HQ80 (0xB36014) const CHIP = { new: 'Every FM-1, the newer chip 0xB36014 too', any: 'Every FM-1: it does not check the chipNot tried by us on the newer chip 0xB36014', old: 'The first FM-1s onlyOn a newer FM-1 (flash 0xB36014) this version keeps your saves in RAM only, and updates from it may fail: what to do' }; function fwInfo(f, el) { let d = $("fwi"); if (!d) { document.body.insertAdjacentHTML("beforeend", ''); d = $("fwi"); d.addEventListener("click", (ev) => { if (ev.target  ...
+
+... ct").onclick()); return; } dev.link.close(); current = dev.id.text; log(`identity ${current}`); showNow(); // (3.11.2026, Sven) the chip cannot be read from here (only M-Flasher in download mode): a word on it, once connected $("nowx").innerHTML = 'Newer FM-1 with flash ID 0xB36014? Not every firmware can save on it – see the FAQ.'; $("nowx").hidden = false; const w = whoIs(current); ev("Connect", w && (w.fw ? w.fw.name : w.name) || current); } catch (e) { $("now").textContent = "Not connected"; say(e.message + (HINT[e.code] ? " " + HINT[e.code] : "")); } }; // the long word under the buttons (the pill keeps the short one) function say(text) {  ...
+
+... olour: colourOf(f), img: pic(f), wide: WIDE.has(f.id) && !f.card, over: was && (was.fw || was.name) ? (was.fw ? was.fw.name : was.name) : "", note: "Saved what you want to keep? The new firmware may not read the old one's projects." + (f.chip === "old" ? " This version knows only the first FM-1s' flash chip: on a newer FM-1 (flash 0xB36014) it saves to RAM only, and updates from it may fail – choose a firmware marked “Saves on newer FM-1s” there." : "") }))) return; ev("Install", `${f.name} ${f.version}`); writing = true; render(); el = $("grid").querySelector(`.fw[data-id="${f.id}"]`); const bar = el.querySelector("progress"); bar.style. ...
+
+... & (was.fw || was.name) ? (was.fw ? was.fw.name : was.name) : "", note: "Saved what you want to keep? The new firmware may not read the old one's projects." + (f.chip === "old" ? " This version knows only the first FM-1s' flash chip: on a newer FM-1 (flash 0xB36014) it saves to RAM only, and updates from it may fail – choose a firmware marked “Saves on newer FM-1s” there." : "") }))) return; ev("Install", `${f.name} ${f.version}`); writing = true; render(); el = $("grid").querySelector(`.fw[data-id="${f.id}"]`); const bar = el.querySelector("progress"); bar.style.display = "block"; try { msg("Loading the package…"); const r = await fetch(f.p ...
+```
+</details></tool-use>
+
+_**Agent - sidechain (claude-opus-5-5 2026-11-17 18:05:52Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Check whether Hub reads firmware.json; find community links
+
+`D=/private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/0a574306-469e-4a59-9622-5701a42aee59/scratchpad/web; cd $D; grep -c -i "firmware\.json" hub.html submit.html kb.html fmhub.md catalog.json; grep -o -i -E ".{150}fmhub\.json.{150}" hub.html | head -3; grep -o -i -E "Discord[^<]{0,100}|discord\.(gg|com)/[A-Za-z0-9/]+|reddit\.com/r/[A-Za-z0-9_]+|forum\.m-vave\.com" hub.html kb.html submit.html | sort -u`
+
+```text
+hub.html:0
+fmhub.md:0
+kb.html:0
+catalog.json:0
+submit.html:0
+hub.html:forum.m-vave.com
+kb.html:Discord.
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 18:05:52Z)**_
+
+兩種晶片都通過：從 0.2 升級後，K4 改的值存檔、重開後讀得回來，實機韌體的 TYPE 點劃畫面也正常 `[模擬]`。更新文件，記下你的實機回饋。
+
+_**Agent - sidechain (claude-opus-5-5 2026-11-17 18:05:58Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Find the FM-1 Discord link on the Hub KB
+
+`D=/private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/0a574306-469e-4a59-9622-5701a42aee59/scratchpad/web; cd $D; grep -o -i -E '.{200}FM-1 Discord.{50}' kb.html | head -2; grep -o -i -E 'https?://[^" ]*(discord|reddit)[^" ]*' hub.html kb.html submit.html | sort -u`
+
+```text
+(Bash completed with no output)
+```
+</details></tool-use>
+
+_**Agent - sidechain (claude-opus-5-5 2026-11-17 18:06:03Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Show Discord mentions in Hub KB source
+
+`D=/private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/0a574306-469e-4a59-9622-5701a42aee59/scratchpad/web; cd $D; grep -n -i "discord" kb.html | head -5 | cut -c1-600`
+
+```text
+483:    or the FM-1 Discord.</p></div>
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 18:06:07Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Record 0.3 and the user's hardware feedback in docs
+
+```bash
+python3 - <<'PY'
+def sub(p,a,b):
+    s=open(p).read(); assert a in s,(p,a[:60]); s=s.replace(a,b,1); open(p,'w').write(s)
+p='docs/dev/morse.md'
+sub(p,"**狀態（2026-11-18）：機器上是韌體 0.2、host 0.2.0（00:14 刷入；0.1 時已在實機確認發報、解碼、TYPE、PRACTICE、和電腦連線 `[實機]`）。0.2 在單元測試、host simulator、fm1-emu 兩種晶片都驗證過 `[模擬]`；0.2 的新頁面還沒在實機上逐一確認。**",
+"**狀態（2026-11-18）：機器上是韌體 0.2（00:14 刷入）。0.1 時已在實機確認發報、解碼、TYPE、PRACTICE、和電腦連線；0.2 的 RHYTHM、KEY 三種顯示、TYPE、LISTEN、PRESET 本人試過覺得不錯，升級後學習進度也還在 `[實機]`。韌體 0.3（修 TYPE 鍵上點劃的排版）、host 0.3.0 已在模擬器驗證，還沒刷。**")
+sub(p,"| 韌體 0.2、host 0.2.0 | 2026-11-18 | 是（00:14 刷入，`54ff440`） |",
+"| 韌體 0.3、host 0.3.0 | 2026-11-18 | 是（還沒刷） | TYPE 打開鍵上點劃時，鍵盤從 86 px 拉高到 126 px、上方輸入行縮成一行，黑鍵和白鍵都同時放得下碼和字母（0.2 黑鍵只剩碼、白鍵的碼壓到字母，數字頁的 `0` 放不下）。藍牙順延到 0.4 |\n| 韌體 0.2、host 0.2.0 | 2026-11-18 | 是（00:14 刷入，`54ff440`） |")
+sub(p,"| 0.3 | 藍牙：own BLE stack","| 0.4 | 藍牙：own BLE stack")
+sub(p,"| 0.2 刷進實機 | `just fm1-switch firmware/morse/build/morse.fwsc` | 寫入 32 個 sector（`0x04000`–`0x23FFF`），和預演一致；HELLO 回報 0.2，`<SK>` 送出 `[實機]` |",
+"| 0.2 刷進實機 | `just fm1-switch firmware/morse/build/morse.fwsc` | 寫入 32 個 sector（`0x04000`–`0x23FFF`），和預演一致；HELLO 回報 0.2，`<SK>` 送出 `[實機]` |\n| 0.2 升級後的進度 | 本人看 PRACTICE 頁 | 還是 ROUND 4：刷機只改寫韌體區，`0xDA000` 的紀錄留著 `[實機]` |\n| 0.2 新頁面 | 本人試用 RHYTHM、KEY 顯示、TYPE、LISTEN、PRESET | 「感覺都還不錯」；TYPE 鍵上點劃在黑鍵擠掉字母 → 0.3 修 `[實機]` |\n| 0.3：TYPE 鍵上點劃、從 0.2 升級、存檔重開讀回 | `just fw-test morse`、fm1-emu 兩種晶片 | 全過；字母頁和數字頁的碼與字母都放得下 `[模擬]` |")
+sub(p,"| 0.2 | 127,712 B | 28,444 / 98,304 B |","| 0.2 | 127,712 B | 28,444 / 98,304 B |\n| 0.3 | 127,880 B | 28,444 / 98,304 B |")
+sub('docs/dev/morse-cheatsheet.md',"韌體 0.2（機器上還是 0.1 的話，差別見文末）。","韌體 0.2 / 0.3（機器上還是 0.1 的話，差別見文末）。")
+sub('docs/dev/morse-cheatsheet.md',"| `SEQ` | 鍵上顯示點劃（查表用） |","| `SEQ` | 鍵上顯示點劃（查表用）。0.3 起打開時鍵盤會變高、上方只留一行，碼和字母都看得到 |")
+p='docs/device-log.md'
+s=open(p).read()
+i=s.index("\n## Phase 1 驗收")
+row="| 2026-11-18 | Morse 0.2 實機試用（本人） | 開機仍是 ROUND 4：升級保留學習進度。RHYTHM、KEY 三種顯示、TYPE 翻頁和片語、LISTEN、PRESET「感覺都還不錯」。TYPE 打開鍵上點劃時黑鍵的字母被擠掉 → 韌體 0.3 修正（還沒刷） |\n"
+s=s[:i].rstrip("\n")+"\n"+row+s[i:]
+open(p,'w').write(s)
+PY
+just docs-check 2>&1 | tail -1
+```
+
+```text
+{"status": "ok", "pages": 46, "llm_pages": 46, "deployed": false}
+```
+</details></tool-use>
+
+_**Agent - sidechain (claude-opus-5-5 2026-11-17 18:06:07Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Show lines around Discord mention in KB
+
+`D=/private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/0a574306-469e-4a59-9622-5701a42aee59/scratchpad/web; cd $D; sed -n 480,483p kb.html | cut -c1-800`
+
+```text
+    The hub only trusts <code>@v1</code> of the shared workflow, a package built by your own workflow does not get the key.
+    A file uploaded or rebuilt by hand after the run does not either: the hub compares its SHA-256 with the signed one.
+    Questions: an <a href="https://github.com/zvenson/fm1-build/issues" target="_blank" rel="noopener">issue on fm1-build</a>
+    or the FM-1 Discord.</p></div>
+```
+</details></tool-use>
+
+_**Agent - sidechain (claude-opus-5-5 2026-11-17 18:06:14Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Inspect fm1-emu repo tree for firmware list files
+
+`gh api repos/joakimeriksson/fm1-emu --jq '{default_branch,description,homepage,pushed_at}'; gh api "repos/joakimeriksson/fm1-emu/git/trees/HEAD?recursive=1" --jq '.tree[].path' | grep -v -E '^(src|docs/img)/' | grep -i -E "firmware|fetch|list|catalog|contrib|readme|json|tools/" | head -50`
+
+```text
+{"default_branch":"master","description":"Emulator for the M-VAVE FM-1 pocket synth: runs its firmwares unchanged in the browser and natively","homepage":"https://joakimeriksson.github.io/fm1-emu/","pushed_at":"2026-11-16T18:54:39Z"}
+.github/workflows/catalog.yml
+README.md
+crates/fm1-plugin/README.md
+crates/fm1-plugin/wrap/CMakeLists.txt
+docs/FIRMWARES.md
+docs/media/firmwares.gif
+docs/releases/README.md
+docs/stock-firmware.md
+isa/prev/slots.json
+tests/catalog.json
+tools/audit_decode.py
+tools/bench_ab.sh
+tools/bench_all.sh
+tools/bench_video.sh
+tools/bench_wasm_ab.mjs
+tools/build_isa.py
+tools/build_plugin.ps1
+tools/build_plugin.sh
+tools/build_site.sh
+tools/catalog_check.py
+tools/catalog_refresh.py
+tools/census.py
+tools/check_isa.py
+tools/check_modes.sh
+tools/check_plugin_au.cpp
+tools/check_plugin_save_interop.mjs
+tools/collapse.py
+tools/demo_page.html
+tools/demo_page.py
+tools/derive.py
+tools/disasm.py
+tools/disasm_app.sh
+tools/fetch_firmwares.mjs
+tools/film-0.4.0.json
+tools/film-0.5.1.json
+tools/film.py
+tools/film_take.mjs
+tools/film_wall.py
+tools/fuzz_decode.py
+tools/fwsc_extract.mjs
+tools/gen_isa.py
+tools/hub_catalog.mjs
+tools/hwdsp.py
+tools/isa_stable_names.py
+tools/normlib.py
+tools/package_apps.sh
+tools/package_plugin.ps1
+tools/package_plugin.sh
+tools/play.sh
+tools/probe.sh
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 18:06:17Z)**_
+
+0.3 準備好了，文件也記下了你的實機回饋。上架 Hub 的研究還在背景跑，結果回來後我會整理成一份清單給你。
+
+**目前狀態**
+- **機器上**：Morse 0.2，你的進度 ROUND 4 還在。
+- **韌體 0.3**：只修了 TYPE 的鍵上點劃排版。打開點劃時鍵盤會變高、上方輸入行縮成一行，黑鍵和白鍵上都同時放得下碼和字母，數字頁最長的 `0` 也放得下。
+  - 單元測試、模擬器腳本、host 測試全過。
+  - 兩種晶片上「從 0.2 升級、存檔、重開、讀回」都通過 `[模擬]`。
+  - 套件 SHA-256 `64bfa57d…`。
+- **藍牙**：順延到 0.4。
+- **還沒 commit**：0.3 的程式碼和這幾次的文件更新都還沒 commit。
+
+等 Hub 的研究回來，我會一起給你：上架需要準備的東西（安裝說明頁、截圖、GitHub Release 等），以及要不要 commit 並刷 0.3。如果你想先刷 0.3，也可以現在說，我就先做 preflight。
+
+_**Agent - sidechain (claude-opus-5-5 2026-11-17 18:06:26Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Download fm1-emu catalog docs and scripts
+
+`cd /private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/0a574306-469e-4a59-9622-5701a42aee59/scratchpad/web; mkdir -p emu; for p in docs/FIRMWARES.md .github/workflows/catalog.yml tools/hub_catalog.mjs tools/catalog_refresh.py tools/fetch_firmwares.mjs tools/catalog_check.py; do gh api "repos/joakimeriksson/fm1-emu/contents/$p" --jq .content | base64 -d > "emu/$(basename $p)"; done; wc -l emu/*; cat emu/catalog.yml; sed -n 1,80p emu/FIRMWARES.md`
+
+```text
+     113 emu/catalog_check.py
+     132 emu/catalog_refresh.py
+      95 emu/catalog.yml
+      43 emu/fetch_firmwares.mjs
+     251 emu/FIRMWARES.md
+     174 emu/hub_catalog.mjs
+     808 total
+# Every catalog firmware played with the JIT and interpreted (tools/catalog_check.py): the two
+# give the same audio, and the audio is the one in tests/catalog.json. Runs when the emulator
+# changes, and before a release (release.yml). A change that moves a firmware's sound updates
+# tests/catalog.json in the same pull request (tools/catalog_check.py --update).
+
+name: Catalog
+
+on:
+  push:
+    branches: [master]
+    paths:
+      - crates/fm1-isa/**
+      - crates/fm1-core/**
+      - crates/fm1-soc/**
+      - crates/fm1-live/**
+      - Cargo.lock
+      - web/firmwares.json
+      - web/fwsc.js
+      - tests/catalog.json
+      - tools/catalog_check.py
+      - tools/fetch_firmwares.mjs
+      - .github/workflows/catalog.yml
+  pull_request:
+    paths:
+      - crates/fm1-isa/**
+      - crates/fm1-core/**
+      - crates/fm1-soc/**
+      - crates/fm1-live/**
+      - Cargo.lock
+      - web/firmwares.json
+      - web/fwsc.js
+      - tests/catalog.json
+      - tools/catalog_check.py
+      - tools/fetch_firmwares.mjs
+      - .github/workflows/catalog.yml
+  workflow_dispatch:
+  workflow_call:
+
+permissions:
+  contents: read
+
+jobs:
+  # The packages from their authors' sites, as the page fetches them, once for the four shards
+  # (a site asked 330 times at once refused some, and the page's fallback then took a newer build).
+  fetch:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      # kept between runs: a site that is down costs nothing if its package was fetched before
+      - uses: actions/cache@v4
+        with:
+          path: reference/firmwares
+          key: firmwares-${{ hashFiles('web/firmwares.json') }}
+          restore-keys: firmwares-
+
+      - name: Fetch the firmwares
+        run: node tools/fetch_firmwares.mjs
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: firmwares
+          path: reference/firmwares/*.fwsc
+          retention-days: 1
+
+  catalog:
+    needs: fetch
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [0, 1, 2, 3]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Rust and ALSA headers
+        run: |
+          command -v cargo || { curl -sSf https://sh.rustup.rs | sh -s -- -y --profile minimal; echo "$HOME/.cargo/bin" >> "$GITHUB_PATH"; }
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq libasound2-dev pkg-config
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: firmwares
+          path: reference/firmwares
+
+      - name: Build fm1-live
+        run: cargo build --release -p fm1-live
+
+      - name: Play the catalog
+        run: python3 tools/catalog_check.py --shard ${{ matrix.shard }}/4
+# Firmwares that run in the emulator
+
+200 community firmwares: every one on [the FM-1 Firmware Hub](https://thefirmwarehub.com/) that
+runs here, a few more from [fm1-editor.com/firmware](https://fm1-editor.com/firmware/), FM-1 SID, and
+M-VAVE's stock firmware. Each name opens [the page](https://joakimeriksson.github.io/fm1-emu/) with
+that firmware picked (press Start); each author links to the firmware's source.
+
+Generated from `web/firmwares.json` and `web/smk37/firmwares.json` by `node tools/readme_firmwares.mjs`
+(CI checks it is current); edit those, not this file.
+
+## The FM-1
+
+<!-- firmwares: node tools/readme_firmwares.mjs -->
+| Firmware (opens it on the page) | By | What it is |
+|---|---|---|
+| [M-VAVE stock firmware](https://joakimeriksson.github.io/fm1-emu/?fw=mvave) | [M-VAVE](https://github.com/joakimeriksson/fm1-emu/blob/master/docs/stock-firmware.md) | The firmware the FM-1 ships with: a DX7-style FM synth, both cores running. Bring your own `FM-1.fwsc`. |
+| [Felucca 1.8.2](https://joakimeriksson.github.io/fm1-emu/?fw=felucca) | [hugelton](https://github.com/hugelton/Felucca) | The original open firmware: a four-operator FM synth with sequencer, arpeggiator and effects. |
+| [Felucca [Salt] 0.9-salt14](https://joakimeriksson.github.io/fm1-emu/?fw=felucca-salt) | [ChanceTheMaker](https://github.com/ChanceTheMaker/Felucca) | A Felucca fork with its own sound and editor changes. |
+| [386DX 2.0](https://joakimeriksson.github.io/fm1-emu/?fw=386dx) | [seajaysec](https://github.com/seajaysec/386-DX-FM1-KaraokeBot) | A karaoke robot with a band: it sings songs from karaoke and MIDI files, or lines you type, to the notes you play. |
+| [AISLING 1.4](https://joakimeriksson.github.io/fm1-emu/?fw=aisling) | [CU_STE](https://github.com/stephencummins/fm1-aisling) | A generative Irish ambient instrument: harps in a jig's threes and a flute over a held drone, with surf, wind and rain. |
+| [AMB-1 1.3.2](https://joakimeriksson.github.io/fm1-emu/?fw=amb) | [charlesvestal](https://github.com/charlesvestal/fm1-amb) | A generative ambient machine inspired by Music for Airports. |
+| [Amenity 2.0.0](https://joakimeriksson.github.io/fm1-emu/?fw=amenity) | [Presethead](https://github.com/ejtb76/amenity) | A live jungle tool built around the Amen break. |
+| [April OS BETA 1.1](https://joakimeriksson.github.io/fm1-emu/?fw=april) | [beashoko](https://github.com/beashoko/april-os) | A sampler inspired by the Casio SK-1: no synth engines, only samples, recorded through the installer page's microphone bridge. |
+| [Arctic Scream 2.0](https://joakimeriksson.github.io/fm1-emu/?fw=arctic) | [p0larpatch](https://github.com/PolarPatch/Arctic-scream-FM-1) | Dark ambient drones and feedback screams from the frozen tundra. |
+| [Arcturus S6 1.7](https://joakimeriksson.github.io/fm1-emu/?fw=arcturus) | [Zeptosecond DSP](https://github.com/zeptosecond-dsp/Arcturus-S6) | An experimental, self-playing wavetable instrument for generative, evolving soundscapes. |
+| [Argo 1.8.3](https://joakimeriksson.github.io/fm1-emu/?fw=argo) | [echoe](https://github.com/echoe/argo_fm1) | An LLM-written expansion of Felucca with samples removed and a few synth engines added, with a focus on multiple patterns per track, per-step patch switching, and synthesis. |
+| [ARTIHIVE 2.0.4](https://joakimeriksson.github.io/fm1-emu/?fw=artihive) | [KHAV](https://github.com/KHAVld/ARTIHIVE) | Eight-voice experimental drone and polyphonic FM synthesizer with four interacting pairs, envelopes, legato glide, hyper LFO, stereo motion, dual modulated delay and a 1-16 step arpeggiator and sequencer. |
+| [ASS-ID 1.0](https://joakimeriksson.github.io/fm1-emu/?fw=assid) | [altessproduction](https://github.com/altessproduction/ASS-ID_FM1) | The ATEK303 acid groovebox plus a drum track on the same clock: eight synthesized TR-808/909/707 voices, no samples, a seeded 64-step generator with mutations and LOCK for both tracks, an 8x16 drum matrix, swing, three kits, drive, chorus, delay, reverb and eight factory presets. |
+| [ATEK303 1.2](https://joakimeriksson.github.io/fm1-emu/?fw=atek303) | [Animatek](https://github.com/animatek/FM1-Animatek) | A TB-303 style acid synth with its own pattern generator: press PLAY and a line plays. |
+| [Skiff Atlatl 1.1](https://joakimeriksson.github.io/fm1-emu/?fw=atlatl) | [LIkst4](https://github.com/LIkst4/skiff-atlatl) | A six-track groovebox for the FM-1, forked from Skiff: a SYNTH with analog, 303 and Plaits-style oscillators, an acid filter and OberVave presets, a Minimoog voice, classic drum models, more trig conditions, a step arpeggiator, 8-channel USB audio, a web editor and screen mirroring. |
+| [B1 5.6](https://joakimeriksson.github.io/fm1-emu/?fw=b1) | [Joppe Sikken (SikkenWorks)](https://github.com/SikkenWorks/B1-Drawbar-Organ) | B1 turns the M-VAVE FM1 into a compact drawbar rock organ with 91 shared tonewheels, nine drawbars per registration, percussion, Leslie, B3/ROCK tones, MIDI and expressive live controls. |
+| [B3 ORGAN 0.3](https://joakimeriksson.github.io/fm1-emu/?fw=b3organ) | [R-Jeb](https://github.com/R-Jeb/setBfree-fm1) | A B3 tonewheel organ: 91 wheels, nine drawbars, key click, vibrato and chorus, percussion, overdrive, reverb and a Leslie, computed from setBfree's own data and measured against it. |
+| [BB1 2.2](https://joakimeriksson.github.io/fm1-emu/?fw=bb1) | [Ole Big Beat / TexasRADIO](https://github.com/TexasRADIO/bb1-firmware) | Two independent drum layers and Dillo, an Open303-derived acid bass, through tape echo and spring reverb: a synthesised 808 and seven sampled machines, 67 songs, 21 eras and 205 ACID phrases. |
+| [BEETLE 1.8.3](https://joakimeriksson.github.io/fm1-emu/?fw=beetle) | [Joppe Sikken (SikkenWorks)](https://github.com/SikkenWorks/BEETLE) | A tracker for the FM-1: patterns written top to bottom, step by step, with note, instrument, chord and effect columns, the way trackers have always worked. |
+| [BEETLE BLUE 1.3.1](https://joakimeriksson.github.io/fm1-emu/?fw=beetleblue) | [Joppe Sikken (SikkenWorks)](https://github.com/SikkenWorks/BEETLE-BLUE) | BEETLE BLUE turns your M-VAVE FM1 into a six-lane drum tracker. |
+| [Berlinan 0.5.1](https://joakimeriksson.github.io/fm1-emu/?fw=berlinan) | [Jiří Píša](https://github.com/jiripisa/fm1-berlinan) | A generative Berlin School MIDI sequencer: a small ensemble of voices that repeat, phase against each other on loops of unequal length and earn their mutations over time. |
+| [Bigorna 2026.11.12](https://joakimeriksson.github.io/fm1-emu/?fw=bigorna) | [Nuno Zimas](https://github.com/nzimas/bigorna) | Rhythmic noise, power noise, industrial and IDM after the Elektron Digitone II: six tracks, four machines (4-OP, DRUM, WAVY, HIVE), parameter locks on a 16-step sequencer, a looper, send effects and USB audio. |
+| [Blop 1.1.0](https://joakimeriksson.github.io/fm1-emu/?fw=blop) | [Obsimo](https://github.com/OSR-Experiment/OSR-1) | Explore sound with your Blop: one-finger chords from 38 grids, chord rhythms, a bass with its own riffs and a few discreet drums with sidechain, while a little creature swims to your chords in an aquarium on the screen. |
+| [bocjuhn 1.0.0-rc10](https://joakimeriksson.github.io/fm1-emu/?fw=bocjuhn) | [ryuji kanagawa](https://github.com/IanP06/bocjuhn) | An experimental instrument with six tracks and eight sound engines. |
+| [Bubba Machine 0.10.0-beta](https://joakimeriksson.github.io/fm1-emu/?fw=bubba) | [Erbubar23](https://github.com/Erbubar23/bubba-machine) | A six-track groovebox written from scratch: TR drums from Plaits' 808 and 909 models, a sampler with a 16-slice slicer, a bass and three free tracks (analog, 6-op FM, 303 acid), scenes and fills, all at 44.1 kHz. |
+| [Bunker Evolved 1.0.0](https://joakimeriksson.github.io/fm1-emu/?fw=bunker) | [Kid Bunka](https://github.com/kidbee85-beep/bunker-evolved) | Generative ambient: four editable layers from 64 sound recipes, 24 worlds, 24 motifs and 32 scales. |
+| [Bytemania 1.3.1](https://joakimeriksson.github.io/fm1-emu/?fw=bytemania) | [lloyd (llozd)](https://github.com/llozd/bytemania) | A bytebeat synth: play one-line formulas, tweak them with the knobs, and write your own, with a random button in the formula creator that is really fun. |
+| [Caravel 0.12.0](https://joakimeriksson.github.io/fm1-emu/?fw=caravel) | [BonszaiMusic](https://github.com/bonszaimusic/caravel) | Multi-engine synth firmware with DRONE, STASIS texture capture, Pair Morph, and per-track Random Morph and Morph Journey for evolving, ambient and experimental sound design. |
+| [Carnac OS 0.9.6](https://joakimeriksson.github.io/fm1-emu/?fw=carnac) | [OrbVorgis](https://github.com/OwenKirby/carnac-os) | A dual-timbral wavetable synth after Carnac's standing stones: 15 morphing wavetable banks, seven voice architectures, a MAQ 16/3-style sequencer for modulated sequences and a chord sequencer for progressions, spring, tomb and tank reverbs. |
+| [Chipbox 1.6.1-bluetoothbanter](https://joakimeriksson.github.io/fm1-emu/?fw=chipbox) | [Pasquale Barilla](https://github.com/pbarilla/chipbox) | A chiptune groovebox with replicas of the NES, Game Boy and Sega Master System sound chips, in three views: RACK for the 16 steps of a page, CHIP to set up each channel, SONG to chain the pages into a song. |
+| [CHOPPAH 1.3.1](https://joakimeriksson.github.io/fm1-emu/?fw=choppah) | [profikid](https://github.com/profikid/fm1-break-choppah) | An Amen break chopper: eight classic breaks cut into 16 slices on the white keys, hold a key to loop it, and a generator that rearranges the break live, with a four-slot FX chain and a DJ filter. |
+| [ChoralRoot 0.41](https://joakimeriksson.github.io/fm1-emu/?fw=choralroot) | [Quixotic7](https://github.com/Quixotic7/ChoralRootFM1) | A port of the Choral Root synth. |
+| [fm1-chord 0.3](https://joakimeriksson.github.io/fm1-emu/?fw=chord) | [math0ne](https://github.com/math0ne/fm1-chord) | A chord machine after the HiChord, with extras: chords in a key under the white keys, slash chords and inversions, sounds, envelopes, effects and a looper. |
+| [CLATTER Pocket 1.0.0](https://joakimeriksson.github.io/fm1-emu/?fw=clatter) | [allmyfriendsaresynths](https://github.com/clickysteve/clatter-pocket) | A generative drum machine on the LXR sound engine. |
+| [Clipper 1.3.1](https://joakimeriksson.github.io/fm1-emu/?fw=clipper) | [isod89](https://github.com/isod89/clipper-fm1) | A deep synth grown out of SLOOP: 23 engines and 407 sounds, from HYBRID (three oscillators, two filters, a mod matrix) to six-operator FM, wavetables, wave sequencing, a Juno and physical models; arp, step sequencer, MPE and a web editor for every parameter. |
+| [COQUÍ 1.1.1](https://joakimeriksson.github.io/fm1-emu/?fw=coqui) | [saulofilho](https://github.com/saulofilho/coqui-fm1) | Latin and Caribbean groovebox: synthesized congas, bongos, timbales, guiro and cowbell, 14 grooves from salsa and bomba to dembow, tumbao and montuno lines over the chord you hold, generative parts in the clave, and effect scenes from a backyard to a dub. |
+| [CoralFlower 0.7.1](https://joakimeriksson.github.io/fm1-emu/?fw=coralflower) | [FicusFicusov](https://github.com/FicusFicusov/CoralFlower) | Chords after the Orchid, with a UX made for the FM-1: one key turns every note into a chord with a bass, 27 scales, an arpeggiator, a looper, a plate reverb, and a pixel flower that grows as you play. |
+| [CORD 1.0.3](https://joakimeriksson.github.io/fm1-emu/?fw=cord) | [Chase DeAnda](https://github.com/chasedeanda/cord-fm1) | Pick a chord progression, press Play, and play along with drums, bass and chords. |
+| [CS-1 2026.10.22](https://joakimeriksson.github.io/fm1-emu/?fw=cs1) | [twochannels](https://github.com/twochannels/CS-1) | A Yamaha CS-80 in spirit: eight voices of two channels, high- and low-pass filters in series, ring modulator, the touch response and 22 tones from the owner's manual. |
+| [CTL-1 1.0.3](https://joakimeriksson.github.io/fm1-emu/?fw=ctl) | [charlesvestal](https://github.com/charlesvestal/fm1-ctl) | A MIDI controller: the keys play in a scale with its chords on the black keys, four banks of knobs, an arpeggiator and Euclidean drums, with General MIDI sounds of its own. |
+| [CULTBOX 1.2](https://joakimeriksson.github.io/fm1-emu/?fw=cultbox) | [beatcult](https://github.com/beatcult/CULTBOX) | A three-channel groovebox: a Polivoks-style duophonic synth (PLVKS), an Elka-style sample drum machine with a step sequencer, and a dub siren, with BBD echoes, per-channel character effects, arp, scales and a mixer with panning. |
+| [Cut-A-Dor 1.2.1](https://joakimeriksson.github.io/fm1-emu/?fw=cutador) | [Kid Bunka](https://github.com/kidbee85-beep/cut-a-dor-release) | A beat dojo for scratch DJs and beatmakers: boom bap, lo-fi and breaks from 16 rhythm families with swing and fills, an eight-lane 32-step sequencer, punch-in effects you record bar by bar, a bass voice. |
+| [DARK-1 1.0.6](https://joakimeriksson.github.io/fm1-emu/?fw=dark1) | [Polystellarflow](https://github.com/sparky480v/Dark-1) | Dark-music firmware for the FM-1: 21 genres, 210 pieces, from dark techno and cinema to dark ambient, witch house and dungeon synth. |
+| [Daurade 1.0.1-0bf2076](https://joakimeriksson.github.io/fm1-emu/?fw=daurade) | [delirioux](https://github.com/delirioux/daurade) | Generative French house after a certain robotic duo: a filtered loop opening over sixteen bars, a mix that pumps on every kick and a robot voice singing the hook. |
+| [DEEP FIELD 1.8](https://joakimeriksson.github.io/fm1-emu/?fw=deepfield) | [Kyle McCann](https://github.com/WisestWizard/deepfield) | A drone synth with velocity-sensitive keys. |
+| [Del Rio 1.0](https://joakimeriksson.github.io/fm1-emu/?fw=delrio) | [Jess Del Rio](https://github.com/jsopdebeeck/fm1-delrio) | A rhythm box of ceremony percussion: djembe, cajon, udu, clapsticks, maracas and triangle, their real strokes on the black keys, a step sequencer on the white keys and 31 rhythms from the literature. |
+| [Demake 0.4.24](https://joakimeriksson.github.io/fm1-emu/?fw=demake) | [Sequencist](https://github.com/InigoHernandez/demake-synth) | An ambient lofi machine on 64 of its author's own pedal recordings: three synths, each with a piano roll, eight patterns, its own reverb, delay or tape echo and motion; huge shared reverbs, colour and old media over the whole mix; a chord machine and an arpeggiator, sixteen scenes, a song mode. |
+| [Dinghy 0.5](https://joakimeriksson.github.io/fm1-emu/?fw=dinghy) | [zvenson](https://github.com/zvenson/dinghy) | Your base for your own FM-1 firmware: everything under it done and documented (updates, USB rescue, USB-MIDI, USB audio, keys, screen, settings), a 4-voice sine on top. |
+| [DRIFT 0.9.6](https://joakimeriksson.github.io/fm1-emu/?fw=drift) | [FBNFRTG](https://github.com/FBNFRTG/drift-fm1) | An ambient instrument for live sessions: warm synths, spacious pads and delicate plucks over a generative Euclidean sequencer on one track, with delays and reverbs from spring to shimmer. |
+| [Drumlab 0.1.4-insertbluetoothpunhere](https://joakimeriksson.github.io/fm1-emu/?fw=drumlab) | [pbarilla](https://github.com/pbarilla/drumlab) | Microtonic, for the FM-1! Roll the dice for a kit, build one from scratch, or bring in your Microtonic presets and patterns. |
+| [DUB-1 1.4.3](https://joakimeriksson.github.io/fm1-emu/?fw=dub) | [sbegueria](https://github.com/sbegueria/fm1-dub) | A generative dub techno machine that plays itself from the moment it is on: chord stabs into a tape echo, FM pings, a sub bass on five grooves, a ducking kick, crackle, and an eight-bar arrangement with breaks and fills. |
+| [DUELL 1.2](https://joakimeriksson.github.io/fm1-emu/?fw=duell) | [OSCILL/R](https://github.com/oscillr/DUELL) | A multimorphing bitimbral synthesizer: two complete parts, three ways to play them together, and a morph that glides between two versions of every sound. |
+| [Dungeon Tracker 1.5](https://joakimeriksson.github.io/fm1-emu/?fw=dungeontracker) | [Bourbon Weather](https://github.com/BourbonWX/Dungeon-Tracker) | A four-track groovebox that is a dungeon crawler: your party plays the music, the rogue drums, the fighter bass, the cleric pads and the mage the melody. |
+| [DX747 0.1](https://joakimeriksson.github.io/fm1-emu/?fw=dx747) | [Esben von Buchwald](https://github.com/esbenvb/fm1-dx747) | An eight-part multitimbral DX7 module. |
+| [ECHOFIELD 0.2.11](https://joakimeriksson.github.io/fm1-emu/?fw=echofield) | [PhilipsKnobs](https://github.com/Philip-Bos/echofield-fm1) | A granular sampler: a few seconds of any sound become slow clouds, sparkles, tape loops and swells, played from the keys and knobs. |
+| [Elixir 1.3.1](https://joakimeriksson.github.io/fm1-emu/?fw=elixir) | [Dan Majka](https://github.com/dmajka/elixir) | A super powerful drum synth and sequencer that started as a port of the Erica Synths LXR-02 and kept going. |
+| [Evander's Music Box 1.5.2](https://joakimeriksson.github.io/fm1-emu/?fw=emb) | [Michail Tsakiroglou](https://github.com/MikeTsak/Evanders-Music-Box--FM-1-LARP-firmware) | A bard's instrument for LARP, medieval and high fantasy: recorder, hurdy-gurdy, harp and a tavern kit on four tracks, encounters and songs for the table. |
+| [ESTAMPIE 0.3.8](https://joakimeriksson.github.io/fm1-emu/?fw=estampie) | [Drew Robinson](https://github.com/ocean/estampie) | A groovebox for lively mediæval dance music: hurdy-gurdy, lutes, shawms and frame drums over drones, four tracks with 64-step sequencers, mediæval modes and temperaments, and velocity from the FM-1's own keys. |
+| [ETCH 1.88](https://joakimeriksson.github.io/fm1-emu/?fw=etch) | [SikkenWorks](https://github.com/SikkenWorks/ETCH) | Draw the sound: a waveform drawn and changed with the knobs, morphed into another one, and a third modulating the result. |
+| [Fart Machine One 1.1.0](https://joakimeriksson.github.io/fm1-emu/?fw=fart) | [adamcharleswilsonmusic-code](https://github.com/adamcharleswilsonmusic-code/Fart-Machine-One) | A questionable musical instrument: eleven artisanal farts, reverb, delay and a sixteen-step sequencer. |
+| [Felucca 8 Patterns 1.8.3](https://joakimeriksson.github.io/fm1-emu/?fw=felucca8) | [echoe](https://github.com/echoe/Felucca_8_patterns) | Felucca 1.5.1 with eight sequences a track to switch between and chain one after another; the user samples are left out to make room. |
+| [FiMba-1 0.7.0](https://joakimeriksson.github.io/fm1-emu/?fw=fimba) | [jadamsowers](https://github.com/jadamsowers/fm1-fimba) | A physically modelled kalimba (thumb piano), with mbira patterns, tape and grains. |
+| [FIZZ 0.12.0-beta.17](https://joakimeriksson.github.io/fm1-emu/?fw=fizz) | [Quixotic7](https://github.com/Quixotic7/FIZZ) | A groovebox around one engine, ChoralRoot's FM TONE: eight tracks, p-locks and preset sound locks, conditions, ratchets, chords, and MIDI FX for generative patterns and for reworking the ones you have. |
+| [Flyfish 1.1.1-9abe2e8](https://joakimeriksson.github.io/fm1-emu/?fw=flyfish) | [delirioux](https://github.com/delirioux/flyfish) | One piece on the FM-1: Chopin's Étude Op. |
+| [FM-106 1.0](https://joakimeriksson.github.io/fm1-emu/?fw=fm106) | [PatttF](https://github.com/PatttF/fm-106) | The Juno-106 emulation of KR-106 ported to the FM-1: six voices on both cores, the BBD stereo chorus, 128 factory presets and a 1980s Roland look. |
+```
+</details></tool-use>
+
+_**Agent - sidechain (claude-opus-5-5 2026-11-17 18:06:32Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Read fm1-emu hub_catalog and catalog_refresh scripts
+
+`cd /private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/0a574306-469e-4a59-9622-5701a42aee59/scratchpad/web/emu; sed -n 1,60p hub_catalog.mjs; echo ======; sed -n 1,50p catalog_refresh.py; echo =====; cat fetch_firmwares.mjs | head -43; grep -n -i -E "add|contribut|pull request|hub|firmwares.json|issue" FIRMWARES.md | tail -20`
+
+```text
+// The FM-1 page's catalog (web/firmwares.json) from the FM-1 Firmware Hub's (thefirmwarehub.com,
+// zvenson's): every firmware it lists that runs here, its package fetched from the Hub (whose
+// packages never change under their name, sent with Access-Control-Allow-Origin: *; an old one is
+// removed when a new version comes, and web/fwsc.js then asks the Hub's catalog), then our
+// own list, web/firmwares-own.json (hand-edited: FM-1 SID, M-VAVE's own, ... the firmwares the Hub
+// does not list). For a firmware the Hub lists, what is ours is kept (the page's description and
+// the installer link, from our own list, else from the last web/firmwares.json; a licence from our
+// own list, else the Hub's, else the last file's) and the rest comes from the Hub. The Hub's catalog changes every few hours: run this when it has.
+//   node tools/hub_catalog.mjs [--check] [--catalog=hub.json]
+// (--check: only say whether the file is current; --catalog: the Hub's catalog from a file)
+import { readFileSync, writeFileSync } from "node:fs";
+import { packageVersion } from "../web/fwsc.js";
+
+const HUB = "https://thefirmwarehub.com/";
+const OUT = new URL("../web/firmwares.json", import.meta.url);
+const OWN = new URL("../web/firmwares-own.json", import.meta.url);
+// our ids where the Hub's differ (the page takes either in ?fw=; see ourId for the rest)
+const OURS = { salt: "felucca-salt", floyd: "sloop-floyd", sloopbanks: "sloop-banks" };
+// listed on the Hub, not run here yet
+const SKIP = {
+  "vibe-link": "crashes in the emulator a second or two after boot (a CPU exception at 0x0200338E: its own crash screen); held back until that is understood",
+  lsdjburrito: "boots to its instructions, but makes no audio until an LSDJ song is sent to it over USB from its web page, which the emulator's page cannot do",
+};
+// first in the list (the page's default first), then by id
+const FIRST = ["mvave", "felucca", "felucca-salt"];
+
+const arg = process.argv.find((a) => a.startsWith("--catalog="));
+const hub = arg ? JSON.parse(readFileSync(arg.slice(10))) : await (await fetch(HUB + "catalog.json")).json();
+const cur = JSON.parse(readFileSync(OUT));
+const ownFile = JSON.parse(readFileSync(OWN));
+const own = ownFile.firmwares;
+const old = new Map([...cur.firmwares, ...own].map((f) => [f.id, f]));
+
+// Our id for a Hub firmware: OURS, else the id of the entry the Hub's id was recorded on ("hub"),
+// else one of our own list's by the same id or the same name (letters and digits only, so the Hub's
+// "fm1-sid" or "FM1 SID" is our "FM-1 SID"); else the Hub's. One in our own list with the same
+// repository but neither is reported, to be told apart by hand ("hub" on the entry).
+const norm = (s) => String(s || "").toLowerCase().replace(/[^a-z0-9]/g, "");
+const ghRepo = (u) => String(u || "").replace(/^https:\/\/github\.com\//, "").split("/").slice(0, 2).join("/").toLowerCase();
+function ourId(h) {
+  if (OURS[h.id]) return OURS[h.id];
+  const rec = [...old.values()].find((f) => f.hub === h.id);
+  if (rec) return rec.id;
+  const m = own.find((f) => f.id === h.id) || own.find((f) => norm(f.name) === norm(h.name));
+  if (m) {
+    if (m.id !== h.id) console.log(`  (the Hub's ${h.id} is our ${m.id}: the same name)`);
+    return m.id;
+  }
+  for (const f of own) {
+    if (h.repo && ghRepo(f.repo) === h.repo.toLowerCase())
+      console.log(`  CHECK: the Hub's ${h.id} ("${h.name}") has the repository of our ${f.id} ("${f.name}"); ` +
+        `if it is the same firmware, add "hub": "${h.id}" to it in web/firmwares-own.json`);
+  }
+  return h.id;
+}
+
+// a repository's licence (GitHub's SPDX id), for a firmware new to the list whose Hub entry has
+// none ("lic"); GITHUB_TOKEN when set, as the unauthenticated API allows 60 asks an hour
+async function licence(repo) {
+  try {
+======
+#!/usr/bin/env python3
+"""The page's catalog brought up to the Hub's, keeping only what plays here.
+
+    tools/catalog_refresh.py [--jobs N] [--summary FILE.md]
+
+1. tools/hub_catalog.mjs rewrites web/firmwares.json from the FM-1 Firmware Hub's catalog.
+2. What moved to a newer package, or is new, against the last commit's web/firmwares.json, is
+   fetched (tools/fetch_firmwares.mjs) and played (tools/catalog_check.py --update: the JIT and
+   the interpreter must agree, and the audio must last), which records its hash in
+   tests/catalog.json.
+3. What fails is held back: a firmware that moved keeps the package it had (its entry and hash as
+   they were), a new one stays out of the file (the page still lists it among the Hub's newcomers,
+   marked as not yet run here, web/fwsc.js hubNewcomers). A firmware gone from the Hub leaves
+   tests/catalog.json too.
+4. docs/FIRMWARES.md, the list with authors the README links to, follows the file
+   (tools/readme_firmwares.mjs).
+5. The summary (markdown, for a pull request) says what moved, what is new, what was held back
+   and why. Exit 0 whether or not anything failed (a held-back firmware is not an error: the file
+   stays one that plays); 1 only when the tools themselves could not run.
+
+Run by .github/workflows/catalog-refresh.yml every day; by hand the same way.
+"""
+import json
+import os
+import re
+import subprocess
+import sys
+
+root = os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
+CAT = os.path.join(root, "web", "firmwares.json")
+GOLDEN = os.path.join(root, "tests", "catalog.json")
+args = sys.argv[1:]
+jobs = args[args.index("--jobs") + 1] if "--jobs" in args else str(os.cpu_count() or 2)
+summary_path = args[args.index("--summary") + 1] if "--summary" in args else None
+
+
+def sh(cmd, **kw):
+    print("+", " ".join(cmd), flush=True)
+    return subprocess.run(cmd, cwd=root, text=True, **kw)
+
+
+def entries(text):
+    return {f["id"]: f for f in json.loads(text)["firmwares"]}
+
+
+before_text = sh(["git", "show", "HEAD:web/firmwares.json"], capture_output=True, check=True).stdout
+before = entries(before_text)
+if sh(["node", "tools/hub_catalog.mjs"]).returncode != 0:
+    sys.exit("hub_catalog.mjs failed")
+after_doc = json.load(open(CAT))
+=====
+// Fetch the firmwares in web/firmwares.json into reference/firmwares/<id>.fwsc, the package as
+// published, for fm1-live --fw and tools/catalog_check.py, which boot it as the web page does.
+// Same download as the web page; the app is unpacked only to say its size.
+//   node tools/fetch_firmwares.mjs [id ...]
+import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { fileURLToPath } from "node:url";
+const { appFromPackage, fetchPackage } = await import(new URL("../web/fwsc.js", import.meta.url));
+// (a path, not URL.pathname: that keeps a leading slash before the drive letter on Windows)
+const root = fileURLToPath(new URL("../", import.meta.url));
+const cat = JSON.parse(readFileSync(root + "web/firmwares.json"));
+const want = new Set(process.argv.slice(2));
+mkdirSync(root + "reference/firmwares", { recursive: true });
+// A site that is busy (429, 5xx) or drops the connection gets three more tries; what failed is
+// said, as the download then may not be the catalog's own package (fetchPackage falls back).
+const failed = [];
+async function patient(url, opts) {
+  for (let i = 0; ; i++) {
+    try {
+      const r = await fetch(url, opts);
+      if (r.ok || (r.status !== 429 && r.status < 500) || i === 3) {
+        if (!r.ok) failed.push(`${url}: ${r.status}`);
+        return r;
+      }
+    } catch (e) {
+      if (i === 3) { failed.push(`${url}: ${e.message}`); throw e; }
+    }
+    await new Promise((ok) => setTimeout(ok, 2000 << i));
+  }
+}
+for (const f of cat.firmwares) {
+  if (want.size && !want.has(f.id)) continue;
+  if (f.byo) continue;                     // M-VAVE's own: fm1-live --fwsc FM-1.fwsc
+  try {
+    failed.length = 0;
+    const { bytes, url } = await fetchPackage(f, patient);
+    const app = appFromPackage(bytes);
+    writeFileSync(root + "reference/firmwares/" + f.id + ".fwsc", bytes);
+    console.log(`${f.id.padEnd(13)} ${url.replace(/\/$/, "").split("/").pop().padEnd(36)} app ${app.length} bytes`);
+    for (const why of failed) console.log(`${"".padEnd(13)} (${why})`);
+  } catch (e) {
+    console.log(`${f.id.padEnd(13)} FAILED ${e.message}`);
+  }
+}
+231:| [Speak37 1.0](https://joakimeriksson.github.io/fm1-emu/smk37/?fw=speak37) | [genkigenki](https://github.com/genkigenki/Speak37) | A talking synth for the SMK-37 and the FM-1: every key speaks the next word at its pitch, chords speak in harmony. |
+232:| [Erik37 1.3](https://joakimeriksson.github.io/fm1-emu/smk37/?fw=erik37) | [genkigenki](https://github.com/genkigenki/erik37) | A grand piano for the SMK-37: a sampled concert grand with velocity layers, dampers and their noise, the three pedals, string resonance and four rooms. |
+233:| [Snoop37 2.8.5](https://joakimeriksson.github.io/fm1-emu/smk37/?fw=snoop37) | [isod89 (port: genkigenki)](https://github.com/genkigenki/sloop-fm1/tree/snoop37-2.8.5) | SLOOP, the four-track looper groovebox, adapted for the SMK-37. |
+234:| [X0X 0.2](https://joakimeriksson.github.io/fm1-emu/smk37/?fw=x0x37) | [Charles Vestal (port: genkigenki)](https://github.com/genkigenki/fm1-x0x) | A 909, an 808, two 303s with a line generator and a breakbeat player, all at once. |
+235:| [FoMni 0.2](https://joakimeriksson.github.io/fm1-emu/smk37/?fw=fomni37) | [Charles Vestal (port: genkigenki)](https://github.com/genkigenki/fm1-fomni) | An Omnichord-style chord harp: the 16 pads become the strum plate, the keybed holds the chords. |
+236:| [MAKU 0.1](https://joakimeriksson.github.io/fm1-emu/smk37/?fw=maku37) | [okumurari2 (port: genkigenki)](https://github.com/genkigenki/MAKU37) | An always-on ambience machine: power it on and a new, random, in-key world is already playing. |
+237:| [Rainbow mode 0.2](https://joakimeriksson.github.io/fm1-emu/smk37/?fw=rainbow37) | [joshbartlettband-web (port: genkigenki)](https://github.com/genkigenki/RAINBOW37) | A music toy for kids: colour-coded notes, 40 friends who sing along, no menus. |
+238:| [GHOULBOX 2.1](https://joakimeriksson.github.io/fm1-emu/smk37/?fw=ghoulbox) | [Jason Persinger (port: genkigenki)](https://github.com/genkigenki/Felucca/tree/ghoulbox-smk37) | Dungeon-synth firmware: dark ambient, medieval and fantasy sounds, with drones, a hurdy-gurdy crank and two sounds at once. |
+239:| [ChoralRoot 0.24-beta3](https://joakimeriksson.github.io/fm1-emu/smk37/?fw=choralroot) | [Quixotic7, with the SMK-37 stock-mapping fix (PR #22) (port: genkigenki)](https://github.com/genkigenki/ChoralRootFM1/tree/smk37-stock-mapping) | A chord instrument in the manner of the Orchid: one hand plays roots, the other picks the chord. |
+240:| [ORBIT 0.7.0](https://joakimeriksson.github.io/fm1-emu/smk37/?fw=orbit) | [dspaudio (port: genkigenki)](https://github.com/genkigenki/orbit/tree/smk37) | A four-track groovebox with OP-1-inspired screens: three synth parts, a drum machine, an event tape and a mixer. |
+241:| [AMB-1 1.1](https://joakimeriksson.github.io/fm1-emu/smk37/?fw=amb) | [Charles Vestal (port: genkigenki)](https://github.com/genkigenki/fm1-amb/tree/smk37) | A generative ambient machine inspired by Music for Airports: loops of different lengths drift past each other and never repeat. |
+242:| [Polly 0.4.1](https://joakimeriksson.github.io/fm1-emu/smk37/?fw=polly) | [Charles Vestal (port: genkigenki)](https://github.com/genkigenki/fm1-polly/tree/smk37) | A pocket arranger inspired by the Yamaha QY70: a band of eight General MIDI instruments follows the chords you play. |
+243:| [winampFM 0.1](https://joakimeriksson.github.io/fm1-emu/smk37/?fw=winamp) | [Hericdk (port: genkigenki)](https://github.com/genkigenki/winampFM/tree/smk37) | A synth groovebox in the look of Winamp 2.x, built on SLOOP: player, playlist, effect sliders and a visualizer. |
+244:| [DUB-1 1.0.0](https://joakimeriksson.github.io/fm1-emu/smk37/?fw=dub) | [sbegueria (port: genkigenki)](https://github.com/genkigenki/fm1-dub/tree/smk37) | A generative dub techno machine: chord stabs through a low-pass into a tape echo, a sub bass, a kick that ducks the rest. |
+245:| [Ketch 0.1](https://joakimeriksson.github.io/fm1-emu/smk37/?fw=ketch) | [Adrien Risser-Zhuang (port: genkigenki)](https://github.com/genkigenki/fm1-tracker-ketch/tree/smk37) | A tracker in the LSDJ / M8 line: song, chain and phrase screens, Felucca's sound engines on four channels, effects and a mixer. |
+246:| [Melodee 1.4.5](https://joakimeriksson.github.io/fm1-emu/smk37/?fw=melodee) | [keremimo (port: genkigenki)](https://github.com/genkigenki/melodee/tree/smk37) | A four-track multi-engine synth and sequencer: Prophet, CZ, FM6, SID, drums and more. |
+247:| [FMEL-1 0.1-beta](https://joakimeriksson.github.io/fm1-emu/smk37/?fw=fmel) | [AntonioAltea, on zvenson's Dinghy (port: genkigenki)](https://github.com/genkigenki/fmel-1/tree/smk37) | A Mellotron M400 in your SMK-37: real tapes, wow and flutter, a second sound on the other track. |
+248:| [Frodhes 0.9.2](https://joakimeriksson.github.io/fm1-emu/smk37/?fw=frodhes) | [Leonardo Mirabal, on zvenson's Dinghy (port: genkigenki)](https://github.com/genkigenki/frodhes/tree/smk37) | A physically modelled electric piano: every note computed live from a hammer, a tine and a pickup. |
+249:| [ZEN-1 1.0.2](https://joakimeriksson.github.io/fm1-emu/smk37/?fw=zen) | [aceyprime, on FuMi-1 and FoMni (port: genkigenki)](https://github.com/genkigenki/zen-1/tree/smk37) | Ambient scenes that play themselves: a cherry tree over a stream, a koi pond, fireflies under a real moon. |
+250:| [OberVave 1.5-beta](https://joakimeriksson.github.io/fm1-emu/smk37/?fw=obervave) | [zvenson](https://github.com/zvenson/obervave/blob/main/SMK37.md) | One 8-voice analog-style polysynth in the spirit of the American poly synths of 1979–84, with chorus, delay and a plate reverb. |
+```
+</details></tool-use>
+
+_**Agent - sidechain (claude-opus-5-5 2026-11-17 18:06:43Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Read fm1-emu README and own firmware list
+
+```bash
+cd /private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/0a574306-469e-4a59-9622-5701a42aee59/scratchpad/web/emu; gh api "repos/joakimeriksson/fm1-emu/contents/README.md" --jq .content | base64 -d > README.md; gh api "repos/joakimeriksson/fm1-emu/contents/web/firmwares-own.json" --jq .content | base64 -d > firmwares-own.json; gh api "repos/joakimeriksson/fm1-emu/contents/.github/workflows/catalog-refresh.yml" --jq .content | base64 -d > catalog-refresh.yml 2>/dev/null; head -30 catalog-refresh.yml; grep -n -i -E "your firmware|add (a|your)|firmwares-own|hub|contribut|pull request|issue|own list" README.md | head -30; python3 -I -c "
+import json,sys; d=json.load(open(sys.argv[1])); print({k:v for k,v in d.items() if k!='firmwares'}); print(len(d['firmwares'])); print(json.dumps(d['firmwares'][:2],indent=1)[:1500]); print([f['id'] for f in d['firmwares']])" firmwares-own.json
+```
+
+```text
+gh: Not Found (HTTP 404)
+9:**Play it: [joakimeriksson.github.io/fm1-emu](https://joakimeriksson.github.io/fm1-emu/)**:
+13:[![The emulated FM-1's front panel running fifteen of the firmwares in turn](docs/media/firmwares.gif)](https://joakimeriksson.github.io/fm1-emu/)
+17:https://github.com/user-attachments/assets/6849316e-7239-497e-b617-be74317dc2b1
+30:And the **[M-VAVE SMK-37](https://joakimeriksson.github.io/fm1-emu/smk37/)**: a 37-key keyboard with
+33:Also here: **[FM-1 SID](https://github.com/joakimeriksson/fm1-sid)** (`fm1-sid/`, a submodule: clone with
+36:and GoatTracker songs ([its page](https://joakimeriksson.github.io/fm1-emu/fm1-sid/) plays all of HVSC).
+37:On a real FM-1 it is its own firmware on [fm1-dock](https://github.com/joakimeriksson/fm1-dock), which
+42:The community firmwares: every one on [the FM-1 Firmware Hub](https://thefirmwarehub.com/) that
+43:runs here (its packages, fetched from the Hub; `tools/hub_catalog.mjs` follows its catalog), and a
+45:M-VAVE's stock firmware (V13 and V15) with both CPU cores running. The ones the Hub doesn't list
+46:are our own list, `web/firmwares-own.json`: add a firmware there, and the tool appends it. The page
+47:also lists, last and marked as not yet run here, whatever else the Hub has a package for, so a new
+49:link that opens it on the page: [docs/FIRMWARES.md](docs/FIRMWARES.md).** (`?fw=` takes the Hub's ids
+52:`&name=` naming it: other hubs' "Try", older versions; `?chip=uc25hq80` gives the FM-1 the flash
+62:([fm1-dock's tools/tryit.py](https://github.com/joakimeriksson/fm1-dock/blob/main/tools/tryit.py)).
+75:genkigenki's [fm1-to-smk37](https://github.com/genkigenki/fm1-to-smk37) kit maps that wiring and
+79:**Play it: [joakimeriksson.github.io/fm1-emu/smk37](https://joakimeriksson.github.io/fm1-emu/smk37/)**.
+80:The firmwares come from [genkigenki's install page](https://genkigenki.github.io/smk37/)
+91:[the releases](https://github.com/joakimeriksson/fm1-emu/releases/latest), and play a firmware
+173:**Download it** from [the releases](https://github.com/joakimeriksson/fm1-emu/releases/latest):
+224:[Scintilla](https://github.com/joakimeriksson/scintilla-fm1) (an Elka Synthex; preset 29,
+232:[nih-plug](https://github.com/robbert-vdh/nih-plug). [clap-wrapper](https://github.com/free-audio/clap-wrapper)
+255:[Emulating a Synthesizer Before It Arrives](https://joakimeriksson.github.io/fm1-emu/fm1-emu-report.pdf)
+266:- `fm1-sid/`: the SID study and player firmware, [joakimeriksson/fm1-sid](https://github.com/joakimeriksson/fm1-sid) as a submodule
+284:[AL-255/FM-1-RE](https://github.com/AL-255/FM-1-RE),
+285:[ip2k/lunar-modulator](https://github.com/ip2k/lunar-modulator),
+286:kagaimiq's [jielie](https://kagaimiq.github.io/jielie), the hardware layer of
+287:[hugelton/Felucca](https://github.com/hugelton/Felucca) and
+288:[awesome-fm-1](https://github.com/cicloid/awesome-fm-1). Thanks to every firmware author for publishing their work.
+{'note': 'Our own list: firmwares the FM-1 Firmware Hub does not list (this repository\'s FM-1 SID, M-VAVE\'s own, and a few from fm1-editor.com/firmware). Edit this file to add one; node tools/hub_catalog.mjs appends these to the Hub\'s list in web/firmwares.json. An entry whose id the Hub lists too keeps its texts here and takes the Hub\'s package. "default": the firmware the page starts with.', 'default': 'felucca'}
+9
+[
+ {
+  "id": "mvave",
+  "name": "M-VAVE stock firmware",
+  "version": "",
+  "author": "M-VAVE",
+  "license": "M-VAVE's own",
+  "about": "The firmware the FM-1 ships with: a DX7-style FM synth, both cores running. This page does not host it and cannot download it (M-VAVE's server does not allow other pages to): download FM-1.fwsc from M-VAVE, then open it here; this browser keeps it for next time. Its patches live in flash an update does not carry, so it starts with a small bank of the emulator's own; \"DX7 bank\u2026\" loads a 32-voice .syx.",
+  "repo": "https://github.com/joakimeriksson/fm1-emu/blob/master/docs/stock-firmware.md",
+  "byo": true,
+  "download": "https://yms-file-store.oss-cn-hongkong.aliyuncs.com/software/firmware/FM-1.fwsc"
+ },
+ {
+  "id": "april",
+  "name": "April OS",
+  "version": "BETA 1.1",
+  "author": "beashoko",
+  "license": "MIT (its repository, which holds the installer page; the firmware source is not published)",
+  "about": "A sampler inspired by the Casio SK-1: no synth engines, only samples, recorded through the installer page's microphone bridge.",
+  "repo": "https://github.com/beashoko/april-os",
+  "installer": "https://beashoko.github.io/april-os/",
+  "embedded": "DEFAULT_FIRMWARE"
+ }
+]
+['mvave', 'april', 'fm1dock', 'fm1doom', 'purplemonkey', 'quest', 'sid', 'sloop-alg', 'choppah']
+```
+</details></tool-use>
+
+_**Agent - sidechain (claude-opus-5-5 2026-11-17 18:06:52Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Read fm1-emu README firmware section and workflows
+
+`cd /private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/0a574306-469e-4a59-9622-5701a42aee59/scratchpad/web/emu; sed -n 40,56p README.md; gh api repos/joakimeriksson/fm1-emu/contents/.github/workflows --jq '.[].name'; ls ; gh api repos/joakimeriksson/fm1-emu --jq '.has_issues'; gh api "repos/joakimeriksson/fm1-emu/pulls?state=all&per_page=10" --jq '.[] | [.number,.user.login,.title] | @tsv' | head`
+
+```text
+## What runs
+
+The community firmwares: every one on [the FM-1 Firmware Hub](https://thefirmwarehub.com/) that
+runs here (its packages, fetched from the Hub; `tools/hub_catalog.mjs` follows its catalog), and a
+few more from [fm1-editor.com/firmware](https://fm1-editor.com/firmware/). Also FM-1 SID, and
+M-VAVE's stock firmware (V13 and V15) with both CPU cores running. The ones the Hub doesn't list
+are our own list, `web/firmwares-own.json`: add a firmware there, and the tool appends it. The page
+also lists, last and marked as not yet run here, whatever else the Hub has a package for, so a new
+firmware is playable the day it is published. **The list, each firmware with its author and a
+link that opens it on the page: [docs/FIRMWARES.md](docs/FIRMWARES.md).** (`?fw=` takes the Hub's ids
+too; `&embed=1` shows only the device and its controls, for a window on another site;
+`?package=URL` plays a package from another site (https, with CORS on) that the list doesn't have,
+`&name=` naming it: other hubs' "Try", older versions; `?chip=uc25hq80` gives the FM-1 the flash
+part of units sold since autumn 2026, JEDEC B3 60 14, in place of the stock Puya, as fm1-live's
+`--flash-chip uc25hq80` does: a firmware that knows only the Puya keeps its saves in RAM there.)
+A page on this site can hand the emulator a try-out (`web/tryout.js`): `&flash=PATH` lays flash
+sectors over the package's fresh flash (records of a 4-byte little-endian offset and the 4096-byte
+catalog.yml
+pages.yml
+plugin-tests.yml
+release.yml
+true
+206	joakimeriksson	Timers keep exact time through a handler's pending clear; a pressed LED lights at once (follow-ups to #196, #198)
+202	jvitkauskas	fm1-soc: the boot-parameter block carries the chip key, trim and a blank MAC (split from #188)
+201	jvitkauskas	fm1-isa: narrow r_mov_i_l2 and the iff gotos to what an FM-1 decodes (split from #188)
+200	jvitkauskas	fm1-soc: strict misaligned word accesses move the aligned-down word (split from #188)
+199	jvitkauskas	fm1-soc: the PC limits raise their exception once until DBG_CON bit 18 (split from #188)
+198	eubide	Average the panel LEDs over 40 ms so dim LEDs do not flicker
+197	eubide	Offer a higher clock when the firmware itself runs out of time
+196	eubide	TIMER0..3 keep the crystal's time at every CPU clock
+194	jvitkauskas	Run pi32v2-isa's instruction forms that fm1-isa has no class for (stacked on #188)
+193	ItsRobbAllen	docs: establish F'Em 1 fork and checkpoint workflow
+```
+</details></tool-use>
+
+_**Agent - sidechain (claude-opus-5-5 2026-11-17 18:07:04Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Check how fm1-emu catalog refresh is scheduled
+
+`cd /private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/0a574306-469e-4a59-9622-5701a42aee59/scratchpad/web/emu; for w in pages release; do gh api "repos/joakimeriksson/fm1-emu/contents/.github/workflows/$w.yml" --jq .content | base64 -d > $w.yml; done; grep -n -E "schedule|cron|hub_catalog|catalog_refresh" pages.yml release.yml; gh api "repos/joakimeriksson/fm1-emu/commits?path=web/firmwares.json&per_page=8" --jq '.[] | [.commit.author.date, .commit.author.name, (.commit.message|split("\n")[0])] | @tsv'`
+
+```text
+2026-11-13T23:57:32Z	Joakim Eriksson	Catalog: VIBE FM Link 0.4 held back (on hub_catalog.mjs's skip list): it crashes in the emulator
+2026-11-13T23:03:23Z	Joakim Eriksson	Catalog: the Hub's day (2026-11-14), 203 firmwares; tools/catalog_refresh.py does the refresh
+2026-11-05T20:38:03Z	Joakim Eriksson	Catalog: the Hub's day (2026-11-05): 158 firmwares, 23 moved to newer packages, B3 Organ and VEFFBOX new
+2026-11-04T23:19:00Z	Joakim Eriksson	The page lists the Hub's newcomers live, last and marked as not yet run here
+2026-11-04T23:09:03Z	Joakim Eriksson	Catalog: CHOPPAH on the page (#141 regenerated), its audio hash
+2026-11-04T21:02:24Z	Joakim Eriksson	Catalog: the package's version, the Hub's licence over an old lookup, --fw boots the package
+2026-11-04T19:13:27Z	Joakim Eriksson	Catalog: 155 firmwares from the Hub (60 new, 48 moved to newer packages); the check boots from the package
+2026-10-31T20:29:34Z	Joakim Eriksson	Catalog: fm1-dock 0.7 (Bluetooth MIDI with both cores, eight add-ons on its page), its package from its page; the README's row
+```
+</details></tool-use>
+
+_**Agent - sidechain (claude-opus-5-5 2026-11-17 18:07:13Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Inspect FM1 Developers' Wiki repo tree
+
+`gh api repos/sbegueria/fm1-dev-wiki --jq '{default_branch,description,homepage,pushed_at,has_issues}'; gh api "repos/sbegueria/fm1-dev-wiki/git/trees/HEAD?recursive=1" --jq '.tree[].path' | grep -v -E '\.(png|jpg|svg|webp)$' | head -80`
+
+```text
+{"default_branch":"master","description":"Unofficial community reference for M-VAVE FM-1 / SMK-37 custom firmware developers","has_issues":true,"homepage":"https://sbegueria.github.io/fm1-dev-wiki/","pushed_at":"2026-10-29T21:56:28Z"}
+LICENSE.md
+README.md
+docs
+docs/AI-Skills.md
+docs/Audio-Output.md
+docs/Boot-Chain-and-Bootloaders.md
+docs/Choosing-a-Base.md
+docs/Clocks-and-Power.md
+docs/Contributing.md
+docs/Controls.md
+docs/Debugging.md
+docs/Display.md
+docs/FM1-Base.md
+docs/Firmware-Package-Format.md
+docs/Flash-Storage.md
+docs/Getting-Started.md
+docs/Glossary.md
+docs/Hardware-Overview.md
+docs/Home.md
+docs/Known-Projects.md
+docs/License.md
+docs/MIDI-and-USB.md
+docs/Memory-Map.md
+docs/Open-Questions.md
+docs/Performance.md
+docs/Pinout.md
+docs/Programming-Guide.md
+docs/Recovery.md
+docs/SMK-37.md
+docs/Second-Core.md
+docs/Simulators-and-Emulators.md
+docs/Tools.md
+docs/Update-Protocol-and-Installers.md
+docs/_config.yml
+docs/img
+docs/sections
+docs/sections/Boot-and-install.md
+docs/sections/Community.md
+docs/sections/Hardware.md
+docs/sections/Start.md
+docs/sections/Writing-firmware.md
+```
+</details></tool-use>
+
+_**Agent - sidechain (claude-opus-5-5 2026-11-17 18:07:21Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Read Wiki Known-Projects, Contributing, Community pages
+
+`cd /private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/0a574306-469e-4a59-9622-5701a42aee59/scratchpad/web; mkdir -p wiki; for p in docs/Known-Projects.md docs/Contributing.md docs/sections/Community.md README.md; do gh api "repos/sbegueria/fm1-dev-wiki/contents/$p" --jq .content | base64 -d > "wiki/$(basename $p)"; done; wc -l wiki/*; cat wiki/Contributing.md; echo =====; cat wiki/Community.md; echo ====; sed -n 1,40p wiki/Known-Projects.md`
+
+```text
+      16 wiki/Community.md
+      60 wiki/Contributing.md
+      67 wiki/Known-Projects.md
+      62 wiki/README.md
+     205 total
+---
+title: "Contributing"
+parent: Community
+nav_order: 6
+---
+
+# Contributing
+
+Anyone can improve this wiki. The rules exist for one reason: **a wrong fact, once written down, gets copied.**
+The r/MVaveFM1 thread that started this wiki put it this way: a small hallucination or oversight leads to a
+workaround that didn't need to be there, and "once it's there in code, comments, markdown, etc. it becomes almost
+impossible for future agents to question it".
+
+## The rules
+
+1. **Every technical fact has a source and a tag** ([HW], [SDK], [RE], [CODE], [?]; see [Home](Home.md)).
+   - [HW]: say who measured it, on what (FM-1 or SMK-37, which bootloader, which firmware), and when.
+   - [CODE]: link the file and, ideally, the commit.
+   - [SDK]: give the SDK path.
+   - Can't source it? Tag it [?] and add it to [Open Questions](Open-Questions.md).
+2. **Don't upgrade a tag without evidence.** "Everyone's code does it" is [CODE], not [HW].
+3. **Disagreements stay visible.** If your source contradicts the page, add yours beside it and open an entry in
+   [Open Questions](Open-Questions.md). Don't delete the other.
+4. **Write the date** on measurements and on anything about a project's status. Projects move fast.
+5. **Plain English, short sentences.** Many readers use translation tools. Define terms in [Glossary](Glossary.md).
+6. **No secrets, no binaries.** Don't paste M-VAVE's or JieLi's binaries or large parts of their code. Short
+   register facts, addresses and protocol descriptions are fine.
+7. **Credit people and projects.** Link the repository, issue or post.
+8. **Unofficial and neutral.** No logos. Don't speak for M-VAVE or JieLi.
+
+## Using AI assistants
+
+AI tools write a lot of FM-1 code. They are welcome here too, with these extra rules:
+
+- **An AI's claim is [?] until someone checks it** on hardware, in the SDK, or in working code.
+- Say in your edit summary that an AI helped, and which parts you checked yourself.
+- Don't let an assistant "fill in" a table. Missing data stays missing.
+- When you point an assistant at this wiki, point it at the tags too: [?] facts are not facts.
+
+## Code excerpts
+
+- Keep excerpts short: the lines that show the point.
+- Say where each excerpt comes from and its licence, in a comment or the line above it.
+- Your own new snippets are under the wiki's licence ([License](License.md)); mark them "a sketch".
+
+## Page layout
+
+Each technical page ends with a **Sources** section. Use `[Page Name](Page-Name.md)` for links inside the wiki. Use tables
+for registers and pins: address, value, meaning, tag.
+
+## How to edit
+
+The pages are Markdown files in `docs/`. Fork the repository, edit, and open a pull request: each change is
+reviewed before it's merged, so a second pair of eyes checks every new fact. Small fixes can be edited in the
+browser (the pencil icon makes the fork and the pull request for you). New pages or big changes: open an issue
+first, so others can comment.
+
+---
+
+Unofficial community wiki. Not affiliated with M-VAVE or JieLi. Text under [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/); code excerpts keep their own licences ([License](License.md)). Facts are tagged **[HW] [SDK] [RE] [CODE] [?]**: see [Home](Home.md). Found an error? See [Contributing](Contributing.md). [Home](Home.md)
+=====
+---
+title: Community
+nav_order: 6
+has_children: true
+permalink: /sections/community/
+---
+
+# Community
+
+- [Known Projects](../Known-Projects.md)
+- [Tools](../Tools.md)
+- [AI Skills](../AI-Skills.md)
+- [Open Questions](../Open-Questions.md)
+- [Glossary](../Glossary.md)
+- [Contributing](../Contributing.md)
+- [License](../License.md)
+====
+---
+title: "Known Projects"
+parent: Community
+nav_order: 1
+---
+
+# Known Projects
+
+Projects that hold **developer knowledge**: bases, references and specifications. For the full list of firmwares,
+editors and tools, see [awesome-fm-1](https://github.com/cicloid/awesome-fm-1), the
+[FM-1 resource hub](https://github.com/aroum/fm1-custom-fw), the [FM-1 Firmware Database](https://github.com/stanleygurvich/fm1-firmware-database)
+and the [FM-1 Firmware Atlas](https://github.com/wero1414/atlas-fm-1). Licences and descriptions are from each
+project's README (October 2026).
+
+## Bases and platforms
+
+| Project | Licence | What |
+| --- | --- | --- |
+| [Felucca](https://github.com/hugelton/Felucca) (Leo Kuroshita, Hügelton Instruments) | GPL-3.0 | The first big open firmware; the origin of most community platform code |
+| [felucca-bsp](https://github.com/hugelton/felucca-bsp) | MPL-2.0 | The chip and board layer split out of Felucca, beta |
+| [fm1-base](https://github.com/charlesvestal/fm1-base) (Charles Vestal) | MPL-2.0 | A platform and template on felucca-bsp, with host simulator, browser emulator, BLE MIDI, WiFi, USB audio, velocity and pressure, second core; beta. See [fm1-base as a Base](FM1-Base.md) |
+| [Dinghy](https://github.com/zvenson/dinghy) | GPL-3.0 | The smallest documented firmware to build on |
+| [foma](https://github.com/konsumer/foma) | GPL-3.0 | One C file, Docker, a WebAssembly preview and installer on one page |
+| [fm1-nes](https://github.com/Keitark/fm1-nes) | Apache-2.0 | Source-only integration with JieLi's SDK; app-only updates |
+| [FM1 Open](https://github.com/m-vave/fm1_open) (M-VAVE) | GPLv3 + SDK linking exception | M-VAVE's open app with a binary engine SDK |
+| [smk37_open](https://github.com/m-vave/smk37_open) (M-VAVE) | as above | The same for the SMK-37 |
+| [Optimist](https://github.com/w0ts/optimist) | GPL-3.0 | A modular firmware platform from SLOOP / Felucca |
+
+## Specifications and reverse engineering
+
+| Project | Licence | What |
+| --- | --- | --- |
+| [m-bootloader](https://github.com/jvitkauskas/m-bootloader) and its [SPEC.md](https://github.com/jvitkauskas/m-bootloader/blob/main/docs/SPEC.md) | MIT | Clean-room bootloader; the spec is the most complete public description of boot, flash formats, keys and panel |
+| [FM-1 resource hub](https://github.com/aroum/fm1-custom-fw) `REVERSE_ENGINEERING.md` | none declared | Pin-by-pin package map from board photos and JieLi's datasheet, the stock updater's internals, protocol notes, case opening; **mixes FM-1 facts with generic AC79 material** (e.g. 4–8 MB flash), so check each point |
+| [FM-1-RE](https://github.com/AL-255/FM-1-RE) | WTFPL | Analysis of the stock firmware: architecture, memory map, OTA protocol, Ghidra scripts |
+| [pi32v2-isa](https://github.com/jvitkauskas/pi32v2-isa) | MIT-0 | The instruction set as a table, an open assembler/linker, and an LLVM fork that builds FM-1 firmware |
+| [fm1-bootloader](https://github.com/jvitkauskas/fm1-bootloader) | Apache-2.0 | The stock bootloader, readable C |
+| [jielie](https://github.com/kagaimiq/jielie) (kagaimiq) | | Reference site for JieLi SoCs; USB_KEY notes |
+| [ghidra-jieli](https://github.com/kagaimiq/ghidra-jieli) | | Ghidra processor module for pi32v2 |
+| [JieLi AC79 SDK](https://gitee.com/Jieli-Tech/fw-AC79_AIoT_SDK) and [docs](https://doc.zh-jieli.com/AC79/zh-cn/master/index.html) | Apache-2.0 | The vendor SDK (Chinese docs) |
+```
+</details></tool-use>
+
+_**Agent - sidechain (claude-opus-5-5 2026-11-17 18:07:37Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Inspect community list repos
+
+`cd /private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/0a574306-469e-4a59-9622-5701a42aee59/scratchpad/web; mkdir -p lists; for r in cicloid/awesome-fm-1 aroum/fm1-custom-fw stanleygurvich/fm1-firmware-database wero1414/atlas-fm-1; do echo "== $r"; gh api repos/$r --jq '{default_branch,description,homepage,pushed_at,has_issues}' 2>&1; gh api "repos/$r/git/trees/HEAD?recursive=1" --jq '.tree[].path' 2>/dev/null | grep -v -E '\.(png|jpg|svg|webp|gif|fwsc|bin)$' | head -40; done`
+
+```text
+== cicloid/awesome-fm-1
+{"default_branch":"main","description":"A curated list of resources, custom firmware, tools and open source work around the M-VAVE FM-1 pocket FM synthesizer.","has_issues":true,"homepage":null,"pushed_at":"2026-11-16T07:57:50Z"}
+CONTRIBUTING.md
+LICENSE
+README.md
+mooring
+mooring/catalog.json
+mooring/catalog.json.intoto.jsonl
+mooring/catalog.signed.json
+== aroum/fm1-custom-fw
+{"default_branch":"main","description":"M-VAVE FM-1 resource hub: custom firmwares directory, docs, MIDI SysEx protocol tools \u0026 firmware flasher","has_issues":true,"homepage":null,"pushed_at":"2026-11-15T18:17:45Z"}
+.gitignore
+README.md
+REVERSE_ENGINEERING.md
+fm1_flasher.py
+fm1_sysex_scanner.py
+photos
+pyproject.toml
+uv.lock
+== stanleygurvich/fm1-firmware-database
+{"message":"Not Found","documentation_url":"https://docs.github.com/rest","status":"404"}gh: Not Found (HTTP 404)
+{"message":"Not Found","documentation_url":"https://docs.github.com/rest","status":"404"}
+== wero1414/atlas-fm-1
+{"default_branch":"main","description":null,"has_issues":true,"homepage":null,"pushed_at":"2026-10-14T22:12:45Z"}
+.gitignore
+FIRMWARES.md
+README.md
+build.py
+data
+data/firmwares.json
+data/github-meta.json
+dist
+dist/artifact.html
+index.html
+template.html
+tools
+tools/fetch_github.py
+```
+</details></tool-use>
+
+_**Agent - sidechain (claude-opus-5-5 2026-11-17 18:07:45Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Read awesome-fm-1 contributing guide and README structure
+
+`cd /private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/0a574306-469e-4a59-9622-5701a42aee59/scratchpad/web/lists; gh api repos/cicloid/awesome-fm-1/contents/CONTRIBUTING.md --jq .content | base64 -d > awesome-CONTRIBUTING.md; gh api repos/cicloid/awesome-fm-1/contents/README.md --jq .content | base64 -d > awesome-README.md; cat awesome-CONTRIBUTING.md; echo ====; wc -l awesome-README.md; grep -n -i -E "^#|contribut|mooring|pull request|fm1-base|conductor|agent" awesome-README.md | head -60`
+
+```text
+# Contribution guidelines
+
+Thanks for helping keep this list useful.
+
+## What belongs here
+
+- Anything specifically about the M-VAVE / Cuvave FM-1: firmware, tools, editors, patches, hardware add-ons, documentation, long-form articles and videos.
+- Open source work is preferred. Closed or commercial projects are fine when they are notable and clearly labelled.
+- Firmware, tools and docs made only for the SMK-37 keyboards (Pro, Elite, MKE-P37) go under *SMK-37*. A project that runs on both the FM-1 and the SMK-37 goes in its FM-1 section and says so.
+- Projects for other M-VAVE devices go under *Related M-VAVE projects* only when they share hardware, protocols or tooling with the FM-1.
+
+## How to add an entry
+
+- Keep the format: `- [Name](url) - Description.` One line, ends with a period.
+- Say what the thing does and who made it. Mention the license for software.
+- Put it in the right section and keep sections roughly ordered by maturity or relevance.
+- Check the link works and the project is not a bare fork with no changes.
+- One entry per pull request makes review easier.
+
+## Removing or updating entries
+
+- If a project is abandoned, superseded or its link is dead, open a PR to remove or replace it and say why.
+====
+     525 awesome-README.md
+1:# Awesome M-VAVE FM-1 [![Awesome](https://awesome.re/badge.svg)](https://awesome.re)
+12:## Contents
+35:## Official
+44:- [FM1 Open](https://github.com/m-vave/fm1_open) - M-VAVE's own open firmware repository. V14 adds 8 tracks, 8 sample slots and 16 FX demos; releases carry the development kit, a binary device-engine SDK and a [browser workbench](https://open.m-vave.com/fm1-workbench). Most new firmwares build on it or on fm1-base. GPL-3.0 with the FM1 SDK linking exception.
+46:## Custom firmware
+50:### Open source
+134:- [FIELD](https://github.com/AveyCole/FM1-Field) - Radio of field recordings from Radio Aporee: browse by country or region on a globe, sample and layer recordings over WiFi or USB. Experimental alpha. Built on fm1-radio and fm1-base. [Site and installer](https://aveycole.github.io/FM1-Field/). MPL-2.0.
+139:- [LOOM-8](https://github.com/charlesvestal/fm1-loom) - OP-XY-inspired groovebox by Charles Vestal: eight colour-coded tracks, 85 factory presets, a 64-step sequencer with step tricks and parameter locks, weave, throws and a conductor track. Built on fm1-base and felucca-bsp. MPL-2.0.
+146:- [Haunted FM-1](https://github.com/davidpryan/haunted-fm1) - Five generative haunted-ambient firmwares (Midnight Route, Voicemail, Untrue Step, Half-Light, Worn Tape) in the manner of Burial, each with its own manual. Built on fm1-base. MIT.
+168:- [Erik37](https://github.com/genkigenki/erik37) - Sampled concert grand by genkigenki with velocity layers, dampers, pedals, string resonance and four rooms. Made for the SMK-37 and also built for the FM-1, untested on one. Based on fm1-base and felucca-bsp. MPL-2.0.
+173:- [MODELAR](https://github.com/hirakos999/MODELAR) - Semi-modular drone synth played like a Kaoss Pad: four cross-modulating oscillators, with the white keys as an XY pad grid and 11 gesture shapes on the black keys. Beta 0.3. Built on fm1-base and felucca-bsp. MPL-2.0.
+180:- [J6](https://github.com/JackieAlacrity2373/fm1-j6) - JUNO-60-style six-voice polysynth: one DCO per voice, 24 dB resonant low-pass, high-pass, stereo chorus, poly/unison/solo modes, arpeggiator and a 16-step recorder. Built on fm1-base and felucca-bsp. MPL-2.0.
+183:- [Berlinan](https://github.com/jiripisa/fm1-berlinan) - Generative Berlin School sequencer as a standalone USB MIDI sequencer: voices on loops of unequal length, each on its own MIDI channel, with the FM-1 as clock master or follower. [Installer](https://jiripisa.github.io/fm1-berlinan/install/). Built on fm1-base. GPL-2.0-or-later.
+188:- [DelRio](https://github.com/jsopdebeeck/fm1-delrio) - Ceremony rhythm box by Jess Del Rio: djembe, cajon, udu, clapsticks, maracas and triangle, plus berimbau and tanpura and shruti-box drones. Built on fm1-base and felucca-bsp. MPL-2.0.
+218:- [fm1-wheel](https://github.com/ograndebe/fm1wheel) - Tonewheel organ after setBfree, for the FM-1 and the SMK-37 Pro: tone generator, scanner, preamp, reverb and Leslie, with drawbars, percussion and V1-V3/C1-C3 presets. Phase 1 runs on the host only so far. Built on fm1-base and felucca-bsp. [Site](https://ograndebe.github.io/fm1wheel/). GPL-3.0.
+220:- [Album](https://github.com/joshbartlettband-web/album-fm1) - A series of firmwares, one per record: each patch pairs a sound with a photograph that moves as it plays. Album 01 has eleven patches, chord mode through a reverse reverb, and uses both cores. Built on fm1-base. [Site](https://joshbartlettband-web.github.io/album-fm1/). No release. MIT.
+224:- [VNL-1](https://github.com/pianomansam/fm1-vnl) - Lo-fi hip hop firmware built on fm1-base, with a browser emulator build. MPL-2.0.
+232:- [LUOGU](https://github.com/Reytian/fm1-luogu) - Peking opera percussion and accompaniment by Reytian: 64 luogu jing patterns with play-along scoring and 18 banshi with jinghu interludes. Built on fm1-base. Chinese manual. MPL-2.0.
+244:- [FRASIL](https://github.com/styvesgoupil/frasil) - Ambient drone firmware: latched drones with shimmer reverb and freeze, GLINT FM bells with arpeggiator and 32-step sequencer, and a bass line. Built on fm1-base, keeps Felucca's flash layout. [Site](https://frasilsynth.com/). MPL-2.0.
+249:- [AEther](https://github.com/twaroshinto/AEther) - Spectral PaulStretch-style synth that turns each note into a dense cloud, on fm1-base. Polish and English manuals. v0.5, not yet tested on hardware. MPL-2.0.
+262:- [MIDIMON](https://github.com/ignis32/midimonitor_fm1) - MIDI monitor and router in a green-phosphor look: watches and filters TRS, USB, USB host and BLE MIDI, and routes between ports as a matrix. Can act as a BLE MIDI dongle. README warns of brick risk and suggests installing the open bootloader first. Built on fm1-base. MPL-2.0.
+263:- [TRIO](https://github.com/Reytian/fm1-trio) - Jazz trio by Reytian: you play the chords, and small neural networks on the FM-1's chip walk the bass and play the drums. [Site](https://reytian.github.io/fm1-trio/). Built on fm1-base and felucca-bsp. MPL-2.0.
+266:- [FM-1 Neverhood](https://github.com/egorgam/fm1-neverhood) - Tribute to The Neverhood: 22 presets, a four-track sequencer and a battery indicator. Characters, sounds and sprites come from the game's demo files. [Installer](https://neverhood.moode.ru/) and [emulator](https://neverhood.moode.ru/emu/). Built on fm1-base. MIT.
+273:- [CHOPPAH](https://github.com/profikid/fm1-break-choppah) - Amen break chopper by Laurens Profittlich: eight classic breaks cut into 16 slices on the white keys with hold-to-loop, momentary roll, reverse, freeze and tape-stop pads on the black keys, a generator that rearranges the break live, and a four-slot master FX chain with a DJ filter. [Browser emulator](https://profikid.github.io/fm1-break-choppah/emu/), [web installer](https://profikid.github.io/fm1-break-choppah/install/) and [manual](https://profikid.github.io/fm1-break-choppah/manual/). Built on fm1-base. MPL-2.0.
+283:### Closed source
+290:### Not a synth
+313:## Reverse engineering and firmware development
+341:- [fm1-base](https://github.com/charlesvestal/fm1-base) - Charles Vestal's base and template for FM-1 firmware on felucca-bsp: platform layer, host simulator, browser emulator and install tools. CTL-1 and the Radio firmware are built on it. Beta. MPL-2.0.
+345:## Firmware update and recovery
+368:## Editors, librarians and companion software
+403:## Patches and sound banks
+410:## Hardware add-ons
+418:## Physical cases and reference designs
+428:## Documentation and guides
+442:## Articles and reviews
+458:## Videos
+471:## Communities
+481:## SMK-37
+485:### Official
+489:### Firmware
+501:### Tools and documentation
+503:- [fm1-to-smk37](https://github.com/genkigenki/fm1-to-smk37) - Kit for migrating open FM-1 firmwares to the SMK-37 with a coding agent such as Claude Code, and for developing for both boards from one source. By genkigenki. [Website](https://genkigenki.github.io/smk37/kit.html). No license declared.
+506:## Related M-VAVE projects
+523:## Contributing
+525:Contributions welcome. Read the [contribution guidelines](CONTRIBUTING.md) first.
+```
+</details></tool-use>
+
+_**Agent - sidechain (claude-opus-5-5 2026-11-17 18:07:52Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Read awesome-fm-1 sections and mooring info
+
+`cd /private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/0a574306-469e-4a59-9622-5701a42aee59/scratchpad/web/lists; sed -n 1,11p awesome-README.md; sed -n 46,50p awesome-README.md; sed -n 283,312p awesome-README.md; sed -n 471,480p awesome-README.md; grep -n -i mooring awesome-README.md; gh api "repos/cicloid/awesome-fm-1/commits?path=mooring&per_page=3" --jq '.[] | [.commit.author.date,.commit.author.name,(.commit.message|split("\n")[0])]|@tsv'`
+
+```text
+# Awesome M-VAVE FM-1 [![Awesome](https://awesome.re/badge.svg)](https://awesome.re)
+
+> A curated list of resources, tools, custom firmware and open source work around the M-VAVE (Cuvave) FM-1 pocket FM synthesizer.
+
+The FM-1 is a battery-powered, six-operator FM synthesizer with 32 algorithms, 27 silicone keys, a colour TFT screen, built-in effects, an arpeggiator and a step sequencer. It speaks Yamaha DX7 SysEx, so decades of DX7 patches load straight into it. It is built around a JieLi AC791N (WL82) SoC and updates its firmware over USB-MIDI SysEx, which is why it has become one of the most hackable synths of 2026: the updater was reverse-engineered within weeks of launch and a family of open source firmwares now runs on it.
+
+**Flashing unofficial firmware is at your own risk.** The flash has a single bank and the board has no debug header, so read the recovery section below before you install anything.
+
+> [!WARNING]
+> FM-1s sold since autumn have a different flash chip (UC25HQ80) in place of the Puya. A firmware that checks only for the Puya's ID keeps saves in RAM, losing them at power-off, and its updater refuses every later install. The device can then be recovered only through the chip's download mode. ([Felucca issue #320](https://github.com/hugelton/Felucca/issues/320), [The Firmware Hub rescue page](https://thefirmwarehub.com/tools/rescue/#chip))
+
+## Custom firmware
+
+All of these install over USB from Chrome or Edge in a couple of minutes, and M-VAVE's own updater takes you back to stock. Most of the open source ones descend from Felucca. Two directories keep track of the whole field: the [FM-1 Firmware Hub](https://thefirmwarehub.com/) installs any open source firmware in one click, and the [FM1 firmware directory](https://fm1-editor.com/firmware/) lists every firmware with its status, latest version and install links.
+
+### Open source
+### Closed source
+
+- [FM-1+VA](https://baudgirl.com/work/FM-1+VA) - The first third-party firmware, by Madeline (Baud Girl). Keeps the stock FM engine, adds a virtual analog engine with supersaw, a 64-step dot-matrix sequencer with ratchets and chance, four assignable knobs on every screen, and a cleaner menu. Free, with a [manual](https://baudgirl.com/work/FM-1+VA/manual) and [web installer](https://baudgirl.com/work/FM-1+VA/install). The author has said the source will be released.
+- [Groove OS](https://www.groove-os.com/) - Commercial eight-track groovebox firmware by Peter Gombos ($29). FM and VA engines, up to 20 voices, per-track loop lengths, drum machine, performance mode, [browser emulator](https://www.groove-os.com/emu) and [manual](https://www.groove-os.com/manual). Built on top of the V15 firmware.
+- [April OS](https://github.com/beashoko/april-os) - Sampling-focused Felucca fork: 32 three-second sample slots, an eight-track sequencer, a sample and loop editor, and recording through a computer's or phone's microphone. Its repository holds the [installer page](https://beashoko.github.io/april-os/), not the firmware source.
+- [UTA BOX](https://github.com/Kashiwayo-593/uta-box) - Japanese singing firmware in two themes (Teto and Rose): write lyrics in kana and each key sings the next syllable at its pitch. Repo holds the .fwsc files, not the source.
+
+### Not a synth
+
+- [FM-1 Doom](https://github.com/zvenson/fm1doom) - Playable Doom by sloopDX's author: one FreeDM arena on the keys and knob, synthesised sound effects, [web installer](https://dx7.designburgapps.com/doom/). GPL-2.0.
+- [Mocky](https://github.com/charlesvestal/fm1-mocky) - Firmware and [web app](https://charlesvestal.github.io/fm1-mocky/) by Charles Vestal for sending pictures to the FM-1's screen from the browser. GPL-3.0.
+- [fm1-mdx](https://github.com/Keitark/fm1-mdx) - Experimental MDX/PDX karaoke player on a software YM2151 that lets you mute a part and play it on the keys. Tested on a computer only. GPL-3.0.
+- [fm1-nes](https://github.com/Keitark/fm1-nes) - NES emulator running on the FM-1, published as a worked example of custom firmware development with board-support code and USB serial diagnostics. Apache-2.0.
+- [fm1-doom](https://github.com/Keitark/fm1-doom) - Doom engine port for the FM-1, in progress.
+- [fm1-radio](https://github.com/charlesvestal/fm1-radio) - Internet radio by Charles Vestal: joins a 2.4 GHz WiFi network, plays Radio Garden stations and adds punch-in effects on the keys. Pre-release 1.3 with a [web installer](https://charlesvestal.github.io/fm1-radio/install/) and [manual](https://charlesvestal.github.io/fm1-radio/manual/). GPL-3.0.
+- [fm1-doom (Deadlock)](https://github.com/seanohollaren/fm1-doom) - E1M1 of Doom with title screen, sound and music, on the rp2040-doom engine and Felucca's hardware layer. [Web installer](https://doom.deadlockinteractive.com). Experimental. GPL-3.0.
+- [Doom FM-1 / SMK](https://github.com/ChanceTheMaker/doom-fm1-smk) - Doom-engine port with nine maps and three weapons for the FM-1 and SMK-37 Pro and Elite. By Chance Roth. [Browser simulator](https://chancethemaker.github.io/doom-fm1-smk/simulator.html) and [installer](https://chancethemaker.github.io/doom-fm1-smk/). GPL-3.0.
+- [GameDude](https://github.com/ChanceTheMaker/gamedude-fm1-smk) - Game Boy emulator for the FM-1 and SMK-37, with a browser player and simulator that prepare a firmware from your own ROM. By Chance Roth. [Play and install](https://chancethemaker.github.io/gamedude-fm1-smk/). GPL-3.0.
+- [NESynth](https://github.com/ChanceTheMaker/NESynth-FM1-SMK) - NES emulator (InfoNES core) for the FM-1 and SMK-37 with a browser player and firmware builder. Experimental, mostly NROM, MMC1, UxROM, CNROM, MMC3, MMC2 and Color Dreams mappers. By Chance Roth. [Play and install](https://chancethemaker.github.io/NESynth-FM1-SMK/). GPL-3.0.
+- [Trireme FM-1](https://github.com/ignis32/trireme_fm1) - Turns the FM-1 into a programmable USB keyboard and macro pad configured with Vial or on the device: any key or media/mouse key on every key, button and knob, five layers. README warns it is AI-written and not fully hand-tested. GPL-3.0.
+- [fm1-ctrl](https://github.com/johnskiller/fm1-ctrl) - Work in progress thin controller firmware that makes the FM-1 the input device for any firmware's web emulator over USB MIDI, with a WebMIDI shim and JSON control maps. Host-tested modules and a panel emulator so far. GPL-3.0.
+- [RAMBEAVER](https://github.com/adamcharleswilsonmusic-code/RAMBEAVER) - Side-scrolling action game by Adam Wilson: defend the dam, ride through robot city, fly to the data center and beat Mother. Platform derives from Felucca, X0X and FoMni. Source is a release zip. GPL-3.0.
+- [Hungry Travis](https://github.com/adamcharleswilsonmusic-code/Hungry-Travis) - Spoon-feeding balance game by Adam Wilson: keep the bean in the bowl, tip the spoon, with a grumpy 3D face and character voices. Firmware and source zip sit in the repository, no release. GPL-3.0.
+- [FMDj](https://github.com/DeadActive/FMDj) - LSDj tracker and DMGo! drum machine running in a Game Boy emulator on the FM-1. You supply your own ROM and the install page adds it to the firmware in the browser. [Site](https://deadactive.github.io/FMDj/) and [simulator](https://deadactive.github.io/FMDj/webapp/lsdj-sim/). Felucca-based. GPL-3.0.
+- [NOCT FM](https://github.com/Joolo09/noct-fm) - MIDI controller firmware with pixel screens and one permanent preset for FL Studio and Ableton Live, with DAW scripts, an [installer](https://joolo09.github.io/noct-fm/) and an emulator. Engineering alpha, Russian README. MPL-2.0.
+- [Deal or No Deal](https://github.com/Kiwi3p/fm1-deal-or-no-deal) - Genesis-style Deal or No Deal parody game: 26 cases on the keys, a pixel-art host, a chiptune soundtrack and a robot voice reading the banker's offers, all generated at build time. Built on Felucca. No release, build from source. GPL-3.0.
+- [TransitFM1](https://github.com/Quixotic7/TransitFM1) - Silent stopover firmware for moving between custom firmwares: answers installers as V15, brings ChoralRoot's flash safeguards and writes the next firmware itself. 0.1.2 was withdrawn. GPL-3.0.
+- [Threadboard](https://github.com/NotAKerbal/threadboard-fm1) - Turns the FM-1 into a physical console for T3 Code, Codex or Claude Code threads: each active thread gets a white key, and key lights flag questions, approvals and finished work. Firmware plus a local bridge and dashboard. MIT.
+- [FM1 time-signal source](https://github.com/rfb/fm1-time-signal-source) - Repurposes the FM-1 as a WWV-style time-signal station feeding an AM/SSB transmitter, keeping the fictional Haida Standard Time for amateur station VA7BFR. [Browser flasher and simulator](https://rfb.github.io/fm1-time-signal-source/). Based on FM1 Open. GPL-3.0 with linking exception.
+
+## Communities
+
+- [KVR Audio thread](https://www.kvraudio.com/forum/viewtopic.php?t=632127) - Long-running thread where the factory preset recovery and much of the early tooling were first shared.
+- [r/MVaveFM1](https://www.reddit.com/r/MVaveFM1/) - Subreddit where much of the custom firmware and recovery work is announced and tested.
+- [Hacker News discussion](https://news.ycombinator.com/item?id=49994065) - Thread on the FM-1-RE reverse-engineering write-up.
+- [Elektronauts thread](https://www.elektronauts.com/t/m-vave-fm-1/252170) - Workflow discussion and firmware news.
+- [Gearspace thread](https://gearspace.com/threads/m-vave-fm-1.1465371/) - Owners' thread.
+- [Plugg Supply](https://plugg-supply.net/forum/gear-plugins/m-vave-fm-1-patch-librarian-free-browser-tool-for-dx-7-sound-transfer) - Forum post and discussion on the browser patch librarian.
+- [GitHub topic: m-vave](https://github.com/topics/m-vave) - Repositories tagged with the brand.
+
+2026-11-16T07:57:48Z	Gustavo Barron	Publish Mooring firmware list revision 11
+2026-11-07T13:47:23Z	Gustavo Barron	Publish Mooring firmware list revision 10
+2026-11-07T13:08:45Z	Gustavo Barron	Publish Mooring firmware list revision 9
+```
+</details></tool-use>
+
+_**Agent - sidechain (claude-opus-5-5 2026-11-17 18:08:04Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Check awesome-fm-1 PR history and mooring catalog
+
+`cd /private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/0a574306-469e-4a59-9622-5701a42aee59/scratchpad/web/lists; gh api "repos/cicloid/awesome-fm-1/pulls?state=all&per_page=15" --jq '.[] | [.number,.state,(.merged_at!=null),.user.login,.title] | @tsv'; echo; gh api "repos/cicloid/awesome-fm-1/commits?per_page=12" --jq '.[] | [.commit.author.date[:10],.commit.author.name,(.commit.message|split("\n")[0])]|@tsv'; gh api repos/cicloid/awesome-fm-1/contents/mooring/catalog.json --jq .content | base64 -d | head -c 1200`
+
+```text
+29	open	false	MarcGoudy	Update Guru-600 to 1.3.0
+28	open	false	barnierg76	Add Tekstuur, a texture instrument
+27	open	false	barnierg76	Add Golf, a wavetable synth with a step sequencer
+25	closed	true	MiloMeowzers	Add Mewcoder, a vocoder build of SLOOP for the SMK-37
+24	closed	true	MiloMeowzers	Add SLOOP SMK-37, multichannel USB audio for the SMK-37
+23	closed	true	TexasRADIO	Add Big Beat Studio BB–37
+22	closed	true	MarcGoudy	Add Guru-600, a Prophet-600 firmware
+21	closed	true	perspector	Add physical cases and reference designs
+20	closed	true	TexasRADIO	Add Compás 1.0 to the FM-1 catalogue
+19	closed	true	esbenvb	Add DX747, an eight-part multitimbral DX7 module
+18	closed	true	TexasRADIO	Add Big Beat Studio BB-BOB to the FM-1 catalogue
+17	closed	true	pjac1810	Add MIAOU
+15	closed	true	profikid	CHOPPAH: eight breaks, not seventeen
+14	closed	true	mykeln	Add RIFT by mykeln experimental drone firmware
+13	closed	true	pjac1810	Add LAX-32
+
+2026-11-16	Gustavo Barron	Publish Mooring firmware list revision 11
+2026-11-12	Gustavo Barron	Add SMK-37 and case sections; add BB-BOB, Compás, DX747, Guru-600, BB-37, SLOOP SMK-37 and Mewcoder
+2026-11-12	Gustavo Barron	Merge pull request #25: Add Mewcoder, a vocoder build of SLOOP for the SMK-37
+2026-11-12	Gustavo Barron	Merge pull request #24: Add SLOOP SMK-37, multichannel USB audio for the SMK-37
+2026-11-12	Gustavo Barron	Merge pull request #23: Add Big Beat Studio BB–37
+2026-11-12	Gustavo Barron	Merge pull request #22: Add Guru-600, a Prophet-600 firmware
+2026-11-12	Gustavo Barron	Merge pull request #21: Add physical cases and reference designs
+2026-11-12	Gustavo Barron	Merge pull request #20: Add Compás 1.0 to the FM-1 catalogue
+2026-11-12	Gustavo Barron	Merge pull request #19: Add DX747, an eight-part multitimbral DX7 module
+2026-11-12	Gustavo Barron	Merge pull request #18: Add Big Beat Studio BB-BOB to the FM-1 catalogue
+2026-11-11	MiloMeowzers	Add Mewcoder
+2026-11-11	MiloMeowzers	Add SLOOP SMK-37
+{
+  "allowlist": {
+    "entries": [
+      {
+        "download": {
+          "family": "stock",
+          "flashSize": 602112,
+          "license": "Apache-2.0",
+          "loaderSHA256": "ef1f2db89b011fa53e71df363f0122de0ea896618c53fb53e8da676322004541",
+          "notes": [],
+          "releaseTag": "V15",
+          "requiresStockV15": false,
+          "size": 699956,
+          "sourceRepo": "https://github.com/m-vave/fm1_open",
+          "url": "https://raw.githubusercontent.com/m-vave/fm1_open/b178ac43c25f010c60a878056fb5331fe693fd62/sdk/firmware/FM-1_015.fwsc"
+        },
+        "label": "M-VAVE stock firmware V15 (FM-1.fwsc)",
+        "product": "FM-1_015",
+        "rawSize": 699956,
+        "sha256": "db1642b2b6fa5c2cccb11ffd13878068bb28601678d3644049f99dc40e7edb8a",
+        "stock": true
+      },
+      {
+        "download": {
+          "family": "stock",
+          "flashSize": 692224,
+          "license": "Apache-2.0",
+          "loaderSHA256": "ef1f2db89b011fa53e71df363f0122de0ea896618c53fb53e8da676322004541",
+          "notes": [],
+          "releaseTag": "V16",
+          "requiresStockV15": false,
+          "size": 718196,
+          "sourceRepo": "https://www.m-vave.com/d
+```
+</details></tool-use>
+
+_**Agent - sidechain (claude-opus-5-5 2026-11-17 18:08:16Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Read aroum/fm1-custom-fw README and contribution signals
+
+`cd /private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/0a574306-469e-4a59-9622-5701a42aee59/scratchpad/web/lists; gh api repos/aroum/fm1-custom-fw/contents/README.md --jq .content | base64 -d > aroum-README.md; wc -l aroum-README.md; grep -n -i -E "^#|contribut|pull request|PR|issue|add your|submit|fm1-base|agent" aroum-README.md | head -50; gh api "repos/aroum/fm1-custom-fw/pulls?state=all&per_page=10" --jq '.[] | [.number,.state,(.merged_at!=null),.user.login,.title] | @tsv'; gh api "repos/aroum/fm1-custom-fw/commits?per_page=8" --jq '.[] | [.commit.author.date[:10],.commit.author.name,(.commit.message|split("\n")[0])]|@tsv'`
+
+```text
+<persisted-output>
+Output too large (44.4KB). Full output saved to: /Users/zhouhanru/.claude/projects/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/0a574306-469e-4a59-9622-5701a42aee59/tool-results/bjoblxqn4.txt
+
+Preview (first 2KB):
+     626 aroum-README.md
+1:# M-VAVE FM1 Resource Hub, Custom Firmwares & MIDI SysEx Protocol Documentation
+3:A curated directory and reference hub for the **M-VAVE FM1** synthesizer (powered by the **JieLi AC791N** processor) — gathering community custom firmwares, documentation, tools, MIDI SysEx protocol details, and the `M-UPGRADE-FM1.app` (macOS) updater.
+11:> Resources and ports for the **M-VAVE SMK-37 / SMK-37 Pro** keyboard controller:
+20:> * **Online Web Workbench:** **[open.m-vave.com/fm1-workbench](https://open.m-vave.com/fm1-workbench)** — provides in-browser WebAssembly simulation, testing, and direct USB firmware flashing.
+25:## 1. Custom & Alternative Firmwares
+27:Community-developed custom firmwares, mods, and experimental firmware projects for the M-VAVE FM-1, clearly divided into sound/groovebox instruments, modular builders, games and non-audio ports, and stock binary patchers:
+29:### 1.1. Sound, Synthesizer & Groovebox Firmwares (Music & Audio)
+33:#### 1.1.1. Felucca Ecosystem (Multi-Engine Platform & Direct Forks)
+...
+</persisted-output>
+```
+</details></tool-use>
+
+_**Agent - sidechain (claude-opus-5-5 2026-11-17 18:08:25Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+List aroum README headings and contribution info
+
+`cd /private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/0a574306-469e-4a59-9622-5701a42aee59/scratchpad/web/lists; grep -n -E "^#{1,4} " aroum-README.md | cut -c1-120; grep -n -i -E "contribut|pull request|add your|submit|open an issue" aroum-README.md | cut -c1-300; gh api "repos/aroum/fm1-custom-fw/pulls?state=all&per_page=10" --jq '.[] | [.number,.state,(.merged_at!=null),.user.login,.title] | @tsv'; gh api "repos/aroum/fm1-custom-fw/commits?per_page=8" --jq '.[] | [.commit.author.date[:10],.commit.author.name,(.commit.message|split("\n")[0])]|@tsv'`
+
+```text
+1:# M-VAVE FM1 Resource Hub, Custom Firmwares & MIDI SysEx Protocol Documentation
+25:## 1. Custom & Alternative Firmwares
+29:### 1.1. Sound, Synthesizer & Groovebox Firmwares (Music & Audio)
+33:#### 1.1.1. Felucca Ecosystem (Multi-Engine Platform & Direct Forks)
+117:#### 1.1.2. SLOOP Ecosystem (Groovebox Core & Derived Firmwares)
+157:#### 1.1.3. FoMni Family (Strumplate & Chord Instruments)
+169:#### 1.1.4. Independent & Original Engine Firmwares
+303:### 1.2. Modular Firmware Platforms & Builders
+321:### 1.3. Gaming, Emulators & Non-Audio Ports (Games & Experiments)
+348:### 1.4. Stock Firmware Patchers & Binary Mods
+355:## 2. Hardware Architecture & Reverse Engineering Reference
+376:## 3. External References & Resources
+380:### 3.1. Hardware Recovery, Bootloaders & Firmware Flashers
+409:### 3.2. Reverse Engineering, Disassembly & Decompilation
+421:### 3.3. Vendor SDKs, Architecture & JieLi Community Research
+429:### 3.4. Emulators, Simulators & Virtual Instruments
+450:### 3.5. Web Editors, Patch Librarians & Companion Utilities
+497:### 3.6. Developer Frameworks, UI Designers & Curated Collections
+514:### 3.7. Custom Soundbanks & Preset Collections
+525:### 3.8. Firmware Hubs, Web Directories & Online Installers
+539:### 3.9. Related SMK-37 Resources
+546:## 4. Documentation, Protocols & Guides
+561:## 5. Hardware Mods, Add-ons & DIY Enhancements
+601:## 6. Articles, Reviews & Community Analyses
+617:## 7. Community Hubs & Discussions
+35	closed	false	jonludwig1234	docs: Update ARCADE RAT links (.fwsc release, Web Simulator, Configurator & Reddit thread)
+34	closed	false	shan-sherif	Update README.md
+32	closed	false	jonludwig1234	Add ARCADE RAT v1.0 by Stack Trace to Gaming & Synthesizers
+31	closed	true	shan-sherif	Add FM-1 Midi-Mania (Felucca-based rhythm game) to Gaming
+30	closed	true	TexasRADIO	Refresh BB-BOB catalogue links
+27	closed	true	nasonliu	Add RetroDash rhythm-game firmware
+26	closed	true	TexasRADIO	Add Compás 1.0 to the FM-1 catalogue
+25	closed	false	TexasRADIO	Add Big Beat Studio BB-BOB to the FM-1 catalogue
+24	closed	true	profikid	table: add CHOPPAH (Amen break chopper for the FM-1)
+23	closed	true	mykeln	Add RIFT by mykeln as experimental Felucca-derived firmware
+2026-11-15	aroum	docs: add Luka multi-instance emulator and expand FM-1 Firmware Atlas
+2026-11-15	aroum	docs: update ARCADE RAT links in section 1.3 (#35)
+2026-11-15	aroum	docs: add Reddit announcement link to FM-1 Chimera Vocal
+2026-11-15	aroum	feat: add SHRUB, Chimera Vocal, EVIL GENIUS, FIENDBOX, and update FM-106, fm1-emu, FM-1 Studio
+2026-11-13	aroum	docs: remove firmware release numbers from catalogue
+2026-11-13	aroum	docs: expand firmware and recovery resource catalogue
+2026-11-10	aroum	Merge pull request #31 from shan-sherif/main
+2026-11-10	Shan-Sherif	Update README.md
+```
+</details></tool-use>
+
+_**Agent - sidechain (claude-opus-5-5 2026-11-17 18:08:35Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Read aroum table format, hubs and community sections
+
+`cd /private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/0a574306-469e-4a59-9622-5701a42aee59/scratchpad/web/lists; sed -n 321,326p aroum-README.md | cut -c1-400; echo; sed -n 525,538p aroum-README.md | cut -c1-500; echo; sed -n 617,626p aroum-README.md | cut -c1-400`
+
+```text
+### 1.3. Gaming, Emulators & Non-Audio Ports (Games & Experiments)
+
+| # | Name, Author, License & Links | Description & Features |
+|---|-------------------------------|------------------------|
+| 1 | **FM-1 Doom by Sven Trogus (zvenson)**<br>[GitHub](https://github.com/zvenson/fm1doom) \| [Web Installer](https://doom.deadlockinteractive.com/) \| [Alt Web Installer](https://dx7.designburgapps.com/doom/)<br>**License:** Open Source (GPL-2.0-or-later / GPL-3.0; FreeDM game data under BSD-3-Clause). Based on doomgeneric, Chocolate Doom, and the sloopDX / SLOOP / Felucca platform. | **Concept
+| 2 | **FM-1 NES by Keitark**<br>[GitHub](https://github.com/Keitark/fm1-nes) \| [App Updates Guide](https://github.com/Keitark/fm1-nes/blob/main/APP_UPDATES.md)<br>**License:** Open Source (Apache-2.0). | **Status:** Experimental / Source only (reference proof-of-concept).<br>**Concept:** Nintendo Entertainment System (NES) emulator running on the FM-1 hardware.<br>**Features:** Uses the FM-1's 2
+
+### 3.8. Firmware Hubs, Web Directories & Online Installers
+
+Community hubs, live directory dashboards, web-based flashers, and metadata registries tracking and installing M-VAVE FM-1 custom firmwares:
+
+| # | Name, Author, License & Links | Description & Features |
+|---|-------------------------------|------------------------|
+| 1 | **The FM-1 Firmware Hub (Make Firmware, Not War)**<br>[Project Link](https://thefirmwarehub.com/) \\| [List View](https://thefirmwarehub.com/?view=list) | Web-based firmware manager and one-click WebMIDI installer created by Sven Trogus (zvenson). Allows previewing, installing, and switching between 50+ open-source community firmwares for the M-VAVE FM-1 directly from Chrome/Edge with automatic nightly updates from author repositories and instant rollback to official stock V15 firmware. |
+| 2 | **FM-1 Online Editor & Firmware Directory**<br>[Project Link](https://fm1-editor.com/) \\| [Firmware Catalog](https://fm1-editor.com/firmware/) | Web-based configuration and patch editor / librarian for the M-VAVE FM1 synthesizer, along with a curated directory and status tracker for community firmwares. |
+| 3 | **FMDB: FM-1 & SMK-37 Firmware Database / Relay by Stanley Gurvich (EmeraldMoonLabs)**<br>[Project Link](https://stanleygurvich.github.io/FMDB_FM1_FirmwareDatabase/) \\| [Source & Tools](https://github.com/stanleygurvich/fm1-firmware-database) \| [Reddit Announcement](https://www.reddit.com/r/MVaveFM1/comments/1x6gg0h/relay_fm1_editor_firmware_database_emulator/) | **Concept:** Comprehensive FM-1 and SMK-37 firmware database, emulator host, ability matrix, and automated release crawler.<br
+| 4 | **Octo-Vave by amacias (Artificial Music)**<br>[GitHub](https://github.com/amacias/octo-vave) \\| [Web App & Directory](https://amacias.github.io/octo-vave/) \| [Reddit Announcement](https://www.reddit.com/r/synthdiy/comments/1x9ptdn/octovave_taming_the_mvave_fm1_firmware_explosion/)<br>**License:** Open Source (MIT). | **Concept:** Local web application and firmware catalog dashboard designed to organize, track, and test-verify the expanding universe of community FM-1 custom firmwares.<br
+| 5 | **FM-1 Firmware Atlas by wero1414**<br>[Project Link](https://wero1414.github.io/atlas-fm-1/) \| [GitHub](https://github.com/wero1414/atlas-fm-1) \| [Reddit Announcement](https://www.reddit.com/r/MVaveFM1/comments/1xwvaa6/i_made_a_fortuneteller_that_tells_you_which_fm1/) | **Concept:** Visual map, purpose matrix, decision tree ("fortune-teller"), and lineage directory for all known M-VAVE FM-1 community custom firmwares, complete with safety guides and recovery pathways.<br>**Features:** I
+| 6 | **altstrument: M-VAVE FM-1 Directory**<br>[Project Link](https://altstrument.org/devices/m-vave-fm-1) | Open-source device registry and custom firmware catalog for the M-VAVE FM-1 tracking 90+ firmwares, companion tools, licenses, release histories, and brick-risk flags.<br>--- |
+
+
+
+## 7. Community Hubs & Discussions
+
+Where the M-VAVE FM-1 community discusses reverse engineering, troubleshooting, and new releases:
+
+* **[M-VAVE Official Forum (Topic #4: FM1 Open Firmware Announcement)](https://forum.m-vave.com/topic/4):** The official manufacturer forum and announcement hub (announcement topic #4 was subsequently removed by manufacturer).
+* **[Reddit: r/MVaveFM1](https://www.reddit.com/r/MVaveFM1/):** The primary community hub for custom firmware releases, unbricking help, and hardware hacks.
+* **[KVR Audio: M-VAVE FM-1 Thread](https://www.kvraudio.com/forum/viewtopic.php?t=632127):** Technical thread where factory preset recovery and early tools were first shared.
+* **[Hacker News: FM-1 Reverse-Engineering Discussion](https://news.ycombinator.com/item?id=49994065):** Discussion on the FM-1-RE architecture and JieLi SoC discoveries.
+* **[Elektronauts: M-VAVE FM-1 Thread](https://www.elektronauts.com/t/m-vave-fm-1/252170):** Groovebox workflow discussions, firmware releases, and audio demos.
+* **[Gearspace: M-VAVE FM-1 Owners Thread](https://gearspace.com/threads/m-vave-fm-1.1465371/):** Hardware impressions, comparison with Yamaha DX-series hardware, and tips.
+```
+</details></tool-use>
+
+_**Agent - sidechain (claude-opus-5-5 2026-11-17 18:08:46Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Check fm1-editor.com firmware directory for submission path
+
+```bash
+D=/private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/0a574306-469e-4a59-9622-5701a42aee59/scratchpad/web; cd $D; curl -sL -A "Mozilla/5.0 (research)" https://fm1-editor.com/firmware/ -o fm1editor.html; wc -c fm1editor.html; python3 -I -c "
+import sys,re,html
+s=open(sys.argv[1],encoding='utf-8',errors='replace').read()
+t=re.sub(r'(?is)<(script|style)[^>]*>.*?</\1>','',s); t=re.sub(r'<[^>]+>',' ',t); t=html.unescape(re.sub(r'\s+',' ',t))
+for m in re.finditer(r'(?i)(submit|add your|suggest|missing|contact|pull request|github\.com/[^ ]+|issue|form)', t):
+    print('..',t[max(0,m.start()-200):m.end()+200])
+" fm1editor.html | head -20; grep -o -E 'href="[^"]*(submit|github|issue|form|mailto)[^"]*"' fm1editor.html | sort -u | head
+```
+
+```text
+ 1723293 fm1editor.html
+.. irmwares found Nothing matches. Try fewer words, or another kind. Show all firmwares seajaysec 386DX Latest 2.0 Updated 4 Nov 2026 8 8 stars on GitHub A karaoke robot with a band, an homage to the performer Alexei Shulgin's 386 DX. It sings songs you bring in from karaoke and MIDI files, and lines you type on the FM1, to the notes you play, with a face whose mouth opens with the sound. Keys, bass, and
+.. itten by Claude with human guidance and tested on one FM-1. It installs from its release package. Release ↗ Source ↗ echoe Argo Latest 1.8.5 Updated 16 Nov 2026 6 6 stars on GitHub A fork of Felucca, formerly called Felucca 8 Patterns, that gives each track eight sequences to swap between and chain one after another, and removes the sampling engines. Its latest release swaps in engines from Mini-Tone 
+.. ll ↗ Release ↗ Source ↗ animatek ATEK303 Latest 1.2 Updated 8 Nov 2026 4 4 stars on GitHub Animatek's firmware for the FM1, named for the TB-303, kept in a repository that also holds notes on the platform, written in Spanish. It installs from the atek303-1.1.fwsc package in its release. Release ↗ Source ↗ jasonbot Atl-Atl Beta · Latest 0.8 Updated 15 Nov 2026 0 0 stars on GitHub A USB audio interface 
+.. se package. Release ↗ Install ↗ Source ↗ Josh-McFarlin BoopBox Latest 1.9.6 Updated 16 Nov 2026 1 1 star on GitHub A renamed fork of SLOOP that carries on from SLOOP 2.8.3 with an eight-track project format of its own. Since 14 Nov its site, installer, and web editor are on Replit. It installs from its own browser page, which also updates an FM1 running SLOOP or Felucca, and has a web editor. Install 
+.. and printable guides. Install ↗ Try it in a browser ↗ Source ↗ NorfolkHacker Braindancer No numbered releases Updated 1 Nov 2026 1 1 star on GitHub An IDM and braindance firmware, a fork of JIANT FM, formerly called ACID FM. Its 0.9.1, the version its README names, trims JIANT's engines for IDM, gives its sound, sequencer, global and MIDI screens an acid look of its own, and has a generator that write
+.. e. Install ↗ Try it in a browser ↗ Manual ↗ Release ↗ Source ↗ llozd Bytemania Latest 1.3.2 Updated 14 Nov 2026 6 6 stars on GitHub A bytebeat synth built on Dinghy: the note you play sets how fast a formula of t runs, and the knobs change the numbers inside it. It has 30 built-in patches, 64 user slots, a live formula compiler on the device, and a random formula generator. It comes as a release packa
+..  6 stars on GitHub A bytebeat synth built on Dinghy: the note you play sets how fast a formula of t runs, and the knobs change the numbers inside it. It has 30 built-in patches, 64 user slots, a live formula compiler on the device, and a random formula generator. It comes as a release package, not a page that installs it. Release ↗ Source ↗ bonszaimusic Caravel Latest 0.13.0 Updated 13 Nov 2026 26 26 
+.. Dinghy: the note you play sets how fast a formula of t runs, and the knobs change the numbers inside it. It has 30 built-in patches, 64 user slots, a live formula compiler on the device, and a random formula generator. It comes as a release package, not a page that installs it. Release ↗ Source ↗ bonszaimusic Caravel Latest 0.13.0 Updated 13 Nov 2026 26 26 stars on GitHub A multi-engine synthesiser, a
+..  · Latest 0.41 Updated 12 Nov 2026 110 110 stars on GitHub A chord instrument inspired by Telepathic Instruments' Orchid: one hand plays roots while the other shapes chords, with voicings, key and performance modes, a bass line, and a looper. Built on Felucca's engines and the monome grid ChoralRoot, it installs from its own browser page and can be tried first in a browser emulator. ChoralRoot ↗ Try i
+.. r emulator. Try it in a browser ↗ Release ↗ Source ↗ dmajka Elixir Latest 1.4.3 Updated 17 Nov 2026 18 18 stars on GitHub The Erica Synths LXR-02 drum machine's sound engine and sequencer on the FM1, formerly called Kettle: six voices on seven tracks, 32 patterns with parameter locks, songs, kits, and projects, and MIDI in and out with clock sync. Version 1.0 adds new sound engines, a rebuilt effects 
+..  stars on GitHub Turns the FM1 into a two-in, two-out USB audio interface and a Bluetooth audio receiver with SBC, AAC, aptX and aptX HD, with a mixer, a five-band EQ, a peak limiter, and meters, waveforms and a spectrum on the screen. It installs with M-Flasher once the m-bootloader has been flashed, rather than from a browser page. Release ↗ Install guide ↗ Source ↗ shan-sherif FM-1 Chimera Vocal Be
+.. elf comes next. It installs from its own browser page, which also has an emulator, a quickstart and a manual. Install ↗ Source ↗ ejtb76 FMLarynx Latest 0.4.2 Updated 15 Nov 2026 2 2 stars on GitHub A formant synthesiser with a 303-style 16-step pattern sequencer, ported from a VST3 plugin and built on Dinghy. A saw wave runs through a three-formant vowel filter, a resonant low-pass and a ping-pong del
+.. x Latest 0.4.2 Updated 15 Nov 2026 2 2 stars on GitHub A formant synthesiser with a 303-style 16-step pattern sequencer, ported from a VST3 plugin and built on Dinghy. A saw wave runs through a three-formant vowel filter, a resonant low-pass and a ping-pong delay, with vowel, accent and slide per step and 16 stored patterns. It installs from its release package, or through the FM-1 Firmware Hub; the R
+.. pdated 25 Oct 2026 1 1 star on GitHub A firmware where every track is a function drawn on one pair of axes and played as it is drawn. Its ACID track plays sixteen steps you write, the 303's way, or a formula, through a ping-pong delay and a small room, with punch-in effects. It is built on Dinghy, SLOOP, and Felucca, comes as numbered test builds, and installs from its own web page. Install ↗ Source ↗
+..  the chord, with rhythm patterns, an auto bass, and its own effects. It installs from its own browser page, which can also put M-VAVE's firmware back. Install ↗ Try it in a browser ↗ Source ↗ mpancia FORMALFRED Latest 1.0.0 Updated 2 Nov 2026 1 1 star on GitHub A generative sequencer of four lanes whose sequencing logic is proved in Lean 4, made at a hackathon. Its site has a web installer and a brows
+.. sets you steer by key, pattern and section. It installs from its release package and plays in a browser emulator first. Its 0.3.1-beta notes call it beta, installed on three FM1s so far with no major issues reported, and still advise installing with caution. Release ↗ Source ↗ saulofilho GL!TCH Latest 2.0.2 Updated 15 Nov 2026 0 0 stars on GitHub A neon-noir groovebox built on GR!MM, by Coqui’s maker: 
+.. d 6 Nov 2026 Not on GitHub An eight-track groovebox that keeps an FM synth and adds a virtual analogue synth and drum kits, with a 64-step sequencer with parameter locks, a six-effect mixer, and a performance mode with scenes. Version 2.0 adds a sampler that records from a phone over Bluetooth or USB, or from the FM1 itself, Bluetooth audio, and a wider stereo mix; 1.4 owners update to it free. It ins
+..  tracks of 808, 909, and Plaits drum models and samples, a 64-step sequencer with motion recording and songs, Mutable Instruments' Grids, a compressor for ducking and pumping, resonators, and live performance effects. It installs from its own browser page, plays in a browser first, and leaves through M-VAVE's M-UPGRADE. Install ↗ Try it in a browser ↗ Source ↗ Adam Wilson Hungry Travis Latest FM-1_797
+..  Boy tracker, on the FM1, played from its keys and knobs, with filters, drive, lo-fi, and an LFO on each channel, a shared echo, reverb, and compressor, MIDI sync, and colour themes. A GameDude fork, formerly called LSDj for FM-1, it does not include LSDj: its page adds your own copy to the firmware. Its README calls 0.9.97 alpha. It installs from its own browser page, which also plays it in an emulat
+.. SLOOP 2.6 to 2.8. Install ↗ Editor ↗ Release ↗ Source ↗ eldontyrellcorp Mini-Ju08 Latest 1.00 Updated 11 Nov 2026 1 1 star on GitHub Stephane Schmitz’s Jupiter-8-style synth, built on Mini-Tone’s platform and the synth and panel of jupiter8_esp32: eight voices in Whole, Dual, Split, or 2-Part modes, two VCOs a voice with sync and cross modulation, a high-pass filter and a 12 or 24 dB ladder, two ADSRs
+href="#formalfred"
+href="#icon-github"
+href="https://aceyprime.github.io/zen-1/"
+href="https://aceyprime.github.io/zen-1/emu/"
+href="https://aceyprime.github.io/zen-1/install/"
+href="https://acidsound.github.io/picovave/"
+href="https://actuallysparky.github.io/FM-1-Unholy-Union-generative-drone-firmware/"
+href="https://altessproduction.github.io/DUB-BOX-FM1/dub/"
+href="https://altessproduction.github.io/DUB-BOX-FM1/installer/"
+href="https://altessproduction.github.io/MT-4OX/"
+```
+</details></tool-use>
+
+_**Agent - sidechain (claude-opus-5-5 2026-11-17 18:08:51Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Read fm1-editor directory header and footer text
+
+```bash
+D=/private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/0a574306-469e-4a59-9622-5701a42aee59/scratchpad/web; cd $D; python3 -I -c "
+import sys,re,html
+s=open(sys.argv[1],encoding='utf-8',errors='replace').read()
+t=re.sub(r'(?is)<(script|style)[^>]*>.*?</\1>','',s); t=re.sub(r'<[^>]+>',' ',t); t=html.unescape(re.sub(r'\s+',' ',t))
+i=t.find('firmwares found'); print(t[:1500]); print('....'); print(t[-1500:])
+" fm1editor.html
+```
+
+```text
+ M-VAVE FM1 firmware per firmware. Each has a maker, a title, a status line, a blurb, and one or more links that open the project's own pages: the main one as .firmware-link-main, the rest in its .firmware-link-menu, each with an icon from the sprite above (AGENTS.md says which). An entry with a photo wraps the maker and title in .firmware-head with a small photo at the top right (sizes="4.5rem"); one without has no photo bay at all. src/firmware-page.test.ts checks every entry has them. --> M-VAVE FM1 Firmware ← Open the editor Latest · 17 November 2026 Added ARP WAV 09 1.0.5 , Atl-Atl 0.8 , Beiwagen 0.2 , Blues Box 1.2 , CONDUCTOR 1.0 , DABKE 0.17 , EVIL GENIUS 0.1.4 , Fernbedienung 1.0 , FM-1 Chimera Vocal 0.7.0 , FM-1 Midi-Mania 0.9.2 , FM-KICK 0.5.0 , FM1 Tonic 1.0 , FMav-1 0.5.1 , GL!TCH 2.0.2 , Hookology 1.0 , Juicy 0.1 , M-Vsynth2 1.2.2 , Mini-Ju08 1.00 , OrGigs 1.0.2 , Plissken 0.11 , Stack Trace CFW 1.0.0 , SY1 0.4.2 , TRAPSTATION OS 1.1.0.2 , and Yehnah 0.1.0 , and promoted LSDJ Burrito 0.9.97 from the watch list New versions: Adrift 0.4.0 , AISLING 1.4.1 , Album 0.1.76 , Amenity 2.1.1 , AQUORA 0.7.14 , Araminta 4.7 , Arctic Scream 2.1.1 , Argo 1.8.5 , B3 ORGAN 0.5 , BAILE 0.8 , Bigorna build 106 , BoopBox 1.9.6 , CHOPPAH 1.4.1 , Compás 1.2 , DEEP FIELD 1.11 , Demake synth 0.4.25 , DUELL 1.3.1 , Elixir 1.4.3 , FIZZ 0.13.0 , FM Lab 1.4.0 , FM-1 Audio Router 0.6.1 , fm1-dock 0.9.0 , FMini-1 2.6.0 , FMLarynx 0.4.2 , Frodhes 0.9.13 , GIO-1 0.3.1-beta , Guru-600 1.3.0 ,
+....
+ telespial Piano learning and DX7-style synthesis. So far it is a browser prototype: its README says no flashable firmware has been released. VoiceTest ↗ Plieuw Voice analysis and processing for the FM1, from pitch correction to a vocoder. Its README says the sound processing is tested on a computer, but the firmware integration is not done yet. Vostok ↗ g0rst A synth for coldwave, post-punk, and darkwave on the six-operator FM engine, for the FM1 and the SMK-37, with its notes in German. Its page has an emulator, but there is no release or installer yet. Wild ↗ saintpid An experimental n001se fork. It is built from source, with no release, package or installer, and the README says it is untested on hardware. WitchBox ↗ davidpryan A six-track 2-step and melodic dubstep groovebox on Dinghy. Its README says it builds and renders audio on a computer but has not yet run on an FM1. WT-2 ↗ DedrichVonDorn A wavetable synth with 206 parameters, installed through M-VAVE's M-UPGRADE app. Its README says to take the package from the Releases page once it is published, and there is no release yet. Wulzie ↗ woolydawg5 A bass-heavy groovebox in planning. Its README says there is no firmware to install yet. Zombie FM-1 ↗ Joolo09 Two firmwares, a groovebox and a sampler, with DAW modes for FL Studio and Ableton Live and a web installer. Its README says flashing a physical FM1 has not been verified. Pictures come from each project's own pages. Know of a firmware missing here? Open an issue .
+```
+</details></tool-use>
+
+_**Agent - sidechain (claude-opus-5-5 2026-11-17 18:08:56Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Find the issue link and watch-list rule on fm1-editor
+
+`D=/private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/0a574306-469e-4a59-9622-5701a42aee59/scratchpad/web; cd $D; grep -o -E '.{300}Open an issue.{200}' fm1editor.html | grep -o -E 'href="[^"]*"' ; grep -o -i -E '.{200}watch list.{300}' fm1editor.html | head -2 | sed 's/<[^>]*>//g'`
+
+```text
+(Bash completed with no output)
+```
+</details></tool-use>
+
+_**Agent - sidechain (claude-opus-5-5 2026-11-17 18:09:01Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Show raw HTML around the open-an-issue link
+
+```bash
+D=/private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/0a574306-469e-4a59-9622-5701a42aee59/scratchpad/web; cd $D; python3 -I -c "
+import sys,re
+s=open(sys.argv[1],encoding='utf-8',errors='replace').read()
+i=s.find('Open an issue'); print(s[i-600:i+100])
+for m in re.finditer(r'(?i)watch list', s):
+    print('---', re.sub(r'<[^>]+>','',s[m.start()-400:m.end()+300]))
+    break
+" fm1editor.html
+```
+
+```text
+a sampler, with DAW modes for FL Studio and Ableton
+                Live and a web installer. Its README says flashing a physical FM1 has not been
+                verified.
+              </p>
+            </li>
+          </ul>
+        </section>
+
+        <p class="hero-footer-text text-xs leading-5">
+          Pictures come from each project's own pages. Know of a firmware missing here?
+          <a
+            class="underline underline-offset-2"
+            href="https://github.com/benny-sparra/fm1-dx7-patch-importer/issues"
+            rel="noopener"
+            target="_blank"
+            >Open an issue</a
+          >.
+        </p>
+      </div>
+    </main>
+  </body>
+</html>
+
+---              Plissken 0.11,
+                    Stack Trace CFW 1.0.0,
+                    SY1 0.4.2,
+                    TRAPSTATION OS 1.1.0.2, and
+                    Yehnah 0.1.0, and promoted
+                    LSDJ Burrito 0.9.97 from the watch list
+                
+                
+                  New versions: Adrift 0.4.0,
+                    AISLING 1.4.1, Album 0.1.76,
+```
+</details></tool-use>
+
+_**Agent - sidechain (claude-opus-5-5 2026-11-17 18:09:09Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Locate the FMDB firmware database repository
+
+`gh api repos/stanleygurvich/FMDB_FM1_FirmwareDatabase --jq '{full_name,description,pushed_at}' 2>&1 | head -3; gh search repos --owner stanleygurvich --limit 10 --json name,description 2>&1 | head -20`
+
+```text
+{"message":"Not Found","documentation_url":"https://docs.github.com/rest/repos/repos#get-a-repository","status":"404"}gh: Not Found (HTTP 404)
+[{"description":"Ableton custom script generator for MIDI controllers. Turn anything into a PUSH/LAUNCHPAD","name":"AbletonSurfaceGenerator"}]
+```
+</details></tool-use>
+
+_**Agent - sidechain (claude-opus-5-5 2026-11-17 18:09:19Z)**_
+
+<tool-use data-tool-type="read" data-tool-name="WebFetch"><details>
+<summary>Tool use: **WebFetch**</summary>
+ `https://stanleygurvich.github.io/FMDB_FM1_FirmwareDatabase/`
+
+```text
+The provided content doesn't say how the database discovers or adds firmware. It doesn't mention a crawler, GitHub topic search, a Firmware Hub catalog, manual submissions, a form, or issues, and it lists no submission requirements. The page is also marked "[Content truncated due to length...]," so the missing details may be in the omitted text.
+
+The only related statement is a call to join the community: "FMDB IS IN A VERY EARLY STATE - join the DISCORD if you wish to help :)"
+
+For the submission process, check the full page or the project's Discord.
+```
+</details></tool-use>
+
+_**Agent - sidechain (claude-opus-5-5 2026-11-17 18:09:26Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Check Atlas and Octo-Vave READMEs for add-a-firmware path
+
+`gh api repos/wero1414/atlas-fm-1/contents/README.md --jq .content | base64 -d | grep -n -i -E "add|contribut|pull request|issue|firmwares.json|hub|fetch" | head -15; echo ===; gh api repos/amacias/octo-vave/contents/README.md --jq .content 2>/dev/null | base64 -d | grep -n -i -E "add a firmware|contribut|pull request|catalog|hub|submit" | head -10`
+
+```text
+3:A map of every known firmware for the **M-VAVE FM-1** pocket FM synth: what each one tries to be, which engines and sounds it ships, how it talks MIDI, whether the project is still alive (from GitHub activity), and a six-step path for new owners.
+5:- `index.html` is the whole site, a single static file, served at https://wero1414.github.io/atlas-fm-1/ via GitHub Pages.
+8:- `data/firmwares.json` is the source of truth, one object per firmware. Edit it to add or fix an entry.
+9:- `data/github-meta.json` holds last-push dates and stars, refreshed by `tools/fetch_github.py`.
+14:python3 tools/fetch_github.py   # optional: refresh activity (60 unauthenticated GitHub calls/hour, or set GITHUB_TOKEN)
+23:- https://thefirmwarehub.com/ (one-click installer, run by zvenson)
+24:- https://github.com/aroum/fm1-custom-fw (the most complete written directory; this atlas was seeded from it)
+25:- https://github.com/cicloid/awesome-fm-1
+27:## Contributing
+29:Add a row to `data/firmwares.json` with: name, author, family, purpose, emulates, engines, sounds, sequencer, midi, clock, why, features, status, license, repo, install. Run `build.py`, open `index.html`, commit.
+===
+12:  <a href="https://amacias.github.io/octo-vave/"><b>Homepage</b></a> ·
+14:  <a href="https://github.com/amacias/octo-vave/issues/new?template=validation-report.yml">Report a validation</a>
+23:**Windows:** [download the installer](https://github.com/amacias/octo-vave/releases/latest/download/Octo-Vave-win64.msi)
+24:([release notes and SHA256](https://github.com/amacias/octo-vave/releases/latest)), double-click it, then open
+45:records from your phone. Those projects live on different GitHub pages and web installers, each with
+50:- **Finds and ranks** every free FM-1 firmware: official, the community top 10 (by GitHub stars and
+83:[homepage's All Validated Firmware list](https://amacias.github.io/octo-vave/#validated).** The app shows
+112:<td align="center" width="25%"><a href="https://github.com/m-vave/fm1_open"><img src="web/img/fw/fm1open.png" width="160" alt="FM-1 Open"></a><br><img src="docs/img/octo.svg" height="14" alt="validated"> <b>FM-1 Open</b><br><sub>M-VAVE · official open firmware + workbench</sub></td>
+113:<td align="center" width="25%"><a href="https://github.com/hugelton/Felucca"><img src="web/img/fw/felucca.png" width="160" alt="Felucca"></a><br><img src="docs/img/octo.svg" height="14" alt="validated"> <b>Felucca</b><br><sub>hugelton · multi-engine synth the others build on</sub></td>
+114:<td align="center" width="25%"><a href="https://github.com/isod89/sloop-fm1"><img src="web/img/fw/sloop.png" width="160" alt="SLOOP"></a><br><img src="docs/img/octo.svg" height="14" alt="validated"> <b>SLOOP</b><br><sub>3dSam (isod89) · live 4-track groovebox</sub></td>
+```
+</details></tool-use>
+
+_**Agent - sidechain (claude-opus-5-5 2026-11-17 18:09:36Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Find Hub catalog repos with more than one firmware
+
+```bash
+D=/private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/0a574306-469e-4a59-9622-5701a42aee59/scratchpad/web; cd $D; python3 -I -c "
+import json,sys,collections
+c=json.load(open(sys.argv[1])); fw=c['firmwares']
+by=collections.defaultdict(list)
+for f in fw: by[(f.get('repo') or '').lower()].append(f)
+for r,l in by.items():
+    if len(l)>1:
+        print(r)
+        for f in l: print('   ',f['id'],f['name'],f.get('tag'),f.get('assetPkg'),f.get('pkg'),'fmhub' if f.get('fmhub') else '-', f.get('srcref'))
+" catalog.json
+```
+
+```text
+deadactive/hortator
+    hortator Hortator drum-v1.0.1 hortator-[\d.]+\.fwsc fw/hortator-1.0.1.fwsc - None
+    hortator-bt Hortator (Bluetooth) drum-v1.0.1 hortator-[\d.]+-bluetooth\.fwsc fw/hortator-bt-1.0.1.fwsc - None
+```
+</details></tool-use>
+
+_**Agent - sidechain (claude-opus-5-5 2026-11-17 18:10:00Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Inspect firmware_json.py root and require logic
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/third_party/fm1-base/tools; grep -n -E "def (require|targets|display_name|screenshot|repo_root|root)|app\b.*name|\.parent|REQUIRED|title" firmware_json.py | head -40`
+
+```text
+13:SRC = Path(__file__).resolve().parents[1]            # fm1-base
+51:REQUIRED = ("author", "licence", "tagline", "description", "tags", "install", "repo", "screenshot")
+103:def display_name(conf, app_dir):
+104:    """the product's name as people see it: fm1.toml title, else usb_manufacturer (the name the computer shows:
+105:    "CTL-1"), else app.h's APP_NAME, else fm1.toml name"""
+106:    if conf.get("title"):
+107:        if not isinstance(conf["title"], str) or "\n" in conf["title"]:
+108:            raise SystemExit("fm1.toml title: a name on one line")
+109:        return conf["title"]
+120:    """the REQUIRED keys fm1.toml leaves out or leaves empty, in REQUIRED's order"""
+121:    have = {k for k in REQUIRED if conf.get(k) not in (None, "", [])}
+124:    return [k for k in REQUIRED if k not in have]
+127:def require(conf, release, toml="fm1.toml", app_dir=None):
+128:    """a release build (release true) refuses an fm1.toml without the REQUIRED keys, or (given app_dir) with a
+149:def repo_root(app_dir, src=SRC):
+153:    return app.parent if app.name == "app" and app.parent != Path(src).resolve() else app
+156:def screenshot_path(conf):
+177:def screenshot_problem(conf, app_dir, src=SRC):
+272:def targets(app_dir, no_ble=False, src=SRC):
+278:    if app.name == "app" and not no_ble and app.parent != Path(src).resolve():
+279:        out.append(app.parent / "firmware.json")
+288:    p.parent.mkdir(parents=True, exist_ok=True)
+```
+</details></tool-use>
+
+_**Agent - sidechain (claude-opus-5-5 2026-11-17 18:10:06Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Check device log for Morse flash history and Morse files
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1; grep -n -i -E "morse|conductor" docs/device-log.md | head -30; ls firmware/morse; ls firmware/morse/build 2>/dev/null | head; ls firmware/morse/tests`
+
+```text
+13:| 目前韌體 | **Morse 0.2（自製）**（2026-11-18 00:14 刷入，套件識別 `FM-1_1300`，USB 產品名 `MORSE FM-1`；macOS 的 MIDI port 仍顯示 `Felucca`）。之前依序是原廠 015 → SLOOP 2.8.5 → Agent Deck 0.7 → SLOOP 2.8.5 → CTL-1 1.0.3 → ChoralRoot 0.41 → Conductor 0.1 → 0.2 → 0.3 → Morse 0.1 |
+38:| 2026-11-17 | 刷 Conductor 之前的 ChoralRoot 0.41 | `backups/2026-11-17-pre-conductor/fm1-20261117-183840.bin` + `.json` | `81f048bb0e8bea174ccb84df4de2555c891b087651083710c41c428a0e7ba1e1` | 尚未上傳 |
+39:| 2026-11-17 22:52 | 刷 Morse 之前的 Conductor（identity `FM-1 120`；依 [Conductor 版本紀錄](agentic/conductor-changelog.md) 是 0.3） | `backups/2026-11-17-pre-morse/fm1-20261117-225206.bin` + `.json` | `fbcb47909c37828ec92dd890d3a80b26ab61899f59d1743013ad9bd4250ca0ef` | 尚未上傳 |
+41:`fm1-switch` 在寫入前又自動備份了一份 `backups/2026-11-17-2253-pre-morse/fm1-20261117-225404.bin`，SHA-256 和上面這份相同；M-Flasher 另存 `~/Documents/M-Flasher/backups/fm1-20261117-225412.bin`。
+45:| 2026-11-18 00:12 | 刷 Morse 0.2 之前的 Morse 0.1（含學習紀錄：玩過 3 回合、聽 15/14 WPM） | `backups/2026-11-18-pre-morse-0.2/fm1-20261118-001247.bin` + `.json` | `35457c78575749cdaed88cea833f5f8a45dd7cbabd79a6e8762f8677a338ada4` | 尚未上傳 |
+88:| 2026-11-17 18:38 | agent 執行 `just fm1-download-mode`、`fm1-info`、`fm1-backup pre-conductor`（刷 Conductor 前的 preflight） | 切換成功（`WL82 UBOOT1.00`）。`info`：model FM-1、bootloader stock (M-VAVE)、firmware Felucca、app OK、flash `0xB36014`，晶片 CRC32 與讀取相符。備份 SHA-256 `81f048bb…7ba1e1`，`fm1-verify-backups` ok。機器停在下載模式，等本人刷寫 |
+89:| 2026-11-17 18:40 | 本人執行 `just fm1-switch firmware/conductor/build/conductor.fwsc`（SHA-256 `de182723…0502f3`，commit `d45ce67`） | 先自動備份 `backups/2026-11-17-1839-pre-conductor/fm1-20261117-184005.bin`（SHA-256 與 18:38 那份相同，`81f048bb…7ba1e1`）。M-Flasher 的計畫：`Writes 140 sectors (560 KiB): 0x04000-0x8EFFF, 0x91000-0x91FFF`，安裝範圍 `0x04000-0x92FFF`。寫入後全部驗證通過（晶片 CRC32 相符），M-Flasher 自動備份 `fm1-20261117-184013.bin`，機器重開 |
+90:| 2026-11-17 | Conductor 在實機開機 | 螢幕正常；macOS 的 MIDI port 名稱沿用 `Felucca`，daemon 照名字找不到 → 改成聽協定找 port。裝置 0.4 秒內送出 Conductor 的 HELLO，本人的 daemon 連上，裝置改送 HEARTBEAT，SELECT 有回傳。Conductor 不寫 flash，資料區沒有變動（模擬器預演結果，實機尚未用備份比對） |
+91:| 2026-11-17 18:59 | 本人執行 `just fm1-switch firmware/conductor/build/conductor.fwsc`（0.2，SHA-256 `48a052f9…faea6d`，commit `5add525`） | 先自動備份 `backups/2026-11-17-1859-pre-conductor/fm1-20261117-185927.bin`（Conductor 0.1 的狀態，SHA-256 `71dd8a47533b3bda6da1d001ad59989cdcbb2c69dde280dff240cf5aed9c1c32`）。M-Flasher 的計畫：`Writes 22 sectors (88 KiB): 0x04000-0x19FFF`，驗證通過，自動備份 `fm1-20261117-185935.bin`。重開後 daemon 回報 `firmware 0.2`；輔助使用權限的警告消失 |
+92:| 2026-11-17 22:51 | agent 執行 `just fm1-download-mode`、`fm1-info`、`fm1-backup pre-morse`（刷 Morse 0.1 前的 preflight） | 切換成功（`WL82 UBOOT1.00`）。`info`：model FM-1、bootloader stock (M-VAVE)、firmware `FM-1 120`（Conductor）、app OK、flash `0xB36014`，晶片 CRC32 與讀取相符。備份 SHA-256 `fbcb4790…250ca0ef`。用這份備份預演：Morse 和它不同的是 `0x04000`–`0x21FFF` 的 30 個 sector，全在韌體區；`0xDA000`–`0xDBFFF` 是空的。機器留在 download mode 等本人執行寫入 |
+93:| 2026-11-17 22:54 | 本人執行 `just fm1-switch firmware/morse/build/morse.fwsc`（Morse 0.1，SHA-256 `dfb23a70…27c9a`，commit `c3b5cd6`） | 先自動備份 `backups/2026-11-17-2253-pre-morse/`（SHA-256 同 22:52 那份）。M-Flasher 的計畫：`Writes 30 sectors (120 KiB): 0x04000-0x21FFF`、`Installs FM-1_1300 (0x04000-0x92FFF)`，和預演一致；寫入後晶片 CRC32 相符，自動重開。重開後 `fm1-find` 顯示 `Felucca (running)`；`python -m morse send` 依協定找到 port，收到 Morse 的 HELLO（韌體 0.1）並送出文字 |
+94:| 2026-11-17 22:56–23:00 | Morse 0.1 實機測試：本人操作，agent 在電腦端記錄 MIDI 與 `T_CHAR`（4 分鐘） | KEY 頁直鍵發報解碼正確（S、H、O、T…），按鍵以 `90 00 7F`／`80 00 00` 送出；TYPE 頁每按一字送出 `T_CHAR`，播放時序精準（dit 60 ms、Farnsworth 字間 652 ms），K1 調速生效（之後 dit 57 ms）。一次 SOS 讀成 `S M T S`：O 的 dah 之間隔 146、175 ms，和字間（169–224 ms）一樣長。看到一次 9 ms 的按鍵彈跳：解碼器忽略了，MIDI 照送。本人回饋：VVV「好像有聽到」、PRACTICE 玩了一回合「還可以」、TYPE「不錯」；初學打 SOS 成功率不高，希望看到自己打的點劃 → 做進韌體 0.2 |
+95:| 2026-11-18 00:10 | agent 執行 `just fm1-download-mode`、`fm1-info`、`fm1-backup pre-morse-0.2`（刷 Morse 0.2 前的 preflight） | 切換前機器送出 Morse 0.1 的 HELLO。第一次 `fm1-info` 卡住超過 2 分鐘、沒有輸出（中止）；重試時 M-Flasher 重新載入 loader，1.3 s 讀完：model FM-1、bootloader stock、firmware `FM-1 130`（Morse）、app OK、flash `0xB36014`，CRC32 相符。備份 SHA-256 `35457c78…338ada4`。用這份備份預演 0.2：不同的是 `0x04000`–`0x23FFF` 的 32 個 sector，全在韌體區；0.1 的紀錄（`0xDA000`–`0xDBFFF`）升級後保留（ROUND 4、聽 15/14、發報速度補成 10）`[模擬]` |
+96:| 2026-11-18 00:14 | 本人執行 `just fm1-switch firmware/morse/build/morse.fwsc`（Morse 0.2，SHA-256 `fc3dd404…556b0`，commit `54ff440`） | 先自動備份 `backups/2026-11-18-0013-pre-morse/`（SHA-256 同 00:12 那份）。M-Flasher 的計畫：`Writes 32 sectors (128 KiB): 0x04000-0x23FFF`、`Installs FM-1_1300 (0x04000-0x92FFF)`，和預演一致；寫入後 CRC32 相符，自動重開，M-Flasher 另存 `fm1-20261118-001409.bin`。重開後 `python -m morse send` 收到 HELLO（韌體 0.2）並送出 `<SK>` |
+97:| 2026-11-18 | Morse 0.2 實機試用（本人） | 開機仍是 ROUND 4：升級保留學習進度。RHYTHM、KEY 三種顯示、TYPE 翻頁和片語、LISTEN、PRESET「感覺都還不錯」。TYPE 打開鍵上點劃時黑鍵的字母被擠掉 → 韌體 0.3 修正（還沒刷） |
+build
+tests
+web
+app.c
+app.h
+content.c
+content.h
+fm1.toml
+learn.c
+learn.h
+morse.c
+morse.h
+README.md
+tone.c
+tone.h
+words.tsv
+gen
+host
+loader
+o2
+crt0.o
+data.bin
+firmware.json
+fm1_isr.o
+fm1_vec.o
+morse.bin
+basic.txt
+morse_test.c
+```
+</details></tool-use>
+
+_**Agent - sidechain (claude-opus-5-5 2026-11-17 18:10:29Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+List owner's GitHub releases and licence files
+
+`gh release list -R daviddwlee84/M-VAVE_FM-1 --limit 20 2>&1 | head; gh api repos/daviddwlee84/M-VAVE_FM-1 --jq '{license: .license.spdx_id, topics, has_pages}'; cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1; ls LICENSE* firmware/morse/LICENSE* firmware/conductor/LICENSE* 2>&1; ls fmhub.json firmware.json 2>&1`
+
+```text
+Exit code 2
+Backup 2026-11-17-0341-pre-ctl-1.0.3		backup-2026-11-17-0341-pre-ctl-1.0.3	2026-11-16T20:18:09Z
+Backup 2026-11-17-pre-agtdeck		backup-2026-11-17-pre-agtdeck	2026-11-16T18:41:34Z
+Backup 2026-11-17-sloop-2.8.5		backup-2026-11-17-sloop-2.8.5	2026-11-16T17:44:00Z
+Backup 2026-11-17-stock	Latest	backup-2026-11-17-stock	2026-11-16T17:39:30Z
+{"has_pages":true,"license":null,"topics":[]}
+(eval):1: no matches found: LICENSE*
+"fmhub.json": No such file or directory (os error 2)
+"firmware.json": No such file or directory (os error 2)
+```
+</details></tool-use>
+
+_**Agent - sidechain (claude-opus-5-5 2026-11-17 18:10:37Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Find licence files and Morse description length
+
+```bash
+cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1; find . -path ./third_party -prune -o -path ./vendor -prune -o -path ./tools -prune -o -path ./.git -prune -o -iname "LICEN[CS]E*" -print 2>/dev/null | head; grep -n -i -E "licen[cs]e|MIT" firmware/morse/README.md | head -5; python3 -I -c "
+import json; d=json.load(open('firmware/morse/build/firmware.json')); print(len(d['description']), len(d['tagline']))"; grep -n -E "^name|shot" firmware/morse/tests/basic.txt | head -5; ls firmware/morse/web
+```
+
+```text
+./site/assets/javascripts/LICENSE
+./.venv/lib/python3.13/site-packages/tomli-2.5.0.dist-info/licenses
+./.venv/lib/python3.13/site-packages/pathspec-1.1.1.dist-info/licenses
+./.venv/lib/python3.13/site-packages/markupsafe-3.0.4.dist-info/licenses
+./.venv/lib/python3.13/site-packages/tomli-2.5.0.dist-info/licenses/LICENSE
+./.venv/lib/python3.13/site-packages/pathspec-1.1.1.dist-info/licenses/LICENSE
+./.venv/lib/python3.13/site-packages/markupsafe-3.0.4.dist-info/licenses/LICENSE.txt
+./.venv/lib/python3.13/site-packages/zensical-0.0.73.dist-info/licenses
+./.venv/lib/python3.13/site-packages/packaging/licenses
+./.venv/lib/python3.13/site-packages/markdown-3.11.3.dist-info/licenses
+3:The FM-1 as a pocket Morse code machine, on [fm1-base](https://github.com/charlesvestal/fm1-base). MIT.
+270 27
+6:shot boot.png
+31:shot menu.png
+64:shot key.png
+69:shot key_code.png
+88:shot key_timing.png
+words
+```
+</details></tool-use>
+
+_**Agent - sidechain (claude-opus-5-5 2026-11-17 18:10:44Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Find Morse host-simulator screenshots and their sizes
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/firmware/morse; find . -name "*.png" -not -path "*/node_modules/*" | head -20; f=$(find . -name "key.png" | head -1); [ -n "$f" ] && file "$f" && ls -l "$f"`
+
+```text
+./build/host/rhythm_dahs.png
+./build/host/rhythm_good.png
+./build/host/type.png
+./build/host/settings.png
+./build/host/key.png
+./build/host/done_muted.png
+./build/host/type_code_signs.png
+./build/host/card_new.png
+./build/host/done_keyed.png
+./build/host/result_right.png
+./build/host/type_phrases.png
+./build/host/chart.png
+./build/host/menu.png
+./build/host/result_wrong.png
+./build/host/done.png
+./build/host/card_hear.png
+./build/host/listen.png
+./build/host/rhythm.png
+./build/host/rhythm_long.png
+./build/host/boot.png
+./build/host/key.png: PNG image data, 240 x 240, 8-bit/color RGB, non-interlaced
+.rw-r--r--@ 173k zhouhanru 18 Nov 02:05 ./build/host/key.png
+```
+</details></tool-use>
+
+_**Agent - sidechain (claude-opus-5-5 2026-11-17 18:10:54Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Confirm release identity computation in build.py
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/third_party/fm1-base/tools; sed -n 1715,1730p build.py; sed -n 17,22p build.py`
+
+```text
+    PRODUCT = prefix + "00"
+    name = STEM + ".fwsc"
+    if a.release:
+        # identity: the prefix + major, minor, patch as two digits each (0.1 -> FM-1_0000100): FM-1 is the
+        # model the update tools match on; the digits after the underscore are the firmware's.
+        m = re.fullmatch(r"(\d{1,2})\.(\d{1,2})(?:\.(\d{1,2}))?(-[A-Za-z0-9]+)?", a.release)
+        if not m:
+            raise SystemExit(f"--release {a.release}: use X.Y[.Z][-suffix], up to two digits each")
+        PRODUCT = prefix + "%02d%02d%02d" % (int(m[1]), int(m[2]), int(m[3] or 0))
+        VERSION = a.release.upper()
+        RELEASE = a.release
+        name = f"{STEM}-{a.release}.fwsc"
+    # a release package needs firmware.json's keys; the simulator, the emulator, the .rfm1 and dev builds only warn
+    firmware_json.require(CONF, bool(a.release) and not (a.host or a.web or a.rfm1), APP / "fm1.toml", APP)
+    touch = touch_app()
+    input_hz()                                     # (refuses another rate early, on every build)
+APP_DIR holds the app (app.h, app.c, its sources) and its fm1.toml:
+  name = "TEMPLATE"          the build's file names (lower case)
+  id_prefix = "FM-1_0"       package identity: dev builds are the prefix + "00", releases the prefix + XXYYZZ
+  usb_manufacturer = "..."   the USB names (felucca-bsp FELUCCA_USB_MANUFACTURER / FELUCCA_USB_PRODUCT)
+  usb_product = "..."
+  o2 = ["dsp/engine.c"]      separate units compiled at -O2 (the app's DSP), relative to APP_DIR (globs too); each with
+```
+</details></tool-use>
+
+_**Agent - sidechain (claude-opus-5-5 2026-11-17 18:11:13Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Search repo for claims about Conductor in the Hub
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1; grep -rn -i -E "mammoth|conductor.*(hub|catalog)|(hub|catalog).*conductor" docs README.md .specstory/history 2>/dev/null | cut -c1-250 | head -10`
+
+```text
+docs/resources.md:67:| [scf4/codex-midi](https://github.com/scf4/codex-midi) | 把任意 MIDI controller 偽裝成 Codex Micro，控制 ChatGPT 桌面版裡的 Codex | 只限 macOS、注入 ChatGPT.app；見[為什麼不走 Codex Micro](agentic/conductor.md#codex-micro) |
+docs/resources.md:68:| [herdrdev/herdr-core](https://github.com/herdrdev/herdr-core) | `hc`：coding agent 的 terminal runtime，JSON-RPC API、OSC 7501 狀態 | Conductor 的主要 backend，見[自己的 agent 控制台](agentic/conductor.md) |
+docs/resources.md:89:| [herdr-core](https://github.com/herdrdev/herdr-core/blob/master/CHANGELOG.md) | 0.1.21 | 2026-11-12 | 本機安裝的版本（`hc --version`）；Conductor 對它測過 |
+docs/agentic/agent-deck.md:94:- **偽裝成 Codex Micro**（[scf4/codex-midi](https://github.com/scf4/codex-midi)）：要注入 ChatGPT.app、協定是逆向工程、狀態只以 RGB 顏色傳來，不適合單色 LED。見[為什麼不走 Codex Micro](conductor.md#codex-micro)。
+README.md:27:| **Conductor** | The FM-1 as a desk console for coding agents: one agent per key, urgency on the key LEDs, state and output on the screen (Chinese included), chimes, approve / deny / interrupt from the buttons, push-to-talk dictation, U
+.specstory/history/2026-11-17_09-19-20Z-agent-deck-https-github.md:12291:# url: https://daviddwlee84.github.io/M-VAVE_FM-1/agentic/conductor/
+.specstory/history/2026-11-17_09-19-20Z-agent-deck-https-github.md:12298:# url: https://daviddwlee84.github.io/M-VAVE_FM-1/agentic/conductor/
+.specstory/history/2026-11-17_09-19-20Z-agent-deck-https-github.md:12446:about    /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/firmware/conductor/build/firmware.json  (for firmware hubs)
+.specstory/history/2026-11-17_09-19-20Z-agent-deck-https-github.md:13147:s=s.replace("""| [ignis32/trireme_fm1](https://github.com/ignis32/trireme_fm1) | Vial 相容 USB HID macro keyboard | 不需要 daemon 的快捷鍵方案 |""","""| [scf4/codex-midi](https://github.co
+.specstory/history/2026-11-17_09-19-20Z-agent-deck-https-github.md:13148:| [herdrdev/herdr-core](https://github.com/herdrdev/herdr-core) | `hc`：coding agent 的 terminal runtime，JSON-RPC API、OSC 7501 狀態 | Conductor 的主要 backend，見[自己的 agent 控制台](agentic/
+```
+</details></tool-use>
+
+---
+
+_**User (2026-11-17 18:11:14Z)**_
+
+先 commit 然後刷 0.3
