@@ -19,7 +19,7 @@ and the context coding agents need to help operate the device safely.
 
 ## Our own firmware + host
 
-Built here on [fm1-base](https://github.com/charlesvestal/fm1-base) (MPL-2.0), MIT-licensed.
+Built here on [fm1-base](https://github.com/charlesvestal/fm1-base) (MPL-2.0). Conductor and the shared modules are MIT; Morse's firmware is GPL-3.0-or-later (its host program here is MIT).
 Each one is a firmware for the FM-1 plus, where it needs one, a program on the computer.
 
 | Project | What it is | Firmware | Host | Status |

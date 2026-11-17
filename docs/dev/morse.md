@@ -1,6 +1,6 @@
 # 摩斯電碼機（Morse）
 
-把 FM-1 變成隨身的摩斯電碼機：琴鍵當電鍵發報、即時解碼成文字、琴鍵當字母鍵盤把文字播成摩斯、用閃卡隨身練習，也能接電腦和 [Vail](https://vailmorse.com/) 跟網路上的人互傳。韌體在獨立的 repo [fm1-morse](https://github.com/daviddwlee84/fm1-morse)（MIT，以 submodule 放在本 repo 的 `firmware/morse/`），電腦端在本 repo 的 `host/morse/`。
+把 FM-1 變成隨身的摩斯電碼機：琴鍵當電鍵發報、即時解碼成文字、琴鍵當字母鍵盤把文字播成摩斯、用閃卡隨身練習，也能接電腦和 [Vail](https://vailmorse.com/) 跟網路上的人互傳。韌體在獨立的 repo [fm1-morse](https://github.com/daviddwlee84/fm1-morse)（GPL-3.0-or-later，以 submodule 放在本 repo 的 `firmware/morse/`），電腦端在本 repo 的 `host/morse/`（MIT）。
 
 **狀態（2026-11-18）：機器上是韌體 0.3（02:12 刷入）。0.1 時已在實機確認發報、解碼、TYPE、PRACTICE、和電腦連線；0.2 的 RHYTHM、KEY 三種顯示、TYPE、LISTEN、PRESET 本人試過覺得不錯，升級後學習進度也還在 `[實機]`。0.3 修了 TYPE 鍵上點劃的排版。** 操作方式見[操作速查](morse-cheatsheet.md)。
 
@@ -256,7 +256,8 @@ TYPE 頁的 LIVE 對應「打一個送一個」，COMPOSE 對應「先打好再�
 
 2026-11-18 為了上架 [The Firmware Hub](../firmware/hub.md#listing)，韌體搬到 [daviddwlee84/fm1-morse](https://github.com/daviddwlee84/fm1-morse)（用 `git subtree split` 保留歷史），在本 repo 以 submodule 引回 `firmware/morse`。
 
-- **新 repo 的內容**：根目錄有 MIT `LICENSE`、`fmhub.json`（`kinds: other`、`sounds: none`，卡片圖是 `docs/screen.png`）、英文 README（含 Hub 要求說明的「其他韌體的資料」）、鎖定版本的 fm1-base submodule，以及自帶一份 `common/`（hostlink、ledfx）。
+- **授權**：2026-11-18 從 MIT 改成 GPL-3.0-or-later，讓拿去改的人分享出來的版本也要開源。fm1-base 的 MPL-2.0 和 `common/` 的 MIT 都可以併入 GPL 作品；SLOOP 就是 GPL-3.0 加 felucca-bsp 的前例。之後的藍牙用 fm1-base 自己的 stack，不會連結 JieLi 的閉源函式庫，所以避開了 GPL 不能連結閉源庫的問題。`57ea786` 以前的版本以 MIT 公開，仍可依 MIT 使用。套件內容不受影響（改授權前後的 `.fwsc` 完全相同）。
+- **新 repo 的內容**：根目錄有 GPL-3.0 `LICENSE`、`fmhub.json`（`kinds: other`、`sounds: none`，卡片圖是 `docs/screen.png`）、英文 README（含 Hub 要求說明的「其他韌體的資料」）、鎖定版本的 fm1-base submodule，以及自帶一份 `common/`（hostlink、ledfx）。
 - **identity 前綴改成 `FM-1_41`**：原本的 `FM-1_13` 和 Hub 上 FM-1 Midi-Mania 的 `FM-1_137` 開頭相同。目錄裡沒有任何 `FM-1_41x`，但送審前仍要用 Hub 的 #check 確認。開發版是 `FM-1_4100`，release 版是 `FM-1_41` 加 XXYYZZ（0.3 是 `FM-1_41000300`）。存檔位置不變，進度會保留。
 - **build**：在本 repo 用 `third_party/fm1-base` build（`just fw-test morse`、`just morse-release 0.3`）。子 repo 裡的那份 fm1-base 是給它單獨 build 用的，`fw-setup` 不會去抓。
 - **改程式的流程**：在 `firmware/morse` 裡 commit 並推到 fm1-morse，再到本 repo commit 新的 submodule 指標。

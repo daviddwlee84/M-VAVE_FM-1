@@ -43,7 +43,7 @@
 
 ## 自製韌體 + host
 
-在 [fm1-base](dev/index.md) 上寫的，MIT。每個專案是一套 FM-1 韌體，需要的話再加一個電腦端程式。
+在 [fm1-base](dev/index.md) 上寫的。Conductor 和共用模組是 MIT；Morse 的韌體是 GPL-3.0-or-later（電腦端仍是 MIT）。每個專案是一套 FM-1 韌體，需要的話再加一個電腦端程式。
 
 | 專案 | 是什麼 | 韌體 | 電腦端 | 狀態 |
 |---|---|---|---|---|
