@@ -144,6 +144,7 @@ class Conductor:
     device_seen: float = 0.0
     voice: object = None  # a VoiceKey, or None: the button does nothing
     device_fw: tuple = (0, 0)  # from the device's HELLO
+    device_transport: int = 0  # P.TR_USB / P.TR_BLE, from the HELLO
     synced: bool = False  # the device said HELLO to this daemon; until then nothing is sent
     _waiting_said: bool = False
     renderer: object = None  # a render.LineRenderer: DETAIL as pictures (any script) for firmware >= 0.2
@@ -189,7 +190,11 @@ class Conductor:
     def send_detail(self, force: bool = False) -> None:
         self._detail_at = time.time()
         aid = self.slots.agent_at(self.selected) if self.selected is not None else None
-        pictures = self.renderer is not None and self.device_fw >= (0, 2)
+        pictures = (
+            self.renderer is not None
+            and self.device_fw >= (0, 2)
+            and (self.device_transport == P.TR_USB or self.config.get("detail_pictures_ble", False))
+        )  # a picture line is 558 bytes: too slow over Bluetooth MIDI, so text there
         lines: list[str] = []
         if aid:
             try:
@@ -232,7 +237,9 @@ class Conductor:
         self.device_seen = time.time()
         if m.type == P.T_HELLO:
             self.device_fw = tuple(m.payload[1:3]) if len(m.payload) >= 3 else (0, 0)
-            self.log(f"[device] hello, protocol {m.payload[0] if m.payload else '?'}, firmware {'.'.join(map(str, self.device_fw))}")
+            self.device_transport = P.transport_of(m)
+            via = "Bluetooth" if self.device_transport == P.TR_BLE else "USB"
+            self.log(f"[device] hello, protocol {m.payload[0] if m.payload else '?'}, firmware {'.'.join(map(str, self.device_fw))}, via {via}")
             if self.voice:
                 self.voice.let_go()  # the device restarted: its button is not held any more
             self.synced = True

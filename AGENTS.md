@@ -59,6 +59,7 @@ just cond-sim [BACKEND]    # daemon with a text stand-in for the FM-1 (fake, hc,
 just cond-it           # hc end to end with two fake agents (label conductor-test=1), cleaned up after
 just cond-emu [CHIP]   # Conductor firmware in fm1-emu with the virtual USB cable
 just cond-run [BACKEND]    # daemon against a CONDUCTOR MIDI device (emulator or real unit)
+just fw-common-test    # firmware/common unit tests on this computer (hostlink BLE packets)
 
 just fw-setup          # submodules + Python tools (needs `brew install libraqm`)
 just fw-test [APP]     # host simulator build + tests/basic.txt; no toolchain, no hardware

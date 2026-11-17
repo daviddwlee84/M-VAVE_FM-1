@@ -43,8 +43,8 @@ the device was showing.
 
 | Type | Name | Payload |
 |---|---|---|
-| `41` | HELLO | `ver`, `fw_major`, `fw_minor` — once a second until HELLO_ACK |
-| `42` | HEARTBEAT | `ver` — once a second after HELLO_ACK |
+| `41` | HELLO | `ver`, `fw_major`, `fw_minor`, `transport` (0 USB, 1 Bluetooth; from firmware 0.3) — once a second on every transport with a computer, until HELLO_ACK |
+| `42` | HEARTBEAT | `ver`, `transport` (from 0.3) — once a second after HELLO_ACK, on the transport the HELLO_ACK came by |
 | `43` | ACTION | `op`, `slot`, `tag` u14 |
 | `44` | SELECT | `slot`, optional `scroll` (KNOB 1 detents back, 4 lines each) — the host answers with DETAIL lines for it |
 
@@ -58,12 +58,22 @@ sends `12` on every release; the host also lets go after 120 s, when the device
 says HELLO again, and when it exits. The slot is only used to focus that agent's
 pane first.
 
+## Transports
+
+USB: SysEx as it is. Bluetooth (firmware 0.3, fm1-base's own BLE stack): the same
+frames as BLE-MIDI SysEx; the device reassembles them from the USB-MIDI packets the
+stack hands over and replies on the link the HELLO_ACK came by. The host prefers a
+USB port when it hears the device on both, and sends DETAIL as text over Bluetooth
+(a DETAIL_BMP is 558 bytes).
+
 ## Liveness
 
 - The device counts the host as present while any frame arrived in the last
   10 s. The host sends META at least every 3 s as a keepalive.
 - On HELLO the host sends HELLO_ACK, CLEAR, every SLOT and META.
-- After a new USB session (cable out and in) the device says HELLO again.
+- After a new USB session (cable out and in), or when the Bluetooth link drops, the
+  device says HELLO again.
+- The host sends nothing and carries out no ACTION before it has heard a HELLO.
 
 ## Who decides
 

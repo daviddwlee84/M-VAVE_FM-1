@@ -6,7 +6,7 @@ expect host 0
 # no host yet: the device says HELLO once a second (version 1, firmware 0.1)
 sysex_out
 wait 1100
-expect_sysex F0 7D 43 4E 01 41 01 00 02 F7
+expect_sysex F0 7D 43 4E 01 41 01 00 03 00 F7
 # HELLO_ACK ("hello_ack")
 sysex F0 7D 43 4E 01 01 01 F7
 wait 30
@@ -98,6 +98,16 @@ leds
 release ARP
 wait 30
 expect_sysex F0 7D 43 4E 01 43 0C 00 23 02 F7
+# OCT+: Bluetooth off, then on again (nothing saved)
+listen
+tap OCT+
+wait 30
+said BLUETOOTH OFF
+tap OCT+
+wait 30
+said BLUETOOTH ON
+expect transport 0
+expect store_writes 0
 # the host goes quiet: after 10 s, NO HOST and the keys go stale
 wait 10500
 expect host 0

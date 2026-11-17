@@ -12,9 +12,11 @@
 #define APP_BLOCK 256u                   /* frames per audio block: 5.8 ms at 44.1 kHz */
 #define APP_SYSEX                        /* our frames from the host (host/conductor/PROTOCOL.md) */
 
-/* nothing of ours is saved: the slots live on the host. The platform's panel calibration is the only object */
+/* nothing of ours is saved: the slots live on the host. The platform's panel calibration is the only object;
+ * Bluetooth's record is kept by the app (APP_BLE_STORE), in RAM only (app.c app_ble_load / app_ble_save) */
 enum { OBJ_PANEL, OBJ_NOBJ };
 #define APP_STORE_MAP {0xDC000u}
+#define APP_BLE_STORE
 
 void app_init(void);
 void app_render(int32_t *lr, uint32_t n, uint32_t master_q12);

@@ -1,6 +1,6 @@
 # Conductor 操作速查
 
-一頁看完怎麼用 [Conductor](conductor.md)。對應韌體 0.2、協定 v1（2026-11-17）。
+一頁看完怎麼用 [Conductor](conductor.md)。對應韌體 0.3、協定 v1（2026-11-17）。
 
 ## 三步開始
 
@@ -38,7 +38,7 @@ just cond-run        # 2. daemon：自動接 hc 與 classic Herdr 裡的 agent
 <circle class="off" cx="60" cy="164" r="24"/><text class="lab" x="60" y="131">PRESETS</text><text class="lab" x="60" y="206">—</text>
 <circle class="nav" cx="150" cy="164" r="24"/><text class="lab" x="150" y="131">ALGORITHM</text><text class="fn" x="150" y="206">換頁</text>
 <rect class="off" x="30" y="216" width="58" height="24" rx="6"/><text class="lab" x="59" y="232">OCT-</text>
-<rect class="off" x="122" y="216" width="58" height="24" rx="6"/><text class="lab" x="151" y="232">OCT+</text>
+<rect class="ctl" x="122" y="216" width="58" height="24" rx="6"/><text class="lab" x="151" y="232">OCT+ 藍牙</text>
 <!-- screen -->
 <rect class="scr" x="228" y="20" width="230" height="222" rx="10"/>
 <text x="343" y="48" style="fill:#fff;font-size:14px;font-weight:700">AGENTS</text>
@@ -121,6 +121,7 @@ just cond-run        # 2. daemon：自動接 hc 與 classic Herdr 裡的 agent
 | KNOB 1 | 在輸出裡往回捲（逆時針），一格 4 行；換 agent 會回到最底 |
 | `SEQ` | 裝置上的說明頁；再按一次回原本的頁 |
 | ALGORITHM | 四頁輪流：全部、輸出、等你的、說明 |
+| `OCT+` | 藍牙開 / 關（到下次開機為止，不存） |
 
 ### 看 agent 在做什麼 { #detail }
 
@@ -147,6 +148,16 @@ just cond-run        # 2. daemon：自動接 hc 與 classic Herdr 裡的 agent
 `voice_mode` 是 `hold`（按住說、放開停）或 `toggle`（按一下開始、再按一下停，給用切換式快捷鍵的 app）。按鍵名稱：`ctrl`、`option`、`cmd`、`shift`、`fn`、右側的 `rctrl` / `ropt` / `rcmd` / `rshift`，以及 `space`、`f13`–`f19` 等。不想要這個功能：`just cond-run --no-voice`。
 
 安全：按住超過 120 秒、裝置重開、daemon 結束時，daemon 一定會放開按鍵，不會讓 `Ctrl` 卡住。
+
+## 藍牙 { #bluetooth }
+
+韌體 0.3 起，USB 和藍牙都能接 daemon。藍牙每次開機都會打開，`OCT+` 可以關掉（到下次開機為止）。
+
+1. 第一次：Mac 的「音訊 MIDI 設定」→ 選單「視窗 → 顯示 MIDI 工作室」→ 工具列的藍牙圖示 → 找到 `FM-1 XXXX`，按「連接」。不需要配對碼。
+2. 跑 `just cond-run`。daemon 自己找到藍牙那個 port；USB 也插著時優先用 USB。
+3. 標頭右上角：沒有 host 時，`BLE` 灰色 = 廣播中、藍色 = 電腦已連上；有 host 時出現藍色 `BLE` = 正在走藍牙。
+
+走藍牙時，`EDIT` 的輸出只送 ASCII 文字（點陣圖一行 558 bytes，藍牙太慢），中文會是 `?`。要看中文就插 USB。
 
 ## 沒有 FM-1 時：文字版
 

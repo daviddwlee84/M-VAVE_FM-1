@@ -107,23 +107,38 @@ host/conductor（Python daemon）
 
 ## USB 與 Bluetooth { #bluetooth }
 
-FM-1 的晶片有 Bluetooth，fm1-base 也支援 BLE MIDI（`ble = true`）`[上游]`。協定不挑傳輸方式。文字 frame 都很短；DETAIL 的點陣圖一行 558 bytes，走 BLE 時要分包，或改回只送文字。**目前的 build 只開 USB**（`fm1.toml` 的 `ble = false`），原因是：
+**韌體 0.3 起支援藍牙**（2026-11-17 實作；實機還沒驗證）。使用方式見[速查](conductor-cheatsheet.md#bluetooth)。
 
-- **收 SysEx 要用 fm1-base 自己的 BLE stack。** 預設的 JieLi stack 解 BLE MIDI 時把 SysEx 整段跳過（`ble/midi/le_midi.c`：`sysex: skip to the end flag`）`[上游]`。`ble_stack = "own"` 的解碼器（`bt/ble/ble_midi.h`）會把跨封包的 SysEx 還原成 USB-MIDI 的 SysEx 封包（CIN 4–7），從 `plat_midi_in` 的 `PORT_BLE` 進來 `[上游]`。但 `APP_SYSEX` 只收 USB，所以 app 要自己把這些封包組回 frame（`hostlink` 加一個 BLE 的組裝器）。送出則用 `plat_midi_send(…, TO_BLE)` 送 SysEx 封包，或 `plat_ble_stream`。
-- **容量夠。** fm1-base 記載 own stack 的 BLE MIDI 約 118–123 KB flash、37 KB RAM、69 KB pool `[上游]`；Conductor 0.2 是 87 KB flash、31 KB RAM，加起來仍在 FM-1 的範圍內（`[調研]`，要 build 才確定）。
-- **配對會寫 flash。** `ble_pairing = true` 會把 bond 存進 store（`OBJ_BLE`）；USB 版完全不寫。要選一個不跟其他韌體衝突的位址，並在模擬器量測寫入。
-- **點陣圖太大。** BLE MIDI 的吞吐量比 USB 低很多，一行 558 bytes 的 DETAIL 點陣圖在 BLE 上會慢；BLE 連線時先送 ASCII 文字，或只在 DETAIL 頁送點陣圖。
-
-預計的 Bluetooth 設計（還沒實作）：
-
-| 項目 | 設計 |
+| 項目 | 做法 |
 |---|---|
-| 模式 | 插 USB 且有電腦時走 USB；按住 `REC` 1 秒切換 Bluetooth 開 / 關（和 fm1-base template 相同的手勢） |
-| 配對 | FM-1 廣播 BLE MIDI；macOS 第一次在 **Audio MIDI 設定 → MIDI Studio → Bluetooth 設定** 按「連接」。之後 CoreMIDI 出現一個名字含 `CONDUCTOR` 的 port，daemon 用同一段程式找到它（`host/conductor/device.py` 的 `MidiLink` 不分 USB / BLE） |
-| 螢幕 | 標頭顯示 `USB` / `BLE ADV`（廣播中）/ `BLE`（已連線）；配對碼（若有）顯示在螢幕上 |
-| 兩條都在時 | daemon 優先選 USB 那個 port |
-| 安全 | 連上一台之後停止廣播。裝置只送意圖，真正按鍵的是電腦上的 daemon，且會再確認；陌生的電腦連上也拿不到任何 agent 的控制權 |
-| 好處 | 拔掉線用電池當無線控制台，這是 Agent Deck 做不到的（它的基底沒有藍牙程式） |
+| BLE stack | fm1-base 自己的 stack（`ble_stack = "own"`）。預設的 JieLi stack 解 BLE MIDI 時把收到的 SysEx 整段跳過（`ble/midi/le_midi.c`：`sysex: skip to the end flag`）`[上游]`；own stack 會把它還原成 USB-MIDI 的 SysEx 封包（CIN 4–7），從 `plat_midi_in` 的 `PORT_BLE` 進來 `[上游]` |
+| 收 | `APP_SYSEX` 只收 USB，所以 `hostlink` 的 `hl_sx_packet` 自己把 BLE 的封包組回 frame |
+| 送 | frame 切成 USB-MIDI SysEx 封包，`plat_midi_send(…, TO_BLE_HOST)`；佇列放不下整個 frame 就不送（寧可晚，不要送一半） |
+| 哪條路 | 沒有 host 時，USB 有電腦就從 USB、藍牙有連線就從藍牙各送一份 HELLO（帶著傳輸方式）；之後只走 HELLO_ACK 來的那條。daemon 兩條都聽到時選 USB |
+| 不寫 flash | 位址由 own stack 從 flash 晶片的唯一 ID 算出（每次開機一樣，名稱 `FM-1 XXXX`）；不開配對（fm1-base：macOS、iOS 不配對也能連）。所以 app 接管藍牙的保存（`APP_BLE_STORE`），只放 RAM，不需要 `OBJ_BLE`。fm1-emu 兩種晶片仍是 0 次寫入 `[模擬]` |
+| 開關 | 每次開機都開；`OCT+` 關到下次開機（不存設定，所以也不寫 flash） |
+| DETAIL | 藍牙上只送 ASCII 文字；點陣圖一行 558 bytes，BLE MIDI 太慢。設定 `detail_pictures_ble: true` 可以強制送圖 |
+| 容量 | app 122 KB、RAM `.data+.bss` 38 KB（上限 96 KB）；`ble_diag = false` 省下 2.4 KB RAM |
+
+驗證到哪裡：
+
+| 項目 | 結果 | 標記 |
+|---|---|---|
+| `just fw-common-test` | 0–20 bytes、558、640 bytes 的 frame 切成封包再組回，內容相同；中間插一個 note-on 會被忽略；超長的 frame 整個丟掉、下一個正常 | — |
+| host simulator 的 BLE 替身 | 拔掉 USB、從 BLE 連上後，裝置從 BLE 送出 HELLO（傳輸方式 `01`）；`OCT+` 開關藍牙；0 次 store 寫入 | `[模擬]` |
+| fm1-emu 兩種晶片 | 開機、重開都 0 次 erase / program；USB 路徑照常。模擬器不模擬藍牙無線電 | `[模擬]` |
+| 實機：Mac 經藍牙連上、daemon 用藍牙 port | 還沒做 | — |
+
+## 經過 iOS 或 MIDI routing app { #routing }
+
+Conductor 和 daemon 之間說的**全是 SysEx**（`F0 7D 43 4E …`），琴鍵和按鈕不送 note 或 CC。daemon 要在 Mac 上跑（它要接 hc / Herdr），所以 iPad 上的 routing app（StreamByter、MidiFire、AUM 等）頂多是中繼站。我的建議 `[調研]`，沒有實測：
+
+- **能直接接就直接接。** USB 或藍牙直連 Mac 最單純；中間每多一個 app，就多一個可能丟掉或改寫 SysEx 的地方。
+- **藍牙一次只能連一台。** fm1-base 的 own stack 同時只有一條 BLE MIDI 連線 `[上游]`：iPad 用藍牙連著時，Mac 就連不上藍牙。iPad 和 Mac 都要用時，Mac 走 USB。
+- **讓 SysEx 原封不動通過。** 很多 routing app 預設會過濾或限制 SysEx。規則用前綴 `F0 7D 43 4E` 放行，其他照你的需求處理；`7D 43 4E` 是我們自己的固定前綴，就是為了好認、好放行。
+- **不要把別的來源合併進同一條路。** 兩個來源合流時，SysEx 可能被別的訊息插進中間而損壞。Conductor 的 frame 損壞時會被丟掉，不會誤動作，但會漏掉更新。
+- **一台裝置只接一個 daemon。** routing 把同一台 FM-1 分給兩個 daemon，兩邊會搶著送表、各自執行按鍵。
+- **想在 iOS 上拿琴鍵觸發別的東西**，現在做不到，因為沒有 note / CC。之後可以加一個選項：琴鍵同時送 channel 16 的 note、按鈕送 CC，讓 StreamByter 這類工具不必懂 SysEx 也能用。
 
 ## 共用模組 { #common }
 
@@ -131,7 +146,7 @@ FM-1 的晶片有 Bluetooth，fm1-base 也支援 BLE MIDI（`ble = true`）`[上
 
 | 模組 | 用途 |
 |---|---|
-| `hostlink` | app 自己的 SysEx 對話：frame 前綴、HELLO 直到 host 回應、之後 HEARTBEAT、host 是否還在、重新插線後重新 HELLO |
+| `hostlink` | app 自己的 SysEx 對話，走 USB 或藍牙：frame 前綴、HELLO 直到 host 回應、之後 HEARTBEAT、host 是否還在、重新插線或藍牙斷線後重新 HELLO；藍牙 SysEx 封包的拆與組 |
 | `ledfx` | 單色 LED 的動態：off / glow / mid / lit / 呼吸 / 閃 / 雙閃 / 快閃，每 frame 轉成 `plat_lights` + `plat_lights_mid` |
 | `chime` | 兩個 operator 的 FM 小音色加上音符佇列，混進 app 的 render，做提示音 |
 
@@ -141,6 +156,7 @@ FM-1 的晶片有 Bluetooth，fm1-base 也支援 BLE MIDI（`ble = true`）`[上
 
 ```sh
 just cond-test              # daemon 的單元測試（協定、slot 記憶、動作確認）
+just fw-common-test         # firmware/common 的單元測試（藍牙 SysEx 封包）
 just cond-sim               # daemon 對 fake backend，裝置用 terminal 文字代替
 just cond-sim auto          # 同上，接真的 hc 與 classic Herdr（只看不按就不會送任何鍵）
 just cond-it                # hc 端到端：開兩個假 agent，approve / deny / continue，再關掉
@@ -281,7 +297,8 @@ Preflight：
 - [ ] approve 的按鍵：預設 Enter（Claude Code 與 Codex 的權限選單預設選「Yes」）。`SAVE`（不再詢問）預設 Claude `2`、Codex `a`，**還沒對真的 session 驗證過** `[調研]`。先用一個用完即丟的 session 試，再把結果寫回這裡。
 - [ ] 在 fm1-emu 視窗裡手動按一輪 `REC` / `FX` / `ENV`，對 hc 的假 agent。
 - [ ] classic Herdr 的動作（approve / deny / focus）在一個新開的測試 workspace 裡驗證。
-- [ ] Bluetooth：用 `ble_stack = "own"`，`hostlink` 加 BLE 的 SysEx 組裝，配對與 flash 寫入在模擬器量測後再實作，見 [USB 與 Bluetooth](#bluetooth)。
+- [x] Bluetooth（0.3），見 [USB 與 Bluetooth](#bluetooth)。
+- [ ] 藍牙在實機驗證：Mac 連上 `FM-1 XXXX`、daemon 走藍牙、拔掉 USB 用電池。
 - [ ] `codex app-server` backend。
 - [ ] 語音鍵（`ARP`）對真的 Wispr Flow 試一次：host 單元測試確認了送出的按鍵與一定會放開，**還沒在有輔助使用權限的 terminal 裡實際觸發過** Wispr Flow。
 - [x] 實刷（2026-11-17），見[實刷準備](#flash)。

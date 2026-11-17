@@ -16,7 +16,7 @@ enum { OP_APPROVE = 1, OP_ALWAYS, OP_DENY, OP_INTERRUPT, OP_ENTER, OP_CONTINUE, 
 #define F_QUESTION 0x01u
 #define F_REMOTE 0x02u
 #define FW_MAJOR 0u
-#define FW_MINOR 2u
+#define FW_MINOR 3u
 #define NAME_MAX 20u
 #define DETAIL_LINES 8u
 #define LINE_MAX 36u
@@ -45,6 +45,7 @@ static struct {
     uint8_t bmp[DETAIL_LINES][BMP_BYTES];
 } detail;
 static uint32_t chimes;                  /* figures played since boot (the host simulator's "chimes") */
+static int ble_on = 1;                   /* Bluetooth starts at every power-on; OCT+ turns it off until the next */
 
 static const char *const KIND2[] = {"??", "CL", "CX", "OC", "GM", "CU", "PI", "SH"};
 static const char *const STATE_WORD[S_N] = {"", "IDLE", "WORK", "WAIT", "DONE", "ERR", "?"};
@@ -79,7 +80,7 @@ static struct {
     uint32_t msg_until;
     char footer[LINE_MAX + 1];
     uint32_t footer_until;
-    uint8_t host_was;
+    uint8_t host_was, ble_was;
 } ui;
 
 static void copy_text(char *d, const uint8_t *s, uint32_t n, uint32_t max)
@@ -180,7 +181,7 @@ static void slot_in(const uint8_t *d, uint32_t n)
     ui.redraw = 1;
 }
 
-int app_sysex(const uint8_t *p, uint32_t n)
+static int host_frame(const uint8_t *p, uint32_t n, int transport)
 {
     uint8_t t;
     uint32_t len, i, now = plat_ms();
@@ -190,7 +191,7 @@ int app_sysex(const uint8_t *p, uint32_t n)
     hl_seen(&link, now);
     switch (t) {
     case T_HELLO_ACK:
-        hl_acked(&link, now);
+        hl_acked(&link, now, transport);
         break;
     case T_CLEAR:
         for (i = 0; i < NKEYS; i++)
@@ -234,6 +235,34 @@ int app_sysex(const uint8_t *p, uint32_t n)
     }
     ui.redraw = 1;
     return 1;
+}
+
+int app_sysex(const uint8_t *p, uint32_t n) { return host_frame(p, n, HL_USB); }
+
+/* Bluetooth: fm1-base's own stack hands SysEx over as USB-MIDI packets on PORT_BLE (main loop) */
+static hl_sx_t ble_rx;
+static void ble_in(void)
+{
+    uint32_t pkt, n;
+    int port;
+    const uint8_t *f;
+    while (plat_midi_in(&pkt, &port))
+        if (port == PORT_BLE && hl_sx_packet(&ble_rx, pkt, &f, &n))
+            host_frame(f, n, HL_BLE);
+}
+
+/* nothing of Bluetooth's is written to the flash: the own stack makes its address from the flash part's unique ID
+ * (the same at every start), there is no pairing to keep (macOS and iOS connect without one), so the record lives
+ * in RAM and its save is a no-op */
+int app_ble_load(struct plat_ble_rec *r)
+{
+    (void)r;
+    return 0;
+}
+int app_ble_save(const struct plat_ble_rec *r)
+{
+    (void)r;
+    return 0;
 }
 
 /* --------------------------------------------------------------- host out --- */
@@ -357,6 +386,11 @@ static void input(void)
             break;
         case B_HOME: set_page(PG_GRID); break;
         case B_GLO: set_page(PG_APPROVALS); break;
+        case B_OCTUP:                    /* Bluetooth on / off, for this power-on (nothing saved) */
+            ble_on = !ble_on;
+            plat_ble_enable(ble_on);
+            app_say("BLUETOOTH", ble_on ? "ON" : "OFF");
+            break;
         case B_SEQ:                      /* help, and back to where we were */
             if (ui.page == PG_HELP)
                 set_page(ui.back);
@@ -456,9 +490,16 @@ static void draw_header(uint32_t now)
             int_text((int32_t)working, t);
             x -= 10 + text_w(&FONT_S, t);
             cv_text(x, 8, &FONT_S, t, state_rgb(S_WORKING));
-            cv_text(x - 6 - text_w(&FONT_XS, meta.backend), 10, &FONT_XS, meta.backend, C_GRAY);
+            x -= 6 + text_w(&FONT_XS, meta.backend);
+            cv_text(x, 10, &FONT_XS, meta.backend, C_GRAY);
+            if (link.transport == HL_BLE)
+                cv_text(x - 6 - text_w(&FONT_XS, "BLE"), 10, &FONT_XS, "BLE", state_rgb(S_WORKING));
         } else {
-            cv_text(232 - text_w(&FONT_XS, "NO HOST"), 10, &FONT_XS, "NO HOST", state_rgb(S_ERROR));
+            int32_t x = 232 - text_w(&FONT_XS, "NO HOST");
+            cv_text(x, 10, &FONT_XS, "NO HOST", state_rgb(S_ERROR));
+            if (FM1B_BLE && ble_on)              /* grey while it advertises, blue once a computer is connected */
+                cv_text(x - 6 - text_w(&FONT_XS, "BLE"), 10, &FONT_XS, "BLE",
+                        plat_ble_connected() ? state_rgb(S_WORKING) : C_DIM);
         }
     }
     cv_rect(0, 31, 240, 1, C_LINE);
@@ -672,10 +713,12 @@ void app_frame(void)
     uint32_t now = plat_ms();
     uint8_t host;
     input();
+    ble_in();
     hl_tick(&link, now, T_HELLO, T_HEARTBEAT, HELLO, 3);
     host = (uint8_t)hl_host(&link, now);
-    if (host != ui.host_was) {
+    if (host != ui.host_was || (uint8_t)plat_ble_connected() != ui.ble_was) {
         ui.host_was = host;
+        ui.ble_was = (uint8_t)plat_ble_connected();
         ui.redraw = 1;
     }
     /* a message or footer running out */
@@ -703,6 +746,8 @@ int app_expect(const char *what, int *got)
         *got = ui.sel;
     else if (!strcmp(what, "total"))
         *got = meta.total;
+    else if (!strcmp(what, "transport"))
+        *got = link.transport;
     else if (!strcmp(what, "bmp0")) {           /* dots lit in DETAIL picture line 0 */
         uint32_t i, n = 0;
         for (i = 0; i < BMP_BYTES; i++)

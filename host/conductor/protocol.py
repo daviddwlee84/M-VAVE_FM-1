@@ -184,12 +184,21 @@ def parse_action(m: Message) -> Action:
     return Action(m.payload[0], m.payload[1], _r14(m.payload, 2))
 
 
-def device_hello(fw_major: int = 0, fw_minor: int = 1) -> bytes:
-    return frame(T_HELLO, bytes([VERSION, fw_major, fw_minor]))
+TR_USB, TR_BLE = 0, 1  # the transport a device frame came by (firmware 0.3 says; older ones are USB only)
 
 
-def device_heartbeat() -> bytes:
-    return frame(T_HEARTBEAT, bytes([VERSION]))
+def device_hello(fw_major: int = 0, fw_minor: int = 1, transport: int | None = None) -> bytes:
+    return frame(T_HELLO, bytes([VERSION, fw_major, fw_minor]) + (bytes([transport]) if transport is not None else b""))
+
+
+def device_heartbeat(transport: int | None = None) -> bytes:
+    return frame(T_HEARTBEAT, bytes([VERSION]) + (bytes([transport]) if transport is not None else b""))
+
+
+def transport_of(m: Message) -> int:
+    """USB unless a HELLO (4th byte) or HEARTBEAT (2nd byte) says Bluetooth."""
+    i = 3 if m.type == T_HELLO else 1 if m.type == T_HEARTBEAT else None
+    return m.payload[i] if i is not None and len(m.payload) > i else TR_USB
 
 
 def device_action(op: int, index: int, tag: int) -> bytes:

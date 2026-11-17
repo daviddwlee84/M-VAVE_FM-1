@@ -296,3 +296,28 @@ def test_silent_until_hello(tmp_path):
     assert sent == [] and be.sent == []  # nothing out, no keys pressed
     c.on_frame(P.device_hello(0, 2))
     assert c.device_fw == (0, 2) and P.parse(sent[0]).type == P.T_HELLO_ACK
+
+
+def test_bluetooth_gets_text_detail(tmp_path):
+    from conductor.render import LineRenderer
+
+    be, sim, c = setup(tmp_path)
+    c.renderer = LineRenderer()
+    sent = []
+    c.send = sent.append
+    c.on_frame(P.device_hello(0, 3, P.TR_BLE))
+    assert c.device_transport == P.TR_BLE
+    c.on_frame(P.device_select(0))
+    kinds = {P.parse(f).type for f in sent}
+    assert P.T_DETAIL in kinds and P.T_DETAIL_BMP not in kinds
+    sent.clear()
+    c.on_frame(P.device_hello(0, 3, P.TR_USB))
+    c.on_frame(P.device_select(0))
+    assert P.T_DETAIL_BMP in {P.parse(f).type for f in sent}
+
+
+def test_transport_of_old_and_new_frames():
+    assert P.transport_of(P.parse(P.device_hello(0, 2))) == P.TR_USB
+    assert P.transport_of(P.parse(P.device_hello(0, 3, P.TR_BLE))) == P.TR_BLE
+    assert P.transport_of(P.parse(P.device_heartbeat(P.TR_BLE))) == P.TR_BLE
+    assert P.transport_of(P.parse(P.device_heartbeat())) == P.TR_USB

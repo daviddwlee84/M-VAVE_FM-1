@@ -210,6 +210,14 @@ cond-run backend="auto" *args:
 cond-emu chip="uc25hq80":
     just emu-run firmware/conductor/build/conductor.fwsc "{{chip}}" --usb
 
+# firmware/common's own tests on this computer (hostlink's Bluetooth SysEx packets).
+fw-common-test:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    mkdir -p build
+    cc -Wall -Wextra -I firmware/common -o build/hostlink_test firmware/common/tests/hostlink_test.c
+    build/hostlink_test
+
 # hc end to end: two fake agents (label conductor-test=1), approve / deny / continue, then kill them.
 cond-it:
     uv run --locked --all-groups python host/tests/integration_hc.py
