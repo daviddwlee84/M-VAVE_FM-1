@@ -193,6 +193,46 @@ Transpose 在 Key Mode 關掉時也有效。要關機後還在，**按住 `SAVE`
 
 這個設定會套用到之後所有的和弦，包括正在播放的 loop。`OCT-` / `OCT+` 則是把根音整組移八度（-2 到 +2）。
 
+### 轉位與 slash chord（C/G）{ #slash-chords }
+
+ChoralRoot **沒有「另外指定低音」的按法**。chord block 只決定和弦種類，根音鍵就是和弦的根音。`[上游]` 下面是手冊裡能做到的方式，各有限制。
+
+**1. 用 voicing 做轉位：最直接**
+
+KNOB 1 每往上一格，就把最低的音移高八度。三和弦 C：
+
+| voicing | 音（低到高） | 等於 |
+|---|---|---|
+| 0 | C E G | C |
+| +1 | E G C | C/E（第一轉位） |
+| +2 | G C E | C/G（第二轉位） |
+
+七和弦有四個音，+3 才會轉到第三轉位。
+
+限制：BASS 開著時，bass 聲部仍然彈根音 C，聽起來又變回 C 在最低音。要聽到真正的 C/G，**先點 `ENV` 關掉 bass**。
+
+**2. Split Bass：一隻手彈低音、一隻手彈和弦**
+
+KEY layer 的 KNOB 4（Single）設成 **Split Bass**。分割點以下的鍵只彈 bass 聲部的單音，其他鍵照常彈和弦。所以 bass 可以彈任何你指定的音。
+
+限制：分割是**依音名**分，不是依位置。預設分割點是 F，所以每個八度的 C 到 E 都歸 bass、F 到 B 都歸和弦（`GLO` + KNOB 1 可以移動分割點）。C/G 剛好按不出來，因為 C 在 bass 那邊、G 在和弦那邊。適合的是低音音名比根音前面的，例如 F/C、G/D、A/E、A/C#。
+
+**3. Key Mode 的 6-Dim 音階：自動產生 slash chord**
+
+KEY layer 的 KNOB 2 選 **6-Dim**（Barry Harris 的 6th-diminished 音階）。在 C 調下按 E 得到 `C6/E`、按 G 得到 `C6/G`，螢幕會顯示斜線。不過只有這種音階這樣做，而且是 C6 不是 C。
+
+**4. 交給外部**
+
+透過 MIDI 送出去，在 iPad 或 DAW 上另外彈低音（Raw Chord 與 Bass 各有自己的 channel，見[送 MIDI 出去](index.md#midi-out)）。或用 Options 的 MIDI Roots 接一整排外接鍵盤。
+
+### 有些和弦轉位、有些不轉：可以，但不是事先設定 `[上游]`
+
+voicing **是全域的**：設好後套用到之後所有的和弦。沒有「這個和弦固定用某個轉位」的對照表，也沒有自動 voice leading 或「把組成音限制在某個音域」的設定。可以這樣做：
+
+- **現場演奏**：在換和弦之間轉 KNOB 1。它是旋鈕，按住和弦時轉、立刻生效，下一個和弦再轉回來。
+- **錄在 loop 裡：每一步可以有自己的 voicing。** 在 loop 編輯器（`SEQ`）選到一步，ALGORITHM 或 KNOB 3 設定這一步的 Voicing：`Follow`（跟著當下的 KNOB 1）或 -12 到 +12 的固定值。所以 loop 裡可以 I 用原位、IV 用第二轉位，播放時各自保持。螢幕上，有自己 voicing 的步會在和弦名稱後面顯示藍色數字。
+- **整體音域**：`OCT-` / `OCT+` 把根音整組移八度（-2 到 +2）；voicing 往負的方向轉會讓和弦往下展開。Options → **6th with 7th** 可以讓 6 音和七度同時出現時移高一個八度（13 和弦的排法）。
+
 ## 第五課：加 bass
 
 點 **BASS**（面板印的是 **`ENV`**）。每個和弦下面會自動加一個 bass 音，螢幕右上顯示 `Bass`。
