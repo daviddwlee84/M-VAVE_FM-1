@@ -233,6 +233,73 @@ TYPE 頁的 LIVE 對應「打一個送一個」，COMPOSE 對應「先打好再�
 
 我手上只有一台，所以直連排在下一版（見[路線圖](#roadmap)），先用電腦和 Vail 跟人互傳。
 
+## 藍牙方案（0.5 研究） { #bluetooth }
+
+2026-11-18 的研究，還沒實作。
+
+### 要做到什麼
+
+| 用途 | 怎麼連 |
+|---|---|
+| Mac 上的 Vail、MORSE on the web、`just morse-*`，不接線 | FM-1 當 BLE-MIDI peripheral，Mac 在「音訊 MIDI 設定」的藍牙視窗連上 |
+| iPad、手機 | 同上（但見下面「瀏覽器」） |
+| 兩台 FM-1 互打 | 一台當 central，連上另一台（`ble_central`） |
+
+### 已經有的
+
+- **Conductor 已經在這台機器上走通** `[實機]`：fm1-base 的 own stack（`ble_stack = "own"`），2026-11-17 Mac 不用配對碼就連上 `FM-1 3399`，port 叫 `FM-1 3399 Bluetooth`，daemon 經藍牙收發 SysEx。做法見 [Conductor 的藍牙](../agentic/conductor.md)：
+    - `hostlink` 會自己把 BLE 的 SysEx 封包組回 frame；
+    - 藍牙的紀錄由 app 接管（`APP_BLE_STORE`），只放 RAM，不寫 flash；
+    - fm1-emu 兩種晶片都是 0 次寫入。
+- **MORSE 的程式本來就分得開傳輸**：`hostlink` 支援 USB 和 BLE 兩條路；按鍵用 Vail 格式的 note 0，走哪條路都一樣。
+- **fm1-base own stack 的時間戳記** `[上游]`（`docs/bt/BLE-STACK.md` §6）：
+    - **送出**時帶真實的 13-bit 毫秒時間戳記（JieLi 原本的 stack 都送 `80 80`）。
+    - **收進**時有 `ble_midi_time`：照送出端的時間戳記排時間，把同一個 connection event 擠在一起的訊息拉開。
+    - `plat_midi_send` 可以在 1 kHz tick 裡呼叫，所以按鍵的時間戳記是按下的那一刻。
+
+### MORSE 要改的地方
+
+1. `fm1.toml`：`ble = true`、`ble_stack = "own"`、`ble_diag = false`（省 2.4 KB RAM）、`ble_midi_time = true`。
+2. `app.h` 定義 `APP_BLE_STORE`，`app.c` 實作 `app_ble_load` / `app_ble_save`，只放 RAM（照 Conductor）。沒有這一步 build 會失敗（缺 `OBJ_BLE`），2026-11-18 試過。
+3. 主迴圈：`plat_midi_in` 從 `PORT_BLE` 來的封包，SysEx 交給 `hl_sx_packet` 組回 frame，note 0 交給收訊解碼器，時間用 `plat_midi_in_t24`。
+4. 按鍵：`plat_midi_send(…, TO_USB | TO_BLE_HOST)`。
+5. 設定頁加 BLUETOOTH 開關（Conductor 是 `OCT+`），header 顯示 `BT`。
+6. 兩台互打再加 `ble_central = true`，以及「掃描、選一台、連上」的畫面。
+
+### 時間準不準
+
+這是摩斯特有的問題：點在 20 WPM 只有 60 ms。BLE 的 connection interval 大約 7.5–15 ms，按鍵事件會晚 0–15 ms 才送到，**誤差可能達到一個點的 25%**。
+
+- **送出**：own stack 帶了真實的時間戳記。接收端照時間戳記排，抖動就會消失；照到達時間算，就會抖。CoreMIDI 會把 BLE-MIDI 的時間戳記換成封包時間 `[調研]`，但 Chrome 的 Web MIDI 和 Vail 網頁用的是哪一個，要實測。
+- **收進**：開 `ble_midi_time` 後，FM-1 會照送出端的時間解碼，另一台 FM-1 或 Vail 送來的按鍵不會被擠在一起。
+- **真的抖的話**：照原本的構想，用 note 的 velocity 帶上這個 mark 的長度（10 ms 一格），收的一方用長度而不是到達時間。只有收方也是 MORSE 才有用，Vail 不懂。
+
+### 瀏覽器
+
+| 平台 | 網頁（Vail、MORSE on the web）走藍牙 |
+|---|---|
+| macOS Chrome / Edge | 在「音訊 MIDI 設定」連上後，藍牙 MIDI 就是一般的 CoreMIDI port，Web MIDI 應該看得到 `[調研]`。MORSE on the web 靠 HELLO 找 port，程式不用改 |
+| Android Chrome | 有 Web MIDI；藍牙 MIDI 裝置要先由系統或某個 app 連上 `[調研]` |
+| iPad / iPhone | Safari 沒有 Web MIDI，網頁用不了；要用支援藍牙 MIDI 的 app `[調研]` |
+
+### 已知的限制
+
+- **一次只連一個 host**：own stack 同時只有一條連到電腦的 BLE MIDI 連線 `[上游]`。iPad 連著時，Mac 就要走 USB。
+- **macOS 不會自己連回來** `[實機]`：FM-1 重開後要到藍牙 MIDI 視窗再按一次 Connect（Conductor 的經驗；它的 daemon 會自動彈出那個視窗）。
+- **大小**：0.4 是 138 KB。own stack 大約多 41–46 KB，central 再多 13–22 KB（fm1-base 的數字）。Conductor 開藍牙後是 122 KB、RAM 38 KB。上限 581 KB、RAM 96 KB，都很寬裕。
+- **電池**：藍牙開著的耗電還沒量。
+- **模擬器沒有無線電**：藍牙只能在實機上測。
+
+### 驗證計畫
+
+1. host simulator：BLE 替身送 HELLO（傳輸 `01`）、BLUETOOTH 開關、0 次 store 寫入（照 Conductor 的測試）。
+2. fm1-emu 兩種晶片：開機、存檔、重開，USB 照常、0 次多餘寫入。
+3. 實機（要你核准刷機）：
+    - Mac 藍牙連上，`just morse-send`、MORSE on the web、Vail 都能用；
+    - **量抖動**：同一串按鍵分別走 USB 和藍牙，記下 Mac 收到的時間（CoreMIDI 封包時間和 Web MIDI 的 `timeStamp`），比較兩者的差；
+    - 拔線後只用電池，連著打 10 分鐘看會不會斷。
+4. 兩台互打：等有第二台。
+
 ## 設計
 
 ### 時序
@@ -340,7 +407,7 @@ TYPE 頁的 LIVE 對應「打一個送一個」，COMPOSE 對應「先打好再�
 
 | 版本 | 內容 |
 |---|---|
-| 0.5 | 藍牙：own BLE stack 的 peripheral（Mac、iPad、手機上的 Vail 走藍牙）和 central（一台 FM-1 掃描並連上另一台）。BLE connection interval 是 11.25 ms，每個按鍵事件會晚 0–11 ms 到；對策想用 note 的 velocity 帶上長度、收的一方加一點播放緩衝，等量過再定。實機要等有第二台 |
+| 0.5 | 藍牙（研究見[藍牙方案](#bluetooth)）：own BLE stack 的 peripheral（Mac、iPad、手機上的 Vail 走藍牙）和 central（一台 FM-1 掃描並連上另一台）。BLE connection interval 是 11.25 ms，每個按鍵事件會晚 0–11 ms 到；對策想用 note 的 velocity 帶上長度、收的一方加一點播放緩衝，等量過再定。實機要等有第二台 |
 | 之後 | host 送日期，讓間隔複習改成天數；USB-C 直連（見[接口與連線](../hardware/io.md#two-units)） |
 
 ### Backlog { #backlog }
