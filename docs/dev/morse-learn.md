@@ -78,7 +78,7 @@ EDIT 改的是副本，按 `PLAY`（或 `REC`）時才問「SAVE CHANGES?」。
 
 進度存在 FM-1 的 flash 裡（`0xDA000`）。換成別的韌體不一定保得住：從 SLOOP 2.8.5 切回來時還在，刷回原廠 V15 就沒了 `[實機]`。換韌體前先備份：
 
-- **網頁**：用 Chrome 或 Edge 開 fm1-morse 的 `web/progress.html`，Connect，Download the progress。換回 MORSE 後選檔案，Send it to the FM-1。
+- **網頁**：用 Chrome 或 Edge 開 [progress 頁](https://daviddwlee84.github.io/fm1-morse/web/progress.html)（或 fm1-morse 裡的 `web/progress.html`），Connect，Download the progress。換回 MORSE 後選檔案，Send it to the FM-1。
 - **指令列**：`just morse-backup progress.json`，之後 `just morse-restore progress.json`。
 
 FM-1 收到備份後會顯示回合數、開放幾個字、答過幾題，按 `PLAY` 才載入。備份檔是 JSON，可以直接改每個字的盒號。

@@ -10,7 +10,7 @@
 | Flash 晶片 / JEDEC ID | **`0xB36014` (new)**，UCUN UC25HQ80，1 MiB |
 | Bootloader | stock (M-VAVE) |
 | 出廠韌體版本 | FM-1 015 (stock)，firmware check OK |
-| 目前韌體 | **Morse 0.3 release（`FM-1_41000300`）**（2026-11-18 Hub 測試 3：從原廠 015 用 USB-MIDI 安裝，進度從 ROUND 1 重新開始；USB 產品名 `MORSE FM-1`）。之前依序是原廠 015 → SLOOP 2.8.5 → Agent Deck 0.7 → SLOOP 2.8.5 → CTL-1 1.0.3 → ChoralRoot 0.41 → Conductor 0.1 → 0.2 → 0.3 → Morse 0.1 → 0.2 → 0.3 → SLOOP 2.8.5 → Morse 0.3 release → 原廠 015（還原） |
+| 目前韌體 | **Morse 0.4 release build（`FM-1_41000400`）**（2026-11-18 05:20 從 Morse 0.3 release 用 USB-MIDI 更新，學習紀錄保留；macOS 上的 MIDI port 名稱仍是 `Felucca`）。0.3 release 是 Hub 測試 3 從原廠 015 裝的，進度當時從 ROUND 1 重新開始。之前依序是原廠 015 → SLOOP 2.8.5 → Agent Deck 0.7 → SLOOP 2.8.5 → CTL-1 1.0.3 → ChoralRoot 0.41 → Conductor 0.1 → 0.2 → 0.3 → Morse 0.1 → 0.2 → 0.3 → SLOOP 2.8.5 → Morse 0.3 release → 原廠 015（還原）→ Morse 0.3 release → Morse 0.4 |
 | SLOOP 的曲子 | **已不在機器上**（`0x97000` 被 ChoralRoot 的韌體蓋掉）。完整保存在 `2026-11-17-0341-pre-ctl-1.0.3` 備份裡；回 SLOOP 要在 M-Flasher GUI 還原那份備份 |
 | m-bootloader | 未安裝 |
 | 主機 | macOS，M-Flasher 0.12.1 |
@@ -111,6 +111,8 @@ M-Flasher 在兩次寫入前各自動存了一份：`~/Documents/M-Flasher/backu
 | 2026-11-18 02:46 | agent 執行 `just fm1-download-mode`（原廠執行中）、`fm1-backup pre-hub-test-3-stock`、`fm1-restart` | M-Flasher 回報 bootloader stock、firmware `FM-1 015 (stock)`；備份 SHA-256 `c6a47902…44fd38`，**和 11/17 的原廠備份逐 sector 完全相同**：還原是完整的。重開回原廠 |
 | 2026-11-18 02:48 | Hub 測試 3：本人執行 `fm1_install.py firmware/morse/build/morse-0.3.fwsc`，機器上是原廠 015（`FM-1_015`，port `FM-1`） | 成功：`checking the package (34 reads)` → `switching to update mode` → `the loader writes only the sectors that changed (fast install)` → `done: the FM-1 runs FM-1_41000300`。PRACTICE 從 ROUND 1 開始（原廠備份裡沒有 Morse 紀錄）。Hub 要求的三項實機測試全部通過 |
 | 2026-11-18 04:47 | agent 執行 `fm1_install.py --info`、`just fm1-download-mode`、`fm1-backup pre-morse-0.4`、`fm1-restart`（刷 Morse 0.4 前的 preflight） | `--info` 回答 `FM-1_41000300 [running]`；flash `0xB36014`；備份 SHA-256 `73a530d2…2e9b556`，`0xDA000`–`0xDBFFF` 有 Morse 的紀錄；重開回 Morse 0.3。0.4 的紀錄格式沒變，[模擬] 疊在 0.2／0.3 紀錄上升級都保留 |
+| 2026-11-18 05:20 | 本人執行 `fm1_install.py firmware/morse/build/morse-0.4.fwsc`（Morse 0.4 release build，`FM-1_41000400`，SHA-256 `3bc1b23b…7e471f`，fm1-morse `323d79b`），機器上是 Morse 0.3 release | 成功：`checking the package (30 reads)` → `switching to update mode` → `the loader writes only the sectors that changed (fast install)` → `done: the FM-1 runs FM-1_41000400` |
+| 2026-11-18 05:25 | agent 執行 `just morse-backup`（唯讀）；用 Playwright 的 Chromium 開 `web/progress.html` 下載進度（唯讀） | 指令列：`round 16, 10 open (KMURESNAPT), 4 past the line, 169 answered, 132 right`，**升級後學習紀錄保留**，存成 `backups/progress/2026-11-18-after-0.4.json`。網頁第一版找不到機器：macOS 把這台的 MIDI port 叫做 `Felucca`（第一次接上時的韌體名），網頁只找名字有 MORSE 的 port；改成聽哪個 port 送出 HELLO 後，網頁下載的 JSON 和指令列的完全相同 |
 
 ## Phase 1 驗收
 

@@ -260,7 +260,7 @@ TYPE 頁的 LIVE 對應「打一個送一個」，COMPOSE 對應「先打好再�
 | 0.1 | 109,508 B | 27,180 / 98,304 B |
 | 0.2 | 127,712 B | 28,444 / 98,304 B |
 | 0.3 | 127,880 B | 28,444 / 98,304 B |
-| 0.4 | 137,276 B | 29,084 / 98,304 B |
+| 0.4 | 138,076 B（release） | 29,084 / 98,304 B |
 
 上限是 581,564 B；RAM code 5,100 / 32,768 B；套件 616,003 B，開發版 identity `FM-1_4100`。目前都沒有開藍牙；加上 own BLE stack 和 central 大約再多 55–70 KB，仍然很寬裕。
 
@@ -293,6 +293,8 @@ TYPE 頁的 LIVE 對應「打一個送一個」，COMPOSE 對應「先打好再�
 | 0.4：判定、評級、ALMOST、手動編輯、分級測驗、備份格式 | `just morse-unit` | 3016 項全過（例如：M 用 180/180 ms 判對、5 WPM 的手回答 20 WPM 的題目判對、K 打成 −·· 判錯） |
 | 0.4：整個 app（SEND 10 時用 20 WPM 的手速答 M、T 判對，STRICT 判錯；錯的對照圖；ALMOST；CHART 編輯取消／存檔／按住歸零；確認時其他鍵無效；分級測驗；備份匯出向量、載入要按 PLAY、缺片拒收；重開讀回） | `just fw-test morse` | 全過 |
 | 0.4：host 和網頁的備份格式 | `just morse-test`；網頁的程式碼用 node 跑 | host 56 項全過；網頁產生的位元組和 host 的向量相同 |
+| 0.4 刷進實機 | `fm1_install.py`（USB-MIDI，fast install） | 成功；ROUND 16、開放 10 個字的紀錄保留 `[實機]` |
+| 0.4 的備份：指令列和網頁 | `just morse-backup`；Chromium 開 `web/progress.html` | 兩者下載的內容相同；網頁要用「誰在送 HELLO」找 port，因為 macOS 把這台叫 `Felucca` `[實機]` |
 | 0.4：疊在實機 0.2 紀錄的備份上、改設定、重開讀回 | `emu_rehearse.py` + fm1-emu `uc25hq80`、`p25q80` | ROUND 5 的紀錄保留，改過的速度重開後讀回 `[模擬]` |
 
 ## 版本紀錄
@@ -302,7 +304,7 @@ TYPE 頁的 LIVE 對應「打一個送一個」，COMPOSE 對應「先打好再�
 | 版本 | 日期 | 要刷機 | 內容 |
 |---|---|---|---|
 | 韌體 0.1、host 0.1.0 | 2026-11-17 | 是（22:54 刷入，`c3b5cd6`） | 第一版：KEY、TYPE、PRACTICE、CHART、SETTINGS，兩種學習方式，Vail 格式的 MIDI，host 的 `type`／`send`／`listen`。原本規劃分成 0.1（核心）和 0.2（閃卡），因為一起做完、都還沒刷，合併成 0.1 |
-| 韌體 0.4、host 0.4.0 | 2026-11-18 | 是（還沒刷） | 實機回饋（ROUND 14 還停在第一組）：打碼卡改用答案自己的節奏判斷（[判定](#judging)），手速跨卡延續，評級和 SHOULD／YOU 對照圖，ALMOST；SET 頁的 JUDGING 可以切回 STRICT；CHART 編輯、分級測驗、開始畫面列出擋住下一組的字，SOUND 模式下新字和答案可以按 `SEQ` 偷看點劃，弱卡在同一回合重複出現、熟字只在有空位時補，[手動修改都要按 PLAY 確認](#progress)；進度的[備份與還原](#backup)（`T_PROG_*`、host 的 `backup`／`restore`、網頁）。藍牙順延到 0.5 |
+| 韌體 0.4、host 0.4.0 | 2026-11-18 | 是（05:20 用 USB-MIDI 裝 release build `FM-1_41000400`，fm1-morse `323d79b`） | 實機回饋（ROUND 14 還停在第一組）：打碼卡改用答案自己的節奏判斷（[判定](#judging)），手速跨卡延續，評級和 SHOULD／YOU 對照圖，ALMOST；SET 頁的 JUDGING 可以切回 STRICT；CHART 編輯、分級測驗、開始畫面列出擋住下一組的字，SOUND 模式下新字和答案可以按 `SEQ` 偷看點劃，弱卡在同一回合重複出現、熟字只在有空位時補，[手動修改都要按 PLAY 確認](#progress)；進度的[備份與還原](#backup)（`T_PROG_*`、host 的 `backup`／`restore`、網頁）。藍牙順延到 0.5 |
 | 韌體 0.3 release（`FM-1_41000300`） | 2026-11-18 | 是（Hub 測試時用 USB-MIDI 裝過三次） | fm1-morse 的第一個 release [v0.3](https://github.com/daviddwlee84/fm1-morse/releases/tag/v0.3)：identity 改成 `FM-1_41`，授權改成 GPL-3.0-or-later，程式和 0.3 相同 |
 | 韌體 0.3、host 0.3.0 | 2026-11-18 | 是（02:12 刷入，`02b0ea2`） | TYPE 打開鍵上點劃時，鍵盤從 86 px 拉高到 126 px、上方輸入行縮成一行，黑鍵和白鍵都同時放得下碼和字母（0.2 黑鍵只剩碼、白鍵的碼壓到字母，數字頁的 `0` 放不下）。藍牙順延到 0.4 |
 | 韌體 0.2、host 0.2.0 | 2026-11-18 | 是（00:14 刷入，`54ff440`） | 實機試用後的回饋：發報速度和聽的速度分開（K4），PRESET 推薦組合，轉速度時顯示 dit／dah 毫秒；KEY 頁 TEXT／CODE／TIMING 三種顯示；RHYTHM 頁（練長短、提示、建議速度）；LISTEN 頁（連續播放五種節目）；TYPE 頁翻三頁（字母、數字符號、片語）、三種排列、鍵上點劃、LIVE／COMPOSE、`PLAY` 可停止、`REC` 刪字和清空；prosign `<SK>`；解碼器遇到長短差 2 倍時回頭修正；靜音和改音高不再重設解碼器。藍牙順延到 0.3 |
