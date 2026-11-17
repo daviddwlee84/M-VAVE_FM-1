@@ -257,3 +257,30 @@ def test_detail_as_pictures_for_newer_firmware(tmp_path):
     c.on_frame(P.device_hello(0, 1))
     c.on_frame(P.device_select(0))
     assert not [f for f in sent if P.parse(f).type == P.T_DETAIL_BMP]
+
+
+CODEX_SCREEN = [
+    "  >_ OpenAI Codex (v0.169.0)",
+    "  permissions: YOLO mode",
+    " " * 120 + "⠈⢿⣿⣿⣦⡀⠈⠛⠿⣿⣿⣿⣿⣄⡀  ⢀⣠⣼⣿⣿",
+    "• Ran make test, 12 passed",
+    "",
+    "› Ask Codex to do anything",
+    "",
+    "  GPT-6.1-Sol xhigh · Standard · Ready · Context 100% left · ~",
+    "  ← for agents · ? for shortcuts",
+]
+
+
+def test_codex_screen():
+    from conductor.core import strip_chrome, tui_lines
+
+    out = tui_lines(strip_chrome(CODEX_SCREEN))
+    assert out == ["  >_ OpenAI Codex (v0.169.0)", "  permissions: YOLO mode", "* Ran make test, 12 passed"]
+
+
+def test_missing_glyphs_become_question_marks():
+    from conductor.render import LineRenderer
+
+    r = LineRenderer()
+    assert r.clean("ok 中文 \U0001F9EA") == "ok 中文 ?"

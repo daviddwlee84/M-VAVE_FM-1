@@ -2,7 +2,7 @@
 
 Conductor 是我在 [fm1-base](../dev/index.md) 上寫的 agent 控制台：韌體在 `firmware/conductor/`，電腦端的 daemon 在 `host/conductor/`。用過 [Agent Deck](agent-deck.md) 之後，有兩件事想改：shell pane 佔掉大半琴鍵，而且它只接 classic Herdr / tmux。
 
-**狀態（2026-11-17）：已刷進實機（新晶片 `0xB36014`），開機正常，daemon 連得上 `[實機]`。按鍵、LED、批准流程還沒逐項在實機確認。**
+**狀態（2026-11-17）：0.2 已刷進實機（新晶片 `0xB36014`），開機正常，daemon 連得上，DETAIL 的中文點陣圖在實機顯示 `[實機]`。按鍵、LED、批准流程還沒逐項在實機確認。**
 
 ## 一句話的設計
 
@@ -75,7 +75,8 @@ host/conductor（Python daemon）
 - **用真正的 SysEx。** Agent Deck 把資料塞進 CC，是因為它的基底 Dinghy 把 SysEx 留給更新程式；fm1-base 讓 app 收發 SysEx（`APP_SYSEX`、`plat_sysex_send`）`[上游]`。前綴 `7D 43 4E` 避開 fm1-base 自己的 `7D 4C ..`。
 - **裝置只送意圖，host 再確認一次。** 裝置送 `ACTION(op, slot, tag)`；host 送鍵前重新讀一次 backend：tag 要還是那個鍵上的 agent，狀態也要對（approve / deny 只對 BLOCKED，continue 只對 IDLE / DONE）。避免「剛好換了一個 agent 到這個鍵上」時批准錯對象。
 - **沒有 auto-approve。**
-- **DETAIL 由電腦畫。** 裝置的字型只有 ASCII，中文字型也放不進韌體。所以 daemon 先去掉 agent 的介面（輸入框、狀態列），再用系統字型（macOS 的 STHeiti）把每一行畫成 240×16 的點陣圖送過去，一行一個 558 bytes 的 SysEx。韌體 0.1 收到的是 ASCII 文字。
+- **DETAIL 由電腦畫，先去掉 agent 的介面。** Claude Code：從輸入框上方的分隔線切掉，再刪底部的狀態列。Codex：歡迎畫面的點字 logo（`⣿⠿…`，字型裡沒有，會畫成方框）、底部的 `› Ask Codex…` 與 `Context 100% left` 狀態列。字型缺的字顯示成 `?`。2026-11-17 用我真實的 Claude Code 與 Codex session 對照過 `[實機]` host 端。
+- **DETAIL 的字由電腦畫。** 裝置的字型只有 ASCII，中文字型也放不進韌體。所以 daemon 先去掉 agent 的介面（輸入框、狀態列），再用系統字型（macOS 的 STHeiti）把每一行畫成 240×16 的點陣圖送過去，一行一個 558 bytes 的 SysEx。韌體 0.1 收到的是 ASCII 文字。
 - **韌體不寫 flash。** 所有狀態都在 host；fm1-emu 裡兩種晶片都是 0 次 erase / program `[模擬]`。韌體只登記 fm1-base 必要的 panel calibration 物件（`0xDC000`），不用 SLOOP 的設定 sector `0xFC000`。
 - **授權**：`firmware/conductor`、`firmware/common`、`host/conductor` 都是 MIT。沒有複製 Agent Deck（GPL-3.0）的程式碼，只參考它的按鍵配置與行為。
 

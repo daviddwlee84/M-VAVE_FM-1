@@ -50,9 +50,11 @@ _RULE = re.compile(r"^\s*[─━-]{3}")
 _PROMPT = re.compile(r"^\s*[❯›>]")
 _OPTION = re.compile(r"^\s*[❯›>]?\s*\d+\.\s")
 _CHROME = re.compile(
-    r"bypass permissions|shift\+tab|\? for shortcuts|esc to interrupt|context left|⏎|ctrl\+[a-z] |"
+    r"bypass permissions|shift\+tab|\? for shortcuts|esc to interrupt|context left|\d+% (context )?left|"
+    r"context \d+% left|← for agents|⏎|ctrl\+[a-z] |"
     r"^\s*(Context|Tokens|Cache|Approx RAM|Started:|Usage|Weekly)\b|\d+ rules \||\d+ hooks|"
-    r"[█▓▒░]{3,}|^\s*\[(Opus|Sonnet|Haiku|Fable|gpt|o\d)|^\s*✓ \w+ ×\d"
+    r"[█▓▒░]{3,}|^\s*\[(Opus|Sonnet|Haiku|Fable|gpt|o\d)|^\s*✓ \w+ ×\d",
+    re.IGNORECASE,
 )
 
 
@@ -68,6 +70,10 @@ def strip_chrome(lines: list[str]) -> list[str]:
     out = lines[:cut]
     while out and (not out[-1].strip() or _CHROME.search(out[-1]) or _RULE.match(out[-1])):
         out.pop()
+    if out and _PROMPT.match(out[-1]) and not _OPTION.match(out[-1]):
+        out.pop()  # the input line at the very bottom (Codex: "› Ask Codex to do anything")
+        while out and not out[-1].strip():
+            out.pop()
     return out
 
 
@@ -77,9 +83,17 @@ def tui_lines(raw: list[str]) -> list[str]:
     out = []
     for ln in raw:
         t = ln.translate(TUI_ASCII)
-        t = "".join(ch for ch in t if ch.isprintable() and not 0xE000 <= ord(ch) <= 0xF8FF).rstrip()
-        if t.strip():
-            out.append(t)
+        # braille and block elements are pictures drawn in text (Codex's logo): left out
+        t = "".join(
+            ch
+            for ch in t
+            if ch.isprintable() and not 0xE000 <= ord(ch) <= 0xF8FF and not 0x2800 <= ord(ch) <= 0x28FF
+            and not 0x2580 <= ord(ch) <= 0x259F
+        ).rstrip()
+        if not t.strip():
+            continue
+        lead = len(t) - len(t.lstrip(" "))
+        out.append(("  " + t.lstrip(" ")) if lead > 8 else t)  # deep indents waste the narrow screen
     return out
 
 

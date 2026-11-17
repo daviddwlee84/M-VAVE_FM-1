@@ -42,6 +42,19 @@ class LineRenderer:
             raise OSError("no font with CJK glyphs found; set detail_font in config.json")
         self.font = ImageFont.truetype(path, size)
         self.path = path
+        self._notdef = bytes(self.font.getmask("\U000F0000"))  # what a character the font lacks looks like
+        self._has: dict[str, bool] = {}
+
+    def has_glyph(self, ch: str) -> bool:
+        if ord(ch) < 0x80:
+            return True
+        if ch not in self._has:
+            self._has[ch] = bytes(self.font.getmask(ch)) != self._notdef
+        return self._has[ch]
+
+    def clean(self, text: str) -> str:
+        """'?' for what the font cannot draw, rather than its empty box."""
+        return "".join(ch if self.has_glyph(ch) else "?" for ch in text)
 
     def width(self, text: str) -> float:
         return self.font.getlength(text)
@@ -50,7 +63,7 @@ class LineRenderer:
         """Break a line where it would run past the screen, by drawn width (a CJK
         character is about twice a Latin one)."""
         out, cur = [], ""
-        for ch in text:
+        for ch in self.clean(text):
             if self.width(cur + ch) > width and cur:
                 out.append(cur.rstrip())
                 cur = "  " + ch if ch != " " else "  "
@@ -63,7 +76,7 @@ class LineRenderer:
         from PIL import Image, ImageDraw
 
         img = Image.new("L", (W, H), 0)
-        ImageDraw.Draw(img).text((2, H // 2), text, font=self.font, fill=255, anchor="lm")
+        ImageDraw.Draw(img).text((2, H // 2), self.clean(text), font=self.font, fill=255, anchor="lm")
         px = img.load()
         return pack7([1 if px[x, y] >= 110 else 0 for y in range(H) for x in range(W)])
 
