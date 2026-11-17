@@ -1,6 +1,6 @@
 # 自己的 agent 控制台：Conductor
 
-Conductor 是我在 [fm1-base](../dev/index.md) 上寫的 agent 控制台：韌體在 `firmware/conductor/`，電腦端的 daemon 在 `host/conductor/`。用過 [Agent Deck](agent-deck.md) 之後，有兩件事想改：shell pane 佔掉大半琴鍵，而且它只接 classic Herdr / tmux。
+Conductor 是我在 [fm1-base](../dev/index.md) 上寫的 agent 控制台（版本與更新見[版本紀錄](conductor-changelog.md)）：韌體在 `firmware/conductor/`，電腦端的 daemon 在 `host/conductor/`。用過 [Agent Deck](agent-deck.md) 之後，有兩件事想改：shell pane 佔掉大半琴鍵，而且它只接 classic Herdr / tmux。
 
 **狀態（2026-11-17）：0.2 已刷進實機（新晶片 `0xB36014`），開機正常，daemon 連得上，DETAIL 的中文點陣圖在實機顯示 `[實機]`。按鍵、LED、批准流程還沒逐項在實機確認。**
 

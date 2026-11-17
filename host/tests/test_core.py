@@ -321,3 +321,13 @@ def test_transport_of_old_and_new_frames():
     assert P.transport_of(P.parse(P.device_hello(0, 3, P.TR_BLE))) == P.TR_BLE
     assert P.transport_of(P.parse(P.device_heartbeat(P.TR_BLE))) == P.TR_BLE
     assert P.transport_of(P.parse(P.device_heartbeat())) == P.TR_USB
+
+
+def test_warns_when_firmware_is_newer(tmp_path):
+    from conductor import FIRMWARE_KNOWN
+
+    logs = []
+    be = FakeBackend.demo()
+    c = Conductor(backend=be, send=lambda f: None, slots=SlotMap(tmp_path / "s.json"), log=logs.append)
+    c.on_frame(P.device_hello(FIRMWARE_KNOWN[0], FIRMWARE_KNOWN[1] + 1, P.TR_USB))
+    assert any("newer than this daemon" in ln for ln in logs)

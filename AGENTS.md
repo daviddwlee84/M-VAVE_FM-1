@@ -208,6 +208,14 @@ Other rules:
 
 ## Conductor and live agents
 
+Versions (`docs/agentic/conductor-changelog.md`): firmware X.Y (`FW_MINOR` in
+`firmware/conductor/app.c`), host X.Y.Z (`__version__` in
+`host/conductor/__init__.py`, plus `FIRMWARE_KNOWN`). A host-only change bumps Z;
+a firmware change bumps Y and resets the host to X.Y.0. The protocol byte changes
+only for an incompatible change; additions are gated on the firmware version.
+Every update adds a changelog row (version, date, reflash yes/no, what, commit)
+and starts its commit subject with the version.
+
 The daemon presses keys in real agent sessions. When testing, send keys only to
 terminals the test started itself (`just cond-it` labels them `conductor-test=1`
 and kills them after). Never approve, deny or interrupt the owner's own agents

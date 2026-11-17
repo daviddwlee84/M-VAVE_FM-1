@@ -240,6 +240,11 @@ class Conductor:
             self.device_transport = P.transport_of(m)
             via = "Bluetooth" if self.device_transport == P.TR_BLE else "USB"
             self.log(f"[device] hello, protocol {m.payload[0] if m.payload else '?'}, firmware {'.'.join(map(str, self.device_fw))}, via {via}")
+            from . import FIRMWARE_KNOWN
+
+            if self.device_fw > FIRMWARE_KNOWN:
+                self.log(f"[device] firmware {'.'.join(map(str, self.device_fw))} is newer than this daemon knows "
+                         f"({'.'.join(map(str, FIRMWARE_KNOWN))}): update host/conductor (git pull)")
             if self.voice:
                 self.voice.let_go()  # the device restarted: its button is not held any more
             self.synced = True

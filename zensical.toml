@@ -57,6 +57,7 @@ nav = [
     { "用 FM-1 控制 agent" = "agentic/agent-deck.md" },
     { "自己的 agent 控制台" = "agentic/conductor.md" },
     { "Conductor 操作速查" = "agentic/conductor-cheatsheet.md" },
+    { "Conductor 版本紀錄" = "agentic/conductor-changelog.md" },
   ] },
   { "自製韌體" = "dev/index.md" },
   { "線上試玩" = "playground.md" },

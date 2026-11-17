@@ -9,6 +9,7 @@ import sys
 import time
 from pathlib import Path
 
+from . import __version__
 from .backends.base import BackendError
 from .core import DEFAULT_CONFIG, Conductor
 from .slots import SlotMap
@@ -128,6 +129,7 @@ def main(argv=None) -> int:
     slots = SlotMap(args.slots or CONFIG_DIR / f"slots-{backend.name}.json")
     cfg = load_config()
     c = Conductor(backend=backend, send=link.send, slots=slots, config=cfg)
+    print(f"[conductor] host {__version__}")
     report(backend)
     try:
         from .render import LineRenderer
