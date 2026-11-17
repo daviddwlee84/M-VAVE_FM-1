@@ -107,7 +107,7 @@ host/conductor（Python daemon）
 
 ## USB 與 Bluetooth { #bluetooth }
 
-**韌體 0.3 起支援藍牙**（2026-11-17 實作；實機還沒驗證）。使用方式見[速查](conductor-cheatsheet.md#bluetooth)。
+**韌體 0.3 起支援藍牙**，2026-11-17 在實機上連通 `[實機]`。使用方式見[速查](conductor-cheatsheet.md#bluetooth)。
 
 | 項目 | 做法 |
 |---|---|
@@ -127,7 +127,7 @@ host/conductor（Python daemon）
 | `just fw-common-test` | 0–20 bytes、558、640 bytes 的 frame 切成封包再組回，內容相同；中間插一個 note-on 會被忽略；超長的 frame 整個丟掉、下一個正常 | — |
 | host simulator 的 BLE 替身 | 拔掉 USB、從 BLE 連上後，裝置從 BLE 送出 HELLO（傳輸方式 `01`）；`OCT+` 開關藍牙；0 次 store 寫入 | `[模擬]` |
 | fm1-emu 兩種晶片 | 開機、重開都 0 次 erase / program；USB 路徑照常。模擬器不模擬藍牙無線電 | `[模擬]` |
-| 實機：Mac 經藍牙連上、daemon 用藍牙 port | 還沒做 | — |
+| 實機：Mac 經藍牙連上、daemon 用藍牙 port | 拔掉 USB，在 MIDI 工作室的藍牙設定連上 `FM-1 3399`（不需要配對碼）；CoreMIDI 的 port 名稱是 `FM-1 3399 Bluetooth`，daemon 自己找到並回報 `firmware 0.3, via Bluetooth` | `[實機]` |
 
 ## 經過 iOS 或 MIDI routing app { #routing }
 
@@ -317,7 +317,9 @@ Preflight：
 - [ ] 在 fm1-emu 視窗裡手動按一輪 `REC` / `FX` / `ENV`，對 hc 的假 agent。
 - [ ] classic Herdr 的動作（approve / deny / focus）在一個新開的測試 workspace 裡驗證。
 - [x] Bluetooth（0.3），見 [USB 與 Bluetooth](#bluetooth)。
-- [ ] 藍牙在實機驗證：Mac 連上 `FM-1 XXXX`、daemon 走藍牙、拔掉 USB 用電池。
+- [x] 藍牙在實機連通（2026-11-17）。
+- [ ] FM-1 關機再開機後，macOS 會不會自己重新連上藍牙（還沒試）。
+- [ ] 不用 GUI 連線：`just cond-ble connect / disconnect`（CoreBluetooth + `MIDIBluetoothDriverActivateAllConnections`），見[速查](conductor-cheatsheet.md#bluetooth)。
 - [ ] `codex app-server` backend。
 - [ ] 語音鍵（`ARP`）對真的 Wispr Flow 試一次：host 單元測試確認了送出的按鍵與一定會放開，**還沒在有輔助使用權限的 terminal 裡實際觸發過** Wispr Flow。
 - [x] 實刷（2026-11-17），見[實刷準備](#flash)。
