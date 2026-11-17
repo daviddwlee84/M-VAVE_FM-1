@@ -61,6 +61,7 @@ nav = [
   ] },
   { "自製韌體" = [
     { "開發環境" = "dev/index.md" },
+    { "用 MORSE 學摩斯" = "dev/morse-learn.md" },
     { "摩斯電碼機" = "dev/morse.md" },
     { "摩斯電碼機操作速查" = "dev/morse-cheatsheet.md" },
     { "裝置端語音合成" = "dev/tts.md" },

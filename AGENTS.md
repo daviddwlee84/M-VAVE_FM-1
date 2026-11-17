@@ -71,6 +71,9 @@ just morse-test        # Morse host unit tests (protocol vectors shared with tes
 just morse-emu [CHIP]  # Morse firmware in fm1-emu with the virtual USB cable
 just morse-type [--dry-run]  # what the FM-1 reads, typed into the focused Mac app
 just morse-send TEXT   # the FM-1 plays TEXT as received
+just morse-backup FILE # Morse 0.4+: the learning progress into JSON (read-only on the unit)
+just morse-restore FILE  # back onto the unit; it asks on its screen (PLAY yes)
+just morse-shots       # simulator screenshots into fm1-morse docs/screens/
 
 just voice-vendor      # Moonshine Klatt, python_wizard, CMUdict, 386DX engine into vendor/ (pinned commits)
 just voice-fetch       # community firmwares that speak (Speak37, SPELLBOX, 386DX, ...), digest-verified, for the emulator

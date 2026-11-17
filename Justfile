@@ -301,6 +301,32 @@ morse-send +text:
 morse-sim:
     PYTHONPATH=host uv run --locked --all-groups python -m morse --simulate type --dry-run
 
+# The learning progress into a JSON file (firmware 0.4+; read-only on the FM-1).
+morse-backup file:
+    PYTHONPATH=host uv run --locked --all-groups python -m morse backup "{{file}}"
+
+# A progress JSON file back onto the FM-1: it asks on its screen first (PLAY yes, HOME no).
+morse-restore file:
+    PYTHONPATH=host uv run --locked --all-groups python -m morse restore "{{file}}"
+
+# The simulator's screenshots, doubled (nearest neighbour), into fm1-morse's docs/screens/ for its README.
+morse-shots: (fw-test "morse")
+    #!/usr/bin/env bash
+    set -euo pipefail
+    uv run --locked --all-groups python - <<'PY'
+    from pathlib import Path
+    from PIL import Image
+    src, dst = Path("firmware/morse/build/host"), Path("firmware/morse/docs/screens")
+    dst.mkdir(parents=True, exist_ok=True)
+    names = """menu boot card_new card_new_peek card_hear card_see_key card_hear_key result_right result_keyed result_keyed_wrong
+    result_almost done practice_test placement_ask listen listen_hidden key key_code key_timing rhythm rhythm_good
+    rhythm_dahs type type_code type_phrases chart chart_edit chart_save load_ask settings""".split()
+    for n in names:
+        im = Image.open(src / f"{n}.png").convert("RGB")
+        im.resize((im.width * 2, im.height * 2), Image.NEAREST).save(dst / f"{n}.png", optimize=True)
+    print(f"{len(names)} screens in {dst}")
+    PY
+
 # ---- voice lab: speech options for a vocabulary app (host/voicelab, docs/dev/tts.md) ----
 
 # Upstream code the lab builds on, at pinned commits, into vendor/ (git-ignored): Moonshine's Klatt TTS (MIT),

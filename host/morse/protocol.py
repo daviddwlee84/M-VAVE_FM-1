@@ -18,11 +18,17 @@ VERSION = 1
 T_HELLO_ACK = 0x01
 T_TEXT = 0x02
 T_STOP = 0x03
+T_PROG_REQ = 0x04  # firmware 0.4 and later: send the progress (progress.py)
+T_PROG_LOAD = 0x05  # a chunk of progress to load (the device asks its owner first)
 
 # device -> host
 T_HELLO = 0x41
 T_HEARTBEAT = 0x42
 T_CHAR = 0x43
+T_PROG = 0x44  # a chunk of the progress
+T_PROG_DONE = 0x45  # the answer to a load: PD_*
+PD_LOADED, PD_DECLINED, PD_BAD = 0, 1, 2
+PROG_FIRMWARE = (0, 4)  # the first firmware with T_PROG_*
 
 TR_USB, TR_BLE = 0, 1
 
@@ -103,6 +109,10 @@ def stop() -> bytes:
     return frame(T_STOP)
 
 
+def prog_req() -> bytes:
+    return frame(T_PROG_REQ)
+
+
 # ---- device -> host (built here for tests and the simulator)
 def device_hello(fw_major: int, fw_minor: int, transport: int = TR_USB) -> bytes:
     return frame(T_HELLO, bytes([VERSION, fw_major, fw_minor, transport]))
@@ -134,9 +144,10 @@ def hexs(b: bytes) -> str:
 
 # shared with firmware/morse/tests/basic.txt: the same bytes, by the name in its comments
 VECTORS = {
-    "hello": (device_hello(0, 3), "F0 7D 4D 4F 01 41 01 00 03 00 F7"),
+    "hello": (device_hello(0, 4), "F0 7D 4D 4F 01 41 01 00 04 00 F7"),
     "hello_ack": (hello_ack(), "F0 7D 4D 4F 01 01 01 F7"),
     "char_k": (device_char("K"), "F0 7D 4D 4F 01 43 4B F7"),
     "text_cq": (text("cq")[0], "F0 7D 4D 4F 01 02 43 51 F7"),
     "stop": (stop(), "F0 7D 4D 4F 01 03 F7"),
+    "prog_req": (prog_req(), "F0 7D 4D 4F 01 04 F7"),
 }

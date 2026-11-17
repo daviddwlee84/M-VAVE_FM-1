@@ -1,6 +1,6 @@
 # 摩斯電碼機操作速查
 
-韌體 0.2 / 0.3（機器上還是 0.1 的話，差別見文末）。設計與原理見[摩斯電碼機](morse.md)。
+韌體 0.4（0.3 以前沒有的操作標了「0.4」；0.1 和 0.2 的差別見文末）。學習的步驟見[用 MORSE 學摩斯](morse-learn.md)。設計與原理見[摩斯電碼機](morse.md)。
 
 ## 任何頁面
 
@@ -12,7 +12,7 @@
 | `K1` | 聽的速度：字元 5–40 WPM（預設 20） |
 | `K2` | 間隔（Farnsworth）：字和字之間拉開，5 到字元速度（預設 8） |
 | `K3` | 音高 300–1200 Hz（預設 600）。收到的訊號高一個大三度 |
-| `K4` | 發報速度 5–40 WPM（預設 10）：keyer 的節奏、解碼器的起點、RHYTHM 的目標 |
+| `K4` | 發報速度 5–40 WPM（預設 10）：keyer 的節奏、KEY 頁解碼器的起點、RHYTHM 的目標（0.4 起 PRACTICE 的打碼卡不看它） |
 | `MASTER` | 音量 |
 
 轉速度時畫面上方會顯示它的意思，例如「SEND 10 WPM DIT 120MS DAH 360MS」。設定改完 3 秒後自動存。不知道怎麼設的話，到 SETTINGS 選 PRESET，見[速度](morse.md#speed)。
@@ -22,12 +22,17 @@
 | 控制 | 作用 |
 |---|---|
 | `PLAY` | 開始一回合；題目播完後再按是重播 |
+| `SELECT`（開始畫面） | 0.4：切換「一回合」和「TEST 分級測驗」（下兩組各考一次，答對的可以標成已會） |
 | `E4` `F4` `G4` `A4` | 四選一的題目：四個亮燈的鍵對應畫面上四個選項（由左到右） |
 | `SELECT` + `SEL` | 也可以轉 `SELECT` 選、按 `SEL` 確定（閃爍的是目前選的） |
-| 琴鍵（電鍵） | 「打出來」的題目：畫面出現 `your turn` 後照設定的 keyer 打 |
+| 琴鍵（電鍵） | 「打出來」的題目：畫面出現 `your turn` 後照設定的 keyer 打。0.4 起看你自己的節奏（劃約 3 個點長），快慢都可以 |
 | `SEL` | 打的題目不會：算錯，顯示答案 |
 | 任一琴鍵 | 新字：看完聽完，下一張；答案畫面：不等，直接下一張 |
+| `PLAY`（新字） | 再聽一次（沒聽清楚時） |
+| `SEQ` | 0.4，SOUND 模式：新字和答案畫面偷看點劃，換卡就藏回去。「聽了選」的題目不能看 |
 | `HOME` | 離開，已答的部分會存 |
+
+0.4 打碼卡的結果頁：`RIGHT`／`ALMOST`／`NO`、評級（GREAT／GOOD／CLOSE／OFF 和分數）、`READ AS` 解碼器讀成的字、SHOULD（標準節奏）對 YOU（你按的）的長短條，判反的那一下是紅色，下面一行是要改什麼。ALMOST 不升盒也不歸零，回合最後再問一次。開始畫面的 `NEXT GROUP WAITS ON` 是擋住下一組的字。判定細節見[打碼卡怎麼判](morse.md#judging)。
 
 ## LISTEN（收聽）
 
@@ -85,6 +90,19 @@
 |---|---|
 | `SELECT` | 移動 |
 | `PLAY` / `SEL` | 聽這個字 |
+| `REC` | 0.4：進入 EDIT（改的是副本，標題顯示 `EDIT *`） |
+
+EDIT 裡（0.4）：
+
+| 控制 | 作用 |
+|---|---|
+| `OCT-` / `OCT+`、`K1` | 這個字的等級 0–5；0 是「忘了」，會重新當新字出現 |
+| `K2` | 開放的組數 ±1 |
+| `FX` | 全部退一盒（生疏時） |
+| 按住 `SEL` 2 秒 | 全部歸零 |
+| `PLAY` / `REC` | 問「SAVE CHANGES?」：再按 `PLAY` 存，`HOME` 不存 |
+
+任何改進度的問題（SAVE CHANGES?、MARK THESE KNOWN?、LOAD THIS BACKUP?）都只認 `PLAY`（是）和 `HOME`（否），其他鍵沒作用。
 
 顏色：深紅是剛學、黃是一半、綠是熟了（兩張卡盒號的平均）；幾乎全黑的格子是還沒開的字。
 
@@ -104,6 +122,7 @@
 | SOUND | ON 或 OFF（看燈） |
 | CARDS | 每回合 10–30 張 |
 | LEARN BY | SOUND（預設，建議）或 SIGHT（顯示點劃）。原因見[先用聽的](morse.md#by-sound) |
+| JUDGING | 0.4：BY RHYTHM（預設，看自己的長短比例）或 STRICT（照發報速度，0.3 的判法） |
 | TYPE KEYS | TYPE 頁的排列 |
 
 ## 燈
@@ -121,7 +140,11 @@
 just morse-type            # 解出的字打進 Mac 目前的視窗（要 Accessibility 權限）
 just morse-type --dry-run  # 只印出來
 just morse-send cq cq de fm1 k   # FM-1 當成收到的播出來（"73 <SK>" 這樣的 prosign 0.2 起可以）
+just morse-backup progress.json  # 0.4：學習進度存成 JSON（FM-1 上什麼都不變）
+just morse-restore progress.json # 0.4：載回去；FM-1 會先問，按 PLAY 才載入
 ```
+
+不想裝 Python 的話，用 Chrome 開 fm1-morse 的 `web/progress.html` 也能備份和還原。
 
 ## 0.1 和 0.2 的差別
 

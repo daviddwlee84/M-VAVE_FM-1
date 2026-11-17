@@ -98,6 +98,11 @@ class SimLink:
         self.beat = beat
         self.acked = False
         self._last = 0.0
+        from . import progress as G
+
+        self.progress = G.Progress()      # what it has learnt
+        self.owner_says = P.PD_LOADED     # the owner's answer when a backup comes in (PLAY / HOME)
+        self._asm = G.Assembler()
         self.q.put(P.device_hello(*_firmware()))
         if lines is None:
             threading.Thread(target=self._read_stdin, daemon=True).start()
@@ -123,6 +128,23 @@ class SimLink:
             print(f"[FM-1 plays] {m.payload.decode('ascii')}", file=self.out, flush=True)
         elif m and m.type == P.T_STOP:
             print("[FM-1 stops]", file=self.out, flush=True)
+        elif m and m.type == P.T_PROG_REQ:
+            from . import progress as G
+
+            for f in G.frames(self.progress, P.T_PROG):
+                self.q.put(f)
+        elif m and m.type == P.T_PROG_LOAD:
+            from . import progress as G
+
+            try:
+                p = self._asm.feed(m.payload)
+            except G.ProgressError:
+                self.q.put(P.frame(P.T_PROG_DONE, bytes([P.PD_BAD])))
+                return
+            if p is not None:
+                if self.owner_says == P.PD_LOADED:
+                    self.progress = p
+                self.q.put(P.frame(P.T_PROG_DONE, bytes([self.owner_says])))
 
     def poll(self, timeout: float = 0.1) -> list[bytes]:
         now = time.time()

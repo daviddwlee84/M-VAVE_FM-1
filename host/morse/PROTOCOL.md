@@ -38,6 +38,8 @@ ID; `4D 4F` ("MO") keeps it apart from fm1-base's `7D 4C …` and Conductor's `7
 |---|---|---|
 | `41` | HELLO | `ver`, firmware major, minor, transport (0 USB, 1 BLE). Once a second until a HELLO_ACK |
 | `42` | HEARTBEAT | `ver`, transport. Once a second after a HELLO_ACK |
+| `44` | PROG | firmware 0.4+: a chunk of the progress, the answer to PROG_REQ (see Progress) |
+| `45` | PROG_DONE | firmware 0.4+: the answer to a PROG_LOAD: `00` loaded, `01` declined on the device, `02` refused (a chunk missing or out of turn, CRC, contents) |
 | `43` | CHAR | ASCII: what the device read from the key (KEY page), or what was typed (TYPE page: a letter, or from firmware 0.2 a phrase such as `<SK> `, several characters in one frame; in COMPOSE mode the whole line when it is sent). `20` (space) ends a word; `*` is a pattern that is no character |
 
 ### Host → device
@@ -47,8 +49,29 @@ ID; `4D 4F` ("MO") keeps it apart from fm1-base's `7D 4C …` and Conductor's `7
 | `01` | HELLO_ACK | `ver`. The answer to HELLO **and to every HEARTBEAT**: the device counts the host as gone 10 s after its last frame |
 | `02` | TEXT | ASCII, at most 60 characters: played as received, at the device's hearing speed. Characters without a code are skipped. From firmware 0.2, characters between `<` and `>` are run together as one prosign (`<SK>` is `...-.-`) |
 | `03` | STOP | stop playing the received text |
+| `04` | PROG_REQ | firmware 0.4+: send the progress. Nothing changes on the device |
+| `05` | PROG_LOAD | firmware 0.4+: a chunk of progress to load. Once all have come and check out, the device shows what it got and asks its owner (`PLAY` yes, `HOME` no), then answers PROG_DONE |
 
 CHAR is sent only while the host counts as present (it answered within 10 s).
+
+## Progress
+
+Firmware 0.4 and later; `host/morse/progress.py`, and the same code in fm1-morse `web/progress.html`.
+
+The record: a format byte (`01`), then `learn.c`'s `ln_blob`, 259 bytes little-endian with no padding (round u16,
+streak u16, open u8, answered u32, right u32, then for each of the 41 characters in Koch order its recognise and
+send boxes, u8 each, then for each its two last-answered rounds, u16 each, `FFFF` never), then a CRC-16/CCITT-FALSE
+(poly `1021`, init `FFFF`) of the 260 bytes before it, low byte first: 262 bytes.
+
+On the wire it is cut into chunks of 49 bytes: 6 frames, each `<index> <count = 06>` and the chunk 7-bit packed (for
+each 7 bytes, a byte of their high bits, bit j for byte j, then the 7 bytes' low 7 bits). The device sends one frame
+per main-loop pass; the host sends them about 30 ms apart. A load must come in order from index 0; a gap starts it
+over and is answered `02`.
+
+The file (`morse backup`): JSON, `"format": "fm1-morse-progress"`, `"version": 1`, the round, streak, open,
+answered and right, and for each character `recognise`, `send` (0..5), `last_recognise`, `last_send` (a round or
+`null`). Both the host and the device refuse a record that does not make sense (open outside 5..41, a box over 5, an
+answer after the current round, more right than answered).
 
 ## Shared vectors
 
@@ -57,11 +80,13 @@ The same bytes are in `host/morse/protocol.py` (`VECTORS`) and in
 
 | Name | Bytes |
 |---|---|
-| hello (firmware 0.3, USB) | `F0 7D 4D 4F 01 41 01 00 03 00 F7` |
+| hello (firmware 0.4, USB) | `F0 7D 4D 4F 01 41 01 00 04 00 F7` |
 | hello_ack | `F0 7D 4D 4F 01 01 01 F7` |
 | char_k | `F0 7D 4D 4F 01 43 4B F7` |
 | text_cq | `F0 7D 4D 4F 01 02 43 51 F7` |
 | stop | `F0 7D 4D 4F 01 03 F7` |
+| prog_req | `F0 7D 4D 4F 01 04 F7` |
+| prog_fresh_0, prog_fresh_5, prog_load_0..5 | in `progress.py` `VECTORS`: a fresh record's first and last chunk as sent, and the sample backup loaded |
 
 ## Versions
 

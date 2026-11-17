@@ -4,6 +4,8 @@
             focused app on the computer (macOS; Accessibility permission), or printed (--dry-run)
   send TEXT the FM-1 plays TEXT as received (amber on its KEY page); "-" reads lines from stdin
   listen    print what the FM-1 reads, nothing typed
+  backup FILE   the learning progress into a JSON file (firmware 0.4+; nothing changes on the FM-1)
+  restore FILE  a JSON file back onto the FM-1: it asks first (PLAY yes, HOME no)
 
 --simulate puts a text stand-in in place of the FM-1 (lines on stdin are what it "read")."""
 
@@ -15,6 +17,8 @@ import threading
 import time
 
 from . import __version__
+from . import progress as G
+from . import protocol as P
 from .core import Host
 from .device import MidiLink, SimLink
 from .typer import MacTyper, PrintTyper, accessibility_trusted
@@ -95,6 +99,53 @@ def cmd_send(args) -> int:
     return 0
 
 
+def _connected_for_progress(args):
+    link = open_link(args)
+    host = Host(link, None, log=log)
+    if not wait_connected(host):
+        link.close()
+        raise RuntimeError("the FM-1 has not said HELLO: is it running Morse?")
+    if not host.can_backup():
+        fw = host.firmware or (0, 0)
+        link.close()
+        raise RuntimeError(f"firmware {fw[0]}.{fw[1]} has no progress backup; it came in "
+                           f"{P.PROG_FIRMWARE[0]}.{P.PROG_FIRMWARE[1]}")
+    return link, host
+
+
+def cmd_backup(args) -> int:
+    link, host = _connected_for_progress(args)
+    try:
+        p = host.backup()
+    finally:
+        link.close()
+    text = G.to_json(p, host.firmware)
+    if args.file == "-":
+        sys.stdout.write(text)
+    else:
+        with open(args.file, "w") as f:
+            f.write(text)
+        log(f"saved: {G.summary(p)}")
+    return 0
+
+
+def cmd_restore(args) -> int:
+    with open(args.file) as f:
+        p = G.from_json(f.read())
+    log(f"from the file: {G.summary(p)}")
+    link, host = _connected_for_progress(args)
+    try:
+        log("sent: press PLAY on the FM-1 to load it, HOME to keep what is there")
+        r = host.restore(p)
+    finally:
+        link.close()
+    if r == P.PD_LOADED:
+        log("loaded")
+        return 0
+    log("not loaded: " + ("declined on the FM-1" if r == P.PD_DECLINED else "the FM-1 refused it (damaged?)"))
+    return 1
+
+
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(prog="morse", description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--port", help="MIDI port name (part of it); default: one named MORSE, or one saying HELLO")
@@ -111,10 +162,16 @@ def main(argv: list[str] | None = None) -> int:
     s = sub.add_parser("send", help="the FM-1 plays TEXT")
     s.add_argument("text", nargs="+", help='the text, or "-" for lines from stdin')
     s.set_defaults(fn=cmd_send)
+    b = sub.add_parser("backup", help="the learning progress into a JSON file")
+    b.add_argument("file", help='where ("-" for stdout)')
+    b.set_defaults(fn=cmd_backup)
+    r = sub.add_parser("restore", help="a JSON file back onto the FM-1 (it asks first)")
+    r.add_argument("file")
+    r.set_defaults(fn=cmd_restore)
     args = ap.parse_args(argv)
     try:
         return args.fn(args)
-    except RuntimeError as e:
+    except (RuntimeError, TimeoutError, G.ProgressError, OSError) as e:
         log(str(e))
         return 1
 
