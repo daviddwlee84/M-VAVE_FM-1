@@ -29,6 +29,7 @@ MORSE 是這個 repo 自己寫的 FM-1 韌體（[fm1-morse](https://github.com/d
 - **結果頁**：打碼卡會顯示評級（GREAT／GOOD／CLOSE／OFF），以及兩列長短條。上面的 SHOULD 是照你這次的速度排出的標準節奏，下面的 YOU 是你實際按的。判反的那一下標紅，下面一行告訴你要改什麼，例如「dahs short: hold a dah for 3 dits」。
 - **差一點（ALMOST）**：長短比例很接近界線時算 ALMOST，不升級也不歸零，回合最後會再問一次。
 - **進度怎麼往前**：每個字有兩個盒號，「認得」和「打得出」各一個，0–5。答對升一盒，答錯回 0。開放中的每個字都要「認得」到 2 號盒、「打得出」到 1 號盒，才會開下一組 5 個字。開始畫面的 `NEXT GROUP WAITS ON …` 會列出還差哪些字。
+- 新的一組 5 個字會分兩回合介紹（每回合最多 3 個新字）。剛學的字和答錯過的字在同一回合會出兩次，熟的字只在有空位時才出現。
 - 排程算的是「回合」不是天數（FM-1 關機後沒有時鐘）。一天一回合最接近原本的設計；一天做很多回合也可以，只是複習的間隔會變短。
 
 !!! note "0.3 卡在第一組"
@@ -81,6 +82,20 @@ EDIT 改的是副本，按 `PLAY`（或 `REC`）時才問「SAVE CHANGES?」。
 - **指令列**：`just morse-backup progress.json`，之後 `just morse-restore progress.json`。
 
 FM-1 收到備份後會顯示回合數、開放幾個字、答過幾題，按 `PLAY` 才載入。備份檔是 JSON，可以直接改每個字的盒號。
+
+## 背後的學習法 { #methods }
+
+完整的英文版和出處在 fm1-morse 的 [LEARNING.md](https://github.com/daviddwlee84/fm1-morse/blob/main/LEARNING.md)。那邊是給公開讀者看的，所以用英文寫；這裡只摘要。
+
+| 方法 | 主張 | MORSE 怎麼做 |
+|---|---|---|
+| **Koch 法**（Ludwig Koch，1936） | 把每個字當成一個聲音記，速度快到數不了點劃；不要看點劃圖；先學兩個字，抄對約 90% 再加一個 `[調研]` | 按 LCWO 的 Koch 順序一次開放 5 個字；字元預設 20 WPM；預設 SOUND 模式不畫點劃，只在不影響練習的地方可以按 `SEQ` 偷看 |
+| **即時辨認**（instant character recognition，CW Academy） | 一聽就知道是哪個字，不要先數幾點幾劃再查表。用 5–10 WPM 的慢速學，容易養成數點劃的習慣，之後很難改。LCWO 的建議是字元至少 25–30 WPM `[上游]` | 字元速度不放慢，用 Farnsworth 拉開間隔。如果 20 WPM 還數得出來，就把 `K1` 調高 |
+| **Farnsworth** | 字本身維持高速，拉長字和字之間的間隔，讓整體變慢。ARRL 為此訂了自己的時序標準 `[上游]` | `K1` 是字元速度、`K2` 是有效速度；PRESET 從 START（20/8）到 FAST（25/25） |
+| **Leitner 盒**（Sebastian Leitner，1972） | 答對往下一盒，答錯回第一盒，前面的盒子比較常複習 `[上游]` | 每個字有「認得」和「打得出」兩張卡，各在 0–5 號盒，盒 n 每 2ⁿ 回合複習；弱卡在同一回合會重複出現 |
+| **手比耳朵慢** | 發報是動作技巧，新手的手打不了 20 WPM | 聽和發分開兩個速度；打碼卡看你自己的長短比例，不看絕對速度；RHYTHM 頁專門練手 |
+
+出處：[Koch 1936 報告摘要](https://longislandcwclub.org/wp-content/uploads/2022/11/EXECUTIVE-SUMMARY-KOCH-1936.pdf)、[CW Academy 初級課程](https://cwops.org/wp-content/uploads/2025/02/Beginner-curriculum.htm)、[LCWO ICR guidelines](https://cwops.org/wp-content/uploads/2024/08/LCWO-ICR-Guidelines.pdf)、[ARRL 時序標準](https://uoxyc.github.io/morse/kodbok/fs_fansworth_x9004008.pdf)、[Leitner system](https://en.wikipedia.org/wiki/Leitner_system)。Koch 那組學生「不到 14 小時抄到 12 WPM」的數字只見於二手摘要，沒有核對過原文。
 
 ## 進階：交給 Vail
 

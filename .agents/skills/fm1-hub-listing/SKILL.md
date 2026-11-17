@@ -163,6 +163,11 @@ Announcements happen on r/MVaveFM1. Do not write `@name` in PR text.
 
 ## Pitfalls met
 
+- `just fw-build` and `just morse-release` run `fw-setup` first, whose `git submodule update` checks the app
+  submodule out at the commit this repo records (detached HEAD): commit inside the app, then commit the new pointer
+  here, then build. Otherwise the package is built from the old commit while the host simulator (run on the working
+  tree) passes. Check a release in fm1-emu for the change itself before handing it to the owner.
+
 - The Hub's CONDUCTOR is another author's (MammothCheese); names and ids collide across projects: search the
   catalog before naming.
 - A python patch that does `open(p, "w").write(open(p).read())` empties the file: the write-open truncates first.

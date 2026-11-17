@@ -47,6 +47,7 @@ M-Flasher 在兩次寫入前各自動存了一份：`~/Documents/M-Flasher/backu
 | 2026-11-18 02:33 | Hub 測試 1（Morse → SLOOP，走 USB-MIDI）之前的 Morse 0.3 開發版（`FM-1_1300`） | `backups/2026-11-18-pre-hub-test-1/fm1-20261118-023344.bin` + `.json` | `c2b315877b9a7e0edc59c308c866c166db68c2005a8aa000c82789cd732dfc3c` | 尚未上傳 |
 | 2026-11-18 02:39 | Hub 測試 2（SLOOP → Morse release，走 USB-MIDI）之前的 SLOOP 2.8.5（`0xDA000` 仍有 Morse 的紀錄） | `backups/2026-11-18-pre-hub-test-2/fm1-20261118-023901.bin` + `.json` | `deacf5153e17b52a6675a429bf063cb76e29ffff01d87de3214cd824d4151464` | 尚未上傳 |
 | 2026-11-18 02:42 | Hub 測試 3 之前的 Morse 0.3 release（`FM-1_41000300`，含學習紀錄）：測完要回到這裡就還原這份 | `backups/2026-11-18-pre-hub-test-3/fm1-20261118-024232.bin` + `.json` | `5601847d2505efa80d85ec611a0813f2854bb9f40c91cb49d47d65299f7e50b5` | 尚未上傳 |
+| 2026-11-18 04:47 | 刷 Morse 0.4 之前的 Morse 0.3 release（`FM-1_41000300`，含學習紀錄：ROUND 15、S N A P T 剛解鎖） | `backups/2026-11-18-pre-morse-0.4/fm1-20261118-044757.bin` + `.json` | `73a530d20bc6409488a28717a2f5c5817a7083c023dc88f657ecd37fcc82602b` | 尚未上傳 |
 
 ## 下載的檔案
 
@@ -109,6 +110,7 @@ M-Flasher 在兩次寫入前各自動存了一份：`~/Documents/M-Flasher/backu
 | 2026-11-18 02:45 | 本人用 M-Flasher GUI 還原 `backups/2026-11-17-stock/fm1-20261117-011632.bin`（RESTORE FULL FLASH） | 原廠開機；`fm1-find` 顯示 `midi FM-1 (running)`，`fm1_install.py --info` 回答 `FM-1_015 [running] port: FM-1` |
 | 2026-11-18 02:46 | agent 執行 `just fm1-download-mode`（原廠執行中）、`fm1-backup pre-hub-test-3-stock`、`fm1-restart` | M-Flasher 回報 bootloader stock、firmware `FM-1 015 (stock)`；備份 SHA-256 `c6a47902…44fd38`，**和 11/17 的原廠備份逐 sector 完全相同**：還原是完整的。重開回原廠 |
 | 2026-11-18 02:48 | Hub 測試 3：本人執行 `fm1_install.py firmware/morse/build/morse-0.3.fwsc`，機器上是原廠 015（`FM-1_015`，port `FM-1`） | 成功：`checking the package (34 reads)` → `switching to update mode` → `the loader writes only the sectors that changed (fast install)` → `done: the FM-1 runs FM-1_41000300`。PRACTICE 從 ROUND 1 開始（原廠備份裡沒有 Morse 紀錄）。Hub 要求的三項實機測試全部通過 |
+| 2026-11-18 04:47 | agent 執行 `fm1_install.py --info`、`just fm1-download-mode`、`fm1-backup pre-morse-0.4`、`fm1-restart`（刷 Morse 0.4 前的 preflight） | `--info` 回答 `FM-1_41000300 [running]`；flash `0xB36014`；備份 SHA-256 `73a530d2…2e9b556`，`0xDA000`–`0xDBFFF` 有 Morse 的紀錄；重開回 Morse 0.3。0.4 的紀錄格式沒變，[模擬] 疊在 0.2／0.3 紀錄上升級都保留 |
 
 ## Phase 1 驗收
 

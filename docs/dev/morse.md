@@ -72,6 +72,9 @@ WPM 是每分鐘幾個字，以 PARIS 這個字（50 個單位）為準：**dit 
 
 - **一個字兩張卡**：「認得它」（聽到或看到，說出是哪個字）和「打得出它」（看到字母，用電鍵打出來）。
 - **Leitner 盒**：每張卡在 0–5 號盒。答對升一盒，答錯回 0 號，盒 n 每 2ⁿ 個回合複習一次。答錯的卡會在同一回合最後再問一次，這次答對也不升盒。
+- **一回合怎麼出題**（0.4）：先排新字和到期的卡（盒號低、等最久的優先）。其中盒號 0–1 的弱卡（包括剛介紹的新字）會在回合後半再出一次，重複那次答對不會再升盒。還有空位，才用沒到期的卡補滿，最弱的優先。0.3 每張卡一回合只出一次，空位直接用熟字補，所以新的一組開放後，一回合裡大部分還是 K U R E 這些熟字（2026-11-18 試用時的回饋 `[實機]`）。
+- **新字一次介紹幾個**：開放一組 5 個字時，每回合最多介紹 3 個，所以會分兩回合介紹完。後一回合又出現 NEW LETTER，是同一組剩下的字，不是又開了一組。
+- **回合數**：做完一回合，或答過題後中途離開（`HOME`、換頁），都算一回合。
 - **用回合數，不用日期**：FM-1 沒有關機後還在走的時鐘，所以排程數的是「做了幾回合」。之後接電腦時可以讓 host 送日期，改成真正的天數，但還沒做。
 - **新字按 Koch 順序**（LCWO 的 41 字：K M U R E S N A P T L W I . J Z = F O Y , V G 5 / Q 9 2 H 3 8 B ? 4 7 C 1 D 6 0 X），5 個一組，像五十音的一「行」。一回合最多 3 個新字，每個新字先播兩次給你聽，然後才考。開著的字全部「認得」到 2 號盒以上、「打得出」到 1 號盒以上，才開下一組。
 - **先選擇，後回想**：「認得」的卡在 0–2 號盒是聽完從四個裡選（四個選項對應 E4 F4 G4 A4 四個亮燈的鍵，干擾選項挑碼型相近的），3 號盒以上改成聽完直接打出來。
@@ -299,7 +302,7 @@ TYPE 頁的 LIVE 對應「打一個送一個」，COMPOSE 對應「先打好再�
 | 版本 | 日期 | 要刷機 | 內容 |
 |---|---|---|---|
 | 韌體 0.1、host 0.1.0 | 2026-11-17 | 是（22:54 刷入，`c3b5cd6`） | 第一版：KEY、TYPE、PRACTICE、CHART、SETTINGS，兩種學習方式，Vail 格式的 MIDI，host 的 `type`／`send`／`listen`。原本規劃分成 0.1（核心）和 0.2（閃卡），因為一起做完、都還沒刷，合併成 0.1 |
-| 韌體 0.4、host 0.4.0 | 2026-11-18 | 是（還沒刷） | 實機回饋（ROUND 14 還停在第一組）：打碼卡改用答案自己的節奏判斷（[判定](#judging)），手速跨卡延續，評級和 SHOULD／YOU 對照圖，ALMOST；SET 頁的 JUDGING 可以切回 STRICT；CHART 編輯、分級測驗、開始畫面列出擋住下一組的字，SOUND 模式下新字和答案可以按 `SEQ` 偷看點劃，[手動修改都要按 PLAY 確認](#progress)；進度的[備份與還原](#backup)（`T_PROG_*`、host 的 `backup`／`restore`、網頁）。藍牙順延到 0.5 |
+| 韌體 0.4、host 0.4.0 | 2026-11-18 | 是（還沒刷） | 實機回饋（ROUND 14 還停在第一組）：打碼卡改用答案自己的節奏判斷（[判定](#judging)），手速跨卡延續，評級和 SHOULD／YOU 對照圖，ALMOST；SET 頁的 JUDGING 可以切回 STRICT；CHART 編輯、分級測驗、開始畫面列出擋住下一組的字，SOUND 模式下新字和答案可以按 `SEQ` 偷看點劃，弱卡在同一回合重複出現、熟字只在有空位時補，[手動修改都要按 PLAY 確認](#progress)；進度的[備份與還原](#backup)（`T_PROG_*`、host 的 `backup`／`restore`、網頁）。藍牙順延到 0.5 |
 | 韌體 0.3 release（`FM-1_41000300`） | 2026-11-18 | 是（Hub 測試時用 USB-MIDI 裝過三次） | fm1-morse 的第一個 release [v0.3](https://github.com/daviddwlee84/fm1-morse/releases/tag/v0.3)：identity 改成 `FM-1_41`，授權改成 GPL-3.0-or-later，程式和 0.3 相同 |
 | 韌體 0.3、host 0.3.0 | 2026-11-18 | 是（02:12 刷入，`02b0ea2`） | TYPE 打開鍵上點劃時，鍵盤從 86 px 拉高到 126 px、上方輸入行縮成一行，黑鍵和白鍵都同時放得下碼和字母（0.2 黑鍵只剩碼、白鍵的碼壓到字母，數字頁的 `0` 放不下）。藍牙順延到 0.4 |
 | 韌體 0.2、host 0.2.0 | 2026-11-18 | 是（00:14 刷入，`54ff440`） | 實機試用後的回饋：發報速度和聽的速度分開（K4），PRESET 推薦組合，轉速度時顯示 dit／dah 毫秒；KEY 頁 TEXT／CODE／TIMING 三種顯示；RHYTHM 頁（練長短、提示、建議速度）；LISTEN 頁（連續播放五種節目）；TYPE 頁翻三頁（字母、數字符號、片語）、三種排列、鍵上點劃、LIVE／COMPOSE、`PLAY` 可停止、`REC` 刪字和清空；prosign `<SK>`；解碼器遇到長短差 2 倍時回頭修正；靜音和改音高不再重設解碼器。藍牙順延到 0.3 |
@@ -312,7 +315,7 @@ TYPE 頁的 LIVE 對應「打一個送一個」，COMPOSE 對應「先打好再�
 - **新 repo 的內容**：根目錄有 GPL-3.0 `LICENSE`、`fmhub.json`（`kinds: other`、`sounds: none`，卡片圖是 `docs/screen.png`）、英文 README（含 Hub 要求說明的「其他韌體的資料」）、鎖定版本的 fm1-base submodule，以及自帶一份 `common/`（hostlink、ledfx）。
 - **identity 前綴改成 `FM-1_41`**：原本的 `FM-1_13` 和 Hub 上 FM-1 Midi-Mania 的 `FM-1_137` 開頭相同。目錄裡沒有任何 `FM-1_41x`，但送審前仍要用 Hub 的 #check 確認。開發版是 `FM-1_4100`，release 版是 `FM-1_41` 加 XXYYZZ（0.3 是 `FM-1_41000300`）。存檔位置不變，進度會保留。
 - **build**：在本 repo 用 `third_party/fm1-base` build（`just fw-test morse`、`just morse-release 0.3`）。子 repo 裡的那份 fm1-base 是給它單獨 build 用的，`fw-setup` 不會去抓。
-- **改程式的流程**：在 `firmware/morse` 裡 commit 並推到 fm1-morse，再到本 repo commit 新的 submodule 指標。
+- **改程式的流程**：在 `firmware/morse` 裡 commit 並推到 fm1-morse，再到本 repo commit 新的 submodule 指標。**要先 commit 指標，再 build**：`just fw-build`、`just morse-release` 都會先跑 `fw-setup`，而它的 `git submodule update` 會把 `firmware/morse` 切回本 repo 記錄的 commit（detached HEAD）。2026-11-18 就因為這樣，build 出來的 0.4 套件裡是舊的出題邏輯，在模擬器裡看到第一回合只有 6 張卡才發現。
 
 上架還要做的：
 
