@@ -197,7 +197,7 @@ daemon 的設定檔是 `~/.config/conductor/config.json`（可省略），可以
 
 ## 實刷準備 { #flash }
 
-**狀態（2026-11-17）：除了「接上實機才能做」的兩項，`AGENTS.md` 要求的檢查都做完了。**
+**狀態（2026-11-17 18:38）：`AGENTS.md` 要求的檢查全部做完，等我本人刷寫。**
 
 要刷的套件：
 
@@ -217,8 +217,9 @@ Preflight：
 | 換韌體預演（疊在最新的實機備份 `2026-11-17-0413-pre-choralroot-0.41` 上開機） | 正常開機、USB 列舉、收得到 host 的 frame；開機後 0 個 sector 被改寫。套件映像 `0x04000`–`0x92FFF`，和備份相比不同的有 124 個 sector（`0x04000`–`0x7FFFF`） | `[模擬]` |
 | 退路一：M-Flasher 切下載模式 | 送出 M-Flasher 用的進入更新模式 SysEx（`F0 22 24 35 7D F7`，felucca-bsp `chip/usb.c`）後，USB 斷開再重連，和 SLOOP 2.8.5、Agent Deck 0.7 在同一測試下的反應相同；那兩套都在實機上用 M-Flasher 切走過。模擬器不模擬 ROM 更新模式 | `[模擬]` |
 | 退路二：開機時按住 `REC` | fm1-base 開機時偵測到 `REC` 就進入晶片的更新模式（`device/main_fm1.c`），給「韌體能開機但 USB 不通」時用 | `[上游]` |
-| 目前的韌體與 bootloader | ChoralRoot 0.41、原廠 bootloader（[我的機器](../device-log.md)）。**接上後用 `just fm1-info` 再確認一次** | 待實機 |
-| 完整備份（目前 ChoralRoot 的狀態） | **還沒有**：最新的備份是刷 ChoralRoot 之前的。接上後先 `just fm1-backup pre-conductor`，SHA-256 記進[我的機器](../device-log.md) | 待實機 |
+| 目前的韌體與 bootloader | `fm1-info`：firmware Felucca（即 ChoralRoot 0.41）、bootloader stock (M-VAVE)、app OK、flash `0xB36014` | `[實機]` |
+| 完整備份（目前 ChoralRoot 的狀態） | `backups/2026-11-17-pre-conductor/fm1-20261117-183840.bin`，SHA-256 `81f048bb0e8bea174ccb84df4de2555c891b087651083710c41c428a0e7ba1e1`，已記進[我的機器](../device-log.md) | `[實機]` |
+| 疊在**這份**備份上預演 | 正常開機、0 個 sector 被改寫；安裝會和現況不同的是 140 個 sector（`0x04000`–`0x91FFF`） | `[模擬]` |
 
 會被改的地方：韌體區 `0x04000`–`0x92FFF`。ChoralRoot 的映像到 `0x9EFFF`，`0x93000`–`0x9EFFF` 留著不動，Conductor 不讀它。Conductor 不寫設定 sector `0xFC000`，也不寫任何資料區。實際寫入範圍以 M-Flasher 刷之前印出的計畫為準。
 
