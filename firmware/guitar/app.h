@@ -1,7 +1,8 @@
 /* SPDX-License-Identifier: GPL-3.0-or-later */
 /* GUITAR: the FM-1 as a pocket guitar neck and chord book (design: docs/dev/guitar.md in
- * github.com/daviddwlee84/M-VAVE_FM-1). v0.1 has two pages: NECK, a key's scale on the frets, whole or one
- * position at a time; SHAPE, chord diagrams found by search, easiest first. The neck is fret.c; the theory, the voice
+ * github.com/daviddwlee84/M-VAVE_FM-1). Three pages: NECK, a key's scale on the frets, whole or one position at a
+ * time; SHAPE, chord diagrams found by search, easiest first; LEARN (0.2), chords taught key by key on Leitner cards
+ * (lesson.c). The neck is fret.c; the theory, the voice
  * and the music signs are THEORY's (../theory). Built on fm1-base (MPL-2.0, its headers). This app is
  * GPL-3.0-or-later; ../common (ledfx) is MIT. */
 #pragma once

@@ -418,3 +418,13 @@ int fr_shapes(const fr_tuning_t *t, th_chord_t c, fr_shape_t *out, int max)
 {
     return fr_shapes_filter(t, c, FR_F_EASY, out, max);
 }
+
+int fr_shape_make(const fr_tuning_t *t, const int8_t *fret, fr_shape_t *sh)
+{
+    int s;
+    for (s = 0; s < FR_STR_MAX; s++) sh->fret[s] = (int8_t)(s < t->n ? fret[s] : -1);
+    sh->no5 = 0;
+    sh->score = 0;
+    if (fr_shape_lo(sh, t->n) && fr_shape_hi(sh, t->n) - fr_shape_lo(sh, t->n) >= FR_SPAN) return 0;
+    return fr_fingers(t, sh);
+}

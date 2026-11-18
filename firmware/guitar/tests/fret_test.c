@@ -5,6 +5,7 @@
 #include <string.h>
 #include "../../theory/theory.c"
 #include "../fret.c"
+#include "../lesson.c"
 
 static int fails, checks;
 #define CHECK(c, ...) do { checks++; if (!(c)) { printf("FAIL %s:%d ", __FILE__, __LINE__); printf(__VA_ARGS__); printf("\n"); fails++; } } while (0)
@@ -342,12 +343,80 @@ static void test_forms(void)
         }
 }
 
+static void test_lesson(void)
+{
+    ls_prog_t p;
+    uint32_t rng = 1;
+    uint8_t cards[LS_ROUND], d[3];
+    int i, j, n, last = -1;
+    CHECK(ls_nitems <= LS_ITEMS_MAX, "items fit");
+    for (i = 0; i < ls_nitems; i++) {
+        fr_shape_t sh;
+        th_chord_t c = ls_chord(i);
+        int8_t notes[8];
+        int k = th_chord(c.root, c.q, notes), want = 0, got, pcs;
+        for (j = 0; j < k; j++) want |= 1 << th_pc(notes[j]);
+        CHECK(ls_items[i].stage >= last, "item %d in stage order", i);
+        last = ls_items[i].stage;
+        CHECK(ls_shape(i, &sh), "item %d (%s) playable", i, ls_items[i].frets);
+        pcs = ls_pcs(i);
+        got = pcs;
+        CHECK((got & ~want) == 0, "item %d (%s): a note outside the chord", i, ls_items[i].frets);
+        CHECK((want & ~got) == 0 || (want & ~got) == 1 << th_pc(notes[2]), "item %d (%s): a tone missing", i,
+              ls_items[i].frets);
+        CHECK(fr_shape_midi(STD, &sh, (uint8_t *)notes) > 0 && (uint8_t)notes[0] % 12 == th_pc(c.root),
+              "item %d (%s): root in the bass", i, ls_items[i].frets);
+        CHECK(ls_items[i].stage < ls_nstages, "item %d stage", i);
+        if (ls_items[i].easy) {         /* a stand-in: the full barre version is taught later */
+            for (j = i + 1; j < ls_nitems; j++)
+                if (ls_items[j].root == ls_items[i].root && ls_items[j].q == ls_items[i].q && !ls_items[j].easy) break;
+            CHECK(j < ls_nitems || ls_items[i].root == 6, "item %d: easy without a later barre", i);
+        }
+    }
+    ls_reset(&p);
+    CHECK(ls_valid(&p), "reset is valid");
+    for (i = 0; i < 50; i++) {
+        n = ls_round(&p, &rng, cards, LS_ROUND);
+        CHECK(n == LS_ROUND, "round size %d", n);
+        for (j = 0; j < n; j++) {
+            CHECK(ls_open(&p, cards[j]), "round: only open items");
+            CHECK(!j || cards[j] != cards[j - 1], "round: %d twice in a row", cards[j]);
+        }
+        CHECK(ls_distractors(&p, cards[0], &rng, d) == 3, "three distractors");
+        for (j = 0; j < 3; j++) CHECK(d[j] != cards[0] && strcmp(ls_items[d[j]].frets, ls_items[cards[0]].frets),
+                                      "distractor differs");
+        CHECK(d[0] != d[1] && d[1] != d[2] && d[0] != d[2], "distractors distinct");
+        CHECK(ls_card_kind(&p, cards[0], &rng) == LS_NAME_TO_SHAPE || p.box[cards[0]] >= 1, "new: name to shape");
+    }
+    /* stage 0 opens stage 1 when each of its chords reaches box 2, not before */
+    for (i = 0; i < ls_nitems; i++)
+        if (ls_items[i].stage == 0) CHECK(!ls_answer(&p, i, 1), "one right is not enough");
+    n = 0;
+    for (i = 0; i < ls_nitems; i++)
+        if (ls_items[i].stage == 0) n += ls_answer(&p, i, 1);
+    CHECK(n == 1 && p.stage == 1, "stage 1 opened (%d, %d)", n, p.stage);
+    ls_answer(&p, 0, 0);
+    CHECK(p.box[0] == 0 && p.stage == 1, "wrong: back to box 0, the stage stays open");
+    for (i = 0; i < 5; i++) ls_answer(&p, 1, 1);
+    CHECK(p.box[1] == LS_BOXES, "box capped");
+    ls_answer(&p, 1, 0);
+    CHECK(p.box[1] == 1, "wrong from a high box: box 1");
+    /* everything right, a stage at a time, reaches the last stage */
+    for (j = 0; j < 20; j++)
+        for (i = 0; i < ls_nitems; i++)
+            if (ls_open(&p, i)) ls_answer(&p, i, 1);
+    CHECK(p.stage == ls_nstages - 1 && ls_valid(&p), "all stages open");
+    p.stage = (uint8_t)ls_nstages;
+    CHECK(!ls_valid(&p), "a stage past the end is not valid");
+}
+
 int main(void)
 {
     test_tunings();
     test_positions();
     test_shapes();
     test_forms();
+    test_lesson();
     printf("%d checks, %d failed\n", checks, fails);
     return fails != 0;
 }

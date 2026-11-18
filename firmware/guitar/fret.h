@@ -59,6 +59,8 @@ enum { FR_F_EASY, FR_F_OPEN, FR_F_BARRE, FR_F_MOVABLE, FR_NFILTERS };   /* fr_sh
 int fr_shapes_filter(const fr_tuning_t *t, th_chord_t c, int filter, fr_shape_t *out, int max);
 int fr_shape_open(const fr_shape_t *sh, int n);  /* an open string sounds */
 int fr_shape_root_string(const fr_tuning_t *t, const fr_shape_t *sh);   /* the string with the lowest note */
+int fr_shape_make(const fr_tuning_t *t, const int8_t *fret, fr_shape_t *sh);   /* given frets, fingered; 0 if
+                                                                                 * the hand cannot */
 int fr_shape_lo(const fr_shape_t *sh, int n);    /* the lowest fretted fret (0 if none) */
 int fr_shape_hi(const fr_shape_t *sh, int n);    /* the highest */
 int fr_shape_midi(const fr_tuning_t *t, const fr_shape_t *sh, uint8_t *out);   /* sounding notes, low string first */

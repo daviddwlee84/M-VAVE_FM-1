@@ -1,5 +1,5 @@
 /* SPDX-License-Identifier: GPL-3.0-or-later */
-/* GUITAR v0.1: the NECK and SHAPE pages (see app.h). The neck is fret.c; theory.c, synth.c and gtext.c are THEORY's.
+/* GUITAR: the NECK, SHAPE and LEARN pages (see app.h). The neck is fret.c; theory.c, synth.c and gtext.c are THEORY's.
  * Part of fm1-base's unity build, after the platform: gfx.c and announce.c are in scope. */
 #include "gtext.h"
 #define TH_GLYPH_SHARP GT_SHARP
@@ -11,17 +11,19 @@
 #include "gtext.c"
 #include "ledfx.c"
 #include "fret.c"
+#include "lesson.c"
 
 #define FW_MAJOR 0
 #define FW_MINOR 2
 
 /* ---------------------------------------------------------------- settings --- */
 #define REC_MAGIC 0x31305447u            /* "GT01" */
-#define REC_VER 1u
+#define REC_VER 2u                       /* 2: the LEARN progress appended (0.2) */
+#define REC_V1_SIZE 24u
 
-enum { PG_NECK, PG_SHAPE, PG_N };
+enum { PG_NECK, PG_SHAPE, PG_LEARN, PG_N };
 enum { LB_DOTS, LB_NAMES, LB_DEGREES, LB_N };
-static const char *const PAGE_NAME[PG_N] = { "NECK", "SHAPE" };
+static const char *const PAGE_NAME[PG_N] = { "NECK", "SHAPE", "LEARN" };
 static const char *const LABEL_NAME[LB_N] = { "DOTS", "NAMES", "DEGREES" };
 static const char *const FILTER_NAME[FR_NFILTERS] = { "EASY", "OPEN", "BARRE", "MOVABLE" };
 
@@ -45,6 +47,7 @@ typedef struct {
     uint8_t qual;                        /* QUALS[] */
     uint8_t filter;                      /* SHAPE: FR_F_* (0.1 left it 0: EASY) */
     uint8_t rsv[4];
+    ls_prog_t learn;                     /* LEARN: the boxes and the stage open (0.2) */
 } rec_t;
 static rec_t rec;
 static uint32_t saves;
@@ -61,13 +64,15 @@ static void defaults(void)
     rec.oct = 0;
     rec.root = 0;                        /* C */
     rec.qual = 0;
+    ls_reset(&rec.learn);
 }
 
 static int rec_valid(const rec_t *r)
 {
     return r->magic == REC_MAGIC && r->ver == REC_VER && r->size == sizeof *r && r->tonic >= -9 && r->tonic <= 12
            && r->scale < TH_NSCALES && r->labels < LB_N && r->pos < 16 && r->tuning < FR_NTUNINGS && r->page < PG_N
-           && r->oct >= -2 && r->oct <= 2 && r->root >= -9 && r->root <= 12 && r->qual < NQUALS && r->filter < FR_NFILTERS;
+           && r->oct >= -2 && r->oct <= 2 && r->root >= -9 && r->root <= 12 && r->qual < NQUALS && r->filter < FR_NFILTERS
+           && ls_valid(&r->learn);
 }
 
 static void rec_save(void)
@@ -299,19 +304,24 @@ static void seq_stop(void)
     ui.redraw |= R_MAIN;
 }
 
-/* SHAPE: strum the shape, low string first */
-static void strum(void)
+/* SHAPE and LEARN: strum a shape, low string first */
+static void strum_shape(const fr_tuning_t *t, const fr_shape_t *sh)
 {
     uint8_t m[FR_STR_MAX];
     int n, i;
     seq_stop();
-    if (ui.shape >= ui.nshapes) return;
-    n = fr_shape_midi(tun(), &ui.shapes[ui.shape], m);
+    n = fr_shape_midi(t, sh, m);
     for (i = 0; i < n; i++) ui.seq[i] = m[i];
     ui.nseq = (uint8_t)n;
     ui.seq_run = 0;
     ui.seq_on = 1;
     ui.seq_at = plat_ms();
+}
+
+static void strum(void)
+{
+    if (ui.shape < ui.nshapes) strum_shape(tun(), &ui.shapes[ui.shape]);
+    else seq_stop();
 }
 
 /* NECK: the position's notes, low to high */
@@ -393,6 +403,96 @@ static void identify_held(void)
     ui.redraw |= R_MAIN | R_FOOT;
 }
 
+/* ----------------------------------------------------------------- LEARN --- */
+/* A round of LS_ROUND cards from lesson.c. NAME: a chord's name, four shapes, SELECT picks one, PLAY answers.
+ * NOTES: a shape without its name, play its notes on the keys (any octave, together or one by one while one key is
+ * held), let go to answer. Then the answer is shown and strummed; PLAY goes on. Standard tuning only. */
+enum { LN_ASK, LN_SHOWN, LN_END };
+static const fr_tuning_t *const LSTD = &fr_tunings[FR_STANDARD];
+
+static struct {
+    uint8_t cards[LS_ROUND];
+    int n, i;                            /* the round's cards, the one now */
+    int item, kind, state;
+    uint8_t choice[4];                   /* NAME: the items shown, in screen order */
+    fr_shape_t sh[4];                    /* their shapes; NOTES: sh[0] is the item's */
+    int pick, answer, right, nright, opened, played;
+    uint32_t rng;
+} ln;
+
+static void ln_setup(int kind)
+{
+    int i;
+    ln.item = ln.cards[ln.i];
+    ln.kind = kind;
+    ln.state = LN_ASK;
+    ln.pick = 0;
+    ln.played = 0;
+    if (ln.kind == LS_NAME_TO_SHAPE) {
+        uint8_t d[3];
+        int nd = ls_distractors(&rec.learn, ln.item, &ln.rng, d);
+        ln.answer = (int)(ls_rand(&ln.rng) % 4u);
+        for (i = 0; i < 4; i++) ln.choice[i] = (uint8_t)ln.item;
+        for (i = 0; i < nd; i++) ln.choice[i < ln.answer ? i : i + 1] = d[i];
+        for (i = 0; i < 4; i++) ls_shape(ln.choice[i], &ln.sh[i]);
+    } else {
+        ln.answer = 0;
+        ls_shape(ln.item, &ln.sh[0]);
+    }
+    ui.redraw |= R_ALL;
+}
+
+static void ln_card(void) { ln_setup(ls_card_kind(&rec.learn, ln.cards[ln.i], &ln.rng)); }
+
+static void ln_round(void)
+{
+    ln.rng ^= plat_ms() * 2654435761u + rec.learn.rounds;
+    ln.n = ls_round(&rec.learn, &ln.rng, ln.cards, LS_ROUND);
+    ln.i = 0;
+    ln.nright = 0;
+    ln.opened = 0;
+    if (ln.n) ln_card();
+}
+
+static void ln_answer(int right)
+{
+    fr_shape_t sh;
+    char t[TH_CHORD_MAX];
+    ln.right = right;
+    ln.nright += right;
+    if (ls_answer(&rec.learn, ln.item, right)) ln.opened = 1;
+    ln.state = LN_SHOWN;
+    th_chord_name(ls_chord(ln.item), t);
+    app_say(right ? "RIGHT" : "IT IS", t);
+    if (ls_shape(ln.item, &sh)) strum_shape(LSTD, &sh);
+    ui.redraw |= R_ALL;
+}
+
+static void ln_next(void)
+{
+    seq_stop();
+    if (ln.state == LN_END || !ln.n) {
+        ln_round();
+        return;
+    }
+    if (++ln.i < ln.n) {
+        ln_card();
+        return;
+    }
+    ln.state = LN_END;
+    rec.learn.rounds++;
+    rec_save();
+    if (ln.opened) app_say("NEW CHORDS", ls_stages[rec.learn.stage].what);
+    ui.redraw |= R_ALL;
+}
+
+/* NOTES: every key let go, the notes played since the first key went down are the answer */
+static void ln_notes_done(int pcs)
+{
+    if (rec.page != PG_LEARN || ln.state != LN_ASK || ln.kind != LS_SHAPE_TO_NOTES || !pcs) return;
+    ln_answer(pcs == ls_pcs(ln.item));
+}
+
 /* ----------------------------------------------------------------- input --- */
 static void set_tonic(int f)
 {
@@ -429,7 +529,7 @@ static void input(void)
     for (k = 0; k < NKEYS; k++) {
         uint32_t bit = 1u << k;
         if ((keys & bit) && !(ui.keys & bit)) {
-            if (btn >> B_SEL & 1u) {     /* SEL held: this note becomes the key's tonic, or the chord's root */
+            if ((btn >> B_SEL & 1u) && rec.page != PG_LEARN) {     /* SEL held: this note becomes the key's tonic, or the chord's root */
                 if (rec.page == PG_NECK) {
                     set_tonic(th_spell_pc(KEY_MIDI(k) % 12, 0));
                     key_text(t);
@@ -444,6 +544,7 @@ static void input(void)
             ui.knote[k] = (uint8_t)(KEY_MIDI(k) + 12 * rec.oct);
             note_on(ui.knote[k], touch_vel(k));
             ui.held_changed = 1;
+            if (rec.page == PG_LEARN) ln.played |= 1 << (ui.knote[k] % 12);
         } else if (!(keys & bit) && (ui.keys & bit)) {
             if (ui.knote[k]) note_off(ui.knote[k]);
             ui.knote[k] = 0;
@@ -455,6 +556,11 @@ static void input(void)
             if (ui.knote[k]) h |= 1 << (ui.knote[k] % 12);
         if (h != ui.held_pcs) ui.redraw |= R_MAIN;
         ui.held_pcs = h;
+        if (!keys && rec.page == PG_LEARN) {     /* every key let go: a NOTES card is answered */
+            h = ln.played;
+            ln.played = 0;
+            ln_notes_done(h);
+        }
     }
     ui.keys = keys;
     for (k = 0; k < NB; k++) {
@@ -464,10 +570,15 @@ static void input(void)
             seq_stop();
             rec.page = (uint8_t)((rec.page + 1) % PG_N);
             ui.sh = SH_NONE;
+            if (rec.page == PG_LEARN && !ln.n) ln_round();
             app_say("PAGE", PAGE_NAME[rec.page]);
             changed(R_ALL);
         } else if (k == B_PLAY) {
-            if (ui.seq_on) seq_stop();
+            if (rec.page == PG_LEARN) {
+                if (ln.state != LN_ASK) ln_next();
+                else if (ln.kind == LS_NAME_TO_SHAPE) ln_answer(ln.pick == ln.answer);
+                else strum_shape(LSTD, &ln.sh[0]);       /* NOTES: hear it, as often as wanted */
+            } else if (ui.seq_on) seq_stop();
             else if (rec.page == PG_SHAPE) strum();
             else scale_run();
         } else if (k == B_OCTDN || k == B_OCTUP) {
@@ -482,7 +593,16 @@ static void input(void)
             }
         }
     }
-    if ((e = plat_enc(EN_SELECT)) != 0) {
+    if (rec.page == PG_LEARN) {          /* LEARN: SELECT picks a shape; the knobs rest */
+        if ((e = plat_enc(EN_SELECT)) != 0 && ln.state == LN_ASK && ln.kind == LS_NAME_TO_SHAPE) {
+            ln.pick = (int)th_mod(ln.pick + e, 4);
+            ui.redraw |= R_MAIN;
+        }
+        (void)plat_enc(EN_K1);
+        (void)plat_enc(EN_K2);
+        (void)plat_enc(EN_K3);
+        (void)plat_enc(EN_K4);
+    } else if ((e = plat_enc(EN_SELECT)) != 0) {
         if (rec.page == PG_NECK) {       /* around the circle of fifths */
             set_tonic(rec.tonic + e);
             key_text(t);
@@ -558,6 +678,9 @@ static void lights(uint32_t now)
     if (rec.page == PG_NECK) {
         mask = fr_scale_pcs(cur_key());
         tpc = th_pc(rec.tonic);
+    } else if (rec.page == PG_LEARN) {   /* the answer's notes once it is shown, nothing before */
+        mask = ln.n && ln.state == LN_SHOWN ? ls_pcs(ln.item) : 0;
+        tpc = ln.n ? th_pc(ls_items[ln.item].root) : -1;
     } else {
         int8_t f[TH_TONES_MAX];
         int n = th_chord(cur_chord().root, cur_chord().q, f), i;
@@ -791,14 +914,168 @@ static void draw_shape_at(int32_t oy)
     cv_text(x, 156 - oy, &FONT_T, FILTER_NAME[rec.filter], rec.filter ? C_HI : C_DIM);
 }
 
+/* LEARN: a chord diagram anywhere, any size (standard tuning). fingers: the finger numbers in the dots */
+static void diagram(int32_t x0, int32_t y0, int32_t oy, int32_t gap, int32_t row, int rows, int32_t dot,
+                    const fr_shape_t *sh, int rpc, int fingers)
+{
+    int s, r, start = 1, n = LSTD->n;
+    int32_t x, y, mk = dot / 2 + 1;
+    char lab[4];
+    if (fr_shape_hi(sh, n) > rows || (!fr_shape_open(sh, n) && fr_shape_lo(sh, n) > 1)) start = fr_shape_lo(sh, n);
+    for (s = 0; s < n; s++) cv_rect(x0 + gap * s, y0 - oy, 1, row * rows + 1, C_GRAY);
+    for (r = 0; r <= rows; r++)
+        cv_rect(x0, y0 + row * r - oy - (r == 0 && start == 1 ? 2 : 0), gap * (n - 1) + 1, r == 0 && start == 1 ? 3 : 1,
+                r == 0 && start == 1 ? C_WHITE : C_GRAY);
+    if (start > 1) {
+        lab[0] = 0;
+        tint(lab, start);
+        cv_text(x0 - 6 - text_w(fingers ? &FONT_T : &FONT_XS, lab), y0 + row / 2 - 6 - oy, fingers ? &FONT_T : &FONT_XS,
+                lab, C_HI);
+    }
+    if (sh->barre) {
+        y = y0 + row * (sh->barre - start) + row / 2 - oy;
+        cv_rect(x0 + gap * sh->bfrom - dot / 2, y - dot / 2, gap * (sh->bto - sh->bfrom) + dot + 1, dot, C_AMB);
+    }
+    for (s = 0; s < n; s++) {
+        int f = sh->fret[s], pc;
+        x = x0 + gap * s;
+        y = y0 - mk - 4 - oy;
+        if (f < 0) {
+            cv_line(x - mk, y - mk, x + mk, y + mk, C_GRAY);
+            cv_line(x - mk, y + mk, x + mk, y - mk, C_GRAY);
+            continue;
+        }
+        pc = fr_midi(LSTD, s, f) % 12;
+        if (f == 0) circle(x, y, mk, pc == rpc ? C_HI : C_GRAY);
+        else {
+            y = y0 + row * (f - start) + row / 2 - oy;
+            disc(x, y, dot, pc == rpc ? C_HI : C_AMB);
+            if (fingers) {
+                lab[0] = (char)('0' + sh->finger[s]);
+                lab[1] = 0;
+                ctext(x + 1, y, &FONT_T, lab, C_BLACK);
+            }
+        }
+    }
+}
+
+static void frame(int32_t x, int32_t y, int32_t w, int32_t h, int32_t t, uint16_t c)
+{
+    cv_rect(x, y, w, t, c);
+    cv_rect(x, y + h - t, w, t, c);
+    cv_rect(x, y, t, h, c);
+    cv_rect(x + w - t, y, t, h, c);
+}
+
+static void draw_learn_at(int32_t oy)
+{
+    int i, rpc;
+    char lab[TH_CHORD_MAX];
+    if (!ln.n) return;
+    rpc = th_pc(ls_items[ln.item].root);
+    if (ln.state == LN_END) {            /* the round's score, then every chord open: a bar per box */
+        lab[0] = 0;
+        tint(lab, ln.nright);
+        tcat(lab, " / ");
+        tint(lab, ln.n);
+        ctext(120, 30 - oy, &FONT_M, lab, ln.nright == ln.n ? C_HI : C_WHITE);
+        ctext(120, 60 - oy, &FONT_T, ln.opened ? "NEW CHORDS" : "RIGHT", ln.opened ? C_HI : C_GRAY);
+        if (ln.opened) ctext(120, 78 - oy, &FONT_T, ls_stages[rec.learn.stage].what, C_AMB);
+        for (i = 0; i < ls_nitems; i++) {
+            int32_t x = 15 + (i % 21) * 10, b = rec.learn.box[i];
+            if (!ls_open(&rec.learn, i)) {
+                cv_rect(x, 140 - oy, 7, 1, C_LINE);
+                continue;
+            }
+            cv_rect(x, 140 - 6 * b - oy, 7, 6 * b + 1, b >= LS_PASS ? C_HI : C_AMB);
+        }
+        ctext(120, 156 - oy, &FONT_XS, "BOX PER CHORD", C_DIM);
+        return;
+    }
+    if (ln.kind == LS_NAME_TO_SHAPE) {   /* four shapes, two by two */
+        for (i = 0; i < 4; i++) {
+            int32_t cx = (i % 2) * 120, cy = (i / 2) * 88;
+            diagram(cx + 30, cy + 16, oy, 12, 15, 4, 4, &ln.sh[i], ln.state == LN_SHOWN ? th_pc(ls_items[ln.choice[i]].root)
+                                                                                        : -1, 0);
+            if (ln.state == LN_ASK && i == ln.pick) frame(cx + 2, cy + 1 - oy, 116, 86, 2, C_HI);
+            if (ln.state == LN_SHOWN) {
+                if (i == ln.answer) frame(cx + 2, cy + 1 - oy, 116, 86, 3, C_WHITE);
+                else if (i == ln.pick && !ln.right) frame(cx + 2, cy + 1 - oy, 116, 86, 1, C_GRAY);
+                th_chord_name(ls_chord(ln.choice[i]), lab);
+                gtext(cx + 96, cy + 36 - oy, &FONT_T, lab, i == ln.answer ? C_WHITE : C_GRAY);
+            }
+        }
+        return;
+    }
+    /* NOTES: one big shape; the notes played so far, then the chord's */
+    diagram(SH_X0, SH_Y0, oy, 22, SH_ROW, SH_ROWS, 9, &ln.sh[0], ln.state == LN_SHOWN ? rpc : -1, 1);
+    if (ln.state == LN_ASK) {
+        cv_text(152, 30 - oy, &FONT_T, "PLAY ITS", C_GRAY);
+        cv_text(152, 46 - oy, &FONT_T, "NOTES", C_GRAY);
+        int k = 0;
+        for (i = 0; i < 12; i++)
+            if (ln.played >> i & 1) {
+                th_name(th_spell_pc(i, 0), lab);
+                gtext(152 + 22 * (k % 4), 80 + 16 * (k / 4) - oy, &FONT_B, lab, C_WHITE);
+                k++;
+            }
+    } else {
+        int8_t tones[TH_TONES_MAX];
+        th_chord_t c = ls_chord(ln.item);
+        int nt = th_chord(c.root, c.q, tones);
+        th_chord_name(c, lab);
+        gtext(152, 4 - oy, &FONT_M, lab, C_WHITE);
+        for (i = 0; i < nt; i++) {
+            char nm[TH_NAME_MAX];
+            th_name(tones[i], nm);
+            gtext(152 + 22 * (i % 4), 40 + 16 * (i / 4) - oy, &FONT_B, nm, th_pc(tones[i]) == rpc ? C_HI : C_AMB);
+        }
+    }
+}
+
 static void draw_main(void)
 {
     int h;
     for (h = 0; h < 2; h++) {
         cv_begin(240, MAIN_H / 2, C_BLACK);
         if (rec.page == PG_NECK) draw_neck_at(h * MAIN_H / 2);
+        else if (rec.page == PG_LEARN) draw_learn_at(h * MAIN_H / 2);
         else draw_shape_at(h * MAIN_H / 2);
         cv_blit(0, 32 + (uint32_t)(h * MAIN_H / 2));
+    }
+}
+
+/* LEARN's question, or the answer */
+static void learn_title(char *t)
+{
+    char c[TH_CHORD_MAX];
+    t[0] = 0;
+    if (!ln.n) return;
+    th_chord_name(ls_chord(ln.item), c);
+    if (ln.state == LN_END) tcat(t, "ROUND DONE");
+    else if (ln.state == LN_SHOWN) {
+        tcat(t, ln.right ? "RIGHT: " : "NO: ");
+        tcat(t, c);
+    } else if (ln.kind == LS_NAME_TO_SHAPE) {
+        tcat(t, "WHICH IS ");
+        tcat(t, c);
+        tcat(t, "?");
+    } else
+        tcat(t, "WHICH NOTES?");
+}
+
+static void learn_foot(char *t)          /* "STAGE 1 KEY C  3/8" */
+{
+    t[0] = 0;
+    tcat(t, "STAGE ");
+    tint(t, rec.learn.stage + 1);
+    tcat(t, " KEY ");
+    tcat(t, ls_stages[rec.learn.stage].key);
+    if (ln.n && ln.state != LN_END) {
+        tcat(t, "  ");
+        tint(t, ln.i + 1);
+        tcat(t, "/");
+        tint(t, ln.n);
     }
 }
 
@@ -808,6 +1085,7 @@ static void draw_header(void)
     int32_t x = 232;
     cv_begin(240, 32, C_BLACK);
     if (rec.page == PG_NECK) key_text(t);
+    else if (rec.page == PG_LEARN) learn_title(t);
     else {
         t[0] = 0;
         tcat(t, "CHORD SHAPES");
@@ -872,6 +1150,7 @@ static void draw_footer(void)
         } else {
             char t[40];
             if (rec.page == PG_NECK) pos_text(t);
+            else if (rec.page == PG_LEARN) learn_foot(t);
             else {
                 t[0] = 0;
                 tcat(t, "PLAY STRUMS");
@@ -901,6 +1180,7 @@ static void speak(void)
         tcat(t, PAGE_NAME[rec.page]);
         tcat(t, ". ");
         if (rec.page == PG_NECK) key_text(k);
+        else if (rec.page == PG_LEARN) learn_title(k);
         else th_chord_name(cur_chord(), k);
         gt_ascii(k, a, sizeof a);
         tcat(t, a);
@@ -923,10 +1203,19 @@ void app_panic(void) { synth_stop(); }
 /* ------------------------------------------------------------ the contract --- */
 void app_init(void)
 {
+    int n;
     zero(&ui, sizeof ui);
+    zero(&ln, sizeof ln);
     saves = 0;
     dirty_at = 0;
-    if (plat_store_load(OBJ_GUITAR, &rec, sizeof rec) != (int)sizeof rec || !rec_valid(&rec)) {
+    n = plat_store_load(OBJ_GUITAR, &rec, sizeof rec);
+    if (n == (int)REC_V1_SIZE && rec.ver == 1u && rec.size == REC_V1_SIZE) {    /* 0.1: no LEARN progress yet */
+        ls_reset(&rec.learn);
+        rec.ver = REC_VER;
+        rec.size = (uint16_t)sizeof rec;
+        n = (int)sizeof rec;
+    }
+    if (n != (int)sizeof rec || !rec_valid(&rec)) {
         zero(&rec, sizeof rec);
         defaults();
     }
@@ -990,6 +1279,16 @@ int app_expect(const char *what, int *got)
     else if (!strcmp(what, "glow_keys")) *got = (int)ui.glow;
     else if (!strcmp(what, "shown")) *got = ui.sh;
     else if (!strcmp(what, "saves")) *got = (int)saves;
+    else if (!strcmp(what, "lstage")) *got = rec.learn.stage;
+    else if (!strcmp(what, "lrounds")) *got = rec.learn.rounds;
+    else if (!strcmp(what, "lstate")) *got = ln.state;
+    else if (!strcmp(what, "lkind")) *got = ln.kind;
+    else if (!strcmp(what, "litem")) *got = ln.item;
+    else if (!strcmp(what, "lcard")) *got = ln.i;
+    else if (!strcmp(what, "lpick")) *got = ln.pick;
+    else if (!strcmp(what, "lright")) *got = ln.nright;
+    else if (!strcmp(what, "rec_size")) *got = (int)sizeof rec;
+    else if (!strncmp(what, "lbox", 4)) *got = rec.learn.box[atoi(what + 4)];
     else if (!strncmp(what, "mask", 4)) *got = (int)ui.mask[atoi(what + 4)];
     else return 0;
     return 1;
@@ -1006,6 +1305,16 @@ int app_host_cmd(const char *cmd, const char *a, const char *b, const char *c, c
 {
     char want[96], raw[96], got[96], small[96];
     (void)c, (void)d;
+    if (!strcmp(cmd, "learn_pick")) {   /* learn_pick right|wrong: SELECT onto that choice (NAME cards) */
+        ln.pick = !strcmp(a, "right") ? ln.answer : (ln.answer + 1) % 4;
+        ui.redraw |= R_MAIN;
+        return 1;
+    }
+    if (!strcmp(cmd, "learn_card")) {   /* learn_card ITEM|- KIND: this card now */
+        if (strcmp(a, "-")) ln.cards[ln.i] = (uint8_t)atoi(a);     /* - keeps the card's chord */
+        ln_setup(atoi(b));
+        return 1;
+    }
     if (strcmp(cmd, "expect_text")) return 0;
     /* expect_text key|pos|chord|frets|fingers|footer|tuning TEXT (_ a space), signs as # b o /o */
     host_text(b, want, sizeof want);
@@ -1013,6 +1322,8 @@ int app_host_cmd(const char *cmd, const char *a, const char *b, const char *c, c
     if (!strcmp(a, "key")) key_text(raw);
     else if (!strcmp(a, "pos")) pos_text(raw);
     else if (!strcmp(a, "chord")) th_chord_name(cur_chord(), raw);
+    else if (!strcmp(a, "learn")) learn_title(raw);
+    else if (!strcmp(a, "learn_foot")) learn_foot(raw);
     else if (!strcmp(a, "frets")) shape_text(raw);
     else if (!strcmp(a, "form") && ui.shape < ui.nshapes) form_text(&ui.shapes[ui.shape], raw);
     else if (!strcmp(a, "fingers") && ui.shape < ui.nshapes) {
