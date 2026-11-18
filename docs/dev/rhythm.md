@@ -5,7 +5,7 @@
 **狀態（2026-11-18）：**
 
 - **v0.1（METRO + ECHO）**：在 host simulator、本人 Mac 上的 device build 與 fm1-emu 兩種晶片驗證過 `[模擬]`，見 [v0.1 驗證](#v01-verify)。還沒刷進實機。本人在 emulator 試用的感想是「也還可以」。
-- **v0.2（譜面、ECHO 的 READ 模式、ENDLESS）**：只在 host simulator 驗證過 `[模擬]`，見 [v0.2](#v02)。
+- **v0.2（譜面、ECHO 的 READ 模式、ENDLESS）**：在 host simulator、Mac 上的 device build 與 fm1-emu 兩種晶片驗證過 `[模擬]`，見 [v0.2](#v02)。還沒刷進實機。
 
 - 韌體在 `firmware/rhythm/`，GPL-3.0-or-later，名稱 RHYTHM。
 - 識別碼 `FM-1_54`。2026-11-18 對照 Hub 的 catalog（12:01 UTC 版）沒人用。原本暫定的 `FM-1_52` 已經被 RemoteFM1、JAMTRACK、QUADRO 用掉（RemoteFM1 的 pattern 正好吃到 `FM-1_5200`）。
@@ -163,7 +163,10 @@ simulator 的劇本有幾個 app 自己的指令：`pattern q_ee_r_q` 指定 ECH
     - 只改名字的版本：套件 616,003 B，app 104,296 B，`.data`+`.bss` 41,008 / 98,304 B。
     - fm1-emu 的 `uc25hq80` 與 `p25q80`：`HOME` 依序切換三頁；READ 模式畫得出譜；ENDLESS 的血條、回合數和上一回合的譜都有出現；設定重開後還在。
     - 疊在 `2026-11-18-pre-theory-0.2` 上預演：存檔只寫 `0xD2000`。
-- **還沒做的**：改名後的 commit 要在 Mac 上再 build 一次。
+- 2026-11-18 在 Mac 上驗證改名後的 `df535d3` `[模擬]`：
+    - 不用任何 patch 就可以 build。套件 616,003 B，SHA-256 `7efc1107e6b2cc1f9414d37b45ff9bf18bd4931f4bb53a32ee2abe171a9fae82`。
+    - fm1-emu 的兩種晶片：ENDLESS 都能正常跑，沒有 fault。
+- **還沒做的**：刷進實機。刷之前要先備份，刷機要本人逐次同意。
 
 ## 之後 { #next }
 
