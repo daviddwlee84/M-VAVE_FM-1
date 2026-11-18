@@ -1,159 +1,98 @@
-# MORSE 0.4：練習判定輔助、進度管理與匯出、使用指南、截圖
+# MORSE 0.5：藍牙 MIDI（peripheral）
 
 ## Context 背景
 
-0.3 已發布並送上 Hub。實機使用後的回饋：
+0.4 已經刷進實機，網頁 Live 也能用了。你要開始做 0.5 藍牙，研究在 `docs/dev/morse.md#bluetooth`。
 
-1. **PRACTICE 打得像卻判錯。** 原因在 `app.c` 的 `own_reset()`：每張卡都把解碼器重設成 SEND SPEED（預設 10 WPM：dit 120 ms，dah 要 ≥240 ms）。使用者是模仿聽到的 20 WPM 節奏在打（dah 約 180 ms），結果 M 被讀成 I、T 被讀成 E。`mo_dec_mark` 的「兩個 mark 相差兩倍以上就重讀」只救得了 dit 和 dah 混合的字。
-2. 想要能**歸零、往回退**進度。
-3. 想**匯出／匯入進度**，像 SLOOP 匯出歌曲那樣；換韌體或刷回原廠後不用重學。
-4. 有經驗的人想**跳過已知的字**，三種方式都要：CHART 手動標記、開放到第 n 組、分級測驗。**任何手動修改都要先確認 SAVE 才寫入**，避免誤觸。
-5. docs 要有一頁**用 MORSE 學摩斯的使用指南**。
-6. fm1-morse repo 要補**截圖**：menu、每個主要功能。
+**目標**：不接線，讓 Mac（之後也包括 iPad 和手機的 app）透過藍牙使用這些功能：
+- Vail；
+- MORSE on the web：Live、備份、還原；
+- `just morse-send` / `morse-type` / `morse-backup`。
 
-使用者已選定：寬鬆判定加上答錯時的對照圖；匯出用 CLI 加 Web MIDI 網頁；跳過已知的三種方式都做，且都要確認。
+**範圍**：
+- 只做 **peripheral**，也就是 FM-1 被電腦連。
+- 兩台 FM-1 互打（`ble_central`）要等有第二台，留在 backlog。
+- 用 velocity 帶 mark 長度的備案，等實機量過抖動再決定要不要做。
 
-版本規劃：韌體 0.4，host 0.4.0。BLE 從 0.4 延到 0.5，roadmap 跟著改。
+## 已確認的事實（讀過程式）
 
-## 1. 練習判定輔助
+- **Conductor 的做法可以照抄**（`firmware/conductor/app.c:242-266`、`app.h:16-19`）：
+  - `APP_BLE_STORE` 加上空的 `app_ble_load` / `app_ble_save`；
+  - `ble_in()` 用 `hl_sx_packet` 把封包組回 frame，再交給 `host_frame(…, HL_BLE)`；
+  - `plat_ble_enable(on)` 開關藍牙，`plat_ble_connected()` 給 header 用。
+- **MORSE 跟 Conductor 不一樣的地方**：MORSE 在 **1 kHz 的 `app_tick`** 裡讀 `plat_midi_in`（`firmware/morse/app.c:474`），把 note 當成收訊按鍵。藍牙送來的 SysEx 封包也會出現在同一個佇列裡，但 `host_frame` 會呼叫 `hl_send` 和 `prog_in`，不應該在 tick 裡跑。
+- **收訊時間**（`third_party/fm1-base/include/plat.h:107-110`）：
+  - 沒開 `ble_midi_time` 時，note 的時間是「讀到的時候」，同一個 connection event 裡的訊息會擠在一起。對 60 ms 的點來說這樣不行。
+  - 開了以後，`plat_midi_in_t24()` 給的是送出端的時間（`plat_ticks24`，24 tick 等於 1 µs）。
+- **送出**：`plat_midi_send` 可以在 tick 裡呼叫，own stack 會帶真實的時間戳記。
+- **host simulator 已經有藍牙替身**：`ble connect|disconnect`、`midi BLE …`、`expect_out BLE …`（`third_party/fm1-base/host/plat_host.c:20-33`）。
+- **`set_t.look` 的 8 個 bit 都用掉了。** `mute` 只用到 bit 0。
 
-**原則：PRACTICE 不再用絕對速度判長短。** SEND SPEED 是全域設定，目前同時管三件事：KEY 頁的 keyer、KEY 頁解碼器的起點、PRACTICE 判定。0.4 起它只管 KEY 頁。PRACTICE 改成看你自己打出來的長短比例（劃約為點的 3 倍），快慢都可以：
-- HEAR_KEY（聽了照打）：解碼器起點用 HEAR 的字元速度，因為你在模仿聽到的節奏。
-- SEE_KEY（看字打碼）：起點用延續下來的手速，沒有的話用 SEND。
-- 起點只是第一筆猜測，後面靠相對長短和手速延續修正，所以打得比聽到的慢也能判對。
+## 1. 韌體（fm1-morse submodule，FW_MINOR 5）
 
-**手速延續**
-- `morse.c` 新增 `mo_dec_restart(d)`：只清掉 `pat`、`prev` 和統計，保留 `dit_avg`、`dah_avg`、`cgap`。
-- 練習中換卡改用 `mo_dec_restart`，學到的手速就會帶到下一張卡。只有開始新回合、或改了速度時，才用 `own_reset()` 整個重設。
+**`fm1.toml`**：加 `ble = true`、`ble_stack = "own"`、`ble_diag = false`、`ble_midi_time = true`。
 
-**相似度評級**（每張打碼卡都給）
-- `mo_judge` 另外算一個 0–100 的節奏分數：
-  - 劃點比和 3.0 差多少；
-  - 字內 gap 和 1 個點差多少；
-  - 同一種元素之間長短是否一致。
-- 結果頁顯示評級：`GREAT`（≥85）、`GOOD`（≥65）、`CLOSE`、`OFF`。
-- 評級和對錯分開：碼型對了就算對，評級只是告訴你節奏有多標準。
-- **差一點（CLOSE MISS）**：元素數對，但有一個元素長短判反，而且差距在界線 ±20% 以內。這種情況不升盒也不歸零，同一張卡在回合末再出一次，畫面顯示「ALMOST」加對照圖。
+**`app.h`**：加 `#define APP_BLE_STORE`，註解照 Conductor（只放 RAM，不寫 flash）。
 
-**寬鬆判定**
-- `morse.c` 新增純函式 `mo_judge(mark[], gap[], n, want_code, dit_est) → MJ_OK / MJ_COUNT / MJ_DAH_SHORT / MJ_DIT_LONG / MJ_SPLIT / MJ_OTHER`。
-- 規則：
-  - 元素數必須相同。
-  - dit 和 dah 混合的字：答案裡「應為 dah 的 mark」最短的那個，要比「應為 dit 的 mark」最長的那個長 1.5 倍以上。只比相對長短，不管絕對速度。
-  - 只有一種元素的字（E T I M S O H 5 0）：和延續下來的手速比，界線放寬到 1.6 × dit。
-- 判定用的資料取自已經在記錄的 `tim.live`（`app.c` 約 580 行，每個 mark 和字內 gap 的毫秒數）。
-- 字被切開也要處理：解碼器先吐出前半個字時，若前半是預期碼型的前綴，就再等下一段。超過預期的元素數，或停頓超過字間 gap，才判定，原因記為 `MJ_SPLIT`。
-- `set_t.look` 的 bit 7 目前沒用，拿來當「STRICT 判定」開關，放在 SET 頁，預設寬鬆。`set_valid` 跟著放寬，所以**存檔格式不用改**。
+**`app.c`**：
 
-**答錯時的對照圖**
-- PS_RESULT 畫兩列長短條：上面 SHOULD（預期碼型，用你的手速排出時間），下面 YOU（你實際的 mark 和 gap，同一個比例尺）。
-- 下面一行提示，對應 `MJ_*`：dah 太短、dit 太長、字中間停太久被切開、多了或少了一個元素。文字沿用 RHYTHM 的 `H1`／`H2` 風格（`app.c` 約 906 行）。
-- 判對但有一項接近界線時，給一行小提示（例如「dah 偏短」）。
-- 畫長短條重用 KEY TIMING 的 `tim_row()`（約 1715 行）。
+1. **空的 `app_ble_load` / `app_ble_save`**，照 Conductor。
+2. **`app_tick` 的 MIDI 迴圈分流**：
+   - **note**：照舊設定 `rx_midi`。來自 `PORT_BLE` 的 note，用 `plat_midi_in_t24()` 換算回 `plat_ms` 的時間（`now - (plat_ticks24() - t24) / 24000`），再交給 `ev_push(SRC_RX, …, t)`。
+   - **SysEx 封包**（CIN 4–7，來自 `PORT_BLE`）：放進一個 SPSC ring（大約 256 個 `uint32_t`，tick 寫、主迴圈讀，寫法照 `ev_push`）。
+   - 收訊用的 `rx_down` 判斷保持原樣。
+3. **`app_frame` 新增 `ble_in()`**：把 ring 裡的封包交給 `hl_sx_packet(&ble_rx, …)`，組好的 frame 交給 `host_frame(f, n, HL_BLE)`。之後 HELLO、Live、`T_PROG*` 備份還原都直接走藍牙，因為 `hl_send` 會回到 ack 來的那條路。
+4. **送出按鍵**：`midi_key()` 改成 `plat_midi_send(…, TO_USB | (ble_on() ? TO_BLE_HOST : 0))`。
+5. **設定**：SETTINGS 加第 13 項 **BLUETOOTH ON/OFF**，`SET_ITEMS` 改成 13。
+   - 存在 `SET.mute` 的 bit 1，1 代表關，預設 0（開）。所以**存檔格式不變**，0.4 的存檔可以直接讀。
+   - `set_valid` 改成 `mute <= 3`。原本用到 `mute` 的地方改成 `& 1`。
+   - 開關時呼叫 `plat_ble_enable`。開機時照設定呼叫一次。
+6. **header**：照 Conductor 顯示 `BT`。正在廣播時是灰色，連上後是藍色，跟 USB 的 host 標示並排。
+7. **`#if FM1B_BLE` 包起來**，`--no-ble` 也能 build。
 
-## 2. 進度管理：CHART 編輯模式（所有修改都要確認）
+**`tests/basic.txt`**（host simulator）新增：
+- `ble connect` 後，HELLO 從 BLE 送出，傳輸 byte 是 `01`；
+- 從 BLE 送 HELLO_ACK 和 `T_TEXT`，裝置會播出來；
+- `T_PROG_REQ` 走 BLE，回傳的 `T_PROG` frame 也走 BLE；
+- KEY 頁按鍵時，`expect_out BLE 90 00 …`；
+- BLUETOOTH OFF 之後，按鍵不送到 BLE；這個設定存檔、重開機後還在；
+- 藍牙相關的動作不增加 store 寫入。
 
-CHART 頁按 `REC` 進入 **EDIT**。所有改動先存在 RAM 裡的草稿 `ln_state_t draft`，畫面頂端顯示 `EDIT — unsaved`。
+**版本和協定**：`FW_MINOR` 改成 5，HELLO 向量改成 `05`。協定本身不變，HELLO 本來就帶傳輸 byte。
 
-| 操作 | 效果（作用在草稿上） |
-|---|---|
-| SELECT 選字，K1 轉 | 該字的等級 0–5，認字和發報兩個方向一起改 |
-| `OCT+` | 標為「已會」：認字盒 3、發報盒 2 |
-| `OCT-` | 「忘了」：兩個方向都回盒 0，排到下回合 |
-| K2 轉 | 開放到第 n 組。新開放的字設成剛好達到解鎖門檻（認字盒 2、發報盒 1）；縮回時，被關掉的字歸零 |
-| `FX` | 全部往回退一盒（生疏時用，所有字都會提早複習） |
-| 按住 `SEL` 2 秒 | 全部歸零，等同新手 |
-| `PLAY` | 出現「SAVE CHANGES? PLAY=yes HOME=no」，再按一次 `PLAY` 才寫入 |
-| `HOME`／離開頁面 | 有草稿時先問；選 no 就丟掉草稿 |
+## 2. host（`host/morse/`，0.5.0）
 
-- `learn.c` 新增純函式：`ln_set_level`、`ln_mark_known`、`ln_forget`、`ln_open_to`、`ln_step_back`、`ln_reset`。每個函式做完都要讓 `ln_valid` 成立。
-- 確切的按鍵配置，實作時會對照 CHART 目前已用的鍵再定，結果寫進速查頁。
+- `__init__.py` 改成 0.5.0 / (0,5)，`protocol.py` 的 HELLO 向量和測試跟著改。
+- `device.py`：找 port 時，USB 和藍牙都有就用 USB，跟 Conductor 的 `sniff_port` 一樣。找不到 port 時，提示到藍牙 MIDI 視窗按 Connect，並重用 `host/conductor/blelink.py` 打開那個視窗（同一個 repo，MIT）。
+- CLI 印出目前走的是 USB 還是 Bluetooth（從 HELLO 的傳輸 byte 判斷）。
 
-**分級測驗（PLACEMENT）**
-- PRACTICE 開始畫面加一個選項：`SELECT` 選「TEST」，`PLAY` 開始。
-- 測試範圍：還沒開放的下兩組，每字出一張 HEAR_CHOOSE，靜音時改出 LIGHT 或 CODE 卡。
-- 結果頁列出答對的字，問「MARK THESE KNOWN? PLAY=yes」。確認後，答對的字標為已會；若某組全部答對，就開放那一組。
-- 不影響回合數和 streak。
-- 實作上用 `ln_build` 的新 flag `LN_PLACE`。
+## 3. 網頁（fm1-morse `web/index.html`）
 
-## 3. 匯出／匯入進度
+- 連線狀態顯示「via Bluetooth / USB」，從 HELLO 最後一個 byte 判斷。
+- 說明一行：Mac 要先在「音訊 MIDI 設定 → 藍牙」連上。
+- 備份走藍牙會比較慢，6 個 frame 應該還是只要幾秒。逾時改成依傳輸決定。
 
-**協定**：hostlink 加三種訊息，要求韌體 ≥0.4，host 用 HELLO 帶的版本號判斷。
-- `T_PROG_REQ`（host→dev）：要求匯出。
-- `T_PROG`（dev→host）：資料分片。
-- `T_PROG_LOAD`（host→dev）：匯入的分片。
+## 4. 文件
 
-資料是 `ln_state_t` 加 `REC_VER` 和 CRC16，用 7-bit 打包，每片 ≤ `HOSTLINK_MAX`（64 B）。
-
-**匯入要在機器上確認**：收齊並檢查 CRC 和 `ln_valid` 後，畫面顯示「LOAD PROGRESS? round N, M letters open — PLAY=yes HOME=no」，按了才寫入。和第 2 節「手動修改要確認」同一個原則。
-
-**host**（`host/morse/`，維持 MIT）：
-- `morse backup FILE.json` 和 `morse restore FILE.json`，加 Justfile 的 `morse-backup`、`morse-restore`。
-- JSON 格式人看得懂、也可以手改：
-  ```json
-  {"format": "fm1-morse-progress", "version": 1, "firmware": "0.4", "round": 0, "streak": 0, "open": 0,
-   "answered": 0, "right": 0, "chars": {"K": {"recognise": 3, "send": 2, "last": [12, 11]}}}
-  ```
-- 測試向量由 `protocol.py` 和 `tests/basic.txt` 共用，和現有做法一樣。
-
-**網頁**（fm1-morse repo 的 `web/progress.html`，GPL）：
-- 單一檔案，用 Web MIDI（Chrome）找到 MORSE 埠，可以 Backup（下載 JSON）和 Restore（上傳 JSON），JSON 格式和 CLI 相同。
-- 用 GitHub Pages 發布。開啟 Pages 是公開動作，做之前會先問你。
-
-**文件**：寫明 Morse 的進度存在 `0xDA000`。實測從 SLOOP 切回來時進度還在，但刷回原廠 V15 就沒了，所以換韌體前先備份。寫進 README 和 `docs/dev/morse.md`。
-
-## 4. 使用指南
-
-新頁 `docs/dev/morse-learn.md`「用 MORSE 學摩斯」，繁體中文，加進 `zensical.toml` nav。內容：
-
-- 第一次開機選 START preset。
-- 每天一回合 PRACTICE。
-- 通勤時用 LISTEN 背景聽。
-- RHYTHM 練手。
-- TYPE 和 KEY 自由玩。
-- 什麼時候換 BUILDING／QSO preset。
-- 判錯時怎麼看對照圖。
-- 生疏了、已經會、換韌體時怎麼處理進度（CHART EDIT、TEST、backup）。
-- 進階交給 Vail，FM-1 當它的鍵。
-
-同時更新：
-- `docs/index.md`、`README.md`：在「自己的韌體」那一行連到這頁。
-- `docs/dev/morse-cheatsheet.md`：加上 0.4 的新操作。
-- fm1-morse 的 README：加英文的 "Learning with MORSE" 小節。
-
-## 5. 截圖
-
-- `tests/basic.txt` 已經會產生約 25 張 `shot`。補上缺的：card_hear_key、card_see_key、result_wrong（含對照圖）、chart_edit、save_confirm、placement、type_letters、listen 播放中。
-- 新增 `just morse-shots`：跑模擬器後，把挑好的 PNG 放大 2 倍（nearest neighbour），複製到 fm1-morse 的 `docs/screens/`。
-- fm1-morse README 加一個 Screens 小節，用表格排：menu、practice（各種卡）、listen、key 的三種 view、rhythm、type 的 layout 和 code、chart 和 edit、settings。
-- docs 的指南頁連到 GitHub 上的圖，不複製進這個 repo。
-
-## 檔案 Files
-
-- fm1-morse（submodule）：
-  - `morse.c/h`（`mo_dec_restart`、`mo_judge`）
-  - `learn.c/h`（編輯函式、`LN_PLACE`）
-  - `app.c`（FW_MINOR 4；判定、對照圖、CHART EDIT、確認對話、TEST、`T_PROG*`、STRICT 設定）
-  - `tests/basic.txt`、`tests/morse_test.c`
-  - `web/progress.html`、`docs/screens/`、README、`fmhub.json` 不變
-- 這個 repo：
-  - `host/morse/`（`protocol.py`、`core.py`、`__main__.py`、`__init__.py` 改成 0.4.0、`PROTOCOL.md`）、`host/tests/test_morse.py`
-  - Justfile（`morse-backup`、`morse-restore`、`morse-shots`）
-  - `docs/dev/morse.md`（0.4 版本列、roadmap 的 BLE 改成 0.5）、`morse-learn.md`（新）、`morse-cheatsheet.md`、`zensical.toml`、`docs/index.md`、`README.md`、AGENTS.md（新的 Justfile 指令）
+- `docs/dev/morse.md`：
+  - 藍牙一節從「研究」改成「0.5」，寫實作和怎麼連；
+  - 版本列加 0.5，大小和 RAM 用 build 出來的數字；
+  - roadmap 和 backlog 留下 central 和 velocity 備案；
+  - 驗證表。
+- `morse-cheatsheet.md`：加 BLUETOOTH 設定和 header 的 `BT`。
+- `morse-learn.md`：「接電腦」段落加藍牙。
+- fm1-morse README：加 Bluetooth 小節，截圖加 `settings_bt`。
+- AGENTS.md 不用改，沒有新的 Justfile 指令。
 
 ## Verification 驗證
 
-1. `just morse-unit`：
-   - `mo_judge`：M 用 180/180 ms 判對；I 用 60/60 ms 判對；dit 和 dah 對比不足判錯；切開、元素數不對時給出對的 reason。
-   - 評級：標準 1:3:1 得 GREAT；劃點比 2:1 得 CLOSE；判反但在 ±20% 內算 CLOSE MISS。慢手（SEND 5 WPM 的節奏）回答 20 WPM 的題目也判對。
-   - `mo_dec_restart` 保留平均值。
-   - `ln_*` 的編輯函式做完後 `ln_valid` 都成立；`ln_open_to` 往前開、往回縮都正確；`LN_PLACE` 的回合只出未開放的字。
-2. `just fw-test morse`：
-   - 腳本手（sendkeys）在 SEND=10 的設定下，用 20 WPM 的手速回答 M 和 T：寬鬆判對，STRICT 判錯，錯時畫出對照圖（shot）。
-   - CHART EDIT：改了按 HOME，選 no 後 `store_writes` 不變；選 yes 才寫入；`reboot` 後還在。
-   - TEST 回合。
-   - `T_PROG_REQ` 會吐出向量；`T_PROG_LOAD` 先要求確認，CRC 錯就拒收。
-3. `just morse-test`：host 向量測試；`morse backup` 和 `restore` 在 SimLink 上來回一次，資料不變。
-4. `just morse-emu` 加 `--usb`：CLI backup → 改進度 → restore，在 `uc25hq80` 和 `p25q80` 各做一次存檔、重開、讀回。網頁在 Chrome 上對 emulator 的虛擬埠做一次 backup 和 restore（`[模擬]`）。
-5. `just fw-build morse`，記錄大小。`just docs-check`。
-6. 實機：照 AGENTS.md 的 preflight，用 USB-MIDI 更新到 0.4（你核准後由你執行），確認進度保留，再實際用 backup 和 restore 跑一次。v0.4 release、Hub 更新、開啟 Pages 都是公開動作，到時候一步一步問你。
+1. `just morse-unit`、`just fw-test morse`（加上上面的 BLE 測試）、`just morse-test`。
+2. `just fw-build morse` 會 build 出含藍牙的版本，記錄大小和 RAM（預估 +41–46 KB）。**注意**：submodule pointer 要先 commit，再 build，避開已知的 fw-setup 陷阱。
+3. fm1-emu 在 `uc25hq80` 和 `p25q80` 上都跑一次：開機、改設定、存檔、重開、讀回，USB 照常，藍牙不增加寫入 `[模擬]`。模擬器沒有無線電，藍牙本身要到實機才能測。
+4. 實機（**每次刷機都要你核准**，preflight 照 AGENTS.md，由你輸入 `yes`）：
+   - 確認進度還在。
+   - Mac 用藍牙連上 `FM-1 XXXX`，`just morse-send`、MORSE on the web（Live 和備份）、Vail 都能用。
+   - **量抖動**：用 KEY 頁打同一串字，比較 USB 和藍牙兩邊 Web MIDI `timeStamp` 的間隔。我會寫一個小量測腳本或網頁 debug 區，記錄每個 mark 的長度。
+   - 拔線只用電池，連打 10 分鐘。
+   - 結果寫進 `device-log.md`，以及 morse.md 的 `[實機]` 標記。
+5. `just docs-check`。commit、push、release 都等你說。

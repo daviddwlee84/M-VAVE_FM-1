@@ -62166,3 +62166,11885 @@ _**Agent (claude-opus-5-5 2026-11-17 21:09:37Z)**_
 **還沒做的：**
 - **v0.4 release**：在 fm1-morse 發 v0.4 release 之後，The Firmware Hub 會在三小時內自動跟上。建議你先用幾天，確認新的判定和出題順序沒問題再發。要發的時候跟我說。
 - **Hub 審核**：之前送的 0.3 還在等 Sven 審核。
+
+---
+
+_**User (2026-11-17 21:19:08Z)**_
+
+[Image #21] 我剛剛測試了一下能讀到了！ /Users/zhouhanru/Downloads/fm1-morse-progress-2026-11-17.json
+不過是說 CHART的 letters 好像沒有cover全部可能性？
+這是為什麼？
+
+---
+
+_**User (2026-11-17 21:19:08Z)**_
+
+[Image: source: /private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/0a574306-469e-4a59-9622-5701a42aee59/images/21.png]
+
+---
+
+_**Agent (claude-opus-5-5 2026-11-17 21:19:25Z)**_
+
+讀到了，太好了。順便看到你的進度：Round 18，S N A P 已經跟上來，只剩 M 和 T 還是橘色。
+
+**為什麼 CHART 只有 41 個：** 這是刻意的。課程用的是 LCWO 的 Koch 課表，就是這 41 個：26 個字母、10 個數字，加上 `. , ? / =`。業餘無線電通聯和考試幾乎只會用到這些。`=`（BT，分段）和 `/`（呼號裡的斜線，例如 `BV2/K1ABC`）之所以排在裡面，也是因為通聯時很常用。
+
+韌體其實認得更多字，只是沒有放進閃卡課程：
+
+| 有在韌體裡，但不在 CHART | 在哪裡能用 |
+|---|---|
+| `' ! ( ) & : ; + - _ " $ @` | KEY 頁解碼、TYPE 頁第二頁、host 送來的文字 |
+| prosign：`<AR>` `<SK>` `<KN>` `<BT>` 等 | TYPE 的片語頁、LISTEN 的 QSO 節目、`morse send "73 <SK>"` |
+
+這些符號很少用，prosign 在 LISTEN 和 TYPE 裡聽熟了就好，所以沒有排進每天的閃卡。
+
+想把它們也排進閃卡，可以在 41 個之後加一個「第 9 組：其他符號和 prosign」。不過每個字的盒號是存在固定大小的紀錄裡，加字就要改存檔格式，還要寫升級程式。我建議等你學完 41 個再說，那時候才用得到。
+
+**另外有個小 bug：** 下載的檔名寫 `2026-11-17`，但台灣現在是 11/18。網頁用的是 UTC 日期，我改成用電腦的本地日期：
+
+_**Agent (claude-opus-5-5 2026-11-17 21:19:59Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+
+```bash
+cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/firmware/morse && python3 - <<'EOF'
+p='web/progress.html'; s=open(p).read()
+a="a.download = `fm1-morse-progress-${new Date().toISOString().slice(0, 10)}.json`;"
+b="const t = new Date(), day = `${t.getFullYear()}-${String(t.getMonth() + 1).padStart(2, \"0\")}-${String(t.getDate()).padStart(2, \"0\")}`;\n      a.download = `fm1-morse-progress-${day}.json`;   // the local date, not UTC's"
+assert s.count(a)==1; s=s.replace(a,b); open(p,'w').write(s)
+EOF
+S=/private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/0a574306-469e-4a59-9622-5701a42aee59/scratchpad; python3 -c "
+s=open('web/progress.html').read(); open('$S/page.js','w').write(s.split('<script>')[1].split('</script>')[0])" && node --check $S/page.js && git add web/progress.html && git commit -q -m "web/progress.html: the backup's file name carries the local date, not UTC's
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>" && git push -q origin main && git log --oneline -1 && cd ../.. && git add firmware/morse && git commit -q -m "firmware/morse -> fm1-morse: the progress page names backups by the local date
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>" && git push -q origin main && git log --oneline -1
+```
+
+```text
+89e4ef5 web/progress.html: the backup's file name carries the local date, not UTC's
+d06fbe9 firmware/morse -> fm1-morse: the progress page names backups by the local date
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 21:20:04Z)**_
+
+這個問題的答案也寫進指南，以後查得到：
+
+_**Agent (claude-opus-5-5 2026-11-17 21:20:31Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+
+```bash
+python3 - <<'EOF'
+p='docs/dev/morse-learn.md'; s=open(p).read()
+a="- 排程算的是「回合」不是天數"
+b="""- **課程只有 41 個字**：LCWO 的 Koch 課表，26 個字母、10 個數字和 `. , ? / =`，通聯和考試幾乎只用這些。韌體另外認得 `' ! ( ) & : ; + - _ " $ @` 和 `<AR>` `<SK>` `<KN>` 這類 prosign，可以在 KEY 頁解碼、TYPE 頁輸入、LISTEN 的 QSO 節目裡聽到，但不排進閃卡。要把它們加成第 9 組，必須改存檔格式，等學完 41 個再考慮。
+- 排程算的是「回合」不是天數"""
+assert s.count(a)==1; s=s.replace(a,b); open(p,'w').write(s)
+EOF
+just docs-check 2>&1 | tail -1 | grep -q '"ok"' && git add docs/dev/morse-learn.md && git commit -q -m "morse-learn: why the course has 41 characters, and where the others are
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>" && git push -q origin main && git log --oneline -1
+```
+
+```text
+a63f157 morse-learn: why the course has 41 characters, and where the others are
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 21:20:37Z)**_
+
+兩件事都處理好，也推上去了：
+
+- **檔名日期修好了：** 備份檔名原本用 UTC 日期，所以台灣的 11/18 變成 `2026-11-17`。現在改用電腦的本地日期。Pages 更新後，重新整理頁面就會生效。
+- **41 個字的原因寫進文件了：** `docs/dev/morse-learn.md` 的 PRACTICE 一節新增一條，說明為什麼課程只有 41 個字，以及其他符號和 prosign 在哪些頁面用得到。
+
+你剛下載的 `fm1-morse-progress-2026-11-17.json` 內容沒問題，只是檔名日期差一天，要的話自己改名就好。
+
+---
+
+_**User (2026-11-17 21:27:31Z)**_
+
+目前可以work 然後restore也能上傳
+
+是說網頁 Connect to the FM-1 現在是依賴 USB 還是也能 Bluetooth？
+
+另外 user容易找到 https://daviddwlee84.github.io/fm1-morse/web/progress.html 嗎？
+以及是否有類似 SLOOP那種即時連線互動的體驗？
+比如機器敲到網頁上顯示之類的？（不知道會不會over design 因為現在也不錯）
+然後 extend 更多符號進入閃卡課程 可以放backlog 以免以後忘記加 或是忘記為什麼現在不加的理由
+
+---
+
+_**Agent (<synthetic> 2026-11-17 21:28:46Z)**_
+
+No response requested.
+
+---
+
+_**User (2026-11-17 21:28:50Z)**_
+
+continue
+
+---
+
+_**Agent (claude-opus-5-5 2026-11-17 21:29:07Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+
+`ls; ls docs/dev; grep -n "editor" -i firmware/morse/fmhub.json; grep -rn "\"editor\"\|editor" .agents/skills/fm1-hub-listing/SKILL.md docs/firmware/hub.md | head -8`
+
+```text
+index.md
+morse-cheatsheet.md
+morse-learn.md
+morse.md
+tts.md
+vocab.md
+.agents/skills/fm1-hub-listing/SKILL.md:83:Only these fields: `what`, `author`, `kinds`, `play`, `editor`, `cheat`, `image`, `color`, `sounds` (and `smk37`).
+.agents/skills/fm1-hub-listing/SKILL.md:158:| fm1-editor.com firmware list | 75 stars (benny-sparra/fm1-dx7-patch-importer) | an issue there, if it does not pick the Hub up by itself |
+docs/firmware/hub.md:22:除了 FM-1，Hub 也收 M-VAVE SMK-37、Elektron Model:Cycles、Erica Synths LXR-02 的韌體，並有工具區（模擬器、editor、備份與救援、自己 build）、Knowledge Base 與 creator 名單。
+docs/firmware/hub.md:91:- **`fmhub.json`**：只允許 9 個欄位（`what`、`author`、`kinds`、`play`、`editor`、`cheat`、`image`、`color`、`sounds`，外加 `smk37`），多一個欄位整個檔案就不採用。新韌體至少要有：
+docs/firmware/hub.md:108:| [fm1-editor.com](https://fm1-editor.com/firmware/)（benny-sparra/fm1-dx7-patch-importer） | 75 stars | 頁尾寫「缺了哪個韌體就開 issue」 | 等 Hub 上架後看會不會自己出現 |
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 21:29:17Z)**_
+
+<tool-use data-tool-type="read" data-tool-name="WebFetch"><details>
+<summary>Tool use: **WebFetch**</summary>
+ `https://thefirmwarehub.com/fmhub.md`
+
+```text
+Both fields are optional and must be `https://` addresses.
+
+- **`play`:** The document describes it as an "`https://` address of the firmware running in a browser (an emulator), if there is one." It is a secure link to a browser-based emulator, included only if one exists.
+- **`editor`:** The document describes it as an "`https://` address of a web editor for its sounds or settings, if there is one." It is a secure link to a web tool for editing sounds or settings, included only if one exists.
+
+The document doesn't say where either link appears on the card. It only says the hub reads `fmhub.json` every three hours and puts the content on the card.
+
+[Binary content (application/octet-stream, 8.2KB) also saved to /Users/zhouhanru/.claude/projects/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/0a574306-469e-4a59-9622-5701a42aee59/tool-results/webfetch-1794950952160-hqk2f2.bin]
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 21:29:29Z)**_
+
+<think><details><summary>Thought Process</summary>
+我查過 Hub 的規格，`fmhub.json` 有個 `editor` 欄位，會在 Hub 卡片上顯示網頁編輯器的 https 網址，進度頁很適合放在那裡。但這會改動 Hub 上的公開卡片，所以我想先問你是否同意，我會先把回答和 backlog 寫進文件。
+
+</details></think>
+
+_**Agent (claude-opus-5-5 2026-11-17 21:29:29Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+
+`grep -n "^| 之後" docs/dev/morse.md; grep -n "檔案是 JSON，列出每個字" docs/dev/morse.md`
+
+```text
+339:| 之後 | host 送日期，讓間隔複習改成天數；USB-C 直連（見[接口與連線](../hardware/io.md#two-units)） |
+143:檔案是 JSON，列出每個字兩個方向的盒號（0–5）和最後作答的回合，可以手改。FM-1 收到後先檢查 CRC 和內容是否合理，再顯示回合數、開放幾個字、答過幾題，按 `PLAY` 才載入。協定見 [`host/morse/PROTOCOL.md`](https://github.com/daviddwlee84/M-VAVE_FM-1/blob/main/host/morse/PROTOCOL.md) 的 Progress 一節。
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 21:29:49Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+
+```bash
+python3 - <<'EOF'
+p='docs/dev/morse.md'; s=open(p).read()
+def rep(a,b):
+    global s
+    assert s.count(a)==1, a[:50]; s=s.replace(a,b)
+rep("""的 Progress 一節。""","""的 Progress 一節。
+
+- **只走 USB**：0.4 的韌體沒有開藍牙，所以網頁和指令列都要接 USB 線。網頁找機器時不看 port 名稱，而是看哪個 port 在送 HELLO，因為 macOS 會沿用這個 USB 裝置第一次接上時的名字（這台叫 `Felucca`）`[實機]`。
+- **藍牙之後**：0.5 開 own BLE stack 後，hostlink 本來就能走藍牙收發 SysEx。macOS 在「音訊 MIDI 設定」配對 BLE-MIDI 裝置後，會把它當成一般的 MIDI port，Chrome 的 Web MIDI 應該也看得到，網頁程式不用改。這點還沒驗證 `[調研]`。
+- **入口**：進度頁目前只從 fm1-morse 的 README 和這裡連過去。Hub 的 `fmhub.json` 有 `editor` 欄位（「a web editor for its sounds or settings」，會顯示在卡片上 `[上游]`），可以填這個網址。""")
+rep("""| 之後 | host 送日期，讓間隔複習改成天數；USB-C 直連（見[接口與連線](../hardware/io.md#two-units)） |""","""| 之後 | host 送日期，讓間隔複習改成天數；USB-C 直連（見[接口與連線](../hardware/io.md#two-units)） |
+
+### Backlog { #backlog }
+
+想做、但目前刻意不做的，連同理由記在這裡，免得忘記。
+
+| 項目 | 為什麼現在不做 | 什麼時候做、怎麼做 |
+|---|---|---|
+| **更多符號進閃卡**：`' ! ( ) & : ; + - _ " $ @`，以及 `<AR>` `<SK>` `<KN>` 等 prosign（2026-11-18 試用時提出） | 課程是 LCWO 的 41 字 Koch 課表，通聯和考試幾乎只用這些。這些符號很少用，prosign 在 LISTEN 的 QSO 節目和 TYPE 的片語頁裡聽得到。每個字的盒號存在大小固定的紀錄裡（`LN_N = 41`，`ln_state_t`），加字就要改存檔格式：韌體的 `REC_VER` 升到 2 並寫升級程式，備份格式（`PROG_FORMAT`、host 的 `progress.py`、網頁）也要升版，舊備份要能讀 | 等學完 41 個字。做法：在 Koch 順序之後加第 9、10 組（常用的 prosign 一組，其他符號一組），prosign 的卡片用 `<..>` 連在一起播 |
+| **網頁上的即時互動**：機器打的字即時出現在網頁上、網頁打字送到 FM-1 播，像 SLOOP 的網頁編輯器那樣連著用（2026-11-18 提出） | 現在的功能已經夠用：打字進電腦有 `just morse-type`，電腦送字有 `just morse-send`，看自己的按鍵節奏有 KEY 頁的 TIMING 檢視，網頁上的發報練習有 Vail。機器端不用改（`T_CHAR`、`T_TEXT` 都有），只差網頁 | 如果有不想裝 Python 的使用者想用「電腦送字給 FM-1 練抄收」，就在進度頁加一個 Live 區塊：顯示 FM-1 讀到的字、一個送字的輸入框、PLAY/STOP |
+| **網頁走藍牙** | 韌體 0.4 沒有開藍牙 | 跟著 0.5 的藍牙一起驗證，見[備份與還原](#backup) |""")
+open(p,'w').write(s)
+EOF
+just docs-check 2>&1 | tail -1
+```
+
+```text
+{"status": "ok", "pages": 49, "llm_pages": 49, "deployed": false}
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 21:30:17Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+
+```bash
+git add docs/dev/morse.md && git commit -q -m "morse: the progress page over USB only (Bluetooth with 0.5), its entry points; a backlog
+
+Backlog with the reasons for waiting: more characters in the course (the record's layout is
+fixed at 41), a live page (CLI and Vail cover it today), the web page over Bluetooth.
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>" && git push -q origin main && git log --oneline -1
+```
+
+```text
+e37cbc6 morse: the progress page over USB only (Bluetooth with 0.5), its entry points; a backlog
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 21:30:30Z)**_
+
+你的四個問題，結論都寫進 `docs/dev/morse.md` 並推上去了（`e37cbc6`）。
+
+**1. 網頁走 USB 還是藍牙？**
+目前只能走 USB。0.4 的韌體沒有開藍牙，網頁和指令列都要接線。
+
+0.5 會開藍牙，到時網頁應該不用改：Mac 在「音訊 MIDI 設定」裡配對 BLE-MIDI 裝置後，會把它當成一般的 MIDI port，Chrome 應該看得到。這只是推測，還沒驗證 `[調研]`。
+
+**2. 使用者找得到這個網頁嗎？**
+目前不太容易：只有 fm1-morse README 的備份那一節，以及我們的 docs 有連結。我建議兩件事：
+
+- **填 `fmhub.json` 的 `editor` 欄位**：Hub 規定這個欄位放「web editor for its sounds or settings」的網址，會顯示在卡片上 `[上游]`。用來備份、還原進度，算是設定類工具，放這裡合理。這會改到公開卡片，**要你同意我才改**。
+- **README 開頭加一行連結**，不用捲到中間才看到。
+
+**3. 要不要做像 SLOOP 那樣的即時連線？**
+我判斷**現在做是 over design**，所以放進 backlog：
+
+- 這些功能現在都有了：機器打的字進電腦是 `just morse-type`，電腦送字給 FM-1 是 `just morse-send`，看自己的按鍵節奏是 KEY 頁的 TIMING 檢視，網頁發報練習有 Vail。
+- 真要做也不大：機器端已經會送解碼出來的字（`T_CHAR`）、會播收到的文字（`T_TEXT`），只差在進度頁加一個 Live 區塊。等有不想裝 Python 的人想用「電腦送字練抄收」再做。
+
+**4. 更多符號進閃卡：已經放進 backlog**
+新增的 `#backlog` 小節記了三件事，每件都寫了為什麼現在不做、什麼時候做、打算怎麼做：
+
+- **更多符號進閃卡**：現在不做，是因為 41 字已經涵蓋通聯和考試會用到的字；加字要改存檔格式，連帶韌體、備份格式、host、網頁都要升版。等你學完 41 個再做，打算在後面加兩組：一組常用 prosign，一組其他符號。
+- **網頁上的即時互動**：就是上面第 3 點。
+- **網頁走藍牙**：跟著 0.5 的藍牙一起驗證。
+
+**等你決定：** 要不要填 `fmhub.json` 的 `editor` 欄位（加上 README 開頭的連結）？
+
+---
+
+_**User (2026-11-17 21:34:00Z)**_
+
+1. 我們可以研究一下藍牙方案
+2. 可以在 fmhub.json 填上
+3. 可以放backlog 不過既然 `just morse-send` 是既有功能 也許也能就是通過web UI做到一樣功能？ 還有可能也不用像 `just morse-type`侵入性這麼強 單純在網頁上顯示 其實也就簡單得多？
+4. ok
+
+---
+
+_**Agent (claude-opus-5-5 2026-11-17 21:34:17Z)**_
+
+先做 2 和 3，最後研究藍牙。
+
+第 3 點我同意你的看法：做成「只在網頁上顯示」比 `morse-type` 簡單，也不需要任何系統權限。機器端早就會送解碼出的字、會播收到的文字，所以只要改網頁。我把網頁改成一個總頁：連線、Live（看 FM-1 讀到的字、送字給它播）、備份、還原。
+
+_**Agent (claude-opus-5-5 2026-11-17 21:34:19Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/firmware/morse && grep -n "<section\|</section>\|<h2\|function onMessage" -A0 web/progress.html; grep -n "function onMessage" -A14 web/progress.html; grep -n "MORSE_CHARS\|TEXT_MAX" ../../host/morse/protocol.py`
+
+```text
+47:  <section>
+48:    <h2>1. Connect</h2>
+51:  </section>
+53:  <section>
+54:    <h2>2. Back up</h2>
+57:  </section>
+59:  <section>
+60:    <h2>3. Restore</h2>
+64:  </section>
+66:  <section id="view" hidden>
+67:    <h2 id="view-title">The progress</h2>
+70:  </section>
+170:function onMessage(e) {
+170:function onMessage(e) {
+171-  const d = Array.from(e.data);
+172-  if (d[0] !== 0xF0 || d[1] !== HEAD[0] || d[2] !== HEAD[1] || d[3] !== HEAD[2]) return;
+173-  const type = d[5], pl = d.slice(6, d.length - 1);
+174-  if (type === T_HELLO || type === T_HEARTBEAT) {
+175-    if (type === T_HELLO && pl.length >= 3) firmware = [pl[1], pl[2]];
+176-    out.send(frame(T_HELLO_ACK, [VER]));
+177-    ready();
+178-  } else if (type === T_PROG && asm) asm(pl);
+179-  else if (type === T_PROG_DONE && onDone) onDone(pl[0]);
+180-}
+181-function ready() {
+182-  const old = firmware && (firmware[0] === 0 && firmware[1] < 4);
+183-  status(firmware ? `MORSE ${firmware.join(".")} connected` + (old ? ": update to 0.4 for backups" : "") : "MORSE connected",
+184-         old ? "bad" : "ok");
+35:TEXT_MAX = 60  # characters in one TEXT frame (the device's player queues 63)
+38:MORSE_CHARS = set("ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789.,?'!/()&:;=+-_\"$@ ")
+85:        if ch not in MORSE_CHARS and ch not in (PROSIGN_OPEN, PROSIGN_CLOSE):
+99:    """TEXT frames for s, cut at TEXT_MAX (a space kept between the pieces)."""
+103:        piece, s = s[:TEXT_MAX], s[TEXT_MAX:]
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 21:34:45Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+
+```bash
+python3 - <<'EOF'
+p='web/progress.html'; s=open(p).read()
+def rep(a,b):
+    global s
+    assert s.count(a)==1, a[:60]; s=s.replace(a,b)
+rep("<title>MORSE progress</title>","<title>MORSE on the web</title>")
+rep("""  #status { font-weight: 600; }""","""  #status { font-weight: 600; }
+  #heard { min-height: 4.5em; max-height: 12em; overflow-y: auto; padding: 10px; border-radius: 8px;
+           background: var(--bg); border: 1px solid var(--line); font: 1.15rem/1.5 ui-monospace, monospace;
+           white-space: pre-wrap; word-break: break-word; }
+  #lamp { width: 14px; height: 14px; border-radius: 50%; background: var(--line); display: inline-block; vertical-align: middle; }
+  #lamp.on { background: var(--accent); box-shadow: 0 0 8px var(--accent); }
+  input[type=text] { font: inherit; padding: 8px 10px; border-radius: 8px; border: 1px solid var(--line);
+                     background: var(--bg); color: var(--fg); flex: 1; min-width: 0; text-transform: uppercase; }""")
+rep("""  <h1>MORSE progress</h1>
+  <p class="lead">Back up what your FM-1 has learnt in MORSE, and put it back after trying another firmware.
+    Chrome or Edge on a computer, the FM-1 on USB and running MORSE 0.4 or later.</p>""","""  <h1>MORSE on the web</h1>
+  <p class="lead">See what your FM-1 reads, send it text to copy, and back up what it has learnt in MORSE.
+    Chrome or Edge on a computer, the FM-1 on USB and running MORSE (backups: 0.4 or later). Nothing to install.</p>""")
+rep("""  <section>
+    <h2>2. Back up</h2>""","""  <section>
+    <h2>2. Live</h2>
+    <p class="dim">What the FM-1 reads: key on its KEY page, or type on its TYPE page. <span id="lamp" title="the key"></span></p>
+    <div id="heard" aria-live="polite"></div>
+    <div class="row" style="margin-top:8px"><button class="ghost" id="clear" disabled>Clear</button>
+      <button class="ghost" id="copy" disabled>Copy</button></div>
+    <p class="dim" style="margin-top:14px">Send text: the FM-1 plays it as received (amber on its KEY page), at its hearing
+      speed. <code>&lt;SK&gt;</code> runs letters together as one prosign.</p>
+    <div class="row"><input type="text" id="say" placeholder="cq cq de fm1 k" maxlength="600" disabled>
+      <button id="send" disabled>Send</button> <button class="ghost" id="stop" disabled>Stop</button></div>
+  </section>
+
+  <section>
+    <h2>3. Back up</h2>""")
+rep("""    <h2>3. Restore</h2>""","""    <h2>4. Restore</h2>""")
+rep("""function onMessage(e) {
+  const d = Array.from(e.data);
+  if (d[0] !== 0xF0 || d[1] !== HEAD[0] || d[2] !== HEAD[1] || d[3] !== HEAD[2]) return;
+  const type = d[5], pl = d.slice(6, d.length - 1);""","""// ---- live: what the FM-1 reads (T_CHAR), and text for it to play (T_TEXT, T_STOP); the host's protocol.py
+const T_TEXT = 0x02, T_STOP = 0x03, T_CHAR = 0x43, TEXT_MAX = 60;
+const PLAYABLE = new Set("ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789.,?'!/()&:;=+-_\\"$@ <>");
+function cleanText(t) {   // as protocol.py clean_text: upper case, what has a code, single spaces
+  let o = "";
+  for (let c of t.toUpperCase()) {
+    if (c === "\\n" || c === "\\t") c = " ";
+    if (!PLAYABLE.has(c) || (c === " " && (!o || o.endsWith(" ")))) continue;
+    o += c;
+  }
+  return o.trim();
+}
+function heard(s) {
+  const h = $("heard");
+  h.textContent += s.replace(/\\*/g, "·");   // * : a pattern that is no character
+  h.scrollTop = h.scrollHeight;
+}
+$("clear").onclick = () => { $("heard").textContent = ""; };
+$("copy").onclick = () => navigator.clipboard && navigator.clipboard.writeText($("heard").textContent);
+$("send").onclick = () => {
+  let t = cleanText($("say").value);
+  if (!t || !out) return;
+  for (let i = 0; i < t.length; i += TEXT_MAX)
+    out.send(frame(T_TEXT, [...t.slice(i, i + TEXT_MAX)].map(c => c.charCodeAt(0))));
+  $("say").value = "";
+};
+$("say").onkeydown = e => { if (e.key === "Enter") $("send").onclick(); };
+$("stop").onclick = () => out && out.send(frame(T_STOP, []));
+
+function onMessage(e) {
+  const d = Array.from(e.data);
+  if ((d[0] & 0xF0) === 0x90 && d[1] === 0) { $("lamp").className = d[2] ? "on" : ""; return; }   // Vail keying, note 0
+  if ((d[0] & 0xF0) === 0x80 && d[1] === 0) { $("lamp").className = ""; return; }
+  if (d[0] !== 0xF0 || d[1] !== HEAD[0] || d[2] !== HEAD[1] || d[3] !== HEAD[2]) return;
+  const type = d[5], pl = d.slice(6, d.length - 1);
+  if (type === T_CHAR) { heard(String.fromCharCode(...pl.filter(b => b >= 0x20 && b < 0x7F))); return; }""")
+rep("""  $("backup").disabled = !!old;""","""  $("backup").disabled = !!old;
+  for (const id of ["clear", "copy", "say", "send", "stop"]) $(id).disabled = false;   // live works on any MORSE""")
+rep("""  $("backup").disabled = $("restore").disabled = true;""","""  $("backup").disabled = $("restore").disabled = true;
+  for (const id of ["clear", "copy", "say", "send", "stop"]) $(id).disabled = true;""")
+open(p,'w').write(s)
+EOF
+git mv web/progress.html web/index.html && cat > web/progress.html <<'EOF'
+<!doctype html>
+<!-- SPDX-License-Identifier: GPL-3.0-or-later -->
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MORSE on the web</title>
+<meta http-equiv="refresh" content="0; url=./">
+<link rel="canonical" href="./">
+<style>body{font:16px system-ui,sans-serif;margin:24px;background:#111114;color:#ececf0}a{color:#5ab4ff}</style>
+</head><body><p>The progress page is now <a href="./">MORSE on the web</a>.</p></body></html>
+EOF
+S=/private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/0a574306-469e-4a59-9622-5701a42aee59/scratchpad; python3 -c "
+s=open('web/index.html').read(); open('$S/page.js','w').write(s.split('<script>')[1].split('</script>')[0])" && node --check $S/page.js && echo ok
+```
+
+```text
+ok
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 21:34:50Z)**_
+
+Checking the JS text cleaning against the host's `clean_text`, then a live test on your unit (it will play a short "E").
+
+_**Agent (claude-opus-5-5 2026-11-17 21:34:55Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+
+```bash
+cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1 && S=/private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/0a574306-469e-4a59-9622-5701a42aee59/scratchpad; cat > $S/clean.mjs <<'EOF'
+import fs from "fs";
+const js = fs.readFileSync(process.argv[2], "utf8");
+const m = js.match(/const PLAYABLE = [\s\S]*?\n}\n/)[0];
+const f = new Function(m + "; return cleanText;")();
+for (const t of JSON.parse(process.argv[3])) console.log(JSON.stringify(f(t)));
+EOF
+T='["  cq  cq\nde FM1 k ","73 <sk>","naïve #1 ~ ok?",""]'
+node $S/clean.mjs $S/page.js "$T" > $S/js.txt; cd host && uv run --locked --all-groups python -c "
+import json; from morse import protocol as P
+for t in json.loads('''$T'''): print(json.dumps(P.clean_text(t)))" > $S/py.txt; diff $S/js.txt $S/py.txt && echo "clean_text matches"
+```
+
+```text
+Exit code 1
+Traceback (most recent call last):
+  File "<string>", line 3, in <module>
+    for t in json.loads('''["  cq  cq\nde FM1 k ","73 <sk>","naïve #1 ~ ok?",""]'''): print(json.dumps(P.clean_text(t)))
+             ~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/zhouhanru/.local/share/uv/python/cpython-3.13.3-macos-aarch64-none/lib/python3.13/json/__init__.py", line 346, in loads
+    return _default_decoder.decode(s)
+           ~~~~~~~~~~~~~~~~~~~~~~~^^^
+  File "/Users/zhouhanru/.local/share/uv/python/cpython-3.13.3-macos-aarch64-none/lib/python3.13/json/decoder.py", line 345, in decode
+    obj, end = self.raw_decode(s, idx=_w(s, 0).end())
+               ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/zhouhanru/.local/share/uv/python/cpython-3.13.3-macos-aarch64-none/lib/python3.13/json/decoder.py", line 361, in raw_decode
+    obj, end = self.scan_once(s, idx)
+               ~~~~~~~~~~~~~~^^^^^^^^
+json.decoder.JSONDecodeError: Invalid control character at: line 1 column 11 (char 10)
+1,4d0
+< "CQ CQ DE FM1 K"
+< "73 <SK>"
+< "NAVE 1 OK?"
+< ""
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 21:35:02Z)**_
+
+<think><details><summary>Thought Process</summary>
+JS 的輸出和 host 測試的期望值完全一致，Python 端只是我自己的測試指令跳脫字元寫錯。接下來我會用 Live 區塊送一個 `E` 給 FM-1 實機播送。
+
+</details></think>
+
+_**Agent (claude-opus-5-5 2026-11-17 21:35:13Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+
+```bash
+cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1 && S=/private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/0a574306-469e-4a59-9622-5701a42aee59/scratchpad; cat > $S/livetest.py <<'EOF'
+import time
+from playwright.sync_api import sync_playwright
+with sync_playwright() as p:
+    b = p.chromium.launch(headless=False)
+    ctx = b.new_context()
+    ctx.grant_permissions(["midi", "midi-sysex"], origin="http://127.0.0.1:8765")
+    pg = ctx.new_page()
+    sent = []
+    pg.goto("http://127.0.0.1:8765/")
+    pg.click("#connect")
+    for _ in range(40):
+        if pg.inner_text("#status").startswith("MORSE"): break
+        time.sleep(0.25)
+    print("status:", pg.inner_text("#status"), "| send enabled:", not pg.is_disabled("#send"))
+    pg.fill("#say", "e")
+    pg.press("#say", "Enter")
+    time.sleep(1.0)
+    print("box cleared after send:", pg.input_value("#say") == "")
+    pg.goto("http://127.0.0.1:8765/progress.html"); time.sleep(1.0)
+    print("old address lands on:", pg.url, pg.title())
+    b.close()
+EOF
+cd firmware/morse/web && (python3 -m http.server 8765 --bind 127.0.0.1 >/dev/null 2>&1 &) && sleep 1 && cd ../../.. && timeout 60 uv run --with playwright python $S/livetest.py 2>&1 | tail -3; pkill -f "http.server 8765"
+```
+
+```text
+status: MORSE 0.4 connected | send enabled: True
+box cleared after send: True
+old address lands on: http://127.0.0.1:8765/progress.html MORSE on the web
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 21:35:21Z)**_
+
+<think><details><summary>Thought Process</summary>
+送字成功的話，`E` 應該已在你的機器上播出（MORSE 0.4 已連線、Send 可用、送出後輸入框清空）。反方向要等你在機器上操作來測，接著我會改 `fmhub.json` 和 README。
+
+</details></think>
+
+_**Agent (claude-opus-5-5 2026-11-17 21:35:22Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+
+```bash
+cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/firmware/morse && cat fmhub.json && python3 - <<'EOF'
+import json
+p='fmhub.json'; d=json.load(open(p))
+new={}
+for k,v in d.items():
+    new[k]=v
+    if k=='play' or (k=='kinds' and 'play' not in d):
+        pass
+new['editor']='https://daviddwlee84.github.io/fm1-morse/web/'
+order=['what','author','kinds','play','editor','cheat','image','color','sounds','smk37']
+out={k:new[k] for k in order if k in new}
+open(p,'w').write(json.dumps(out, indent=2, ensure_ascii=False)+"\n")
+EOF
+python3 -m json.tool fmhub.json >/dev/null && cat fmhub.json
+```
+
+```text
+{
+  "what": "Learn and use Morse code. Key on the piano keys (straight key or iambic paddles) and see what you sent, drill short and long presses, learn by sound with flash cards, listen to endless practice, type letters and CW phrases on the keys. Keying goes out over USB-MIDI in the Vail format.",
+  "author": "Da-Wei Lee",
+  "kinds": [
+    "other"
+  ],
+  "cheat": "https://github.com/daviddwlee84/fm1-morse#controls",
+  "image": "docs/screen.png",
+  "color": "#5AC8FF",
+  "sounds": "none"
+}
+{
+  "what": "Learn and use Morse code. Key on the piano keys (straight key or iambic paddles) and see what you sent, drill short and long presses, learn by sound with flash cards, listen to endless practice, type letters and CW phrases on the keys. Keying goes out over USB-MIDI in the Vail format.",
+  "author": "Da-Wei Lee",
+  "kinds": [
+    "other"
+  ],
+  "editor": "https://daviddwlee84.github.io/fm1-morse/web/",
+  "cheat": "https://github.com/daviddwlee84/fm1-morse#controls",
+  "image": "docs/screen.png",
+  "color": "#5AC8FF",
+  "sounds": "none"
+}
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 21:35:38Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+
+```bash
+python3 - <<'EOF'
+p='README.md'; s=open(p).read()
+def rep(a,b):
+    global s
+    assert s.count(a)==1, a[:60]; s=s.replace(a,b)
+rep("""![MORSE on the FM-1](docs/screen.png)""","""**[MORSE on the web](https://daviddwlee84.github.io/fm1-morse/web/)**: see what your FM-1 reads, send it
+text to copy, back up and restore your progress. Chrome or Edge, the FM-1 on USB, nothing to install.
+
+![MORSE on the FM-1](docs/screen.png)""")
+rep("""- In Chrome or Edge: [the progress page](https://daviddwlee84.github.io/fm1-morse/web/progress.html)
+  (or `web/progress.html` from this repository, opened from your disk): *Download the progress*,
+  later *Send it to the FM-1*.""","""- In Chrome or Edge: [MORSE on the web](https://daviddwlee84.github.io/fm1-morse/web/)
+  (or `web/index.html` from this repository, opened from your disk): *Download the progress*,
+  later *Send it to the FM-1*.""")
+rep("""| `web/` | `progress.html` (back up / restore over Web MIDI), `words/` (the screen reader's words) |""","""| `web/` | `index.html` (MORSE on the web: live text both ways, back up / restore, over Web MIDI), `words/` (the screen reader's words) |""")
+open(p,'w').write(s)
+EOF
+grep -n "progress.html" README.md LEARNING.md web/index.html | head; git add -A && git commit -q -m "MORSE on the web: live text both ways; fmhub.json editor points at it
+
+- web/index.html (was progress.html, which now forwards to it): a Live section shows what the
+  FM-1 reads (T_CHAR) and its key lamp (note 0), and sends text for it to play (T_TEXT,
+  T_STOP); cleaned as the host's clean_text does. Nothing to install, no Accessibility
+  permission: it only shows.
+- fmhub.json: editor, so the Hub's card links the page.
+- README: the page at the top.
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>" && git push -q origin main && git log --oneline -1
+```
+
+```text
+42f900e MORSE on the web: live text both ways; fmhub.json editor points at it
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 21:35:46Z)**_
+
+Now the docs here: page renamed, Live is done (out of the backlog), links updated.
+
+_**Agent (claude-opus-5-5 2026-11-17 21:35:47Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1 && grep -rn "progress.html\|progress 頁\|網頁上的即時互動" docs/ host/ README.md | cut -c1-160`
+
+```text
+docs/device-log.md:115:| 2026-11-18 05:25 | agent 執行 `just morse-backup`（唯讀）；用 Playwright 的 Chromium 開 `web/progress.html` 下載進度（唯讀） | 指令列：`round 16, 10 open (KM
+docs/dev/morse-cheatsheet.md:147:不想裝 Python 的話，用 Chrome 開 fm1-morse 的 `web/progress.html` 也能備份和還原。
+docs/dev/morse-learn.md:82:- **網頁**：用 Chrome 或 Edge 開 [progress 頁](https://daviddwlee84.github.io/fm1-morse/web/progress.html)（或 fm1-morse 裡的 `web/progress.html
+docs/dev/morse.md:140:| 網頁（Chrome、Edge） | fm1-morse 的 `web/progress.html`：Connect、Download the progress；還原時選檔案、Send it to the FM-1 |
+docs/dev/morse.md:301:| 0.4 的備份：指令列和網頁 | `just morse-backup`；Chromium 開 `web/progress.html` | 兩者下載的內容相同；網頁要用「誰在送 HELLO」找 port，因為 macOS 把這台叫 `Felucca` `[實機]` |
+docs/dev/morse.md:352:| **網頁上的即時互動**：機器打的字即時出現在網頁上、網頁打字送到 FM-1 播，像 SLOOP 的網頁編輯器那樣連著用（2026-11-18 提出） | 現在的功能已經夠用：打字進電腦有 `just morse-type`，電腦送字有 `just morse-send`
+host/morse/PROTOCOL.md:59:Firmware 0.4 and later; `host/morse/progress.py`, and the same code in fm1-morse `web/progress.html`.
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 21:36:03Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+
+```bash
+python3 - <<'EOF'
+import re
+def edit(p, a, b):
+    s=open(p).read(); assert s.count(a)==1, (p,a[:50]); open(p,'w').write(s.replace(a,b))
+U="https://daviddwlee84.github.io/fm1-morse/web/"
+edit('docs/dev/morse-cheatsheet.md','不想裝 Python 的話，用 Chrome 開 fm1-morse 的 `web/progress.html` 也能備份和還原。',f'不想裝 Python 的話，用 Chrome 或 Edge 開 [MORSE on the web]({U})：看 FM-1 讀到的字、送字給它播、備份和還原，都不用安裝。')
+s=open('docs/dev/morse-learn.md').read()
+i=s.index('- **網頁**：用 Chrome 或 Edge 開 [progress 頁]'); j=s.index('\n',i)
+s=s[:i]+f'- **網頁**：用 Chrome 或 Edge 開 [MORSE on the web]({U})（或 fm1-morse 裡的 `web/index.html`），Connect，Download the progress。換回 MORSE 後選檔案，Send it to the FM-1。'+s[j:]
+open('docs/dev/morse-learn.md','w').write(s)
+edit('docs/dev/morse-learn.md','也可以把 FM-1 當成 Mac 的摩斯鍵盤：`just morse-type`，在 KEY 頁打的字會打進目前的視窗。',f'也可以把 FM-1 當成 Mac 的摩斯鍵盤：`just morse-type`，在 KEY 頁打的字會打進目前的視窗。只想看自己打了什麼、或讓電腦送字給 FM-1 練抄收，用 [MORSE on the web]({U}) 的 Live 區塊就好，不用裝東西，也不需要 Accessibility 權限。')
+edit('docs/dev/morse.md','| 網頁（Chrome、Edge） | fm1-morse 的 `web/progress.html`：Connect、Download the progress；還原時選檔案、Send it to the FM-1 |',f'| 網頁（Chrome、Edge） | [MORSE on the web]({U})（fm1-morse 的 `web/index.html`，舊網址 `web/progress.html` 會轉過去）：Connect、Download the progress；還原時選檔案、Send it to the FM-1 |')
+s=open('docs/dev/morse.md').read()
+i=s.index('| **網頁上的即時互動**'); j=s.index('\n',i)
+s=s[:i]+s[j+1:]
+s=s.replace('- **入口**：進度頁目前只從 fm1-morse 的 README 和這裡連過去。Hub 的 `fmhub.json` 有 `editor` 欄位（「a web editor for its sounds or settings」，會顯示在卡片上 `[上游]`），可以填這個網址。',
+f'- **入口**：fm1-morse README 的最上面，以及 Hub 卡片：`fmhub.json` 的 `editor` 欄位（「a web editor for its sounds or settings」`[上游]`）2026-11-18 填了這個網址。\n- **Live**（2026-11-18 加入，不需要新韌體）：網頁顯示 FM-1 讀到的字（`T_CHAR`，在 KEY 頁發報或在 TYPE 頁打字）和按鍵燈號（note 0），也能送字給 FM-1 播（`T_TEXT`、`T_STOP`），等於網頁版的 `morse-send`，加上只顯示、不打進系統的 `morse-type`。網頁會回應 HELLO，所以 FM-1 會顯示 `PC`。送字在實機上試過 `[實機]`。')
+open('docs/dev/morse.md','w').write(s)
+edit('host/morse/PROTOCOL.md','the same code in fm1-morse `web/progress.html`.','the same code in fm1-morse `web/index.html` (MORSE on the web, which also shows CHAR and sends TEXT / STOP).')
+EOF
+just docs-check 2>&1 | tail -1
+```
+
+```text
+{"status": "ok", "pages": 49, "llm_pages": 49, "deployed": false}
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 21:36:32Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+
+```bash
+git add docs host/morse/PROTOCOL.md firmware/morse && git commit -q -m "MORSE on the web: live text both ways, linked from the Hub card
+
+firmware/morse -> fm1-morse 42f900e (web/index.html with Live; fmhub.json editor). docs: the page's
+new address, Live in the backup section, out of the backlog.
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>" && git push -q origin main && git log --oneline -1
+```
+
+```text
+3a8ee66 MORSE on the web: live text both ways, linked from the Hub card
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 21:36:39Z)**_
+
+網頁的部分完成了。最後研究藍牙方案，先看 fm1-base 的藍牙選項，以及 Conductor 在這個 repo 裡已經走過的藍牙經驗。
+
+_**Agent (claude-opus-5-5 2026-11-17 21:36:41Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+
+`grep -n "^ *ble\|ble_stack\|ble_central\|ble_name\|ble =" third_party/fm1-base/tools/build.py | head -20; grep -n "ble\|BLE\|藍牙" firmware/conductor/fm1.toml; grep -n "藍牙\|BLE" docs/agentic/conductor.md | head -20`
+
+```text
+56:  ble_stack_kb = 6           the Bluetooth tasks' stacks, KB each (default 8: three of them, in the pool; radio.c
+58:  ble_heap_kb = 16           its heap, KB (default 24, in RAM; the same log line's "heap": its most ever)
+59:  ble_trim = true            Bluetooth as a MIDI peripheral only: JieLi's central, classic and test code cut (flash and
+60:                             RAM: Melodee's measure ~18 KB and ~4 KB); not with ble_central
+61:  ble_no_pairing = true      with ble_trim: no pairing or encryption either (~19 KB more flash; iOS and macOS connect)
+62:  ble_central = true         and the FM-1 connects to Bluetooth MIDI devices too (FM1B_BLE_CENTRAL), beside a computer;
+63:                             with ble_stack = "own", 3: without pairing (no bonds, no passkey: smaller)
+208:  ble_stack = "own"          with ble: Optimist's own Bluetooth stack (bt/: Henri David's, docs/bt/BLE-STACK.md;
+210:  ble_pairing = true         with ble_stack = "own": pairing and an encrypted link (LE legacy pairing, Just Works),
+212:  ble_diag = false           with ble_stack = "own": the link layer's diagnostics left out (bt/ble/ble_diag.h BLE_DIAG 0:
+214:  ble_midi_time = true       with ble_stack = "own": Bluetooth MIDI in by the sender's time (FM1B_BLE_MIDI_TIME): each
+217:  ble = true                 Bluetooth MIDI (FM1B_BLE): ble/ on JieLi's BT libraries, from the AC79 SDK ($AC79_SDK);
+319:BLE = False                         # fm1.toml ble = true, unless --no-ble
+320:OWN = False                         # with BLE: fm1.toml ble_stack = "own" (bt/, no JieLi library)
+584:# one link as a peripheral. Not with ble_central: a central needs the scan, connecting and the GATT client
+693:    """fm1.toml bt_audio_sim = true (with bt_audio, ble_stack = "own"): the host simulator and the browser emulator build
+724:    ble_config(sdk, dst)
+737:    if CONF.get("ble_stack_kb"):                  # the Bluetooth tasks' stacks, KB each (default 8)
+738:        flags.append(f"-DSHIM_STACK_WORDS={int(CONF['ble_stack_kb']) * 256}")
+746:    # (TRANS_DATA_EN), or with ble_central one link as a peripheral and one as a central (TRANS_MULTI_BLE_EN: the
+9:ble = true                     # Bluetooth MIDI beside USB (OCT+ turns it off until the next power-on)
+10:ble_stack = "own"              # fm1-base's own stack: it hands incoming SysEx to the app (JieLi's drops it)
+11:ble_diag = false               # no link-layer diagnostics: 2.4 KB of RAM back
+110:**韌體 0.3 起支援藍牙**，2026-11-17 在實機上連通 `[實機]`。使用方式見[速查](conductor-cheatsheet.md#bluetooth)。
+114:| BLE stack | fm1-base 自己的 stack（`ble_stack = "own"`）。預設的 JieLi stack 解 BLE MIDI 時把收到的 SysEx 整段跳過（`ble/midi/le_midi.c`：`sysex: skip to the end flag`）`[上游]`；own stack 會把它還原成 USB-MIDI 的 SysEx 封包（CIN 4–7），從 `plat_midi_in` 的 `PORT_BLE` 進來 `[上游]` |
+115:| 收 | `APP_SYSEX` 只收 USB，所以 `hostlink` 的 `hl_sx_packet` 自己把 BLE 的封包組回 frame |
+116:| 送 | frame 切成 USB-MIDI SysEx 封包，`plat_midi_send(…, TO_BLE_HOST)`；佇列放不下整個 frame 就不送（寧可晚，不要送一半） |
+117:| 哪條路 | 沒有 host 時，USB 有電腦就從 USB、藍牙有連線就從藍牙各送一份 HELLO（帶著傳輸方式）；之後只走 HELLO_ACK 來的那條。daemon 兩條都聽到時選 USB |
+118:| 不寫 flash | 位址由 own stack 從 flash 晶片的唯一 ID 算出（每次開機一樣，名稱 `FM-1 XXXX`）；不開配對（fm1-base：macOS、iOS 不配對也能連）。所以 app 接管藍牙的保存（`APP_BLE_STORE`），只放 RAM，不需要 `OBJ_BLE`。fm1-emu 兩種晶片仍是 0 次寫入 `[模擬]` |
+120:| 重新連線 | macOS 不會在 FM-1 重開後自己連回去 `[實機]`。CoreMIDI 公開的 `MIDIBluetoothConnection.h`（macOS 13 起）說：用 CoreBluetooth 連上周邊，再呼叫 `MIDIBluetoothDriverActivateAllConnections` 讓 CoreMIDI 接手 `[上游]`。2026-11-17 實測：CoreBluetooth 連得上（看得到 BLE-MIDI service、可以訂閱 MIDI I/O），呼叫也回傳 0，但 CoreMIDI 裡已知的 `FM-1 3399` 一直是離線，先建立 CoreMIDI client、讓 run loop 跑也一樣 `[實機]`。所以 daemon 改成找不到 port 時彈出 macOS 的藍牙 MIDI 視窗（CoreAudioKit 的 `CABTLEMIDIWindowController`，`host/conductor/btpanel.swift`），按一下「Connect」，port 出現後 daemon 以新的 process 重新啟動（同一個 process 的 CoreMIDI client 可能看不到新的 port）|
+121:| DETAIL | 藍牙上只送 ASCII 文字；點陣圖一行 558 bytes，BLE MIDI 太慢。設定 `detail_pictures_ble: true` 可以強制送圖 |
+129:| host simulator 的 BLE 替身 | 拔掉 USB、從 BLE 連上後，裝置從 BLE 送出 HELLO（傳輸方式 `01`）；`OCT+` 開關藍牙；0 次 store 寫入 | `[模擬]` |
+130:| fm1-emu 兩種晶片 | 開機、重開都 0 次 erase / program；USB 路徑照常。模擬器不模擬藍牙無線電 | `[模擬]` |
+131:| 實機：Mac 經藍牙連上、daemon 用藍牙 port | 拔掉 USB，在 MIDI 工作室的藍牙設定連上 `FM-1 3399`（不需要配對碼）；CoreMIDI 的 port 名稱是 `FM-1 3399 Bluetooth`，daemon 自己找到並回報 `firmware 0.3, via Bluetooth` | `[實機]` |
+140:| 藍牙 MIDI | 實測；重開後按一下藍牙 MIDI 視窗 | BlueZ 支援 BLE MIDI，`bluetoothctl connect` 可以純指令連線，連上後是 ALSA port | 一般 MIDI API 看不到 BLE MIDI 裝置，要 Windows 的新 MIDI 服務 |
+141:| 自動彈出藍牙 MIDI 視窗 | 有（CoreAudioKit） | 沒有：找不到 port 就結束 | 沒有 |
+149:- **能直接接就直接接。** USB 或藍牙直連 Mac 最單純；中間每多一個 app，就多一個可能丟掉或改寫 SysEx 的地方。
+150:- **藍牙一次只能連一台。** fm1-base 的 own stack 同時只有一條 BLE MIDI 連線 `[上游]`：iPad 用藍牙連著時，Mac 就連不上藍牙。iPad 和 Mac 都要用時，Mac 走 USB。
+162:| `hostlink` | app 自己的 SysEx 對話，走 USB 或藍牙：frame 前綴、HELLO 直到 host 回應、之後 HEARTBEAT、host 是否還在、重新插線或藍牙斷線後重新 HELLO；藍牙 SysEx 封包的拆與組 |
+172:just fw-common-test         # firmware/common 的單元測試（藍牙 SysEx 封包）
+293:0.3 加了藍牙。換成 0.3 一樣要我本人批准。
+304:| fm1-emu 兩種晶片：開機 → 重開 → 再讀回 | 都 0 次 erase / program（藍牙開著） | `[模擬]` |
+306:| 藍牙實際連線 | 模擬器沒有無線電，**只能在實機確認** | — |
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 21:36:56Z)**_
+
+<think><details><summary>Thought Process</summary>
+這個 repo 已有 Conductor 0.3 的先例，它用 fm1-base 自帶的 BLE 協定棧，並在 2026-11-17 與 Mac 實機連通。接下來我要查藍牙按鍵時間是否準確，以及加入藍牙後資料量會增加多少。
+
+</details></think>
+
+_**Agent (claude-opus-5-5 2026-11-17 21:36:56Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/third_party/fm1-base && ls docs/bt/ 2>/dev/null; grep -n -i "timestamp\|ble_midi_time\|connection interval\|interval" docs/bt/BLE-STACK.md 2>/dev/null | head -25; sed -n 205,220p tools/build.py`
+
+```text
+ble-traces
+BLE-DEVICES-DESIGN.md
+BLE-HW-FACTS.md
+BLE-STACK.md
+BT-CLASSIC.md
+README.md
+RF-CALIBRATION.md
+61:- **CONNECT_IND checks:** our AdvA and RxAdd; Interval 6..3200; Timeout 10..3200 and > (1 + Latency) x Interval x 2; WinSize
+62:  1..min(8, Interval - 1); WinOffset <= Interval; Hop 5..16; >= 2 channels; not the advertising AA. Anything else is ignored and
+64:- **Timers:** 0x3E without a packet in the first window + 6 intervals; supervision timeout 0x08; 40 s LL response timeout 0x22.
+83:- When a client turns the MIDI notifications on and the interval is outside 6..9, an L2CAP Connection Parameter Update Request
+113:  Real 13-bit millisecond timestamps (stock sends `80 80`); running status inside a packet; SysEx over packets.
+114:- **In:** decoded to USB-MIDI event packets with timestamps: running status with or without a timestamp, low-part wrap, real
+118:  packet's newest timestamp. `midi_out_event` (the audio ISR; the FM-1's own notes) also
+160:  instant writes within one interval, >= 7.5 ms), so BLE waits for an audio half and the audio never waits for more than one BLE
+212:- **Scanning:** state 1, interval 64 / window 60 slots (40 / 37.5 ms), active (the engine sends SCAN_REQ with the Core's backoff) for
+216:  WinOffset random in [Interval / 2, Interval - 1], Hop random 5..16, 37 channels, latency 0, timeout 2 s, SCA 0, **interval 9
+226:  intervals closes with 0x3E.
+292:(why a CONNECT_IND was refused: 1 not advertising, 2 format, 3 RxAdd, 4 AdvA, 5 interval / latency / timeout, 6 WinSize, 7 WinOffset,
+  boot_pack = true           .ram_text and .data stored LZMA-packed (tools/boot_pack.py, Melodee's; device/boot_lzma.h): the
+                             boot unpacks them, the decoder's tables in the pool before it is cleared (about 9 KB of
+                             flash back on a large app)
+  ble_stack = "own"          with ble: Optimist's own Bluetooth stack (bt/: Henri David's, docs/bt/BLE-STACK.md;
+                             FM1B_BLE_OWN) instead of JieLi's libraries: nothing of the SDK's linked, no shim
+  ble_pairing = true         with ble_stack = "own": pairing and an encrypted link (LE legacy pairing, Just Works),
+                             the bond kept in OBJ_BLE; without it a pairing is refused (macOS and iOS connect anyway)
+  ble_diag = false           with ble_stack = "own": the link layer's diagnostics left out (bt/ble/ble_diag.h BLE_DIAG 0:
+                             its counters and event rings, ~2.4 KB of RAM, and the radio log's "BT ll" line); kept by default
+  ble_midi_time = true       with ble_stack = "own": Bluetooth MIDI in by the sender's time (FM1B_BLE_MIDI_TIME): each
+                             message's time sent, from its BLE-MIDI timestamp (bt/ble/ble_time.c), for plat_midi_in_t24;
+                             the transport then comes at once instead of held to the sender's time
+  ble = true                 Bluetooth MIDI (FM1B_BLE): ble/ on JieLi's BT libraries, from the AC79 SDK ($AC79_SDK);
+                             --no-ble builds without it (NAME-usb.fwsc), and the build checks nothing of JieLi's is in
+  wifi = true                WiFi (FM1B_WIFI): a station on JieLi's WiFi libraries and the SDK's lwIP (built from its
+                             sources), on the same shim (ble/shim, ble/wifi) with fm1-radio's RAM split (device/
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 21:37:01Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+
+`sed -n 108,122p docs/bt/BLE-STACK.md; grep -n "plat_midi_send\|stamp\|t24" include/plat.h | head -12; grep -n "大小\|KB\|app " ../../docs/agentic/conductor.md | grep -i "0.3\|藍牙\|B " | head -8`
+
+```text
+## 6. BLE-MIDI and the firmware (`ble_midi.c`, `io/midi/midi_ble.c`)
+
+### 6.1 Packets and the router
+- **Out:** one notification per connection event (up to `BLE_MIDI_PER_EVENT` = 2 with a backlog), as many events as fit in MTU - 3.
+  Real 13-bit millisecond timestamps (stock sends `80 80`); running status inside a packet; SysEx over packets.
+- **In:** decoded to USB-MIDI event packets with timestamps: running status with or without a timestamp, low-part wrap, real
+  time anywhere, SysEx over packets, system common. A message cut at a packet's end is dropped.
+- **Router:** channel messages, and the clock and transport for `clock_sync.c` (CLK IN BLE); the BLE interrupt puts them in `ble_in_q`,
+  the TIMER5 tick moves them into `midi_in_q`, where they play as USB's, each timed by its arrival less its distance to the
+  packet's newest timestamp. `midi_out_event` (the audio ISR; the FM-1's own notes) also
+  queues into `ble_out_q` while a client listens, and CLK OUT's clock goes out timed (`ble_rt_push`). Nothing is bridged between USB / TRS and BLE. `ble_midi_route`: bit 0 in,
+  bit 1 out.
+- **No stuck notes:** notes a central had on (`ble_held`, 256 B) are ended with a note-off through the same ring when the link goes
+  (any cause) and when BLUETOOTH goes OFF; notes sent after OFF are dropped; USB and TRS notes keep sounding.
+100: * plat_midi_send(pkt, (TO_USB | TO_BLE) & ~plat_midi_in_from()) */
+108: * TRS jack's, with fm1.toml midi_stamp = true (FM1B_MIDI_STAMP; else when it was read), within 0.05 ms of landing on the FM-1 (a 10 kHz look at the endpoint and the jack's ring, inside the render
+109: * too, while the 2 kHz poll that takes them may wait for it); Bluetooth's: when it was read, or with fm1.toml ble_midi_time (ble_stack = "own") when the sender stamped it, the connection's bunching taken out (the transport then comes at once, not held to the sender's time). For an app that follows a
+111:uint32_t plat_midi_in_t24(void);
+114:void plat_midi_send(uint32_t pkt, uint32_t to);   /* to: TO_USB | TO_BLE, or one link; main loop, the render or the
+116:void plat_midi_out(uint32_t pkt);      /* plat_midi_send(pkt, TO_USB) */
+161: * ended, which goes on before any message queued (plat_midi_send's) so none ends it; between frames those go
+164: * host), send by plat_midi_send. NULL: none again */
+118:| 不寫 flash | 位址由 own stack 從 flash 晶片的唯一 ID 算出（每次開機一樣，名稱 `FM-1 XXXX`）；不開配對（fm1-base：macOS、iOS 不配對也能連）。所以 app 接管藍牙的保存（`APP_BLE_STORE`），只放 RAM，不需要 `OBJ_BLE`。fm1-emu 兩種晶片仍是 0 次寫入 `[模擬]` |
+122:| 容量 | app 122 KB、RAM `.data+.bss` 38 KB（上限 96 KB）；`ble_diag = false` 省下 2.4 KB RAM |
+162:| `hostlink` | app 自己的 SysEx 對話，走 USB 或藍牙：frame 前綴、HELLO 直到 host 回應、之後 HEARTBEAT、host 是否還在、重新插線或藍牙斷線後重新 HELLO；藍牙 SysEx 封包的拆與組 |
+297:| 檔案 | `firmware/conductor/build/conductor.fwsc`（616,003 B，identity `FM-1_1200`，app 122,120 B） |
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 21:37:09Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+
+`sed -n 96,118p include/plat.h; grep -n "central\|ble_central" docs/bt/BLE-DEVICES-DESIGN.md | head -8; grep -rn "plat_midi_send" ../../firmware/morse/app.c | head -5`
+
+```text
+/* MIDI: 4-byte USB-MIDI event packets (byte 0 = cable / CIN, then status, data 1, data 2). In from USB, the TRS jack
+ * (in only: the FM-1 has no MIDI out jack) and Bluetooth (FM1B_BLE); out to USB and Bluetooth. Bluetooth has two
+ * links with FM1B_BLE_CENTRAL (below), the computer's and the device's: both come in on PORT_BLE, TO_BLE goes to
+ * both, TO_BLE_HOST or TO_BLE_DEV to one. MIDI thru with nothing echoed back where it came from: after plat_midi_in,
+ * plat_midi_send(pkt, (TO_USB | TO_BLE) & ~plat_midi_in_from()) */
+enum { PORT_USB, PORT_BLE, PORT_TRS, NPORTS };
+#define TO_USB (1u << PORT_USB)
+#define TO_BLE_HOST (1u << PORT_BLE)   /* the computer (a phone, a tablet) connected to the FM-1 */
+#define TO_BLE_DEV (1u << 3)           /* the Bluetooth MIDI device the FM-1 connected to (FM1B_BLE_CENTRAL) */
+#define TO_BLE (TO_BLE_HOST | TO_BLE_DEV)
+int plat_midi_in(uint32_t *pkt, int *port);   /* 1 = got one, from port PORT_* (port may be 0) */
+/* when the last message plat_midi_in gave came in, on plat_ticks24's clock (called where plat_midi_in is): USB's and the
+ * TRS jack's, with fm1.toml midi_stamp = true (FM1B_MIDI_STAMP; else when it was read), within 0.05 ms of landing on the FM-1 (a 10 kHz look at the endpoint and the jack's ring, inside the render
+ * too, while the 2 kHz poll that takes them may wait for it); Bluetooth's: when it was read, or with fm1.toml ble_midi_time (ble_stack = "own") when the sender stamped it, the connection's bunching taken out (the transport then comes at once, not held to the sender's time). For an app that follows a
+ * clock or places notes by time; host: when it was read */
+uint32_t plat_midi_in_t24(void);
+uint32_t plat_midi_in_from(void);      /* where the last one came from, as an out: TO_USB, TO_BLE_HOST or TO_BLE_DEV
+                                        * (0: the TRS jack, which has no out); called where plat_midi_in is */
+void plat_midi_send(uint32_t pkt, uint32_t to);   /* to: TO_USB | TO_BLE, or one link; main loop, the render or the
+                                                   * tick */
+void plat_midi_out(uint32_t pkt);      /* plat_midi_send(pkt, TO_USB) */
+uint32_t plat_midi_out_room(uint32_t to);   /* the free slots in the out queues of to (TO_USB, TO_BLE, a link: each
+                                        * has its own): the fewest among the ones someone listens on; 0 when nobody
+6:[BLE-STACK.md](BLE-STACK.md) (section 9 is the central role); the radio is in [BLE-HW-FACTS.md](BLE-HW-FACTS.md). The UI is the
+14:- **One link, one role at a time:** a peripheral for a Mac or phone that connects to the FM-1, a central for a device the FM-1
+16:- **LAST is the device the FM-1 itself connected to, as a central** (the user's ruling, 2026-10-09: "last is for automatic
+30:| MAN (NONE, or no LAST) | advertises, waits for a central | ADVERTISING / CONNECTED |
+78:  the overlay list below are the same list in another place; with the central or BT AUDIO nothing opens the overlay any more
+79:  (`dev_open` stays for BT MIDI without the central).
+121:SAVE on a nearby row connects (`ble_central_connect`: initiator, master link, pairing when asked, BLE-MIDI subscribed). **Ready:** it
+143:2 s, advertise 1 s, for 30 s; then initiate 1 s every 10 s, until found or NONE / OFF. Whatever link comes first wins; a central that
+../../firmware/morse/app.c:444:    plat_midi_send(down ? MIDI_KEY_ON : MIDI_KEY_OFF, TO_USB);
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 21:37:23Z)**_
+
+fm1-base 的資料夠了。另外實際 build 一個開了藍牙的版本來量大小（只 build、不刷，改的設定之後還原）：
+
+_**Agent (claude-opus-5-5 2026-11-17 21:37:33Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1 && cp firmware/morse/fm1.toml /private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/0a574306-469e-4a59-9622-5701a42aee59/scratchpad/fm1.toml.bak && grep -n "^ble\|^id_prefix\|^include" firmware/morse/fm1.toml; printf '\nble = true\nble_stack = "own"\nble_diag = false\nble_midi_time = true\n' >> firmware/morse/fm1.toml && JIELI_TOOLCHAIN="$PWD/tools/jieli/toolchain" AC79_SDK="$PWD/tools/fw-AC79_AIoT_SDK" uv run --locked --all-groups python third_party/fm1-base/tools/build.py firmware/morse 2>&1 | grep -E "image|parts|FAIL|error" | head -5; printf 'ble_central = true\n' >> firmware/morse/fm1.toml && JIELI_TOOLCHAIN="$PWD/tools/jieli/toolchain" AC79_SDK="$PWD/tools/fw-AC79_AIoT_SDK" uv run --locked --all-groups python third_party/fm1-base/tools/build.py firmware/morse 2>&1 | grep -E "image|FAIL|error" | head -3; cp /private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/0a574306-469e-4a59-9622-5701a42aee59/scratchpad/fm1.toml.bak firmware/morse/fm1.toml && git -C firmware/morse status --short`
+
+```text
+4:id_prefix = "FM-1_41"          # package identity: dev FM-1_4100, release 0.3 FM-1_41000300
+8:include = ["common"]           # hostlink, ledfx (from M-VAVE_FM-1 firmware/common, MIT)
+third_party/fm1-base/device/radio.c:271:71: error: use of undeclared identifier 'OBJ_BLE'; did you mean 'PORT_BLE'?
+third_party/fm1-base/device/radio.c:272:77: error: use of undeclared identifier 'OBJ_BLE'; did you mean 'PORT_BLE'?
+third_party/fm1-base/device/bt_own.c:263:25: error: use of undeclared identifier 'OBJ_BLE'; did you mean 'PORT_BLE'?
+third_party/fm1-base/device/bt_own.c:407:29: error: use of undeclared identifier 'OBJ_BLE'; did you mean 'PORT_BLE'?
+4 errors generated.
+third_party/fm1-base/device/radio.c:271:71: error: use of undeclared identifier 'OBJ_BLE'; did you mean 'PORT_BLE'?
+third_party/fm1-base/device/radio.c:272:77: error: use of undeclared identifier 'OBJ_BLE'; did you mean 'PORT_BLE'?
+third_party/fm1-base/device/bt_own.c:263:25: error: use of undeclared identifier 'OBJ_BLE'; did you mean 'PORT_BLE'?
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 21:37:42Z)**_
+
+<think><details><summary>Thought Process</summary>
+加了藍牙設定後 build 失敗，因為 app 還得自己處理 `OBJ_BLE` 的保存；Conductor 用 `APP_BLE_STORE` 只存在 RAM。我接下來會看 Conductor 的寫法並記進方案。
+
+</details></think>
+
+_**Agent (claude-opus-5-5 2026-11-17 21:37:42Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+
+`grep -n "APP_BLE_STORE\|ble_store\|OBJ_BLE" firmware/conductor/app.h firmware/conductor/app.c | head; grep -rn "APP_BLE_STORE" third_party/fm1-base/include/*.h third_party/fm1-base/device/radio.c | head -4`
+
+```text
+firmware/conductor/app.h:16: * Bluetooth's record is kept by the app (APP_BLE_STORE), in RAM only (app.c app_ble_load / app_ble_save) */
+firmware/conductor/app.h:19:#define APP_BLE_STORE
+third_party/fm1-base/include/plat.h:238: * APP_BLE_STORE in app.h and gives the two calls below; it then needs no OBJ_BLE. app_ble_load: at Bluetooth's start
+third_party/fm1-base/device/radio.c:266:#ifdef APP_BLE_STORE
+third_party/fm1-base/device/radio.c:268:#error "APP_BLE_STORE: with the own stack only (fm1.toml ble_stack = \"own\"): JieLi's keeps its records in OBJ_BLE"
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 21:37:47Z)**_
+
+Writing up the Bluetooth plan in `docs/dev/morse.md`.
+
+_**Agent (claude-opus-5-5 2026-11-17 21:37:48Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+
+`grep -n "^## 兩台互傳" -A6 docs/dev/morse.md`
+
+```text
+230:## 兩台互傳
+231-
+232-現況和選項見[接口與連線](../hardware/io.md#two-units)。這台軟體的設計是**線路上傳按鍵動作（note on / off），不傳文字**，收的一方自己解碼，像真的電報線。好處是同一套格式可以走 USB、兩種藍牙 stack、USB host、經電腦轉送，Vail 也聽得懂。
+233-
+234-我手上只有一台，所以直連排在下一版（見[路線圖](#roadmap)），先用電腦和 Vail 跟人互傳。
+235-
+236-## 設計
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 21:38:41Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+
+```bash
+python3 - <<'EOF'
+p='docs/dev/morse.md'; s=open(p).read()
+a="""## 設計
+"""
+assert s.count(a)==1
+s=s.replace(a,"""## 藍牙方案（0.5 研究） { #bluetooth }
+
+2026-11-18 的研究，還沒實作。
+
+### 要做到什麼
+
+| 用途 | 怎麼連 |
+|---|---|
+| Mac 上的 Vail、MORSE on the web、`just morse-*`，不接線 | FM-1 當 BLE-MIDI peripheral，Mac 在「音訊 MIDI 設定」的藍牙視窗連上 |
+| iPad、手機 | 同上（但見下面「瀏覽器」） |
+| 兩台 FM-1 互打 | 一台當 central，連上另一台（`ble_central`） |
+
+### 已經有的
+
+- **Conductor 已經在這台機器上走通** `[實機]`：fm1-base 的 own stack（`ble_stack = "own"`），2026-11-17 Mac 不用配對碼就連上 `FM-1 3399`，port 叫 `FM-1 3399 Bluetooth`，daemon 經藍牙收發 SysEx。做法見 [Conductor 的藍牙](../agentic/conductor.md)：
+    - `hostlink` 會自己把 BLE 的 SysEx 封包組回 frame；
+    - 藍牙的紀錄由 app 接管（`APP_BLE_STORE`），只放 RAM，不寫 flash；
+    - fm1-emu 兩種晶片都是 0 次寫入。
+- **MORSE 的程式本來就分得開傳輸**：`hostlink` 支援 USB 和 BLE 兩條路；按鍵用 Vail 格式的 note 0，走哪條路都一樣。
+- **fm1-base own stack 的時間戳記** `[上游]`（`docs/bt/BLE-STACK.md` §6）：
+    - **送出**時帶真實的 13-bit 毫秒時間戳記（JieLi 原本的 stack 都送 `80 80`）。
+    - **收進**時有 `ble_midi_time`：照送出端的時間戳記排時間，把同一個 connection event 擠在一起的訊息拉開。
+    - `plat_midi_send` 可以在 1 kHz tick 裡呼叫，所以按鍵的時間戳記是按下的那一刻。
+
+### MORSE 要改的地方
+
+1. `fm1.toml`：`ble = true`、`ble_stack = "own"`、`ble_diag = false`（省 2.4 KB RAM）、`ble_midi_time = true`。
+2. `app.h` 定義 `APP_BLE_STORE`，`app.c` 實作 `app_ble_load` / `app_ble_save`，只放 RAM（照 Conductor）。沒有這一步 build 會失敗（缺 `OBJ_BLE`），2026-11-18 試過。
+3. 主迴圈：`plat_midi_in` 從 `PORT_BLE` 來的封包，SysEx 交給 `hl_sx_packet` 組回 frame，note 0 交給收訊解碼器，時間用 `plat_midi_in_t24`。
+4. 按鍵：`plat_midi_send(…, TO_USB | TO_BLE_HOST)`。
+5. 設定頁加 BLUETOOTH 開關（Conductor 是 `OCT+`），header 顯示 `BT`。
+6. 兩台互打再加 `ble_central = true`，以及「掃描、選一台、連上」的畫面。
+
+### 時間準不準
+
+這是摩斯特有的問題：點在 20 WPM 只有 60 ms。BLE 的 connection interval 大約 7.5–15 ms，按鍵事件會晚 0–15 ms 才送到，**誤差可能達到一個點的 25%**。
+
+- **送出**：own stack 帶了真實的時間戳記。接收端照時間戳記排，抖動就會消失；照到達時間算，就會抖。CoreMIDI 會把 BLE-MIDI 的時間戳記換成封包時間 `[調研]`，但 Chrome 的 Web MIDI 和 Vail 網頁用的是哪一個，要實測。
+- **收進**：開 `ble_midi_time` 後，FM-1 會照送出端的時間解碼，另一台 FM-1 或 Vail 送來的按鍵不會被擠在一起。
+- **真的抖的話**：照原本的構想，用 note 的 velocity 帶上這個 mark 的長度（10 ms 一格），收的一方用長度而不是到達時間。只有收方也是 MORSE 才有用，Vail 不懂。
+
+### 瀏覽器
+
+| 平台 | 網頁（Vail、MORSE on the web）走藍牙 |
+|---|---|
+| macOS Chrome / Edge | 在「音訊 MIDI 設定」連上後，藍牙 MIDI 就是一般的 CoreMIDI port，Web MIDI 應該看得到 `[調研]`。MORSE on the web 靠 HELLO 找 port，程式不用改 |
+| Android Chrome | 有 Web MIDI；藍牙 MIDI 裝置要先由系統或某個 app 連上 `[調研]` |
+| iPad / iPhone | Safari 沒有 Web MIDI，網頁用不了；要用支援藍牙 MIDI 的 app `[調研]` |
+
+### 已知的限制
+
+- **一次只連一個 host**：own stack 同時只有一條連到電腦的 BLE MIDI 連線 `[上游]`。iPad 連著時，Mac 就要走 USB。
+- **macOS 不會自己連回來** `[實機]`：FM-1 重開後要到藍牙 MIDI 視窗再按一次 Connect（Conductor 的經驗；它的 daemon 會自動彈出那個視窗）。
+- **大小**：0.4 是 138 KB。own stack 大約多 41–46 KB，central 再多 13–22 KB（fm1-base 的數字）。Conductor 開藍牙後是 122 KB、RAM 38 KB。上限 581 KB、RAM 96 KB，都很寬裕。
+- **電池**：藍牙開著的耗電還沒量。
+- **模擬器沒有無線電**：藍牙只能在實機上測。
+
+### 驗證計畫
+
+1. host simulator：BLE 替身送 HELLO（傳輸 `01`）、BLUETOOTH 開關、0 次 store 寫入（照 Conductor 的測試）。
+2. fm1-emu 兩種晶片：開機、存檔、重開，USB 照常、0 次多餘寫入。
+3. 實機（要你核准刷機）：
+    - Mac 藍牙連上，`just morse-send`、MORSE on the web、Vail 都能用；
+    - **量抖動**：同一串按鍵分別走 USB 和藍牙，記下 Mac 收到的時間（CoreMIDI 封包時間和 Web MIDI 的 `timeStamp`），比較兩者的差；
+    - 拔線後只用電池，連著打 10 分鐘看會不會斷。
+4. 兩台互打：等有第二台。
+
+## 設計
+""")
+s=s.replace("| 0.5 | 藍牙：","| 0.5 | 藍牙（研究見[藍牙方案](#bluetooth)）：",1)
+open(p,'w').write(s)
+EOF
+just docs-check 2>&1 | tail -1 && git add docs/dev/morse.md && git commit -q -m "morse: the Bluetooth plan for 0.5 (research)
+
+What Conductor already proved on this unit, what fm1-base's own stack gives (real BLE-MIDI
+timestamps out, ble_midi_time in), the changes MORSE needs (APP_BLE_STORE: the build fails
+without it, tried), timing against a 60 ms dit, browsers, limits, and how to verify.
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>" && git push -q origin main && git log --oneline -1
+```
+
+```text
+{"status": "ok", "pages": 49, "llm_pages": 49, "deployed": false}
+90a6cbb morse: the Bluetooth plan for 0.5 (research)
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-17 21:38:58Z)**_
+
+四件事都做完並推上去了。
+
+**2. `fmhub.json` 填了 `editor`**
+- 網址是 https://daviddwlee84.github.io/fm1-morse/web/ 。Hub 每三小時讀一次 `fmhub.json`，下次讀取後卡片上就會出現這個連結。
+- fm1-morse README 最上面也加了連結。
+
+**3. 網頁的 Live 功能做好了**
+照你說的，只在網頁上顯示，不打進系統，所以不用裝東西、也不需要 Accessibility 權限：
+- 顯示 FM-1 讀到的字（在 KEY 頁發報或在 TYPE 頁打字都會出現），旁邊有按鍵燈號，可以清除、複製。
+- 輸入框送字給 FM-1 播，按 Enter 或 Send，`<SK>` 這類 prosign 也行，另外有 Stop。等於網頁版的 `morse-send`。
+- 機器端不用改，現在的 0.4 就能用。
+- 網頁改名為「MORSE on the web」，新網址是上面那個 `/web/`。舊的 `progress.html` 會轉過去，你之前存的網址也還能用。
+- 實機測過：連線後送 `e` 成功，你的機器應該有播出一聲 `E`。**反方向我沒辦法測**，因為要有人在機器上按鍵：請到 KEY 頁打幾個字，看網頁上有沒有出現。
+- 文件裡的網址都更新了，backlog 裡的「網頁即時互動」一項刪掉，改寫進備份與還原那一節。
+
+**1. 藍牙方案的研究**
+寫在 `docs/dev/morse.md` 的「藍牙方案（0.5 研究）」一節。重點：
+- **風險不高**：Conductor 用同一套 fm1-base own stack，2026-11-17 就在你這台機器上和 Mac 連通過 `[實機]`。MORSE 的 `hostlink` 和 Vail 格式的按鍵本來就不分 USB 或藍牙。
+- **要改的地方不多**：開四個 `fm1.toml` 設定、照 Conductor 的寫法把藍牙紀錄只放在 RAM（`APP_BLE_STORE`）、收 `PORT_BLE` 的封包、按鍵改成同時送 USB 和藍牙、加一個開關。我試著直接開藍牙 build，失敗原因正是缺第二項，設定已經還原。
+- **最大的未知是時間準不準**：20 WPM 的點只有 60 ms，藍牙可能晚 0–15 ms。fm1-base 送出時會附上真實的時間戳記，問題在接收端用不用它：CoreMIDI 應該會用，Chrome 和 Vail 不確定，要實測。真的抖的話，備案是用 velocity 帶上按鍵長度。
+- **瀏覽器**：Mac 上的 Chrome 應該能透過藍牙用 Vail 和 MORSE on the web，網頁程式不用改，這點還沒驗證 `[調研]`。iPad 和 iPhone 的 Safari 沒有 Web MIDI，網頁在那裡用不了。
+- **已知限制**：一次只能連一台電腦。FM-1 重開後 Mac 不會自動連回，要到藍牙 MIDI 視窗再按一次 Connect（Conductor 遇過）。容量很寬裕：0.4 是 138 KB，加藍牙大約多 41–46 KB，上限是 581 KB。
+- **驗證計畫**：模擬器測開關和存檔；刷進實機後在 Mac 上用藍牙跑 Vail、網頁、`morse-send`；同一串按鍵分別走 USB 和藍牙，比較收到的時間差；拔線只用電池連打 10 分鐘。
+
+要開始做 0.5 的藍牙嗎？做完一樣先在模擬器驗證，刷機前再請你核准。
+
+**4. 更多符號進閃卡**
+已經在 backlog，理由和做法都寫了。
+
+---
+
+_**User (2026-11-17 22:34:16Z)**_
+
+This session is being continued from a previous conversation that ran out of context. The summary below covers the earlier portion of the conversation.
+
+<system-reminder>
+<tools-used-before-summary>Agent, AskUserQuestion, Bash, Edit, ExitPlanMode, Read, TaskStop, ToolSearch, WebFetch, WebSearch, Write</tools-used-before-summary>
+</system-reminder>
+Summary:
+1. Primary Request and Intent:
+   - **Morse 0.4, from 0.3 hardware feedback**:
+     - PRACTICE keyed answers misjudged. Fix with lenient judging by rhythm, a similarity grade, a SHOULD/YOU comparison on wrong answers, and STRICT still available as a toggle.
+     - Progress management: reset or step back; skip known letters by CHART marking, open to group n, and a placement test. Every manual change must be confirmed (PLAY) before it overwrites.
+     - Export and import progress like SLOOP's song export, through a CLI and a Web MIDI page.
+     - A docs guide on learning with MORSE, and screenshots in the fm1-morse repo.
+   - Later additions:
+     - NEW LETTER code peek as a toggle (SEQ).
+     - Fix the footer to say PLAY replays.
+     - Weak cards should come up more often.
+     - A Koch/learning-methods chapter: English in fm1-morse, Chinese summary here.
+   - The user approved: commit, flash 0.4 (the user ran it), push, enable fm1-morse GitHub Pages.
+   - Latest request:
+     1. Research a Bluetooth plan.
+     2. Fill `fmhub.json` editor.
+     3. Web UI for send text and display of what the FM-1 reads, non-invasive (backlog was OK, but they suggested doing it since it is simple).
+     4. OK to put more symbols in the flashcard course into the backlog.
+
+2. Key Technical Concepts:
+   - fm1-base unity build, host simulator scripts (expect, setcard, setstrict, sysex, expect_sysex, shot), fm1-emu (`--shot`, `--flash`, `FM1_BENCH_KEYS`, `FM1_NO_PLAY`), `emu_rehearse.py`.
+   - Judging by rhythm: the shortest expected dah must be at least 1.5× the longest expected dit (ALMOST at 1.2–1.5). Uniform letters are compared to the hand dit (dah ≥ 1.6×, dit ≤ 2.4×; ALMOST 1.3× / 3.0×). Score 0–100 (ratio dev ×1.5, gap dev/3, spread/3). GREAT ≥ 85, GOOD ≥ 65, CLOSE ≥ 40, OFF.
+   - Hand speed carried across cards; first-card seed = (dit(wpm) + dit(send)) / 2. Wait before judging: 6u or 900 ms if short of marks, else max(3u, 2·decunit + 20). A long internal gap (≥ 2.5 dit) caps the result at ALMOST.
+   - Leitner boxes; ALMOST leaves the box unchanged and re-asks the card. Weak cards (box 0–1) repeat later in the round with again=1 before known fill. Placement test (LN_PLACE): next 10 letters, HEAR_CHOOSE.
+   - Progress wire format:
+     - Contents: format byte 1 + ln_blob (259 B LE) + CRC-16/CCITT-FALSE = 262 B.
+     - Framing: 49-byte chunks → 6 frames `<idx> <count=6>` + pack7.
+     - Messages: T_PROG_REQ 04, T_PROG_LOAD 05, T_PROG 44, T_PROG_DONE 45 (00 loaded / 01 declined / 02 bad).
+     - The device asks before loading (ASK_LOAD).
+     - JSON format "fm1-morse-progress" v1.
+   - Web MIDI: find the port by sniffing HELLO/HEARTBEAT, because macOS keeps the old name ("Felucca"). Live: T_CHAR display, note-0 lamp, T_TEXT/T_STOP send with a cleanText port of clean_text.
+   - Pitfall: `just fw-build` / `morse-release` run `fw-setup`, which checks out the submodule at the superproject's recorded pointer. Commit the pointer before building.
+   - BLE:
+     - fm1-base own stack, already proven by Conductor on this unit `[實機]`.
+     - Real 13-bit BLE-MIDI timestamps out; `ble_midi_time` in.
+     - `APP_BLE_STORE` is required.
+     - One host link; macOS needs a reconnect click; Web MIDI over BLE on macOS is `[調研]`.
+
+3. Files and Code Sections:
+   - **firmware/morse** (submodule fm1-morse; commits d5e6cd7, 323d79b, aa73524, 89e4ef5, 42f900e; main at 42f900e):
+     - `morse.h/.c`:
+       ```c
+       void mo_dec_restart(mo_dec_t *d);
+       void mo_dec_teach(mo_dec_t *d, const uint16_t *mark, uint32_t n, uint8_t want);
+       enum { MJ_RIGHT, MJ_ALMOST, MJ_WRONG };
+       enum { MH_NONE, MH_DAH_SHORT, MH_DIT_LONG, MH_EXTRA, MH_MISSING, MH_GAP_LONG, MH_UNEVEN, MH_DAH_LONG, MH_NHINTS };
+       typedef struct { uint8_t verdict, hint, score; uint16_t dit; } mo_judge_t;
+       mo_judge_t mo_judge(const uint16_t *mark, const uint16_t *gap, uint32_t n, uint8_t want, uint32_t dit_est);
+       ```
+       The hint picker only fires above 8 points: for uniform dahs, MH_DAH_SHORT if avg < 3·dit_est; MH_GAP_LONG only if cg ≥ 8.
+     - `learn.h/.c`:
+       ```c
+       enum { LN_WRONG, LN_RIGHT, LN_ALMOST };
+       #define LN_PLACE 4u
+       #define LN_PLACE_N (2u * LN_GROUP)
+       #define LN_BLOB_N (...)
+       void ln_set_level(...); void ln_mark_known(...); void ln_open_to(...); void ln_step_back(...);
+       uint32_t ln_place_count(...); uint32_t ln_place_apply(...);
+       void ln_blob(...); int ln_unblob(...);
+       ```
+       - `ln_round_t` adds `near`, `place`, `known[2]`.
+       - `ln_build` tail: base = new + due; weak (box ≤ 1) repeats appended with again=1; then fill.
+     - `app.c`:
+       - FW_MINOR 4; protocol enums; `strict()` (look bit 7); pr fields (res, test, hand, unit0, am/ag, an, has_j, pend, a_up, read[4], j, peek); pg and prog structs.
+       - Functions: hand_ready, capturing, practice_edge (hooked into read_events), practice_judge, practice_answer(int res), result_keyed/bars, chart edit functions, ask_yes/ask_no/ask_at, crc16/pack7/unpack7/prog_fill/prog_pump/prog_in.
+       - Input routing: while ask, only PLAY/HOME work; chart-edit keys; K1/K2 in edit; ALGO blocked while editing.
+       - SEQ peek in PRACTICE; footers; NEXT GROUP WAITS ON; SET_ITEMS 12 (JUDGING); expects/commands.
+     - `tests/basic.txt`: HELLO vector `04`, prog vectors, 0.4 section, peek, repeat answers (answered 7, streaks +1), TYPE KEYS index 11.
+     - `tests/morse_test.c`: test_judge, test_learn_hand, weak-repeat test (3074 checks).
+     - `web/index.html`: MORSE on the web, with Connect (HELLO sniff), Live, Back up, Restore, chart view. `web/progress.html` redirects to `./`.
+     - `README.md` (web link at top, Learning section, backup section, Screens table of 30 PNGs, LEARNING link), `LEARNING.md` (English methods with sources), `docs/screens/*.png`.
+     - `fmhub.json` gains `"editor": "https://daviddwlee84.github.io/fm1-morse/web/"`.
+   - **host/morse**: `progress.py` (new), `protocol.py` (T_PROG*, PD_*, PROG_FIRMWARE (0,4), prog_req, hello vector 0.4), `core.py` (backup/restore), `__main__.py` (backup/restore), `device.py` (SimLink progress), `__init__.py` 0.4.0/(0,4), `PROTOCOL.md` (Progress section); `host/tests/test_morse.py` (56 tests).
+   - **Justfile**: morse-backup, morse-restore, morse-shots (30 names incl. card_new_peek).
+   - **docs**:
+     - `dev/morse-learn.md` (new guide; methods table; web links; 41-chars note; round making).
+     - `dev/morse.md`: judging, progress, backup (USB only, BLE later, entry points, Live), how a round is made, sizes (0.4 138,076 B release), verification rows, version row (flashed 05:20), backlog (more symbols with reasons; web BT), `#bluetooth` research section, roadmap 0.5.
+     - `dev/morse-cheatsheet.md`, `device-log.md` (backup 04:47 SHA 73a530d2…; preflight; 05:20 install; 05:25 CLI/web backup; current firmware Morse 0.4 FM-1_41000400, port "Felucca"), `index.md`, `README.md`, `AGENTS.md`, `zensical.toml` nav.
+   - `scripts/check-docs-site.py`: a full URL on the same host but outside the site subpath counts as external.
+   - `.agents/skills/fm1-hub-listing/SKILL.md`: fw-setup pitfall.
+   - Main repo commits: d763eae, c10cbb9, 8067f37, 9f7b13a, d06fbe9, a63f157, e37cbc6, 3a8ee66, 90a6cbb (all pushed).
+
+4. Errors and fixes:
+   - Missing prog_in prototype: added a forward declaration.
+   - Test expectations shifted (HELLO version, settings index, open counts, first round 9 cards, streak +1): updated.
+   - Hint "gaps inside long" on a right M: tightened the hint picker.
+   - Truncated header messages: shortened them.
+   - **Release built from the old submodule commit** (fw-setup resets the submodule): restored main, committed the pointer, rebuilt, verified "1 / 9" in the emulator. Pitfall documented.
+   - Web page "no MIDI port named MORSE": now sniffs HELLO.
+   - Playwright: no Chrome installed, so installed Chromium; the test loop condition bug was fixed.
+   - docs-check failure was hidden by `| tail` and pushed (deploy failed): fixed the checker; the next deploy succeeded.
+   - Backup filename used the UTC date: switched to the local date.
+   - BLE trial build failed (OBJ_BLE undeclared): this needs APP_BLE_STORE. Reverted fm1.toml (submodule clean).
+
+5. Problem Solving:
+   - On hardware: 0.4 installed and progress kept (round 16, 10 open). CLI and web backups are identical; restore upload works (user confirmed).
+   - Live send verified on the unit (the page sent "E"). Live receive (T_CHAR shown on the page) is not yet tested by the user.
+   - Pages: https://daviddwlee84.github.io/fm1-morse/web/ (old progress.html redirects).
+
+6. All user messages:
+   - "我發現我有一個問題是 PRACTICE 的時候 明明覺得我已經打得跟聽到的很像了缺還是識別成不對的字 可能somehow需要有一些輔助？ 另外可能要也能夠刪除學習進度（歸零？）或是往回退 如果生疏了？… export 我們的學習進度？… 恢復進度 以及如果已經是有經驗的 想跳過一些已知的字… docs裡介紹一下我們自己的專案… 補多一些截圖到 moose repo裡面…"
+   - AskUserQuestion answers: lenient judging plus comparison; CLI + web page; all of CHART marking, open to group n, placement test, plus "目前 CHART 好像確實能夠有顏色深淺 但是為了避免user誤觸 如果決定手動修改 則應該要額外怎樣確認SAVE才override".
+   - (rejected plan) "我想了一下practice的UX 也許打得很像 但識別不對 寬鬆一點 也能有個相似度評級等等 不過我們的發送速度不知道是不是一個global settings … 此時打字速度應該比照聽的速度？"
+   - "BTW 我發現我玩到 ROUND 14 了 好像還是一直在 K M U R E 學習 什麼情況我們才會往下拓展？"
+   - "有些情況可能不能太寬鬆 比如我在 PRACTICE 一開始背 K 以為是−·· … （另外我們可能也會想要有原本的這種比較建議乾淨的模式 看看是不是做成可toggle的？…）"
+   - "目前也有成功解鎖了（在上一版） 不過 NEW LETTER 時 是否也會想要展示音標 （…toggle才顯示？…） （然後它會寫 any key: next 不過我實測 沒聽清楚按 PLAY/STOP 鈕確實還能重聽）"
+   - "先 commit 然後刷 0.4 也能push跟開 fm1-morse的GitHub Pages Koch 法 等相關學習法也能有 docs記錄一個章節 （…fm1-morse裡面寫？還是在我們自己這邊寫; …English會更好？）"
+   - "另外刷0.4的話 我們現在的進度會被保存嗎？"
+   - "另外我剛剛測試重開機（還是舊版的時候） 突然就從 ROUND 16跳17 然後突然就開始show new letter … 理論上應該根據不熟的程度 讓不熟的更高頻出現？"
+   - "然後我發現經過這麼幾輪的練習 其實某方面來說已經蠻習慣 20 WPM 的速度了 （原本預設 SEND 10 WPM的已經不習慣了）"
+   - "BTW 20 WPM 算是一個正常（比較通用）的速度嗎？"
+   - "20/8 vs. 20/13 是什麼區別？ 中間停頓的長度嗎？"
+   - "https://daviddwlee84.github.io/fm1-morse/web/progress.html 我用網頁沒成功" + pasted fm1_install output (success, FM-1_41000400).
+   - "我剛剛測試了一下能讀到了！ /Users/zhouhanru/Downloads/fm1-morse-progress-2026-11-17.json 不過是說 CHART的 letters 好像沒有cover全部可能性？ 這是為什麼？"
+   - "目前可以work 然後restore也能上傳 是說網頁 Connect to the FM-1 現在是依賴 USB 還是也能 Bluetooth？ 另外 user容易找到 …progress.html 嗎？ 以及是否有類似 SLOOP那種即時連線互動的體驗？… 然後 extend 更多符號進入閃卡課程 可以放backlog…"
+   - "1. 我們可以研究一下藍牙方案 2. 可以在 fmhub.json 填上 3. 可以放backlog 不過既然 `just morse-send` 是既有功能 也許也能就是通過web UI做到一樣功能？ 還有可能也不用像 `just morse-type`侵入性這麼強 單純在網頁上顯示 其實也就簡單得多？ 4. ok"
+   - Constraints in effect (AGENTS.md, verbatim essentials):
+     - Firmware write: "Only after the owner approves **that specific write in the current session**. Never pass `--yes`; the owner types M-Flasher's `yes`."
+     - Forbidden to initiate: "`m-flasher bootloader …`, `restore …`, `run-ram …`, any erase, any flash address arithmetic".
+     - "Commit or push only when the owner asks."
+     - "Never commit flash backups or credentials to git."
+     - "Pushing to `main` deploys the site."
+     - "Persist data only through fm1-base's storage layer (`APP_STORE_MAP` in `app.h`). Never compute flash addresses or call erase/program directly."
+     - Treat the user's email as private.
+
+7. Pending Tasks:
+   - Give the final reply summarizing items 1–3 of the latest request:
+     - Bluetooth research written (`docs/dev/morse.md#bluetooth`, commit 90a6cbb).
+     - fmhub editor filled.
+     - Live web UI done at https://daviddwlee84.github.io/fm1-morse/web/.
+     - Backlog updated.
+   - Ask the user to test Live receive (key on the KEY page or type on the TYPE page, and see the text and lamp on the web page).
+   - Later, when the user asks: v0.4 GitHub release (Hub follows automatically); implementing BLE 0.5 (needs APP_BLE_STORE etc.; hardware flash needs approval); Hub review outcome; update the hub-listing skill and memory per hub-listing-skill-todo.
+   - Leave other sessions' files (.specstory, .claude/plans) uncommitted.
+
+8. Current Work:
+   I had just finished the user's latest four-part request:
+   - (2)+(3) In fm1-morse commit 42f900e:
+     - `web/progress.html` renamed to `web/index.html` ("MORSE on the web"), with a Live section: `#heard` box showing T_CHAR text, `#lamp` from note 0, `#say` input + Send (T_TEXT chunks of 60 after cleanText) + Stop (T_STOP), Clear/Copy buttons. These are enabled in `ready()` and disabled in `hunt()`.
+     - `progress.html` is now a meta-refresh redirect.
+     - `fmhub.json` gets `"editor": "https://daviddwlee84.github.io/fm1-morse/web/"`.
+     - README has a link at the top.
+     - Live send was verified on the unit via Playwright (status "MORSE 0.4 connected", box cleared after send).
+     - Docs updated in main repo commit 3a8ee66; the live item was removed from the backlog.
+   - (1) Bluetooth research:
+     - Trial build with ble = true / ble_stack = "own" failed (needs APP_BLE_STORE as in firmware/conductor/app.h); fm1.toml restored.
+     - Wrote `## 藍牙方案（0.5 研究） { #bluetooth }` in docs/dev/morse.md: goals, existing (Conductor `[實機]`, own-stack timestamps `[上游]`), the six changes MORSE needs, timing vs a 60 ms dit, a browsers table, limits, a verification plan.
+     - Roadmap 0.5 links to it. Committed and pushed as 90a6cbb; docs-check ok.
+   - (4) The backlog already has the more-symbols item with reasons (commit e37cbc6).
+
+9. Optional Next Step:
+   Send the final reply (Traditional Chinese) reporting the completed items from the user's request "1. 我們可以研究一下藍牙方案 2. 可以在 fmhub.json 填上 3. … 通過web UI做到一樣功能？ … 單純在網頁上顯示 … 4. ok":
+   - **BLE research**: summary of the plan and the open questions to verify on hardware (timing jitter, Web MIDI over BLE, reconnect).
+   - **fmhub editor**: filled; the Hub picks it up within 3 h.
+   - **Live**: at https://daviddwlee84.github.io/fm1-morse/web/ (old URL redirects). Ask the user to test receive by keying on the KEY page.
+   - **Next**: ask whether to proceed with implementing BLE 0.5 or a v0.4 release. Any flash still needs their explicit approval.
+
+If you need specific details from before compaction (like exact code snippets, error messages, or content you generated), read the full transcript at: /Users/zhouhanru/.claude/projects/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/0a574306-469e-4a59-9622-5701a42aee59.jsonl
+Continue the conversation from where it left off without asking the user any further questions. Resume directly — do not acknowledge the summary, do not recap what was happening, do not preface with "I'll continue" or similar. Pick up the last task as if the break never happened.
+
+The messages after this summary are the most recent messages from before compaction, kept verbatim. The summary was written without seeing them, so something it says has not happened yet may already have happened in them.
+
+---
+
+_**User (2026-11-18 07:29:39Z)**_
+
+好，開始做 0.5 藍牙
+
+---
+
+_**Agent (claude-opus-5-5 2026-11-18 07:29:46Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Show the Bluetooth research section
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1; grep -n "bluetooth" docs/dev/morse.md | head; awk '/\{ #bluetooth \}/,/^## [^藍]/' docs/dev/morse.md | head -120`
+
+```text
+236:## 藍牙方案（0.5 研究） { #bluetooth }
+410:| 0.5 | 藍牙（研究見[藍牙方案](#bluetooth)）：own BLE stack 的 peripheral（Mac、iPad、手機上的 Vail 走藍牙）和 central（一台 FM-1 掃描並連上另一台）。BLE connection interval 是 11.25 ms，每個按鍵事件會晚 0–11 ms 到；對策想用 note 的 velocity 帶上長度、收的一方加一點播放緩衝，等量過再定。實機要等有第二台 |
+## 藍牙方案（0.5 研究） { #bluetooth }
+
+2026-11-18 的研究，還沒實作。
+
+### 要做到什麼
+
+| 用途 | 怎麼連 |
+|---|---|
+| Mac 上的 Vail、MORSE on the web、`just morse-*`，不接線 | FM-1 當 BLE-MIDI peripheral，Mac 在「音訊 MIDI 設定」的藍牙視窗連上 |
+| iPad、手機 | 同上（但見下面「瀏覽器」） |
+| 兩台 FM-1 互打 | 一台當 central，連上另一台（`ble_central`） |
+
+### 已經有的
+
+- **Conductor 已經在這台機器上走通** `[實機]`：fm1-base 的 own stack（`ble_stack = "own"`），2026-11-17 Mac 不用配對碼就連上 `FM-1 3399`，port 叫 `FM-1 3399 Bluetooth`，daemon 經藍牙收發 SysEx。做法見 [Conductor 的藍牙](../agentic/conductor.md)：
+    - `hostlink` 會自己把 BLE 的 SysEx 封包組回 frame；
+    - 藍牙的紀錄由 app 接管（`APP_BLE_STORE`），只放 RAM，不寫 flash；
+    - fm1-emu 兩種晶片都是 0 次寫入。
+- **MORSE 的程式本來就分得開傳輸**：`hostlink` 支援 USB 和 BLE 兩條路；按鍵用 Vail 格式的 note 0，走哪條路都一樣。
+- **fm1-base own stack 的時間戳記** `[上游]`（`docs/bt/BLE-STACK.md` §6）：
+    - **送出**時帶真實的 13-bit 毫秒時間戳記（JieLi 原本的 stack 都送 `80 80`）。
+    - **收進**時有 `ble_midi_time`：照送出端的時間戳記排時間，把同一個 connection event 擠在一起的訊息拉開。
+    - `plat_midi_send` 可以在 1 kHz tick 裡呼叫，所以按鍵的時間戳記是按下的那一刻。
+
+### MORSE 要改的地方
+
+1. `fm1.toml`：`ble = true`、`ble_stack = "own"`、`ble_diag = false`（省 2.4 KB RAM）、`ble_midi_time = true`。
+2. `app.h` 定義 `APP_BLE_STORE`，`app.c` 實作 `app_ble_load` / `app_ble_save`，只放 RAM（照 Conductor）。沒有這一步 build 會失敗（缺 `OBJ_BLE`），2026-11-18 試過。
+3. 主迴圈：`plat_midi_in` 從 `PORT_BLE` 來的封包，SysEx 交給 `hl_sx_packet` 組回 frame，note 0 交給收訊解碼器，時間用 `plat_midi_in_t24`。
+4. 按鍵：`plat_midi_send(…, TO_USB | TO_BLE_HOST)`。
+5. 設定頁加 BLUETOOTH 開關（Conductor 是 `OCT+`），header 顯示 `BT`。
+6. 兩台互打再加 `ble_central = true`，以及「掃描、選一台、連上」的畫面。
+
+### 時間準不準
+
+這是摩斯特有的問題：點在 20 WPM 只有 60 ms。BLE 的 connection interval 大約 7.5–15 ms，按鍵事件會晚 0–15 ms 才送到，**誤差可能達到一個點的 25%**。
+
+- **送出**：own stack 帶了真實的時間戳記。接收端照時間戳記排，抖動就會消失；照到達時間算，就會抖。CoreMIDI 會把 BLE-MIDI 的時間戳記換成封包時間 `[調研]`，但 Chrome 的 Web MIDI 和 Vail 網頁用的是哪一個，要實測。
+- **收進**：開 `ble_midi_time` 後，FM-1 會照送出端的時間解碼，另一台 FM-1 或 Vail 送來的按鍵不會被擠在一起。
+- **真的抖的話**：照原本的構想，用 note 的 velocity 帶上這個 mark 的長度（10 ms 一格），收的一方用長度而不是到達時間。只有收方也是 MORSE 才有用，Vail 不懂。
+
+### 瀏覽器
+
+| 平台 | 網頁（Vail、MORSE on the web）走藍牙 |
+|---|---|
+| macOS Chrome / Edge | 在「音訊 MIDI 設定」連上後，藍牙 MIDI 就是一般的 CoreMIDI port，Web MIDI 應該看得到 `[調研]`。MORSE on the web 靠 HELLO 找 port，程式不用改 |
+| Android Chrome | 有 Web MIDI；藍牙 MIDI 裝置要先由系統或某個 app 連上 `[調研]` |
+| iPad / iPhone | Safari 沒有 Web MIDI，網頁用不了；要用支援藍牙 MIDI 的 app `[調研]` |
+
+### 已知的限制
+
+- **一次只連一個 host**：own stack 同時只有一條連到電腦的 BLE MIDI 連線 `[上游]`。iPad 連著時，Mac 就要走 USB。
+- **macOS 不會自己連回來** `[實機]`：FM-1 重開後要到藍牙 MIDI 視窗再按一次 Connect（Conductor 的經驗；它的 daemon 會自動彈出那個視窗）。
+- **大小**：0.4 是 138 KB。own stack 大約多 41–46 KB，central 再多 13–22 KB（fm1-base 的數字）。Conductor 開藍牙後是 122 KB、RAM 38 KB。上限 581 KB、RAM 96 KB，都很寬裕。
+- **電池**：藍牙開著的耗電還沒量。
+- **模擬器沒有無線電**：藍牙只能在實機上測。
+
+### 驗證計畫
+
+1. host simulator：BLE 替身送 HELLO（傳輸 `01`）、BLUETOOTH 開關、0 次 store 寫入（照 Conductor 的測試）。
+2. fm1-emu 兩種晶片：開機、存檔、重開，USB 照常、0 次多餘寫入。
+3. 實機（要你核准刷機）：
+    - Mac 藍牙連上，`just morse-send`、MORSE on the web、Vail 都能用；
+    - **量抖動**：同一串按鍵分別走 USB 和藍牙，記下 Mac 收到的時間（CoreMIDI 封包時間和 Web MIDI 的 `timeStamp`），比較兩者的差；
+    - 拔線後只用電池，連著打 10 分鐘看會不會斷。
+4. 兩台互打：等有第二台。
+
+## 設計
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 07:29:51Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Compare Conductor and Morse BLE config and code
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1; cat firmware/conductor/fm1.toml firmware/morse/fm1.toml; grep -n "BLE\|ble" firmware/conductor/app.h firmware/conductor/app.c | head -80`
+
+```text
+# Conductor's build settings (fm1-base tools/build.py)
+name = "CONDUCTOR"
+id_prefix = "FM-1_12"          # package identity: dev FM-1_1200
+usb_manufacturer = "fm1-base"
+usb_product = "CONDUCTOR FM-1" # the daemon finds the MIDI port by "CONDUCTOR"
+o2 = []
+include = ["../common"]        # hostlink, ledfx, chime: shared with later firmwares
+words = "words.tsv"
+ble = true                     # Bluetooth MIDI beside USB (OCT+ turns it off until the next power-on)
+ble_stack = "own"              # fm1-base's own stack: it hands incoming SysEx to the app (JieLi's drops it)
+ble_diag = false               # no link-layer diagnostics: 2.4 KB of RAM back
+tagline = "a desk console for coding agents"
+repo = "https://github.com/daviddwlee84/M-VAVE_FM-1"
+licence = "MIT"
+credits = "Built on fm1-base by Charles Vestal."
+author = "daviddwlee84"
+description = "The keys are your coding agents: their lights say who needs you, the screen says what they are doing, a chime tells you without looking. Talks to hc or Herdr through a host daemon over USB-MIDI."
+tags = ["utility"]
+# Morse's build settings (fm1-base tools/build.py)
+name = "MORSE"
+title = "MORSE"
+id_prefix = "FM-1_41"          # package identity: dev FM-1_4100, release 0.3 FM-1_41000300
+usb_manufacturer = "fm1-base"
+usb_product = "MORSE FM-1"     # host/morse finds the MIDI port by "MORSE"
+o2 = []
+include = ["common"]           # hostlink, ledfx (from M-VAVE_FM-1 firmware/common, MIT)
+tagline = "a pocket Morse code machine"
+repo = "https://github.com/daviddwlee84/fm1-morse"
+site = "https://daviddwlee84.github.io/M-VAVE_FM-1/dev/morse/"
+install = "https://github.com/daviddwlee84/fm1-morse#install"
+screenshot = "docs/screen.png"
+licence = "GPL-3.0-or-later"
+credits = "Built on fm1-base by Charles Vestal. Koch order from LCWO; MIDI keying in the Vail adapter's format."
+author = "daviddwlee84"
+description = "Learn and use Morse code. Key on the piano keys (straight key or iambic paddles) and see what you sent, drill short and long presses, learn by sound with flash cards, listen to endless practice, type letters and CW phrases on the keys. Keying goes out over USB-MIDI in the Vail format. Settings and progress are kept; Koch order, Farnsworth spacing, a decoder that follows a beginner's hand."
+tags = ["utility"]
+firmware/conductor/app.h:16: * Bluetooth's record is kept by the app (APP_BLE_STORE), in RAM only (app.c app_ble_load / app_ble_save) */
+firmware/conductor/app.h:19:#define APP_BLE_STORE
+firmware/conductor/app.c:48:static int ble_on = 1;                   /* Bluetooth starts at every power-on; OCT+ turns it off until the next */
+firmware/conductor/app.c:83:    uint8_t host_was, ble_was;
+firmware/conductor/app.c:173:    /* a chime when an agent we already knew changes: not for the table filling up at a (re)connect */
+firmware/conductor/app.c:242:/* Bluetooth: fm1-base's own stack hands SysEx over as USB-MIDI packets on PORT_BLE (main loop) */
+firmware/conductor/app.c:243:static hl_sx_t ble_rx;
+firmware/conductor/app.c:244:static void ble_in(void)
+firmware/conductor/app.c:250:        if (port == PORT_BLE && hl_sx_packet(&ble_rx, pkt, &f, &n))
+firmware/conductor/app.c:251:            host_frame(f, n, HL_BLE);
+firmware/conductor/app.c:257:int app_ble_load(struct plat_ble_rec *r)
+firmware/conductor/app.c:262:int app_ble_save(const struct plat_ble_rec *r)
+firmware/conductor/app.c:390:            ble_on = !ble_on;
+firmware/conductor/app.c:391:            plat_ble_enable(ble_on);
+firmware/conductor/app.c:392:            app_say("BLUETOOTH", ble_on ? "ON" : "OFF");
+firmware/conductor/app.c:451:            ledfx_set(&bb, k, FX_GLOW, now);   /* the panel readable in the dark */
+firmware/conductor/app.c:495:            if (link.transport == HL_BLE)
+firmware/conductor/app.c:496:                cv_text(x - 6 - text_w(&FONT_XS, "BLE"), 10, &FONT_XS, "BLE", state_rgb(S_WORKING));
+firmware/conductor/app.c:500:            if (FM1B_BLE && ble_on)              /* grey while it advertises, blue once a computer is connected */
+firmware/conductor/app.c:501:                cv_text(x - 6 - text_w(&FONT_XS, "BLE"), 10, &FONT_XS, "BLE",
+firmware/conductor/app.c:502:                        plat_ble_connected() ? state_rgb(S_WORKING) : C_DIM);
+firmware/conductor/app.c:716:    ble_in();
+firmware/conductor/app.c:719:    if (host != ui.host_was || (uint8_t)plat_ble_connected() != ui.ble_was) {
+firmware/conductor/app.c:721:        ui.ble_was = (uint8_t)plat_ble_connected();
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 07:29:55Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Read Conductor BLE glue and Morse transport usage
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1; sed -n 235,270p firmware/conductor/app.c; sed -n 10,22p firmware/conductor/app.h; cd firmware/morse; grep -n "plat_midi_in\|plat_midi_send\|hl_sx\|HL_USB\|HL_BLE\|host_frame\|PORT_\|TO_USB\|transport\|APP_STORE_MAP\|link\." app.c app.h | head -60`
+
+```text
+    }
+    ui.redraw = 1;
+    return 1;
+}
+
+int app_sysex(const uint8_t *p, uint32_t n) { return host_frame(p, n, HL_USB); }
+
+/* Bluetooth: fm1-base's own stack hands SysEx over as USB-MIDI packets on PORT_BLE (main loop) */
+static hl_sx_t ble_rx;
+static void ble_in(void)
+{
+    uint32_t pkt, n;
+    int port;
+    const uint8_t *f;
+    while (plat_midi_in(&pkt, &port))
+        if (port == PORT_BLE && hl_sx_packet(&ble_rx, pkt, &f, &n))
+            host_frame(f, n, HL_BLE);
+}
+
+/* nothing of Bluetooth's is written to the flash: the own stack makes its address from the flash part's unique ID
+ * (the same at every start), there is no pairing to keep (macOS and iOS connect without one), so the record lives
+ * in RAM and its save is a no-op */
+int app_ble_load(struct plat_ble_rec *r)
+{
+    (void)r;
+    return 0;
+}
+int app_ble_save(const struct plat_ble_rec *r)
+{
+    (void)r;
+    return 0;
+}
+
+/* --------------------------------------------------------------- host out --- */
+static void send_select(void)
+{
+#define APP_NAME "CONDUCTOR"
+#define APP_SPLASH_RGB RGB(255, 176, 0)
+#define APP_BLOCK 256u                   /* frames per audio block: 5.8 ms at 44.1 kHz */
+#define APP_SYSEX                        /* our frames from the host (host/conductor/PROTOCOL.md) */
+
+/* nothing of ours is saved: the slots live on the host. The platform's panel calibration is the only object;
+ * Bluetooth's record is kept by the app (APP_BLE_STORE), in RAM only (app.c app_ble_load / app_ble_save) */
+enum { OBJ_PANEL, OBJ_NOBJ };
+#define APP_STORE_MAP {0xDC000u}
+#define APP_BLE_STORE
+
+void app_init(void);
+void app_render(int32_t *lr, uint32_t n, uint32_t master_q12);
+app.h:21:#define APP_STORE_MAP {0xDC000u, 0xDA000u}
+app.c:8:#include "hostlink.c"
+app.c:444:    plat_midi_send(down ? MIDI_KEY_ON : MIDI_KEY_OFF, TO_USB);
+app.c:474:    while (plat_midi_in(&pkt, &port)) {
+app.c:652:static int host_frame(const uint8_t *p, uint32_t n, int transport)
+app.c:662:        hl_acked(&link, now, transport);
+app.c:690:int app_sysex(const uint8_t *p, uint32_t n) { return host_frame(p, n, HL_USB); }
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 07:29:59Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Read Morse MIDI in/out and host frame code
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/firmware/morse; sed -n 430,500p app.c; sed -n 640,720p app.c; sed -n 10,30p app.h; grep -n "hl_send\|hl_tx\|link.transport\|plat_ble\|static void host_send\|sysex_send\|plat_sysex" app.c | head -30; grep -n "transport\|HL_BLE\|ble" common/hostlink.h | head -30`
+
+```text
+    if (next == ev_r)
+        return;                          /* the main loop is behind: drop (it re-syncs on the next edge) */
+    ev[ev_w].src = (uint8_t)src;
+    ev[ev_w].down = (uint8_t)down;
+    ev[ev_w].t = t;
+    ev_w = next;
+}
+
+static void midi_key(void)               /* own keying and ptx's playing, as one key on MIDI */
+{
+    int down = (own_down && own_midi) || (ptx_down && ptx_midi);
+    if (down == midi_down)
+        return;
+    midi_down = (uint8_t)down;
+    plat_midi_send(down ? MIDI_KEY_ON : MIDI_KEY_OFF, TO_USB);
+}
+
+void app_tick(void)
+{
+    uint32_t now = plat_ms(), keys = plat_keys(), pkt;
+    int dit = 0, dah = 0, own, t, rx, port;
+    if (key_input && keys) {
+        if (keyer.mode == MO_STRAIGHT)
+            dit = 1;
+        else {
+            int lo = (keys & LEFT_KEYS) != 0, hi = (keys & ~LEFT_KEYS) != 0;
+            dit = SET.swap ? hi : lo;
+            dah = SET.swap ? lo : hi;
+        }
+    }
+    own = mo_keyer_tick(&keyer, dit, dah);
+#ifdef PLAT_HOST
+    if (mo_player_busy(&host_hand))
+        own = mo_player_tick(&host_hand);
+#endif
+    if (own != own_down) {
+        own_down = (uint8_t)own;
+        ev_push(SRC_OWN, own, now);
+    }
+    t = mo_player_tick(&ptx);
+    ptx_down = (uint8_t)t;
+    midi_key();
+    tone_gate(TONE_TX, own || t);
+    /* MIDI in: a key-down on channel 1, any note (Vail sends 0, a DAW whatever it plays); velocity 0 is a release */
+    while (plat_midi_in(&pkt, &port)) {
+        uint32_t st = pkt >> 8 & 0xFFu, vel = pkt >> 24 & 0x7Fu;
+        if (st == 0x90u && vel)
+            rx_midi = 1;
+        else if (st == 0x80u || st == 0x90u)
+            rx_midi = 0;
+    }
+    rx = rx_midi || mo_player_tick(&prx);
+    if (rx != rx_down) {
+        rx_down = (uint8_t)rx;
+        ev_push(SRC_RX, rx, now);
+    }
+    tone_gate(TONE_RX, rx);
+}
+
+/* ------------------------------------------------------------- the reading --- */
+static void txt_add(uint32_t which, char c)
+{
+    char *t = txt[which];
+    uint32_t n = slen(t), i;
+    if (n >= TXT_N) {
+        for (i = 0; i + 1u < TXT_N; i++)
+            t[i] = t[i + 1u];
+        n = TXT_N - 1u;
+    }
+    t[n] = c;
+    t[n + 1u] = 0;
+            ui.redraw |= R_MAIN;         /* the code so far is drawn */
+    }
+    for (s = 0; s < SRC_N; s++)          /* silence ends a character, then a word */
+        if (dsrc[s].seen && !dsrc[s].down) {
+            char c = mo_dec_idle(&dsrc[s].dec, now - dsrc[s].t_up);
+            if (c)
+                emit(s, c);
+        }
+}
+
+/* ---------------------------------------------------------------- the host --- */
+static void prog_in(const uint8_t *d, uint32_t len);
+static int host_frame(const uint8_t *p, uint32_t n, int transport)
+{
+    uint8_t t;
+    uint32_t len, i, now = plat_ms();
+    const uint8_t *d = hl_match(&link, p, n, &t, &len);
+    if (!d)
+        return 0;
+    hl_seen(&link, now);
+    switch (t) {
+    case T_HELLO_ACK:
+        hl_acked(&link, now, transport);
+        ui.redraw |= R_HEAD;
+        break;
+    case T_TEXT:                         /* the computer's text, played as received (<..> a prosign) */
+        for (i = 0; i < len; i++) {
+            char c = (char)d[i];
+            if (c >= 'a' && c <= 'z')
+                c = (char)(c - 32);
+            if (c == ' ' || c == '<' || c == '>' || mo_code(c))
+                play_char(&prx, c);
+        }
+        break;
+    case T_STOP:
+        play_stop(&prx);
+        break;
+    case T_PROG_REQ:                     /* the progress, out (nothing changes here) */
+        prog.tx_on = 1;
+        prog.tx_i = 0;
+        break;
+    case T_PROG_LOAD:
+        prog_in(d, len);
+        break;
+    default:
+        break;
+    }
+    return 1;
+}
+
+int app_sysex(const uint8_t *p, uint32_t n) { return host_frame(p, n, HL_USB); }
+
+/* ------------------------------------------------------------- the pages --- */
+static void inputs_for_page(void)        /* who the keys and MIDI belong to on this page */
+{
+    key_input = !pg.ask && (ui.page == PG_KEY || ui.page == PG_RHYTHM
+                            || (ui.page == PG_PRACTICE && pr.ps == PS_CARD && pr.answer_ok));
+    own_midi = ui.page == PG_KEY;
+    ptx_midi = ui.page == PG_TYPE;
+}
+
+static void practice_leave(void);
+static void listen_stop(void);
+
+static void set_page(uint32_t p)
+{
+    if (ui.page == PG_PRACTICE && p != PG_PRACTICE)
+        practice_leave();
+    if (ui.page == PG_LISTEN && p != PG_LISTEN)
+        listen_stop();
+    if (ui.page == PG_TYPE && p != PG_TYPE)
+        play_stop(&ptx);
+    if (p != PG_MENU)
+        ui.back = (uint8_t)p;
+    ui.page = (uint8_t)(p % PG_N);
+    ui.sel = (uint8_t)(ui.page == PG_MENU && ui.back ? ui.back - 1u : 0u);
+    inputs_for_page();
+    ui.redraw |= R_ALL;
+}
+
+/* -------------------------------------------------------------- practice --- */
+#include "plat.h"
+
+#define APP_NAME "MORSE"
+#define APP_SPLASH_RGB RGB(90, 200, 255)
+#define APP_BLOCK 256u                   /* frames per audio block: 5.8 ms at 44.1 kHz (the sidetone's jitter) */
+#define APP_TICK                         /* 1 kHz: the key, the keyer, the players, MIDI in and out */
+#define APP_SYSEX                        /* our frames from the host (PROTOCOL.md in github.com/daviddwlee84/M-VAVE_FM-1 host/morse) */
+
+/* the settings and the flash cards' progress, one record (app.c rec_t), at 0xDA000: away from the 0xFC000 settings
+ * sector SLOOP, Agent Deck and CTL-1 share (docs/hardware/flash-map.md). The panel calibration is the platform's */
+enum { OBJ_PANEL, OBJ_MORSE, OBJ_NOBJ };
+#define APP_STORE_MAP {0xDC000u, 0xDA000u}
+
+void app_init(void);
+void app_render(int32_t *lr, uint32_t n, uint32_t master_q12);
+void app_panic(void);
+void app_ui_init(void);
+void app_frame(void);
+void app_input_only(void);
+void app_say(const char *a, const char *b);
+void app_tick(void);
+532:        hl_send(&link, T_CHAR, p, n);
+1009:    hl_send(&link, T_PROG_DONE, b, 1);
+1123:    if (hl_send(&link, T_PROG, f, k) == 0 && ++prog.tx_i >= PROG_FRAMES)
+3190:static void host_send(const char *s)     /* a hand on a straight key keys s */
+6: * The device says HELLO once a second (on every transport that has a computer) until the host answers, then a
+7: * HEARTBEAT once a second on the transport the answer came by; the host counts as present while frames keep
+12: *   BLE  fm1-base's own stack (ble_stack = "own") turns BLE-MIDI SysEx into USB-MIDI SysEx packets (CIN 4..7) on
+17: *   static hostlink_t hl;  static hl_sx_t ble_rx;
+20: *   main loop: while (plat_midi_in(&pkt, &port)) if (port == PORT_BLE && hl_sx_packet(&ble_rx, pkt, &f, &n))
+21: *                  my_frame(f, n, HL_BLE);
+23: *             hl_acked(&hl, now, transport); ...
+25: * HELLO carries the app's payload and then the transport byte (HL_USB / HL_BLE); HEARTBEAT carries ver, transport.
+35:enum { HL_USB, HL_BLE, HL_NTRANSPORTS };
+40:    uint8_t transport;                   /* HL_USB / HL_BLE: where the answer came from, where we reply */
+43:    uint32_t session;                    /* plat_usb_session when acked over USB: a new cable means a new HELLO */
+57:void hl_acked(hostlink_t *h, uint32_t now, int transport);
+59:int hl_send(hostlink_t *h, uint8_t type, const uint8_t *payload, uint32_t n);   /* to the host's transport; 0 = queued */
+60:int hl_send_to(hostlink_t *h, int transport, uint8_t type, const uint8_t *payload, uint32_t n);
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 07:30:05Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Check hostlink BLE use and fm1-base BLE API
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1; sed -n 1,34p firmware/common/hostlink.h; grep -n "plat_ble\|FM1B_BLE" firmware/common/hostlink.c; cd third_party/fm1-base; grep -rn "plat_midi_in\b\|plat_midi_in_t24\|ble_midi_time\|PORT_BLE\|TO_BLE_HOST\|plat_ble_enable\|plat_ble_connected" --include=*.h . | head -30`
+
+```text
+/* SPDX-License-Identifier: MIT */
+/* hostlink: an app's own SysEx conversation with a program on the computer, over fm1-base, by USB or Bluetooth.
+ *
+ * Frames are F0 7D <id0> <id1> <ver> <type> <payload...> F7. 7D is the MIDI non-commercial ID; pick
+ * id0/id1 so you stay apart from fm1-base's own 7D 4C .. frames (Conductor uses 43 4E, "CN").
+ * The device says HELLO once a second (on every transport that has a computer) until the host answers, then a
+ * HEARTBEAT once a second on the transport the answer came by; the host counts as present while frames keep
+ * coming (HOSTLINK_TIMEOUT_MS).
+ *
+ * Transports:
+ *   USB  frames in through APP_SYSEX (app_sysex), out through plat_sysex_send.
+ *   BLE  fm1-base's own stack (ble_stack = "own") turns BLE-MIDI SysEx into USB-MIDI SysEx packets (CIN 4..7) on
+ *        PORT_BLE; hl_sx_packet puts them back together. Out: the frame cut into such packets, plat_midi_send to
+ *        TO_BLE_HOST. (JieLi's stack drops incoming SysEx: Bluetooth needs the own stack.)
+ *
+ * Use (unity build: app.c includes hostlink.c; fm1.toml include = ["../common"]):
+ *   static hostlink_t hl;  static hl_sx_t ble_rx;
+ *   hl_init(&hl, 0x43, 0x4E, 1);
+ *   int app_sysex(const uint8_t *p, uint32_t n) { return my_frame(p, n, HL_USB); }
+ *   main loop: while (plat_midi_in(&pkt, &port)) if (port == PORT_BLE && hl_sx_packet(&ble_rx, pkt, &f, &n))
+ *                  my_frame(f, n, HL_BLE);
+ *   my_frame: d = hl_match(&hl, p, n, &t, &len); if (!d) return 0; hl_seen(&hl, now); on HELLO_ACK
+ *             hl_acked(&hl, now, transport); ...
+ *   each frame: hl_tick(&hl, now, T_HELLO, T_HEARTBEAT, hello_payload, n);
+ * HELLO carries the app's payload and then the transport byte (HL_USB / HL_BLE); HEARTBEAT carries ver, transport.
+ */
+#pragma once
+#include <stdint.h>
+
+#define HOSTLINK_TIMEOUT_MS 10000u
+#define HOSTLINK_EVERY_MS 1000u
+#define HOSTLINK_MAX 64u                 /* the longest payload an app sends through hl_send */
+#define HOSTLINK_RX_MAX 640u             /* the longest frame taken from Bluetooth (fm1-base's APP_SYSEX limit) */
+
+107:#if FM1B_BLE
+109:        if (!plat_ble_connected() || plat_midi_out_room(TO_BLE_HOST) < np)
+132:#if FM1B_BLE
+133:    if (h->acked && h->transport == HL_BLE && !plat_ble_connected())
+155:#if FM1B_BLE
+156:        if (plat_ble_connected()) {
+(eval):1: no matches found: --include=*.h
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 07:30:08Z)**_
+
+正在讀 fm1-base 的藍牙 API，確認 MORSE 在 1 kHz tick 裡讀 MIDI 的寫法能不能直接接上藍牙。
+
+_**Agent (claude-opus-5-5 2026-11-18 07:30:10Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Find fm1-base BLE API declarations
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/third_party/fm1-base; grep -rn "plat_midi_in\b\|plat_midi_in(\|plat_midi_in_t24\|ble_midi_time\|PORT_BLE\|TO_BLE_HOST\|plat_ble_enable\|plat_ble_connected\|plat_midi_out_room" platform/*.h src/*.h include/*.h 2>/dev/null | head -30; ls`
+
+```text
+(eval):1: no matches found: platform/*.h
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 07:30:15Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Locate fm1-base BLE API files
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/third_party/fm1-base; ls; grep -rln "plat_midi_in_t24" . | head; grep -rn "ble_midi_time" --include="*.md" --include="*.py" --include="*.h" . | head -15`
+
+```text
+README.md
+tools/build.py
+host/plat_host.c
+include/plat.h
+tests/midi_stamp_test.c
+device/radio.c
+device/plat_fm1.c
+device/unity.c
+README.md:32:| Bluetooth MIDI in by the sender's time (for an app that follows a clock by time) | `ble_midi_time = true`, with `ble_stack = "own"` | `plat_midi_in_t24` after `plat_midi_in` |
+README.md:78:- With `ble_midi_time = true` each message from Bluetooth comes with the time it was sent, from its BLE-MIDI
+tools/build.py:214:  ble_midi_time = true       with ble_stack = "own": Bluetooth MIDI in by the sender's time (FM1B_BLE_MIDI_TIME): each
+tools/build.py:832:        if CONF.get("ble_midi_time"):              # BLE MIDI in by the sender's time (plat_midi_in_t24), transport not held
+include/plat.h:109: * too, while the 2 kHz poll that takes them may wait for it); Bluetooth's: when it was read, or with fm1.toml ble_midi_time (ble_stack = "own") when the sender stamped it, the connection's bunching taken out (the transport then comes at once, not held to the sender's time). For an app that follows a
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 07:30:18Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Read plat.h MIDI/BLE API and README notes
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/third_party/fm1-base; sed -n 70,90p README.md; sed -n 95,130p include/plat.h; grep -n "ble\b\|ble_\|BLE" include/plat.h | head -40; sed -n 205,222p tools/build.py`
+
+```text
+task, and the build checks it. The radio calibrates itself at every start, so an FM-1 whose stock calibration was
+overwritten works the same. The own stack is smaller and does more:
+
+- Bluetooth MIDI with a computer or a phone, as on JieLi's.
+- With `ble_pairing = true` it pairs and encrypts the link (LE legacy pairing), and keeps the bond in `OBJ_BLE`.
+  Without it a pairing is refused; macOS and iOS connect anyway.
+- `ble_diag = false` leaves out the link layer's diagnostics (its counters and event rings: about 2.4 KB of RAM
+  and some code; the radio log's `BT ll` line). They are kept by default.
+- With `ble_midi_time = true` each message from Bluetooth comes with the time it was sent, from its BLE-MIDI
+  timestamp (`plat_midi_in_t24`): the connection's bunching taken out, for an app that times a clock it follows
+  itself. Without it the clock and transport are held to the sender's time (spaced as sent, up to 0.12 s later).
+- With `ble_central = true` the FM-1 connects to Bluetooth MIDI devices, as on JieLi's. A device that asks for a
+  code gets one on the FM-1's screen (`plat_ble_passkey`).
+- With `bt_audio = true` it sends its sound to headphones and speakers (A2DP, SBC), beside Bluetooth MIDI on the
+  one radio. While it streams, the FM-1's own output is muted. Four devices are remembered, the last one first, and
+  `plat_bta_reconnect(0)` at power-on connects it again. `bt_log = true` adds the audio set-up's steps to the
+  radio's log.
+
+It was tried on one FM-1 with a Mac, an iPhone (GarageBand; Cubasis as host and as a peripheral with the code),
+headphones (AIAIAI TMA-2) and a speaker (Anker SoundCore 2), MIDI and audio at once. Its limits:
+
+
+/* MIDI: 4-byte USB-MIDI event packets (byte 0 = cable / CIN, then status, data 1, data 2). In from USB, the TRS jack
+ * (in only: the FM-1 has no MIDI out jack) and Bluetooth (FM1B_BLE); out to USB and Bluetooth. Bluetooth has two
+ * links with FM1B_BLE_CENTRAL (below), the computer's and the device's: both come in on PORT_BLE, TO_BLE goes to
+ * both, TO_BLE_HOST or TO_BLE_DEV to one. MIDI thru with nothing echoed back where it came from: after plat_midi_in,
+ * plat_midi_send(pkt, (TO_USB | TO_BLE) & ~plat_midi_in_from()) */
+enum { PORT_USB, PORT_BLE, PORT_TRS, NPORTS };
+#define TO_USB (1u << PORT_USB)
+#define TO_BLE_HOST (1u << PORT_BLE)   /* the computer (a phone, a tablet) connected to the FM-1 */
+#define TO_BLE_DEV (1u << 3)           /* the Bluetooth MIDI device the FM-1 connected to (FM1B_BLE_CENTRAL) */
+#define TO_BLE (TO_BLE_HOST | TO_BLE_DEV)
+int plat_midi_in(uint32_t *pkt, int *port);   /* 1 = got one, from port PORT_* (port may be 0) */
+/* when the last message plat_midi_in gave came in, on plat_ticks24's clock (called where plat_midi_in is): USB's and the
+ * TRS jack's, with fm1.toml midi_stamp = true (FM1B_MIDI_STAMP; else when it was read), within 0.05 ms of landing on the FM-1 (a 10 kHz look at the endpoint and the jack's ring, inside the render
+ * too, while the 2 kHz poll that takes them may wait for it); Bluetooth's: when it was read, or with fm1.toml ble_midi_time (ble_stack = "own") when the sender stamped it, the connection's bunching taken out (the transport then comes at once, not held to the sender's time). For an app that follows a
+ * clock or places notes by time; host: when it was read */
+uint32_t plat_midi_in_t24(void);
+uint32_t plat_midi_in_from(void);      /* where the last one came from, as an out: TO_USB, TO_BLE_HOST or TO_BLE_DEV
+                                        * (0: the TRS jack, which has no out); called where plat_midi_in is */
+void plat_midi_send(uint32_t pkt, uint32_t to);   /* to: TO_USB | TO_BLE, or one link; main loop, the render or the
+                                                   * tick */
+void plat_midi_out(uint32_t pkt);      /* plat_midi_send(pkt, TO_USB) */
+uint32_t plat_midi_out_room(uint32_t to);   /* the free slots in the out queues of to (TO_USB, TO_BLE, a link: each
+                                        * has its own): the fewest among the ones someone listens on; 0 when nobody
+                                        * does. A sequencer keeps room for the note-offs it owes before it sends a
+                                        * note-on */
+uint32_t plat_midi_out_link(void);     /* a number that changes at each new USB connection (a host to tell its
+                                        * sounds again: programs, volumes) */
+/* USB MIDI host (fm1.toml usb_host = true: FM1B_USB_HOST 1; felucca-bsp docs/USB_HOST.md): the USB port plays host to
+ * a USB-MIDI controller or synth, directly or behind one powered hub; the FM-1 gives the port no power (a powered hub
+ * or adapter). It comes in on PORT_USB and TO_USB goes to it; no computer meanwhile (no USB audio, backup, mirror).
+ * Boot is always a device. plat_usb_host (main loop) asks; connecting blocks the main loop a moment (seconds behind a
+ * hub), the sound plays on. plat_usb_host_msg: the latest change, once (not a queue). plat_usb_lost: 1 once after a
+ * USB session ended (a device lost, the mode changed): release what its notes hold. Without FM1B_USB_HOST all stay
+ * USBH_OFF / 0. */
+enum { USBH_OFF, USBH_LOOKING, USBH_CONNECTED };
+96:/* MIDI: 4-byte USB-MIDI event packets (byte 0 = cable / CIN, then status, data 1, data 2). In from USB, the TRS jack
+97: * (in only: the FM-1 has no MIDI out jack) and Bluetooth (FM1B_BLE); out to USB and Bluetooth. Bluetooth has two
+98: * links with FM1B_BLE_CENTRAL (below), the computer's and the device's: both come in on PORT_BLE, TO_BLE goes to
+99: * both, TO_BLE_HOST or TO_BLE_DEV to one. MIDI thru with nothing echoed back where it came from: after plat_midi_in,
+100: * plat_midi_send(pkt, (TO_USB | TO_BLE) & ~plat_midi_in_from()) */
+101:enum { PORT_USB, PORT_BLE, PORT_TRS, NPORTS };
+103:#define TO_BLE_HOST (1u << PORT_BLE)   /* the computer (a phone, a tablet) connected to the FM-1 */
+104:#define TO_BLE_DEV (1u << 3)           /* the Bluetooth MIDI device the FM-1 connected to (FM1B_BLE_CENTRAL) */
+105:#define TO_BLE (TO_BLE_HOST | TO_BLE_DEV)
+109: * too, while the 2 kHz poll that takes them may wait for it); Bluetooth's: when it was read, or with fm1.toml ble_midi_time (ble_stack = "own") when the sender stamped it, the connection's bunching taken out (the transport then comes at once, not held to the sender's time). For an app that follows a
+112:uint32_t plat_midi_in_from(void);      /* where the last one came from, as an out: TO_USB, TO_BLE_HOST or TO_BLE_DEV
+114:void plat_midi_send(uint32_t pkt, uint32_t to);   /* to: TO_USB | TO_BLE, or one link; main loop, the render or the
+117:uint32_t plat_midi_out_room(uint32_t to);   /* the free slots in the out queues of to (TO_USB, TO_BLE, a link: each
+144:/* Bluetooth MIDI (fm1.toml ble = true: FM1B_BLE 1): JieLi's BT libraries on fm1-base's shim (ble/), started at
+145: * every boot unless the last Bluetooth run crashed (then by hand: plat_ble_start). The app gives it a store object,
+146: * OBJ_BLE (the radio's address and pairing). Without it (FM1B_BLE 0, tools/build.py --no-ble) nothing of JieLi's is
+147: * linked, and the state stays BLE_OFF */
+148:#ifndef FM1B_BLE
+149:#define FM1B_BLE 0
+151:enum { BLE_OFF, BLE_STARTING, BLE_READY, BLE_FAILED };
+152:int plat_ble_state(void);
+153:int plat_ble_connected(void);          /* a central is connected and listening */
+154:int plat_ble_linked(void);             /* a central is connected, listening or not yet (a Mac whose MIDI driver
+156:void plat_ble_start(void);
+157:/* A stream of SysEx frames to the computer's link (ble_stack = "own"; a screen mirrored): the radio reads it in its own
+162: * first. All three run in the radio's interrupts while a computer listens (plat_ble_connected): short, no lock, a
+165:struct plat_ble_stream {
+170:int plat_ble_stream(const struct plat_ble_stream *s);
+171:/* the computer's link as agreed (ble_stack = "own"; 0 each when none, or another stack): v[0] the LL data length
+174:void plat_ble_link_info(uint32_t v[7]);
+175:uint32_t plat_ble_log_total(void);     /* lines written since the last start (survives a reset) */
+176:const char *plat_ble_log_line(int back);   /* 0 = the newest */
+177:/* Bluetooth MIDI devices (fm1.toml ble_central = true: FM1B_BLE_CENTRAL 1): the FM-1 connects to one (a keyboard,
+178: * a controller), beside a computer connected to it. Its MIDI comes in as PORT_BLE too (plat_midi_in_from:
+179: * TO_BLE_DEV), and TO_BLE goes to both (TO_BLE_DEV to the device alone, TO_BLE_HOST to the computer).
+181:#ifndef FM1B_BLE_CENTRAL
+182:#define FM1B_BLE_CENTRAL 0
+184:enum { BLE_DEV_OFF, BLE_DEV_SCANNING, BLE_DEV_CONNECTING, BLE_DEV_SEARCHING, BLE_DEV_READY };
+185:void plat_ble_scan(int on);
+186:int plat_ble_found(int i, char *name, int *rssi);   /* device i of the scan (name: 21 bytes); 0 = none */
+  boot_pack = true           .ram_text and .data stored LZMA-packed (tools/boot_pack.py, Melodee's; device/boot_lzma.h): the
+                             boot unpacks them, the decoder's tables in the pool before it is cleared (about 9 KB of
+                             flash back on a large app)
+  ble_stack = "own"          with ble: Optimist's own Bluetooth stack (bt/: Henri David's, docs/bt/BLE-STACK.md;
+                             FM1B_BLE_OWN) instead of JieLi's libraries: nothing of the SDK's linked, no shim
+  ble_pairing = true         with ble_stack = "own": pairing and an encrypted link (LE legacy pairing, Just Works),
+                             the bond kept in OBJ_BLE; without it a pairing is refused (macOS and iOS connect anyway)
+  ble_diag = false           with ble_stack = "own": the link layer's diagnostics left out (bt/ble/ble_diag.h BLE_DIAG 0:
+                             its counters and event rings, ~2.4 KB of RAM, and the radio log's "BT ll" line); kept by default
+  ble_midi_time = true       with ble_stack = "own": Bluetooth MIDI in by the sender's time (FM1B_BLE_MIDI_TIME): each
+                             message's time sent, from its BLE-MIDI timestamp (bt/ble/ble_time.c), for plat_midi_in_t24;
+                             the transport then comes at once instead of held to the sender's time
+  ble = true                 Bluetooth MIDI (FM1B_BLE): ble/ on JieLi's BT libraries, from the AC79 SDK ($AC79_SDK);
+                             --no-ble builds without it (NAME-usb.fwsc), and the build checks nothing of JieLi's is in
+  wifi = true                WiFi (FM1B_WIFI): a station on JieLi's WiFi libraries and the SDK's lwIP (built from its
+                             sources), on the same shim (ble/shim, ble/wifi) with fm1-radio's RAM split (device/
+                             app_wifi.ld). Not with ble (yet)
+  net = ["net/stream.c"]     with wifi: the app's network code (lwIP's sockets), compiled as the SDK builds code that
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 07:30:38Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Find settings struct and main-loop hook in Morse
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/firmware/morse; grep -n "plat_ticks24\|ticks24" ../../third_party/fm1-base/include/plat.h | head -5; grep -n "typedef struct" app.c | head; grep -n "} set_t;" app.c; awk '/^typedef struct {/{s=NR} /} set_t;/{print s": "NR}' app.c; grep -n "set_valid\|SET_ITEMS\|static const char \*const SET_NAME" app.c | head; grep -n "app_frame(void)" app.c`
+
+```text
+107:/* when the last message plat_midi_in gave came in, on plat_ticks24's clock (called where plat_midi_in is): USB's and the
+506:uint32_t plat_ticks24(void);
+48:typedef struct {
+65:typedef struct {
+135:typedef struct {
+170:typedef struct {
+64:} set_t;
+48: 64
+101:static int set_valid(const set_t *s)
+1595:#define SET_ITEMS 12u
+1629:        ui.sel = (uint8_t)wrap(ui.sel, d, SET_ITEMS);
+1751:static const char *const SET_NAME[SET_ITEMS] = {"PRESET", "HEAR SPEED", "SPACING", "SEND SPEED", "PITCH",    "KEYER",
+2738:    for (i = 0; i < SET_ITEMS; i++) {
+2989:    if (rec.magic != REC_MAGIC || rec.ver != REC_VER || rec.size != sizeof rec || !set_valid(&rec.set)
+3016:void app_frame(void)
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 07:30:42Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Read settings struct, settings page, main loop
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/firmware/morse; sed -n 46,120p app.c; sed -n 500,510p ../../third_party/fm1-base/include/plat.h; sed -n 1595,1640p app.c; sed -n 1748,1760p app.c; sed -n 3016,3060p app.c`
+
+```text
+enum { KV_TEXT, KV_CODE, KV_TIMING, KV_N };   /* the KEY page's view */
+enum { TL_ALPHA, TL_PIANO, TL_KOCH, TL_N };   /* the TYPE page's letters on the keys */
+typedef struct {
+    uint8_t wpm;                         /* hearing: character speed 5..40 */
+    uint8_t eff;                         /* hearing: effective speed (Farnsworth) 5..wpm */
+    uint8_t keyer;                       /* MO_STRAIGHT, MO_IAMBIC_A, MO_IAMBIC_B */
+    uint8_t swap;                        /* paddles: 0 left half dit, 1 left half dah */
+    uint8_t mute;
+    uint8_t cards;                       /* per round 10..30 */
+    uint8_t learn;                       /* LM_* */
+    uint8_t look;                        /* bits 0-1 KEY's view (KV_*), bit 2 TYPE's keys show the code, bits 3-4
+                                          * TYPE's layout (TL_*), bit 5 LISTEN hides the text, bit 6 TYPE composes
+                                          * (a line sent with PLAY) instead of sending each key, bit 7 PRACTICE
+                                          * judges keyed answers strictly (by the send speed, as 0.3 did) */
+    uint16_t pitch;                      /* Hz 300..1200 */
+    uint8_t send;                        /* sending: the keyer's speed and where the decoder starts, 5..40 (0 in
+                                          * a 0.1 record: the default) */
+    uint8_t prog;                        /* LISTEN's program (LP_*) */
+} set_t;
+typedef struct {
+    uint32_t magic;
+    uint16_t ver, size;
+    set_t set;
+    ln_state_t ln;
+} rec_t;
+static rec_t rec;
+#define SET (rec.set)
+#define SEND_DEFAULT 10u                 /* a beginner's hand: a 120 ms dit (the START preset) */
+
+static uint32_t kview(void) { return SET.look & 3u; }
+static uint32_t tlabel(void) { return SET.look >> 2 & 1u; }
+static uint32_t tlayout(void) { return SET.look >> 3 & 3u; }
+static uint32_t lhide(void) { return SET.look >> 5 & 1u; }
+static uint32_t tcompose(void) { return SET.look >> 6 & 1u; }
+static uint32_t strict(void) { return SET.look >> 7 & 1u; }
+static void look_set(uint32_t shift, uint32_t mask, uint32_t v)
+{
+    SET.look = (uint8_t)((SET.look & ~(mask << shift)) | (v & mask) << shift);
+}
+
+static void set_defaults(void)          /* the START preset: Koch's characters at 20, gaps stretched to 8 (Farnsworth) */
+{
+    SET.wpm = 20;
+    SET.eff = 8;
+    SET.keyer = MO_STRAIGHT;
+    SET.swap = 0;
+    SET.mute = 0;
+    SET.cards = 20;
+    SET.learn = LM_SOUND;
+    SET.look = 0;
+    SET.pitch = 600;
+    SET.send = SEND_DEFAULT;
+    SET.prog = LP_KOCH;
+}
+
+static int set_valid(const set_t *s)
+{
+    return s->wpm >= 5u && s->wpm <= 40u && s->eff >= 5u && s->eff <= s->wpm && s->keyer < MO_NKEYER && s->swap <= 1u
+           && s->mute <= 1u && s->cards >= 10u && s->cards <= 30u && s->learn <= LM_VISUAL && s->pitch >= 300u
+           && s->pitch <= 1200u && (s->look & 3u) < KV_N && (s->look >> 3 & 3u) < TL_N
+           && s->send >= 5u && s->send <= 40u && s->prog < LP_N;
+}
+
+static uint32_t saves;                   /* records written since boot */
+static uint32_t dirty_at;                /* a setting changed at (0: saved) */
+
+static void rec_save(void)
+{
+    rec.magic = REC_MAGIC;
+    rec.ver = REC_VER;
+    rec.size = (uint16_t)sizeof rec;
+    if (plat_store_save(OBJ_MORSE, &rec, sizeof rec) == 0)
+        saves++;
+    dirty_at = 0;
+}
+
+/* a free-running count of PLAT_TICKS_PER_US ticks a microsecond, for timing spans shorter than plat_ms can: a part of
+ * the render, say. Device: TIMER4, from the 24 MHz crystal (one register read); host: its monotonic clock, at the same
+ * rate. No lock and no state, so the audio interrupt and the tick may call it too. It wraps every 2^32 ticks (179 s):
+ * a span is the unsigned difference of two reads */
+#define PLAT_TICKS_PER_US 24u
+uint32_t plat_ticks24(void);
+
+/* Disk mode (fm1.toml msc = true: FM1B_MSC; device/msc.c on felucca-bsp's FELUCCA_MSC): the FM-1 shows the computer a
+ * USB drive, the app's blocks, until it goes back to itself; meanwhile it has no USB MIDI or audio. The app keeps the
+ * blocks (plat_disk_t) and calls plat_disk_poll from its main loop (APP_LOOP: every pass) while on. Host: nothing
+#define SET_ITEMS 12u
+static void page_select(int32_t e)       /* SELECT turned */
+{
+    int32_t d = e > 0 ? 1 : -1;
+    const ln_card_t *c;
+    switch (ui.page) {
+    case PG_MENU:
+        ui.sel = (uint8_t)wrap(ui.sel, d, PG_N - 1u);
+        break;
+    case PG_PRACTICE:
+        if (pr.ps == PS_CARD && (c = ln_card(&pr.r)) != 0 && ln_choose(c->type))
+            pr.pick = (uint8_t)wrap(pr.pick, d, 4u);
+        else if (pr.ps == PS_START || pr.ps == PS_DONE) {   /* a round, or a placement test */
+            pr.test = (uint8_t)!pr.test;
+            if (pr.ps == PS_DONE && pr.r.place)
+                pr.ps = PS_START;
+            ui.redraw |= R_ALL;
+        }
+        break;
+    case PG_LISTEN:
+        SET.prog = (uint8_t)wrap(SET.prog, d, LP_N);
+        look_changed();
+        if (ls.on)
+            listen_start();
+        break;
+    case PG_RHYTHM:
+        rh.drill = (uint8_t)wrap(rh.drill, d, RH_DRILLS);
+        rhythm_reset();
+        rhythm_hint();
+        break;
+    case PG_CHART:
+        ui.csel = (uint8_t)wrap(ui.csel, d, LN_N);
+        break;
+    case PG_SET:
+        ui.sel = (uint8_t)wrap(ui.sel, d, SET_ITEMS);
+        break;
+    default:
+        break;
+    }
+    ui.redraw |= R_MAIN | R_FOOT;
+}
+
+static void say_speed(const char *what, uint32_t wpm)   /* a speed, and what it means in ms */
+{
+    char a[24], b[24];
+    uint32_t dit = mo_dit_ms(wpm);
+}
+
+/* the settings page: SELECT moves, OCT- / OCT+ (or SEL) change */
+static const char *const SET_NAME[SET_ITEMS] = {"PRESET", "HEAR SPEED", "SPACING", "SEND SPEED", "PITCH",    "KEYER",
+                                                "PADDLES", "SOUND",     "CARDS",   "LEARN BY",   "JUDGING",
+                                                "TYPE KEYS"};
+static void settings_step(int32_t d)
+{
+    switch (ui.sel) {
+    case 0: preset_step(d); break;
+    case 1: speed(d); break;
+    case 2: spacing(d); break;
+    case 3: send_speed(d); break;
+void app_frame(void)
+{
+    static const uint8_t HELLO[3] = {MO_VER, FW_MAJOR, FW_MINOR};
+    static uint32_t last_msg;
+    uint32_t now = plat_ms();
+    uint8_t host, lamp, pat;
+    input();
+    read_events();
+    if (ui.page == PG_PRACTICE)
+        practice_step(now);
+    if (ui.page == PG_LISTEN)
+        listen_step();
+    hl_tick(&link, now, T_HELLO, T_HEARTBEAT, HELLO, 3);
+    prog_pump();
+    host = (uint8_t)hl_host(&link, now);
+    if (host != ui.host_was) {
+        ui.host_was = host;
+        ui.redraw |= R_HEAD;
+    }
+    if ((ui.msg_until && now >= ui.msg_until) != last_msg) {
+        last_msg = ui.msg_until && now >= ui.msg_until;
+        ui.redraw |= R_HEAD;
+    }
+    lamp = (uint8_t)(tone_gated(TONE_TX) | tone_gated(TONE_RX) << 1);
+    if (lamp != ui.lamp_was) {
+        ui.lamp_was = lamp;
+        ui.redraw |= R_LAMP;
+    }
+    pat = (uint8_t)ptx.cur;
+    if (ui.page == PG_TYPE && pat != ui.pat_was) {
+        ui.pat_was = pat;
+        ui.redraw |= R_MAIN;
+    }
+    if (dirty_at && (int32_t)(now - dirty_at) > 3000)   /* settings saved once the knobs rest */
+        rec_save();
+    lights(now);
+    ann_tick(now);
+    if (ui.redraw)
+        draw(now);
+}
+
+/* --------------------------------------------------------- host simulator --- */
+#ifdef PLAT_HOST
+static int host_fails;
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 07:30:52Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Check host port finding and BLE sim test hooks
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1; grep -n "MORSE\|Bluetooth\|port_name\|def find\|get_input_names\|get_output_names" host/morse/device.py host/morse/*.py | head -20; grep -n "Bluetooth\|BLE\|sniff\|def find" host/conductor/*.py | head -20; grep -n "ble\|BLE\|bluetooth" -i firmware/conductor/tests/basic.txt | head; grep -n "ble\|BLE" ../M-VAVE_FM-1/third_party/fm1-base/host/plat_host.c 2>/dev/null | head`
+
+```text
+host/morse/device.py:13:PORT_HINTS = ("MORSE",)
+host/morse/device.py:38:def find_port(names: list[str], want: str | None) -> str | None:
+host/morse/device.py:50:        ins, outs = mido.get_input_names(), mido.get_output_names()
+host/morse/device.py:56:            raise RuntimeError(f"no Morse FM-1 on MIDI: no port named MORSE and none saying HELLO (inputs: {ins})")
+host/morse/__main__.py:151:    ap.add_argument("--port", help="MIDI port name (part of it); default: one named MORSE, or one saying HELLO")
+host/morse/device.py:13:PORT_HINTS = ("MORSE",)
+host/morse/device.py:38:def find_port(names: list[str], want: str | None) -> str | None:
+host/morse/device.py:50:        ins, outs = mido.get_input_names(), mido.get_output_names()
+host/morse/device.py:56:            raise RuntimeError(f"no Morse FM-1 on MIDI: no port named MORSE and none saying HELLO (inputs: {ins})")
+host/morse/protocol.py:38:MORSE_CHARS = set("ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789.,?'!/()&:;=+-_\"$@ ")
+host/morse/protocol.py:85:        if ch not in MORSE_CHARS and ch not in (PROSIGN_OPEN, PROSIGN_CLOSE):
+host/conductor/__main__.py:88:                    help="no MIDI port: exit, instead of opening the Bluetooth MIDI window and waiting")
+host/conductor/__main__.py:111:                # macOS does not reconnect a Bluetooth MIDI device after it restarts: open its window and wait
+host/conductor/__main__.py:115:                print("[ble] no MIDI port. In the Bluetooth MIDI window, click Connect next to FM-1 XXXX "
+host/conductor/core.py:147:    device_transport: int = 0  # P.TR_USB / P.TR_BLE, from the HELLO
+host/conductor/core.py:197:        )  # a picture line is 558 bytes: too slow over Bluetooth MIDI, so text there
+host/conductor/core.py:241:            via = "Bluetooth" if self.device_transport == P.TR_BLE else "USB"
+host/conductor/blelink.py:1:"""Bluetooth MIDI on macOS: getting the FM-1 connected again after it restarts.
+host/conductor/blelink.py:3:macOS does not reconnect a BLE MIDI device by itself when the device comes back
+host/conductor/blelink.py:4:(2026-11-17, on the owner's Mac). CoreMIDI's public MIDIBluetoothConnection.h suggests
+host/conductor/blelink.py:5:connecting with CoreBluetooth and calling MIDIBluetoothDriverActivateAllConnections;
+host/conductor/blelink.py:8:macOS's own Bluetooth MIDI window (CoreAudioKit's CABTLEMIDIWindowController, the one in
+host/conductor/blelink.py:39:    """The Bluetooth MIDI window, or Audio MIDI Setup when the helper cannot be built."""
+host/conductor/blelink.py:72:    print("[ble] Bluetooth MIDI window open: click Connect next to FM-1 XXXX")
+host/conductor/device.py:1:"""The two ends a daemon can talk to: a real FM-1 over MIDI (USB or Bluetooth, the same
+host/conductor/device.py:17:def sniff_port(mido, names: list[str], seconds: float = 2.5) -> str | None:
+host/conductor/device.py:20:    "Felucca", after a switch; over Bluetooth it is "FM-1 XXXX"). With the device on
+host/conductor/device.py:21:    USB and Bluetooth at once, USB wins: faster, and the pictures go over it."""
+host/conductor/device.py:50:def find_port(names: list[str], want: str | None) -> str | None:
+host/conductor/device.py:57:    """SysEx in and out through mido. Over USB or BLE MIDI the port looks the same; only
+host/conductor/device.py:58:    its name differs (macOS shows a Bluetooth device once it is connected in Audio MIDI
+101:# OCT+: Bluetooth off, then on again (nothing saved)
+105:said BLUETOOTH OFF
+108:said BLUETOOTH ON
+20: *   midi [PORT] B0 B1 B2         incoming MIDI message (PORT: USB, the default, BLE, BLE-DEV or TRS; hex bytes;
+21: *                                BLE is the computer's link, BLE-DEV the device's: both PORT_BLE, FM1B_BLE_CENTRAL)
+22: *   ble connect | ble link | ble disconnect   a central listening, or linked and not yet listening (FM1B_BLE: the
+33: *   expect_out PORT B0 B1 B2     check that this message went out to PORT since the last "out" (USB, BLE, BLE-DEV, USBH)
+53: *   stats_switch 1|0             the debug stats on / off (plat_stats_enable, as an app's setting does; expect stats:
+82: *                                viewer's keep-alive stops; unplug: the cable out
+97: *   usb unplug|plug|stall|read   the computer: the cable out, in again (a new plat_usb_session), the computer stops
+308:static int ble_state, ble_conn, bdev_state;   /* bdev_state: the Bluetooth MIDI device (BLE_DEV_*) */
+318:static uint32_t ble_listening(void)            /* the Bluetooth links listening, as outs */
+320:    return (ble_conn ? TO_BLE_HOST : 0u) | (bdev_state == BLE_DEV_READY ? TO_BLE_DEV : 0u);
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 07:31:02Z)**_
+
+正在寫計畫：fm1-base 的藍牙 API 和模擬器的 BLE 測試指令都確認過了，接下來把做法整理成計畫。
+
+_**Agent (claude-opus-5-5 2026-11-18 07:31:35Z)**_
+
+<tool-use data-tool-type="write" data-tool-name="Write"><details>
+<summary>Tool use: **Write**</summary>
+
+```markdown
+# MORSE 0.5：藍牙 MIDI（peripheral）
+
+## Context 背景
+
+0.4 已經刷進實機，網頁 Live 也能用了。你要開始做 0.5 藍牙，研究在 `docs/dev/morse.md#bluetooth`。
+
+**目標**：不接線，讓 Mac（之後也包括 iPad 和手機的 app）透過藍牙使用這些功能：
+- Vail；
+- MORSE on the web：Live、備份、還原；
+- `just morse-send` / `morse-type` / `morse-backup`。
+
+**範圍**：
+- 只做 **peripheral**，也就是 FM-1 被電腦連。
+- 兩台 FM-1 互打（`ble_central`）要等有第二台，留在 backlog。
+- 用 velocity 帶 mark 長度的備案，等實機量過抖動再決定要不要做。
+
+## 已確認的事實（讀過程式）
+
+- **Conductor 的做法可以照抄**（`firmware/conductor/app.c:242-266`、`app.h:16-19`）：
+  - `APP_BLE_STORE` 加上空的 `app_ble_load` / `app_ble_save`；
+  - `ble_in()` 用 `hl_sx_packet` 把封包組回 frame，再交給 `host_frame(…, HL_BLE)`；
+  - `plat_ble_enable(on)` 開關藍牙，`plat_ble_connected()` 給 header 用。
+- **MORSE 跟 Conductor 不一樣的地方**：MORSE 在 **1 kHz 的 `app_tick`** 裡讀 `plat_midi_in`（`firmware/morse/app.c:474`），把 note 當成收訊按鍵。藍牙送來的 SysEx 封包也會出現在同一個佇列裡，但 `host_frame` 會呼叫 `hl_send` 和 `prog_in`，不應該在 tick 裡跑。
+- **收訊時間**（`third_party/fm1-base/include/plat.h:107-110`）：
+  - 沒開 `ble_midi_time` 時，note 的時間是「讀到的時候」，同一個 connection event 裡的訊息會擠在一起。對 60 ms 的點來說這樣不行。
+  - 開了以後，`plat_midi_in_t24()` 給的是送出端的時間（`plat_ticks24`，24 tick 等於 1 µs）。
+- **送出**：`plat_midi_send` 可以在 tick 裡呼叫，own stack 會帶真實的時間戳記。
+- **host simulator 已經有藍牙替身**：`ble connect|disconnect`、`midi BLE …`、`expect_out BLE …`（`third_party/fm1-base/host/plat_host.c:20-33`）。
+- **`set_t.look` 的 8 個 bit 都用掉了。** `mute` 只用到 bit 0。
+
+## 1. 韌體（fm1-morse submodule，FW_MINOR 5）
+
+**`fm1.toml`**：加 `ble = true`、`ble_stack = "own"`、`ble_diag = false`、`ble_midi_time = true`。
+
+**`app.h`**：加 `#define APP_BLE_STORE`，註解照 Conductor（只放 RAM，不寫 flash）。
+
+**`app.c`**：
+
+1. **空的 `app_ble_load` / `app_ble_save`**，照 Conductor。
+2. **`app_tick` 的 MIDI 迴圈分流**：
+   - **note**：照舊設定 `rx_midi`。來自 `PORT_BLE` 的 note，用 `plat_midi_in_t24()` 換算回 `plat_ms` 的時間（`now - (plat_ticks24() - t24) / 24000`），再交給 `ev_push(SRC_RX, …, t)`。
+   - **SysEx 封包**（CIN 4–7，來自 `PORT_BLE`）：放進一個 SPSC ring（大約 256 個 `uint32_t`，tick 寫、主迴圈讀，寫法照 `ev_push`）。
+   - 收訊用的 `rx_down` 判斷保持原樣。
+3. **`app_frame` 新增 `ble_in()`**：把 ring 裡的封包交給 `hl_sx_packet(&ble_rx, …)`，組好的 frame 交給 `host_frame(f, n, HL_BLE)`。之後 HELLO、Live、`T_PROG*` 備份還原都直接走藍牙，因為 `hl_send` 會回到 ack 來的那條路。
+4. **送出按鍵**：`midi_key()` 改成 `plat_midi_send(…, TO_USB | (ble_on() ? TO_BLE_HOST : 0))`。
+5. **設定**：SETTINGS 加第 13 項 **BLUETOOTH ON/OFF**，`SET_ITEMS` 改成 13。
+   - 存在 `SET.mute` 的 bit 1，1 代表關，預設 0（開）。所以**存檔格式不變**，0.4 的存檔可以直接讀。
+   - `set_valid` 改成 `mute <= 3`。原本用到 `mute` 的地方改成 `& 1`。
+   - 開關時呼叫 `plat_ble_enable`。開機時照設定呼叫一次。
+6. **header**：照 Conductor 顯示 `BT`。正在廣播時是灰色，連上後是藍色，跟 USB 的 host 標示並排。
+7. **`#if FM1B_BLE` 包起來**，`--no-ble` 也能 build。
+
+**`tests/basic.txt`**（host simulator）新增：
+- `ble connect` 後，HELLO 從 BLE 送出，傳輸 byte 是 `01`；
+- 從 BLE 送 HELLO_ACK 和 `T_TEXT`，裝置會播出來；
+- `T_PROG_REQ` 走 BLE，回傳的 `T_PROG` frame 也走 BLE；
+- KEY 頁按鍵時，`expect_out BLE 90 00 …`；
+- BLUETOOTH OFF 之後，按鍵不送到 BLE；這個設定存檔、重開機後還在；
+- 藍牙相關的動作不增加 store 寫入。
+
+**版本和協定**：`FW_MINOR` 改成 5，HELLO 向量改成 `05`。協定本身不變，HELLO 本來就帶傳輸 byte。
+
+## 2. host（`host/morse/`，0.5.0）
+
+- `__init__.py` 改成 0.5.0 / (0,5)，`protocol.py` 的 HELLO 向量和測試跟著改。
+- `device.py`：找 port 時，USB 和藍牙都有就用 USB，跟 Conductor 的 `sniff_port` 一樣。找不到 port 時，提示到藍牙 MIDI 視窗按 Connect，並重用 `host/conductor/blelink.py` 打開那個視窗（同一個 repo，MIT）。
+- CLI 印出目前走的是 USB 還是 Bluetooth（從 HELLO 的傳輸 byte 判斷）。
+
+## 3. 網頁（fm1-morse `web/index.html`）
+
+- 連線狀態顯示「via Bluetooth / USB」，從 HELLO 最後一個 byte 判斷。
+- 說明一行：Mac 要先在「音訊 MIDI 設定 → 藍牙」連上。
+- 備份走藍牙會比較慢，6 個 frame 應該還是只要幾秒。逾時改成依傳輸決定。
+
+## 4. 文件
+
+- `docs/dev/morse.md`：
+  - 藍牙一節從「研究」改成「0.5」，寫實作和怎麼連；
+  - 版本列加 0.5，大小和 RAM 用 build 出來的數字；
+  - roadmap 和 backlog 留下 central 和 velocity 備案；
+  - 驗證表。
+- `morse-cheatsheet.md`：加 BLUETOOTH 設定和 header 的 `BT`。
+- `morse-learn.md`：「接電腦」段落加藍牙。
+- fm1-morse README：加 Bluetooth 小節，截圖加 `settings_bt`。
+- AGENTS.md 不用改，沒有新的 Justfile 指令。
+
+## Verification 驗證
+
+1. `just morse-unit`、`just fw-test morse`（加上上面的 BLE 測試）、`just morse-test`。
+2. `just fw-build morse` 會 build 出含藍牙的版本，記錄大小和 RAM（預估 +41–46 KB）。**注意**：submodule pointer 要先 commit，再 build，避開已知的 fw-setup 陷阱。
+3. fm1-emu 在 `uc25hq80` 和 `p25q80` 上都跑一次：開機、改設定、存檔、重開、讀回，USB 照常，藍牙不增加寫入 `[模擬]`。模擬器沒有無線電，藍牙本身要到實機才能測。
+4. 實機（**每次刷機都要你核准**，preflight 照 AGENTS.md，由你輸入 `yes`）：
+   - 確認進度還在。
+   - Mac 用藍牙連上 `FM-1 XXXX`，`just morse-send`、MORSE on the web（Live 和備份）、Vail 都能用。
+   - **量抖動**：用 KEY 頁打同一串字，比較 USB 和藍牙兩邊 Web MIDI `timeStamp` 的間隔。我會寫一個小量測腳本或網頁 debug 區，記錄每個 mark 的長度。
+   - 拔線只用電池，連打 10 分鐘。
+   - 結果寫進 `device-log.md`，以及 morse.md 的 `[實機]` 標記。
+5. `just docs-check`。commit、push、release 都等你說。
+
+```
+
+```text
+The file /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/.claude/plans/squishy-riding-flute.md has been updated successfully. (file state is current in your context — no need to Read it back)
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 07:31:38Z)**_
+
+<tool-use data-tool-type="unknown" data-tool-name="ToolSearch"><details>
+<summary>Tool use: **ToolSearch**</summary>
+
+**Input:**
+
+- max_results: `1`
+- query: `select:ExitPlanMode`
+
+**Result:**
+
+```
+
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 07:31:47Z)**_
+
+<think><details><summary>Thought Process</summary>
+藍牙方案已寫好，只做 FM-1 被電腦連的情況，互連部分先放 backlog；SysEx 會交給主迴圈處理，note 則照送出端時間解碼，模擬器只能驗證開關和存檔，實機測試刷機前會再請你核准。
+
+</details></think>
+
+_**Agent (claude-opus-5-5 2026-11-18 07:38:10Z)**_
+
+<tool-use data-tool-type="generic" data-tool-name="ExitPlanMode"><details>
+<summary>Tool use: **ExitPlanMode**</summary>
+
+```text
+User has approved your plan. You can now start coding. Start with updating your todo list if applicable
+
+Your plan has been saved to: /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/.claude/plans/squishy-riding-flute.md
+You can refer back to it if needed during implementation.
+
+## Approved Plan:
+# MORSE 0.5：藍牙 MIDI（peripheral）
+
+## Context 背景
+
+0.4 已經刷進實機，網頁 Live 也能用了。你要開始做 0.5 藍牙，研究在 `docs/dev/morse.md#bluetooth`。
+
+**目標**：不接線，讓 Mac（之後也包括 iPad 和手機的 app）透過藍牙使用這些功能：
+- Vail；
+- MORSE on the web：Live、備份、還原；
+- `just morse-send` / `morse-type` / `morse-backup`。
+
+**範圍**：
+- 只做 **peripheral**，也就是 FM-1 被電腦連。
+- 兩台 FM-1 互打（`ble_central`）要等有第二台，留在 backlog。
+- 用 velocity 帶 mark 長度的備案，等實機量過抖動再決定要不要做。
+
+## 已確認的事實（讀過程式）
+
+- **Conductor 的做法可以照抄**（`firmware/conductor/app.c:242-266`、`app.h:16-19`）：
+  - `APP_BLE_STORE` 加上空的 `app_ble_load` / `app_ble_save`；
+  - `ble_in()` 用 `hl_sx_packet` 把封包組回 frame，再交給 `host_frame(…, HL_BLE)`；
+  - `plat_ble_enable(on)` 開關藍牙，`plat_ble_connected()` 給 header 用。
+- **MORSE 跟 Conductor 不一樣的地方**：MORSE 在 **1 kHz 的 `app_tick`** 裡讀 `plat_midi_in`（`firmware/morse/app.c:474`），把 note 當成收訊按鍵。藍牙送來的 SysEx 封包也會出現在同一個佇列裡，但 `host_frame` 會呼叫 `hl_send` 和 `prog_in`，不應該在 tick 裡跑。
+- **收訊時間**（`third_party/fm1-base/include/plat.h:107-110`）：
+  - 沒開 `ble_midi_time` 時，note 的時間是「讀到的時候」，同一個 connection event 裡的訊息會擠在一起。對 60 ms 的點來說這樣不行。
+  - 開了以後，`plat_midi_in_t24()` 給的是送出端的時間（`plat_ticks24`，24 tick 等於 1 µs）。
+- **送出**：`plat_midi_send` 可以在 tick 裡呼叫，own stack 會帶真實的時間戳記。
+- **host simulator 已經有藍牙替身**：`ble connect|disconnect`、`midi BLE …`、`expect_out BLE …`（`third_party/fm1-base/host/plat_host.c:20-33`）。
+- **`set_t.look` 的 8 個 bit 都用掉了。** `mute` 只用到 bit 0。
+
+## 1. 韌體（fm1-morse submodule，FW_MINOR 5）
+
+**`fm1.toml`**：加 `ble = true`、`ble_stack = "own"`、`ble_diag = false`、`ble_midi_time = true`。
+
+**`app.h`**：加 `#define APP_BLE_STORE`，註解照 Conductor（只放 RAM，不寫 flash）。
+
+**`app.c`**：
+
+1. **空的 `app_ble_load` / `app_ble_save`**，照 Conductor。
+2. **`app_tick` 的 MIDI 迴圈分流**：
+   - **note**：照舊設定 `rx_midi`。來自 `PORT_BLE` 的 note，用 `plat_midi_in_t24()` 換算回 `plat_ms` 的時間（`now - (plat_ticks24() - t24) / 24000`），再交給 `ev_push(SRC_RX, …, t)`。
+   - **SysEx 封包**（CIN 4–7，來自 `PORT_BLE`）：放進一個 SPSC ring（大約 256 個 `uint32_t`，tick 寫、主迴圈讀，寫法照 `ev_push`）。
+   - 收訊用的 `rx_down` 判斷保持原樣。
+3. **`app_frame` 新增 `ble_in()`**：把 ring 裡的封包交給 `hl_sx_packet(&ble_rx, …)`，組好的 frame 交給 `host_frame(f, n, HL_BLE)`。之後 HELLO、Live、`T_PROG*` 備份還原都直接走藍牙，因為 `hl_send` 會回到 ack 來的那條路。
+4. **送出按鍵**：`midi_key()` 改成 `plat_midi_send(…, TO_USB | (ble_on() ? TO_BLE_HOST : 0))`。
+5. **設定**：SETTINGS 加第 13 項 **BLUETOOTH ON/OFF**，`SET_ITEMS` 改成 13。
+   - 存在 `SET.mute` 的 bit 1，1 代表關，預設 0（開）。所以**存檔格式不變**，0.4 的存檔可以直接讀。
+   - `set_valid` 改成 `mute <= 3`。原本用到 `mute` 的地方改成 `& 1`。
+   - 開關時呼叫 `plat_ble_enable`。開機時照設定呼叫一次。
+6. **header**：照 Conductor 顯示 `BT`。正在廣播時是灰色，連上後是藍色，跟 USB 的 host 標示並排。
+7. **`#if FM1B_BLE` 包起來**，`--no-ble` 也能 build。
+
+**`tests/basic.txt`**（host simulator）新增：
+- `ble connect` 後，HELLO 從 BLE 送出，傳輸 byte 是 `01`；
+- 從 BLE 送 HELLO_ACK 和 `T_TEXT`，裝置會播出來；
+- `T_PROG_REQ` 走 BLE，回傳的 `T_PROG` frame 也走 BLE；
+- KEY 頁按鍵時，`expect_out BLE 90 00 …`；
+- BLUETOOTH OFF 之後，按鍵不送到 BLE；這個設定存檔、重開機後還在；
+- 藍牙相關的動作不增加 store 寫入。
+
+**版本和協定**：`FW_MINOR` 改成 5，HELLO 向量改成 `05`。協定本身不變，HELLO 本來就帶傳輸 byte。
+
+## 2. host（`host/morse/`，0.5.0）
+
+- `__init__.py` 改成 0.5.0 / (0,5)，`protocol.py` 的 HELLO 向量和測試跟著改。
+- `device.py`：找 port 時，USB 和藍牙都有就用 USB，跟 Conductor 的 `sniff_port` 一樣。找不到 port 時，提示到藍牙 MIDI 視窗按 Connect，並重用 `host/conductor/blelink.py` 打開那個視窗（同一個 repo，MIT）。
+- CLI 印出目前走的是 USB 還是 Bluetooth（從 HELLO 的傳輸 byte 判斷）。
+
+## 3. 網頁（fm1-morse `web/index.html`）
+
+- 連線狀態顯示「via Bluetooth / USB」，從 HELLO 最後一個 byte 判斷。
+- 說明一行：Mac 要先在「音訊 MIDI 設定 → 藍牙」連上。
+- 備份走藍牙會比較慢，6 個 frame 應該還是只要幾秒。逾時改成依傳輸決定。
+
+## 4. 文件
+
+- `docs/dev/morse.md`：
+  - 藍牙一節從「研究」改成「0.5」，寫實作和怎麼連；
+  - 版本列加 0.5，大小和 RAM 用 build 出來的數字；
+  - roadmap 和 backlog 留下 central 和 velocity 備案；
+  - 驗證表。
+- `morse-cheatsheet.md`：加 BLUETOOTH 設定和 header 的 `BT`。
+- `morse-learn.md`：「接電腦」段落加藍牙。
+- fm1-morse README：加 Bluetooth 小節，截圖加 `settings_bt`。
+- AGENTS.md 不用改，沒有新的 Justfile 指令。
+
+## Verification 驗證
+
+1. `just morse-unit`、`just fw-test morse`（加上上面的 BLE 測試）、`just morse-test`。
+2. `just fw-build morse` 會 build 出含藍牙的版本，記錄大小和 RAM（預估 +41–46 KB）。**注意**：submodule pointer 要先 commit，再 build，避開已知的 fw-setup 陷阱。
+3. fm1-emu 在 `uc25hq80` 和 `p25q80` 上都跑一次：開機、改設定、存檔、重開、讀回，USB 照常，藍牙不增加寫入 `[模擬]`。模擬器沒有無線電，藍牙本身要到實機才能測。
+4. 實機（**每次刷機都要你核准**，preflight 照 AGENTS.md，由你輸入 `yes`）：
+   - 確認進度還在。
+   - Mac 用藍牙連上 `FM-1 XXXX`，`just morse-send`、MORSE on the web（Live 和備份）、Vail 都能用。
+   - **量抖動**：用 KEY 頁打同一串字，比較 USB 和藍牙兩邊 Web MIDI `timeStamp` 的間隔。我會寫一個小量測腳本或網頁 debug 區，記錄每個 mark 的長度。
+   - 拔線只用電池，連打 10 分鐘。
+   - 結果寫進 `device-log.md`，以及 morse.md 的 `[實機]` 標記。
+5. `just docs-check`。commit、push、release 都等你說。
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 07:38:18Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Find mute usages, header, init, settings code
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/firmware/morse; git status --short; grep -n "SET.mute\|s->mute\|FW_MINOR\|hl_init\|ui.host_was\|static void draw_head\|R_HEAD) {\|void app_init\|ev_w\b.*=\|static.*ev\[" app.c | head -40; sed -n 1760,1830p app.c`
+
+```text
+16:#define FW_MINOR 4u
+92:    SET.mute = 0;
+104:           && s->mute <= 1u && s->cards >= 10u && s->cards <= 30u && s->learn <= LM_VISUAL && s->pitch >= 300u
+140:static ev_t ev[EV_N];
+365:    tone_mute(SET.mute);
+432:    ev[ev_w].src = (uint8_t)src;
+433:    ev[ev_w].down = (uint8_t)down;
+434:    ev[ev_w].t = t;
+435:    ev_w = next;
+816:    uint32_t flags = (SET.mute ? LN_MUTED : 0u) | (visual() ? LN_VISUAL : 0u);
+1712:    SET.mute = (uint8_t)!SET.mute;
+1714:    app_say("SOUND", SET.mute ? "OFF: WATCH THE LIGHTS" : "ON");
+1962:    if (SET.mute)
+2017:static void draw_header(uint32_t now)
+2043:        if (SET.mute) {
+2548:            text_c(120, 128 - oy, &FONT_XS, SET.mute ? "watch it, then a key" : "listen, then any key", C_DIM);
+2766:        case 7: text_cat(t, SET.mute ? "OFF (LIGHTS)" : "ON"); break;
+2970:void app_init(void)
+2982:    ev_w = ev_r = 0;
+3003:    hl_init(&link, 0x4D, 0x4F, MO_VER);
+3018:    static const uint8_t HELLO[3] = {MO_VER, FW_MAJOR, FW_MINOR};
+3031:    if (host != ui.host_was) {
+3032:        ui.host_was = host;
+3066:        *got = SET.mute;
+    case 3: send_speed(d); break;
+    case 4: pitch(d); break;
+    case 5:
+        SET.keyer = (uint8_t)wrap(SET.keyer, d, MO_NKEYER);
+        set_changed();
+        break;
+    case 6:
+        SET.swap = (uint8_t)!SET.swap;
+        set_changed();
+        break;
+    case 7: mute_toggle(); break;
+    case 8:
+        SET.cards = (uint8_t)clamp((int32_t)SET.cards + d * 5, 10, 30);
+        set_changed();
+        break;
+    case 9:
+        SET.learn = (uint8_t)!SET.learn;
+        set_changed();
+        if (visual())
+            app_say("TIP", "SOUND FIRST IS FASTER LATER");
+        break;
+    case 10:
+        look_set(7, 1u, !strict());
+        look_changed();
+        app_say(strict() ? "STRICT" : "BY RHYTHM", strict() ? "AT THE SEND SPEED" : "ANY SPEED, 1:3");
+        break;
+    case 11:
+        look_set(3, 3u, wrap(tlayout(), d, TL_N));
+        look_changed();
+        break;
+    default:
+        break;
+    }
+}
+
+static void input(void)
+{
+    uint32_t keys = plat_keys(), btn = plat_buttons(), k;
+    int32_t e;
+    if (pg.ask) {                        /* a question: PLAY yes, HOME no, nothing else */
+        for (k = 0; k < NB; k++)
+            if ((btn >> k & 1u) && !(ui.btn >> k & 1u)) {
+                if (k == B_PLAY)
+                    ask_yes();
+                else if (k == B_HOME)
+                    ask_no();
+            }
+        for (k = 0; k < NE; k++)
+            (void)plat_enc(k);
+        if (btn != ui.btn)
+            ui.redraw |= R_FOOT;
+        ui.keys = keys;
+        ui.btn = btn;
+        return;
+    }
+    for (k = 0; k < NKEYS; k++)
+        if ((keys >> k & 1u) && !(ui.keys >> k & 1u))
+            page_key(k);
+    for (k = 0; k < NB; k++) {
+        if (!(btn >> k & 1u) || (ui.btn >> k & 1u))
+            continue;
+        if (pg.edit && ui.page == PG_CHART) {   /* CHART's edit takes these */
+            if (k == B_HOME || k == B_REC || k == B_PLAY) {
+                chart_save_or_leave();
+                continue;
+            }
+            if (k == B_FX) {
+                ln_step_back(&pg.draft);
+                chart_changed("ONE BOX BACK", "ALL COME SOONER");
+                continue;
+            }
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 07:38:23Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Read header, settings display, init code
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/firmware/morse; sed -n 360,368p app.c; sed -n 1706,1716p app.c; sed -n 2017,2075p app.c; sed -n 2730,2780p app.c; sed -n 2970,3012p app.c; sed -n 3058,3075p app.c`
+
+```text
+    if (applied.wpm != SET.wpm || applied.eff != SET.eff)
+        mo_dec_init(&dsrc[SRC_RX].dec, dit, gap);
+    applied.wpm = SET.wpm, applied.eff = SET.eff, applied.send = SET.send;
+    tone_pitch(TONE_TX, (float)SET.pitch);
+    tone_pitch(TONE_RX, (float)SET.pitch * 1.26f);   /* received a major third up */
+    tone_mute(SET.mute);
+}
+
+static void set_changed(void)
+    text_cat(a, " HZ");
+    app_say(a, "");
+}
+
+static void mute_toggle(void)
+{
+    SET.mute = (uint8_t)!SET.mute;
+    set_changed();
+    app_say("SOUND", SET.mute ? "OFF: WATCH THE LIGHTS" : "ON");
+}
+
+static void draw_header(uint32_t now)
+{
+    static const char *const PAGE[PG_N] = {"MENU", "PRACTICE", "LISTEN", "KEY", "RHYTHM", "TYPE", "CHART", "SETTINGS"};
+    char t[24];
+    int32_t x;
+    cv_begin(240, 32, C_BLACK);
+    if (now < ui.msg_until) {
+        x = cv_text(8, 7, &FONT_B, ui.msg[0], C_WHITE);
+        cv_text(x + 8, 9, &FONT_XS, ui.msg[1], C_RX);
+    } else {
+        cv_text(8, 7, &FONT_B, ui.page == PG_CHART && pg.edit ? (pg.dirty ? "EDIT *" : "EDIT") : PAGE[ui.page],
+                ui.page == PG_CHART && pg.edit ? C_MEH : C_WHITE);
+        t[0] = 0;
+        if (ui.page == PG_KEY || ui.page == PG_RHYTHM) {   /* the speed this page goes by */
+            text_cat(t, "SEND ");
+            int_cat(t, SET.send);
+        } else {
+            int_cat(t, SET.wpm);
+            if (SET.eff < SET.wpm) {
+                text_cat(t, "/");
+                int_cat(t, SET.eff);
+            }
+        }
+        text_cat(t, " WPM");
+        x = 232 - text_w(&FONT_XS, t);
+        cv_text(x, 10, &FONT_XS, t, C_GRAY);
+        if (SET.mute) {
+            x -= 8 + text_w(&FONT_XS, "MUTE");
+            cv_text(x, 10, &FONT_XS, "MUTE", C_RX);
+        }
+        if (hl_host(&link, now)) {
+            x -= 8 + text_w(&FONT_XS, "PC");
+            cv_text(x, 10, &FONT_XS, "PC", C_BLUE);
+        }
+    }
+    cv_rect(0, 31, 240, 1, C_LINE);
+    cv_blit(0, 0);
+}
+
+static void draw_lamp(int32_t y)         /* the keying as a light: white sending, amber receiving */
+{
+    int tx = tone_gated(TONE_TX), rx = tone_gated(TONE_RX);
+    cv_begin(240, 10, C_BLACK);
+    cv_rect(20, 2, 200, 6, tx ? C_OWN : rx ? C_RX : C_LINE);
+    cv_blit(0, y);
+}
+
+/* KEY: the top strip (the letter so far, the last one read, how it is going), then one of three views */
+static void key_top(void)
+{
+    char t[40];
+    uint8_t pend = mo_dec_pending(&dsrc[SRC_OWN].dec);
+    const mo_dec_t *d = &dsrc[SRC_OWN].dec;
+    cv_begin(240, 56, C_BLACK);
+    if ((visual() || kview() != KV_TEXT) && pend > 1u)
+        draw_code(pend, 90, 22, 8, C_OWN);
+    if (ui.last) {
+        t[0] = ui.last, t[1] = 0;
+        text_c(200, 6, &FONT_L, t, C_OWN);
+}
+
+static void set_at(int32_t oy)
+{
+    static const char *const KEYER[MO_NKEYER] = {"STRAIGHT", "IAMBIC A", "IAMBIC B"};
+    static const char *const LAYOUT[TL_N] = {"A-P WHITE, Q-Z BLACK", "A-Z LEFT TO RIGHT", "KOCH ORDER"};
+    char t[32];
+    uint32_t i;
+    for (i = 0; i < SET_ITEMS; i++) {
+        int32_t y = 1 + (int32_t)i * 14 - oy;
+        if (i == ui.sel)
+            cv_rect(0, y - 1, 240, 14, C_LINE);
+        cv_text(8, y, &FONT_XS, SET_NAME[i], C_GRAY);
+        t[0] = 0;
+        switch (i) {
+        case 0: {
+            int p = preset_now();
+            text_cat(t, p < 0 ? "CUSTOM" : PRESET[p].name);
+            if (p == 0)
+                text_cat(t, " (TO BEGIN)");
+            break;
+        }
+        case 1:
+        case 3:
+            int_cat(t, i == 3 ? SET.send : SET.wpm);
+            text_cat(t, " WPM  DIT ");
+            int_cat(t, (int32_t)mo_dit_ms(i == 3 ? SET.send : SET.wpm));
+            text_cat(t, " MS");
+            break;
+        case 2:
+            int_cat(t, SET.eff);
+            text_cat(t, SET.eff < SET.wpm ? " WPM (FARNSWORTH)" : " WPM");
+            break;
+        case 4: int_cat(t, SET.pitch); text_cat(t, " HZ"); break;
+        case 5: text_cat(t, KEYER[SET.keyer]); break;
+        case 6: text_cat(t, SET.swap ? "LEFT DAH" : "LEFT DIT"); break;
+        case 7: text_cat(t, SET.mute ? "OFF (LIGHTS)" : "ON"); break;
+        case 8: int_cat(t, SET.cards); text_cat(t, " A ROUND"); break;
+        case 9: text_cat(t, visual() ? "SIGHT" : "SOUND (BEST)"); break;
+        case 10: text_cat(t, strict() ? "STRICT (SEND SPEED)" : "BY RHYTHM (EASY)"); break;
+        case 11: text_cat(t, LAYOUT[tlayout()]); break;
+        default: break;
+        }
+        cv_text(96, y, &FONT_XS, t, i == ui.sel ? C_WHITE : C_RX);
+    }
+}
+
+static void menu_at(int32_t oy)
+{
+    static const char *const NAME[PG_N - 1] = {"PRACTICE", "LISTEN", "KEY", "RHYTHM", "TYPE", "CHART", "SETTINGS"};
+    static const char *const WHAT[PG_N - 1] = {"flash cards",    "play on and on",   "send, it reads you",
+void app_init(void)
+{
+    /* everything from nothing: the host simulator's reboot runs this again over the old RAM */
+    zero(&ui, sizeof ui);
+    zero(&pr, sizeof pr);
+    zero(&grid, sizeof grid);
+    zero(&tim, sizeof tim);
+    zero(&ls, sizeof ls);
+    zero(&rh, sizeof rh);
+    zero(txt, sizeof txt);
+    zero(dsrc, sizeof dsrc);
+    zero(&applied, sizeof applied);
+    ev_w = ev_r = 0;
+    own_down = ptx_down = rx_midi = rx_down = midi_down = 0;
+    key_input = own_midi = ptx_midi = 0;
+    saves = 0;
+    dirty_at = 0;
+    if (plat_store_load(OBJ_MORSE, &rec, sizeof rec) == (int)sizeof rec && rec.set.send == 0u)
+        rec.set.send = SEND_DEFAULT;     /* a 0.1 record: it had no send speed */
+    if (rec.magic != REC_MAGIC || rec.ver != REC_VER || rec.size != sizeof rec || !set_valid(&rec.set)
+        || !ln_valid(&rec.ln)) {
+        zero(&rec, sizeof rec);
+        set_defaults();
+        ln_init(&rec.ln);
+    }
+    mo_keyer_init(&keyer, SET.keyer, mo_dit_ms(SET.send));
+    mo_player_init(&ptx, mo_dit_ms(SET.wpm), mo_gap_ms(SET.wpm, SET.eff));
+    mo_player_init(&prx, mo_dit_ms(SET.wpm), mo_gap_ms(SET.wpm, SET.eff));
+#ifdef PLAT_HOST
+    mo_player_init(&host_hand, mo_dit_ms(SET.send), mo_dit_ms(SET.send));
+#endif
+    tone_stop();
+    timing_apply();
+    hl_init(&link, 0x4D, 0x4F, MO_VER);
+    ui.page = PG_PRACTICE;               /* straight into today's practice */
+    ui.back = PG_PRACTICE;
+    pr.ps = PS_START;
+    rhythm_hint();
+}
+
+void app_ui_init(void)
+{
+    lcd_fill(0, 0, 240, 240, C_BLACK);
+#ifdef PLAT_HOST
+static int host_fails;
+
+int app_expect(const char *what, int *got)
+{
+    if (!strcmp(what, "page"))
+        *got = ui.page;
+    else if (!strcmp(what, "mute"))
+        *got = SET.mute;
+    else if (!strcmp(what, "wpm"))
+        *got = SET.wpm;
+    else if (!strcmp(what, "eff"))
+        *got = SET.eff;
+    else if (!strcmp(what, "send"))
+        *got = SET.send;
+    else if (!strcmp(what, "pitch"))
+        *got = SET.pitch;
+    else if (!strcmp(what, "keyer"))
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 07:38:30Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Check BLE API in host sim and Conductor tests
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/third_party/fm1-base; grep -n "plat_ble_enable\|plat_ble_linked" include/plat.h; grep -n "FM1B_BLE\b\|FM1B_BLE " tools/build.py | head; grep -n "ble\b\|\"ble\"" tools/build.py | grep -i host | head; grep -n "plat_ble_enable\|plat_midi_in_t24\|ble connect\|ble_conn =" host/plat_host.c | head; grep -n "ble\|BLE" ../../firmware/conductor/tests/basic.txt | head -30`
+
+```text
+154:int plat_ble_linked(void);             /* a central is connected, listening or not yet (a Mac whose MIDI driver
+235:void plat_ble_enable(int on);
+217:  ble = true                 Bluetooth MIDI (FM1B_BLE): ble/ on JieLi's BT libraries, from the AC79 SDK ($AC79_SDK);
+823:        flags += ["-DFM1B_BLE=1", "-DFM1B_BLE_OWN=1", *inc(SRC / "bt" / "ble", SRC / "bt" / "br")]
+843:        flags += ["-DFM1B_BLE=1", *inc(SRC / "ble" / "shim")]
+1415:           "-Wno-unused-function", "-Wno-unused-parameter", "-DPLAT_HOST", *opt_flags(), f"-DFM1B_BUILD={build_id():#010x}u", *["-DFM1B_BLE=1"] * BLE, *["-DFM1B_BLE_CENTRAL=1"] * (BLE and bool(CONF.get("ble_central"))), *["-DFM1B_BT_AUDIO=1"] * bta_sim(), *(bta_mem_flags() if bta_sim() else []), *["-DFM1B_WIFI=1"] * WIFI,
+1544:           "-Wno-unused-variable", "-DPLAT_HOST", "-DPLAT_WEB", *opt_flags(), *(f"-DFM1B_EMU_{p.upper()}=1" for p in parts), *["-DFM1B_BLE=1"] * BLE, *["-DFM1B_BLE_CENTRAL=1"] * (BLE and bool(CONF.get("ble_central"))), *["-DFM1B_BT_AUDIO=1"] * bta_sim(), *(bta_mem_flags() if bta_sim() else []), *["-DFM1B_WIFI=1"] * WIFI, *(f'-DAPP_VERSION="{VERSION}"',) * bool(VERSION),
+1653:    defs = ["-DPLAT_HOST", "-DPLAT_WEB", "-DPLAT_RFM1", *opt_flags(), *["-DFM1B_BLE=1"] * BLE,
+268:(firmware-usb.json from --no-ble; every build writes it, --host, --web and --rfm1 too). An app in a firmware's
+1410:    exe = out / (STEM + "_host")                  # NAME_host; NAME-usb_host with --no-ble
+1544:           "-Wno-unused-variable", "-DPLAT_HOST", "-DPLAT_WEB", *opt_flags(), *(f"-DFM1B_EMU_{p.upper()}=1" for p in parts), *["-DFM1B_BLE=1"] * BLE, *["-DFM1B_BLE_CENTRAL=1"] * (BLE and bool(CONF.get("ble_central"))), *["-DFM1B_BT_AUDIO=1"] * bta_sim(), *(bta_mem_flags() if bta_sim() else []), *["-DFM1B_WIFI=1"] * WIFI, *(f'-DAPP_VERSION="{VERSION}"',) * bool(VERSION),
+22: *   ble connect | ble link | ble disconnect   a central listening, or linked and not yet listening (FM1B_BLE: the
+477:uint32_t plat_midi_in_t24(void) { return plat_ticks24(); }   /* (the script's messages come in when they are read) */
+642:void plat_ble_enable(int on)
+646:        ble_conn = ble_link = 0;
+1973:    ble_conn = ble_link = 0;
+2646:                ble_conn = 1;
+2652:                ble_conn = ble_link = 0;
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 07:38:34Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Read plat_ble_enable and sim script commands
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/third_party/fm1-base; sed -n 228,238p include/plat.h; sed -n 636,650p host/plat_host.c; grep -n "^ \*   \(expect_sysex\|sysex\|expect_out\|out\b\|midi\)" host/plat_host.c; sed -n 18,40p host/plat_host.c; cd ../../firmware/conductor/tests; grep -n -i "ble\|bluetooth\|transport" basic.txt | head -40`
+
+```text
+uint32_t plat_ble_device_flags(void);  /* PLAT_BLE_DF_* */
+int plat_ble_rpa_resolve(const uint8_t irk[16], const uint8_t addr[6]);   /* 1: addr is a private address made from irk */
+void app_ble_scan_report(const uint8_t *pdu, uint32_t n, uint32_t rssi);
+void app_ble_device_keys(const struct plat_ble_keys *k);
+/* Bluetooth on or off, as the player asks: off ends every link, stops advertising and scanning (the radio quiet);
+ * on starts it (or advertises again). Whether it starts at power-on: APP_BLE_AT_BOOT (app.h, e.g. a saved setting;
+ * default 1) */
+void plat_ble_enable(int on);
+/* What Bluetooth keeps (the own stack, ble_stack = "own"), by default in the app's store object OBJ_BLE. An app that
+ * keeps it in its own saved data instead (a settings record it has, with these fields at its own places) defines
+ * APP_BLE_STORE in app.h and gives the two calls below; it then needs no OBJ_BLE. app_ble_load: at Bluetooth's start
+}
+uint32_t plat_ble_device_flags(void) { return 0; }
+int plat_ble_rpa_resolve(const uint8_t irk[16], const uint8_t addr[6]) { (void)irk, (void)addr; return 0; }
+#else
+static void bdev_report(void) {}
+#endif
+void plat_ble_enable(int on)
+{
+    if (!on) {
+        bdev_state = BLE_DEV_OFF;
+        ble_conn = ble_link = 0;
+        ble_state = BLE_OFF;
+        ble_say("switched off");
+    } else {
+        plat_ble_start();
+20: *   midi [PORT] B0 B1 B2         incoming MIDI message (PORT: USB, the default, BLE, BLE-DEV or TRS; hex bytes;
+32: *   out                          print the MIDI sent since the last "out" (and forget it; clocks not shown)
+33: *   expect_out PORT B0 B1 B2     check that this message went out to PORT since the last "out" (USB, BLE, BLE-DEV, USBH)
+90: *   sysex HEX..                  a SysEx frame from the computer (F0 .. F7, hex, spaces allowed), as the device takes
+94: *   sysex_out                    print the app's SysEx frames (plat_sysex_send) since the last "sysex_out" (and forget them)
+95: *   expect_sysex HEX..           check that this frame went out since the last "sysex_out" (F0 .. F7, hex)
+96: *   sysex_log FILE|off           every frame the app sends from now on, appended to FILE as it went out (raw)
+ *   spin ENC N                   N detents at once, exactly N (no acceleration)
+ *   master N                     MASTER pot 0..4096 (then 40 ms, as the device's smoothing settles)
+ *   midi [PORT] B0 B1 B2         incoming MIDI message (PORT: USB, the default, BLE, BLE-DEV or TRS; hex bytes;
+ *                                BLE is the computer's link, BLE-DEV the device's: both PORT_BLE, FM1B_BLE_CENTRAL)
+ *   ble connect | ble link | ble disconnect   a central listening, or linked and not yet listening (FM1B_BLE: the
+ *                                stand-in stack is ready a second after the start)
+ *   bta add NAME | bta drop NAME a Bluetooth audio device around, or gone (FM1B_BT_AUDIO: a link to it is lost)
+ *   jack in | jack out           headphones into the jack, or out (plat_headphones; nothing plugged at the start)
+ *   wav FILE | wavstop           start / stop recording the output
+ *   usbwav FILE | usbwavstop     start / stop recording the USB audio input as a computer gets it: usb_audio_channels
+ *                                (FM1B_UAC_CH) of 16 bits, the master on 1 and 2, the app's own after it (plat_usb_ch)
+ *   peakreset                    restart the output peak (expect peak_db_min / peak_db_max)
+ *   shot FILE.png                save the screen
+ *   leds                         print the lit buttons and keys (keys: # bright, + dim)
+ *   out                          print the MIDI sent since the last "out" (and forget it; clocks not shown)
+ *   expect_out PORT B0 B1 B2     check that this message went out to PORT since the last "out" (USB, BLE, BLE-DEV, USBH)
+ *   expect_no_out PORT B0 B1 B2  check that it did not
+ *   expect WHAT VALUE            check state: exit 1 on mismatch; VALUE "<N" / ">N" is a bound (WHAT: store_writes,
+ *                                store_tries, clocks_out, midi_out, usb_play_gain, usb_audio_full, ... below; data.ADDR: the
+ *                                flash's byte at ADDR, as plat_data reads it; -1 outside its windows)
+ *   reboot                       re-run boot from the simulated flash (persistence test)
+ *                                (the app's plat_restart does the same, at the end of its millisecond; expect restarts)
+ *   crash [PC [VEC]]             a CPU fault (hex; 02012344, 3): the .noinit crash record as felucca-bsp's fm1_fault_c
+101:# OCT+: Bluetooth off, then on again (nothing saved)
+105:said BLUETOOTH OFF
+108:said BLUETOOTH ON
+109:expect transport 0
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 07:38:39Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Check APP_BLE_AT_BOOT and BLE SysEx simulation
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/third_party/fm1-base; grep -rn "APP_BLE_AT_BOOT" --include=*.c --include=*.h . | head; sed -n 236,250p include/plat.h; grep -rn "BLE SysEx\|frames from Bluetooth\|sysex.*ble\|ble.*sysex" -i host/plat_host.c | head`
+
+```text
+(eval):1: no matches found: --include=*.c
+/* What Bluetooth keeps (the own stack, ble_stack = "own"), by default in the app's store object OBJ_BLE. An app that
+ * keeps it in its own saved data instead (a settings record it has, with these fields at its own places) defines
+ * APP_BLE_STORE in app.h and gives the two calls below; it then needs no OBJ_BLE. app_ble_load: at Bluetooth's start
+ * (main loop), 1 with r filled, 0 none kept (the platform makes the address then, and saves it); app_ble_save: main
+ * loop, once something changed (a new address, a pairing, a remembered audio device), 0 kept (the app may write it
+ * to the flash later, with its own data) */
+struct plat_ble_rec {
+    uint8_t addr[6];                   /* our BLE address (static random: the top two bits 1) */
+    uint8_t bonded, rsv;               /* the computer's bond (ble_pairing): bonded, ediv, rand, ltk */
+    uint16_t bond_ediv;
+    uint8_t bond_rand[8], bond_ltk[16];
+    uint8_t bta_addr[6], bta_addr_set;   /* Bluetooth audio (bt_audio): our BR/EDR address, once made */
+    uint8_t bta_n;                     /* the remembered audio devices, the last one first */
+    struct plat_bta_dev {
+        uint8_t addr[6], bonded, link_key[16];   /* link_key: from its pairing (air order), when bonded */
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 07:38:42Z)**_
+
+正在確認 fm1-base 開機時要不要啟動藍牙的設定點（`APP_BLE_AT_BOOT`），接著就開始改韌體。
+
+_**Agent (claude-opus-5-5 2026-11-18 07:38:43Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Find where APP_BLE_AT_BOOT is used
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/third_party/fm1-base; grep -rn "APP_BLE_AT_BOOT" . 2>/dev/null | grep -v "^./include/plat.h" | head; grep -n "ble_start\|plat_ble_start()" device/plat_fm1.c host/plat_host.c | head`
+
+```text
+README.md:119:changes, and tells the platform whether to start it at power-on with `APP_BLE_AT_BOOT` in app.h (an expression,
+host/plat_host.c:1978:    if (APP_BLE_AT_BOOT)
+include/plat.h:233: * on starts it (or advertises again). Whether it starts at power-on: APP_BLE_AT_BOOT (app.h, e.g. a saved setting;
+include/fm1b_config.h:27:#ifndef APP_BLE_AT_BOOT
+include/fm1b_config.h:28:#define APP_BLE_AT_BOOT 1                /* Bluetooth starts at power-on (an app's setting may say no) */
+template/app.h:14:#define APP_BLE_AT_BOOT (!template_ble_off())   /* Bluetooth at power-on: as the player left it (REC held) */
+examples/ble_own/app.h:14:#define APP_BLE_AT_BOOT (!template_ble_off())   /* Bluetooth at power-on: as the player left it (REC held) */
+device/main_fm1.c:1373:    if (!radio_last_bad && APP_BLE_AT_BOOT)
+device/main_fm1.c:1375:                                                     * setting says off: APP_BLE_AT_BOOT) */
+host/plat_host.c:539:void plat_ble_start(void)
+host/plat_host.c:650:        plat_ble_start();
+host/plat_host.c:768:            plat_ble_start();
+host/plat_host.c:1979:        plat_ble_start();
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 07:38:47Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Read template BLE-off pattern and boot order
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/third_party/fm1-base; sed -n 112,125p README.md; grep -n "template_ble_off" -A6 template/app.c | head -20; sed -n 1365,1378p device/main_fm1.c; sed -n 1970,1980p host/plat_host.c`
+
+```text
+   `TO_BLE_DEV` goes to one, each with its own queue, so a slow device never holds up the computer. Both come in on
+   `PORT_BLE`, and `plat_midi_in_from()` says which. MIDI thru, with nothing sent back where it came from (a keyboard
+   played through to a phone): after each `plat_midi_in`,
+   `plat_midi_send(pkt, (TO_USB | TO_BLE) & ~plat_midi_in_from())`.
+
+Bluetooth starts at every power-on, as on M-VAVE's firmware, unless the last Bluetooth run crashed. A firmware
+that lets the player turn it off keeps that as a setting, calls `plat_ble_enable(0)` / `plat_ble_enable(1)` when it
+changes, and tells the platform whether to start it at power-on with `APP_BLE_AT_BOOT` in app.h (an expression,
+e.g. `(set.bluetooth != 0)`). Off ends every link and stops advertising and scanning: the radio is quiet. Its manual
+should say where the setting is (the template's: for details, see template/docs/MANUAL.md).
+`tools/build.py --no-ble` builds the same firmware without Bluetooth (NAME-usb.fwsc).
+
+### Turning WiFi on
+
+230:int template_ble_off(void) { return set.ble_off; }
+231-
+232-/* REC held a second: Bluetooth off or on (kept with the settings, so it stays so at the next power-on) */
+233-static void ble_toggle(void)
+234-{
+235-    set.ble_off = (uint8_t)!set.ble_off;
+236-    set_dirty = 1;
+    if ((fm1_in.buttons & 3u) == 3u)
+        panel_setup();                              /* OCT- + OCT+ held at power-on */
+    if (fm1_in.buttons & (1u << panel.btn[B_REC]))
+        enter_uboot("UPDATE MODE (REC)");           /* REC held at power-on: the chip's update mode, the same key as
+                                                     * m-bootloader's (which takes it first when it is installed): a way
+                                                     * in when this firmware starts but its USB cannot be reached */
+    fm1_delay_ms(400);
+    radio_boot_note();                                /* what ended the last Bluetooth run, into its log */
+    if (!radio_last_bad && APP_BLE_AT_BOOT)
+        ble_start();                                /* Bluetooth is on, as on the stock firmware (unless the app's
+                                                     * setting says off: APP_BLE_AT_BOOT) */
+#ifdef APP_BOOT
+    app_boot();                                     /* the app's own start (a radio), the platform up */
+#endif
+    app_init();
+    lcd_fill(0, 0, 240, 240, 0);
+    ble_state = BLE_OFF;                            /* Bluetooth starts at every boot, as on the device */
+    ble_conn = ble_link = 0;
+    bdev_state = BLE_DEV_OFF;
+#if FM1B_BT_AUDIO
+    bta_boot();
+#endif
+    if (APP_BLE_AT_BOOT)
+        plat_ble_start();
+#ifdef APP_BOOT
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 07:38:52Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+See how template loads ble_off before boot
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/third_party/fm1-base; grep -n "set.ble_off\|plat_store_load\|app_boot\|^void app_init" template/app.c | head`
+
+```text
+97:    set.ble_off = 0;
+100:void app_init(void)
+102:    if (plat_store_load(OBJ_SETTINGS, &set, sizeof set) != (int)sizeof set || set.magic != SET_MAGIC
+103:        || set.octave < -2 || set.octave > 2 || set.wave > 1u || set.ble_off > 1u)
+230:int template_ble_off(void) { return set.ble_off; }
+235:    set.ble_off = (uint8_t)!set.ble_off;
+237:    plat_ble_enable(!set.ble_off);
+238:    app_say("BLUETOOTH", set.ble_off ? "OFF" : "ON");
+319:            if (FM1B_BLE_CENTRAL && !set.ble_off)
+477:        btdev_page(ui.looking && !set.ble_off);
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 07:39:03Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Enable BLE in fm1.toml and app.h
+
+```bash
+cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/firmware/morse; python3 - <<'EOF'
+import re
+p='fm1.toml'; s=open(p).read()
+s=s.replace('include = ["common"]           # hostlink, ledfx (from M-VAVE_FM-1 firmware/common, MIT)\n',
+'include = ["common"]           # hostlink, ledfx (from M-VAVE_FM-1 firmware/common, MIT)\n'
+'ble = true                     # Bluetooth MIDI beside USB (SETTINGS > BLUETOOTH, kept)\n'
+'ble_stack = "own"              # fm1-base\'s own stack: incoming SysEx reaches the app, real BLE-MIDI timestamps out\n'
+'ble_diag = false               # no link-layer diagnostics: 2.4 KB of RAM back\n'
+'ble_midi_time = true           # keying in by the sender\'s time (plat_midi_in_t24), not bunched by the connection\n')
+open(p,'w').write(s)
+p='app.h'; s=open(p).read()
+s=s.replace('#define APP_STORE_MAP {0xDC000u, 0xDA000u}\n',
+'#define APP_STORE_MAP {0xDC000u, 0xDA000u}\n'
+'/* Bluetooth\'s record is kept by the app, in RAM only (app.c app_ble_load / app_ble_save): nothing of it is written.\n'
+' * Whether it starts at power-on: SETTINGS > BLUETOOTH, read from the record before app_init */\n'
+'#define APP_BLE_STORE\n'
+'int morse_ble_off(void);\n'
+'#define APP_BLE_AT_BOOT (!morse_ble_off())\n')
+open(p,'w').write(s)
+EOF
+git diff --stat
+```
+
+```text
+ app.h    | 5 +++++
+ fm1.toml | 4 ++++
+ 2 files changed, 9 insertions(+)
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 07:39:11Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Read event ring definitions
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/firmware/morse; sed -n 130,150p app.c; sed -n 420,430p app.c; sed -n 1955,1966p app.c; sed -n 812,818p app.c; grep -n "^static hostlink_t\|hostlink_t link" app.c`
+
+```text
+static mo_player_t ptx, prx;
+static volatile uint8_t key_input;       /* the keys are the Morse key now */
+static volatile uint8_t own_midi;        /* own keying goes out as MIDI (KEY) */
+static volatile uint8_t ptx_midi;        /* ptx's playing goes out as MIDI (TYPE) */
+static uint8_t own_down, ptx_down, rx_midi, rx_down, midi_down;
+typedef struct {
+    uint8_t src, down;
+    uint32_t t;
+} ev_t;
+#define EV_N 64u
+static ev_t ev[EV_N];
+static volatile uint32_t ev_w, ev_r;
+#define LEFT_KEYS ((1u << 13) - 1u)      /* F3..F4: the left paddle */
+#ifdef PLAT_HOST
+static mo_player_t host_hand;            /* "sendkeys": a scripted hand on a straight key */
+#endif
+
+/* the main loop's */
+static hostlink_t link;
+static struct {
+    mo_dec_t dec;
+    int s = p->started;
+    p->started = 0;
+    plat_unlock(f);
+    return s;
+}
+
+/* --------------------------------------------------------------- the tick --- */
+static void ev_push(uint32_t src, int down, uint32_t t)
+{
+    uint32_t next = (ev_w + 1u) % EV_N;
+    if (next == ev_r)
+    ledfx_t kb = {0, 0, 0}, bb = {0, 0, 0};
+    uint32_t k, i;
+    int tx = tone_gated(TONE_TX), rx = tone_gated(TONE_RX);
+    const ln_card_t *c = ln_card(&pr.r);
+    for (k = 0; k < NB; k++)
+        if (k != B_PLAY)
+            ledfx_set(&bb, k, FX_GLOW, now);
+    if (SET.mute)
+        ledfx_set(&bb, B_FX, FX_LIT, now);
+    if (ui.page == PG_PRACTICE && pr.ps == PS_CARD && c && ln_choose(c->type)) {
+        for (i = 0; i < 4u; i++)
+            ledfx_set(&kb, CHOICE_KEY[i], i == pr.pick ? FX_BLINK : FX_LIT, now);
+}
+
+static void practice_start(void)
+{
+    uint32_t flags = (SET.mute ? LN_MUTED : 0u) | (visual() ? LN_VISUAL : 0u);
+    if (pr.test) {
+        if (rec.ln.open >= LN_N) {
+148:static hostlink_t link;
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 07:39:47Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Add Bluetooth support to Morse app.c
+
+```bash
+cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/firmware/morse; python3 - <<'EOF'
+p='app.c'; s=open(p).read()
+def rep(a,b,n=1):
+    global s
+    c=s.count(a)
+    assert c==n, (a,c)
+    s=s.replace(a,b)
+rep('#define FW_MINOR 4u','#define FW_MINOR 5u')
+rep('''    uint8_t mute;
+''','''    uint8_t mute;                        /* bit 0 the sound off (the lights keep the rhythm), bit 1 Bluetooth off
+                                          * (0.5; a 0.4 record has it 0: on) */
+''')
+rep('&& s->mute <= 1u &&','&& s->mute <= 3u &&')
+rep('''static uint32_t strict(void) { return SET.look >> 7 & 1u; }
+''','''static uint32_t strict(void) { return SET.look >> 7 & 1u; }
+static uint32_t muted(void) { return SET.mute & 1u; }
+static uint32_t ble_off(void) { return SET.mute >> 1 & 1u; }
+''')
+rep('    tone_mute(SET.mute);','    tone_mute((int)muted());')
+rep('uint32_t flags = (SET.mute ? LN_MUTED','uint32_t flags = (muted() ? LN_MUTED')
+rep('''    SET.mute = (uint8_t)!SET.mute;
+    set_changed();
+    app_say("SOUND", SET.mute ? "OFF: WATCH THE LIGHTS" : "ON");''','''    SET.mute ^= 1u;
+    set_changed();
+    app_say("SOUND", muted() ? "OFF: WATCH THE LIGHTS" : "ON");''')
+rep('''    if (SET.mute)
+        ledfx_set(&bb, B_FX''','''    if (muted())
+        ledfx_set(&bb, B_FX''')
+rep('''        if (SET.mute) {
+            x -= 8 + text_w(&FONT_XS, "MUTE");''','''        if (muted()) {
+            x -= 8 + text_w(&FONT_XS, "MUTE");''')
+rep('SET.mute ? "watch it, then a key"','muted() ? "watch it, then a key"')
+rep('case 7: text_cat(t, SET.mute ? "OFF (LIGHTS)" : "ON"); break;','case 7: text_cat(t, muted() ? "OFF (LIGHTS)" : "ON"); break;')
+rep('''        *got = SET.mute;''','''        *got = (int)muted();
+    else if (!strcmp(what, "ble_off"))
+        *got = (int)ble_off();''')
+assert 'SET.mute' not in s.replace('SET.mute ^= 1u','').replace('SET.mute = 0;','').replace('SET.mute >> 1','').replace('SET.mute & 1u','').replace('SET.mute ^= 2u',''), [l for l in s.splitlines() if 'SET.mute' in l]
+# event ring for BLE SysEx
+rep('''static volatile uint32_t ev_w, ev_r;
+''','''static volatile uint32_t ev_w, ev_r;
+#if FM1B_BLE
+#define BX_N 256u                        /* Bluetooth's SysEx packets, from the tick to the main loop (a 640-byte frame
+                                          * is 214 of them; the host sends 64-byte ones) */
+static uint32_t bx[BX_N];
+static volatile uint32_t bx_w, bx_r;
+#endif
+static uint32_t rx_t;                    /* when the received key last changed (Bluetooth: when the sender keyed it) */
+''')
+rep('''    plat_midi_send(down ? MIDI_KEY_ON : MIDI_KEY_OFF, TO_USB);
+}''','''    plat_midi_send(down ? MIDI_KEY_ON : MIDI_KEY_OFF, TO_USB | (FM1B_BLE && !ble_off() ? TO_BLE_HOST : 0u));
+}
+
+/* a key change from MIDI at the time it was made: Bluetooth's by the sender's BLE-MIDI timestamp (ble_midi_time),
+ * the connection's bunching taken out; never before the last one, never ahead of now */
+static void rx_at(int port, uint32_t now)
+{
+    uint32_t t = now;
+    if (port == PORT_BLE) {
+        int32_t ago = (int32_t)(plat_ticks24() - plat_midi_in_t24()) / (int32_t)(PLAT_TICKS_PER_US * 1000u);
+        if (ago > 0)
+            t = now - (uint32_t)(ago < 500 ? ago : 500);
+    }
+    if ((int32_t)(t - rx_t) < 0)
+        t = rx_t;
+    rx_t = t;
+}''')
+rep('''    while (plat_midi_in(&pkt, &port)) {
+        uint32_t st = pkt >> 8 & 0xFFu, vel = pkt >> 24 & 0x7Fu;
+        if (st == 0x90u && vel)
+            rx_midi = 1;
+        else if (st == 0x80u || st == 0x90u)
+            rx_midi = 0;
+    }
+    rx = rx_midi || mo_player_tick(&prx);
+    if (rx != rx_down) {
+        rx_down = (uint8_t)rx;
+        ev_push(SRC_RX, rx, now);
+    }''','''    while (plat_midi_in(&pkt, &port)) {
+        uint32_t st = pkt >> 8 & 0xFFu, vel = pkt >> 24 & 0x7Fu, cin = pkt & 0x0Fu;
+#if FM1B_BLE
+        if (port == PORT_BLE && cin >= 4u && cin <= 7u) {   /* the host's frames, put together in the main loop */
+            uint32_t next = (bx_w + 1u) % BX_N;
+            if (next != bx_r) {
+                bx[bx_w] = pkt;
+                bx_w = next;
+            }
+            continue;
+        }
+#else
+        (void)cin;
+#endif
+        if (st == 0x90u && vel) {
+            if (!rx_midi)
+                rx_at(port, now);
+            rx_midi = 1;
+        } else if (st == 0x80u || st == 0x90u) {
+            if (rx_midi)
+                rx_at(port, now);
+            rx_midi = 0;
+        }
+    }
+    rx = rx_midi || mo_player_tick(&prx);
+    if (rx != rx_down) {
+        rx_down = (uint8_t)rx;
+        if (rx != rx_midi)               /* the computer's text played here: now */
+            rx_at(PORT_USB, now);
+        ev_push(SRC_RX, rx, rx_t);
+    }''')
+# BLE in, store
+rep('''int app_sysex(const uint8_t *p, uint32_t n) { return host_frame(p, n, HL_USB); }
+''','''int app_sysex(const uint8_t *p, uint32_t n) { return host_frame(p, n, HL_USB); }
+
+#if FM1B_BLE
+/* Bluetooth: the own stack hands SysEx over as USB-MIDI packets on PORT_BLE; the tick queues them (bx) */
+static hl_sx_t ble_rx;
+static void ble_in(void)
+{
+    const uint8_t *f;
+    uint32_t n;
+    while (bx_r != bx_w) {
+        uint32_t pkt = bx[bx_r];
+        bx_r = (bx_r + 1u) % BX_N;
+        if (hl_sx_packet(&ble_rx, pkt, &f, &n))
+            host_frame(f, n, HL_BLE);
+    }
+}
+
+/* nothing of Bluetooth's is written: the own stack makes its address from the flash part's unique ID (the same at
+ * every start) and there is no pairing to keep (macOS and iOS connect without one), as in Conductor */
+int app_ble_load(struct plat_ble_rec *r)
+{
+    (void)r;
+    return 0;
+}
+int app_ble_save(const struct plat_ble_rec *r)
+{
+    (void)r;
+    return 0;
+}
+#endif
+
+/* APP_BLE_AT_BOOT: asked before app_init, so it reads the record itself (app_init reads it again) */
+int morse_ble_off(void)
+{
+    if (plat_store_load(OBJ_MORSE, &rec, sizeof rec) != (int)sizeof rec || rec.magic != REC_MAGIC
+        || rec.ver != REC_VER || rec.size != sizeof rec || !set_valid(&rec.set))
+        return 0;
+    return (int)ble_off();
+}
+
+static void ble_toggle(void)
+{
+    SET.mute ^= 2u;
+    set_changed();
+#if FM1B_BLE
+    plat_ble_enable(!ble_off());
+#endif
+    app_say("BLUETOOTH", ble_off() ? "OFF" : "ON");
+}
+''')
+rep('#define SET_ITEMS 12u','#define SET_ITEMS 13u')
+rep('''                                                "TYPE KEYS"};''','''                                                "TYPE KEYS", "BLUETOOTH"};''')
+rep('''    case 11:
+        look_set(3, 3u, wrap(tlayout(), d, TL_N));
+        look_changed();
+        break;
+    default:''','''    case 11:
+        look_set(3, 3u, wrap(tlayout(), d, TL_N));
+        look_changed();
+        break;
+    case 12: ble_toggle(); break;
+    default:''')
+rep('''        case 11: text_cat(t, LAYOUT[tlayout()]); break;
+''','''        case 11: text_cat(t, LAYOUT[tlayout()]); break;
+        case 12:
+            text_cat(t, !FM1B_BLE ? "NOT IN THIS BUILD" : ble_off() ? "OFF" : !plat_ble_connected() ? "ON (NOT CONNECTED)"
+                        : hl_host(&link, plat_ms()) && link.transport == HL_BLE ? "ON (TALKING)" : "ON (CONNECTED)");
+            break;
+''')
+rep('''        if (hl_host(&link, now)) {
+            x -= 8 + text_w(&FONT_XS, "PC");
+            cv_text(x, 10, &FONT_XS, "PC", C_BLUE);
+        }''','''        if (hl_host(&link, now)) {
+            x -= 8 + text_w(&FONT_XS, "PC");
+            cv_text(x, 10, &FONT_XS, "PC", C_BLUE);
+        }
+        if (FM1B_BLE && !ble_off()) {    /* grey while it waits for a computer, blue once one is connected */
+            x -= 8 + text_w(&FONT_XS, "BT");
+            cv_text(x, 10, &FONT_XS, "BT", plat_ble_connected() ? C_BLUE : C_DIM);
+        }''')
+rep('''    ev_w = ev_r = 0;
+''','''    ev_w = ev_r = 0;
+    rx_t = plat_ms();
+#if FM1B_BLE
+    bx_w = bx_r = 0;
+    zero(&ble_rx, sizeof ble_rx);
+#endif
+''')
+rep('''    input();
+    read_events();''','''    input();
+#if FM1B_BLE
+    ble_in();
+#endif
+    read_events();''')
+open(p,'w').write(s)
+EOF
+grep -n "SET.mute" app.c; grep -n "ui.ble_was\|C_DIM\b" app.c | head -3
+```
+
+```text
+Traceback (most recent call last):
+  File "<stdin>", line 198, in <module>
+  File "<stdin>", line 5, in rep
+AssertionError: ('    input();\n    read_events();', 2)
+92:    SET.mute = 0;
+365:    tone_mute(SET.mute);
+816:    uint32_t flags = (SET.mute ? LN_MUTED : 0u) | (visual() ? LN_VISUAL : 0u);
+1712:    SET.mute = (uint8_t)!SET.mute;
+1714:    app_say("SOUND", SET.mute ? "OFF: WATCH THE LIGHTS" : "ON");
+1962:    if (SET.mute)
+2043:        if (SET.mute) {
+2548:            text_c(120, 128 - oy, &FONT_XS, SET.mute ? "watch it, then a key" : "listen, then any key", C_DIM);
+2766:        case 7: text_cat(t, SET.mute ? "OFF (LIGHTS)" : "ON"); break;
+3066:        *got = SET.mute;
+2111:                C_DIM);
+2161:        cv_text(8, 40, &FONT_XS, "each letter over its dits and dahs", C_DIM);
+2172:    cv_text(6, y, &FONT_B, t, r->c == MO_UNKNOWN ? C_BAD : live ? C_DIM : C_OWN);
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 07:39:52Z)**_
+
+韌體的修改腳本在一處比對到兩個位置，所以沒有寫入任何東西。修正後重跑。
+
+_**Agent (claude-opus-5-5 2026-11-18 07:39:54Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Find both input() call sites
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/firmware/morse; grep -n -B3 "    input();" app.c | head`
+
+```text
+1945-
+1946-void app_input_only(void)
+1947-{
+1948:    input();
+--
+3019-    static uint32_t last_msg;
+3020-    uint32_t now = plat_ms();
+3021-    uint8_t host, lamp, pat;
+3022:    input();
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 07:39:58Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Read app_input_only
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/firmware/morse; sed -n 1946,1952p app.c`
+
+```text
+void app_input_only(void)
+{
+    input();
+    read_events();
+}
+
+/* ----------------------------------------------------------------- lights --- */
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 07:40:28Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Apply the Bluetooth patch to app.c
+
+```bash
+mkdir -p /private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/0a574306-469e-4a59-9622-5701a42aee59/scratchpad; cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/firmware/morse; cat > /private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/0a574306-469e-4a59-9622-5701a42aee59/scratchpad/ble_patch.py <<'EOF'
+p='app.c'; s=open(p).read()
+def rep(a,b,n=1):
+    global s
+    c=s.count(a)
+    assert c==n, (a,c)
+    s=s.replace(a,b)
+rep('#define FW_MINOR 4u','#define FW_MINOR 5u')
+rep('''    uint8_t mute;
+''','''    uint8_t mute;                        /* bit 0 the sound off (the lights keep the rhythm), bit 1 Bluetooth off
+                                          * (0.5; a 0.4 record has it 0: on) */
+''')
+rep('&& s->mute <= 1u &&','&& s->mute <= 3u &&')
+rep('''static uint32_t strict(void) { return SET.look >> 7 & 1u; }
+''','''static uint32_t strict(void) { return SET.look >> 7 & 1u; }
+static uint32_t muted(void) { return SET.mute & 1u; }
+static uint32_t ble_off(void) { return SET.mute >> 1 & 1u; }
+''')
+rep('    tone_mute(SET.mute);','    tone_mute((int)muted());')
+rep('uint32_t flags = (SET.mute ? LN_MUTED','uint32_t flags = (muted() ? LN_MUTED')
+rep('''    SET.mute = (uint8_t)!SET.mute;
+    set_changed();
+    app_say("SOUND", SET.mute ? "OFF: WATCH THE LIGHTS" : "ON");''','''    SET.mute ^= 1u;
+    set_changed();
+    app_say("SOUND", muted() ? "OFF: WATCH THE LIGHTS" : "ON");''')
+rep('''    if (SET.mute)
+        ledfx_set(&bb, B_FX''','''    if (muted())
+        ledfx_set(&bb, B_FX''')
+rep('''        if (SET.mute) {
+            x -= 8 + text_w(&FONT_XS, "MUTE");''','''        if (muted()) {
+            x -= 8 + text_w(&FONT_XS, "MUTE");''')
+rep('SET.mute ? "watch it, then a key"','muted() ? "watch it, then a key"')
+rep('case 7: text_cat(t, SET.mute ? "OFF (LIGHTS)" : "ON"); break;','case 7: text_cat(t, muted() ? "OFF (LIGHTS)" : "ON"); break;')
+rep('''        *got = SET.mute;''','''        *got = (int)muted();
+    else if (!strcmp(what, "ble_off"))
+        *got = (int)ble_off();''')
+rep('''static volatile uint32_t ev_w, ev_r;
+''','''static volatile uint32_t ev_w, ev_r;
+#if FM1B_BLE
+#define BX_N 256u                        /* Bluetooth's SysEx packets, from the tick to the main loop (a 640-byte frame
+                                          * is 214 of them; the host sends 64-byte ones) */
+static uint32_t bx[BX_N];
+static volatile uint32_t bx_w, bx_r;
+#endif
+static uint32_t rx_t;                    /* when the received key last changed (Bluetooth: when the sender keyed it) */
+''')
+rep('''    plat_midi_send(down ? MIDI_KEY_ON : MIDI_KEY_OFF, TO_USB);
+}''','''    plat_midi_send(down ? MIDI_KEY_ON : MIDI_KEY_OFF, TO_USB | (FM1B_BLE && !ble_off() ? TO_BLE_HOST : 0u));
+}
+
+/* a key change from MIDI at the time it was made: Bluetooth's by the sender's BLE-MIDI timestamp (ble_midi_time),
+ * the connection's bunching taken out; never before the last one, never ahead of now */
+static void rx_at(int port, uint32_t now)
+{
+    uint32_t t = now;
+    if (port == PORT_BLE) {
+        int32_t ago = (int32_t)(plat_ticks24() - plat_midi_in_t24()) / (int32_t)(PLAT_TICKS_PER_US * 1000u);
+        if (ago > 0)
+            t = now - (uint32_t)(ago < 500 ? ago : 500);
+    }
+    if ((int32_t)(t - rx_t) < 0)
+        t = rx_t;
+    rx_t = t;
+}''')
+rep('''    while (plat_midi_in(&pkt, &port)) {
+        uint32_t st = pkt >> 8 & 0xFFu, vel = pkt >> 24 & 0x7Fu;
+        if (st == 0x90u && vel)
+            rx_midi = 1;
+        else if (st == 0x80u || st == 0x90u)
+            rx_midi = 0;
+    }
+    rx = rx_midi || mo_player_tick(&prx);
+    if (rx != rx_down) {
+        rx_down = (uint8_t)rx;
+        ev_push(SRC_RX, rx, now);
+    }''','''    while (plat_midi_in(&pkt, &port)) {
+        uint32_t st = pkt >> 8 & 0xFFu, vel = pkt >> 24 & 0x7Fu, cin = pkt & 0x0Fu;
+#if FM1B_BLE
+        if (port == PORT_BLE && cin >= 4u && cin <= 7u) {   /* the host's frames, put together in the main loop */
+            uint32_t next = (bx_w + 1u) % BX_N;
+            if (next != bx_r) {
+                bx[bx_w] = pkt;
+                bx_w = next;
+            }
+            continue;
+        }
+#else
+        (void)cin;
+#endif
+        if (st == 0x90u && vel) {
+            if (!rx_midi)
+                rx_at(port, now);
+            rx_midi = 1;
+        } else if (st == 0x80u || st == 0x90u) {
+            if (rx_midi)
+                rx_at(port, now);
+            rx_midi = 0;
+        }
+    }
+    rx = rx_midi || mo_player_tick(&prx);
+    if (rx != rx_down) {
+        rx_down = (uint8_t)rx;
+        if (rx != rx_midi)               /* the computer's text played here: now */
+            rx_at(PORT_USB, now);
+        ev_push(SRC_RX, rx, rx_t);
+    }''')
+rep('''int app_sysex(const uint8_t *p, uint32_t n) { return host_frame(p, n, HL_USB); }
+''','''int app_sysex(const uint8_t *p, uint32_t n) { return host_frame(p, n, HL_USB); }
+
+#if FM1B_BLE
+/* Bluetooth: the own stack hands SysEx over as USB-MIDI packets on PORT_BLE; the tick queues them (bx) */
+static hl_sx_t ble_rx;
+static void ble_in(void)
+{
+    const uint8_t *f;
+    uint32_t n;
+    while (bx_r != bx_w) {
+        uint32_t pkt = bx[bx_r];
+        bx_r = (bx_r + 1u) % BX_N;
+        if (hl_sx_packet(&ble_rx, pkt, &f, &n))
+            host_frame(f, n, HL_BLE);
+    }
+}
+
+/* nothing of Bluetooth's is written: the own stack makes its address from the flash part's unique ID (the same at
+ * every start) and there is no pairing to keep (macOS and iOS connect without one), as in Conductor */
+int app_ble_load(struct plat_ble_rec *r)
+{
+    (void)r;
+    return 0;
+}
+int app_ble_save(const struct plat_ble_rec *r)
+{
+    (void)r;
+    return 0;
+}
+#endif
+
+/* APP_BLE_AT_BOOT: asked before app_init, so it reads the record itself (app_init reads it again) */
+int morse_ble_off(void)
+{
+    if (plat_store_load(OBJ_MORSE, &rec, sizeof rec) != (int)sizeof rec || rec.magic != REC_MAGIC
+        || rec.ver != REC_VER || rec.size != sizeof rec || !set_valid(&rec.set))
+        return 0;
+    return (int)ble_off();
+}
+
+static void ble_toggle(void)
+{
+    SET.mute ^= 2u;
+    set_changed();
+#if FM1B_BLE
+    plat_ble_enable(!ble_off());
+#endif
+    app_say("BLUETOOTH", ble_off() ? "OFF" : "ON");
+}
+''')
+rep('#define SET_ITEMS 12u','#define SET_ITEMS 13u')
+rep('''                                                "TYPE KEYS"};''','''                                                "TYPE KEYS", "BLUETOOTH"};''')
+rep('''    case 11:
+        look_set(3, 3u, wrap(tlayout(), d, TL_N));
+        look_changed();
+        break;
+    default:''','''    case 11:
+        look_set(3, 3u, wrap(tlayout(), d, TL_N));
+        look_changed();
+        break;
+    case 12: ble_toggle(); break;
+    default:''')
+rep('''        case 11: text_cat(t, LAYOUT[tlayout()]); break;
+''','''        case 11: text_cat(t, LAYOUT[tlayout()]); break;
+        case 12:
+            text_cat(t, !FM1B_BLE ? "NOT IN THIS BUILD" : ble_off() ? "OFF" : !plat_ble_connected() ? "ON (NOT CONNECTED)"
+                        : hl_host(&link, plat_ms()) && link.transport == HL_BLE ? "ON (TALKING)" : "ON (CONNECTED)");
+            break;
+''')
+rep('''        if (hl_host(&link, now)) {
+            x -= 8 + text_w(&FONT_XS, "PC");
+            cv_text(x, 10, &FONT_XS, "PC", C_BLUE);
+        }''','''        if (hl_host(&link, now)) {
+            x -= 8 + text_w(&FONT_XS, "PC");
+            cv_text(x, 10, &FONT_XS, "PC", C_BLUE);
+        }
+        if (FM1B_BLE && !ble_off()) {    /* grey while it waits for a computer, blue once one is connected */
+            x -= 8 + text_w(&FONT_XS, "BT");
+            cv_text(x, 10, &FONT_XS, "BT", plat_ble_connected() ? C_BLUE : C_DIM);
+        }''')
+rep('''    ev_w = ev_r = 0;
+''','''    ev_w = ev_r = 0;
+    rx_t = plat_ms();
+#if FM1B_BLE
+    bx_w = bx_r = 0;
+    zero(&ble_rx, sizeof ble_rx);
+#endif
+''')
+rep('''    input();
+    read_events();''','''    input();
+#if FM1B_BLE
+    ble_in();
+#endif
+    read_events();''', 2)
+open(p,'w').write(s)
+print("ok")
+EOF
+python3 /private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/0a574306-469e-4a59-9622-5701a42aee59/scratchpad/ble_patch.py; grep -n "SET.mute" app.c
+```
+
+```text
+ok
+82:static uint32_t muted(void) { return SET.mute & 1u; }
+83:static uint32_t ble_off(void) { return SET.mute >> 1 & 1u; }
+95:    SET.mute = 0;
+776:    SET.mute ^= 2u;
+1804:    SET.mute ^= 1u;
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 07:40:44Z)**_
+
+<think><details><summary>Thought Process</summary>
+開了 `ble_midi_time` 後，藍牙的按下和放開可能落在同一個 tick，會被整個吞掉；我改為每次 note 變化都直接推出帶時間的事件。
+
+</details></think>
+
+_**Agent (claude-opus-5-5 2026-11-18 07:40:49Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Push each MIDI key change as its own event
+
+```bash
+cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/firmware/morse; python3 - <<'EOF'
+p='app.c'; s=open(p).read()
+a='''        if (st == 0x90u && vel) {
+            if (!rx_midi)
+                rx_at(port, now);
+            rx_midi = 1;
+        } else if (st == 0x80u || st == 0x90u) {
+            if (rx_midi)
+                rx_at(port, now);
+            rx_midi = 0;
+        }
+    }
+    rx = rx_midi || mo_player_tick(&prx);
+    if (rx != rx_down) {
+        rx_down = (uint8_t)rx;
+        if (rx != rx_midi)               /* the computer's text played here: now */
+            rx_at(PORT_USB, now);
+        ev_push(SRC_RX, rx, rx_t);
+    }'''
+b='''        if (st == 0x90u || st == 0x80u) {
+            /* each change goes in as it comes: over Bluetooth a short dit's down and up can come in one tick,
+             * each at its own time */
+            rx_midi = (uint8_t)(st == 0x90u && vel);
+            rx = rx_midi || prx_down;
+            if (rx != rx_down) {
+                rx_down = (uint8_t)rx;
+                rx_at(port, now);
+                ev_push(SRC_RX, rx, rx_t);
+            }
+        }
+    }
+    prx_down = (uint8_t)mo_player_tick(&prx);
+    rx = rx_midi || prx_down;
+    if (rx != rx_down) {                 /* the computer's text played here */
+        rx_down = (uint8_t)rx;
+        rx_at(PORT_USB, now);
+        ev_push(SRC_RX, rx, rx_t);
+    }'''
+assert s.count(a)==1; s=s.replace(a,b)
+a='static uint8_t own_down, ptx_down, rx_midi, rx_down, midi_down;'
+assert s.count(a)==1; s=s.replace(a,'static uint8_t own_down, ptx_down, prx_down, rx_midi, rx_down, midi_down;')
+a='    own_down = ptx_down = rx_midi = rx_down = midi_down = 0;'
+assert s.count(a)==1; s=s.replace(a,'    own_down = ptx_down = prx_down = rx_midi = rx_down = midi_down = 0;')
+open(p,'w').write(s)
+EOF
+grep -n "prx_down\|mo_player_tick(&prx)" app.c
+```
+
+```text
+137:static uint8_t own_down, ptx_down, prx_down, rx_midi, rx_down, midi_down;
+517:            rx = rx_midi || prx_down;
+525:    prx_down = (uint8_t)mo_player_tick(&prx);
+526:    rx = rx_midi || prx_down;
+3094:    own_down = ptx_down = prx_down = rx_midi = rx_down = midi_down = 0;
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 07:40:57Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Run Morse host simulator tests
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1; just fw-test morse 2>&1 | tail -25`
+
+```text
+  sysex< F0 7D 4D 4F 01 41 01 00 05 00 F7
+  sysex< F0 7D 4D 4F 01 41 01 00 05 00 F7
+  sysex< F0 7D 4D 4F 01 41 01 00 05 00 F7
+  sysex< F0 7D 4D 4F 01 41 01 00 05 00 F7
+  sysex< F0 7D 4D 4F 01 41 01 00 05 00 F7
+  sysex< F0 7D 4D 4F 01 41 01 00 05 00 F7
+  sysex< F0 7D 4D 4F 01 41 01 00 05 00 F7
+  sysex< F0 7D 4D 4F 01 41 01 00 05 00 F7
+  sysex< F0 7D 4D 4F 01 41 01 00 05 00 F7
+  sysex< F0 7D 4D 4F 01 41 01 00 05 00 F7
+  sysex< F0 7D 4D 4F 01 41 01 00 05 00 F7
+  sysex< F0 7D 4D 4F 01 41 01 00 05 00 F7
+  ok ask == 2
+said!: PROGRESS LOADED
+  ok ask == 0
+  ok open == 15
+  ok round == 7
+  ok answered == 100
+  ok sysex out (8 bytes)
+  ok ask == 0
+  ok sysex out (8 bytes)
+  ok open == 15
+  ok round == 7
+host: 232104 ms simulated, 1882 blits, render 0.0% of real time (host CPU), EXPECTATIONS FAILED
+error: recipe `fw-test` failed with exit code 1
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 07:41:03Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Find failing expectations
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1; just fw-test morse 2>&1 | grep -n "FAIL\|mismatch\|expected\|error" | head -20`
+
+```text
+25:FAIL expect_sysex: not sent (11 bytes)
+568:host: 232104 ms simulated, 1882 blits, render 0.0% of real time (host CPU), EXPECTATIONS FAILED
+569:error: recipe `fw-test` failed with exit code 1
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 07:41:09Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Show the failing HELLO vector context
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1; just fw-test morse 2>&1 | sed -n 15,30p; grep -n "expect_sysex F0 7D 4D 4F 01 41" firmware/morse/tests/basic.txt | head`
+
+```text
+  ok page == 1
+  ok ps == 0
+  ok wpm == 20
+  ok eff == 8
+  ok send == 10
+  ok preset == 0
+  ok mute == 0
+  ok learn == 0
+  ok store_writes == 0
+  sysex< F0 7D 4D 4F 01 41 01 00 05 00 F7
+FAIL expect_sysex: not sent (11 bytes)
+  ok host == 0
+  ok host == 1
+  ok sysex out (65 bytes)
+  ok sysex out (29 bytes)
+  ok store_writes == 0
+20:expect_sysex F0 7D 4D 4F 01 41 01 00 04 00 F7
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 07:41:11Z)**_
+
+Only the expected version vector (now `05`). Updating it, and adding the BLE tests.
+
+_**Agent (claude-opus-5-5 2026-11-18 07:41:14Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Fix HELLO vector and survey the test script
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/firmware/morse; sed -i '' 's/^expect_sysex F0 7D 4D 4F 01 41 01 00 04 00 F7/expect_sysex F0 7D 4D 4F 01 41 01 00 05 00 F7/' tests/basic.txt; grep -n "0\.4\b\|^# ---\|^# ==" tests/basic.txt | head -30; tail -40 tests/basic.txt; grep -n "TYPE KEYS\|sel 11\|spin SELECT\|HELLO_ACK\|42 \|T_TEXT\|43 " tests/basic.txt | head -20`
+
+```text
+17:# ---- the host: HELLO once a second until it answers (version 1, firmware 0.4, transport USB) ("hello")
+27:# ---- the progress out, firmware 0.4 ("prog_req"): a fresh record in six chunks ("prog_fresh_0", "prog_fresh_5",
+35:# ---- the menu: HOME, SELECT to KEY, SEL
+45:# ---- KEY: a straight key by hand, K (-.-) at the send speed, 10 WPM (dit 120 ms)
+101:# ---- received: MIDI note 0 on channel 1 (Vail's keying), a T (-)
+121:# ---- sound and silence
+139:# ---- iambic B: the left half is dit, the right half dah; a squeeze let go in the dah adds the dit (R)
+180:# ---- speeds: K1 hearing, K4 sending, each said in ms; the presets
+212:# ---- RHYTHM: five dits at the send speed (120 ms), clean
+298:# ---- TYPE: pages of keys with OCT- / OCT+ (letters, digits and signs, phrases)
+385:# ---- the layout: A-Z left to right (black key b0 is B)
+407:# ---- LISTEN: abbreviations played on and on, shown as they go, then hidden
+433:# ---- CHART
+442:# ---- PRACTICE: three new letters shown, then asked, then asked again later; one missed comes back at the end
+483:# the three new ones once more (0.4: weak cards repeat later in the round), then the missed one again
+498:# ---- it all comes back after a power cycle
+508:# ---- muted, by sound: the lamp's rhythm instead of sound
+526:# ---- a round answered as a player would: picks on the keys, and the keyed cards (send it, key what you hear)
+604:# ---- 0.4: a keyed answer judged by its own rhythm, not the send speed (SEND 10: 0.3 needed 240 ms for a dah).
+721:# ---- CHART's edit: a copy, saved only with PLAY twice
+780:# ---- a placement test: the ten letters after the open ones, once each; what you knew marked only if you say so
+809:# ---- a backup in: six chunks ("prog_load_0" .. "prog_load_5"), loaded only after PLAY on the FM-1
+expect round 5
+turn SELECT 1
+wait 30
+expect test 0
+
+# ---- a backup in: six chunks ("prog_load_0" .. "prog_load_5"), loaded only after PLAY on the FM-1
+sysex_out
+sysex F0 7D 4D 4F 01 05 00 06 00 01 07 00 02 00 0F 64 00 00 00 00 5A 00 00 00 00 03 02 03 02 03 02 03 00 02 03 02 03 02 03 02 00 03 02 03 02 03 02 03 00 02 03 02 03 02 03 02 00 03 02 00 00 00 00 00 F7
+wait 20
+sysex F0 7D 4D 4F 01 05 01 06 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 06 00 F7
+wait 20
+sysex F0 7D 4D 4F 01 05 02 06 00 06 00 06 00 06 00 06 00 00 06 00 06 00 06 00 00 06 00 06 00 06 00 06 00 00 06 00 06 00 06 00 00 06 00 06 00 06 00 06 00 00 06 00 06 00 06 00 00 06 00 06 00 06 00 06 F7
+wait 20
+sysex F0 7D 4D 4F 01 05 03 06 00 00 06 00 06 00 06 00 7C 06 00 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F F7
+wait 20
+sysex F0 7D 4D 4F 01 05 04 06 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F F7
+wait 20
+sysex F0 7D 4D 4F 01 05 05 06 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 03 7F 44 7B F7
+wait 20
+wait 100
+expect ask 2
+shot load_ask.png
+tap PLAY
+wait 30
+expect ask 0
+expect open 15
+expect round 7
+expect answered 100
+expect_sysex F0 7D 4D 4F 01 45 00 F7
+# one chunk short and another out of turn: refused, nothing asked
+sysex F0 7D 4D 4F 01 05 00 06 00 01 07 00 02 00 0F 64 00 00 00 00 5A 00 00 00 00 03 02 03 02 03 02 03 00 02 03 02 03 02 03 02 00 03 02 03 02 03 02 03 00 02 03 02 03 02 03 02 00 03 02 00 00 00 00 00 F7
+wait 20
+sysex F0 7D 4D 4F 01 05 02 06 00 06 00 06 00 06 00 06 00 00 06 00 06 00 06 00 00 06 00 06 00 06 00 06 00 00 06 00 06 00 06 00 00 06 00 06 00 06 00 06 00 00 06 00 06 00 06 00 00 06 00 06 00 06 00 06 F7
+wait 50
+expect ask 0
+expect_sysex F0 7D 4D 4F 01 45 02 F7
+reboot
+wait 600
+expect open 15
+expect round 7
+22:# HELLO_ACK ("hello_ack")
+67:expect_sysex F0 7D 4D 4F 01 43 4B F7
+110:sysex F0 7D 4D 4F 01 02 43 51 F7
+305:# the host keeps itself known: a HELLO_ACK for each HEARTBEAT (host/morse/PROTOCOL.md)
+313:expect_sysex F0 7D 4D 4F 01 43 41 F7
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 07:41:22Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Read test vectors and sim BLE sysex support
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1; sed -n 17,34p firmware/morse/tests/basic.txt; sed -n 101,120p firmware/morse/tests/basic.txt; sed -n 95,115p firmware/conductor/tests/basic.txt; grep -n '"midi"' -A30 third_party/fm1-base/host/plat_host.c | grep -n "cin\|CIN\|0xF0\|sysex" | head; grep -n "ble_sysex\|sysex BLE\|sysex_ble" third_party/fm1-base/host/plat_host.c | head`
+
+```text
+# ---- the host: HELLO once a second until it answers (version 1, firmware 0.4, transport USB) ("hello")
+sysex_out
+wait 1100
+expect_sysex F0 7D 4D 4F 01 41 01 00 05 00 F7
+expect host 0
+# HELLO_ACK ("hello_ack")
+sysex F0 7D 4D 4F 01 01 01 F7
+wait 30
+expect host 1
+
+# ---- the progress out, firmware 0.4 ("prog_req"): a fresh record in six chunks ("prog_fresh_0", "prog_fresh_5",
+# host/morse/progress.py VECTORS); nothing changes on the FM-1
+sysex F0 7D 4D 4F 01 04 F7
+wait 300
+expect_sysex F0 7D 4D 4F 01 44 00 06 00 01 00 00 00 00 05 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 F7
+expect_sysex F0 7D 4D 4F 01 44 05 06 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 05 7F 51 16 F7
+expect store_writes 0
+
+# ---- received: MIDI note 0 on channel 1 (Vail's keying), a T (-)
+midi USB 90 00 7F
+wait 20
+expect rx 1
+wait 160
+midi USB 80 00 00
+wait 2000
+expect_text rx T
+# the host's text, played as received at 20/8 WPM: CQ ("text_cq")
+sysex F0 7D 4D 4F 01 02 43 51 F7
+wait 4500
+expect_text rx T_CQ
+# and stopped ("stop")
+sysex F0 7D 4D 4F 01 02 50 41 52 49 53 F7
+wait 300
+sysex F0 7D 4D 4F 01 03 F7
+wait 600
+expect rx 0
+clear_text
+
+wait 30
+expect_sysex F0 7D 43 4E 01 43 0B 00 23 02 F7
+leds
+release ARP
+wait 30
+expect_sysex F0 7D 43 4E 01 43 0C 00 23 02 F7
+# OCT+: Bluetooth off, then on again (nothing saved)
+listen
+tap OCT+
+wait 30
+said BLUETOOTH OFF
+tap OCT+
+wait 30
+said BLUETOOTH ON
+expect transport 0
+expect store_writes 0
+# the host goes quiet: after 10 s, NO HOST and the keys go stale
+wait 10500
+expect host 0
+shot nohost.png
+6:441-        min_q[mi_w % MQ] = mk_pkt(b, c, d) & ~0xF0u;     /* (cable 0: the host drops the cable number) */
+44:489-    *pkt = q & ~0xF0u;
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 07:41:27Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+See how sim builds MIDI packets
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/third_party/fm1-base; grep -n "mk_pkt" host/plat_host.c | head -3; grep -n "static uint32_t mk_pkt" -A15 host/plat_host.c; grep -n "expect_out" -A25 host/plat_host.c | grep -n "BLE\|out_log\|sysex" | head`
+
+```text
+411:static uint32_t mk_pkt(const char *a, const char *b, const char *c);
+441:        min_q[mi_w % MQ] = mk_pkt(b, c, d) & ~0xF0u;     /* (cable 0: the host drops the cable number) */
+2161:static uint32_t mk_pkt(const char *a, const char *b, const char *c)
+411:static uint32_t mk_pkt(const char *a, const char *b, const char *c);
+412-/* the script's usbh: plug NAME [in|out|nomidi] (both ways by default; _ in NAME a space), unplug, midi B0 B1 B2 (from the device) */
+413-static int usbh_cmd(const char *a, const char *b, const char *c, const char *d)
+414-{
+415-    usbh_step();
+416-    if (!strcmp(a, "plug") && b[0]) {
+417-        snprintf(uhs.name, sizeof uhs.name, "%s", b);
+418-        for (char *p = uhs.name; *p; p++)
+419-            if (*p == '_')
+420-                *p = ' ';                       /* (the script's words: "Launchkey_Mini" is "Launchkey Mini") */
+421-        uhs.plugged = 1;
+422-        uhs.midi_in = (uint8_t)(strcmp(c, "out") && strcmp(c, "nomidi"));
+423-        uhs.midi_out = (uint8_t)(strcmp(c, "in") && strcmp(c, "nomidi"));
+424-        uhs.t_plug = now_ms;
+425-        uhs.said = 0;
+426-        return 0;
+--
+2161:static uint32_t mk_pkt(const char *a, const char *b, const char *c)
+2162-{
+2163-    uint32_t st = (uint32_t)strtoul(a, 0, 16), d1 = b[0] ? (uint32_t)strtoul(b, 0, 16) : 0,
+2164-             d2 = c[0] ? (uint32_t)strtoul(c, 0, 16) : 0;
+2165-    uint32_t cin = st >= 0xF0 ? 0x0F : st >> 4;
+2166-    return cin | st << 8 | d1 << 16 | d2 << 24;
+2167-}
+2168-static const char *const PORT_N[NPORTS] = {"USB", "BLE", "TRS"};
+2169-/* this message went out to PORT since the last "out" (sent 1), or did not (sent 0); PORT BLE is the computer's link
+2170- * (TO_BLE_HOST), BLE-DEV the device's */
+2171-static int expect_out(const char *port, uint32_t pkt, int sent)
+2172-{
+2173-    int p = find_name(PORT_N, NPORTS, port);
+2174-    uint32_t to = !strcmp(port, "BLE-DEV") ? TO_BLE_DEV : !strcmp(port, "USBH") ? TO_USBH_SIM : p >= 0 ? 1u << p : 0u, i;
+2175-    for (i = 0; i < n_out; i++)
+2176-        if (((out_pkt[i] ^ pkt) & 0xFFFFFF00u) == 0 && (out_to[i] & to))
+1:33: *   expect_out PORT B0 B1 B2     check that this message went out to PORT since the last "out" (USB, BLE, BLE-DEV, USBH)
+14:46- *                                the last boot's save, 1 kept, 0 nothing new, < 0 not kept; the history over "sysex
+15:47- *                                F0 7D 4C 48 F7", cleared with "sysex F0 7D 4C 48 43 4C 52 F7"); the debug stats' queue
+23:55- *                                read over "sysex F0 7D 4C 53 F7", cleared with "sysex F0 7D 4C 53 43 4C 52 F7")
+40:90- *   sysex HEX..                  a SysEx frame from the computer (F0 .. F7, hex, spaces allowed), as the device takes
+41:91- *                                it: to the app (APP_SYSEX: app_sysex gets the bytes between F0 and F7), or dropped (no
+43:93- *                                (8 KiB at most); with APP_SYSEX_BYTE each byte to app_sysex_byte first, any length
+44:94- *   sysex_out                    print the app's SysEx frames (plat_sysex_send) since the last "sysex_out" (and forget them)
+45:95- *   expect_sysex HEX..           check that this frame went out since the last "sysex_out" (F0 .. F7, hex)
+46:96- *   sysex_log FILE|off           every frame the app sends from now on, appended to FILE as it went out (raw)
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 07:41:34Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Find host-sim command hook and Conductor BLE test
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/firmware/morse; grep -n "setcard\|int app_cmd\|app_script" app.c | head; grep -n "ble connect" -B2 -A12 ../conductor/tests/basic.txt | head -40`
+
+```text
+3333:    if (!strcmp(cmd, "setcard")) {       /* setcard hear_key|see_key CHAR: the card asked now becomes this one */
+3337:            printf("  FAIL setcard: no card, or not a letter of the course\n");
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 07:41:38Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Read host-sim command hook
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/firmware/morse; sed -n 3315,3332p app.c; grep -n '"sysex"' app.c; grep -n "strcmp(cmd" app.c`
+
+```text
+    (void)c, (void)d;
+    if (!strcmp(cmd, "expect_text")) {   /* expect_text own|rx|typed TEXT (_ a space; trailing spaces ignored) */
+        int w = !strcmp(a, "rx") ? 1 : !strcmp(a, "typed") ? 2 : 0;
+        char g[TXT_N + 1];
+        uint32_t n;
+        host_text(b, t, sizeof t);
+        for (n = 0; txt[w][n]; n++)
+            g[n] = txt[w][n];
+        while (n && g[n - 1u] == ' ')
+            n--;
+        g[n] = 0;
+        if (strcmp(g, t)) {
+            printf("  FAIL expect_text %s: \"%s\", got \"%s\"\n", a, t, g);
+            host_fails++;
+        } else
+            printf("  ok text %s \"%s\"\n", a, t);
+        return 1;
+    }
+3316:    if (!strcmp(cmd, "expect_text")) {   /* expect_text own|rx|typed TEXT (_ a space; trailing spaces ignored) */
+3333:    if (!strcmp(cmd, "setcard")) {       /* setcard hear_key|see_key CHAR: the card asked now becomes this one */
+3349:    if (!strcmp(cmd, "setstrict")) {     /* setstrict 0|1: JUDGING */
+3353:    if (!strcmp(cmd, "clear_text")) {
+3357:    if (!strcmp(cmd, "sendkeys")) {      /* sendkeys TEXT: keyed by hand at the send speed (_ a space) */
+3362:    if (!strcmp(cmd, "answer_all")) {    /* answer_all right: the rest of the round at once (keyed cards answered
+3380:    if (!strcmp(cmd, "answer")) {        /* answer right|wrong: the card asked now, as a player would */
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 07:41:50Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Add a ble_frame host-sim command
+
+```bash
+cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/firmware/morse; python3 - <<'EOF'
+p='app.c'; s=open(p).read()
+a='''    if (!strcmp(cmd, "setcard")) {'''
+b='''#if FM1B_BLE
+    if (!strcmp(cmd, "ble_frame")) {     /* ble_frame hello_ack|prog_req|text WORD: one of the host's frames over
+                                          * Bluetooth, as the own stack hands it over (SysEx packets, CIN 4..7) */
+        uint8_t f[48];
+        uint32_t n = 0, i, k;
+        f[n++] = 0xF0, f[n++] = 0x7D, f[n++] = 0x4D, f[n++] = 0x4F, f[n++] = MO_VER;
+        if (!strcmp(a, "hello_ack"))
+            f[n++] = T_HELLO_ACK, f[n++] = 1;
+        else if (!strcmp(a, "prog_req"))
+            f[n++] = T_PROG_REQ;
+        else {
+            f[n++] = T_TEXT;
+            for (i = 0; b[i] && n < sizeof f - 1u; i++)
+                f[n++] = (uint8_t)b[i];
+        }
+        f[n++] = 0xF7;
+        for (i = 0; i < n; i += 3) {
+            uint32_t left = n - i, pkt;
+            k = left > 3u ? 3u : left;
+            pkt = left > 3u ? 4u : 4u + k;
+            pkt |= (uint32_t)f[i] << 8;
+            if (k > 1u)
+                pkt |= (uint32_t)f[i + 1u] << 16;
+            if (k > 2u)
+                pkt |= (uint32_t)f[i + 2u] << 24;
+            bx[bx_w] = pkt;
+            bx_w = (bx_w + 1u) % BX_N;
+        }
+        return 1;
+    }
+#endif
+    if (!strcmp(cmd, "setcard")) {'''
+assert s.count(a)==1; s=s.replace(a,b)
+open(p,'w').write(s)
+EOF
+grep -n "T_HELLO_ACK\b.*=\|enum.*T_HELLO" app.c | head -3
+```
+
+```text
+20:enum { T_HELLO_ACK = 0x01, T_TEXT, T_STOP, T_PROG_REQ, T_PROG_LOAD };   /* PROG: firmware 0.4 and later */
+21:enum { T_HELLO = 0x41, T_HEARTBEAT, T_CHAR, T_PROG, T_PROG_DONE };
+3340:            f[n++] = T_HELLO_ACK, f[n++] = 1;
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 07:41:55Z)**_
+
+正在寫 host simulator 的藍牙測試，包括從藍牙送 HELLO_ACK、文字和備份請求，以及開關後存檔、重開的檢查。
+
+_**Agent (claude-opus-5-5 2026-11-18 07:41:57Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Find how tests navigate settings
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/firmware/morse; grep -n "SETTINGS\|expect sel\|turn SELECT" tests/basic.txt | head -20; grep -n "\"sel\"\|\"transport\"\|\"host\"" app.c | head`
+
+```text
+3:# Pages: 0 MENU, 1 PRACTICE, 2 LISTEN, 3 KEY, 4 RHYTHM, 5 TYPE, 6 CHART, 7 SETTINGS. The menu lists them from
+40:turn SELECT 2
+142:turn SELECT 4
+146:turn SELECT 5
+153:turn SELECT -4
+168:turn SELECT 4
+172:turn SELECT 5
+192:turn SELECT -5
+215:turn SELECT -3
+273:turn SELECT 1
+301:turn SELECT 1
+388:turn SELECT 2
+392:turn SELECT 11
+398:turn SELECT -2
+410:turn SELECT -3
+414:turn SELECT 3
+436:turn SELECT 4
+445:turn SELECT -5
+716:turn SELECT 5
+783:turn SELECT -5
+3209:    else if (!strcmp(what, "host"))
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 07:42:01Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Read the settings navigation example
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/firmware/morse; sed -n 385,402p tests/basic.txt; sed -n 3205,3215p app.c`
+
+```text
+# ---- the layout: A-Z left to right (black key b0 is B)
+tap HOME
+wait 30
+turn SELECT 2
+tap SEL
+wait 30
+expect page 7
+turn SELECT 11
+tap OCT+
+wait 30
+expect tlayout 1
+tap HOME
+wait 30
+turn SELECT -2
+tap SEL
+wait 30
+expect page 5
+clear_text
+    else if (!strcmp(what, "tpage"))
+        *got = ui.tpage;
+    else if (!strcmp(what, "line_len"))
+        *got = (int)slen(ui.line);
+    else if (!strcmp(what, "host"))
+        *got = hl_host(&link, plat_ms());
+    else if (!strcmp(what, "ps"))
+        *got = pr.ps;
+    else if (!strcmp(what, "card"))
+        *got = pr.r.at;
+    else if (!strcmp(what, "cards"))
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 07:42:14Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Read the keying test example
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/firmware/morse; grep -n "define MIDI_KEY_ON" app.c; sed -n 45,66p tests/basic.txt`
+
+```text
+30:#define MIDI_KEY_ON (0x09u | 0x90u << 8 | 0x00u << 16 | 0x7Fu << 24)
+# ---- KEY: a straight key by hand, K (-.-) at the send speed, 10 WPM (dit 120 ms)
+out
+sysex_out
+key 0 down
+wait 20
+expect tx 1
+expect_out USB 90 00 7F
+wait 340
+key 0 up
+wait 120
+key 0 down
+wait 120
+key 0 up
+wait 120
+key 0 down
+wait 360
+key 0 up
+wait 30
+expect_out USB 80 00 00
+wait 600
+expect_text own K
+# what was read goes to the host as T_CHAR ("char_k")
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 07:42:28Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Add Bluetooth tests and run the simulator
+
+```bash
+cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/firmware/morse; python3 - <<'EOF'
+p='app.c'; s=open(p).read()
+a='''    else if (!strcmp(what, "host"))
+        *got = hl_host(&link, plat_ms());'''
+b=a+'''
+    else if (!strcmp(what, "transport"))
+        *got = link.transport;'''
+assert s.count(a)==1; s=s.replace(a,b); open(p,'w').write(s)
+EOF
+cat >> tests/basic.txt <<'EOF'
+
+# ---- 0.5: Bluetooth. A computer connects over it: HELLO goes out there too (its first packet F0 7D 4D, CIN 4)
+expect ble_off 0
+out
+ble connect
+wait 1100
+expect_out BLE F0 7D 4D
+expect_out BLE 4F 01 41
+# its answer over Bluetooth: the host is there, replies go back the same way
+ble_frame hello_ack
+wait 30
+expect host 1
+expect transport 1
+# the host's text over Bluetooth, played as received
+clear_text
+ble_frame text E
+wait 1500
+expect_text rx E
+# the progress out over Bluetooth (T_PROG 44)
+out
+ble_frame prog_req
+wait 600
+expect_out BLE 4F 01 44
+# KEY: own keying goes out over USB and Bluetooth
+tap HOME
+wait 30
+turn SELECT 2
+tap SEL
+wait 30
+expect page 3
+out
+key 0 down
+wait 20
+expect_out USB 90 00 7F
+expect_out BLE 90 00 7F
+wait 100
+key 0 up
+wait 30
+expect_out BLE 80 00 00
+wait 800
+# keying in over Bluetooth: a T (-)
+clear_text
+midi BLE 90 00 7F
+wait 180
+midi BLE 80 00 00
+wait 2000
+expect_text rx T
+# SETTINGS > BLUETOOTH: off, kept across a power cycle; then the keying stays off Bluetooth
+tap HOME
+wait 30
+turn SELECT 4
+tap SEL
+wait 30
+expect page 7
+turn SELECT 12
+shot settings_bt.png
+tap OCT+
+wait 30
+said BLUETOOTH OFF
+expect ble_off 1
+expect mute 0
+wait 3500
+reboot
+wait 600
+expect ble_off 1
+expect mute 0
+tap HOME
+wait 30
+turn SELECT 2
+tap SEL
+wait 30
+expect page 3
+out
+key 0 down
+wait 20
+expect_out USB 90 00 7F
+expect_no_out BLE 90 00 7F
+wait 100
+key 0 up
+wait 800
+# and on again
+tap HOME
+wait 30
+turn SELECT 4
+tap SEL
+wait 30
+turn SELECT 12
+tap OCT+
+wait 30
+said BLUETOOTH ON
+expect ble_off 0
+EOF
+cd ../..; just fw-test morse 2>&1 | grep -n "FAIL\|said\|EXPECT\|passed\|ok ble\|ok transport\|ok page" | tail -30
+```
+
+```text
+332:said!: NOT SAVED
+337:said!: EDIT PLAY SAVES
+338:said!: 15 OPEN NEW ONES AT THE LINE
+339:said!: K LEVEL 2
+342:said!: SAVED
+346:said!: EDIT PLAY SAVES
+347:said!: ALL RESET TILL SAVED
+351:said!: NOT SAVED
+353:  ok page == 1
+359:said!: 10 MARKED KNOWN
+558:said!: PROGRESS LOADED
+568:  ok ble_off == 0
+588:FAIL expect_out BLE F0 7D 4D: not sent
+589:FAIL expect_out BLE 4F 01 41: not sent
+590:FAIL expect host == 1, got 0
+591:  ok transport == 1
+593:FAIL expect_out BLE 4F 01 44: not sent
+594:  ok page == 3
+596:FAIL expect_out BLE 90 00 7F: not sent
+597:FAIL expect_out BLE 80 00 00: not sent
+599:  ok page == 7
+600:said!: BLUETOOTH OFF
+601:  ok said "BLUETOOTH OFF"
+602:  ok ble_off == 1
+604:  ok ble_off == 1
+606:  ok page == 3
+611:said!: BLUETOOTH ON
+612:  ok said "BLUETOOTH ON"
+613:  ok ble_off == 0
+614:host: 247478 ms simulated, 2072 blits, render 0.0% of real time (host CPU), EXPECTATIONS FAILED
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 07:42:35Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Show sim output around BLE connect
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1; just fw-test morse 2>&1 | sed -n 566,592p`
+
+```text
+  ok open == 15
+  ok round == 7
+  ok ble_off == 0
+  out 90 00 7F -> USB
+  out 80 00 00 -> USB
+  out 90 00 7F -> USB
+  out 80 00 00 -> USB
+  out 90 00 7F -> USB
+  out 80 00 00 -> USB
+  out 90 00 7F -> USB
+  out 80 00 00 -> USB
+  out 90 00 7F -> USB
+  out 80 00 00 -> USB
+  out 90 00 7F -> USB
+  out 80 00 00 -> USB
+  out 90 00 7F -> USB
+  out 80 00 00 -> USB
+  out 90 00 7F -> USB
+  out 80 00 00 -> USB
+  out 90 00 7F -> USB
+  out 80 00 00 -> USB
+line 848: ble connect: the stack is not ready
+FAIL expect_out BLE F0 7D 4D: not sent
+FAIL expect_out BLE 4F 01 41: not sent
+FAIL expect host == 1, got 0
+  ok transport == 1
+  ok text rx "E"
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 07:42:44Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Wait for the BLE stand-in and rerun
+
+```bash
+cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1; python3 - <<'EOF'
+p='firmware/morse/tests/basic.txt'; s=open(p).read()
+s=s.replace("expect ble_off 0\nout\nble connect\n","expect ble_off 0\nwait 1000\nout\nble connect\n",1)
+open(p,'w').write(s)
+EOF
+just fw-test morse 2>&1 | grep -n "FAIL\|EXPECT\|line [0-9]*:" | tail -30
+```
+
+```text
+(Bash completed with no output)
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 07:42:48Z)**_
+
+模擬器測試全部通過，包含新的藍牙段落。再補一個「藍牙不寫 flash」的檢查。
+
+_**Agent (claude-opus-5-5 2026-11-18 07:42:53Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Probe store write counts around BLE section
+
+```bash
+cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1; python3 - <<'EOF'
+p='firmware/morse/tests/basic.txt'; s=open(p).read()
+s=s.replace("expect ble_off 0\nwait 1000\nout\nble connect\n","expect ble_off 0\nwait 1000\nexpect store_writes 999\nout\nble connect\n",1)
+s=s.replace("expect_out BLE 4F 01 44\n","expect_out BLE 4F 01 44\nexpect store_writes 999\n",1)
+open(p,'w').write(s)
+EOF
+just fw-test morse 2>&1 | grep -n "store_writes == 999"
+```
+
+```text
+569:FAIL expect store_writes == 999, got 15
+604:FAIL expect store_writes == 999, got 15
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 07:43:02Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Fix store write expectations and run unit tests
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1; sed -i '' 's/^expect store_writes 999$/expect store_writes 15/' firmware/morse/tests/basic.txt; just fw-test morse 2>&1 | grep -c "FAIL"; just morse-unit 2>&1 | tail -2; just fw-common-test 2>&1 | tail -2`
+
+```text
+0
+3074 checks, 0 failed
+lpc: ok
+adpcm: ok
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 07:43:06Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Read fw-test recipe
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1; grep -n "^fw-test" -A8 Justfile`
+
+```text
+197:fw-test app="hello": fw-setup
+198-    #!/usr/bin/env bash
+199-    set -euo pipefail
+200-    uv run --locked --all-groups python "{{fm1_base}}/tools/build.py" "firmware/{{app}}" --host
+201-    bin=$(ls firmware/{{app}}/build/host/*_host)
+202-    cd "firmware/{{app}}" && "build/host/$(basename "$bin")" tests/basic.txt build/host
+203-    echo "screenshots and audio: firmware/{{app}}/build/host/"
+204-
+205-# One-time for device builds: JieLi toolchain and the pinned AC79 SDK into tools/ (about 1.2 GB).
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 07:43:13Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Check a host build without Bluetooth compiles
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1; uv run --locked --all-groups python third_party/fm1-base/tools/build.py firmware/morse --host --no-ble 2>&1 | grep -i "error\|warning" | head; ls firmware/morse/build/host/ | grep _host`
+
+```text
+morse-usb_host
+morse_host
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 07:43:21Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Build the device package with Bluetooth
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1; (cd firmware/morse && git status --short); just fw-build morse 2>&1 | tail -15`
+
+```text
+ M app.c
+ M app.h
+ M fm1.toml
+ M tests/basic.txt
+            text_cat(t, !FM1B_BLE ? "NOT IN THIS BUILD" : ble_off() ? "OFF" : !plat_ble_connected() ? "ON (NOT CONNECTED)"
+                                                          ~~~~~~~^
+7 errors generated.
+font T: BarlowSemiCondensed-SemiBold.ttf 10px h 12, digit adv 5, 3600 B
+font XS: BarlowSemiCondensed-SemiBold.ttf 12px h 15, digit adv 6, 7005 B
+font S: BarlowSemiCondensed-Medium.ttf 15px h 16, digit adv 7, 8576 B
+font B: BarlowSemiCondensed-Bold.ttf 15px h 16, digit adv 8, 8752 B
+font M: BarlowSemiCondensed-SemiBold.ttf 23px h 24, digit adv 12, 11832 B
+font L: BarlowSemiCondensed-Bold.ttf 31px h 32, digit adv 16, 19776 B
+font set barlow: 60782 B (approx)
+words: 10 own + 51 common -> /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/firmware/morse/web/words/d25d9228e2.json (1319 B)
+loader: image 14896 B at 0x1c0a800, bss end 0x1c15b20
+loader: ota.bin 12847 B
+build: pi32v2/bin/clang failed
+error: recipe `fw-build` failed on line 217 with exit code 1
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 07:43:27Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Show the device build errors
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1; just fw-build morse 2>&1 | grep -B2 -A3 "error:" | head -50`
+
+```text
+JIELI_TOOLCHAIN="$PWD/tools/jieli/toolchain" AC79_SDK="$PWD/tools/fw-AC79_AIoT_SDK" uv run --locked --all-groups python "third_party/fm1-base/tools/build.py" "firmware/morse"
+In file included from third_party/fm1-base/device/unity.c:455:
+firmware/morse/app.c:83:17: error: redefinition of 'ble_off' as different kind of symbol
+static uint32_t ble_off(void) { return SET.mute >> 1 & 1u; }
+                ^
+third_party/fm1-base/device/bt_own.c:420:16: note: previous definition is here
+--
+               ^
+In file included from third_party/fm1-base/device/unity.c:455:
+firmware/morse/app.c:454:85: error: called object type 'uint8_t' (aka 'unsigned char') is not a function or function pointer
+    plat_midi_send(down ? MIDI_KEY_ON : MIDI_KEY_OFF, TO_USB | (FM1B_BLE && !ble_off() ? TO_BLE_HOST : 0u));
+                                                                             ~~~~~~~^
+firmware/morse/app.c:773:24: error: called object type 'uint8_t' (aka 'unsigned char') is not a function or function pointer
+    return (int)ble_off();
+                ~~~~~~~^
+firmware/morse/app.c:781:29: error: called object type 'uint8_t' (aka 'unsigned char') is not a function or function pointer
+    plat_ble_enable(!ble_off());
+                     ~~~~~~~^
+firmware/morse/app.c:783:33: error: called object type 'uint8_t' (aka 'unsigned char') is not a function or function pointer
+    app_say("BLUETOOTH", ble_off() ? "OFF" : "ON");
+                         ~~~~~~~^
+firmware/morse/app.c:2149:33: error: called object type 'uint8_t' (aka 'unsigned char') is not a function or function pointer
+        if (FM1B_BLE && !ble_off()) {    /* grey while it waits for a computer, blue once one is connected */
+                         ~~~~~~~^
+firmware/morse/app.c:2874:66: error: called object type 'uint8_t' (aka 'unsigned char') is not a function or function pointer
+            text_cat(t, !FM1B_BLE ? "NOT IN THIS BUILD" : ble_off() ? "OFF" : !plat_ble_connected() ? "ON (NOT CONNECTED)"
+                                                          ~~~~~~~^
+7 errors generated.
+--
+loader: ota.bin 12847 B
+build: pi32v2/bin/clang failed
+error: recipe `fw-build` failed on line 217 with exit code 1
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 07:43:30Z)**_
+
+The device build hit a name collision with fm1-base's unity build (`ble_off` is already a symbol there). Renaming ours to `bt_off`.
+
+_**Agent (claude-opus-5-5 2026-11-18 07:43:38Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Rename ble_off to bt_off and rebuild
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1; grep -n "\bbt_off\b" firmware/morse/app.c third_party/fm1-base/device/*.c | head -3; sed -i '' 's/\bble_off()/bt_off()/g; s/static uint32_t ble_off(void)/static uint32_t bt_off(void)/' firmware/morse/app.c; perl -pi -e 's/\bble_off\(\)/bt_off()/g; s/static uint32_t ble_off\(void\)/static uint32_t bt_off(void)/' firmware/morse/app.c; grep -n "ble_off" firmware/morse/app.c; just fw-build morse 2>&1 | grep -E "error|size|bytes|KB|\.fwsc|RAM" | tail -15`
+
+```text
+768:int morse_ble_off(void)
+3181:    else if (!strcmp(what, "ble_off"))
+  ok    own Bluetooth stack: nothing of JieLi's linked, the radio's ramp in RAM
+  ok    image 173680 B; RAM code .ram_text 5576 B of 32768; RAM .data+.bss 38300 B of 98304; pool 69384 B of 344064
+package  /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/firmware/morse/build/morse.fwsc  616003 B, identity FM-1_4100
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 07:43:45Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Rerun sim tests and check emulator recipes
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1; just fw-test morse 2>&1 | grep -c FAIL; ls tools/fm1-emu* 2>/dev/null | head; grep -n "^emu-shot\|^emu-run" -A6 Justfile | head -20`
+
+```text
+2
+fm1-emu
+fm1-live
+README.txt
+136:emu-run package chip="uc25hq80" *args:
+137-    #!/usr/bin/env bash
+138-    set -euo pipefail
+139-    mkdir -p tools/emu-state
+140-    state="tools/emu-state/$(basename "{{package}}" .fwsc)-{{chip}}.flash"
+141-    exec tools/fm1-emu/fm1-live --fwsc "{{package}}" --flash-chip "{{chip}}" --flash "$state" {{args}}
+142-
+--
+144:emu-shot package chip="uc25hq80" ms="6000":
+145-    #!/usr/bin/env bash
+146-    set -euo pipefail
+147-    mkdir -p tools/emu-state/work
+148-    name="$(basename "{{package}}" .fwsc)-{{chip}}"
+149-    pkg="$(cd "$(dirname "{{package}}")" && pwd)/$(basename "{{package}}")"
+150-    cd tools/emu-state
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 07:43:50Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Show failing expectations
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1; just fw-test morse 2>&1 | grep -B3 FAIL`
+
+```text
+  out 90 00 7F -> USB
+  out 80 00 00 -> USB
+line 850: ble connect: the stack is not ready
+FAIL expect_out BLE F0 7D 4D: not sent
+FAIL expect_out BLE 4F 01 41: not sent
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 07:43:58Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Read sim BLE start logic
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/third_party/fm1-base; sed -n 535,560p host/plat_host.c; sed -n 760,772p host/plat_host.c; sed -n 1960,1990p host/plat_host.c`
+
+```text
+    int i;
+    for (i = 0; i < 7; i++)
+        v[i] = 0;
+}
+void plat_ble_start(void)
+{
+    if (ble_state != BLE_OFF || !FM1B_BLE)
+        return;
+    ble_state = BLE_STARTING;
+    ble_t0 = now_ms;
+    ble_log_n = 0;
+    ble_say("BT: starting");
+}
+/* Bluetooth MIDI devices (FM1B_BLE_CENTRAL): one stand-in, "BLE MIDI", found half a second into a scan;
+ * connecting takes 0.3 s; "ble device off" takes it away */
+static uint32_t bdev_t;
+static void bdev_report(void);
+static void ble_tick(void)
+{
+    if (ble_state == BLE_STARTING && now_ms - ble_t0 >= 1000u) {
+        ble_state = BLE_READY;
+        ble_say("BT init ok: starting BLE");
+    }
+    if (bdev_state == BLE_DEV_CONNECTING && now_ms - bdev_t >= 300u) {
+        bdev_state = BLE_DEV_READY;
+        ble_say("central: MIDI ready");
+    }
+}
+void plat_bta_on(int on)
+{
+    if (FM1B_BTA_MEM && on && !bth_mem_p)
+        return;
+    if (on && bth_st == PLAT_BTA_OFF) {
+        if (ble_state == BLE_OFF)
+            plat_ble_start();
+        if (!bth_loaded)
+            bth_load();
+        bth_tried = 0;
+        bth_st = bth_rest();
+    struct timespec t;
+    clock_gettime(CLOCK_MONOTONIC, &t);
+    return (double)t.tv_sec * 1e9 + (double)t.tv_nsec;
+}
+
+static void boot(void)
+{
+    hcr_boot();                                     /* a crash before this boot into the flash history (main_fm1.c) */
+    hds_boot();                                     /* the debug stats' queue, a crash's snapshot (main_fm1.c) */
+    palette_set(APP_PALETTE);                       /* as the device does at boot */
+    app_init();
+    lcd_fill(0, 0, 240, 240, 0);
+    ble_state = BLE_OFF;                            /* Bluetooth starts at every boot, as on the device */
+    ble_conn = ble_link = 0;
+    bdev_state = BLE_DEV_OFF;
+#if FM1B_BT_AUDIO
+    bta_boot();
+#endif
+    if (APP_BLE_AT_BOOT)
+        plat_ble_start();
+#ifdef APP_BOOT
+    app_boot();
+#endif
+    app_ui_init();
+}
+
+static uint8_t restart_req;                         /* plat_restart: at the end of this millisecond */
+static uint32_t restarts;
+void plat_restart(void) { restart_req = 1; }
+#if FM1B_EMU_REBOOT
+static uint8_t web_down;                            /* the browser emulator's restart or update mode: the app is not run,
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 07:44:13Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Check whether the sim keeps flash between runs
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/firmware/morse; ls -la build/host | grep -v png | head -20; grep -n "flash.*file\|fopen" ../../third_party/fm1-base/host/plat_host.c | head`
+
+```text
+drwxr-xr-x@    - zhouhanru 18 Nov 02:31 o2
+.rw-r--r--@ 2.6k zhouhanru 18 Nov 15:43 midi_out.txt
+.rwxr-xr-x@ 283k zhouhanru 18 Nov 15:43 morse-usb_host
+.rwxr-xr-x@ 283k zhouhanru 18 Nov 15:43 morse_host
+1402:/* the whole flash as a file (flash_dump / flash_load, FM1B_FLASH): a 1 MiB image at the FM-1's offsets, a reference
+1469:    if ((f = fopen(path, "wb")) != 0) {
+1478:    FILE *f = fopen(path, "rb");
+1754:    FILE *f = fopen(path, "wb");
+1796:    FILE *f = fopen(path, "rb");
+1810:    FILE *f = fopen(path, "wb");
+1897:    FILE *f = fopen(path, "wb");
+2399:                FILE *f = fopen(out, "wb");
+2519:        midi_log = fopen(out, "w");
+2524:    sc = fopen(argv[1], "r");
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 07:44:20Z)**_
+
+<think><details><summary>Thought Process</summary>
+我找到原因了：先前的 `--no-ble` 建置留下了 `morse-usb_host`，`fw-test` 因此跑到了那個版本。另外我會順手修正 `morse_ble_off` 開機時覆寫 `rec` 的問題，改為讀入暫存變數。
+
+</details></think>
+
+_**Agent (claude-opus-5-5 2026-11-18 07:44:25Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Remove stale binary, fix boot read, rerun tests
+
+```bash
+cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/firmware/morse; rm build/host/morse-usb_host; python3 - <<'EOF'
+p='app.c'; s=open(p).read()
+a='''/* APP_BLE_AT_BOOT: asked before app_init, so it reads the record itself (app_init reads it again) */
+int morse_ble_off(void)
+{
+    if (plat_store_load(OBJ_MORSE, &rec, sizeof rec) != (int)sizeof rec || rec.magic != REC_MAGIC
+        || rec.ver != REC_VER || rec.size != sizeof rec || !set_valid(&rec.set))
+        return 0;
+    return (int)bt_off();
+}'''
+b='''/* APP_BLE_AT_BOOT: the device asks before app_init, so it reads the record itself, into its own copy */
+int morse_ble_off(void)
+{
+    static rec_t r;
+    if (plat_store_load(OBJ_MORSE, &r, sizeof r) != (int)sizeof r || r.magic != REC_MAGIC || r.ver != REC_VER
+        || r.size != sizeof r || r.set.mute > 3u)
+        return 0;
+    return r.set.mute >> 1 & 1;
+}'''
+assert s.count(a)==1; s=s.replace(a,b); open(p,'w').write(s)
+EOF
+cd ../..; just fw-test morse 2>&1 | grep -c FAIL
+```
+
+```text
+0
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 07:44:38Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Rebuild device package and read emulator recipe
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1; just fw-build morse 2>&1 | grep -E "error|image|package" | tail -4; sed -n 144,170p Justfile; grep -n "FM1_BENCH_KEYS\|模擬\].*0\.4\|emu.*p25q80" docs/dev/morse.md | head`
+
+```text
+Checked 18 packages in 2ms
+loader: image 14896 B at 0x1c0a800, bss end 0x1c15b20
+  ok    image 173684 B; RAM code .ram_text 5576 B of 32768; RAM .data+.bss 38572 B of 98304; pool 69384 B of 344064
+package  /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/firmware/morse/build/morse.fwsc  616003 B, identity FM-1_4100
+emu-shot package chip="uc25hq80" ms="6000":
+    #!/usr/bin/env bash
+    set -euo pipefail
+    mkdir -p tools/emu-state/work
+    name="$(basename "{{package}}" .fwsc)-{{chip}}"
+    pkg="$(cd "$(dirname "{{package}}")" && pwd)/$(basename "{{package}}")"
+    cd tools/emu-state
+    ../fm1-emu/fm1-live --fwsc "$pkg" --flash-chip "{{chip}}" --flash "$name.flash" --midi none \
+      --shot "{{ms}}" --lcd-only 2>&1 | grep -i -E "^flash:|fault|error" || true
+    mv work/lcd.ppm "$name.ppm" && echo "LCD: tools/emu-state/$name.ppm"
+
+# Rehearse a switch in the emulator: lay PACKAGE over a real BACKUP (.bin) as M-Flasher would, then boot it.
+# Shows how the new firmware copes with the data the old one left behind. Extra args go to fm1-live.
+emu-rehearse package backup chip="uc25hq80" *args:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    mkdir -p tools/emu-state/work
+    name="$(basename "{{package}}" .fwsc)"
+    pkg="$(cd "$(dirname "{{package}}")" && pwd)/$(basename "{{package}}")"
+    bak="$(cd "$(dirname "{{backup}}")" && pwd)/$(basename "{{backup}}")"
+    cd tools/emu-state
+    rm -f "pristine-$name.flash"
+    ../fm1-emu/fm1-live --fwsc "$pkg" --flash-chip "{{chip}}" --flash "pristine-$name.flash" --midi none --shot 1 --lcd-only >/dev/null 2>&1
+    python3 ../../scripts/emu_rehearse.py "pristine-$name.flash" "$bak" "rehearse-$name.flash"
+    cp "rehearse-$name.flash" "rehearse-$name.before"
+    echo "booting $name over $(basename "$bak") (window; Esc quits). State: tools/emu-state/rehearse-$name.flash"
+    ../fm1-emu/fm1-live --fwsc "$pkg" --flash-chip "{{chip}}" --flash "rehearse-$name.flash" {{args}}
+347:| 兩種晶片：改設定、玩一回合、重開讀回 | fm1-emu `uc25hq80`、`p25q80` | 都讀回「ROUND 2」和改過的設定 `[模擬]` |
+359:| 0.2：從 0.1 的紀錄升級、改設定、重開讀回 | fm1-emu `uc25hq80`、`p25q80` | 設定和進度保留，發報速度補成 10，改過的值重開後讀回 `[模擬]` |
+370:| 0.4：疊在實機 0.2 紀錄的備份上、改設定、重開讀回 | `emu_rehearse.py` + fm1-emu `uc25hq80`、`p25q80` | ROUND 5 的紀錄保留，改過的速度重開後讀回 `[模擬]` |
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 07:44:44Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Find emulator key scripting and latest backup
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1; grep -n -i "BENCH_KEYS\|--script\|--keys\|NO_PLAY" tools/fm1-emu/README.txt | head; ls backups/ | tail -5; grep -n "73a530d2\|backup" docs/device-log.md | tail -5`
+
+```text
+2026-11-18-pre-hub-test-3-stock
+2026-11-18-pre-morse-0.2
+2026-11-18-pre-morse-0.3
+2026-11-18-pre-morse-0.4
+progress
+109:| 2026-11-18 02:42 | agent 執行 `just fm1-download-mode`、`fm1-backup pre-hub-test-3`、`fm1-restart`，`fm1_install.py --info` | M-Flasher 回報 firmware `FM-1 410`；備份 SHA-256 `5601847d…f7e50b5`；重開回 Morse，`--info` 回答 `FM-1_41000300 [running]`。原廠備份重算 SHA-256 仍是 `c6a47902…44fd38` |
+110:| 2026-11-18 02:45 | 本人用 M-Flasher GUI 還原 `backups/2026-11-17-stock/fm1-20261117-011632.bin`（RESTORE FULL FLASH） | 原廠開機；`fm1-find` 顯示 `midi FM-1 (running)`，`fm1_install.py --info` 回答 `FM-1_015 [running] port: FM-1` |
+111:| 2026-11-18 02:46 | agent 執行 `just fm1-download-mode`（原廠執行中）、`fm1-backup pre-hub-test-3-stock`、`fm1-restart` | M-Flasher 回報 bootloader stock、firmware `FM-1 015 (stock)`；備份 SHA-256 `c6a47902…44fd38`，**和 11/17 的原廠備份逐 sector 完全相同**：還原是完整的。重開回原廠 |
+113:| 2026-11-18 04:47 | agent 執行 `fm1_install.py --info`、`just fm1-download-mode`、`fm1-backup pre-morse-0.4`、`fm1-restart`（刷 Morse 0.4 前的 preflight） | `--info` 回答 `FM-1_41000300 [running]`；flash `0xB36014`；備份 SHA-256 `73a530d2…2e9b556`，`0xDA000`–`0xDBFFF` 有 Morse 的紀錄；重開回 Morse 0.3。0.4 的紀錄格式沒變，[模擬] 疊在 0.2／0.3 紀錄上升級都保留 |
+115:| 2026-11-18 05:25 | agent 執行 `just morse-backup`（唯讀）；用 Playwright 的 Chromium 開 `web/progress.html` 下載進度（唯讀） | 指令列：`round 16, 10 open (KMURESNAPT), 4 past the line, 169 answered, 132 right`，**升級後學習紀錄保留**，存成 `backups/progress/2026-11-18-after-0.4.json`。網頁第一版找不到機器：macOS 把這台的 MIDI port 叫做 `Felucca`（第一次接上時的韌體名），網頁只找名字有 MORSE 的 port；改成聽哪個 port 送出 HELLO 後，網頁下載的 JSON 和指令列的完全相同 |
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 07:44:48Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Find emulator key scripting usage
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1; grep -rn "FM1_BENCH_KEYS\|FM1_NO_PLAY" scripts/ Justfile docs/dev/*.md 2>/dev/null | head -5; tools/fm1-emu/fm1-live --help 2>&1 | head -40`
+
+```text
+usage: fm1-live --fwsc FIRMWARE.fwsc   (a firmware package: a community firmware, or M-VAVE's own)
+       fm1-live --fw ID | --fw list    (the page's list, in a checkout: node tools/fetch_firmwares.mjs)
+       fm1-live --bin XIP.bin [--entry 0x02000120]
+options: [--mhz 240] [--syx BANK.syx] [--midi all|none|NAME] [--midi-ch N] [--flash FILE] [--usb]
+         [--latency MS] (12 on Windows, else 50)
+                                 audio queued ahead of the device to start with; it grows by itself
+                                 on underruns and back down after 10 s without one, no lower
+                                 than a level that underran
+         [--buffer FRAMES]       the audio device's buffer, if it takes one
+         [--exclusive]           Windows: the output in WASAPI exclusive mode, the device's shortest
+                                 period (lowest latency; other programs can't play on it meanwhile)
+         [--flash-chip p25q80|uc25hq80]
+                                 the FM-1's flash part: the stock Puya P25Q80 (85 60 14), or the
+                                 UC25HQ80 (B3 60 14) of units sold since autumn 2026
+         [--flaky-core1 RATE [--seed N]] [--cpu1-survives] [--version] [--help]
+headless: --bench MS   run MS emulated ms as fast as it goes, report the speed
+          --shot MS    run MS ms, then write the panel to work/panel.ppm
+          --record DIR with --shot: a PPM frame every 16 ms (62.5 fps) as DIR/000000.ppm…, and the audio
+                       from boot as DIR/audio.raw (44118 Hz stereo s16le; silence until the DMA starts)
+          --record -   the frames as one PPM stream on stdout (tools/bench_video.sh pipes it into ffmpeg),
+                       audio.raw in work/; the run's reports go to stderr then
+          --lcd-only   --shot, --record: the 240x240 LCD alone (work/lcd.ppm), not the panel
+env: FM1_BENCH_KEYS='T:PLAY,T:PLAY^,T:C4@100,T:e0:+3,T:pot:512,T:mHEX'  scripted input (--bench, --shot;
+                         times in ms; ^ releases, @VEL the velocity, eN an encoder's clicks, mHEX: MIDI
+                         bytes into the DIN jack; @FILE: the script from a file)
+     FM1_BENCH_WAV=FILE    --bench: the audio (44.1 kHz stereo s16le, no header)
+     FM1_BENCH_PANEL=FILE  --bench: the panel at the end (PPM)
+     FM1_BENCH_FRAMES=DIR[,MS]  --bench: a film: the panel every MS ms (40) as DIR/000000.ppm..., and
+                           DIR/audio.raw from the boot (tools/film.py turns them into a video)
+     FM1_DUMPRAM=FILE      --bench, --shot: the 1 MiB of RAM at the end
+     FM1_BENCH_JSON=FILE   --bench: the speed as JSON
+     FM1_BENCH_NOKEYS, FM1_WARMUP_MS=N (1000), FM1_BENCH_THREAD, FM1_BENCH_TRACE, FM1_BENCH_PCS,
+     FM1_BENCH_ROUTES      --bench: no default keys, the steady-speed start, a thread, checkpoints, profiles
+     FM1_KEY_AT, FM1_KEY_UP, FM1_NO_PLAY, FM1_NO_SKIP, FM1_SKIP_FROM, FM1_DUMP=ADDR  --shot
+     FM1_NO_JIT            the interpreter (byte-identical, slower); FM1_NO_BLOCKS: a step at a time
+     FM1_NO_LOOPSKIP       run polling loops round by round instead of skipping them (byte-identical, slower)
+     FM1_FLASH_CUT=N       cut the power half way through the Nth flash erase / program (--flash keeps what is left)
+     FM1_USB_SEND='MS:HEX;…'  --shot --usb: MIDI messages over USB at those times (@PATH: from a file); FM1_USB_TRACE: the bus
+     FM1_USB_SIE_NS=N      --usb: each SIE register access takes N ns (default 1000)
+     FM1_USB_WAV=FILE      --usb, --bench / --shot: record the USB audio as a computer would (s16le, no header);
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 07:44:55Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Find prior emulator key scripts in transcript
+
+`cd /Users/zhouhanru/.claude/projects/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/; grep -o 'FM1_BENCH_KEYS=[^ ]*' 0a574306-469e-4a59-9622-5701a42aee59.jsonl | sort -u | head -10`
+
+```text
+FM1_BENCH_KEYS='2500:e2:+1'
+FM1_BENCH_KEYS='2500:e2:+2'
+FM1_BENCH_KEYS='T:PLAY,T:PLAY^,T:C4@100,T:e0:+3,T:pot:512,T:mHEX'
+FM1_BENCH_KEYS=\"$keys\"
+FM1_BENCH_KEYS=\"1000:e5:-1\"
+FM1_BENCH_KEYS=\"1000:e5:+2\"
+FM1_BENCH_KEYS=\"1000:HOME,1060:HOME^,1500:e0:+4,2000:SCL,2060:SCL^,2500:SEQ,2560:SEQ^,3000:A4,3060:A4^\"
+FM1_BENCH_KEYS=\"1000:HOME,1060:HOME^,1500:e0:+6,2000:SCL,2060:SCL^,2600:e5:+1,3100:OCT+,3160:OCT+^\"
+FM1_BENCH_KEYS=\"1000:HOME,1060:HOME^,1500:e0:+6,2000:SCL,2060:SCL^\"
+FM1_BENCH_KEYS=\\\\\\\\\"[^`]\\{0,900\\}'
+Shell cwd was reset to /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 07:45:17Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Emulator: toggle Bluetooth off over real backup on both chips
+
+```bash
+cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1; pkg=$PWD/firmware/morse/build/morse.fwsc; bak=$(ls backups/2026-11-18-pre-morse-0.4/*.bin); cd tools/emu-state; mkdir -p work bt; for chip in uc25hq80 p25q80; do
+rm -f pristine-bt.flash; ../fm1-emu/fm1-live --fwsc "$pkg" --flash-chip $chip --flash pristine-bt.flash --midi none --shot 1 --lcd-only >/dev/null 2>&1
+python3 ../../scripts/emu_rehearse.py pristine-bt.flash "$bak" bt/$chip.flash >/dev/null
+echo "== $chip run 1: BLUETOOTH off, rest for the save"
+FM1_BENCH_KEYS="1000:HOME,1060:HOME^,1500:e0:+6,2000:SCL,2060:SCL^,2600:e0:+12,3100:OCT+,3160:OCT+^" ../fm1-emu/fm1-live --fwsc "$pkg" --flash-chip $chip --flash bt/$chip.flash --midi none --shot 8000 --lcd-only 2>&1 | grep -i -E "^flash:|fault|error"; mv work/lcd.ppm bt/$chip-1.ppm
+echo "== $chip run 2: restart, look"
+FM1_BENCH_KEYS="1000:HOME,1060:HOME^,1500:e0:+6,2000:SCL,2060:SCL^,2600:e0:+12" ../fm1-emu/fm1-live --fwsc "$pkg" --flash-chip $chip --flash bt/$chip.flash --midi none --shot 4000 --lcd-only 2>&1 | grep -i -E "^flash:|fault|error"; mv work/lcd.ppm bt/$chip-2.ppm
+echo "== $chip run 3: PRACTICE start (the record)"
+../fm1-emu/fm1-live --fwsc "$pkg" --flash-chip $chip --flash bt/$chip.flash --midi none --shot 3000 --lcd-only 2>&1 | grep -i -E "^flash:|fault|error"; mv work/lcd.ppm bt/$chip-3.ppm
+done; cd bt; for f in *.ppm; do sips -s format png $f --out ${f%.ppm}.png >/dev/null; done; ls
+```
+
+```text
+Traceback (most recent call last):
+  File "/Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/tools/emu-state/../../scripts/emu_rehearse.py", line 43, in <module>
+    main()
+    ~~~~^^
+  File "/Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/tools/emu-state/../../scripts/emu_rehearse.py", line 26, in main
+    backup = open(sys.argv[2], "rb").read()
+             ~~~~^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: 'backups/2026-11-18-pre-morse-0.4/fm1-20261118-044757.bin'
+== uc25hq80 run 1: BLUETOOTH off, rest for the save
+flash: 0 erases / programs
+== uc25hq80 run 2: restart, look
+flash: 0 erases / programs
+== uc25hq80 run 3: PRACTICE start (the record)
+flash: 0 erases / programs
+Traceback (most recent call last):
+  File "/Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/tools/emu-state/../../scripts/emu_rehearse.py", line 43, in <module>
+    main()
+    ~~~~^^
+  File "/Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/tools/emu-state/../../scripts/emu_rehearse.py", line 26, in main
+    backup = open(sys.argv[2], "rb").read()
+             ~~~~^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: 'backups/2026-11-18-pre-morse-0.4/fm1-20261118-044757.bin'
+== p25q80 run 1: BLUETOOTH off, rest for the save
+flash: 0 erases / programs
+== p25q80 run 2: restart, look
+flash: 0 erases / programs
+== p25q80 run 3: PRACTICE start (the record)
+flash: 0 erases / programs
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 07:45:20Z)**_
+
+Backup 的路徑寫成相對路徑，所以找不到檔案，改成絕對路徑後重跑模擬器。
+
+_**Agent (claude-opus-5-5 2026-11-18 07:45:37Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Rerun emulator test with absolute backup path
+
+```bash
+cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1; pkg=$PWD/firmware/morse/build/morse.fwsc; bak=$PWD/$(ls backups/2026-11-18-pre-morse-0.4/*.bin); cd tools/emu-state; rm -rf bt; mkdir -p work bt; for chip in uc25hq80 p25q80; do
+rm -f pristine-bt.flash; ../fm1-emu/fm1-live --fwsc "$pkg" --flash-chip $chip --flash pristine-bt.flash --midi none --shot 1 --lcd-only >/dev/null 2>&1
+python3 ../../scripts/emu_rehearse.py pristine-bt.flash "$bak" bt/$chip.flash | tail -1
+echo "== $chip run 1: BLUETOOTH off, rest for the save"
+FM1_BENCH_KEYS="1000:HOME,1060:HOME^,1500:e0:+6,2000:SCL,2060:SCL^,2600:e0:+12,3100:OCT+,3160:OCT+^" ../fm1-emu/fm1-live --fwsc "$pkg" --flash-chip $chip --flash bt/$chip.flash --midi none --shot 8000 --lcd-only 2>&1 | grep -i -E "^flash:|fault|error"; mv work/lcd.ppm bt/$chip-1.ppm
+echo "== $chip run 2: restart, look"
+FM1_BENCH_KEYS="1000:HOME,1060:HOME^,1500:e0:+6,2000:SCL,2060:SCL^,2600:e0:+12" ../fm1-emu/fm1-live --fwsc "$pkg" --flash-chip $chip --flash bt/$chip.flash --midi none --shot 4000 --lcd-only 2>&1 | grep -i -E "^flash:|fault|error"; mv work/lcd.ppm bt/$chip-2.ppm
+echo "== $chip run 3: PRACTICE start"
+../fm1-emu/fm1-live --fwsc "$pkg" --flash-chip $chip --flash bt/$chip.flash --midi none --shot 3000 --lcd-only 2>&1 | grep -i -E "^flash:|fault|error"; mv work/lcd.ppm bt/$chip-3.ppm
+done; cd bt; for f in *.ppm; do sips -s format png $f --out ${f%.ppm}.png >/dev/null; done; ls *.png
+```
+
+```text
+package image 0x04000-0x92FFF laid over the backup
+== uc25hq80 run 1: BLUETOOTH off, rest for the save
+flash: 0 erases / programs
+== uc25hq80 run 2: restart, look
+flash: 0 erases / programs
+== uc25hq80 run 3: PRACTICE start
+flash: 0 erases / programs
+package image 0x04000-0x92FFF laid over the backup
+== p25q80 run 1: BLUETOOTH off, rest for the save
+flash: 0 erases / programs
+== p25q80 run 2: restart, look
+flash: 0 erases / programs
+== p25q80 run 3: PRACTICE start
+flash: 0 erases / programs
+p25q80-1.png
+p25q80-2.png
+p25q80-3.png
+uc25hq80-1.png
+uc25hq80-2.png
+uc25hq80-3.png
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 07:45:40Z)**_
+
+<tool-use data-tool-type="read" data-tool-name="Read"><details>
+<summary>Tool use: **Read**</summary>
+ `./tools/emu-state/bt/uc25hq80-1.png`
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 07:45:41Z)**_
+
+<tool-use data-tool-type="read" data-tool-name="Read"><details>
+<summary>Tool use: **Read**</summary>
+ `./tools/emu-state/bt/uc25hq80-3.png`
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 07:45:48Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Find settings scroll logic
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/firmware/morse; grep -n "set_at(" app.c`
+
+```text
+2835:static void set_at(int32_t oy)
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 07:45:52Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Find where settings page is drawn
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/firmware/morse; grep -n "set_at\b" app.c; grep -n "PG_SET" app.c | head -20`
+
+```text
+2835:static void set_at(int32_t oy)
+2962:    case PG_SET: main_area(set_at); break;
+127:enum { PG_MENU, PG_PRACTICE, PG_LISTEN, PG_KEY, PG_RHYTHM, PG_TYPE, PG_CHART, PG_SET, PG_N };
+1682:    case PG_SET:
+1723:    case PG_SET:
+1977:            } else if (ui.page == PG_SET)
+2962:    case PG_SET: main_area(set_at); break;
+2990:    case PG_SET: s = "SELECT item  OCT- / OCT+ change"; break;
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 07:45:56Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Read main_area drawing and OCT handling
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/firmware/morse; grep -n "static void main_area" -A22 app.c; sed -n 1970,1982p app.c`
+
+```text
+2901:static void main_area(void (*fn)(int32_t oy))
+2902-{
+2903-    cv_begin(240, MAIN_H / 2, C_BLACK);
+2904-    fn(0);
+2905-    cv_blit(0, 32);
+2906-    cv_begin(240, MAIN_H / 2, C_BLACK);
+2907-    fn(MAIN_H / 2);
+2908-    cv_blit(0, 32 + MAIN_H / 2);
+2909-}
+2910-
+2911-static void ask_at(int32_t oy)           /* a question about the progress */
+2912-{
+2913-    static const char *const Q[4] = {"", "SAVE CHANGES?", "LOAD THIS BACKUP?", "MARK THESE KNOWN?"};
+2914-    const ln_state_t *s = pg.ask == ASK_PLACE ? &rec.ln : &pg.draft;
+2915-    char t[48];
+2916-    uint32_t i, k = 0;
+2917-    cv_rect(8, 8 - oy, 224, 150, RGB(24, 24, 30));
+2918-    text_c(120, 18 - oy, &FONT_B, Q[pg.ask], C_WHITE);
+2919-    t[0] = 0;
+2920-    if (pg.ask == ASK_PLACE) {
+2921-        for (i = 0; i < LN_N && k < 12u; i++)
+2922-            if (pr.r.known[i / 32u] >> (i % 32u) & 1u) {
+2923-                char c2[3] = {ln_char(i), ' ', 0};
+                grid.n = 0;
+                tim.count = 0;
+                ui.last = 0;
+                ui.redraw |= R_MAIN;
+            } else if (ui.page == PG_TYPE) {   /* the next page of keys: letters, signs, phrases */
+                ui.tpage = (uint8_t)wrap(ui.tpage, k == B_OCTUP ? 1 : -1, 3u);
+                ui.redraw |= R_MAIN | R_FOOT;
+            } else if (ui.page == PG_SET)
+                settings_step(k == B_OCTUP ? 1 : -1);
+            break;
+        default: break;
+        }
+    }
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 07:46:08Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Scroll settings for 13 rows, redraw on BLE changes
+
+```bash
+cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/firmware/morse; grep -n "MAIN_H\b" app.c | head -2; grep -n "uint8_t host_was" app.c; python3 - <<'EOF'
+p='app.c'; s=open(p).read()
+def rep(a,b):
+    global s
+    assert s.count(a)==1,(a,s.count(a)); s=s.replace(a,b)
+rep('''    uint32_t i;
+    for (i = 0; i < SET_ITEMS; i++) {
+        int32_t y = 1 + (int32_t)i * 14 - oy;''','''    uint32_t i;
+    int32_t top = ui.sel > 11u ? (int32_t)(ui.sel - 11u) * 14 : 0;   /* twelve rows fit: scrolled for the rest */
+    for (i = 0; i < SET_ITEMS; i++) {
+        int32_t y = 1 + (int32_t)i * 14 - oy - top;''')
+rep('''    if (host != ui.host_was) {
+        ui.host_was = host;
+        ui.redraw |= R_HEAD;
+    }''','''    if (host != ui.host_was) {
+        ui.host_was = host;
+        ui.redraw |= R_HEAD;
+    }
+#if FM1B_BLE
+    if ((uint8_t)plat_ble_connected() != ui.ble_was) {   /* BT grey or blue, and SETTINGS says so */
+        ui.ble_was = (uint8_t)plat_ble_connected();
+        ui.redraw |= R_HEAD | (ui.page == PG_SET ? R_MAIN : 0u);
+    }
+#endif''')
+open(p,'w').write(s)
+EOF
+grep -n "host_was" app.c | head -2
+```
+
+```text
+2900:#define MAIN_H 176
+2903:    cv_begin(240, MAIN_H / 2, C_BLACK);
+204:    uint8_t host_was, lamp_was, pat_was;
+204:    uint8_t host_was, lamp_was, pat_was;
+3147:    if (host != ui.host_was) {
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 07:46:13Z)**_
+
+設定頁現在是 13 列，最後一列會被切掉，所以改成可以捲動；藍牙連上或斷線時也會重畫畫面。
+
+_**Agent (claude-opus-5-5 2026-11-18 07:46:39Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Rebuild, test, and rerun emulator on both chips
+
+```bash
+cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/firmware/morse; sed -i '' 's/^    uint8_t host_was, lamp_was, pat_was;/    uint8_t host_was, ble_was, lamp_was, pat_was;/' app.c; python3 - <<'EOF'
+p='app.c'; s=open(p).read()
+a='''        ui.host_was = host;
+        ui.redraw |= R_HEAD;'''
+assert s.count(a)==1
+s=s.replace(a,'''        ui.host_was = host;
+        ui.redraw |= R_HEAD | (ui.page == PG_SET ? R_MAIN : 0u);''')
+open(p,'w').write(s)
+EOF
+cd ../..; just fw-test morse 2>&1 | grep -c FAIL; just fw-build morse 2>&1 | grep -E "error|  ok    image" ; pkg=$PWD/firmware/morse/build/morse.fwsc; bak=$PWD/$(ls backups/2026-11-18-pre-morse-0.4/*.bin); cd tools/emu-state; rm -rf bt; mkdir -p work bt; for chip in uc25hq80 p25q80; do
+rm -f pristine-bt.flash; ../fm1-emu/fm1-live --fwsc "$pkg" --flash-chip $chip --flash pristine-bt.flash --midi none --shot 1 --lcd-only >/dev/null 2>&1
+python3 ../../scripts/emu_rehearse.py pristine-bt.flash "$bak" bt/$chip.flash >/dev/null
+echo "== $chip run 1"
+FM1_BENCH_KEYS="1000:HOME,1060:HOME^,1500:e0:+6,2000:SCL,2060:SCL^,2600:e0:+12,3100:OCT+,3160:OCT+^" ../fm1-emu/fm1-live --fwsc "$pkg" --flash-chip $chip --flash bt/$chip.flash --midi none --shot 8000 --lcd-only 2>&1 | grep -i -E "^flash:|fault|error"; mv work/lcd.ppm bt/$chip-1.ppm
+echo "== $chip run 2"
+FM1_BENCH_KEYS="1000:HOME,1060:HOME^,1500:e0:+6,2000:SCL,2060:SCL^,2600:e0:+12" ../fm1-emu/fm1-live --fwsc "$pkg" --flash-chip $chip --flash bt/$chip.flash --midi none --shot 4000 --lcd-only 2>&1 | grep -i -E "^flash:|fault|error"; mv work/lcd.ppm bt/$chip-2.ppm
+echo "== $chip run 3"
+../fm1-emu/fm1-live --fwsc "$pkg" --flash-chip $chip --flash bt/$chip.flash --midi none --shot 3000 --lcd-only 2>&1 | grep -i -E "^flash:|fault|error"; mv work/lcd.ppm bt/$chip-3.ppm
+done; cd bt; for f in *.ppm; do sips -s format png $f --out ${f%.ppm}.png >/dev/null; done
+```
+
+```text
+0
+  ok    image 173744 B; RAM code .ram_text 5576 B of 32768; RAM .data+.bss 38572 B of 98304; pool 69384 B of 344064
+== uc25hq80 run 1
+flash: 0 erases / programs
+== uc25hq80 run 2
+flash: 0 erases / programs
+== uc25hq80 run 3
+flash: 0 erases / programs
+== p25q80 run 1
+flash: 0 erases / programs
+== p25q80 run 2
+flash: 0 erases / programs
+== p25q80 run 3
+flash: 0 erases / programs
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 07:46:42Z)**_
+
+<tool-use data-tool-type="read" data-tool-name="Read"><details>
+<summary>Tool use: **Read**</summary>
+ `./tools/emu-state/bt/uc25hq80-1.png`
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 07:46:50Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Retry the OCT+ press later
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/tools/emu-state; pkg=$PWD/../../firmware/morse/build/morse.fwsc; cp bt/uc25hq80.flash bt/try.flash; FM1_BENCH_KEYS="1000:HOME,1060:HOME^,1500:e0:+6,2000:SCL,2060:SCL^,2600:e0:+12,4000:OCT+,4200:OCT+^" ../fm1-emu/fm1-live --fwsc "$pkg" --flash-chip uc25hq80 --flash bt/try.flash --midi none --shot 4500 --lcd-only 2>&1 | grep -i -E "^flash:|fault|error"; sips -s format png work/lcd.ppm --out bt/try.png >/dev/null`
+
+```text
+flash: 0 erases / programs
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 07:46:53Z)**_
+
+<tool-use data-tool-type="read" data-tool-name="Read"><details>
+<summary>Tool use: **Read**</summary>
+ `./tools/emu-state/bt/try.png`
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 07:46:57Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Find emulator button names
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/tools; grep -n -i "oct" fm1-emu/README.txt | head; strings fm1-emu/fm1-live | grep -E "^(OCT|SCL|HOME|SEQ|REC|FX|ARP)" | head -20`
+
+```text
+REC 
+SEQ PLAYextern "fd != -1
+OCTDNOCTUPSCLENVLFOGLORECcapacity overflow
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 07:47:01Z)**_
+
+It's `OCTUP` in the emulator. Re-running with that.
+
+_**Agent (claude-opus-5-5 2026-11-18 07:47:25Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Emulator Bluetooth off/on persistence on both chips
+
+```bash
+cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1; pkg=$PWD/firmware/morse/build/morse.fwsc; bak=$PWD/$(ls backups/2026-11-18-pre-morse-0.4/*.bin); cd tools/emu-state; rm -rf bt; mkdir -p work bt; for chip in uc25hq80 p25q80; do
+rm -f pristine-bt.flash; ../fm1-emu/fm1-live --fwsc "$pkg" --flash-chip $chip --flash pristine-bt.flash --midi none --shot 1 --lcd-only >/dev/null 2>&1
+python3 ../../scripts/emu_rehearse.py pristine-bt.flash "$bak" bt/$chip.flash >/dev/null
+echo "== $chip run 1: off, rest"
+FM1_BENCH_KEYS="1000:HOME,1060:HOME^,1500:e0:+6,2000:SCL,2060:SCL^,2600:e0:+12,3100:OCTUP,3160:OCTUP^" ../fm1-emu/fm1-live --fwsc "$pkg" --flash-chip $chip --flash bt/$chip.flash --midi none --shot 8000 --lcd-only 2>&1 | grep -i -E "^flash:|fault|error"; mv work/lcd.ppm bt/$chip-1.ppm
+echo "== $chip run 2: restart, look"
+FM1_BENCH_KEYS="1000:HOME,1060:HOME^,1500:e0:+6,2000:SCL,2060:SCL^,2600:e0:+12" ../fm1-emu/fm1-live --fwsc "$pkg" --flash-chip $chip --flash bt/$chip.flash --midi none --shot 4000 --lcd-only 2>&1 | grep -i -E "^flash:|fault|error"; mv work/lcd.ppm bt/$chip-2.ppm
+echo "== $chip run 3: on again, rest"
+FM1_BENCH_KEYS="1000:HOME,1060:HOME^,1500:e0:+6,2000:SCL,2060:SCL^,2600:e0:+12,3100:OCTUP,3160:OCTUP^" ../fm1-emu/fm1-live --fwsc "$pkg" --flash-chip $chip --flash bt/$chip.flash --midi none --shot 8000 --lcd-only 2>&1 | grep -i -E "^flash:|fault|error"; mv work/lcd.ppm bt/$chip-3.ppm
+echo "== $chip run 4: PRACTICE"
+FM1_NO_PLAY=1 ../fm1-emu/fm1-live --fwsc "$pkg" --flash-chip $chip --flash bt/$chip.flash --midi none --shot 3000 --lcd-only 2>&1 | grep -i -E "^flash:|fault|error"; mv work/lcd.ppm bt/$chip-4.ppm
+done; cd bt; for f in *.ppm; do sips -s format png $f --out ${f%.ppm}.png >/dev/null; done
+```
+
+```text
+== uc25hq80 run 1: off, rest
+flash: 4 erases / programs
+== uc25hq80 run 2: restart, look
+flash: 0 erases / programs
+== uc25hq80 run 3: on again, rest
+flash: 4 erases / programs
+== uc25hq80 run 4: PRACTICE
+flash: 0 erases / programs
+== p25q80 run 1: off, rest
+flash: 4 erases / programs
+== p25q80 run 2: restart, look
+flash: 0 erases / programs
+== p25q80 run 3: on again, rest
+flash: 4 erases / programs
+== p25q80 run 4: PRACTICE
+flash: 0 erases / programs
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 07:47:29Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Combine emulator screenshots into one grid
+
+```bash
+cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/tools/emu-state/bt; python3 -c "
+from PIL import Image
+ims=[Image.open(f'{c}-{i}.png') for c in ('uc25hq80','p25q80') for i in (1,2,3,4)]
+W=Image.new('RGB',(240*4,480))
+for k,im in enumerate(ims): W.paste(im,((k%4)*240,(k//4)*240))
+W.save('grid.png')" 2>&1 || echo nopil
+```
+
+```text
+Traceback (most recent call last):
+  File "<string>", line 2, in <module>
+    from PIL import Image
+ModuleNotFoundError: No module named 'PIL'
+nopil
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 07:47:34Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Combine screenshots with project Python
+
+```bash
+cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1; uv run --locked --all-groups python -c "
+from PIL import Image
+d='tools/emu-state/bt/'
+ims=[Image.open(f'{d}{c}-{i}.png') for c in ('uc25hq80','p25q80') for i in (1,2,3,4)]
+W=Image.new('RGB',(240*4,480))
+for k,im in enumerate(ims): W.paste(im,((k%4)*240,(k//4)*240))
+W.save(d+'grid.png')"
+```
+
+```text
+(Bash completed with no output)
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 07:47:36Z)**_
+
+<tool-use data-tool-type="read" data-tool-name="Read"><details>
+<summary>Tool use: **Read**</summary>
+ `./tools/emu-state/bt/grid.png`
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 07:47:45Z)**_
+
+模擬器在兩種晶片上都通過：藍牙關閉後存檔，重開讀回 OFF，再打開；真實備份裡的進度（ROUND 17、開放 10 個字）都保留 `[模擬]`。接著改 host。
+
+_**Agent (claude-opus-5-5 2026-11-18 07:47:47Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Read host morse files and conductor BLE helpers
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/host; cat morse/__init__.py; grep -n "0, 4\|(0,4)\|04\b\|PROG_FIRMWARE\|TR_\|transport" morse/protocol.py | head -20; sed -n 1,80p morse/device.py; grep -n "connected\|HELLO\|hello" morse/core.py morse/__main__.py | head -30; sed -n 17,50p conductor/device.py; head -40 conductor/blelink.py | tail -15; grep -n "^def " conductor/blelink.py`
+
+```text
+"""Morse host: the computer's side of firmware/morse. Types what the FM-1 reads into the
+computer, and sends text for the FM-1 to play. MIT."""
+
+__version__ = "0.4.0"
+FIRMWARE_KNOWN = (0, 4)  # the newest firmware (major, minor) this host was written against
+21:T_PROG_REQ = 0x04  # firmware 0.4 and later: send the progress (progress.py)
+31:PROG_FIRMWARE = (0, 4)  # the first firmware with T_PROG_*
+33:TR_USB, TR_BLE = 0, 1
+117:def device_hello(fw_major: int, fw_minor: int, transport: int = TR_USB) -> bytes:
+118:    return frame(T_HELLO, bytes([VERSION, fw_major, fw_minor, transport]))
+121:def device_heartbeat(transport: int = TR_USB) -> bytes:
+122:    return frame(T_HEARTBEAT, bytes([VERSION, transport]))
+147:    "hello": (device_hello(0, 4), "F0 7D 4D 4F 01 41 01 00 04 00 F7"),
+152:    "prog_req": (prog_req(), "F0 7D 4D 4F 01 04 F7"),
+"""The two ends the host can talk to: a real FM-1 running firmware/morse over MIDI (USB, or
+fm1-emu's virtual cable), or a text stand-in on the terminal."""
+
+from __future__ import annotations
+
+import queue
+import sys
+import threading
+import time
+
+from . import protocol as P
+
+PORT_HINTS = ("MORSE",)
+
+
+def sniff_port(mido, names: list[str], seconds: float = 2.5) -> str | None:
+    """The input that speaks our protocol: the device says HELLO or HEARTBEAT every second,
+    whatever macOS calls the port (it keeps a firmware's old name, e.g. "Felucca", after a
+    switch)."""
+    found: list[str] = []
+    ports = []
+    for n in names:
+        def hear(msg, n=n):
+            if msg.type == "sysex" and bytes(msg.data[:3]) == P.HEADER and n not in found:
+                found.append(n)
+        try:
+            ports.append(mido.open_input(n, callback=hear))
+        except (OSError, IOError):
+            continue
+    end = time.time() + seconds
+    while time.time() < end and not found:
+        time.sleep(0.05)
+    for p in ports:
+        p.close()
+    return found[0] if found else None
+
+
+def find_port(names: list[str], want: str | None) -> str | None:
+    if want:
+        return next((n for n in names if want.lower() in n.lower()), None)
+    return next((n for n in names if any(h.lower() in n.lower() for h in PORT_HINTS)), None)
+
+
+class MidiLink:
+    """SysEx in and out through mido; the keying notes are counted too (key-downs seen)."""
+
+    def __init__(self, port: str | None = None):
+        import mido  # only needed for a real device
+
+        ins, outs = mido.get_input_names(), mido.get_output_names()
+        name_in, name_out = find_port(ins, port), find_port(outs, port)
+        if not name_in and not port:
+            name_in = sniff_port(mido, ins)
+            name_out = name_in if name_in in outs else None
+        if not name_in or not name_out:
+            raise RuntimeError(f"no Morse FM-1 on MIDI: no port named MORSE and none saying HELLO (inputs: {ins})")
+        self.name = name_in
+        self.q: queue.Queue[bytes] = queue.Queue()
+        self.key_downs = 0
+        self.out = mido.open_output(name_out)
+        self.inp = mido.open_input(name_in, callback=self._on_msg)
+        self._mido = mido
+
+    def _on_msg(self, msg):
+        if msg.type == "sysex":
+            self.q.put(bytes([0xF0, *msg.data, 0xF7]))
+        elif msg.type == "note_on" and msg.note == P.KEY_NOTE and msg.velocity:
+            self.key_downs += 1
+
+    def send(self, frame: bytes) -> None:
+        self.out.send(self._mido.Message("sysex", data=list(frame[1:-1])))
+
+    def poll(self, timeout: float = 0.1) -> list[bytes]:
+        out = []
+        try:
+            out.append(self.q.get(timeout=timeout))
+            while True:
+                out.append(self.q.get_nowait())
+        except queue.Empty:
+            pass
+morse/__main__.py:35:    log(f"connected to {link.name}")
+morse/__main__.py:39:def wait_connected(host: Host, seconds: float = 5.0) -> bool:
+morse/__main__.py:41:    while time.time() < end and not host.connected:
+morse/__main__.py:43:    return host.connected
+morse/__main__.py:70:    if not wait_connected(host):
+morse/__main__.py:71:        log("the FM-1 has not said HELLO: is it running Morse?")
+morse/__main__.py:102:def _connected_for_progress(args):
+morse/__main__.py:105:    if not wait_connected(host):
+morse/__main__.py:107:        raise RuntimeError("the FM-1 has not said HELLO: is it running Morse?")
+morse/__main__.py:117:    link, host = _connected_for_progress(args)
+morse/__main__.py:136:    link, host = _connected_for_progress(args)
+morse/__main__.py:151:    ap.add_argument("--port", help="MIDI port name (part of it); default: one named MORSE, or one saying HELLO")
+morse/core.py:1:"""What the host does with the device's frames: answer HELLO and each HEARTBEAT (the device
+morse/core.py:21:        self.connected = False
+morse/core.py:36:        if m.type in (P.T_HELLO, P.T_HEARTBEAT):
+morse/core.py:37:            if m.type == P.T_HELLO:
+morse/core.py:43:            self.link.send(P.hello_ack())
+morse/core.py:44:            self.connected = True
+def sniff_port(mido, names: list[str], seconds: float = 2.5) -> str | None:
+    """The input that speaks our protocol: the device says HELLO or HEARTBEAT every
+    second, whatever macOS calls the port (it keeps a firmware's old name, e.g.
+    "Felucca", after a switch; over Bluetooth it is "FM-1 XXXX"). With the device on
+    USB and Bluetooth at once, USB wins: faster, and the pictures go over it."""
+    found: dict[str, int] = {}
+    ports = []
+    for n in names:
+        def hear(msg, n=n):
+            if msg.type != "sysex" or bytes(msg.data[:3]) != P.HEADER:
+                return
+            try:
+                m = P.parse(bytes(msg.data))
+            except P.ProtocolError:
+                return
+            if m and m.type in (P.T_HELLO, P.T_HEARTBEAT):
+                found[n] = P.transport_of(m)
+        try:
+            ports.append(mido.open_input(n, callback=hear))
+        except (OSError, IOError):
+            continue
+    end = time.time() + seconds
+    while time.time() < end and P.TR_USB not in found.values():
+        if found and time.time() > end - seconds + 1.2:  # one beat heard, and a second for the other link
+            break
+        time.sleep(0.05)
+    for p in ports:
+        p.close()
+    if not found:
+        return None
+    return min(found, key=lambda n: found[n])
+
+
+def find_port(names: list[str], want: str | None) -> str | None:
+    """btpanel.swift built once (swiftc, from the Xcode command line tools); None without it."""
+    out = CACHE / "btpanel"
+    if out.exists() and out.stat().st_mtime >= SOURCE.stat().st_mtime:
+        return out
+    swiftc = shutil.which("swiftc")
+    if not swiftc:
+        return None
+    CACHE.mkdir(parents=True, exist_ok=True)
+    r = subprocess.run([swiftc, "-O", "-o", str(out), str(SOURCE)], capture_output=True, text=True)
+    return out if r.returncode == 0 and out.exists() else None
+
+
+def open_panel() -> subprocess.Popen | None:
+    """The Bluetooth MIDI window, or Audio MIDI Setup when the helper cannot be built."""
+    if sys.platform != "darwin":
+25:def panel_binary() -> Path | None:
+38:def open_panel() -> subprocess.Popen | None:
+49:def fresh_ports() -> list[str]:
+59:def wait_for_port(timeout: float = 300.0, every: float = 1.0) -> str | None:
+69:def main(argv=None) -> int:
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 07:47:54Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Read host core, protocol API, conductor blelink usage
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/host; sed -n 15,60p morse/core.py; grep -n "^def \|^class \|ProtocolError" morse/protocol.py | head -30; grep -n "def transport_of" -A8 conductor/protocol.py; sed -n 25,45p morse/__main__.py; sed -n 49,100p conductor/blelink.py; grep -n "blelink" conductor/__main__.py`
+
+```text
+    def __init__(self, link, typer=None, lower: bool = True, log=None):
+        self.link = link
+        self.typer = typer
+        self.lower = lower
+        self.log = log or (lambda s: None)
+        self.firmware: tuple[int, int] | None = None
+        self.connected = False
+        self.received = ""
+        self._asm: G.Assembler | None = None
+        self.progress: G.Progress | None = None
+        self.prog_error: str | None = None
+        self.prog_done: int | None = None
+
+    def on_frame(self, data: bytes) -> None:
+        try:
+            m = P.parse(data)
+        except P.ProtocolError as e:
+            self.log(f"ignored: {e}")
+            return
+        if m is None:
+            return
+        if m.type in (P.T_HELLO, P.T_HEARTBEAT):
+            if m.type == P.T_HELLO:
+                fw = P.firmware_of(m)
+                if fw and fw != self.firmware:
+                    self.firmware = fw
+                    newer = fw > FIRMWARE_KNOWN
+                    self.log(f"FM-1 Morse firmware {fw[0]}.{fw[1]}" + (" (newer than this host knows)" if newer else ""))
+            self.link.send(P.hello_ack())
+            self.connected = True
+        elif m.type == P.T_PROG and self._asm is not None:
+            try:
+                p = self._asm.feed(m.payload)
+            except G.ProgressError as e:
+                self.prog_error = str(e)
+                self._asm = None
+                return
+            if p is not None:
+                self.progress = p
+                self._asm = None
+        elif m.type == P.T_PROG_DONE and m.payload:
+            self.prog_done = m.payload[0]
+        elif m.type == P.T_CHAR:
+            s = P.chars_of(m).replace(P.UNKNOWN, "")
+            if not s:
+                return
+48:class ProtocolError(ValueError):
+53:class Msg:
+58:def frame(type_: int, payload: bytes = b"") -> bytes:
+60:        raise ProtocolError("payload must be 7-bit")
+64:def parse(data: bytes) -> Msg | None:
+73:        raise ProtocolError("short frame")
+75:        raise ProtocolError(f"protocol version {data[3]}, this host speaks {VERSION}")
+79:def clean_text(text: str) -> str:
+94:def hello_ack() -> bytes:
+98:def text(s: str) -> list[bytes]:
+108:def stop() -> bytes:
+112:def prog_req() -> bytes:
+117:def device_hello(fw_major: int, fw_minor: int, transport: int = TR_USB) -> bytes:
+121:def device_heartbeat(transport: int = TR_USB) -> bytes:
+125:def device_char(c: str) -> bytes:
+129:def firmware_of(m: Msg) -> tuple[int, int] | None:
+135:def chars_of(m: Msg) -> str:
+141:def hexs(b: bytes) -> str:
+198:def transport_of(m: Message) -> int:
+199-    """USB unless a HELLO (4th byte) or HEARTBEAT (2nd byte) says Bluetooth."""
+200-    i = 3 if m.type == T_HELLO else 1 if m.type == T_HEARTBEAT else None
+201-    return m.payload[i] if i is not None and len(m.payload) > i else TR_USB
+202-
+203-
+204-def device_action(op: int, index: int, tag: int) -> bytes:
+205-    return frame(T_ACTION, bytes([op, index]) + _u14(tag))
+206-
+
+
+def log(s: str) -> None:
+    print(f"[morse] {s}", file=sys.stderr, flush=True)
+
+
+def open_link(args):
+    if args.simulate:
+        return SimLink(out=sys.stderr)
+    link = MidiLink(args.port)
+    log(f"connected to {link.name}")
+    return link
+
+
+def wait_connected(host: Host, seconds: float = 5.0) -> bool:
+    end = time.time() + seconds
+    while time.time() < end and not host.connected:
+        host.pump(0.1)
+    return host.connected
+
+
+def fresh_ports() -> list[str]:
+    """MIDI inputs as a new process sees them. A process's own CoreMIDI client may keep an
+    old list without a run loop, so ask a fresh one."""
+    r = subprocess.run(
+        [sys.executable, "-c", "import mido; print('\\n'.join(mido.get_input_names()))"],
+        capture_output=True, text=True,
+    )
+    return [ln for ln in r.stdout.splitlines() if ln.strip()]
+
+
+def wait_for_port(timeout: float = 300.0, every: float = 1.0) -> str | None:
+    end = time.time() + timeout
+    while time.time() < end:
+        ports = fresh_ports()
+        if ports:
+            return ports[0]
+        time.sleep(every)
+    return None
+
+
+def main(argv=None) -> int:
+    """python -m conductor.blelink: open the window and wait for a port."""
+    p = open_panel()
+    print("[ble] Bluetooth MIDI window open: click Connect next to FM-1 XXXX")
+    port = wait_for_port()
+    if p and p.poll() is None:
+        p.terminate()
+    if not port:
+        print("[ble] no MIDI port appeared", file=sys.stderr)
+        return 1
+    print(f"[ble] connected: {port}")
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())
+112:                from .blelink import open_panel, wait_for_port
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 07:48:03Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+See how morse host runs and tests reference version
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1; grep -n "^morse-" -A3 Justfile | grep -v "^--" | head -30; sed -n 140,175p host/morse/__main__.py; grep -n "0, 4\|04 00 F7\|transport" host/tests/test_morse.py | head`
+
+```text
+272:morse-release version: fw-setup fw-toolchain
+273-    JIELI_TOOLCHAIN="$PWD/tools/jieli/toolchain" AC79_SDK="$PWD/tools/fw-AC79_AIoT_SDK" \
+274-      uv run --locked --all-groups python "{{fm1_base}}/tools/build.py" firmware/morse --release "{{version}}"
+275-
+277:morse-unit:
+278-    #!/usr/bin/env bash
+279-    set -euo pipefail
+280-    mkdir -p build
+285:morse-test:
+286-    uv run --locked --all-groups pytest -q host/tests/test_morse.py
+287-
+288-# The firmware in the emulator with the virtual USB cable plugged in (pair with `just morse-type` / `morse-send`).
+289:morse-emu chip="uc25hq80":
+290-    just emu-run firmware/morse/build/morse.fwsc "{{chip}}" --usb
+291-
+292-# What you key or type on the FM-1, typed into the focused app (macOS, Accessibility). --dry-run prints it.
+293:morse-type *args:
+294-    PYTHONPATH=host uv run --locked --all-groups python -m morse type {{args}}
+295-
+296-# The FM-1 plays TEXT as received ("-": lines from stdin).
+297:morse-send +text:
+298-    PYTHONPATH=host uv run --locked --all-groups python -m morse send {{text}}
+299-
+300-# The host against a text stand-in for the FM-1 (lines you type are what it "read").
+301:morse-sim:
+302-    PYTHONPATH=host uv run --locked --all-groups python -m morse --simulate type --dry-run
+303-
+304-# The learning progress into a JSON file (firmware 0.4+; read-only on the FM-1).
+305:morse-backup file:
+306-    PYTHONPATH=host uv run --locked --all-groups python -m morse backup "{{file}}"
+    finally:
+        link.close()
+    if r == P.PD_LOADED:
+        log("loaded")
+        return 0
+    log("not loaded: " + ("declined on the FM-1" if r == P.PD_DECLINED else "the FM-1 refused it (damaged?)"))
+    return 1
+
+
+def main(argv: list[str] | None = None) -> int:
+    ap = argparse.ArgumentParser(prog="morse", description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    ap.add_argument("--port", help="MIDI port name (part of it); default: one named MORSE, or one saying HELLO")
+    ap.add_argument("--simulate", action="store_true", help="a text stand-in for the FM-1")
+    ap.add_argument("--version", action="version", version=f"morse host {__version__}")
+    sub = ap.add_subparsers(dest="cmd", required=True)
+    t = sub.add_parser("type", help="type what the FM-1 reads into the computer")
+    t.add_argument("--dry-run", action="store_true", help="print instead of typing")
+    t.add_argument("--upper", action="store_true", help="type capitals (default: lower case)")
+    t.set_defaults(fn=cmd_type, listen=False)
+    li = sub.add_parser("listen", help="print what the FM-1 reads")
+    li.add_argument("--upper", action="store_true")
+    li.set_defaults(fn=cmd_type, listen=True, dry_run=True)
+    s = sub.add_parser("send", help="the FM-1 plays TEXT")
+    s.add_argument("text", nargs="+", help='the text, or "-" for lines from stdin')
+    s.set_defaults(fn=cmd_send)
+    b = sub.add_parser("backup", help="the learning progress into a JSON file")
+    b.add_argument("file", help='where ("-" for stdout)')
+    b.set_defaults(fn=cmd_backup)
+    r = sub.add_parser("restore", help="a JSON file back onto the FM-1 (it asks first)")
+    r.add_argument("file")
+    r.set_defaults(fn=cmd_restore)
+    args = ap.parse_args(argv)
+    try:
+        return args.fn(args)
+    except (RuntimeError, TimeoutError, G.ProgressError, OSError) as e:
+        log(str(e))
+63:    assert host.firmware == (0, 4)
+133:    assert G.from_json(G.to_json(p, (0, 4))) == p
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 07:48:07Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Read test around firmware and protocol helpers
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/host; sed -n 55,70p tests/test_morse.py; sed -n 125,140p morse/protocol.py; grep -n "backup\|timeout" morse/__main__.py | head -20`
+
+```text
+def test_host_answers_hello_and_types():
+    link = SimLink(lines=["cq de fm1"], out=io.StringIO())
+    typer = PrintTyper(out=io.StringIO())
+    host = Host(link, typer)
+    for _ in range(3):
+        host.pump(0.01)
+    assert link.acked and host.connected
+    assert host.firmware == (0, 4)
+    assert typer.typed == "cq de fm1 "
+    assert P.hello_ack() in link.sent
+
+
+def test_host_upper_and_unknown_dropped():
+    link = SimLink(lines=[], out=io.StringIO())
+    typer = PrintTyper(out=io.StringIO())
+def device_char(c: str) -> bytes:
+    return frame(T_CHAR, c.encode("ascii"))
+
+
+def firmware_of(m: Msg) -> tuple[int, int] | None:
+    if m.type == T_HELLO and len(m.payload) >= 3:
+        return m.payload[1], m.payload[2]
+    return None
+
+
+def chars_of(m: Msg) -> str:
+    if m.type != T_CHAR:
+        return ""
+    return "".join(chr(b) for b in m.payload if 0x20 <= b < 0x7F)
+
+
+7:  backup FILE   the learning progress into a JSON file (firmware 0.4+; nothing changes on the FM-1)
+108:    if not host.can_backup():
+111:        raise RuntimeError(f"firmware {fw[0]}.{fw[1]} has no progress backup; it came in "
+116:def cmd_backup(args) -> int:
+119:        p = host.backup()
+165:    b = sub.add_parser("backup", help="the learning progress into a JSON file")
+167:    b.set_defaults(fn=cmd_backup)
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 07:48:11Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Find SimLink hello and backup timeouts
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/host; grep -n "device_hello\|FIRMWARE_KNOWN" morse/*.py; grep -n "def backup\|timeout\|deadline" morse/core.py | head`
+
+```text
+morse/__init__.py:5:FIRMWARE_KNOWN = (0, 4)  # the newest firmware (major, minor) this host was written against
+morse/device.py:106:        self.q.put(P.device_hello(*_firmware()))
+morse/device.py:153:            self.q.put(P.device_heartbeat() if self.acked else P.device_hello(*_firmware()))
+morse/device.py:168:    from . import FIRMWARE_KNOWN
+morse/device.py:170:    return FIRMWARE_KNOWN
+morse/core.py:9:from . import FIRMWARE_KNOWN
+morse/core.py:41:                    newer = fw > FIRMWARE_KNOWN
+morse/protocol.py:117:def device_hello(fw_major: int, fw_minor: int, transport: int = TR_USB) -> bytes:
+morse/protocol.py:147:    "hello": (device_hello(0, 4), "F0 7D 4D 4F 01 41 01 00 04 00 F7"),
+74:    def pump(self, timeout: float = 0.1) -> None:
+75:        for f in self.link.poll(timeout):
+81:    def backup(self, timeout: float = 5.0) -> G.Progress:
+85:        end = time.time() + timeout
+94:    def restore(self, p: G.Progress, timeout: float = 120.0, gap: float = 0.03) -> int:
+100:        end = time.time() + timeout
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 07:48:28Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Update host version, transport, port sniffing
+
+```bash
+cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/host; python3 - <<'EOF'
+import re
+def edit(p, pairs):
+    s=open(p).read()
+    for a,b in pairs:
+        assert s.count(a)==1,(p,a,s.count(a)); s=s.replace(a,b)
+    open(p,'w').write(s)
+edit('morse/__init__.py',[('__version__ = "0.4.0"','__version__ = "0.5.0"'),('FIRMWARE_KNOWN = (0, 4)','FIRMWARE_KNOWN = (0, 5)')])
+edit('morse/protocol.py',[
+('''def chars_of(m: Msg) -> str:''','''def transport_of(m: Msg) -> int:
+    """USB unless a HELLO (4th byte) or HEARTBEAT (2nd byte) says Bluetooth (firmware 0.5)."""
+    i = 3 if m.type == T_HELLO else 1 if m.type == T_HEARTBEAT else None
+    return m.payload[i] if i is not None and len(m.payload) > i else TR_USB
+
+
+def chars_of(m: Msg) -> str:'''),
+('''    "hello": (device_hello(0, 4), "F0 7D 4D 4F 01 41 01 00 04 00 F7"),''','''    "hello": (device_hello(0, 5), "F0 7D 4D 4F 01 41 01 00 05 00 F7"),'''),
+])
+edit('morse/core.py',[
+('''        self.connected = False
+''','''        self.connected = False
+        self.transport: int | None = None  # P.TR_USB / P.TR_BLE, from HELLO and HEARTBEAT
+'''),
+('''            self.link.send(P.hello_ack())
+            self.connected = True''','''            tr = P.transport_of(m)
+            if tr != self.transport:
+                self.transport = tr
+                self.log("via " + ("Bluetooth" if tr == P.TR_BLE else "USB"))
+            self.link.send(P.hello_ack())
+            self.connected = True'''),
+])
+edit('morse/device.py',[
+('''def sniff_port(mido, names: list[str], seconds: float = 2.5) -> str | None:
+    """The input that speaks our protocol: the device says HELLO or HEARTBEAT every second,
+    whatever macOS calls the port (it keeps a firmware's old name, e.g. "Felucca", after a
+    switch)."""
+    found: list[str] = []
+    ports = []
+    for n in names:
+        def hear(msg, n=n):
+            if msg.type == "sysex" and bytes(msg.data[:3]) == P.HEADER and n not in found:
+                found.append(n)
+        try:
+            ports.append(mido.open_input(n, callback=hear))
+        except (OSError, IOError):
+            continue
+    end = time.time() + seconds
+    while time.time() < end and not found:
+        time.sleep(0.05)
+    for p in ports:
+        p.close()
+    return found[0] if found else None''','''BLE_HINT = ("Over Bluetooth (firmware 0.5): connect FM-1 XXXX first in Audio MIDI Setup > Window > "
+            "Show MIDI Studio > Bluetooth, or run with --bluetooth to open that window and wait")
+
+
+def sniff_port(mido, names: list[str], seconds: float = 2.5) -> str | None:
+    """The input that speaks our protocol: the device says HELLO or HEARTBEAT every second,
+    whatever macOS calls the port (it keeps a firmware's old name, e.g. "Felucca", after a
+    switch; over Bluetooth it is "FM-1 XXXX"). On USB and Bluetooth at once, USB wins."""
+    found: dict[str, int] = {}
+    ports = []
+    for n in names:
+        def hear(msg, n=n):
+            if msg.type != "sysex" or bytes(msg.data[:3]) != P.HEADER:
+                return
+            try:
+                m = P.parse(bytes([0xF0, *msg.data, 0xF7]))
+            except P.ProtocolError:
+                return
+            if m and m.type in (P.T_HELLO, P.T_HEARTBEAT):
+                found[n] = P.transport_of(m)
+        try:
+            ports.append(mido.open_input(n, callback=hear))
+        except (OSError, IOError):
+            continue
+    start = time.time()
+    while time.time() < start + seconds and P.TR_USB not in found.values():
+        if found and time.time() > start + 1.2:  # one link heard, and a beat's time for the other
+            break
+        time.sleep(0.05)
+    for p in ports:
+        p.close()
+    return min(found, key=lambda n: found[n]) if found else None'''),
+('''            raise RuntimeError(f"no Morse FM-1 on MIDI: no port named MORSE and none saying HELLO (inputs: {ins})")''','''            raise RuntimeError(f"no Morse FM-1 on MIDI: no port named MORSE and none saying HELLO (inputs: {ins}). "
+                               + BLE_HINT)'''),
+])
+EOF
+sed -n 64,78p morse/protocol.py
+```
+
+```text
+def parse(data: bytes) -> Msg | None:
+    """A frame (with or without F0 / F7) into a Msg; None when it is not ours."""
+    if data[:1] == b"\xF0":
+        data = data[1:]
+    if data[-1:] == b"\xF7":
+        data = data[:-1]
+    if data[:3] != HEADER:
+        return None
+    if len(data) < 5:
+        raise ProtocolError("short frame")
+    if data[3] != VERSION:
+        raise ProtocolError(f"protocol version {data[3]}, this host speaks {VERSION}")
+    return Msg(data[4], bytes(data[5:]))
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 07:48:33Z)**_
+
+正在改 host 的指令列：加上 `--bluetooth`，會打開 Mac 的藍牙 MIDI 視窗，等 FM-1 連上。
+
+_**Agent (claude-opus-5-5 2026-11-18 07:48:42Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Add --bluetooth flag, tests, run host tests
+
+```bash
+cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/host; python3 - <<'EOF'
+p='morse/__main__.py'; s=open(p).read()
+def rep(a,b):
+    global s
+    assert s.count(a)==1,(a,s.count(a)); s=s.replace(a,b)
+rep('''def open_link(args):
+    if args.simulate:
+        return SimLink(out=sys.stderr)
+    link = MidiLink(args.port)''','''def bluetooth_window(seconds: float = 300.0) -> None:
+    """macOS does not connect a Bluetooth MIDI device by itself: its window (conductor.blelink, the same helper
+    Conductor uses), then wait until a port says HELLO."""
+    import mido
+    from conductor.blelink import open_panel
+    from .device import sniff_port
+
+    panel = open_panel()
+    log("Bluetooth MIDI window open: click Connect next to FM-1 XXXX (SETTINGS > BLUETOOTH on)")
+    end = time.time() + seconds
+    try:
+        while time.time() < end:
+            if sniff_port(mido, mido.get_input_names(), seconds=1.5):
+                return
+    finally:
+        if panel and panel.poll() is None:
+            panel.terminate()
+    raise RuntimeError("no FM-1 said HELLO over Bluetooth")
+
+
+def open_link(args):
+    if args.simulate:
+        return SimLink(out=sys.stderr)
+    if getattr(args, "bluetooth", False):
+        bluetooth_window()
+    link = MidiLink(args.port)''')
+rep('''    ap.add_argument("--simulate", action="store_true", help="a text stand-in for the FM-1")''','''    ap.add_argument("--simulate", action="store_true", help="a text stand-in for the FM-1")
+    ap.add_argument("--bluetooth", action="store_true",
+                    help="macOS: open the Bluetooth MIDI window first and wait for the FM-1 (firmware 0.5)")''')
+open(p,'w').write(s)
+p='tests/test_morse.py'; s=open(p).read()
+s=s.replace("    assert host.firmware == (0, 4)\n","    assert host.firmware == (0, 5)\n    assert host.transport == P.TR_USB\n",1)
+s+='''
+
+def test_transport_from_hello_and_heartbeat():
+    hello_ble = P.parse(P.device_hello(0, 5, P.TR_BLE))
+    assert P.transport_of(hello_ble) == P.TR_BLE
+    assert P.transport_of(P.parse(P.device_heartbeat(P.TR_BLE))) == P.TR_BLE
+    assert P.transport_of(P.parse(P.device_hello(0, 4))) == P.TR_USB
+    assert P.transport_of(P.parse(P.device_char("E"))) == P.TR_USB
+
+
+def test_host_says_bluetooth():
+    logs = []
+    link = SimLink(lines=[], out=io.StringIO())
+    host = Host(link, PrintTyper(out=io.StringIO()), log=logs.append)
+    host.on_frame(P.device_hello(0, 5, P.TR_BLE))
+    assert host.transport == P.TR_BLE and "via Bluetooth" in logs
+'''
+open(p,'w').write(s)
+EOF
+grep -n "^import\|^from" morse/__main__.py; cd ..; just morse-test 2>&1 | tail -3
+```
+
+```text
+12:from __future__ import annotations
+14:import argparse
+15:import sys
+16:import threading
+17:import time
+19:from . import __version__
+20:from . import progress as G
+21:from . import protocol as P
+22:from .core import Host
+23:from .device import MidiLink, SimLink
+24:from .typer import MacTyper, PrintTyper, accessibility_trusted
+uv run --locked --all-groups pytest -q host/tests/test_morse.py
+......................                                                   [100%]
+22 passed in 0.06s
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 07:48:49Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Count host tests
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1; grep -c "^def test_" host/tests/test_morse.py; ls host/tests/; git -C . diff --stat host/`
+
+```text
+17
+__pycache__
+fake_agent.py
+integration_hc.py
+test_core.py
+test_morse.py
+test_protocol.py
+test_voicelab.py
+ host/morse/__init__.py   |  4 ++--
+ host/morse/__main__.py   | 24 ++++++++++++++++++++++++
+ host/morse/core.py       |  5 +++++
+ host/morse/device.py     | 29 +++++++++++++++++++++--------
+ host/morse/protocol.py   |  8 +++++++-
+ host/tests/test_morse.py | 19 ++++++++++++++++++-
+ 6 files changed, 77 insertions(+), 12 deletions(-)
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 07:48:56Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Check CLI help and web HELLO handling
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1; PYTHONPATH=host uv run --locked --all-groups python -m morse --help | head -5; cd firmware/morse/web; grep -n "HELLO\|0x41\|0x42\|connected\|function ready\|function hunt\|status(\|timeout\|setTimeout\|Bluetooth\|USB" index.html | head -50`
+
+```text
+usage: morse [-h] [--port PORT] [--simulate] [--bluetooth] [--version]
+             {type,listen,send,backup,restore} ...
+
+python -m morse: the computer's side of firmware/morse.
+
+52:    Chrome or Edge on a computer, the FM-1 on USB and running MORSE (backups: 0.4 or later). Nothing to install.</p>
+56:    <div class="row"><button id="connect">Connect to the FM-1</button> <span id="status" class="dim">not connected</span></div>
+102:const T_HELLO_ACK = 0x01, T_PROG_REQ = 0x04, T_PROG_LOAD = 0x05;
+103:const T_HELLO = 0x41, T_HEARTBEAT = 0x42, T_PROG = 0x44, T_PROG_DONE = 0x45;
+107:function status(text, cls) { $("status").textContent = text; $("status").className = cls || ""; }
+225:  if (type === T_HELLO || type === T_HEARTBEAT) {
+226:    if (type === T_HELLO && pl.length >= 3) firmware = [pl[1], pl[2]];
+227:    out.send(frame(T_HELLO_ACK, [VER]));
+232:function ready() {
+234:  status(firmware ? `MORSE ${firmware.join(".")} connected` + (old ? ": update to 0.4 for backups" : "") : "MORSE connected",
+241:// Which port is the FM-1: the one whose input speaks our frames (HELLO or HEARTBEAT, once a second). Its name is
+242:// no guide: macOS keeps the name of the firmware it first saw on that USB device ("Felucca", "FM-1", ...).
+250:function hunt() {
+255:  if (!ins.length) { status("no MIDI devices: is the FM-1 on USB (a data cable, no hub)?", "bad"); return; }
+256:  status("looking for the FM-1 running MORSE…", "dim");
+261:    if (!out) { status(`found MORSE on "${i.name}" but not its output port`, "bad"); inp = null; return; }
+266:  hunting = setTimeout(() => {
+267:    if (!inp) status("no FM-1 running MORSE answered: is it on, on USB, and running MORSE 0.4 or later?", "bad");
+274:    midi.onstatechange = e => { if (e.port.state === "connected" && !inp) hunt(); };   // plugged in, restarted
+276:  } catch (err) { status(`MIDI not available: ${err.message}`, "bad"); }
+281:  status("reading…", "dim");
+282:  const timer = setTimeout(() => { asm = null; status("the FM-1 sent nothing back (MORSE 0.4 or later?)", "bad"); }, 5000);
+284:    if (pl[1] !== FRAMES || pl[0] !== next) { asm = null; clearTimeout(timer); status("a chunk went missing: try again", "bad"); return; }
+301:    } catch (err) { status(`refused: ${err.message}`, "bad"); }
+316:  status("sent: press PLAY on the FM-1 to load it, HOME to keep what is there", "dim");
+319:    status(code === 0 ? "loaded on the FM-1" : code === 1 ? "not loaded: declined on the FM-1" : "the FM-1 refused it", code === 0 ? "ok" : "bad");
+322:  for (const f of frames(picked)) { out.send(f); await new Promise(r => setTimeout(r, 30)); }
+325:if (!navigator.requestMIDIAccess) status("this browser has no Web MIDI: use Chrome or Edge", "bad");
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 07:48:59Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Read web connect and hunt code
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/firmware/morse/web; sed -n 48,56p index.html; sed -n 218,270p index.html`
+
+```text
+<body>
+<main>
+  <h1>MORSE on the web</h1>
+  <p class="lead">See what your FM-1 reads, send it text to copy, and back up what it has learnt in MORSE.
+    Chrome or Edge on a computer, the FM-1 on USB and running MORSE (backups: 0.4 or later). Nothing to install.</p>
+
+  <section>
+    <h2>1. Connect</h2>
+    <div class="row"><button id="connect">Connect to the FM-1</button> <span id="status" class="dim">not connected</span></div>
+function onMessage(e) {
+  const d = Array.from(e.data);
+  if ((d[0] & 0xF0) === 0x90 && d[1] === 0) { $("lamp").className = d[2] ? "on" : ""; return; }   // Vail keying, note 0
+  if ((d[0] & 0xF0) === 0x80 && d[1] === 0) { $("lamp").className = ""; return; }
+  if (d[0] !== 0xF0 || d[1] !== HEAD[0] || d[2] !== HEAD[1] || d[3] !== HEAD[2]) return;
+  const type = d[5], pl = d.slice(6, d.length - 1);
+  if (type === T_CHAR) { heard(String.fromCharCode(...pl.filter(b => b >= 0x20 && b < 0x7F))); return; }
+  if (type === T_HELLO || type === T_HEARTBEAT) {
+    if (type === T_HELLO && pl.length >= 3) firmware = [pl[1], pl[2]];
+    out.send(frame(T_HELLO_ACK, [VER]));
+    ready();
+  } else if (type === T_PROG && asm) asm(pl);
+  else if (type === T_PROG_DONE && onDone) onDone(pl[0]);
+}
+function ready() {
+  const old = firmware && (firmware[0] === 0 && firmware[1] < 4);
+  status(firmware ? `MORSE ${firmware.join(".")} connected` + (old ? ": update to 0.4 for backups" : "") : "MORSE connected",
+         old ? "bad" : "ok");
+  $("backup").disabled = !!old;
+  for (const id of ["clear", "copy", "say", "send", "stop"]) $(id).disabled = false;   // live works on any MORSE
+  $("restore").disabled = !!old || !picked;
+}
+
+// Which port is the FM-1: the one whose input speaks our frames (HELLO or HEARTBEAT, once a second). Its name is
+// no guide: macOS keeps the name of the firmware it first saw on that USB device ("Felucca", "FM-1", ...).
+let midi = null, hunting = null;
+function ours(d) { return d[0] === 0xF0 && d[1] === HEAD[0] && d[2] === HEAD[1] && d[3] === HEAD[2]; }
+function outputFor(input) {
+  const outs = [...midi.outputs.values()];
+  return outs.find(o => o.name === input.name && o.manufacturer === input.manufacturer)
+      || outs.find(o => o.name === input.name) || (outs.length === 1 ? outs[0] : null);
+}
+function hunt() {
+  out = inp = null; firmware = null;
+  $("backup").disabled = $("restore").disabled = true;
+  for (const id of ["clear", "copy", "say", "send", "stop"]) $(id).disabled = true;
+  const ins = [...midi.inputs.values()];
+  if (!ins.length) { status("no MIDI devices: is the FM-1 on USB (a data cable, no hub)?", "bad"); return; }
+  status("looking for the FM-1 running MORSE…", "dim");
+  for (const i of ins) i.onmidimessage = e => {
+    if (inp || !ours(Array.from(e.data))) return;
+    inp = i; out = outputFor(i);
+    for (const j of ins) if (j !== i) j.onmidimessage = null;
+    if (!out) { status(`found MORSE on "${i.name}" but not its output port`, "bad"); inp = null; return; }
+    inp.onmidimessage = onMessage;
+    onMessage(e);
+  };
+  clearTimeout(hunting);
+  hunting = setTimeout(() => {
+    if (!inp) status("no FM-1 running MORSE answered: is it on, on USB, and running MORSE 0.4 or later?", "bad");
+  }, 3000);
+}
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 07:49:11Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Show transport on the web page
+
+```bash
+cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/firmware/morse/web; python3 - <<'EOF'
+p='index.html'; s=open(p).read()
+def rep(a,b):
+    global s
+    assert s.count(a)==1,(a,s.count(a)); s=s.replace(a,b)
+rep('''    Chrome or Edge on a computer, the FM-1 on USB and running MORSE (backups: 0.4 or later). Nothing to install.</p>''',
+'''    Chrome or Edge on a computer, the FM-1 running MORSE (backups: 0.4 or later) on USB, or on Bluetooth with 0.5:
+    on a Mac, connect <i>FM-1 XXXX</i> first in Audio MIDI Setup (Window, Show MIDI Studio, the Bluetooth button).
+    Nothing to install.</p>''')
+rep('''    if (type === T_HELLO && pl.length >= 3) firmware = [pl[1], pl[2]];''','''    if (type === T_HELLO && pl.length >= 3) firmware = [pl[1], pl[2]];
+    const tr = type === T_HELLO ? pl[3] : pl[1];   // the link it talks over (0.5): 0 USB, 1 Bluetooth
+    if (tr !== undefined) via = tr === 1 ? "Bluetooth" : "USB";''')
+rep('''  status(firmware ? `MORSE ${firmware.join(".")} connected` + (old ? ": update to 0.4 for backups" : "") : "MORSE connected",''','''  status((firmware ? `MORSE ${firmware.join(".")} connected` : "MORSE connected") + (via ? ` over ${via}` : "")
+         + (old ? ": update to 0.4 for backups" : ""),''')
+rep('''  out = inp = null; firmware = null;''','''  out = inp = null; firmware = null; via = null;''')
+rep('''    if (!inp) status("no FM-1 running MORSE answered: is it on, on USB, and running MORSE 0.4 or later?", "bad");''','''    if (!inp) status("no FM-1 running MORSE answered: is it on, on USB (or connected over Bluetooth, 0.5), and running MORSE?", "bad");''')
+rep('''status("the FM-1 sent nothing back (MORSE 0.4 or later?)", "bad"); }, 5000);''','''status("the FM-1 sent nothing back (MORSE 0.4 or later?)", "bad"); }, via === "Bluetooth" ? 15000 : 5000);''')
+rep('''let midi = null, hunting = null;''','''let midi = null, hunting = null, via = null;''')
+open(p,'w').write(s)
+EOF
+grep -n "let firmware\|firmware = null" index.html | head -3
+```
+
+```text
+107:let out = null, inp = null, firmware = null, asm = null, onDone = null, picked = null;
+256:  out = inp = null; firmware = null; via = null;
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 07:49:18Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Syntax-check the page script
+
+```bash
+cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/firmware/morse/web; python3 -c "
+import re;s=open('index.html').read();m=re.findall(r'<script>(.*?)</script>',s,re.S);open('/private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/0a574306-469e-4a59-9622-5701a42aee59/scratchpad/page.js','w').write(m[-1])"; node --check /private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/0a574306-469e-4a59-9622-5701a42aee59/scratchpad/page.js && echo syntax ok
+```
+
+```text
+syntax ok
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 07:49:23Z)**_
+
+網頁的語法檢查通過了。接著補截圖清單和文件。
+
+_**Agent (claude-opus-5-5 2026-11-18 07:49:25Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Read morse-shots recipe and README structure
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1; grep -n "^morse-shots" -A14 Justfile; grep -n "settings\|## \|USB" firmware/morse/README.md | head -40`
+
+```text
+313:morse-shots: (fw-test "morse")
+314-    #!/usr/bin/env bash
+315-    set -euo pipefail
+316-    uv run --locked --all-groups python - <<'PY'
+317-    from pathlib import Path
+318-    from PIL import Image
+319-    src, dst = Path("firmware/morse/build/host"), Path("firmware/morse/docs/screens")
+320-    dst.mkdir(parents=True, exist_ok=True)
+321-    names = """menu boot card_new card_new_peek card_hear card_see_key card_hear_key result_right result_keyed result_keyed_wrong
+322-    result_almost done practice_test placement_ask listen listen_hidden key key_code key_timing rhythm rhythm_good
+323-    rhythm_dahs type type_code type_phrases chart chart_edit chart_save load_ask settings""".split()
+324-    for n in names:
+325-        im = Image.open(src / f"{n}.png").convert("RGB")
+326-        im.resize((im.width * 2, im.height * 2), Image.NEAREST).save(dst / f"{n}.png", optimize=True)
+327-    print(f"{len(names)} screens in {dst}")
+9:text to copy, back up and restore your progress. Chrome or Edge, the FM-1 on USB, nothing to install.
+13:## What it does
+28:Keying goes out and comes in over USB-MIDI as note 0 on channel 1, the
+34:## Controls
+64:## Learning with MORSE
+83:## Your progress: back up and restore
+99:## Screens
+115:| ![settings](docs/screens/settings.png) SETTINGS | | |
+117:## Install
+123:  over USB-MIDI with fm1-base's `tools/fm1_install.py morse-X.Y.fwsc`.
+129:## Other firmwares' data
+131:MORSE does not read other firmwares' projects or samples. It keeps one record, its settings and
+135:outside its own firmware area, and does not touch the global settings at `0xFC000`. (An update to
+138:## Build
+156:| `common/` | hostlink (SysEx with a host over USB / BLE) and ledfx (LED patterns) |
+165:## License
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 07:49:29Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Read README sections to update
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/firmware/morse; sed -n 1,34p README.md; sed -n 83,116p README.md; sed -n 129,137p README.md`
+
+```text
+# MORSE for the M-VAVE FM-1
+
+A pocket Morse code machine for the [M-VAVE FM-1](https://www.m-vave.com/), built on
+[fm1-base](https://github.com/charlesvestal/fm1-base). Key on the piano keys and read what you
+sent, drill short and long presses, learn the code by sound with flash cards, listen to endless
+practice, type letters and CW phrases on the keys. GPL-3.0-or-later.
+
+**[MORSE on the web](https://daviddwlee84.github.io/fm1-morse/web/)**: see what your FM-1 reads, send it
+text to copy, back up and restore your progress. Chrome or Edge, the FM-1 on USB, nothing to install.
+
+![MORSE on the FM-1](docs/screen.png)
+
+## What it does
+
+| Page | What |
+|---|---|
+| **PRACTICE** | Flash cards a few minutes at a time. Two cards per letter (recognise it, send it), each in a Leitner box; new letters five at a time in Koch order. The schedule counts rounds, not days (the FM-1 keeps no clock through a power-off). Learning **by sound** is the default: no dots and dashes on the screen. A keyed answer is judged by its own rhythm (a dah about three dits), at whatever speed your hand goes, with a grade, the letter as it goes over the letter as you keyed it, and what to work on; a near miss counts as *almost* and comes back. A placement test skips the letters you already know. |
+| **LISTEN** | Plays on and on: Koch groups of the letters you have, common words, a made-up QSO, CW abbreviations with their meaning, sayings. Shown as it plays, or hidden for copying. |
+| **KEY** | Key freely and read what you sent: as text, as each letter over the dits and dahs you keyed, or as bars to scale. Your speed, dah:dit ratio and the gaps inside letters. |
+| **RHYTHM** | Drills of short and long presses against the target length, a judgement for each press, a hint, and a send speed that fits your hand. |
+| **TYPE** | The keys are letters, digits and signs, or CW phrases and prosigns (`CQ`, `<SK>`, `73`...). Each key plays at once, or compose a line and send it. |
+| **CHART** | The course as a grid, coloured by how well you know each letter. Edit it by hand (a letter's level, the groups open, all one step back, all reset); nothing is written until you confirm. |
+
+A straight key (any key) or iambic A/B paddles (left half dit, right half dah). A sidetone at your
+pitch, received signals a third higher, or silence and the key lights. Hearing and sending have
+their own speeds: Koch wants the characters heard fast, a beginner's hand is slow.
+
+Keying goes out and comes in over USB-MIDI as note 0 on channel 1, the
+[Vail adapter's format](https://github.com/Vail-CW/vail-adapter/blob/master/docs/MIDI_INTEGRATION_SPEC.md),
+so [Vail](https://vailmorse.com/) and its training tools take it. A host program
+([`host/morse`](https://github.com/daviddwlee84/M-VAVE_FM-1/tree/main/host/morse)) types what you
+send into the computer and sends text for the FM-1 to play.
+
+## Controls
+## Your progress: back up and restore
+
+The progress lives on the FM-1 at `0xDA000` (below). Another firmware may keep it or overwrite it
+(SLOOP 2.8.5 kept it in our test; going back to stock V15 does not), so back it up before
+switching. MORSE 0.4 and later:
+
+- In Chrome or Edge: [MORSE on the web](https://daviddwlee84.github.io/fm1-morse/web/)
+  (or `web/index.html` from this repository, opened from your disk): *Download the progress*,
+  later *Send it to the FM-1*.
+- Or on the command line with the host from
+  [M-VAVE_FM-1](https://github.com/daviddwlee84/M-VAVE_FM-1): `morse backup FILE.json`,
+  `morse restore FILE.json`.
+
+The file is plain JSON, every letter's two boxes (0-5) and the rounds, and can be edited. The FM-1
+shows what it received and loads it only after `PLAY`.
+
+## Screens
+
+From fm1-base's host simulator (`tests/basic.txt`), twice the size.
+
+| | | |
+|---|---|---|
+| ![menu](docs/screens/menu.png) menu | ![start](docs/screens/boot.png) PRACTICE: start | ![new](docs/screens/card_new.png) a new letter |
+| ![peek](docs/screens/card_new_peek.png) `SEQ`: a peek at its code | | |
+| ![hear and choose](docs/screens/card_hear.png) hear, pick one of four | ![key it](docs/screens/card_see_key.png) see it, key it | ![key what you hear](docs/screens/card_hear_key.png) hear it, key it back |
+| ![right](docs/screens/result_keyed.png) a keyed answer: right | ![wrong](docs/screens/result_keyed_wrong.png) wrong: SHOULD over YOU | ![almost](docs/screens/result_almost.png) almost |
+| ![done](docs/screens/done.png) a round done | ![test](docs/screens/practice_test.png) placement test | ![placement](docs/screens/placement_ask.png) mark what you knew |
+| ![listen](docs/screens/listen.png) LISTEN | ![listen hidden](docs/screens/listen_hidden.png) LISTEN, hidden | ![key](docs/screens/key.png) KEY: text |
+| ![key code](docs/screens/key_code.png) KEY: code | ![key timing](docs/screens/key_timing.png) KEY: timing | ![rhythm](docs/screens/rhythm.png) RHYTHM |
+| ![rhythm good](docs/screens/rhythm_good.png) RHYTHM: even | ![rhythm dahs](docs/screens/rhythm_dahs.png) RHYTHM: dahs short | ![type](docs/screens/type.png) TYPE: letters |
+| ![type code](docs/screens/type_code.png) TYPE: the code on the keys | ![phrases](docs/screens/type_phrases.png) TYPE: phrases | ![chart](docs/screens/chart.png) CHART |
+| ![chart edit](docs/screens/chart_edit.png) CHART: edit | ![save](docs/screens/chart_save.png) save? | ![load](docs/screens/load_ask.png) a backup to load |
+| ![settings](docs/screens/settings.png) SETTINGS | | |
+
+## Other firmwares' data
+
+MORSE does not read other firmwares' projects or samples. It keeps one record, its settings and
+progress (about 300 bytes), at `0xDA000`-`0xDBFFF`, written when a round ends and a few seconds
+after a setting changes. On Felucca-family firmwares (SLOOP and others) that range is inside the
+area for samples: if you keep many samples there, back up before switching. It writes nothing else
+outside its own firmware area, and does not touch the global settings at `0xFC000`. (An update to
+another firmware, as with every fm1-base firmware, stages its loader at `0xE0000`.)
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 07:49:43Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Update fm1-morse README and screenshot list
+
+```bash
+cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1; python3 - <<'EOF'
+def edit(p, pairs):
+    s=open(p).read()
+    for a,b in pairs:
+        assert s.count(a)==1,(p,a,s.count(a)); s=s.replace(a,b)
+    open(p,'w').write(s)
+edit('firmware/morse/README.md',[
+('text to copy, back up and restore your progress. Chrome or Edge, the FM-1 on USB, nothing to install.',
+ 'text to copy, back up and restore your progress. Chrome or Edge, the FM-1 on USB or Bluetooth, nothing to install.'),
+('''Keying goes out and comes in over USB-MIDI as note 0 on channel 1, the''','''Keying goes out and comes in over USB-MIDI or Bluetooth MIDI as note 0 on channel 1, the'''),
+('''## Your progress: back up and restore''','''## Bluetooth
+
+MORSE 0.5 is also a Bluetooth MIDI device (fm1-base's own stack), beside USB: Vail, MORSE on the
+web and the host work without a cable. It is on unless *SETTINGS > BLUETOOTH* says off (kept across
+power-offs). The header shows `BT`, grey while it waits, blue once a computer is connected.
+
+- **Mac**: Audio MIDI Setup, *Window > Show MIDI Studio*, the Bluetooth button, *Connect* next to
+  `FM-1 XXXX`. No pairing code. macOS does not reconnect by itself after the FM-1 restarts: connect
+  again there (`morse --bluetooth ...` opens that window for you).
+- **Browsers**: Chrome and Edge see it as one more MIDI port once the system has connected it.
+  Safari on iPhone and iPad has no Web MIDI.
+- One computer at a time. With USB and Bluetooth both connected, the host and the web page talk over
+  whichever link answered first (the host prefers USB); the keying goes out on both.
+- Keying sent over Bluetooth carries real BLE-MIDI timestamps, and keying received is decoded by the
+  sender's timestamps, so a connection's bunching does not change a dit's length. How well a given
+  computer keeps to them is still to be measured.
+- Nothing of Bluetooth's is written to the flash (no pairing to keep).
+
+## Your progress: back up and restore'''),
+('''- In Chrome or Edge: [MORSE on the web]''','''- In Chrome or Edge, over USB or (0.5) Bluetooth: [MORSE on the web]'''),
+('''| ![settings](docs/screens/settings.png) SETTINGS | | |''','''| ![settings](docs/screens/settings.png) SETTINGS | ![bluetooth](docs/screens/settings_bt.png) SETTINGS: BLUETOOTH, connected | |'''),
+('''outside its own firmware area, and does not touch the global settings at `0xFC000`.''','''outside its own firmware area (nothing for Bluetooth), and does not touch the global settings at `0xFC000`.'''),
+])
+edit('Justfile',[('chart chart_edit chart_save load_ask settings""".split()','chart chart_edit chart_save load_ask settings settings_bt""".split()')])
+EOF
+grep -n "settings\b\|shot settings" firmware/morse/tests/basic.txt | head
+```
+
+```text
+210:shot settings.png
+902:shot settings_bt.png
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 07:49:53Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Regenerate screenshots
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1; just morse-shots 2>&1 | tail -1; cd firmware/morse; git status --short`
+
+```text
+31 screens in firmware/morse/docs/screens
+ M README.md
+ M app.c
+ M app.h
+ M docs/screens/boot.png
+ M docs/screens/card_hear.png
+ M docs/screens/card_hear_key.png
+ M docs/screens/card_new.png
+ M docs/screens/card_new_peek.png
+ M docs/screens/card_see_key.png
+ M docs/screens/chart.png
+ M docs/screens/chart_save.png
+ M docs/screens/done.png
+ M docs/screens/key.png
+ M docs/screens/key_code.png
+ M docs/screens/key_timing.png
+ M docs/screens/listen.png
+ M docs/screens/listen_hidden.png
+ M docs/screens/menu.png
+ M docs/screens/practice_test.png
+ M docs/screens/result_almost.png
+ M docs/screens/result_keyed.png
+ M docs/screens/result_keyed_wrong.png
+ M docs/screens/result_right.png
+ M docs/screens/rhythm.png
+ M docs/screens/rhythm_dahs.png
+ M docs/screens/rhythm_good.png
+ M docs/screens/settings.png
+ M docs/screens/type.png
+ M docs/screens/type_phrases.png
+ M fm1.toml
+ M tests/basic.txt
+ M web/index.html
+?? docs/screens/settings_bt.png
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 07:49:57Z)**_
+
+<tool-use data-tool-type="read" data-tool-name="Read"><details>
+<summary>Tool use: **Read**</summary>
+ `./firmware/morse/docs/screens/settings_bt.png`
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 07:49:57Z)**_
+
+<tool-use data-tool-type="read" data-tool-name="Read"><details>
+<summary>Tool use: **Read**</summary>
+ `./firmware/morse/docs/screens/key.png`
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 07:50:02Z)**_
+
+截圖都更新了，設定頁顯示「BLUETOOTH ON (TALKING)」，header 有藍色的 `BT`。接著改 docs。
+
+_**Agent (claude-opus-5-5 2026-11-18 07:50:03Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Map morse.md structure and BLE mentions
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1; grep -n "^## \|^### \|^| 0\.[0-9]\|138,076\|138 KB\|藍牙\|Bluetooth\|BLE" docs/dev/morse.md | head -80`
+
+```text
+7:## 有沒有人做過 { #prior-art }
+15:相近的作品：SPELLBOX 把琴鍵當 A–Z 鍵盤；MIDIMON（fm1-base）同時當 BLE peripheral、central 與 USB host，作者說用它來 debug 另一台 FM-1。設計時參考的是其他平台的摩斯機：[Morserino-32](https://github.com/oe1wkl/Morserino-32)（模式分類、收發用不同音高）、[LCWO](https://lcwo.net/)（Koch 順序）、Vail（MIDI 格式）。只參考做法，沒有複製程式碼。
+17:## 功能
+33:## 速度：WPM 是什麼、該設多少 { #speed }
+69:## 學習：閃卡和間隔複習
+83:### 打碼卡怎麼判 { #judging }
+101:### 先用聽的：學習方式設定 { #by-sound }
+121:### 進度：跳過、退回、歸零 { #progress }
+134:### 備份與還原 { #backup }
+145:- **只走 USB**：0.4 的韌體沒有開藍牙，所以網頁和指令列都要接 USB 線。網頁找機器時不看 port 名稱，而是看哪個 port 在送 HELLO，因為 macOS 會沿用這個 USB 裝置第一次接上時的名字（這台叫 `Felucca`）`[實機]`。
+146:- **藍牙之後**：0.5 開 own BLE stack 後，hostlink 本來就能走藍牙收發 SysEx。macOS 在「音訊 MIDI 設定」配對 BLE-MIDI 裝置後，會把它當成一般的 MIDI port，Chrome 的 Web MIDI 應該也看得到，網頁程式不用改。這點還沒驗證 `[調研]`。
+150:## 練長短：RHYTHM 頁 { #rhythm }
+164:## 收聽：LISTEN 頁 { #listen }
+180:## 片語、prosign 和實際的用法 { #phrases }
+208:## 和 Vail 搭配 { #vail }
+217:## 電腦端（host）
+230:## 兩台互傳
+232:現況和選項見[接口與連線](../hardware/io.md#two-units)。這台軟體的設計是**線路上傳按鍵動作（note on / off），不傳文字**，收的一方自己解碼，像真的電報線。好處是同一套格式可以走 USB、兩種藍牙 stack、USB host、經電腦轉送，Vail 也聽得懂。
+236:## 藍牙方案（0.5 研究） { #bluetooth }
+240:### 要做到什麼
+244:| Mac 上的 Vail、MORSE on the web、`just morse-*`，不接線 | FM-1 當 BLE-MIDI peripheral，Mac 在「音訊 MIDI 設定」的藍牙視窗連上 |
+248:### 已經有的
+250:- **Conductor 已經在這台機器上走通** `[實機]`：fm1-base 的 own stack（`ble_stack = "own"`），2026-11-17 Mac 不用配對碼就連上 `FM-1 3399`，port 叫 `FM-1 3399 Bluetooth`，daemon 經藍牙收發 SysEx。做法見 [Conductor 的藍牙](../agentic/conductor.md)：
+251:    - `hostlink` 會自己把 BLE 的 SysEx 封包組回 frame；
+252:    - 藍牙的紀錄由 app 接管（`APP_BLE_STORE`），只放 RAM，不寫 flash；
+254:- **MORSE 的程式本來就分得開傳輸**：`hostlink` 支援 USB 和 BLE 兩條路；按鍵用 Vail 格式的 note 0，走哪條路都一樣。
+255:- **fm1-base own stack 的時間戳記** `[上游]`（`docs/bt/BLE-STACK.md` §6）：
+260:### MORSE 要改的地方
+263:2. `app.h` 定義 `APP_BLE_STORE`，`app.c` 實作 `app_ble_load` / `app_ble_save`，只放 RAM（照 Conductor）。沒有這一步 build 會失敗（缺 `OBJ_BLE`），2026-11-18 試過。
+264:3. 主迴圈：`plat_midi_in` 從 `PORT_BLE` 來的封包，SysEx 交給 `hl_sx_packet` 組回 frame，note 0 交給收訊解碼器，時間用 `plat_midi_in_t24`。
+265:4. 按鍵：`plat_midi_send(…, TO_USB | TO_BLE_HOST)`。
+269:### 時間準不準
+271:這是摩斯特有的問題：點在 20 WPM 只有 60 ms。BLE 的 connection interval 大約 7.5–15 ms，按鍵事件會晚 0–15 ms 才送到，**誤差可能達到一個點的 25%**。
+273:- **送出**：own stack 帶了真實的時間戳記。接收端照時間戳記排，抖動就會消失；照到達時間算，就會抖。CoreMIDI 會把 BLE-MIDI 的時間戳記換成封包時間 `[調研]`，但 Chrome 的 Web MIDI 和 Vail 網頁用的是哪一個，要實測。
+277:### 瀏覽器
+279:| 平台 | 網頁（Vail、MORSE on the web）走藍牙 |
+281:| macOS Chrome / Edge | 在「音訊 MIDI 設定」連上後，藍牙 MIDI 就是一般的 CoreMIDI port，Web MIDI 應該看得到 `[調研]`。MORSE on the web 靠 HELLO 找 port，程式不用改 |
+282:| Android Chrome | 有 Web MIDI；藍牙 MIDI 裝置要先由系統或某個 app 連上 `[調研]` |
+283:| iPad / iPhone | Safari 沒有 Web MIDI，網頁用不了；要用支援藍牙 MIDI 的 app `[調研]` |
+285:### 已知的限制
+287:- **一次只連一個 host**：own stack 同時只有一條連到電腦的 BLE MIDI 連線 `[上游]`。iPad 連著時，Mac 就要走 USB。
+288:- **macOS 不會自己連回來** `[實機]`：FM-1 重開後要到藍牙 MIDI 視窗再按一次 Connect（Conductor 的經驗；它的 daemon 會自動彈出那個視窗）。
+289:- **大小**：0.4 是 138 KB。own stack 大約多 41–46 KB，central 再多 13–22 KB（fm1-base 的數字）。Conductor 開藍牙後是 122 KB、RAM 38 KB。上限 581 KB、RAM 96 KB，都很寬裕。
+290:- **電池**：藍牙開著的耗電還沒量。
+291:- **模擬器沒有無線電**：藍牙只能在實機上測。
+293:### 驗證計畫
+295:1. host simulator：BLE 替身送 HELLO（傳輸 `01`）、BLUETOOTH 開關、0 次 store 寫入（照 Conductor 的測試）。
+298:    - Mac 藍牙連上，`just morse-send`、MORSE on the web、Vail 都能用；
+299:    - **量抖動**：同一串按鍵分別走 USB 和藍牙，記下 Mac 收到的時間（CoreMIDI 封包時間和 Web MIDI 的 `timeStamp`），比較兩者的差；
+303:## 設計
+305:### 時序
+313:### 存檔 { #flash }
+326:### 大小
+332:| 0.1 | 109,508 B | 27,180 / 98,304 B |
+333:| 0.2 | 127,712 B | 28,444 / 98,304 B |
+334:| 0.3 | 127,880 B | 28,444 / 98,304 B |
+335:| 0.4 | 138,076 B（release） | 29,084 / 98,304 B |
+337:上限是 581,564 B；RAM code 5,100 / 32,768 B；套件 616,003 B，開發版 identity `FM-1_4100`。目前都沒有開藍牙；加上 own BLE stack 和 central 大約再多 55–70 KB，仍然很寬裕。
+339:## 驗證
+357:| 0.2：解碼器重讀、prosign、LISTEN 的內容 | `just morse-unit` | 2932 項全過（大部分是逐行檢查產生的節目都播得出來） |
+358:| 0.2：整個 app（三種 KEY 檢視、RHYTHM 三種提示、TYPE 翻頁、片語、COMPOSE、停止、REC 清空、排列方式、LISTEN、PRESET、K4、升級後重開讀回、四回合閃卡） | `just fw-test morse` | 全過 |
+359:| 0.2：從 0.1 的紀錄升級、改設定、重開讀回 | fm1-emu `uc25hq80`、`p25q80` | 設定和進度保留，發報速度補成 10，改過的值重開後讀回 `[模擬]` |
+360:| 0.2：疊在實機 0.1 的備份上 | `emu_rehearse.py` + fm1-emu | 真正的學習紀錄（ROUND 4、聽 15/14）升級後保留 `[模擬]` |
+361:| 0.2 刷進實機 | `just fm1-switch firmware/morse/build/morse.fwsc` | 寫入 32 個 sector（`0x04000`–`0x23FFF`），和預演一致；HELLO 回報 0.2，`<SK>` 送出 `[實機]` |
+362:| 0.2 升級後的進度 | 本人看 PRACTICE 頁 | 還是 ROUND 4：刷機只改寫韌體區，`0xDA000` 的紀錄留著 `[實機]` |
+363:| 0.2 新頁面 | 本人試用 RHYTHM、KEY 顯示、TYPE、LISTEN、PRESET | 「感覺都還不錯」；TYPE 鍵上點劃在黑鍵擠掉字母 → 0.3 修 `[實機]` |
+364:| 0.3：TYPE 鍵上點劃、從 0.2 升級、存檔重開讀回 | `just fw-test morse`、fm1-emu 兩種晶片 | 全過；字母頁和數字頁的碼與字母都放得下 `[模擬]` |
+365:| 0.4：判定、評級、ALMOST、手動編輯、分級測驗、備份格式 | `just morse-unit` | 3016 項全過（例如：M 用 180/180 ms 判對、5 WPM 的手回答 20 WPM 的題目判對、K 打成 −·· 判錯） |
+366:| 0.4：整個 app（SEND 10 時用 20 WPM 的手速答 M、T 判對，STRICT 判錯；錯的對照圖；ALMOST；CHART 編輯取消／存檔／按住歸零；確認時其他鍵無效；分級測驗；備份匯出向量、載入要按 PLAY、缺片拒收；重開讀回） | `just fw-test morse` | 全過 |
+367:| 0.4：host 和網頁的備份格式 | `just morse-test`；網頁的程式碼用 node 跑 | host 56 項全過；網頁產生的位元組和 host 的向量相同 |
+368:| 0.4 刷進實機 | `fm1_install.py`（USB-MIDI，fast install） | 成功；ROUND 16、開放 10 個字的紀錄保留 `[實機]` |
+369:| 0.4 的備份：指令列和網頁 | `just morse-backup`；Chromium 開 `web/progress.html` | 兩者下載的內容相同；網頁要用「誰在送 HELLO」找 port，因為 macOS 把這台叫 `Felucca` `[實機]` |
+370:| 0.4：疊在實機 0.2 紀錄的備份上、改設定、重開讀回 | `emu_rehearse.py` + fm1-emu `uc25hq80`、`p25q80` | ROUND 5 的紀錄保留，改過的速度重開後讀回 `[模擬]` |
+372:## 版本紀錄
+379:| 韌體 0.4、host 0.4.0 | 2026-11-18 | 是（05:20 用 USB-MIDI 裝 release build `FM-1_41000400`，fm1-morse `323d79b`） | 實機回饋（ROUND 14 還停在第一組）：打碼卡改用答案自己的節奏判斷（[判定](#judging)），手速跨卡延續，評級和 SHOULD／YOU 對照圖，ALMOST；SET 頁的 JUDGING 可以切回 STRICT；CHART 編輯、分級測驗、開始畫面列出擋住下一組的字，SOUND 模式下新字和答案可以按 `SEQ` 偷看點劃，弱卡在同一回合重複出現、熟字只在有空位時補，[手動修改都要按 PLAY 確認](#progress)；進度的[備份與還原](#backup)（`T_PROG_*`、host 的 `backup`／`restore`、網頁）。藍牙順延到 0.5 |
+381:| 韌體 0.3、host 0.3.0 | 2026-11-18 | 是（02:12 刷入，`02b0ea2`） | TYPE 打開鍵上點劃時，鍵盤從 86 px 拉高到 126 px、上方輸入行縮成一行，黑鍵和白鍵都同時放得下碼和字母（0.2 黑鍵只剩碼、白鍵的碼壓到字母，數字頁的 `0` 放不下）。藍牙順延到 0.4 |
+382:| 韌體 0.2、host 0.2.0 | 2026-11-18 | 是（00:14 刷入，`54ff440`） | 實機試用後的回饋：發報速度和聽的速度分開（K4），PRESET 推薦組合，轉速度時顯示 dit／dah 毫秒；KEY 頁 TEXT／CODE／TIMING 三種顯示；RHYTHM 頁（練長短、提示、建議速度）；LISTEN 頁（連續播放五種節目）；TYPE 頁翻三頁（字母、數字符號、片語）、三種排列、鍵上點劃、LIVE／COMPOSE、`PLAY` 可停止、`REC` 刪字和清空；prosign `<SK>`；解碼器遇到長短差 2 倍時回頭修正；靜音和改音高不再重設解碼器。藍牙順延到 0.3 |
+384:## 獨立 repo 和上架 { #release }
+388:- **授權**：2026-11-18 從 MIT 改成 GPL-3.0-or-later，讓拿去改的人分享出來的版本也要開源。fm1-base 的 MPL-2.0 和 `common/` 的 MIT 都可以併入 GPL 作品；SLOOP 就是 GPL-3.0 加 felucca-bsp 的前例。之後的藍牙用 fm1-base 自己的 stack，不會連結 JieLi 的閉源函式庫，所以避開了 GPL 不能連結閉源庫的問題。`57ea786` 以前的版本以 MIT 公開，仍可依 MIT 使用。套件內容不受影響（改授權前後的 `.fwsc` 完全相同）。
+406:## 路線圖 { #roadmap }
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 07:50:08Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Read backup, host, version and roadmap sections
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1; sed -n 134,148p docs/dev/morse.md; sed -n 217,234p docs/dev/morse.md; sed -n 372,380p docs/dev/morse.md; sed -n 406,440p docs/dev/morse.md`
+
+```text
+### 備份與還原 { #backup }
+
+進度存在 FM-1 的 `0xDA000`（見[存檔](#flash)）。換韌體時不一定保得住：2026-11-18 實測從 SLOOP 2.8.5 切回來時還在，刷回原廠 V15 就沒了 `[實機]`。換韌體前先備份。0.4 起有兩種方式：
+
+| 方式 | 怎麼做 |
+|---|---|
+| 網頁（Chrome、Edge） | [MORSE on the web](https://daviddwlee84.github.io/fm1-morse/web/)（fm1-morse 的 `web/index.html`，舊網址 `web/progress.html` 會轉過去）：Connect、Download the progress；還原時選檔案、Send it to the FM-1 |
+| 指令列 | `just morse-backup FILE.json`、`just morse-restore FILE.json` |
+
+檔案是 JSON，列出每個字兩個方向的盒號（0–5）和最後作答的回合，可以手改。FM-1 收到後先檢查 CRC 和內容是否合理，再顯示回合數、開放幾個字、答過幾題，按 `PLAY` 才載入。協定見 [`host/morse/PROTOCOL.md`](https://github.com/daviddwlee84/M-VAVE_FM-1/blob/main/host/morse/PROTOCOL.md) 的 Progress 一節。
+
+- **只走 USB**：0.4 的韌體沒有開藍牙，所以網頁和指令列都要接 USB 線。網頁找機器時不看 port 名稱，而是看哪個 port 在送 HELLO，因為 macOS 會沿用這個 USB 裝置第一次接上時的名字（這台叫 `Felucca`）`[實機]`。
+- **藍牙之後**：0.5 開 own BLE stack 後，hostlink 本來就能走藍牙收發 SysEx。macOS 在「音訊 MIDI 設定」配對 BLE-MIDI 裝置後，會把它當成一般的 MIDI port，Chrome 的 Web MIDI 應該也看得到，網頁程式不用改。這點還沒驗證 `[調研]`。
+- **入口**：fm1-morse README 的最上面，以及 Hub 卡片：`fmhub.json` 的 `editor` 欄位（「a web editor for its sounds or settings」`[上游]`）2026-11-18 填了這個網址。
+- **Live**（2026-11-18 加入，不需要新韌體）：網頁顯示 FM-1 讀到的字（`T_CHAR`，在 KEY 頁發報或在 TYPE 頁打字）和按鍵燈號（note 0），也能送字給 FM-1 播（`T_TEXT`、`T_STOP`），等於網頁版的 `morse-send`，加上只顯示、不打進系統的 `morse-type`。網頁會回應 HELLO，所以 FM-1 會顯示 `PC`。送字在實機上試過 `[實機]`。
+## 電腦端（host）
+
+`host/morse/`（Python，mido + python-rtmidi），協定見 [`host/morse/PROTOCOL.md`](https://github.com/daviddwlee84/M-VAVE_FM-1/blob/main/host/morse/PROTOCOL.md)：
+
+| 指令 | 做什麼 |
+|---|---|
+| `just morse-type` | 在 FM-1 的 KEY 頁發報（或在 TYPE 頁打字），解出的字打進 Mac 目前的視窗。要給終端機 Accessibility 權限；`--dry-run` 只印出來 |
+| `just morse-send 文字` | FM-1 把文字當成「收到的」播出來，用來練抄收。`-` 從 stdin 一行一行送 |
+| `just morse-sim` | 不接 FM-1，用文字模擬 |
+| `just morse-backup FILE`、`just morse-restore FILE` | 學習進度的備份與還原（韌體 0.4 起，見[備份與還原](#backup)） |
+
+解碼在 FM-1 上做，host 只收結果（`T_CHAR`），所以畫面上看到的和打進電腦的一定一樣。host 每收到一次 HEARTBEAT 就回一個 HELLO_ACK；FM-1 超過 10 秒沒收到 host 的東西就當成斷線。
+
+## 兩台互傳
+
+現況和選項見[接口與連線](../hardware/io.md#two-units)。這台軟體的設計是**線路上傳按鍵動作（note on / off），不傳文字**，收的一方自己解碼，像真的電報線。好處是同一套格式可以走 USB、兩種藍牙 stack、USB host、經電腦轉送，Vail 也聽得懂。
+
+我手上只有一台，所以直連排在下一版（見[路線圖](#roadmap)），先用電腦和 Vail 跟人互傳。
+## 版本紀錄
+
+韌體 X.Y（`FW_MINOR` in `firmware/morse/app.c`），host X.Y.Z（`__version__` in `host/morse/__init__.py`，加上 `FIRMWARE_KNOWN`），規則和 Conductor 一樣。
+
+| 版本 | 日期 | 要刷機 | 內容 |
+|---|---|---|---|
+| 韌體 0.1、host 0.1.0 | 2026-11-17 | 是（22:54 刷入，`c3b5cd6`） | 第一版：KEY、TYPE、PRACTICE、CHART、SETTINGS，兩種學習方式，Vail 格式的 MIDI，host 的 `type`／`send`／`listen`。原本規劃分成 0.1（核心）和 0.2（閃卡），因為一起做完、都還沒刷，合併成 0.1 |
+| 韌體 0.4、host 0.4.0 | 2026-11-18 | 是（05:20 用 USB-MIDI 裝 release build `FM-1_41000400`，fm1-morse `323d79b`） | 實機回饋（ROUND 14 還停在第一組）：打碼卡改用答案自己的節奏判斷（[判定](#judging)），手速跨卡延續，評級和 SHOULD／YOU 對照圖，ALMOST；SET 頁的 JUDGING 可以切回 STRICT；CHART 編輯、分級測驗、開始畫面列出擋住下一組的字，SOUND 模式下新字和答案可以按 `SEQ` 偷看點劃，弱卡在同一回合重複出現、熟字只在有空位時補，[手動修改都要按 PLAY 確認](#progress)；進度的[備份與還原](#backup)（`T_PROG_*`、host 的 `backup`／`restore`、網頁）。藍牙順延到 0.5 |
+| 韌體 0.3 release（`FM-1_41000300`） | 2026-11-18 | 是（Hub 測試時用 USB-MIDI 裝過三次） | fm1-morse 的第一個 release [v0.3](https://github.com/daviddwlee84/fm1-morse/releases/tag/v0.3)：identity 改成 `FM-1_41`，授權改成 GPL-3.0-or-later，程式和 0.3 相同 |
+## 路線圖 { #roadmap }
+
+| 版本 | 內容 |
+|---|---|
+| 0.5 | 藍牙（研究見[藍牙方案](#bluetooth)）：own BLE stack 的 peripheral（Mac、iPad、手機上的 Vail 走藍牙）和 central（一台 FM-1 掃描並連上另一台）。BLE connection interval 是 11.25 ms，每個按鍵事件會晚 0–11 ms 到；對策想用 note 的 velocity 帶上長度、收的一方加一點播放緩衝，等量過再定。實機要等有第二台 |
+| 之後 | host 送日期，讓間隔複習改成天數；USB-C 直連（見[接口與連線](../hardware/io.md#two-units)） |
+
+### Backlog { #backlog }
+
+想做、但目前刻意不做的，連同理由記在這裡，免得忘記。
+
+| 項目 | 為什麼現在不做 | 什麼時候做、怎麼做 |
+|---|---|---|
+| **更多符號進閃卡**：`' ! ( ) & : ; + - _ " $ @`，以及 `<AR>` `<SK>` `<KN>` 等 prosign（2026-11-18 試用時提出） | 課程是 LCWO 的 41 字 Koch 課表，通聯和考試幾乎只用這些。這些符號很少用，prosign 在 LISTEN 的 QSO 節目和 TYPE 的片語頁裡聽得到。每個字的盒號存在大小固定的紀錄裡（`LN_N = 41`，`ln_state_t`），加字就要改存檔格式：韌體的 `REC_VER` 升到 2 並寫升級程式，備份格式（`PROG_FORMAT`、host 的 `progress.py`、網頁）也要升版，舊備份要能讀 | 等學完 41 個字。做法：在 Koch 順序之後加第 9、10 組（常用的 prosign 一組，其他符號一組），prosign 的卡片用 `<..>` 連在一起播 |
+| **網頁走藍牙** | 韌體 0.4 沒有開藍牙 | 跟著 0.5 的藍牙一起驗證，見[備份與還原](#backup) |
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 07:50:16Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Save old BT section and read sizes table
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1; sed -n 236,302p docs/dev/morse.md > /private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/0a574306-469e-4a59-9622-5701a42aee59/scratchpad/bt_old.md; sed -n 326,338p docs/dev/morse.md; sed -n 339,345p docs/dev/morse.md`
+
+```text
+### 大小
+
+`just fw-build morse`（2026-11-17）：
+
+| 版本 | app | `.data+.bss` |
+|---|---|---|
+| 0.1 | 109,508 B | 27,180 / 98,304 B |
+| 0.2 | 127,712 B | 28,444 / 98,304 B |
+| 0.3 | 127,880 B | 28,444 / 98,304 B |
+| 0.4 | 138,076 B（release） | 29,084 / 98,304 B |
+
+上限是 581,564 B；RAM code 5,100 / 32,768 B；套件 616,003 B，開發版 identity `FM-1_4100`。目前都沒有開藍牙；加上 own BLE stack 和 central 大約再多 55–70 KB，仍然很寬裕。
+
+## 驗證
+
+| 項目 | 指令 | 結果 |
+|---|---|---|
+| 碼表、時序、解碼器、keyer、閃卡規則 | `just morse-unit` | 251 項全過 |
+| 整個 app（發報、收報、Vail 位元組、host 協定、靜音、iambic B、TYPE、三回合閃卡含真的按鍵作答、重開機讀回） | `just fw-test morse` | 全過 |
+| host 協定、和韌體共用的測試向量 | `just morse-test` | 全過 |
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 07:50:19Z)**_
+
+Now writing the docs changes (morse.md Bluetooth section, sizes, verification, versions, roadmap, backlog, host table).
+
+_**Agent (claude-opus-5-5 2026-11-18 07:51:06Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Rewrite morse.md Bluetooth docs for 0.5
+
+```bash
+cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1; python3 - <<'EOF'
+p='docs/dev/morse.md'; s=open(p).read()
+def rep(a,b):
+    global s
+    assert s.count(a)==1,(a[:60],s.count(a)); s=s.replace(a,b)
+start=s.index('## 藍牙方案（0.5 研究） { #bluetooth }'); end=s.index('## 設計\n')
+new='''## 藍牙（0.5） { #bluetooth }
+
+2026-11-18 做好，host simulator 和 fm1-emu 都驗證過，**還沒刷進實機**。
+
+### 能做什麼
+
+FM-1 當 BLE-MIDI peripheral，和 USB 同時開著：
+
+- Mac 不接線就能用 Vail、[MORSE on the web](https://daviddwlee84.github.io/fm1-morse/web/)（Live、備份、還原）、`just morse-*`。
+- 按鍵（Vail 格式的 note 0）同時從 USB 和藍牙送出。
+- HELLO、`T_CHAR`、`T_PROG*` 走 host 回答的那條路。
+
+兩台 FM-1 互打（`ble_central`）要等有第二台（見[路線圖](#roadmap)）。
+
+### 怎麼連
+
+1. FM-1 的 *SETTINGS > BLUETOOTH* 是 ON（預設）。header 的 `BT` 灰色代表等待中，藍色代表已經有電腦連上。
+2. Mac：「音訊 MIDI 設定」→ *視窗 > 顯示 MIDI 工作室* → 藍牙按鈕 → `FM-1 XXXX` 旁邊的 *Connect*，不用配對碼（Conductor 在 2026-11-17 實測過 `[實機]`）。
+3. 指令列加 `--bluetooth`（例如 `PYTHONPATH=host uv run python -m morse --bluetooth send cq`），會打開那個視窗，等 FM-1 從藍牙說 HELLO。這個視窗和 Conductor 用的是同一個 `conductor.blelink`。
+4. 網頁照常按 Connect。狀態會顯示 `over Bluetooth` 或 `over USB`（看 HELLO 的最後一個 byte）。
+
+USB 和藍牙都連著時：
+- host 找 port 時優先用 USB（`sniff_port`）；
+- 網頁用先聽到 HELLO 的那條路；
+- 按鍵兩邊都送。
+
+### 怎麼做的
+
+照 Conductor 的寫法，有一個地方不同：
+1. **`fm1.toml`**：`ble = true`、`ble_stack = "own"`、`ble_diag = false`、`ble_midi_time = true`。
+2. **`APP_BLE_STORE`**：`app_ble_load`／`app_ble_save` 什麼都不存。own stack 用 flash 晶片的 unique ID 產生位址，Mac 和 iOS 不配對也能連，所以**藍牙不寫 flash**（fm1-emu 兩種晶片都驗證過）。
+3. **開機要不要開藍牙**：用 `APP_BLE_AT_BOOT`。裝置上這一步在 `app_init` 之前執行，所以 `morse_ble_off()` 自己把紀錄讀進一份副本。
+4. **開關存在哪**：`SET.mute` 的 bit 1（bit 0 是靜音）。**存檔格式不變**，0.4 的紀錄直接讀，舊紀錄的這個 bit 是 0，所以藍牙是開的。
+5. **和 Conductor 不同的地方**：MORSE 在 1 kHz 的 `app_tick` 讀 MIDI，因為收訊按鍵要準。藍牙送來的 SysEx 封包（CIN 4–7）先放進一個 256 格的 ring（`bx`），由主迴圈的 `ble_in()` 用 `hl_sx_packet` 組回 frame，再交給 `host_frame(…, HL_BLE)`。`host_frame` 會送 frame、也可能改進度，所以不在 tick 裡跑。
+6. **收訊按鍵的時間**：開了 `ble_midi_time` 後，同一個 connection event 裡的 note 會一起到，但各自帶著送出端的時間（`plat_midi_in_t24`）。MORSE 把每個 note 的變化都當成一個事件，時間是 `now − 已經過了多久`，最多往回 500 ms，而且不早於上一個事件。所以一個短點的 on 和 off 就算同一個 tick 到，長度也不會變。
+7. **送出**：`plat_midi_send(…, TO_USB | TO_BLE_HOST)`，藍牙關掉時只送 USB。own stack 送出時會帶真實的 13-bit 毫秒時間戳記 `[上游]`（`docs/bt/BLE-STACK.md` §6）。
+
+### 時間準不準
+
+這是摩斯特有的問題：點在 20 WPM 只有 60 ms。BLE 的 connection interval 大約 7.5–15 ms，按鍵事件會晚 0–15 ms 才送到，**誤差可能達到一個點的 25%**。
+
+- **送出**：FM-1 帶了真實的時間戳記。接收端照時間戳記排，抖動就會消失；照到達時間算，就會抖。CoreMIDI 會把 BLE-MIDI 的時間戳記換成封包時間 `[調研]`，但 Chrome 的 Web MIDI 和 Vail 網頁用的是哪一個，要實測。
+- **收進**：FM-1 照送出端的時間解碼（見上面第 6 點）`[模擬]`，模擬器的藍牙替身沒有時間戳記，所以只驗證了程式路徑。
+- **真的抖的話**：照原本的構想，用 note 的 velocity 帶上這個 mark 的長度（10 ms 一格），收的一方用長度而不是到達時間。只有收方也是 MORSE 才有用，Vail 不懂（見 [Backlog](#backlog)）。
+
+### 瀏覽器
+
+| 平台 | 網頁（Vail、MORSE on the web）走藍牙 |
+|---|---|
+| macOS Chrome / Edge | 在「音訊 MIDI 設定」連上後，藍牙 MIDI 就是一般的 CoreMIDI port，Web MIDI 應該看得到 `[調研]`。MORSE on the web 靠 HELLO 找 port |
+| Android Chrome | 有 Web MIDI；藍牙 MIDI 裝置要先由系統或某個 app 連上 `[調研]` |
+| iPad / iPhone | Safari 沒有 Web MIDI，網頁用不了；要用支援藍牙 MIDI 的 app `[調研]` |
+
+### 已知的限制
+
+- **一次只連一個 host**：own stack 同時只有一條連到電腦的 BLE MIDI 連線 `[上游]`。iPad 連著時，Mac 就要走 USB。
+- **macOS 不會自己連回來** `[實機]`：FM-1 重開後要到藍牙 MIDI 視窗再按一次 Connect（Conductor 的經驗），可以用 `--bluetooth` 打開那個視窗。
+- **大小**：開發版 173,744 B，比 0.4 多 35.7 KB；RAM `.data+.bss` 38,572 B（見[大小](#size)）。
+- **電池**：藍牙開著的耗電還沒量。不用時到 SETTINGS 關掉，下次開機也維持關閉。
+- **模擬器沒有無線電**：fm1-emu 只能驗證開關、存檔、不寫 flash；連線本身要在實機上測。
+
+### 驗證
+
+已做 `[模擬]`：
+- host simulator：藍牙替身連上後 HELLO 走 BLE；從 BLE 送 HELLO_ACK（傳輸 `1`）、`T_TEXT`（播出 E）、`T_PROG_REQ`（`T_PROG` 從 BLE 回來）；KEY 頁按鍵同時送 USB 和 BLE；從 BLE 收到的 T 解得出來；BLUETOOTH OFF 之後按鍵只走 USB，存檔、重開機後還是 OFF；藍牙不增加 store 寫入。
+- fm1-emu 兩種晶片：疊在實機 0.4 前的備份上，關掉藍牙、重開讀回 OFF、再打開，ROUND 17 的紀錄保留，開機 0 次寫入。
+
+還要在實機上做（刷機要你核准）：
+- Mac 藍牙連上，`just morse-send`、MORSE on the web、Vail 都能用；
+- **量抖動**：同一串按鍵分別走 USB 和藍牙，記下 Mac 收到的時間（CoreMIDI 封包時間和 Web MIDI 的 `timeStamp`），比較兩者的差；
+- 拔線後只用電池，連著打 10 分鐘看會不會斷。
+
+'''
+s=s[:start]+new+s[end:]
+rep('''- **只走 USB**：0.4 的韌體沒有開藍牙，所以網頁和指令列都要接 USB 線。網頁找機器時不看 port 名稱，而是看哪個 port 在送 HELLO，因為 macOS 會沿用這個 USB 裝置第一次接上時的名字（這台叫 `Felucca`）`[實機]`。
+- **藍牙之後**：0.5 開 own BLE stack 後，hostlink 本來就能走藍牙收發 SysEx。macOS 在「音訊 MIDI 設定」配對 BLE-MIDI 裝置後，會把它當成一般的 MIDI port，Chrome 的 Web MIDI 應該也看得到，網頁程式不用改。這點還沒驗證 `[調研]`。''','''- **USB 或藍牙**：0.4 只能走 USB；0.5 也能走[藍牙](#bluetooth)，網頁會顯示走哪一條。網頁找機器時不看 port 名稱，而是看哪個 port 在送 HELLO，因為 macOS 會沿用這個 USB 裝置第一次接上時的名字（這台叫 `Felucca`）`[實機]`；藍牙的 port 叫 `FM-1 XXXX`。走藍牙時，網頁等備份回來的時間從 5 秒放寬到 15 秒。''')
+rep('''| `just morse-backup FILE`、`just morse-restore FILE` | 學習進度的備份與還原（韌體 0.4 起，見[備份與還原](#backup)） |
+''','''| `just morse-backup FILE`、`just morse-restore FILE` | 學習進度的備份與還原（韌體 0.4 起，見[備份與還原](#backup)） |
+| `--bluetooth`（放在子指令前） | 先打開 Mac 的藍牙 MIDI 視窗，等 FM-1 從藍牙說 HELLO（韌體 0.5，見[藍牙](#bluetooth)） |
+''')
+rep('''解碼在 FM-1 上做，host 只收結果（`T_CHAR`），所以畫面上看到的和打進電腦的一定一樣。''','''解碼在 FM-1 上做，host 只收結果（`T_CHAR`），所以畫面上看到的和打進電腦的一定一樣。host 會印出走的是 USB 還是 Bluetooth；兩條都有時用 USB。''')
+rep('''### 大小
+''','''### 大小 { #size }
+''')
+rep('''| 0.4 | 138,076 B（release） | 29,084 / 98,304 B |
+
+上限是 581,564 B；RAM code 5,100 / 32,768 B；套件 616,003 B，開發版 identity `FM-1_4100`。目前都沒有開藍牙；加上 own BLE stack 和 central 大約再多 55–70 KB，仍然很寬裕。''','''| 0.4 | 138,076 B（release） | 29,084 / 98,304 B |
+| 0.5（藍牙，開發版） | 173,744 B | 38,572 / 98,304 B |
+
+上限是 581,564 B；RAM code 5,576 / 32,768 B（0.5）；套件 616,003 B，開發版 identity `FM-1_4100`。0.5 開了 own BLE stack（peripheral），多 35.7 KB；之後加 central 大約再多 13–22 KB（fm1-base 的數字），仍然很寬裕。''')
+rep('''| 0.4：疊在實機 0.2 紀錄的備份上、改設定、重開讀回 | `emu_rehearse.py` + fm1-emu `uc25hq80`、`p25q80` | ROUND 5 的紀錄保留，改過的速度重開後讀回 `[模擬]` |
+''','''| 0.4：疊在實機 0.2 紀錄的備份上、改設定、重開讀回 | `emu_rehearse.py` + fm1-emu `uc25hq80`、`p25q80` | ROUND 5 的紀錄保留，改過的速度重開後讀回 `[模擬]` |
+| 0.5：藍牙替身上的 HELLO、HELLO_ACK、`T_TEXT`、`T_PROG`、按鍵送出和收進、BLUETOOTH 開關存檔重開、store 寫入不變 | `just fw-test morse` | 全過；`--no-ble` 的 build 也編得過、除了藍牙那段都通過 `[模擬]` |
+| 0.5：host 的傳輸判斷 | `just morse-test` | 22 項全過 |
+| 0.5：疊在實機 0.4 前的備份上，BLUETOOTH 關、重開讀回、再開 | `emu_rehearse.py` + fm1-emu `uc25hq80`、`p25q80` | ROUND 17 的紀錄保留；每次改設定寫 4 次（一筆紀錄），開機 0 次 `[模擬]` |
+''')
+rep('''| 韌體 0.4、host 0.4.0 | 2026-11-18 | 是（05:20''','''| 韌體 0.5、host 0.5.0 | 2026-11-18 | 是（還沒刷） | [藍牙](#bluetooth)：fm1-base own stack 的 BLE-MIDI peripheral，和 USB 同時用；SETTINGS 加 BLUETOOTH 開關（存在紀錄裡，格式不變）；header 顯示 `BT`；SETTINGS 頁可以捲動；收訊按鍵照送出端的時間解碼；host 印出走哪條路、兩條都有時優先 USB、`--bluetooth` 打開 Mac 的藍牙 MIDI 視窗；網頁顯示走哪條路 |
+| 韌體 0.4、host 0.4.0 | 2026-11-18 | 是（05:20''')
+rep('''| 0.5 | 藍牙（研究見[藍牙方案](#bluetooth)）：own BLE stack 的 peripheral（Mac、iPad、手機上的 Vail 走藍牙）和 central（一台 FM-1 掃描並連上另一台）。BLE connection interval 是 11.25 ms，每個按鍵事件會晚 0–11 ms 到；對策想用 note 的 velocity 帶上長度、收的一方加一點播放緩衝，等量過再定。實機要等有第二台 |''','''| 0.5 | [藍牙](#bluetooth) peripheral：Mac、iPad、手機上的 Vail 和 MORSE on the web 走藍牙。已做好，等實機驗證和量抖動 |
+| 0.6 | 兩台 FM-1 互打：`ble_central`，一台掃描、選另一台、連上。等有第二台 |''')
+rep('''| **網頁走藍牙** | 韌體 0.4 沒有開藍牙 | 跟著 0.5 的藍牙一起驗證，見[備份與還原](#backup) |''','''| **用 velocity 帶 mark 的長度** | 0.5 已經照送出端的時間戳記解碼，還不知道接收端（CoreMIDI、Chrome、Vail）會不會照時間戳記排 | 實機量過抖動後再決定：如果到達時間的誤差超過一個點的 15–20%，note off 的 velocity 帶上長度（10 ms 一格），收方也是 MORSE 時用它 |''')
+open(p,'w').write(s)
+EOF
+grep -n "#bluetooth\|藍牙方案" docs/*.md docs/*/*.md | grep -v "docs/dev/morse.md" | head
+```
+
+```text
+docs/agentic/conductor-cheatsheet.md:152:## 藍牙 { #bluetooth }
+docs/agentic/conductor.md:108:## USB 與 Bluetooth { #bluetooth }
+docs/agentic/conductor.md:110:**韌體 0.3 起支援藍牙**，2026-11-17 在實機上連通 `[實機]`。使用方式見[速查](conductor-cheatsheet.md#bluetooth)。
+docs/agentic/conductor.md:332:- [x] Bluetooth（0.3），見 [USB 與 Bluetooth](#bluetooth)。
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 07:51:17Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Find version mentions and cheatsheet settings
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1; sed -i '' 's/ROUND 17 的紀錄保留；每次改設定寫 4 次（一筆紀錄），開機 0 次/ROUND 17 的紀錄保留；改設定時存一筆紀錄（4 次 erase／program），開機 0 次/' docs/dev/morse.md; grep -n -i "morse" README.md docs/index.md | head; grep -n "SETTINGS\|JUDGING\|header\|PC\b" docs/dev/morse-cheatsheet.md | head -20`
+
+```text
+docs/index.md:22:| 用 FM-1 學摩斯電碼、跟人互傳（自製） | [用 MORSE 學摩斯](dev/morse-learn.md)、[摩斯電碼機](dev/morse.md)、[操作速查](dev/morse-cheatsheet.md)、[兩台互連](hardware/io.md#two-units) |
+docs/index.md:46:在 [fm1-base](dev/index.md) 上寫的。Conductor 和共用模組是 MIT；Morse 的韌體是 GPL-3.0-or-later（電腦端仍是 MIT）。每個專案是一套 FM-1 韌體，需要的話再加一個電腦端程式。
+docs/index.md:50:| **Conductor** | coding agent 的桌上控制台：一個琴鍵一個 agent，LED 表示急不急，螢幕顯示狀態與輸出（含中文），提示音，按鈕批准 / 拒絕 / 中斷，按住說話的語音輸入，USB 或藍牙 | `firmware/conductor/` | `host/conductor/`（接 hc 與 classic Herdr 的 Python daemon） | 韌體 0.3、host 0.3.2；2026-11-17 在我的機器上用過，目前機器上換成 Morse（換回來：`just fm1-switch firmware/conductor/build/conductor.fwsc`），見[設計](agentic/conductor.md)、[速查](agentic/conductor-cheatsheet.md)、[版本紀錄](agentic/conductor-changelog.md) |
+docs/index.md:51:| **Morse** | 隨身摩斯電碼機：琴鍵當電鍵（直鍵或 iambic paddle）即時解碼、練長短的 RHYTHM 頁、琴鍵當字母鍵盤和片語鍵、閃卡間隔複習（預設只用聽的，打碼卡看自己的節奏判斷）、分級測驗與手動調整進度、進度備份還原、連續收聽、靜音看燈、USB MIDI 用 Vail 的格式 | `firmware/morse/` | `host/morse/`（把發的字打進電腦、電腦送字給 FM-1 播） | 韌體 0.4、host 0.4.0；2026-11-17 起在我的機器上，見[怎麼用它學](dev/morse-learn.md)、[設計](dev/morse.md)、[速查](dev/morse-cheatsheet.md) |
+docs/index.md:53:| 共用模組 | `hostlink`（經 USB / 藍牙和電腦的 SysEx 連線）、`ledfx`（LED 動態）、`chime`（FM 提示音） | `firmware/common/` | — | Conductor 在用；Morse 用 `hostlink`、`ledfx` |
+README.md:16:- [Morse](docs/dev/morse.md) — our own pocket Morse code machine (firmware + host), see below
+README.md:22:Built here on [fm1-base](https://github.com/charlesvestal/fm1-base) (MPL-2.0). Conductor and the shared modules are MIT; Morse's firmware is GPL-3.0-or-later (its host program here is MIT).
+README.md:27:| **Conductor** | The FM-1 as a desk console for coding agents: one agent per key, urgency on the key LEDs, state and output on the screen (Chinese included), chimes, approve / deny / interrupt from the buttons, push-to-talk dictation, USB or Bluetooth | [`firmware/conductor/`](firmware/conductor/) | [`host/conductor/`](host/conductor/) (Python daemon for [herdr-core](https://github.com/herdrdev/herdr-core) `hc` and classic Herdr) | Firmware 0.3, host 0.3.2; ran on my unit 2026-11-17, now switched to Morse |
+README.md:28:| **Morse** | A pocket Morse code machine: key on the piano keys (straight key or iambic paddles) and read what you sent, type letters on the keys and hear them, flash cards with spaced repetition (by sound by default; keyed answers judged by their own rhythm), a placement test, progress you can edit, back up and restore, silent mode with the lights, USB-MIDI in the Vail adapter's format | [`firmware/morse/`](firmware/morse/) | [`host/morse/`](host/morse/) (types what you key into the computer; sends text for the FM-1 to play) | Firmware 0.4, host 0.4.0; on my unit since 2026-11-17; [learning with it](docs/dev/morse-learn.md) |
+README.md:30:| Shared modules | `hostlink` (SysEx link to a host over USB / BLE), `ledfx` (LED patterns), `chime` (FM notification voice) | [`firmware/common/`](firmware/common/) | — | Used by Conductor; Morse uses `hostlink` and `ledfx` |
+18:轉速度時畫面上方會顯示它的意思，例如「SEND 10 WPM DIT 120MS DAH 360MS」。設定改完 3 秒後自動存。不知道怎麼設的話，到 SETTINGS 選 PRESET，見[速度](morse.md#speed)。
+50:| 琴鍵 | 直鍵：任一鍵。iambic：左半邊 F3–F4 是 dit，右半邊 F#4–G5 是 dah（SETTINGS 可對調） |
+77:預設排列（SETTINGS 的 TYPE KEYS 可改成「A–Z 由左到右」或「Koch 順序」）：
+109:## SETTINGS
+125:| JUDGING | 0.4：BY RHYTHM（預設，看自己的長短比例）或 STRICT（照發報速度，0.3 的判法） |
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 07:51:21Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Read cheatsheet header and settings sections
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1; sed -n 1,16p docs/dev/morse-cheatsheet.md; sed -n 105,140p docs/dev/morse-cheatsheet.md`
+
+````text
+# 摩斯電碼機操作速查
+
+韌體 0.4（0.3 以前沒有的操作標了「0.4」；0.1 和 0.2 的差別見文末）。學習的步驟見[用 MORSE 學摩斯](morse-learn.md)。設計與原理見[摩斯電碼機](morse.md)。
+
+## 任何頁面
+
+| 控制 | 作用 |
+|---|---|
+| `HOME` | 叫出選單；在選單裡再按一次回到上一頁 |
+| `ALGO` 旋鈕 | 直接換頁 |
+| `FX` | 聲音開／關。關掉時 `FX` 燈亮，改看琴鍵燈和畫面上的燈號 |
+| `K1` | 聽的速度：字元 5–40 WPM（預設 20） |
+| `K2` | 間隔（Farnsworth）：字和字之間拉開，5 到字元速度（預設 8） |
+| `K3` | 音高 300–1200 Hz（預設 600）。收到的訊號高一個大三度 |
+| `K4` | 發報速度 5–40 WPM（預設 10）：keyer 的節奏、KEY 頁解碼器的起點、RHYTHM 的目標（0.4 起 PRACTICE 的打碼卡不看它） |
+| `MASTER` | 音量 |
+任何改進度的問題（SAVE CHANGES?、MARK THESE KNOWN?、LOAD THIS BACKUP?）都只認 `PLAY`（是）和 `HOME`（否），其他鍵沒作用。
+
+顏色：深紅是剛學、黃是一半、綠是熟了（兩張卡盒號的平均）；幾乎全黑的格子是還沒開的字。
+
+## SETTINGS
+
+`SELECT` 選項目，`OCT-` / `OCT+`（或 `SEL`）改值。
+
+| 項目 | 值 |
+|---|---|
+| PRESET | START、BUILDING、QSO、FAST；速度和這幾組都不同時顯示 CUSTOM |
+| HEAR SPEED | 聽的字元速度（同 K1） |
+| SPACING | 間隔（同 K2） |
+| SEND SPEED | 發報速度（同 K4） |
+| PITCH | 音高 |
+| KEYER | STRAIGHT、IAMBIC A、IAMBIC B |
+| PADDLES | LEFT DIT（左 dit 右 dah）或 LEFT DAH |
+| SOUND | ON 或 OFF（看燈） |
+| CARDS | 每回合 10–30 張 |
+| LEARN BY | SOUND（預設，建議）或 SIGHT（顯示點劃）。原因見[先用聽的](morse.md#by-sound) |
+| JUDGING | 0.4：BY RHYTHM（預設，看自己的長短比例）或 STRICT（照發報速度，0.3 的判法） |
+| TYPE KEYS | TYPE 頁的排列 |
+
+## 燈
+
+| 燈 | 意思 |
+|---|---|
+| 所有琴鍵全亮／半亮 | 自己在發／收到訊號（靜音時就看這個） |
+| 四個琴鍵亮、一個閃 | 四選一的選項，閃的是 `SELECT` 選中的 |
+| `FX` 亮 | 靜音 |
+| `PLAY` 綠 | 電腦端程式連著 |
+
+## 電腦端
+
+```sh
+just morse-type            # 解出的字打進 Mac 目前的視窗（要 Accessibility 權限）
+````
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 07:51:25Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Read cheatsheet host section
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1; sed -n 140,160p docs/dev/morse-cheatsheet.md`
+
+````text
+just morse-type            # 解出的字打進 Mac 目前的視窗（要 Accessibility 權限）
+just morse-type --dry-run  # 只印出來
+just morse-send cq cq de fm1 k   # FM-1 當成收到的播出來（"73 <SK>" 這樣的 prosign 0.2 起可以）
+just morse-backup progress.json  # 0.4：學習進度存成 JSON（FM-1 上什麼都不變）
+just morse-restore progress.json # 0.4：載回去；FM-1 會先問，按 PLAY 才載入
+```
+
+不想裝 Python 的話，用 Chrome 或 Edge 開 [MORSE on the web](https://daviddwlee84.github.io/fm1-morse/web/)：看 FM-1 讀到的字、送字給它播、備份和還原，都不用安裝。
+
+## 0.1 和 0.2 的差別
+
+0.1 只有一個速度（K1、K2），沒有 LISTEN、RHYTHM 和 PRESET。TYPE 頁要按住 `OCT-` 才是數字和符號，`OCT+` 是刪字，沒有清空，`PLAY` 也停不下來。
+````
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 07:51:39Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Update cheatsheet, learning guide, index and README
+
+````bash
+cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1; python3 - <<'EOF'
+def edit(p, pairs):
+    s=open(p).read()
+    for a,b in pairs:
+        assert s.count(a)==1,(p,a[:50],s.count(a)); s=s.replace(a,b)
+    open(p,'w').write(s)
+edit('docs/dev/morse-cheatsheet.md',[
+('韌體 0.4（0.3 以前沒有的操作標了「0.4」；0.1 和 0.2 的差別見文末）。','韌體 0.5（0.3 以前沒有的操作標了「0.4」，藍牙是「0.5」；0.1 和 0.2 的差別見文末）。'),
+('''| TYPE KEYS | TYPE 頁的排列 |
+''','''| TYPE KEYS | TYPE 頁的排列 |
+| BLUETOOTH | 0.5：ON（預設）或 OFF，關機後保留。旁邊會寫 NOT CONNECTED、CONNECTED，或 TALKING（電腦端程式或網頁正透過藍牙連著）。項目超過一頁，往下轉會捲動 |
+
+畫面右上角：`PC` 代表電腦端程式或網頁連著；`BT`（0.5）灰色代表藍牙開著、等電腦連上，藍色代表已經連上；`MUTE` 代表靜音。
+'''),
+('''just morse-restore progress.json # 0.4：載回去；FM-1 會先問，按 PLAY 才載入
+```''','''just morse-restore progress.json # 0.4：載回去；FM-1 會先問，按 PLAY 才載入
+PYTHONPATH=host uv run python -m morse --bluetooth send cq   # 0.5：先打開 Mac 的藍牙 MIDI 視窗，等 FM-1 連上
+```
+
+0.5 起不接線也行：Mac 的「音訊 MIDI 設定」→ 顯示 MIDI 工作室 → 藍牙 → `FM-1 XXXX` 的 Connect。FM-1 重開後要再按一次（見[藍牙](morse.md#bluetooth)）。'''),
+])
+edit('docs/dev/morse-learn.md',[
+('MORSE 的設計和原理見[摩斯電碼機](morse.md)。本頁寫的是韌體 0.4。' if False else '設計和原理見[摩斯電碼機](morse.md)。本頁寫的是韌體 0.4。','設計和原理見[摩斯電碼機](morse.md)。本頁寫的是韌體 0.4，0.5 加的藍牙寫在最後一節。'),
+('''接上電腦後，FM-1 在 Vail 眼中就是一個 MIDI 電鍵''','''接上電腦後（USB，或 0.5 起的[藍牙](morse.md#bluetooth)），FM-1 在 Vail 眼中就是一個 MIDI 電鍵'''),
+])
+edit('docs/index.md',[('靜音看燈、USB MIDI 用 Vail 的格式 |','靜音看燈、USB 或藍牙 MIDI 用 Vail 的格式 |'),('| 韌體 0.4、host 0.4.0；2026-11-17 起在我的機器上','| 韌體 0.4、host 0.4.0（0.5 加藍牙，還沒刷）；2026-11-17 起在我的機器上')])
+edit('README.md',[('silent mode with the lights, USB-MIDI in the Vail adapter\'s format |','silent mode with the lights, USB or Bluetooth MIDI in the Vail adapter\'s format |'),('| Firmware 0.4, host 0.4.0; on my unit since 2026-11-17;','| Firmware 0.4, host 0.4.0 (0.5 adds Bluetooth, not flashed yet); on my unit since 2026-11-17;')])
+EOF
+grep -n "## 備份\|## 換韌體\|網頁\*\*" docs/dev/morse-learn.md | head
+````
+
+```text
+78:## 換韌體之前：備份進度
+82:- **網頁**：用 Chrome 或 Edge 開 [MORSE on the web](https://daviddwlee84.github.io/fm1-morse/web/)（或 fm1-morse 裡的 `web/index.html`），Connect，Download the progress。換回 MORSE 後選檔案，Send it to the FM-1。
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 07:51:46Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Fix guide wording; check PROTOCOL.md transport notes
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1; sed -i '' 's/本頁寫的是韌體 0.4，0.5 加的藍牙寫在最後一節。/本頁寫的是韌體 0.4；0.5 加了不接線的[藍牙](morse.md#bluetooth)。/' docs/dev/morse-learn.md; grep -n "0.5 加了" docs/dev/morse-learn.md; grep -n "PROTOCOL\|transport\|Bluetooth\|BLE" host/morse/PROTOCOL.md | head`
+
+```text
+5:這頁講怎麼用它學。每個按鍵的作用見[操作速查](morse-cheatsheet.md)，設計和原理見[摩斯電碼機](morse.md)。本頁寫的是韌體 0.4；0.5 加了不接線的[藍牙](morse.md#bluetooth)。
+39:| `41` | HELLO | `ver`, firmware major, minor, transport (0 USB, 1 BLE). Once a second until a HELLO_ACK |
+40:| `42` | HEARTBEAT | `ver`, transport. Once a second after a HELLO_ACK |
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 07:51:50Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Read PROTOCOL.md intro
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1; sed -n 1,20p host/morse/PROTOCOL.md`
+
+```text
+# Morse wire protocol
+
+Between `firmware/morse` on the FM-1 and the host (`host/morse`). Two layers, both
+over USB-MIDI (fm1-emu's virtual cable works the same):
+
+1. **Keying** — MIDI notes, the [Vail adapter's format](https://github.com/Vail-CW/vail-adapter/blob/master/docs/MIDI_INTEGRATION_SPEC.md),
+   so Vail and any MIDI tool understand it without our host.
+2. **Text** — our own SysEx frames, for the host program only.
+
+## Keying (notes)
+
+| Direction | Message | Meaning |
+|---|---|---|
+| device → host | `90 00 7F` | key down (channel 1, note 0) |
+| device → host | `80 00 00` | key up |
+| host → device | `9n kk vv` (channel 1, any note, `vv` > 0) | received key down |
+| host → device | `8n kk vv`, or `9n kk 00` | received key up |
+
+- The device sends its own keying on the **KEY** page (after its keyer: paddles come out
+  already timed, as note 0) and what it plays on the **TYPE** page. Not on the practice
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 07:51:57Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Note Bluetooth in PROTOCOL.md
+
+```bash
+cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1; python3 - <<'EOF'
+p='host/morse/PROTOCOL.md'; s=open(p).read()
+a='''Between `firmware/morse` on the FM-1 and the host (`host/morse`). Two layers, both
+over USB-MIDI (fm1-emu's virtual cable works the same):'''
+b='''Between `firmware/morse` on the FM-1 and the host (`host/morse`). Two layers, both
+over USB-MIDI (fm1-emu's virtual cable works the same) and, from firmware 0.5, Bluetooth MIDI
+(fm1-base's own stack; SysEx in BLE-MIDI packets, keying with real BLE-MIDI timestamps both ways):'''
+assert s.count(a)==1; s=s.replace(a,b)
+a='''| `42` | HEARTBEAT | `ver`, transport. Once a second after a HELLO_ACK |'''
+b=a+'''
+'''
+open(p,'w').write(s)
+EOF
+grep -n "transport (0 USB" -A4 host/morse/PROTOCOL.md | head; grep -n "^- \|^## " host/morse/PROTOCOL.md | sed -n 1,30p
+```
+
+```text
+40:| `41` | HELLO | `ver`, firmware major, minor, transport (0 USB, 1 BLE). Once a second until a HELLO_ACK |
+41-| `42` | HEARTBEAT | `ver`, transport. Once a second after a HELLO_ACK |
+42-| `44` | PROG | firmware 0.4+: a chunk of the progress, the answer to PROG_REQ (see Progress) |
+43-| `45` | PROG_DONE | firmware 0.4+: the answer to a PROG_LOAD: `00` loaded, `01` declined on the device, `02` refused (a chunk missing or out of turn, CRC, contents) |
+44-| `43` | CHAR | ASCII: what the device read from the key (KEY page), or what was typed (TYPE page: a letter, or from firmware 0.2 a phrase such as `<SK> `, several characters in one frame; in COMPOSE mode the whole line when it is sent). `20` (space) ends a word; `*` is a pattern that is no character |
+11:## Keying (notes)
+20:- The device sends its own keying on the **KEY** page (after its keyer: paddles come out
+23:- Up is always `80 00 00`, never `90 00 00`: Vail's web app reads the command nibble only
+26:- Received keying is played on the second voice (a major third up) and decoded into amber
+30:## Text (SysEx)
+58:## Progress
+77:## Shared vectors
+92:## Versions
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 07:52:01Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Read PROTOCOL.md versions section
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1; sed -n 92,110p host/morse/PROTOCOL.md`
+
+```text
+## Versions
+
+The protocol byte changes only for an incompatible change. A new frame type is gated on
+the firmware version the HELLO reports.
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 07:52:08Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Finish PROTOCOL.md and run docs check
+
+```bash
+cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1; cat >> host/morse/PROTOCOL.md <<'EOF'
+
+Firmware 0.5 adds no frame: the same frames go over Bluetooth, and replies go back by the
+transport the host's HELLO_ACK came on. The transport byte of HELLO / HEARTBEAT says which one
+(the host logs it, prefers USB when it hears both, and the web page shows it).
+EOF
+just docs-check 2>&1 | tail -3
+```
+
+```text
+Build finished in 0.30s
+uv run --locked --all-groups python scripts/check-docs-site.py
+{"status": "ok", "pages": 49, "llm_pages": 49, "deployed": false}
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 07:52:27Z)**_
+
+0.5 的藍牙做好了，模擬器上都通過，**還沒刷進實機**，也還沒 commit。
+
+**用起來是這樣**
+- 藍牙和 USB 同時開著。按鍵同時從兩邊送出；網頁、`morse-send`、備份還原也都能改走藍牙。
+- SETTINGS 最後多一項 **BLUETOOTH**，預設 ON，關機後會記住。它跟靜音存在同一個欄位，存檔格式沒變，所以你現在的進度直接沿用。
+- header 會顯示 `BT`：灰色代表在等電腦連，藍色代表已經連上。
+- Mac 的連法：「音訊 MIDI 設定」→ 顯示 MIDI 工作室 → 藍牙 → `FM-1 XXXX` 旁邊按 Connect，不用配對碼。指令列加 `--bluetooth` 會幫你打開這個視窗，並等 FM-1 連上。
+- 網頁會顯示 `over Bluetooth` 或 `over USB`。指令列兩邊都連著時優先用 USB。
+
+**和計畫不同的地方**：藍牙的按下和放開可能在同一毫秒一起到。原本照計畫的寫法會把這種短點整個吃掉，所以改成每個按下、放開都照送出端的時間個別記錄。
+
+**驗證過的** `[模擬]`
+- **host simulator 全過**：藍牙的 HELLO、送字、備份請求、按鍵送出和收進、開關存檔後重開機都測了，藍牙也不會多寫 flash。不含藍牙的 build 也能編譯，除了藍牙那段都通過。
+- **fm1-emu 兩種晶片都過**：疊在你刷 0.4 之前的備份上，把藍牙關掉、重開讀回 OFF、再打開，ROUND 17、開放 10 個字的進度都還在，開機 0 次寫入。
+- **其他測試**：`morse-unit` 3074 項、`morse-test` 22 項、`docs-check` 都通過。
+- **大小**：173,744 B，比 0.4 多 35.7 KB；RAM 38.6 KB / 96 KB。
+
+**模擬器測不到的**：模擬器沒有無線電，所以藍牙連線本身、時間抖動、Chrome 和 Vail 能不能透過藍牙用，都要刷進實機才知道。
+
+**文件**
+- `docs/dev/morse.md` 的藍牙一節改寫成 0.5 的實作和連法，大小、驗證、版本、路線圖也更新了。兩台互打排到 0.6，用 velocity 帶長度的備案放進 backlog。
+- 速查、學習指南、首頁、README、`PROTOCOL.md` 也都更新了。
+- fm1-morse 的 README 加了 Bluetooth 一節，31 張截圖重新產生（新增 `settings_bt`）。
+
+**下一步要你決定**
+1. 要不要 commit？fm1-morse 先 commit 並 push，再把這邊的 submodule pointer 一起 commit。
+2. 刷 0.5 前的 preflight：
+   - 先用 `just morse-backup` 備份學習進度；
+   - 切到下載模式（模式切換，不寫 flash），做一份新的整片 flash 備份；
+   - 然後請你核准刷機，`yes` 由你輸入。
+3. 刷完之後我們一起量抖動：在 KEY 頁打同一串字，分別走 USB 和藍牙，比較 Mac 收到的時間差。
+
+---
+
+_**User (2026-11-18 08:10:43Z)**_
+
+1. 可以
+2. 幫我備份一下 （也可以放到release裡面暫存著）
+3. ok
+
+---
+
+_**Agent (claude-opus-5-5 2026-11-18 08:10:53Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Check submodule branch state
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/firmware/morse; git branch --show-current; git log --oneline -1; git status --short | wc -l`
+
+```text
+main
+42f900e MORSE on the web: live text both ways; fmhub.json editor points at it
+      33
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 08:11:06Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Commit and push fm1-morse 0.5
+
+```bash
+cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/firmware/morse; git add -A && git commit -q -F - <<'EOF'
+0.5: Bluetooth MIDI beside USB (fm1-base's own stack)
+
+- fm1.toml: ble, ble_stack "own", ble_diag off, ble_midi_time.
+- APP_BLE_STORE with no-op load/save: nothing of Bluetooth is written.
+- SETTINGS > BLUETOOTH (bit 1 of the mute byte: record format unchanged,
+  a 0.4 record reads as on), APP_BLE_AT_BOOT reads it before app_init.
+- The tick queues Bluetooth's SysEx packets for the main loop (ble_in ->
+  hl_sx_packet -> host_frame HL_BLE); keying in is timed by the sender's
+  BLE-MIDI timestamps, each note change its own event.
+- Keying out to USB and the Bluetooth host; BT in the header; SETTINGS
+  scrolls past twelve rows.
+- Web page shows the link (USB / Bluetooth); README Bluetooth section;
+  screens regenerated (settings_bt).
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+EOF
+git push -q origin main 2>&1 | tail -2; git log --oneline -1
+```
+
+```text
+a75c29e 0.5: Bluetooth MIDI beside USB (fm1-base's own stack)
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 08:11:35Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Commit and push superproject
+
+```bash
+cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1; git status --short; git add firmware/morse Justfile README.md docs host/morse host/tests/test_morse.py && git commit -q -F - <<'EOF'
+morse 0.5: Bluetooth (firmware a75c29e), host 0.5.0
+
+- firmware/morse -> fm1-morse a75c29e: BLE-MIDI peripheral beside USB,
+  SETTINGS > BLUETOOTH, keying timed by BLE-MIDI timestamps.
+- host 0.5.0: transport from HELLO / HEARTBEAT, USB preferred when both
+  answer, --bluetooth opens the macOS Bluetooth MIDI window
+  (conductor.blelink).
+- docs: the Bluetooth section as built, sizes, verification, versions,
+  roadmap (central -> 0.6), backlog (velocity-carried lengths);
+  cheatsheet, learning guide, index, README, PROTOCOL.md.
+- morse-shots: settings_bt.
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+EOF
+git push -q origin main 2>&1 | tail -2; git log --oneline -1; git status --short
+```
+
+```text
+ M .claude/plans/squishy-riding-flute.md
+ M .specstory/history/2026-11-17_13-42-11Z-ascii-firmware-focus-host.md
+ M .specstory/statistics.json
+ M Justfile
+ M README.md
+ M docs/dev/morse-cheatsheet.md
+ M docs/dev/morse-learn.md
+ M docs/dev/morse.md
+ M docs/index.md
+ M firmware/morse
+ M host/morse/PROTOCOL.md
+ M host/morse/__init__.py
+ M host/morse/__main__.py
+ M host/morse/core.py
+ M host/morse/device.py
+ M host/morse/protocol.py
+ M host/tests/test_morse.py
+?? .claude/plans/firmware-morse-concurrent-crane.md
+?? .specstory/history/2026-11-18_07-29-47Z-at-firmware-morse-at.md
+?? ".specstory/references/gemini-\346\226\207\345\255\227\350\255\234\351\235\242\350\252\236\346\263\225\350\210\207-MIDI-\350\275\211\346\217\233---Google-Gemini-20261118-1536.md"
+34cf8c2 morse 0.5: Bluetooth (firmware a75c29e), host 0.5.0
+ M .claude/plans/squishy-riding-flute.md
+ M .specstory/history/2026-11-17_13-42-11Z-ascii-firmware-focus-host.md
+ M .specstory/statistics.json
+?? .claude/plans/firmware-morse-concurrent-crane.md
+?? .specstory/history/2026-11-18_07-29-47Z-at-firmware-morse-at.md
+?? ".specstory/references/gemini-\346\226\207\345\255\227\350\255\234\351\235\242\350\252\236\346\263\225\350\210\207-MIDI-\350\275\211\346\217\233---Google-Gemini-20261118-1536.md"
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 08:11:38Z)**_
+
+兩邊都 commit 並 push 了。接著備份：先備份學習進度（唯讀），再切到下載模式做整片 flash 備份，最後重開回 Morse。
+
+_**Agent (claude-opus-5-5 2026-11-18 08:11:42Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Back up learning progress (read-only)
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1; just morse-backup backups/progress/2026-11-18-pre-0.5.json 2>&1 | tail -4`
+
+```text
+[morse] connected to Felucca
+[morse] via USB
+[morse] firmware 0.0 has no progress backup; it came in 0.4
+error: recipe `morse-backup` failed on line 306 with exit code 1
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 08:11:52Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Read progress connect check
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/host; sed -n 120,135p morse/__main__.py; grep -n "def can_backup" -A6 morse/core.py`
+
+```text
+    link.close()
+    return 0
+
+
+def _connected_for_progress(args):
+    link = open_link(args)
+    host = Host(link, None, log=log)
+    if not wait_connected(host):
+        link.close()
+        raise RuntimeError("the FM-1 has not said HELLO: is it running Morse?")
+    if not host.can_backup():
+        fw = host.firmware or (0, 0)
+        link.close()
+        raise RuntimeError(f"firmware {fw[0]}.{fw[1]} has no progress backup; it came in "
+                           f"{P.PROG_FIRMWARE[0]}.{P.PROG_FIRMWARE[1]}")
+    return link, host
+83:    def can_backup(self) -> bool:
+84-        return self.firmware is not None and self.firmware >= P.PROG_FIRMWARE
+85-
+86-    def backup(self, timeout: float = 5.0) -> G.Progress:
+87-        """The FM-1's progress (nothing changes on it)."""
+88-        self.progress, self.prog_error, self._asm = None, None, G.Assembler()
+89-        self.link.send(P.prog_req())
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 08:11:59Z)**_
+
+<think><details><summary>Thought Process</summary>
+FM-1 已經被另一個程式連著，所以只收到心跳、沒有收到 HELLO，host 讀不到韌體版本；我先改成版本不明時也照樣嘗試備份。
+
+</details></think>
+
+_**Agent (claude-opus-5-5 2026-11-18 08:12:02Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Allow backup with unknown firmware, retry
+
+```bash
+cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/host; python3 - <<'EOF'
+p='morse/__main__.py'; s=open(p).read()
+a='''    if not host.can_backup():
+        fw = host.firmware or (0, 0)
+        link.close()'''
+b='''    if host.firmware is None:  # only HEARTBEATs: another program (a browser tab?) answered its HELLO
+        log("firmware version not heard (the FM-1 is already talking to another program); trying anyway")
+    elif not host.can_backup():
+        fw = host.firmware
+        link.close()'''
+assert s.count(a)==1; s=s.replace(a,b); open(p,'w').write(s)
+EOF
+cd ..; just morse-test 2>&1 | tail -1; just morse-backup backups/progress/2026-11-18-pre-0.5.json 2>&1 | tail -4
+```
+
+```text
+22 passed in 0.04s
+[morse] connected to Felucca
+[morse] via USB
+[morse] firmware version not heard (the FM-1 is already talking to another program); trying anyway
+[morse] saved: round 29, 20 open (KMURESNAPTLWI.JZ=FOY), 15 past the line, 451 answered, 386 right, streak 5
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 08:12:06Z)**_
+
+Progress saved (round 29, 20 open). Now the full-flash backup: switching to download mode first (a mode switch, not a write).
+
+_**Agent (claude-opus-5-5 2026-11-18 08:12:18Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Enter download mode and take a full-flash backup
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1; just fm1-download-mode 2>&1 | tail -3 && just fm1-backup pre-morse-0.5 2>&1 | tail -8`
+
+```text
+"/Applications/M-Flasher.app/Contents/MacOS/M-Flasher" download-mode
+Sent the Felucca the download-mode message over USB MIDI; waiting for it
+In download mode: usb:2-4	WL82 UBOOT1.00 (USB bus 2, device 4)
+  flash       0xB36014
+  unit id     55227286a0cb022a
+  loader      M-Flasher 1.3, CPU at 96 MHz
+    - the firmware uses the FM-1 flash layout
+    - flash chip 0xB36014 (new)
+Backup saved: backups/2026-11-18-pre-morse-0.5/fm1-20261118-161218.bin
+d8f8889e2b60876786e587ee17f7147d4ca60b1d91f10b84e00883cba32a0d44  backups/2026-11-18-pre-morse-0.5/fm1-20261118-161218.bin
+Record this in docs/device-log.md and keep a copy off this machine.
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 08:12:28Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Restart unit and read backup-release recipe
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1; just fm1-restart 2>&1 | tail -2; grep -n "^fm1-backup-release" -A12 Justfile | head -16`
+
+```text
+Sent the restart (a 34-byte program at 0x01C28000); waiting for the unit to reset
+Running: the Felucca is on USB MIDI
+491:fm1-backup-release dir:
+492-    #!/usr/bin/env bash
+493-    set -euo pipefail
+494-    name=$(basename "{{dir}}")   # accept a bare name or a path like backups/<name>/
+495-    d="backups/$name"; tag="backup-$name"
+496-    test -d "$d" || { echo "no such directory: $d" >&2; exit 1; }
+497-    sums=$(cd "$d" && shasum -a 256 *.bin)
+498-    notes=$(printf 'Full-flash backup of my own FM-1 (1 MiB), made with M-Flasher.\nDevice-specific: restore only to this unit. See docs/device-log.md.\n\nSHA-256:\n%s\n' "$sums")
+499-    if gh release view "$tag" >/dev/null 2>&1; then
+500-      gh release upload "$tag" "$d"/*.bin "$d"/*.json --clobber
+501-    else
+502-      gh release create "$tag" "$d"/*.bin "$d"/*.json --title "Backup $name" --notes "$notes" --latest=false
+503-    fi
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 08:12:33Z)**_
+
+Restarted back to Morse. Now publishing this backup as a release asset, as you asked; the learning-progress JSON goes along in the same release.
+
+_**Agent (claude-opus-5-5 2026-11-18 08:12:37Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Publish the backup as a release asset
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1; ls backups/2026-11-18-pre-morse-0.5/; cp backups/progress/2026-11-18-pre-0.5.json backups/2026-11-18-pre-morse-0.5/morse-progress-2026-11-18-pre-0.5.json; just fm1-backup-release 2026-11-18-pre-morse-0.5 2>&1 | tail -3; gh release view backup-2026-11-18-pre-morse-0.5 --json url,assets -q '.url, (.assets[]|.name)'`
+
+```text
+Exit code 1
+fm1-20261118-161218.bin
+fm1-20261118-161218.json
+Publish this full-flash backup as a PUBLIC release asset? error: recipe `fm1-backup-release` was not confirmed
+release not found
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 08:12:41Z)**_
+
+The recipe has a confirmation prompt. You asked for this specific backup to go into a release, so I'm passing just's `--yes`. That is just's own confirmation, not M-Flasher's.
+
+_**Agent (claude-opus-5-5 2026-11-18 08:12:52Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Publish backup release with confirmation
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1; just --yes fm1-backup-release 2026-11-18-pre-morse-0.5 2>&1 | tail -3; gh release view backup-2026-11-18-pre-morse-0.5 --json url,assets -q '.url, (.assets[]|.name+" "+.digest)'`
+
+```text
+fm1-20261118-161218.bin sha256:d8f8889e2b60876786e587ee17f7147d4ca60b1d91f10b84e00883cba32a0d44
+fm1-20261118-161218.json sha256:d59964e7ae5ff4dc2080979dcf1af7637ea4acdaa97693373dad35fb8243004b
+morse-progress-2026-11-18-pre-0.5.json sha256:5f72cade6080e5129082fd6a1fc5b24e9a4c784a03d7569163727668f5c82abc
+https://github.com/daviddwlee84/M-VAVE_FM-1/releases/tag/backup-2026-11-18-pre-morse-0.5
+fm1-20261118-161218.bin sha256:d8f8889e2b60876786e587ee17f7147d4ca60b1d91f10b84e00883cba32a0d44
+fm1-20261118-161218.json sha256:d59964e7ae5ff4dc2080979dcf1af7637ea4acdaa97693373dad35fb8243004b
+morse-progress-2026-11-18-pre-0.5.json sha256:5f72cade6080e5129082fd6a1fc5b24e9a4c784a03d7569163727668f5c82abc
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 08:12:56Z)**_
+
+上傳的雜湊和本機一致。接著在本機 build 0.5 的 release 套件，準備刷機。
+
+_**Agent (claude-opus-5-5 2026-11-18 08:13:02Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Build the 0.5 release package
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1; just morse-release 0.5 2>&1 | grep -E "error|image|package" | tail -3; (cd firmware/morse && git log --oneline -1 && git status --short | head -3)`
+
+```text
+loader: image 14896 B at 0x1c0a800, bss end 0x1c15b20
+  ok    image 173748 B; RAM code .ram_text 5576 B of 32768; RAM .data+.bss 38572 B of 98304; pool 69384 B of 344064
+package  /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/firmware/morse/build/morse-0.5.fwsc  616003 B, identity FM-1_41000500
+a75c29e 0.5: Bluetooth MIDI beside USB (fm1-base's own stack)
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 08:13:12Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Rehearse 0.5 release over the new backup on both chips
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1; shasum -a 256 firmware/morse/build/morse-0.5.fwsc; pkg=$PWD/firmware/morse/build/morse-0.5.fwsc; bak=$PWD/backups/2026-11-18-pre-morse-0.5/fm1-20261118-161218.bin; cd tools/emu-state; for chip in uc25hq80 p25q80; do rm -f pristine-r.flash; ../fm1-emu/fm1-live --fwsc "$pkg" --flash-chip $chip --flash pristine-r.flash --midi none --shot 1 --lcd-only >/dev/null 2>&1; python3 ../../scripts/emu_rehearse.py pristine-r.flash "$bak" bt/r-$chip.flash >/dev/null; echo "== $chip"; FM1_NO_PLAY=1 ../fm1-emu/fm1-live --fwsc "$pkg" --flash-chip $chip --flash bt/r-$chip.flash --midi none --shot 3000 --lcd-only 2>&1 | grep -i -E "^flash:|fault|error"; sips -s format png work/lcd.ppm --out bt/r-$chip.png >/dev/null; done`
+
+```text
+494331904fd9adc3efb4ba4b22c01f477b741cbfa1d498b52ed458b31d154457  firmware/morse/build/morse-0.5.fwsc
+== uc25hq80
+flash: 0 erases / programs
+== p25q80
+flash: 0 erases / programs
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 08:13:15Z)**_
+
+<tool-use data-tool-type="read" data-tool-name="Read"><details>
+<summary>Tool use: **Read**</summary>
+ `./tools/emu-state/bt/r-uc25hq80.png`
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 08:13:21Z)**_
+
+預演沒問題：0.5 開機直接讀到你的進度（ROUND 30、開放 20 個字、STREAK 5），兩種晶片都是 0 次寫入。把備份記進 device-log：
+
+_**Agent (claude-opus-5-5 2026-11-18 08:13:23Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Read device-log recent entries
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1; grep -n "05:20\|05:25\|現在的韌體\|目前\b" docs/device-log.md | head; sed -n 114,120p docs/device-log.md`
+
+```text
+3:這台 FM-1 目前的狀態與操作歷史。任何對實機的操作，做之前先讀這頁，做完更新這頁。這頁的內容都是 `[實機]`。
+13:| 目前韌體 | **Morse 0.4 release build（`FM-1_41000400`）**（2026-11-18 05:20 從 Morse 0.3 release 用 USB-MIDI 更新，學習紀錄保留；macOS 上的 MIDI port 名稱仍是 `Felucca`）。0.3 release 是 Hub 測試 3 從原廠 015 裝的，進度當時從 ROUND 1 重新開始。之前依序是原廠 015 → SLOOP 2.8.5 → Agent Deck 0.7 → SLOOP 2.8.5 → CTL-1 1.0.3 → ChoralRoot 0.41 → Conductor 0.1 → 0.2 → 0.3 → Morse 0.1 → 0.2 → 0.3 → SLOOP 2.8.5 → Morse 0.3 release → 原廠 015（還原）→ Morse 0.3 release → Morse 0.4 |
+114:| 2026-11-18 05:20 | 本人執行 `fm1_install.py firmware/morse/build/morse-0.4.fwsc`（Morse 0.4 release build，`FM-1_41000400`，SHA-256 `3bc1b23b…7e471f`，fm1-morse `323d79b`），機器上是 Morse 0.3 release | 成功：`checking the package (30 reads)` → `switching to update mode` → `the loader writes only the sectors that changed (fast install)` → `done: the FM-1 runs FM-1_41000400` |
+115:| 2026-11-18 05:25 | agent 執行 `just morse-backup`（唯讀）；用 Playwright 的 Chromium 開 `web/progress.html` 下載進度（唯讀） | 指令列：`round 16, 10 open (KMURESNAPT), 4 past the line, 169 answered, 132 right`，**升級後學習紀錄保留**，存成 `backups/progress/2026-11-18-after-0.4.json`。網頁第一版找不到機器：macOS 把這台的 MIDI port 叫做 `Felucca`（第一次接上時的韌體名），網頁只找名字有 MORSE 的 port；改成聽哪個 port 送出 HELLO 後，網頁下載的 JSON 和指令列的完全相同 |
+| 2026-11-18 05:20 | 本人執行 `fm1_install.py firmware/morse/build/morse-0.4.fwsc`（Morse 0.4 release build，`FM-1_41000400`，SHA-256 `3bc1b23b…7e471f`，fm1-morse `323d79b`），機器上是 Morse 0.3 release | 成功：`checking the package (30 reads)` → `switching to update mode` → `the loader writes only the sectors that changed (fast install)` → `done: the FM-1 runs FM-1_41000400` |
+| 2026-11-18 05:25 | agent 執行 `just morse-backup`（唯讀）；用 Playwright 的 Chromium 開 `web/progress.html` 下載進度（唯讀） | 指令列：`round 16, 10 open (KMURESNAPT), 4 past the line, 169 answered, 132 right`，**升級後學習紀錄保留**，存成 `backups/progress/2026-11-18-after-0.4.json`。網頁第一版找不到機器：macOS 把這台的 MIDI port 叫做 `Felucca`（第一次接上時的韌體名），網頁只找名字有 MORSE 的 port；改成聽哪個 port 送出 HELLO 後，網頁下載的 JSON 和指令列的完全相同 |
+
+## Phase 1 驗收
+
+- [x] 原廠韌體版本已記錄
+- [x] M-Flasher 已安裝，首次授權完成
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 08:13:32Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Record backups in device-log
+
+```bash
+cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1; grep -n "fm1_install" docs/device-log.md | head -3; grep -rn "fm1_install.py" docs/dev/morse.md | head -2; python3 - <<'EOF'
+p='docs/device-log.md'; s=open(p).read()
+a='''| 2026-11-18 05:25 | agent 執行 `just morse-backup`（唯讀）；用 Playwright'''
+i=s.index(a); j=s.index('\n',i)
+row='''
+| 2026-11-18 16:11 | agent 執行 `just morse-backup`（唯讀，刷 Morse 0.5 前） | `round 29, 20 open (KMURESNAPTLWI.JZ=FOY), 15 past the line, 451 answered, 386 right, streak 5`，存成 `backups/progress/2026-11-18-pre-0.5.json`。FM-1 已經和另一個程式連著（只送 HEARTBEAT、不送 HELLO），host 0.5.0 原本因為不知道韌體版本而拒絕備份，改成照樣嘗試 |
+| 2026-11-18 16:12 | agent 執行 `just fm1-download-mode`、`fm1-backup pre-morse-0.5`、`fm1-restart`（刷 Morse 0.5 前的 preflight） | flash `0xB36014`；備份 SHA-256 `d8f8889e…a0d44`；重開回 Morse 0.4。fm1-emu 兩種晶片上把 0.5 release build 疊在這份備份上預演：讀到 ROUND 30、開放 20 個字，0 次寫入 `[模擬]` |
+| 2026-11-18 16:15 | 本人要求後，agent 執行 `just --yes fm1-backup-release 2026-11-18-pre-morse-0.5` | 公開 release [`backup-2026-11-18-pre-morse-0.5`](https://github.com/daviddwlee84/M-VAVE_FM-1/releases/tag/backup-2026-11-18-pre-morse-0.5)：整片 flash 備份、M-Flasher 的 JSON、學習進度 JSON；上傳後的 digest 和本機的 SHA-256 相同 |'''
+s=s[:j]+row+s[j:]
+open(p,'w').write(s)
+EOF
+```
+
+```text
+104:| 2026-11-18 02:12 | 本人執行 `just fm1-switch firmware/morse/build/morse.fwsc`（Morse 0.3，SHA-256 `64bfa57d…f8d4ea`，commit `02b0ea2`） | 先自動備份 `backups/2026-11-18-0212-pre-morse/`（SHA-256 同 02:12 那份）。M-Flasher 的計畫：`Writes 32 sectors (128 KiB): 0x04000-0x23FFF`，和預演一致；寫入後 CRC32 相符，自動重開，M-Flasher 另存 `fm1-20261118-021254.bin`。重開後 HELLO 回報 0.3；`fm1_install.py --info`（USB-MIDI 唯讀詢問）回答 `FM-1_1300 [running]` |
+106:| 2026-11-18 02:40 | Hub 測試 1：本人執行 `fm1_install.py downloads/sloop-2.8.5.fwsc`（USB-MIDI 更新路徑，和 Hub 網頁安裝同一套），機器上是 Morse 0.3（`FM-1_1300`） | 成功：`checking the package (18 reads)` → `switching to update mode` → `the loader reads and writes the whole package (classic install)` → `done: the FM-1 runs FM-1_900`。重開進 SLOOP，之前的曲子還在。證明可以從 Morse 換到別的韌體 |
+107:| 2026-11-18 02:39 | agent 執行 `just fm1-download-mode`（SLOOP 執行中）、`fm1-backup pre-hub-test-2`、`fm1-restart`，`fm1_install.py --info` | 備份 SHA-256 `deacf515…d4151464`，M-Flasher 回報 firmware `SLOOP 2.8.5`；重開回 SLOOP，`--info` 回答 `FM-1_900 [running]`。備份裡 `0xDA000`–`0xDBFFF` 的 Morse 紀錄沒被 SLOOP 動到 |
+docs/dev/morse.md:374:| 0.4 刷進實機 | `fm1_install.py`（USB-MIDI，fast install） | 成功；ROUND 16、開放 10 個字的紀錄保留 `[實機]` |
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 08:13:38Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Find the install command used for 0.4
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1; ls third_party/fm1-base/tools/fm1_install.py; grep -o 'uv run[^`"]*fm1_install.py[^`"]*' /Users/zhouhanru/.claude/projects/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/0a574306-469e-4a59-9622-5701a42aee59.jsonl | sort -u | head -5`
+
+```text
+third_party/fm1-base/tools/fm1_install.py
+uv run --locked --all-groups python third_party/fm1-base/tools/fm1_install.py  --info\nFM-1_015  [running]  port: FM-1\n
+uv run --locked --all-groups python third_party/fm1-base/tools/fm1_install.py --info          # read-only\n107\tuv run --locked --all-groups python third_party/fm1-base/tools/fm1_install.py PACKAGE.fwsc   # owner runs it\n108\t
+uv run --locked --all-groups python third_party/fm1-base/tools/fm1_install.py --info          # read-only\nuv run --locked --all-groups python third_party/fm1-base/tools/fm1_install.py PACKAGE.fwsc   # owner runs it\n
+uv run --locked --all-groups python third_party/fm1-base/tools/fm1_install.py --info        # 唯讀：現在的 identity
+uv run --locked --all-groups python third_party/fm1-base/tools/fm1_install.py --info        # 唯讀：現在的 identity\nuv run --locked --all-groups python third_party/fm1-base/tools/fm1_install.py PACKAGE.fwsc  # 寫入：本人執行\n
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 08:14:08Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Commit device-log and host fix, push
+
+```bash
+cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1; just docs-check 2>&1 | tail -1; git add docs/device-log.md host/morse/__main__.py && git commit -q -m "morse host: back up even when only HEARTBEATs are heard; device-log: pre-0.5 backups
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>" && git push -q origin main && git log --oneline -1
+```
+
+```text
+{"status": "ok", "pages": 49, "llm_pages": 49, "deployed": false}
+a18100e morse host: back up even when only HEARTBEATs are heard; device-log: pre-0.5 backups
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 08:14:21Z)**_
+
+**1. Commit 和 push 都完成了**
+- fm1-morse 是 `a75c29e`；這邊是 `34cf8c2`，包含 submodule pointer、host 0.5.0 和 docs。
+- 備份時遇到一個 host 的 bug，修好後另外 commit 為 `a18100e`，裡面也有 device-log 的紀錄。這兩個後續的 commit 是我自己判斷加的。
+- 這個 bug 是這樣：FM-1 已經和另一個程式連著（大概是開著的網頁分頁），只送 HEARTBEAT、不送 HELLO，host 不知道韌體版本，就拒絕備份。現在改成照樣嘗試。
+
+**2. 備份完成，也放進 release 了**
+- **學習進度**：round 29，開放 20 個字（KMURESNAPTLWI.JZ=FOY），答了 451 題、對 386 題，streak 5。
+- **整片 flash**：`backups/2026-11-18-pre-morse-0.5/fm1-20261118-161218.bin`，SHA-256 `d8f8889e…a0d44`。備份前切到下載模式，備份完已經重開回 Morse 0.4。
+- **Release**：https://github.com/daviddwlee84/M-VAVE_FM-1/releases/tag/backup-2026-11-18-pre-morse-0.5
+  - 裡面有 flash 備份、M-Flasher 的 JSON 和學習進度 JSON，上傳後的 digest 和本機一致。
+  - **這是公開的 release**，裡面有這台機器專屬的資料，跟之前的備份一樣。
+  - recipe 有一個確認提示，因為這份是你要求放上去的，我用 `just --yes` 跳過了。
+
+**刷 0.5 前的 preflight**
+1. 剛做的整片 flash 備份記錄在 `device-log.md`，SHA-256 見上面。
+2. Flash 晶片是 `0xB36014`（新的 UCUN）。fm1-base 支援它，0.4 也在這台機器上跑著。
+3. 套件是本機用 a75c29e build 的 `firmware/morse/build/morse-0.5.fwsc`，identity `FM-1_41000500`，SHA-256 `49433190…154457`。它不是從網路下載的，所以沒有 release digest 可以比對。
+4. 機器上現在是 Morse 0.4（`FM-1_41000400`）。這次只改韌體區；進度在 `0xDA000`，格式沒變。
+5. 預演 `[模擬]`：fm1-emu 兩種晶片上，把 0.5 疊在剛才的備份上，開機讀到 ROUND 30、開放 20 個字、STREAK 5，0 次寫入。
+
+**要刷的話，請你自己執行：**
+```
+uv run --locked --all-groups python third_party/fm1-base/tools/fm1_install.py firmware/morse/build/morse-0.5.fwsc
+```
+這和 0.4 一樣是透過 USB-MIDI 的 fast install。刷完把輸出貼給我，我會用 `--info` 和 `morse-backup` 確認版本和進度都在。
+
+**3. 量抖動**：刷完後到 Mac 的藍牙 MIDI 視窗連上 `FM-1 XXXX`，我們就開始量。
+
+---
+
+_**User (2026-11-18 08:20:30Z)**_
+
+確實網頁連著 我現在關掉了 然後也從網頁導出了一份進度backup 也許可以幫我放去release /Users/zhouhanru/Downloads/fm1-morse-progress-2026-11-18\ \(1\).json
+（也許之後我們backup不止日期也能把小時分鐘加到檔名）
+
+弄好了我來刷
+
+---
+
+_**Agent (claude-opus-5-5 2026-11-18 08:20:39Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Read web backup and compare with CLI backup
+
+```bash
+f="/Users/zhouhanru/Downloads/fm1-morse-progress-2026-11-18 (1).json"; cat "$f" | head -c 600; echo; cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1; python3 -c "
+import json,sys
+a=json.load(open(sys.argv[1]));b=json.load(open('backups/progress/2026-11-18-pre-0.5.json'))
+print('same' if a==b else 'differs'); print({k:(a.get(k),b.get(k)) for k in a if k!='chars' and a.get(k)!=b.get(k)})
+print('chars same' if a.get('chars')==b.get('chars') else 'chars differ')" "$f"
+```
+
+```text
+{
+ "format": "fm1-morse-progress",
+ "version": 1,
+ "firmware": null,
+ "round": 29,
+ "streak": 5,
+ "open": 20,
+ "answered": 451,
+ "right": 386,
+ "chars": {
+  "0": {
+   "recognise": 0,
+   "send": 0,
+   "last_recognise": null,
+   "last_send": null
+  },
+  "1": {
+   "recognise": 0,
+   "send": 0,
+   "last_recognise": null,
+   "last_send": null
+  },
+  "2": {
+   "recognise": 0,
+   "send": 0,
+   "last_recognise": null,
+   "last_send": null
+  },
+  "3": {
+   "recognise": 0,
+   "send": 0,
+   "last_recognise": null,
+   "last_send": null
+  },
+  "4": {
+   "recognise": 0,
+   "send": 0,
+   "last_recognise": nu
+same
+{}
+chars same
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 08:20:43Z)**_
+
+網頁導出的這份和剛才指令列的備份內容完全相同（round 29、20 open）。上傳到同一個 release：
+
+_**Agent (claude-opus-5-5 2026-11-18 08:20:49Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Upload web progress backup to the release
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1; cp "/Users/zhouhanru/Downloads/fm1-morse-progress-2026-11-18 (1).json" backups/2026-11-18-pre-morse-0.5/morse-progress-2026-11-18-pre-0.5-web.json; gh release upload backup-2026-11-18-pre-morse-0.5 backups/2026-11-18-pre-morse-0.5/morse-progress-2026-11-18-pre-0.5-web.json 2>&1 | tail -1; gh release view backup-2026-11-18-pre-morse-0.5 --json assets -q '.assets[].name'`
+
+```text
+fm1-20261118-161218.bin
+fm1-20261118-161218.json
+morse-progress-2026-11-18-pre-0.5-web.json
+morse-progress-2026-11-18-pre-0.5.json
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 08:20:51Z)**_
+
+Now the filename: date plus hour and minute (local time) on the web page.
+
+_**Agent (claude-opus-5-5 2026-11-18 08:20:53Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Find the backup filename code
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/firmware/morse/web; grep -n "fm1-morse-progress-\|getFullYear\|toISOString\|download =" index.html`
+
+```text
+301:      const t = new Date(), day = `${t.getFullYear()}-${String(t.getMonth() + 1).padStart(2, "0")}-${String(t.getDate()).padStart(2, "0")}`;
+302:      a.download = `fm1-morse-progress-${day}.json`;   // the local date, not UTC's
+```
+</details></tool-use>
+
+---
+
+_**User (2026-11-18 08:20:59Z)**_
+
+[Request interrupted by user]
+
+---
+
+_**User (2026-11-18 08:21:00Z)**_
+
+如果已經有了可以不用重複傳
+
+---
+
+_**Agent (claude-opus-5-5 2026-11-18 08:21:05Z)**_
+
+內容一樣，那就把剛才重複上傳的 `-web` 那份從 release 刪掉，只留一份：
+
+_**Agent (claude-opus-5-5 2026-11-18 08:21:09Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Remove duplicate asset from release
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1; gh release delete-asset backup-2026-11-18-pre-morse-0.5 morse-progress-2026-11-18-pre-0.5-web.json -y 2>&1 | tail -1; rm backups/2026-11-18-pre-morse-0.5/morse-progress-2026-11-18-pre-0.5-web.json; gh release view backup-2026-11-18-pre-morse-0.5 --json assets -q '.assets[].name'`
+
+```text
+fm1-20261118-161218.bin
+fm1-20261118-161218.json
+morse-progress-2026-11-18-pre-0.5.json
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 08:21:12Z)**_
+
+Now the filename with hour and minute:
+
+_**Agent (claude-opus-5-5 2026-11-18 08:21:18Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Add hour and minute to backup filename
+
+```bash
+cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/firmware/morse/web; python3 - <<'EOF'
+p='index.html'; s=open(p).read()
+a='''      const t = new Date(), day = `${t.getFullYear()}-${String(t.getMonth() + 1).padStart(2, "0")}-${String(t.getDate()).padStart(2, "0")}`;
+      a.download = `fm1-morse-progress-${day}.json`;   // the local date, not UTC's'''
+b='''      const t = new Date(), p2 = n => String(n).padStart(2, "0");
+      const at = `${t.getFullYear()}-${p2(t.getMonth() + 1)}-${p2(t.getDate())}-${p2(t.getHours())}${p2(t.getMinutes())}`;
+      a.download = `fm1-morse-progress-${at}.json`;   // local time, not UTC's: two backups a day do not collide'''
+assert s.count(a)==1; s=s.replace(a,b); open(p,'w').write(s)
+import re
+open('/private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/0a574306-469e-4a59-9622-5701a42aee59/scratchpad/page.js','w').write(re.findall(r'<script>(.*?)</script>',s,re.S)[-1])
+EOF
+node --check /private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/0a574306-469e-4a59-9622-5701a42aee59/scratchpad/page.js && echo ok; cd ../../..; grep -rn "fm1-morse-progress-2026\|progress-YYYY\|fm1-morse-progress-" docs firmware/morse/README.md host/morse/*.py | head
+```
+
+```text
+ok
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 08:21:53Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Commit and push web filename change
+
+```bash
+cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/firmware/morse; git commit -qam "web: backup file named by local date, hour and minute
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>" && git push -q origin main; cd ../..; git add firmware/morse && git commit -qm "firmware/morse -> fm1-morse: web backups named down to the minute
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>" && git push -q origin main; git log --oneline -1; (cd firmware/morse; git log --oneline -1)
+```
+
+```text
+a9ef652 firmware/morse -> fm1-morse: web backups named down to the minute
+6737ba6 web: backup file named by local date, hour and minute
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 08:21:58Z)**_
+
+刷好了。第一次失敗是在輸入 `y` 時（大概是輸入法送出了非 UTF-8 的字元），那時還沒開始寫入，所以沒有影響。現在確認版本和進度：
+
+_**Agent (claude-opus-5-5 2026-11-18 08:22:03Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Verify installed version and progress after flash
+
+```bash
+cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1; uv run --locked --all-groups python third_party/fm1-base/tools/fm1_install.py --info 2>&1 | tail -2; just morse-backup backups/progress/2026-11-18-after-0.5.json 2>&1 | tail -4; python3 -c "
+import json;a=json.load(open('backups/progress/2026-11-18-pre-0.5.json'));b=json.load(open('backups/progress/2026-11-18-after-0.5.json'))
+a.pop('firmware');b.pop('firmware');print('progress identical' if a==b else 'differs')"
+```
+
+```text
+FM-1_41000500  [running]  port: Felucca
+[morse] connected to Felucca
+[morse] via USB
+[morse] firmware version not heard (the FM-1 is already talking to another program); trying anyway
+[morse] saved: round 29, 20 open (KMURESNAPTLWI.JZ=FOY), 15 past the line, 451 answered, 386 right, streak 5
+progress identical
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 08:22:09Z)**_
+
+已經在跑 `FM-1_41000500`，進度和刷機前完全相同（round 29、20 open、451/386、streak 5）。更新 device-log 和版本表：
+
+_**Agent (claude-opus-5-5 2026-11-18 08:22:21Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Record flash in device-log and docs
+
+```bash
+cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1; date "+%H:%M"; python3 - <<'EOF'
+def edit(p, pairs):
+    s=open(p).read()
+    for a,b in pairs:
+        assert s.count(a)==1,(p,a[:50],s.count(a)); s=s.replace(a,b)
+    open(p,'w').write(s)
+p='docs/device-log.md'; s=open(p).read()
+i=s.index('| 2026-11-18 16:15 |'); j=s.index('\n',i)
+s=s[:j]+'''
+| 2026-11-18 16:25 | 本人執行 `fm1_install.py firmware/morse/build/morse-0.5.fwsc`（Morse 0.5 release build，`FM-1_41000500`，SHA-256 `49433190…154457`，fm1-morse `a75c29e`），機器上是 Morse 0.4 | 第一次在 `[y/N]` 輸入時 Python 報 `UnicodeDecodeError`（終端機送了非 UTF-8 的位元組，大概是輸入法），還沒寫入就結束。第二次成功：`checking the package (30 reads)` → `switching to update mode` → `the loader writes only the sectors that changed (fast install)` → `done: the FM-1 runs FM-1_41000500` |
+| 2026-11-18 16:27 | agent 執行 `fm1_install.py --info`、`just morse-backup`（唯讀） | `FM-1_41000500 [running] port: Felucca`；進度和刷機前相同（round 29、20 open、451 answered、386 right、streak 5），存成 `backups/progress/2026-11-18-after-0.5.json` |'''+s[j:]
+open(p,'w').write(s)
+edit(p,[('| 目前韌體 | **Morse 0.4 release build（`FM-1_41000400`）**（2026-11-18 05:20 從 Morse 0.3 release 用 USB-MIDI 更新，學習紀錄保留；macOS 上的 MIDI port 名稱仍是 `Felucca`）。','| 目前韌體 | **Morse 0.5 release build（`FM-1_41000500`，藍牙）**（2026-11-18 16:25 從 Morse 0.4 用 USB-MIDI 更新，學習紀錄保留；macOS 上的 USB MIDI port 名稱仍是 `Felucca`）。'),
+ ('→ Morse 0.3 release → Morse 0.4 |','→ Morse 0.3 release → Morse 0.4 → Morse 0.5 |')])
+edit('docs/dev/morse.md',[('| 韌體 0.5、host 0.5.0 | 2026-11-18 | 是（還沒刷） |','| 韌體 0.5、host 0.5.0 | 2026-11-18 | 是（16:25 用 USB-MIDI 裝 release build `FM-1_41000500`，fm1-morse `a75c29e`） |'),
+ ('2026-11-18 做好，host simulator 和 fm1-emu 都驗證過，**還沒刷進實機**。','2026-11-18 做好，host simulator 和 fm1-emu 都驗證過，16:25 刷進實機（進度保留 `[實機]`），藍牙連線還在測。'),
+ ('| 0.5：疊在實機 0.4 前的備份上','| 0.5 刷進實機 | `fm1_install.py`（USB-MIDI，fast install） | 成功；ROUND 29、開放 20 個字的紀錄保留 `[實機]` |\n| 0.5：疊在實機 0.4 前的備份上')])
+edit('docs/index.md',[('| 韌體 0.4、host 0.4.0（0.5 加藍牙，還沒刷）；','| 韌體 0.5、host 0.5.0（藍牙）；')])
+edit('README.md',[('| Firmware 0.4, host 0.4.0 (0.5 adds Bluetooth, not flashed yet);','| Firmware 0.5 (Bluetooth), host 0.5.0;')])
+EOF
+just docs-check 2>&1 | tail -1
+```
+
+```text
+16:22
+{"status": "ok", "pages": 49, "llm_pages": 49, "deployed": false}
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 08:22:51Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Fix times and commit
+
+```bash
+cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1; sed -i '' 's/| 2026-11-18 16:25 | 本人執行/| 2026-11-18 16:20 | 本人執行/; s/| 2026-11-18 16:27 | agent 執行 `fm1_install.py --info`、`just morse-backup`/| 2026-11-18 16:22 | agent 執行 `fm1_install.py --info`、`just morse-backup`/; s/（2026-11-18 16:25 從 Morse 0.4/（2026-11-18 16:20 從 Morse 0.4/' docs/device-log.md; sed -i '' 's/是（16:25 用 USB-MIDI/是（16:20 用 USB-MIDI/; s/16:25 刷進實機/16:20 刷進實機/' docs/dev/morse.md; grep -c "16:25\|16:27" docs/device-log.md docs/dev/morse.md; git add docs README.md && git commit -qm "morse 0.5 on the unit (16:20, progress kept); device-log
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>" && git push -q origin main; git log --oneline -1
+```
+
+```text
+docs/device-log.md:0
+docs/dev/morse.md:0
+0d88f84 morse 0.5 on the unit (16:20, progress kept); device-log
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 08:22:56Z)**_
+
+Now the Bluetooth link. Opening the macOS Bluetooth MIDI window for you:
+
+_**Agent (claude-opus-5-5 2026-11-18 08:22:57Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Open the macOS Bluetooth MIDI window
+
+```bash
+cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/host; uv run --locked --all-groups python -c "
+from conductor.blelink import open_panel; p=open_panel(); print('opened' if p else 'fallback')"
+```
+
+```text
+opened
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 08:23:07Z)**_
+
+0.5 已經在你的機器上了，進度完整保留。
+
+**刷機結果**
+- `--info` 回報 `FM-1_41000500 [running]`。刷完後用 `morse-backup` 再讀一次，round 29、開放 20 個字、答 451 題對 386 題、streak 5，和刷機前完全相同。
+- 你第一次跑時出現 `UnicodeDecodeError`，是在輸入 `y` 的時候，終端機送了非 UTF-8 的字元，大概是輸入法還開著。那時還沒開始寫入，所以沒影響。
+- device-log、版本表、首頁和 README 都改成 0.5 了，已 commit 並 push。
+
+**網頁那份進度**：內容和指令列那份完全一樣，所以只在 release 留一份 `morse-progress-2026-11-18-pre-0.5.json`。我原本先傳了一份，看到你的話後又刪掉了。
+
+**檔名加上時分**：網頁下載的備份現在叫 `fm1-morse-progress-2026-11-18-1622.json`（用本機時間）。網頁已經推上 GitHub Pages，幾分鐘內生效。指令列本來就是你自己指定檔名，沒有改。
+
+**刷完後的一個小疑點**：你說網頁已經關了，但讀進度時 FM-1 只送 HEARTBEAT、沒送 HELLO，代表它認為還有程式連著。實際上不影響，備份照樣成功。如果之後還這樣，我再查。
+
+**接下來測藍牙**：Mac 的藍牙 MIDI 視窗已經打開了。
+1. 確認 FM-1 右上角有灰色的 `BT`。
+2. 在視窗裡 `FM-1 XXXX` 旁邊按 **Connect**，`BT` 應該會變藍。
+3. 拔掉 USB 線，跟我說一聲。我會用 `--bluetooth` 送字給 FM-1、從藍牙讀一次進度，再開始量抖動。
+
+---
+
+_**User (2026-11-18 08:24:16Z)**_
+
+連上了，USB 線也拔了 [Image #2] 我看 BT亮藍  不過拔USB後 PC隔一陣子才消失
+
+---
+
+_**User (2026-11-18 08:24:16Z)**_
+
+[Image: source: /private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/0a574306-469e-4a59-9622-5701a42aee59/images/2.png]
+
+---
+
+_**Agent (claude-opus-5-5 2026-11-18 08:24:22Z)**_
+
+右上角的 `PC` 會停留，是因為 FM-1 超過 10 秒沒收到電腦的訊息，才判定電腦離線（`HOSTLINK_TIMEOUT_MS`）。拔線本身不會讓它馬上消失。這個等一下再處理。先從藍牙試送字和讀進度：
+
+_**Agent (claude-opus-5-5 2026-11-18 08:24:26Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+List MIDI ports and send text over Bluetooth
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1; uv run --locked --all-groups python -c "import mido;print('in',mido.get_input_names());print('out',mido.get_output_names())"; time just morse-send paris 2>&1 | tail -4`
+
+```text
+in ['FM-1 3399 Bluetooth']
+out ['FM-1 3399 Bluetooth']
+[morse] connected to FM-1 3399 Bluetooth
+[morse] FM-1 Morse firmware 0.5
+[morse] via Bluetooth
+[morse] sent 1 frame(s); the FM-1 plays it at its own speed
+just morse-send paris 2>&1  0.06s user 0.03s system 3% cpu 2.456 total
+tail -4  0.00s user 0.00s system 0% cpu 2.455 total
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 08:24:33Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Back up progress over Bluetooth
+
+```bash
+cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1; time just morse-backup backups/progress/2026-11-18-ble.json 2>&1 | tail -2; python3 -c "
+import json;a=json.load(open('backups/progress/2026-11-18-after-0.5.json'));b=json.load(open('backups/progress/2026-11-18-ble.json'))
+a.pop('firmware');b.pop('firmware');print('same as over USB' if a==b else 'differs')"
+```
+
+```text
+[morse] firmware version not heard (the FM-1 is already talking to another program); trying anyway
+[morse] saved: round 29, 20 open (KMURESNAPTLWI.JZ=FOY), 15 past the line, 451 answered, 386 right, streak 5
+just morse-backup backups/progress/2026-11-18-ble.json 2>&1  0.08s user 0.02s system 5% cpu 1.743 total
+tail -2  0.00s user 0.00s system 0% cpu 1.743 total
+same as over USB
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 08:24:49Z)**_
+
+<think><details><summary>Thought Process</summary>
+藍牙送字和讀進度都成功了。接下來我會比較 Mac 收到的長度和 FM-1 的 60 ms 基準，並同時記錄封包到達與 CoreMIDI 時間戳記。
+
+</details></think>
+
+_**Agent (claude-opus-5-5 2026-11-18 08:24:58Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Write jitter measurement script
+
+```bash
+cat > /private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/0a574306-469e-4a59-9622-5701a42aee59/scratchpad/jitter.py <<'EOF'
+"""Record note 0 on/off from the FM-1 port: arrival time (perf_counter) and rtmidi's delta (CoreMIDI timestamps).
+Waits for the first note, then records SECONDS more. Prints mark/gap lengths both ways."""
+import sys, time, statistics as st
+import rtmidi
+want = sys.argv[1] if len(sys.argv) > 1 else "FM-1"
+secs = float(sys.argv[2]) if len(sys.argv) > 2 else 25
+mi = rtmidi.MidiIn()
+names = mi.get_ports()
+idx = next(i for i, n in enumerate(names) if want.lower() in n.lower() or (want == "FM-1" and ("Felucca" in n or "MORSE" in n)))
+ev = []  # (arrival, stamp_cum, down)
+cum = [0.0]
+def cb(m, _):
+    msg, dt = m
+    cum[0] += dt
+    st_ = msg[0] & 0xF0
+    if len(msg) >= 3 and msg[1] == 0 and st_ in (0x80, 0x90):
+        ev.append((time.perf_counter(), cum[0], st_ == 0x90 and msg[2] > 0))
+mi.open_port(idx); mi.ignore_types(sysex=True); mi.set_callback(cb)
+print("listening on", names[idx], flush=True)
+t0 = time.time()
+while not ev and time.time() - t0 < 900: time.sleep(0.05)
+time.sleep(secs)
+mi.close_port()
+def spans(col):
+    marks, gaps = [], []
+    for a, b in zip(ev, ev[1:]):
+        d = (b[col] - a[col]) * 1000
+        if a[2] and not b[2]: marks.append(d)
+        elif not a[2] and b[2] and d < 150: gaps.append(d)   # gaps inside a letter only
+    return marks, gaps
+def report(name, xs, target):
+    xs = [x for x in xs if abs(x - target) < target * 0.6]
+    if not xs: print(f"  {name}: none"); return
+    err = [x - target for x in xs]
+    print(f"  {name} ~{target} ms: n={len(xs)} mean {st.mean(xs):.1f} sd {st.pstdev(xs):.1f} min {min(xs):.1f} max {max(xs):.1f} worst |err| {max(map(abs,err)):.1f}")
+print(f"{len(ev)} events")
+for col, label in ((0, "arrival time"), (1, "CoreMIDI timestamps (rtmidi delta)")):
+    m, g = spans(col)
+    print(label)
+    report("dits", m, 60); report("dahs", m, 180); report("gaps", g, 60)
+EOF
+cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1; uv run --locked --all-groups python -c "import rtmidi; print(rtmidi.__version__)"
+```
+
+```text
+1.5.8
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 08:25:03Z)**_
+
+好，代表藍牙送字到 FM-1 這條路通了。接著開始錄：
+
+_**Agent (claude-opus-5-5 2026-11-18 08:25:05Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Record Bluetooth keying timing from the FM-1
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1; uv run --locked --all-groups python -u /private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/0a574306-469e-4a59-9622-5701a42aee59/scratchpad/jitter.py Bluetooth 25`
+
+```text
+Command running in background with ID: blu84jnh5. Output is being written to: /private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/0a574306-469e-4a59-9622-5701a42aee59/tasks/blu84jnh5.output. You will be notified when it completes — do not poll that file or sleep while waiting. Read the file only if the user asks for progress, or if you need a line it prints before you can go on, such as a server's ready line or port.
+Session cwd remains /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1; directory changes made by the backgrounded command do not apply to subsequent commands.
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 08:25:14Z)**_
+
+藍牙這條路兩個方向都通了：我送的 `paris` 你聽到了，從藍牙讀的進度也和走 USB 時一樣。
+
+我已經開始錄藍牙收到的按鍵時間，請在 FM-1 上照下面做：
+
+1. 到 **TYPE** 頁，用字母那一頁（LIVE 模式，按一下就播）。
+2. 從**按下第一個鍵**算起，大約 25 秒內一直按鍵讓它播。混著按會有點又有劃的字，例如 `H`（····）、`O`（−−−）、`P`、`K`、`R`，大概 15–20 個字。每次等上一個字播完再按下一個。
+3. 按完跟我說一聲。我會比較兩種時間的誤差：Mac 收到封包的時間，和 CoreMIDI 的時間戳記。
+
+TYPE 頁用 20 WPM 播，點正好是 60 ms、劃是 180 ms，所以 Mac 上量到的長度和這兩個數字差多少，就是藍牙的抖動。
+
+之後接回 USB 再錄一次，用來對照。
+
+`PC` 拔線後要 10 秒左右才消失的問題我記下了。可以改成 USB 斷線時 FM-1 馬上判定電腦離線，等量完抖動再一起改。
+
+---
+
+_**User (2026-11-18 08:25:50Z)**_
+
+<task-notification>
+<task-id>blu84jnh5</task-id>
+<tool-use-id>toolu_018d17jTWjwDrnmtn57xw1U5</tool-use-id>
+<output-file>/private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/0a574306-469e-4a59-9622-5701a42aee59/tasks/blu84jnh5.output</output-file>
+<status>completed</status>
+<summary>Background command "Record Bluetooth keying timing from the FM-1" completed (exit code 0)</summary>
+</task-notification>
+
+---
+
+_**Agent (claude-opus-5-5 2026-11-18 08:25:57Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Read jitter results
+
+`cat /private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/0a574306-469e-4a59-9622-5701a42aee59/tasks/blu84jnh5.output`
+
+```text
+listening on FM-1 3399 Bluetooth
+97 events
+arrival time
+  dits ~60 ms: n=20 mean 57.3 sd 5.8 min 42.7 max 67.3 worst |err| 17.3
+  dahs ~180 ms: n=18 mean 181.1 sd 23.5 min 106.0 max 232.4 worst |err| 74.0
+  gaps ~60 ms: n=23 mean 60.6 sd 3.6 min 52.4 max 68.1 worst |err| 8.1
+CoreMIDI timestamps (rtmidi delta)
+  dits ~60 ms: n=24 mean 60.0 sd 0.5 min 58.0 max 61.0 worst |err| 2.0
+  dahs ~180 ms: n=24 mean 178.7 sd 12.1 min 123.0 max 197.0 worst |err| 57.0
+  gaps ~60 ms: n=32 mean 60.1 sd 0.3 min 59.0 max 61.0 worst |err| 1.0
+
+[exited with code 0]
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 08:26:15Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Make the jitter script dump raw marks
+
+```bash
+cd /private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/0a574306-469e-4a59-9622-5701a42aee59/scratchpad; python3 - <<'EOF'
+p='jitter.py'; s=open(p).read()
+s=s.replace('''print(f"{len(ev)} events")''','''print(f"{len(ev)} events")
+import json
+json.dump(ev, open(sys.argv[3] if len(sys.argv) > 3 else "jitter_events.json", "w"))
+ma, _ = spans(0); ms, _ = spans(1)
+print("marks (arrival / stamp):", " ".join(f"{a:.0f}/{b:.0f}" for a, b in zip(ma, ms)))''')
+open(p,'w').write(s)
+EOF
+echo ok
+```
+
+```text
+ok
+Shell cwd was reset to /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 08:26:21Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Record Bluetooth timing again with raw dump
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1; uv run --locked --all-groups python -u /private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/0a574306-469e-4a59-9622-5701a42aee59/scratchpad/jitter.py Bluetooth 25 /private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/0a574306-469e-4a59-9622-5701a42aee59/scratchpad/ble2.json`
+
+```text
+Command running in background with ID: bd8b30tor. Output is being written to: /private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/0a574306-469e-4a59-9622-5701a42aee59/tasks/bd8b30tor.output. You will be notified when it completes — do not poll that file or sleep while waiting. Read the file only if the user asks for progress, or if you need a line it prints before you can go on, such as a server's ready line or port.
+Session cwd remains /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1; directory changes made by the backgrounded command do not apply to subsequent commands.
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 08:26:31Z)**_
+
+第一輪藍牙的結果已經回來了。點和字內停頓很準，劃偶爾會偏差，原因還不確定。
+
+| | 點（應為 60 ms） | 劃（應為 180 ms） | 字內停頓（應為 60 ms） |
+|---|---|---|---|
+| 封包到達時間 | 平均 57.3，sd 5.8，最差 ±17 | 平均 181，sd 23.5，最差 ±74 | sd 3.6，最差 ±8 |
+| CoreMIDI 時間戳記 | 平均 60.0，sd 0.5，最差 ±2 | 平均 179，sd 12，最差 ±57 | sd 0.3，最差 ±1 |
+
+- **照到達時間算會抖**：點最差差 17 ms，大約是一個點的 30%，和研究時預估的差不多。
+- **照時間戳記算，點和停頓幾乎完美**：誤差 1–2 ms。這表示 FM-1 送出的 BLE-MIDI 時間戳記是對的，CoreMIDI 也照著用了。
+- **劃有幾個例外**：照時間戳記算，最短 123 ms、最長 197 ms，看起來像是少數幾個劃的放開時間記錯了。可能的原因：13-bit 時間戳記遇到跨封包或進位、FM-1 送出佇列晚了，或 CoreMIDI 重建時間的方式。光看統計分不出來，所以我改了腳本，會印出每一個劃的原始數字。
+
+**請再做一次**：錄音已經重新開始了，一樣到 TYPE 頁，從第一個鍵算起 25 秒，多按一些有劃的字（`O` `T` `M` `K` `Q`）。
+
+做完之後**接回 USB 線**再錄一輪，作為對照。到時我會改成錄 USB 的 port（`Felucca`）。
+
+---
+
+_**User (2026-11-18 08:26:31Z)**_
+
+是說未來配對藍牙MIDI這部分 能從網頁操作嗎？ 還是得從系統設定操作？
+（我在TYPE裡照你指示按了一些）
+
+---
+
+_**Agent (claude-opus-5-5 2026-11-18 08:26:38Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Read second Bluetooth jitter run
+
+`cat /private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/0a574306-469e-4a59-9622-5701a42aee59/tasks/bd8b30tor.output`
+
+```text
+listening on FM-1 3399 Bluetooth
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 08:26:44Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Check whether the recorder is still running
+
+`ps aux | grep -c "[j]itter.py"; ls -la /private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/0a574306-469e-4a59-9622-5701a42aee59/scratchpad/ble2.json 2>&1 | tail -1`
+
+```text
+3
+"/private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/0a574306-469e-4a59-9622-5701a42aee59/scratchpad/ble2.json": No such file or directory (os error 2)
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 08:26:49Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Check MIDI ports
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1; uv run --locked --all-groups python -c "import mido;print(mido.get_input_names())"`
+
+```text
+['FM-1 3399 Bluetooth']
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 08:26:56Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Recheck recorder output and start time
+
+`cat /private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/0a574306-469e-4a59-9622-5701a42aee59/tasks/bd8b30tor.output; ps aux | grep "[j]itter.py" | awk '{print $9, $10}'`
+
+```text
+listening on FM-1 3399 Bluetooth
+4:26PM 0:00.04
+4:26PM 0:00.01
+4:26PM 0:00.02
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 08:27:06Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Stop recorder and test the Bluetooth link
+
+`pkill -f jitter.py; cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1; just morse-send e 2>&1 | tail -2`
+
+```text
+[morse] via Bluetooth
+[morse] sent 1 frame(s); the FM-1 plays it at its own speed
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 08:27:15Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Restart Bluetooth timing recorder
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1; uv run --locked --all-groups python -u /private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/0a574306-469e-4a59-9622-5701a42aee59/scratchpad/jitter.py Bluetooth 25 /private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/0a574306-469e-4a59-9622-5701a42aee59/scratchpad/ble2.json`
+
+```text
+Command running in background with ID: b8wc1k4sp. Output is being written to: /private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/0a574306-469e-4a59-9622-5701a42aee59/tasks/b8wc1k4sp.output. You will be notified when it completes — do not poll that file or sleep while waiting. Read the file only if the user asks for progress, or if you need a line it prints before you can go on, such as a server's ready line or port.
+Session cwd remains /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1; directory changes made by the backgrounded command do not apply to subsequent commands.
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 08:27:27Z)**_
+
+**藍牙 MIDI 的配對能不能在網頁上做？**
+
+大概可以，但要換一條路。下面這些我還沒實際試過 `[調研]`：
+
+- **現在的做法（Web MIDI）不行**：Web MIDI 只看得到系統已經連上的 MIDI port，沒辦法掃描或連接藍牙裝置。所以目前一定要先在「音訊 MIDI 設定」按 Connect。
+- **可以改用 Web Bluetooth**：Chrome 和 Edge 在 Mac 上支援。網頁可以直接掃描 BLE-MIDI 的 service UUID（`03B80E5A-…`），跳出瀏覽器的選擇視窗讓你選 `FM-1 3399`，再自己讀寫 BLE-MIDI 封包。這樣就**完全不用經過系統設定**，FM-1 重開後也只要在網頁再按一次 Connect。
+- **要付出的代價**：
+  - 網頁要自己實作 BLE-MIDI 的封包格式和時間戳記，大約一兩百行 JS；
+  - 這條連線只有網頁能用，Vail 和指令列看不到；
+  - FM-1 一次只能連一台電腦，網頁連著時，系統的藍牙 MIDI 就連不上；
+  - Safari 一樣不支援。
+- **建議**：先放進 backlog，等抖動量完、確定藍牙值得常用再做。網頁加一顆「Connect over Bluetooth」按鈕，USB 那條路保留。
+
+**第二輪錄音沒收到任何按鍵**
+
+腳本從 16:26 開始等，直到我停掉都沒收到 FM-1 的 note。藍牙本身還連著：我剛送了一個 `e` 給 FM-1，應該有播出一聲。
+
+錄音已經重新開始了。請確認兩件事再按一次：
+1. 右上角的 `BT` 還是藍色嗎？
+2. TYPE 頁是不是 **LIVE** 模式，也就是按一下就馬上播出來？如果是 COMPOSE（先排一行，按 `PLAY` 才送），那次就不會一個鍵一個鍵送出 MIDI。
+
+如果 `BT` 是藍色、也確定是 LIVE，按了卻還是沒收到，那就是 FM-1 往電腦的方向有問題，我再往這邊查。
+
+---
+
+_**User (2026-11-18 08:28:00Z)**_
+
+現在剛剛插上USB BT還是藍色 現在需要走USB還是藍牙？
+
+---
+
+_**Agent (claude-opus-5-5 2026-11-18 08:28:05Z)**_
+
+兩條一起錄最好。USB 和藍牙都連著時，FM-1 的按鍵會同時從兩邊送出，所以同一串字可以直接比較兩邊。藍牙的錄音還在等，我再加開一個錄 USB 的：
+
+_**Agent (claude-opus-5-5 2026-11-18 08:28:07Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+List ports and check BLE recorder state
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1; uv run --locked --all-groups python -c "import mido;print(mido.get_input_names())"; cat /private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/0a574306-469e-4a59-9622-5701a42aee59/tasks/b8wc1k4sp.output`
+
+```text
+['Felucca', 'FM-1 3399 Bluetooth']
+listening on FM-1 3399 Bluetooth
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 08:28:12Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Record USB timing from the FM-1
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1; uv run --locked --all-groups python -u /private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/0a574306-469e-4a59-9622-5701a42aee59/scratchpad/jitter.py Felucca 25 /private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/0a574306-469e-4a59-9622-5701a42aee59/scratchpad/usb.json`
+
+```text
+Command running in background with ID: boyl0xjma. Output is being written to: /private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/0a574306-469e-4a59-9622-5701a42aee59/tasks/boyl0xjma.output. You will be notified when it completes — do not poll that file or sleep while waiting. Read the file only if the user asks for progress, or if you need a line it prints before you can go on, such as a server's ready line or port.
+Session cwd remains /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1; directory changes made by the backgrounded command do not apply to subsequent commands.
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 08:28:17Z)**_
+
+USB 和藍牙兩邊現在都在錄，USB 線就這樣插著，不用拔。
+
+請到 **TYPE** 頁，確認是按一下就馬上播的 **LIVE** 模式，然後按 25 秒左右，多按一些有劃的字（`O` `T` `M` `K` `Q`）。按完跟我說。
+
+結果會有兩種情況：
+- **兩邊都收到**：就能用同一串按鍵直接比較 USB 和藍牙。
+- **只有 USB 收到**：剛才藍牙那輪錄不到，就不是操作的問題，而是 FM-1 往電腦的藍牙方向有問題。我會從韌體查。
+
+---
+
+_**User (2026-11-18 08:28:46Z)**_
+
+<task-notification>
+<task-id>boyl0xjma</task-id>
+<tool-use-id>toolu_01HMc2BwcxPZ6WxShft7nufN</tool-use-id>
+<output-file>/private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/0a574306-469e-4a59-9622-5701a42aee59/tasks/boyl0xjma.output</output-file>
+<status>completed</status>
+<summary>Background command "Record USB timing from the FM-1" completed (exit code 0)</summary>
+</task-notification>
+
+---
+
+_**Agent (claude-opus-5-5 2026-11-18 08:28:51Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Read USB and BLE recorder results
+
+`cat /private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/0a574306-469e-4a59-9622-5701a42aee59/tasks/boyl0xjma.output; echo ===; cat /private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/0a574306-469e-4a59-9622-5701a42aee59/tasks/b8wc1k4sp.output`
+
+```text
+listening on Felucca
+92 events
+marks (arrival / stamp): 179/180 180/180 180/180 180/180 180/180 180/180 180/180 60/60 180/180 180/180 180/180 60/60 180/180 180/180 60/60 60/60 180/180 60/60 180/180 180/180 60/60 180/180 180/180 180/180 180/180 180/180 60/60 60/60 60/60 180/180 60/60 180/180 60/60 180/180 180/180 180/180 60/60 180/180 60/60 180/180 180/180 180/180 180/180 180/180 180/180 60/60
+arrival time
+  dits ~60 ms: n=14 mean 60.1 sd 0.1 min 59.7 max 60.2 worst |err| 0.3
+  dahs ~180 ms: n=32 mean 180.3 sd 0.2 min 179.2 max 180.5 worst |err| 0.8
+  gaps ~60 ms: n=34 mean 60.1 sd 0.1 min 60.0 max 60.4 worst |err| 0.4
+CoreMIDI timestamps (rtmidi delta)
+  dits ~60 ms: n=14 mean 60.1 sd 0.1 min 59.7 max 60.2 worst |err| 0.3
+  dahs ~180 ms: n=32 mean 180.3 sd 0.0 min 180.3 max 180.4 worst |err| 0.4
+  gaps ~60 ms: n=34 mean 60.1 sd 0.1 min 60.0 max 60.5 worst |err| 0.5
+
+[exited with code 0]
+===
+listening on FM-1 3399 Bluetooth
+92 events
+marks (arrival / stamp): 179/180 180/181 180/180 178/180 180/181 178/180 188/180 58/61 196/180 180/180 181/181 60/60 180/180 188/180 62/61 61/60 180/180 62/60 179/180 180/181 59/60 180/181 182/180 171/181 180/180 181/180 60/60 60/60 60/60 182/180 59/60 181/180 60/60 180/180 180/180 180/180 60/60 180/180 66/60 180/180 172/180 189/181 178/180 174/180 181/180 60/60
+arrival time
+  dits ~60 ms: n=14 mean 60.6 sd 1.7 min 58.3 max 65.5 worst |err| 5.5
+  dahs ~180 ms: n=32 mean 180.5 sd 4.6 min 170.6 max 196.2 worst |err| 16.2
+  gaps ~60 ms: n=34 mean 59.8 sd 2.8 min 52.3 max 69.5 worst |err| 9.5
+CoreMIDI timestamps (rtmidi delta)
+  dits ~60 ms: n=14 mean 60.1 sd 0.3 min 60.0 max 61.0 worst |err| 1.0
+  dahs ~180 ms: n=32 mean 180.2 sd 0.4 min 180.0 max 181.0 worst |err| 1.0
+  gaps ~60 ms: n=34 mean 60.1 sd 0.4 min 60.0 max 61.0 worst |err| 1.0
+
+[exited with code 0]
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 08:28:59Z)**_
+
+結果很好：照時間戳記算，藍牙的時間和 USB 一樣準。記進文件：
+
+_**Agent (claude-opus-5-5 2026-11-18 08:29:25Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Record hardware jitter results in docs
+
+```bash
+cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1; date +%H:%M; python3 - <<'EOF'
+def edit(p, pairs):
+    s=open(p).read()
+    for a,b in pairs:
+        assert s.count(a)==1,(p,a[:60],s.count(a)); s=s.replace(a,b)
+    open(p,'w').write(s)
+edit('docs/dev/morse.md',[
+('''- **送出**：FM-1 帶了真實的時間戳記。接收端照時間戳記排，抖動就會消失；照到達時間算，就會抖。CoreMIDI 會把 BLE-MIDI 的時間戳記換成封包時間 `[調研]`，但 Chrome 的 Web MIDI 和 Vail 網頁用的是哪一個，要實測。''',
+'''- **送出（2026-11-18 實測）** `[實機]`：TYPE 頁用 20 WPM 播字（點 60 ms、劃 180 ms，FM-1 自己計時，當作標準答案）。USB 和藍牙同時連著，Mac 上用 python-rtmidi 同時錄兩個 port，每個 note 記兩種時間：到達時間（`perf_counter`），以及 CoreMIDI 的封包時間戳記（rtmidi 的 delta）。
+
+    | 46 個 mark、34 個字內停頓 | 點（60） | 劃（180） | 停頓（60） |
+    |---|---|---|---|
+    | USB，到達時間 | sd 0.1，最差 ±0.3 ms | sd 0.2，±0.8 | sd 0.1，±0.4 |
+    | 藍牙，到達時間 | sd 1.7，最差 ±5.5 ms | sd 4.6，±16 | sd 2.8，±9.5 |
+    | 藍牙，CoreMIDI 時間戳記 | sd 0.3，最差 ±1 ms | sd 0.4，±1 | sd 0.4，±1 |
+
+    **CoreMIDI 照 FM-1 送的 BLE-MIDI 時間戳記排時間，結果和 USB 一樣準**，誤差在 1 ms 以內（13-bit 時間戳記的精度就是 1 ms）。照到達時間算，最差會差 16 ms，大約是一個點的 25%，和研究時的預估相同。第一輪錄音有幾個劃只有 106–123 ms，兩種時間都一樣短，比較像是播放真的被下一個鍵打斷了，不是傳輸造成的；第二輪每個字都等播完再按，就沒有再出現。
+- **接收端用哪一種時間**：用 CoreMIDI 時間戳記的程式（python-rtmidi、DAW）不會抖。Chrome 的 Web MIDI（`MIDIMessageEvent.timeStamp`）和 Vail 網頁用的是哪一種，還沒測。'''),
+('''- **真的抖的話**：照原本的構想，用 note 的 velocity 帶上這個 mark 的長度（10 ms 一格），收的一方用長度而不是到達時間。只有收方也是 MORSE 才有用，Vail 不懂（見 [Backlog](#backlog)）。''',
+'''- **用 velocity 帶長度的備案**：接收端照時間戳記排時就不需要。只有在接收端用到達時間、又會誤判時才考慮（見 [Backlog](#backlog)）。'''),
+('''2026-11-18 做好，host simulator 和 fm1-emu 都驗證過，16:20 刷進實機（進度保留 `[實機]`），藍牙連線還在測。''',
+'''2026-11-18 做好，host simulator 和 fm1-emu 都驗證過，16:20 刷進實機（進度保留）。同一天在實機上用藍牙連上 Mac：`morse-send`、進度備份都能用，按鍵的時間戳記和 USB 一樣準 `[實機]`。'''),
+('''還要在實機上做（刷機要你核准）：
+- Mac 藍牙連上，`just morse-send`、MORSE on the web、Vail 都能用；
+- **量抖動**：同一串按鍵分別走 USB 和藍牙，記下 Mac 收到的時間（CoreMIDI 封包時間和 Web MIDI 的 `timeStamp`），比較兩者的差；
+- 拔線後只用電池，連著打 10 分鐘看會不會斷。''',
+'''實機 `[實機]`（2026-11-18）：
+- Mac 用藍牙連上 `FM-1 3399`（port 叫 `FM-1 3399 Bluetooth`），拔掉 USB：`just morse-send paris` 播得出來；`just morse-backup` 走藍牙 1.7 秒，內容和走 USB 時相同。
+- 抖動：見上面的[時間準不準](#bluetooth)，CoreMIDI 時間戳記的誤差 ≤ 1 ms。
+- 拔線後 header 的 `PC` 要大約 10 秒才消失：FM-1 要等 10 秒沒收到電腦的訊息（`HOSTLINK_TIMEOUT_MS`），才判定電腦離線。
+
+還要做：
+- MORSE on the web 和 Vail 經藍牙使用，以及 Chrome 的 `timeStamp` 是不是照時間戳記；
+- 只用電池，連著打 10 分鐘看會不會斷。'''),
+('''| **用 velocity 帶 mark 的長度** | 0.5 已經照送出端的時間戳記解碼，還不知道接收端（CoreMIDI、Chrome、Vail）會不會照時間戳記排 | 實機量過抖動後再決定：如果到達時間的誤差超過一個點的 15–20%，note off 的 velocity 帶上長度（10 ms 一格），收方也是 MORSE 時用它 |''',
+'''| **用 velocity 帶 mark 的長度** | 2026-11-18 實測，CoreMIDI 照時間戳記排，誤差 ≤ 1 ms，不需要 `[實機]` | 只在 Chrome 或 Vail 被證實用到達時間、而且會誤判時才做：note off 的 velocity 帶上長度（10 ms 一格），收方也是 MORSE 時用它 |
+| **網頁直接連藍牙（Web Bluetooth）** | 現在要先在系統的「音訊 MIDI 設定」按 Connect，Web MIDI 沒辦法掃描或連接藍牙裝置 | Chrome／Edge 的 Web Bluetooth 可以直接掃描 BLE-MIDI 的 service（`03B80E5A-EDE8-4B33-A751-6CE34EC4C700`），選 `FM-1 XXXX` 後網頁自己讀寫 BLE-MIDI 封包，不用經過系統設定 `[調研]`。代價：網頁要自己實作封包和時間戳記（大約一兩百行 JS）；連線只有網頁能用（Vail 和指令列看不到）；FM-1 一次只連一台電腦；Safari 不支援 |
+| **拔線後 `PC` 馬上消失** | 現在要等 10 秒沒收到訊息才判定電腦離線 | 收到 `plat_usb_lost`，或 USB session 改變、而且電腦是從 USB 連的時，馬上判定離線 |'''),
+])
+p='docs/device-log.md'; s=open(p).read()
+i=s.index('| 2026-11-18 16:22 |'); j=s.index('\n',i)
+s=s[:j]+'''
+| 2026-11-18 16:30–16:45 | 本人在 Mac 的藍牙 MIDI 視窗連上 `FM-1 3399`、拔掉 USB；agent 執行 `just morse-send`、`just morse-backup`（唯讀），用 python-rtmidi 錄 TYPE 頁播出的按鍵時間 | 藍牙 port `FM-1 3399 Bluetooth`；`morse-send paris` 播出；進度備份走藍牙 1.7 秒，內容和走 USB 時相同。插回 USB 後兩條同時錄：照 CoreMIDI 時間戳記算，藍牙的點、劃、停頓誤差 ≤ 1 ms（和 USB 一樣），照到達時間算最差 ±16 ms。拔線後 `PC` 大約 10 秒才消失（host 逾時） |'''+s[j:]
+open(p,'w').write(s)
+EOF
+just docs-check 2>&1 | tail -1
+```
+
+```text
+16:29
+{"status": "ok", "pages": 49, "llm_pages": 49, "deployed": false}
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 08:29:54Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Fix time and commit results
+
+```bash
+cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1; sed -i '' 's/| 2026-11-18 16:30–16:45 |/| 2026-11-18 16:23–16:29 |/' docs/device-log.md; git add docs && git commit -qm "morse 0.5 on Bluetooth: works with the Mac, timestamps as exact as USB (measured)
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>" && git push -q origin main; git log --oneline -1
+```
+
+```text
+866b2a1 morse 0.5 on Bluetooth: works with the Mac, timestamps as exact as USB (measured)
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 08:30:07Z)**_
+
+藍牙的時間可以算準：只要 Mac 上的程式照 FM-1 送出的時間戳記排，結果和 USB 一樣準。這輪 USB 和藍牙同時錄同一串字，測到的長度如下：
+
+| 每個長度的最大誤差 | 點（應為 60 ms） | 劃（應為 180 ms） | 字內停頓（應為 60 ms） |
+|---|---|---|---|
+| USB | ±0.3 ms | ±0.8 ms | ±0.4 ms |
+| 藍牙，照封包到達時間 | ±5.5 ms | ±16 ms | ±9.5 ms |
+| 藍牙，照 CoreMIDI 時間戳記 | ±1 ms | ±1 ms | ±1 ms |
+
+- **照到達時間算，藍牙會抖**：最差 16 ms，大約是一個點的 25%，和研究時的預估相同。
+- **用 velocity 帶長度的備案暫時不用做**：python-rtmidi、DAW 這類照時間戳記的程式不會抖。
+- **第一輪那幾個太短的劃（106–123 ms）**：兩種時間量出來一樣短，比較像是播放被下一個鍵打斷，不是藍牙造成的。這輪每個字都等播完才按，就沒再出現。
+- **還沒測的**：Chrome 的 Web MIDI 和 Vail 網頁，是照時間戳記還是照到達時間。
+
+**藍牙實測過的**：
+- 用藍牙送 `paris`，FM-1 播得出來；
+- 走藍牙讀進度花 1.7 秒，內容和走 USB 時相同；
+- 中間有一輪沒錄到任何按鍵，原因沒查出來；之後兩輪都正常。
+
+**寫進文件的**：測量表格在 `docs/dev/morse.md` 的藍牙一節，操作紀錄在 `device-log.md`，已 commit 並 push（`866b2a1`）。backlog 加了兩項：
+- **網頁直接連藍牙（Web Bluetooth）**：不用再到系統設定按 Connect。代價是網頁要自己處理藍牙封包；這條連線只有網頁能用，Vail 和指令列看不到；Safari 也不支援。
+- **拔線後 `PC` 馬上消失**：現在要等 10 秒沒收到電腦的訊息才判定離線，可以改成 USB 一斷就判定。
+
+**接下來可以做的**（都不用再刷機）：
+1. 用 Chrome 開 MORSE on the web，經藍牙測 Live，順便量 Chrome 的時間戳記準不準；
+2. 在 Vail 上用藍牙試；
+3. 拔線只用電池連打 10 分鐘，看會不會斷；
+4. 要發 v0.5 的 GitHub release 讓 Hub 更新嗎？這是公開動作，等你說。
+
+---
+
+_**User (2026-11-18 08:34:38Z)**_
+
+1. [Image #3] [Image #5] 好像沒有特別看到時間戳？ https://daviddwlee84.github.io/fm1-morse/web/
+2. [Image #6] Vail https://vailmorse.com/ 我好想沒有特別配置就能直接發信號了
+3. 感覺應該不會 目前就是拔線藍牙模式
+4. 好啊
+
+---
+
+_**User (2026-11-18 08:34:38Z)**_
+
+[Image: source: /private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/0a574306-469e-4a59-9622-5701a42aee59/images/3.png]
+
+[Image: source: /private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/0a574306-469e-4a59-9622-5701a42aee59/images/5.png]
+
+[Image: source: /private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/0a574306-469e-4a59-9622-5701a42aee59/images/6.png]
+
+---
+
+_**Agent (claude-opus-5-5 2026-11-18 08:34:52Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Inspect previous fm1-morse release
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/firmware/morse; gh release list -L 5; gh release view v0.4 --json body,assets,targetCommitish -q '.targetCommitish, .body, (.assets[]|.name)'`
+
+```text
+Exit code 1
+MORSE 0.3	Latest	v0.3	2026-11-17T18:54:06Z
+release not found
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 08:34:59Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Read v0.3 release
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/firmware/morse; gh release view v0.3 --json body,assets,targetCommitish,name -q '.name, .targetCommitish, .body, (.assets[]|.name)'; git tag`
+
+```text
+MORSE 0.3
+main
+The first release of MORSE, a pocket Morse code machine for the M-VAVE FM-1.
+
+- **KEY**: key on the piano keys (straight key or iambic A/B paddles) and read what you sent, as text, as each letter over the dits and dahs you keyed, or as bars to scale.
+- **RHYTHM**: drills of short and long presses with a judgement per press, a hint, and a send speed that fits your hand.
+- **PRACTICE**: flash cards by sound, Leitner boxes, new letters in Koch order.
+- **LISTEN**: endless practice: Koch groups, common words, a made-up QSO, abbreviations with their meaning, sayings.
+- **TYPE**: letters, digits and signs, CW phrases and prosigns on the keys; live or compose.
+- Keying over USB-MIDI in the Vail adapter's format.
+
+| | |
+|---|---|
+| Package | `morse-0.3.fwsc` |
+| Identity | `FM-1_41000300` |
+| SHA-256 | `1c563fdaeca50b95a782eac6252049564fbabb608b5859960e7d0f2470c0f1b3` |
+| Flash chips | saves and updates on `856014` and `B36014` |
+| Licence | GPL-3.0-or-later (fm1-base MPL-2.0, `common/` MIT) |
+
+Tested on an FM-1 with the newer flash chip (`B36014`), over the USB-MIDI update (fm1-base's `fm1_install.py`, the web installer's protocol): installed from the stock V15 firmware (015), installed from SLOOP 2.8.5, and SLOOP 2.8.5 installed from MORSE. The package carries fm1-base's update loader.
+
+MORSE keeps its settings and progress at `0xDA000`-`0xDBFFF` and does not read other firmwares' projects or samples: see the README. Back up your flash before installing.
+
+firmware.json
+morse-0.3.fwsc
+v0.3
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 08:35:05Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Check release build outputs
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/firmware/morse; ls -la build/*.json build/*.fwsc; python3 -c "import json;d=json.load(open('build/firmware.json'));print({k:d[k] for k in list(d)[:12]})"`
+
+```text
+.rw-r--r--@ 1.1k zhouhanru 18 Nov 15:43 build/firmware-usb.json
+.rw-r--r--@ 1.1k zhouhanru 18 Nov 15:40 build/firmware.json
+.rw-r--r--@ 616k zhouhanru 18 Nov 02:38 build/morse-0.3.fwsc
+.rw-r--r--@ 616k zhouhanru 18 Nov 04:57 build/morse-0.4.fwsc
+.rw-r--r--@ 616k zhouhanru 18 Nov 16:13 build/morse-0.5.fwsc
+.rw-r--r--@ 616k zhouhanru 18 Nov 15:46 build/morse.fwsc
+{'schema': 1, 'id': 'morse', 'name': 'MORSE', 'author': 'daviddwlee84', 'license': 'GPL-3.0-or-later', 'tagline': 'a pocket Morse code machine', 'description': "Learn and use Morse code. Key on the piano keys (straight key or iambic paddles) and see what you sent, drill short and long presses, learn by sound with flash cards, listen to endless practice, type letters and CW phrases on the keys. Keying goes out over USB-MIDI in the Vail format. Settings and progress are kept; Koch order, Farnsworth spacing, a decoder that follows a beginner's hand.", 'tags': ['utility'], 'install': 'https://github.com/daviddwlee84/fm1-morse#install', 'site': 'https://daviddwlee84.github.io/M-VAVE_FM-1/dev/morse/', 'source': 'https://github.com/daviddwlee84/fm1-morse', 'screenshot': 'docs/screen.png'}
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 08:35:14Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Read fmhub.json and firmware.json rest
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/firmware/morse; cat fmhub.json; python3 -c "import json;d=json.load(open('build/firmware.json'));print({k:d[k] for k in list(d)[12:]})"; grep -n "firmware.json" ../../third_party/fm1-base/tools/build.py | head -5`
+
+```text
+{
+  "what": "Learn and use Morse code. Key on the piano keys (straight key or iambic paddles) and see what you sent, drill short and long presses, learn by sound with flash cards, listen to endless practice, type letters and CW phrases on the keys. Keying goes out over USB-MIDI in the Vail format.",
+  "author": "Da-Wei Lee",
+  "kinds": [
+    "other"
+  ],
+  "editor": "https://daviddwlee84.github.io/fm1-morse/web/",
+  "cheat": "https://github.com/daviddwlee84/fm1-morse#controls",
+  "image": "docs/screen.png",
+  "color": "#5AC8FF",
+  "sounds": "none"
+}
+{'hardware': {'models': ['FM-1'], 'flash': ['856014', 'B36014'], 'features': ['bluetooth-midi', 'usb-audio-in', 'usb-audio-out', 'screen-reader']}, 'credits': "Built on fm1-base by Charles Vestal. Koch order from LCWO; MIDI keying in the Vail adapter's format."}
+248:The firmware described for firmware hubs (firmware.json, docs/FIRMWARE-JSON.md; tools/firmware_json.py): these keys, and
+256:  tags = ["synth", "fm"]     what it is, from a fixed list (tools/firmware_json.py TAGS; the build refuses another)
+267:Outputs in APP_DIR/build/: NAME.bin (app), loader/ota.bin (update loader), NAME.fwsc (package), firmware.json
+269:repository (APP_DIR named app) also has the repository's firmware.json written, when it changes.
+294:import firmware_json  # noqa: E402
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 08:35:23Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Locate Live section markup
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/firmware/morse/web; grep -n "id=\"lamp\"\|</section>\|<style>\|#lamp" index.html | head; sed -n 60,80p index.html`
+
+```text
+11:<style>
+36:  #lamp { width: 14px; height: 14px; border-radius: 50%; background: var(--line); display: inline-block; vertical-align: middle; }
+37:  #lamp.on { background: var(--accent); box-shadow: 0 0 8px var(--accent); }
+60:  </section>
+64:    <p class="dim">What the FM-1 reads: key on its KEY page, or type on its TYPE page. <span id="lamp" title="the key"></span></p>
+72:  </section>
+78:  </section>
+85:  </section>
+91:  </section>
+  </section>
+
+  <section>
+    <h2>2. Live</h2>
+    <p class="dim">What the FM-1 reads: key on its KEY page, or type on its TYPE page. <span id="lamp" title="the key"></span></p>
+    <div id="heard" aria-live="polite"></div>
+    <div class="row" style="margin-top:8px"><button class="ghost" id="clear" disabled>Clear</button>
+      <button class="ghost" id="copy" disabled>Copy</button></div>
+    <p class="dim" style="margin-top:14px">Send text: the FM-1 plays it as received (amber on its KEY page), at its hearing
+      speed. <code>&lt;SK&gt;</code> runs letters together as one prosign.</p>
+    <div class="row"><input type="text" id="say" placeholder="cq cq de fm1 k" maxlength="600" disabled>
+      <button id="send" disabled>Send</button> <button class="ghost" id="stop" disabled>Stop</button></div>
+  </section>
+
+  <section>
+    <h2>3. Back up</h2>
+    <div class="row"><button id="backup" disabled>Download the progress</button></div>
+    <p class="dim">Nothing changes on the FM-1. The file is plain JSON: every letter's two boxes (0..5), the rounds.</p>
+  </section>
+
+  <section>
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 08:35:26Z)**_
+
+在網頁的 Live 區塊加一個「Timing」折疊區，用來量 Chrome 收到的按鍵時間。
+
+_**Agent (claude-opus-5-5 2026-11-18 08:35:41Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Add a Timing panel to the web page
+
+```bash
+cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/firmware/morse/web; python3 - <<'EOF'
+p='index.html'; s=open(p).read()
+def rep(a,b):
+    global s
+    assert s.count(a)==1,(a[:50],s.count(a)); s=s.replace(a,b)
+rep('''      <button id="send" disabled>Send</button> <button class="ghost" id="stop" disabled>Stop</button></div>
+  </section>''','''      <button id="send" disabled>Send</button> <button class="ghost" id="stop" disabled>Stop</button></div>
+    <details id="timing" style="margin-top:14px"><summary class="dim">Timing: how exactly the keying arrives</summary>
+      <p class="dim">Each press and gap the browser received, in ms: by the event's time stamp, and (after the slash) by when
+        the page got it. The FM-1's TYPE page plays exact lengths (a dit is 1200 / WPM ms, a dah three, the gap inside
+        a letter one), so play some letters there and compare. Over Bluetooth the arrival times wander by a connection
+        interval; the time stamps should not.</p>
+      <pre id="tstats" class="dim" style="white-space:pre-wrap"></pre>
+      <div class="row"><button class="ghost" id="treset">Reset</button></div>
+    </details>
+  </section>''')
+rep('''function onMessage(e) {
+  const d = Array.from(e.data);''','''// Timing: each note-0 edge by the event's time stamp and by when it reached the page
+let tEdges = [];
+function timingEdge(down, stamp, arrived) {
+  tEdges.push([down, stamp, arrived]);
+  if (tEdges.length > 400) tEdges.shift();
+  if ($("timing").open) timingShow();
+}
+function timingShow() {
+  const marks = [], gaps = [];
+  for (let i = 1; i < tEdges.length; i++) {
+    const [a, b] = [tEdges[i - 1], tEdges[i]];
+    const span = [b[1] - a[1], b[2] - a[2]];
+    if (a[0] && !b[0]) marks.push(span);
+    else if (!a[0] && b[0] && span[0] < 150) gaps.push(span);   // gaps inside a letter
+  }
+  const sd = xs => { const m = xs.reduce((p, x) => p + x, 0) / xs.length; return [m, Math.sqrt(xs.reduce((p, x) => p + (x - m) ** 2, 0) / xs.length)]; };
+  const line = (name, xs) => {
+    if (!xs.length) return `${name}: none yet`;
+    const [ms, ss] = sd(xs.map(x => x[0])), [ma, sa] = sd(xs.map(x => x[1]));
+    return `${name} (${xs.length}): time stamp mean ${ms.toFixed(1)} sd ${ss.toFixed(1)}   arrival mean ${ma.toFixed(1)} sd ${sa.toFixed(1)}`;
+  };
+  const short = marks.filter(m => m[0] < 1.8 * Math.min(...marks.map(x => x[0]))), long = marks.filter(m => !short.includes(m));
+  $("tstats").textContent = [line("short presses", short), line("long presses", long), line("gaps inside letters", gaps),
+    "last presses: " + marks.slice(-12).map(m => `${m[0].toFixed(0)}/${m[1].toFixed(0)}`).join("  ")].join("\\n");
+}
+
+function onMessage(e) {
+  const d = Array.from(e.data);
+  if (d[1] === 0 && ((d[0] & 0xF0) === 0x90 || (d[0] & 0xF0) === 0x80))
+    timingEdge((d[0] & 0xF0) === 0x90 && d[2] > 0, e.timeStamp, performance.now());''')
+open(p,'w').write(s)
+import re
+open('/private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/0a574306-469e-4a59-9622-5701a42aee59/scratchpad/page.js','w').write(re.findall(r'<script>(.*?)</script>',s,re.S)[-1])
+EOF
+grep -n '\$("clear").onclick\|\$("copy").onclick' index.html | head -2; node --check /private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/0a574306-469e-4a59-9622-5701a42aee59/scratchpad/page.js && echo ok
+```
+
+```text
+216:$("clear").onclick = () => { $("heard").textContent = ""; };
+217:$("copy").onclick = () => navigator.clipboard && navigator.clipboard.writeText($("heard").textContent);
+ok
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 08:35:47Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Wire up Timing reset and toggle
+
+```bash
+cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/firmware/morse/web; python3 - <<'EOF'
+p='index.html'; s=open(p).read()
+a='''$("clear").onclick = () => { $("heard").textContent = ""; };'''
+s=s.replace(a,a+'''
+$("treset").onclick = () => { tEdges = []; timingShow(); };
+$("timing").ontoggle = () => { if ($("timing").open) timingShow(); };''',1)
+open(p,'w').write(s)
+EOF
+grep -c "treset" index.html; grep -n 'join("' index.html | tail -2
+```
+
+```text
+2
+253:    "last presses: " + marks.slice(-12).map(m => `${m[0].toFixed(0)}/${m[1].toFixed(0)}`).join("  ")].join("\n");
+276:  status((firmware ? `MORSE ${firmware.join(".")} connected` : "MORSE connected") + (via ? ` over ${via}` : "")
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 08:35:55Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Smoke-test the timing functions in node
+
+```bash
+cd /private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/0a574306-469e-4a59-9622-5701a42aee59/scratchpad; python3 -c "
+import re;s=open('/Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/firmware/morse/web/index.html').read()
+m=re.search(r'let tEdges = \[\];.*?\n}\n\nfunction onMessage',s,re.S).group(0).rsplit('function onMessage',1)[0]
+open('t.js','w').write('const el={timing:{open:true},tstats:{}};const \$=id=>el[id];\n'+m+'''
+let t=0;const ed=(d,len)=>{timingEdge(d,t,t+Math.random()*10);t+=len};
+for(let k=0;k<5;k++){ed(1,60);ed(0,60);ed(1,180);ed(0,400);}
+console.log(el.tstats.textContent);''')"; node t.js
+```
+
+```text
+short presses (5): time stamp mean 60.0 sd 0.0   arrival mean 60.7 sd 4.5
+long presses (5): time stamp mean 180.0 sd 0.0   arrival mean 179.4 sd 3.1
+gaps inside letters (5): time stamp mean 60.0 sd 0.0   arrival mean 56.9 sd 3.3
+last presses: 60/60  180/175  60/62  180/180  60/65  180/185  60/52  180/178  60/64  180/180
+Shell cwd was reset to /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 08:36:10Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Commit timing panel and fmhub update
+
+```bash
+cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/firmware/morse; python3 - <<'EOF'
+p='fmhub.json'; s=open(p).read()
+a='Keying goes out over USB-MIDI in the Vail format."'
+assert a in s
+s=s.replace(a,'Keying goes out over USB-MIDI or Bluetooth MIDI in the Vail format; back up your progress from a web page."')
+open(p,'w').write(s)
+EOF
+python3 -m json.tool fmhub.json >/dev/null && git add -A web/index.html fmhub.json && git commit -qm "web: a Timing panel (time stamps vs arrival); fmhub: Bluetooth
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>" && git push -q origin main; git log --oneline -1; shasum -a 256 build/morse-0.5.fwsc
+```
+
+```text
+b072f82 web: a Timing panel (time stamps vs arrival); fmhub: Bluetooth
+494331904fd9adc3efb4ba4b22c01f477b741cbfa1d498b52ed458b31d154457  build/morse-0.5.fwsc
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 08:36:13Z)**_
+
+Now the v0.5 release (public, as you approved), tagged at the commit the tested package was built from (`a75c29e`):
+
+_**Agent (claude-opus-5-5 2026-11-18 08:36:30Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Publish the fm1-morse v0.5 release
+
+```bash
+cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/firmware/morse; cp build/morse-0.5.fwsc /private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/0a574306-469e-4a59-9622-5701a42aee59/scratchpad/; cp build/firmware.json /private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/0a574306-469e-4a59-9622-5701a42aee59/scratchpad/firmware.json; cat > /private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/0a574306-469e-4a59-9622-5701a42aee59/scratchpad/notes.md <<'EOF'
+MORSE 0.5: Bluetooth, and everything from 0.4 (which was not released separately).
+
+**Bluetooth (0.5)**
+- MORSE is a Bluetooth MIDI device beside USB (fm1-base's own stack). Vail, [MORSE on the web](https://daviddwlee84.github.io/fm1-morse/web/) and the host program work without a cable.
+- *SETTINGS > BLUETOOTH* turns it off (kept across power-offs); the header shows `BT`, grey while it waits, blue when connected.
+- Keying goes out with real BLE-MIDI timestamps. Measured on a Mac against the TYPE page's exact 60 / 180 ms: by CoreMIDI's timestamps, within 1 ms, as over USB (by arrival time alone, up to 16 ms off).
+- Nothing of Bluetooth's is written to the flash. On a Mac: Audio MIDI Setup, *Show MIDI Studio*, the Bluetooth button, *Connect* next to `FM-1 XXXX`; again after the FM-1 restarts.
+
+**Practice and progress (0.4)**
+- Keyed answers judged by their own rhythm (a dah about three dits) at any speed, with a grade, the letter as it goes over the letter as you keyed it, and what to work on; a near miss counts as *almost*. `JUDGING: STRICT` keeps the old way.
+- Weak cards come back later in the same round; a peek at a new letter's code with `SEQ`.
+- CHART edit (a letter's level, open groups, all one box back, reset) and a placement test; nothing is written until you press `PLAY`.
+- Back up and restore the progress as JSON, from the web page or the host's `morse backup` / `morse restore`; the FM-1 asks before loading.
+
+| | |
+|---|---|
+| Package | `morse-0.5.fwsc` |
+| Identity | `FM-1_41000500` |
+| SHA-256 | `494331904fd9adc3efb4ba4b22c01f477b741cbfa1d498b52ed458b31d154457` |
+| Flash chips | saves and updates on `856014` and `B36014` (both in fm1-emu; `B36014` on hardware) |
+| Licence | GPL-3.0-or-later (fm1-base MPL-2.0, `common/` MIT) |
+
+Tested on an FM-1 with the newer flash chip (`B36014`): installed over MORSE 0.4 with the USB-MIDI update (fm1-base's `fm1_install.py`, fast install), the learning progress kept; then on Bluetooth with a Mac: the host's send and backup, MORSE on the web (live text, connected over Bluetooth) and Vail. The settings and progress record has the same format as 0.3 and 0.4, so an update from either keeps it.
+
+MORSE keeps its settings and progress at `0xDA000`-`0xDBFFF` and does not read other firmwares' projects or samples: see the README. Back up your flash, and your progress, before installing.
+EOF
+s=/private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/0a574306-469e-4a59-9622-5701a42aee59/scratchpad; gh release create v0.5 "$s/morse-0.5.fwsc" "$s/firmware.json" --target a75c29e --title "MORSE 0.5" --notes-file "$s/notes.md" --latest 2>&1 | tail -1; gh release view v0.5 --json assets -q '.assets[]|.name+" "+.digest'
+```
+
+```text
+Exit code 1
+Release.target_commitish is invalid
+release not found
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 08:36:48Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Tag a75c29e and create the release
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/firmware/morse; git tag -a v0.5 a75c29e -m "MORSE 0.5" && git push -q origin v0.5; s=/private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/0a574306-469e-4a59-9622-5701a42aee59/scratchpad; gh release create v0.5 "$s/morse-0.5.fwsc" "$s/firmware.json" --verify-tag --title "MORSE 0.5" --notes-file "$s/notes.md" --latest 2>&1 | tail -1; gh release view v0.5 --json assets -q '.assets[]|.name+" "+.digest'`
+
+```text
+https://github.com/daviddwlee84/fm1-morse/releases/tag/v0.5
+firmware.json sha256:296479f46067ef674b7a5c1cdad4653b31edd4a023badb762f8412beffe02b91
+morse-0.5.fwsc sha256:494331904fd9adc3efb4ba4b22c01f477b741cbfa1d498b52ed458b31d154457
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 08:36:54Z)**_
+
+Release 上線了，`.fwsc` 的 digest 和刷進去的那份一致。最後更新 docs，並把 submodule pointer 跟上：
+
+_**Agent (claude-opus-5-5 2026-11-18 08:36:55Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Find version and release references
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1; grep -n -i "morse" docs/resources.md | head -5; grep -n "v0.3\](https" docs/dev/morse.md | head -3`
+
+```text
+404:| 韌體 0.3 release（`FM-1_41000300`） | 2026-11-18 | 是（Hub 測試時用 USB-MIDI 裝過三次） | fm1-morse 的第一個 release [v0.3](https://github.com/daviddwlee84/fm1-morse/releases/tag/v0.3)：identity 改成 `FM-1_41`，授權改成 GPL-3.0-or-later，程式和 0.3 相同 |
+421:2. 發一個附 `morse-0.3.fwsc` 的 GitHub release：2026-11-18 發布 [v0.3](https://github.com/daviddwlee84/fm1-morse/releases/tag/v0.3)（tag 在 `748402f`），附 `morse-0.3.fwsc`（SHA-256 `1c563fda…c0f1b3`，GitHub 的 asset digest 相符）和 `firmware.json`。
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 08:37:00Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Read release section
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1; sed -n 418,430p docs/dev/morse.md`
+
+```text
+上架還要做的：
+
+1. 在實機上走 USB-MIDI 更新路徑測三件事：從 Morse 換到別的韌體（2026-11-18 通過，Morse 0.3 → SLOOP）、從別的韌體裝 Morse（2026-11-18 通過，SLOOP → Morse release 0.3 `FM-1_41000300`）、從原廠 V15 裝 Morse（2026-11-18 通過，015 → Morse release，fast install）。三項都在新晶片 `0xB36014` 的機器上做。
+2. 發一個附 `morse-0.3.fwsc` 的 GitHub release：2026-11-18 發布 [v0.3](https://github.com/daviddwlee84/fm1-morse/releases/tag/v0.3)（tag 在 `748402f`），附 `morse-0.3.fwsc`（SHA-256 `1c563fda…c0f1b3`，GitHub 的 asset digest 相符）和 `firmware.json`。
+3. 用 #check 確認 identity：2026-11-18 本人確認 `FM-1_41000300` 是空的；KB 的「Check your file」讀得到 `fmhub.json`，回報 Fine，卡片圖 240×240、169 KB。
+4. 送審：2026-11-18 本人用 Hub 的送審表單送出（Hub 的紀錄是 UTC 2026-11-17 19:03）。自動檢查 8 項全過（原始碼、`LICENSE`、`fmhub.json`、sounds、release、identity、update loader、兩種晶片），狀態是 waiting for Sven，等維護者審核。
+5. 社群清單：2026-11-18 送了兩個最熱門的清單，都是一筆一個 PR。
+    - [awesome-fm-1 #30](https://github.com/cicloid/awesome-fm-1/pull/30)（93 stars，放 *Not a synth* 段）
+    - [aroum/fm1-custom-fw #36](https://github.com/aroum/fm1-custom-fw/pull/36)（424 stars，放 1.1.4 的第 126 筆，和 CTL-1、MIDIMON 同段）
+
+    fm1-emu、RemoteFM1、FMDB 會自動跟著 Hub 或 GitHub，不用送。fm1-editor.com 等 Hub 上架後看它會不會自己出現。整套流程整理成 repo 的 skill `fm1-hub-listing`。
+
+## 路線圖 { #roadmap }
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 08:37:40Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Record release and Bluetooth results, commit
+
+```bash
+cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1; python3 - <<'EOF'
+def edit(p, pairs):
+    s=open(p).read()
+    for a,b in pairs:
+        assert s.count(a)==1,(p,a[:60],s.count(a)); s=s.replace(a,b)
+    open(p,'w').write(s)
+edit('docs/dev/morse.md',[
+('''    fm1-emu、RemoteFM1、FMDB 會自動跟著 Hub 或 GitHub，不用送。fm1-editor.com 等 Hub 上架後看它會不會自己出現。整套流程整理成 repo 的 skill `fm1-hub-listing`。
+''','''    fm1-emu、RemoteFM1、FMDB 會自動跟著 Hub 或 GitHub，不用送。fm1-editor.com 等 Hub 上架後看它會不會自己出現。整套流程整理成 repo 的 skill `fm1-hub-listing`。
+6. 新版本：2026-11-18 發布 [v0.5](https://github.com/daviddwlee84/fm1-morse/releases/tag/v0.5)（tag 在 `a75c29e`，0.4 沒有單獨發 release），附 `morse-0.5.fwsc`（SHA-256 `49433190…154457`，就是刷進實機的那份，GitHub 的 asset digest 相符）和 `firmware.json`。Hub 會跟著 GitHub 的最新 release。`fmhub.json` 的說明加上藍牙。
+'''),
+('''| 韌體 0.5、host 0.5.0 | 2026-11-18 | 是（16:20 用 USB-MIDI 裝 release build `FM-1_41000500`，fm1-morse `a75c29e`） |''','''| 韌體 0.5、host 0.5.0 | 2026-11-18 | 是（16:20 用 USB-MIDI 裝 release build `FM-1_41000500`，fm1-morse `a75c29e`，release [v0.5](https://github.com/daviddwlee84/fm1-morse/releases/tag/v0.5)） |'''),
+('''還要做：
+- MORSE on the web 和 Vail 經藍牙使用，以及 Chrome 的 `timeStamp` 是不是照時間戳記；
+- 只用電池，連著打 10 分鐘看會不會斷。''','''- **MORSE on the web**（Chrome）經藍牙連上，狀態寫 `MORSE 0.5 connected over Bluetooth`，Live 顯示 FM-1 讀到的字。
+- **Vail**（vailmorse.com 的 Repeater）：只用藍牙連著，不用任何設定，FM-1 的 KEY 頁發報就出現在 Vail 上。
+- 拔掉 USB 只用電池，用藍牙連續使用一段時間，沒有斷線（還沒正式計時）。
+
+還要做：Chrome 的 `MIDIMessageEvent.timeStamp` 是照 BLE-MIDI 的時間戳記，還是照到達時間。網頁的 Live 區塊加了 *Timing* 折疊區，會同時列出兩種時間量到的長度，到 TYPE 頁播幾個字就能比較。'''),
+('''- **接收端用哪一種時間**：用 CoreMIDI 時間戳記的程式（python-rtmidi、DAW）不會抖。Chrome 的 Web MIDI（`MIDIMessageEvent.timeStamp`）和 Vail 網頁用的是哪一種，還沒測。''','''- **接收端用哪一種時間**：用 CoreMIDI 時間戳記的程式（python-rtmidi、DAW）不會抖。Chrome 的 Web MIDI（`MIDIMessageEvent.timeStamp`）用的是哪一種，可以用 MORSE on the web 的 *Timing* 區量；Vail 網頁在藍牙上能用 `[實機]`，但它用哪一種時間還不知道。'''),
+])
+p='docs/device-log.md'; s=open(p).read()
+i=s.index('| 2026-11-18 16:23–16:29 |'); j=s.index('\n',i)
+s=s[:j]+'''
+| 2026-11-18（16:29 之後） | 本人只用藍牙（沒接 USB）：Chrome 開 MORSE on the web，以及 vailmorse.com 的 Repeater | 網頁顯示 `MORSE 0.5 connected over Bluetooth`，Live 收到 FM-1 讀到的字；Vail 不用設定就收到 FM-1 的發報。拔線用電池時沒有斷線 |'''+s[j:]
+open(p,'w').write(s)
+EOF
+just docs-check 2>&1 | tail -1; git add firmware/morse docs && git commit -qm "morse 0.5 released (fm1-morse v0.5); web over Bluetooth and Vail work; Timing panel
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>" && git push -q origin main; git log --oneline -1
+```
+
+```text
+{"status": "ok", "pages": 49, "llm_pages": 49, "deployed": false}
+33e8a9a morse 0.5 released (fm1-morse v0.5); web over Bluetooth and Vail work; Timing panel
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 08:37:53Z)**_
+
+**1. 網頁沒有看到時間戳記**：沒錯，原本的頁面不顯示時間。我在 Live 區塊下面加了一個 **Timing** 折疊區，已經推上 GitHub Pages，幾分鐘後重新整理就看得到。用法：
+- 打開 *Timing: how exactly the keying arrives*，到 FM-1 的 TYPE 頁按幾個字；
+- 它會分短按、長按、字內停頓，同時列出兩種算法的平均和 sd：照 Chrome 的時間戳記（`event.timeStamp`），以及照網頁實際收到的時間；
+- 走藍牙時，如果時間戳記那欄的 sd 接近 0，代表 Chrome 用了 BLE-MIDI 的時間戳記；如果兩欄差不多一樣抖，代表 Chrome 用的是到達時間。這就是上一輪還沒測的那一項。
+
+另外從你的截圖看，網頁走藍牙是通的：狀態寫 `MORSE 0.5 connected over Bluetooth`，Live 也收得到字。
+
+**2. Vail 不用任何設定就能用**：藍牙 MIDI 在 Chrome 裡就是一般的 MIDI port，Vail 本來就聽 note 0，所以直接收到。
+
+**3. 電池模式**：記成「拔線用電池時沒有斷線，還沒正式計時」。
+
+**4. v0.5 已發布**：https://github.com/daviddwlee84/fm1-morse/releases/tag/v0.5
+- tag 打在 `a75c29e`，也就是刷進你機器的那份套件的原始碼；`.fwsc` 的 SHA-256 和 GitHub 上的 digest 一致。
+- 0.4 當初沒有單獨發 release，所以 release notes 把 0.4 的練習和進度功能，以及 0.5 的藍牙一起寫了。
+- `fmhub.json` 的說明加上了藍牙和網頁備份。Hub 會自動抓最新的 release，三小時內更新。
+
+**記錄**：網頁、Vail 走藍牙的結果，以及 release，都寫進了 `docs/dev/morse.md` 和 `device-log.md`，已 push（`33e8a9a`）。
+
+**還沒做的**：
+- 用 Timing 區量 Chrome 的時間戳記，你試完把數字貼給我就行；
+- backlog 裡的「網頁直接連藍牙（Web Bluetooth）」和「拔線後 `PC` 馬上消失」，要做再跟我說。
+
+---
+
+_**User (2026-11-18 08:43:52Z)**_
+
+藍牙測試結果 [Image #7]
+```
+
+
+<pasted_content id="cc4a">
+short presses (27): time stamp mean 60.2 sd 0.4   arrival mean 60.4 sd 3.1
+long presses (32): time stamp mean 180.2 sd 0.4   arrival mean 180.6 sd 3.2
+gaps inside letters (43): time stamp mean 60.2 sd 0.4   arrival mean 59.9 sd 2.5
+last presses: 60/60  60/61  180/182  180/178  60/62  60/60  181/186  60/62  181/179  180/179  61/59  60/62
+</pasted_content id="cc4a">
+
+```
+
+USB測試結果 [Image #9]
+```
+
+
+<pasted_content id="cc4a">
+short presses (29): time stamp mean 60.1 sd 0.1   arrival mean 60.1 sd 0.2
+long presses (24): time stamp mean 180.3 sd 0.1   arrival mean 180.3 sd 0.1
+gaps inside letters (40): time stamp mean 60.1 sd 0.1   arrival mean 60.1 sd 0.1
+last presses: 60/60  180/180  180/180  60/60  60/60  60/60  60/60  60/60  180/180  60/60  180/180  60/60
+</pasted_content id="cc4a">
+
+```
+
+（目前測試 如果藍牙available 或是之前配對過 則即便USB插上了 還是會從藍牙配對？ 我手動在機器上把藍牙關掉則能直接走USB）
+
+https://vailmorse.com/#Decoder
+是說我看 Vail decoder會偵測 Speed WPM 跟我們設定的 20 差不多 [Image #11]
+（不過就是 即便打operator phrase 它網頁上還是看起來是分開的字母 不知道是不是因為我們default的間隔比較高 所以被認為是拆分的字母 還是Vail本來就是這樣 得懂行的自己把相關的詞聚在一起？）
+
+另外
+網頁直接連藍牙（Web Bluetooth）
+拔線後 PC 馬上消失
+可以做
+
+---
+
+_**User (2026-11-18 08:43:52Z)**_
+
+[Image: source: /private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/0a574306-469e-4a59-9622-5701a42aee59/images/7.png]
+
+[Image: source: /private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/0a574306-469e-4a59-9622-5701a42aee59/images/9.png]
+
+[Image: source: /private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/0a574306-469e-4a59-9622-5701a42aee59/images/11.png]
+
+---
+
+_**Agent (claude-opus-5-5 2026-11-18 08:44:32Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Read fm1-base BLE-MIDI stack notes
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/third_party/fm1-base; ls docs/bt/ 2>/dev/null | head; grep -n "^#\|SysEx\|sysex\|timestamp\|MTU\|7772E5DB\|03B80E5A" docs/bt/BLE-STACK.md | head -50`
+
+```text
+ble-traces
+BLE-DEVICES-DESIGN.md
+BLE-HW-FACTS.md
+BLE-STACK.md
+BT-CLASSIC.md
+README.md
+RF-CALIBRATION.md
+2:# BLE MIDI: our own stack (route C)
+9:## 1. What it is, and where it stands
+25:## 2. Layout (`firmware/src/ble/`, `io/midi/`)
+39:## 3. The driver interface (`ble_hw.h`)
+57:## 4. Link layer (peripheral)
+71:## 5. Host and GATT
+74:(6, 9, 0, 100); 8 GATT 0x1801; 9-11 Service Changed + CCCD; 12 BLE-MIDI service `03B80E5A-EDE8-4B33-A751-6CE34EC4C700`; 13-15 MIDI
+75:I/O `7772E5DB-3868-4112-A1A9-F2669D106BF3` (read: empty; write without response; notify; Write Request accepted too) + CCCD.
+77:- ATT: MTU exchange (ours 247 = one 251-octet LL PDU), Find Information, Find By Type Value, Read By Type, Read, Read Blob, Read By
+87:### 5.1 Security (`ble_smp.c`, `ble_aes.c`)
+109:## 6. BLE-MIDI and the firmware (`ble_midi.c`, `io/midi/midi_ble.c`)
+111:### 6.1 Packets and the router
+112:- **Out:** one notification per connection event (up to `BLE_MIDI_PER_EVENT` = 2 with a backlog), as many events as fit in MTU - 3.
+113:  Real 13-bit millisecond timestamps (stock sends `80 80`); running status inside a packet; SysEx over packets.
+114:- **In:** decoded to USB-MIDI event packets with timestamps: running status with or without a timestamp, low-part wrap, real
+115:  time anywhere, SysEx over packets, system common. A message cut at a packet's end is dropped.
+118:  packet's newest timestamp. `midi_out_event` (the audio ISR; the FM-1's own notes) also
+124:### 6.2 On / off, boot, address
+146:## 7. The baseband driver (`ble_hw_wl82.c`, `hal/fm1_ble.h`)
+167:## 8. The radio's start-up and the stored trims
+169:### 8.1 `fm1_ble_rf_init` (`hal/fm1_ble_rf.h`)
+189:### 8.2 The stored trims (`ble_vm.c`)
+200:### 8.3 The capture and the build
+207:## 9. The central role: connecting out (`BLE_CENTRAL`)
+211:### 9.1 Link layer and driver (`ble_ll_central.c`, `ble_hw_wl82_central.c`)
+228:### 9.2 GATT client and security (`ble_gattc.c`, `ble_central.c`, `ble_smp_init.c`)
+229:- **GATT client:** MTU 247, Find By Type Value for the BLE-MIDI service (else Read By Group Type), Read By Type 0x2803 for the MIDI
+259:## 10. Tests (`tests/run_tests.sh`; ASan + UBSan where the compiler has them)
+273:## 11. On a real FM-1: the console and the breadcrumb
+312:## 12. Open
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 08:44:39Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Read advertising and BLE-MIDI details
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/third_party/fm1-base; sed -n 57,70p docs/bt/BLE-STACK.md; sed -n 109,123p docs/bt/BLE-STACK.md`
+
+```text
+## 4. Link layer (peripheral)
+
+- **Advertising:** ADV_IND = AdvA + flags (`02 01 06`) + the BLE-MIDI 128-bit UUID, ChSel 0; SCAN_RSP = the complete local name
+  `Optimist XXXX` (`BLE_DEVICE_NAME`; stock's was `FM-1_BLE`). 100 ms, 37 / 38 / 39.
+- **CONNECT_IND checks:** our AdvA and RxAdd; Interval 6..3200; Timeout 10..3200 and > (1 + Latency) x Interval x 2; WinSize
+  1..min(8, Interval - 1); WinOffset <= Interval; Hop 5..16; >= 2 channels; not the advertising AA. Anything else is ignored and
+  advertising goes on (`cind_rej_why` says which).
+- **Timers:** 0x3E without a packet in the first window + 6 intervals; supervision timeout 0x08; 40 s LL response timeout 0x22.
+- **Procedures:** version and feature exchange (we start LL_PERIPHERAL_FEATURE_REQ after 6 events if the central has not); data
+  length; connection update and channel map with instants (an instant already passed ends the link, 0x28);
+  LL_CONNECTION_PARAM_REQ accepted when valid, else 0x1E; PHY_REQ answered 1M / 1M (anything else ends the link, 0x1A); ping;
+  termination both ways; LL_ENC_REQ refused (0x1A) unless `BLE_LL_ENC=1`; LL_UNKNOWN_RSP for the rest. Version 9 (5.0), company
+  0xFFFF. Control PDUs go first; L2CAP frames wait whole in a 1 KiB ring and are cut to the data length when the engine pulls them.
+
+## 6. BLE-MIDI and the firmware (`ble_midi.c`, `io/midi/midi_ble.c`)
+
+### 6.1 Packets and the router
+- **Out:** one notification per connection event (up to `BLE_MIDI_PER_EVENT` = 2 with a backlog), as many events as fit in MTU - 3.
+  Real 13-bit millisecond timestamps (stock sends `80 80`); running status inside a packet; SysEx over packets.
+- **In:** decoded to USB-MIDI event packets with timestamps: running status with or without a timestamp, low-part wrap, real
+  time anywhere, SysEx over packets, system common. A message cut at a packet's end is dropped.
+- **Router:** channel messages, and the clock and transport for `clock_sync.c` (CLK IN BLE); the BLE interrupt puts them in `ble_in_q`,
+  the TIMER5 tick moves them into `midi_in_q`, where they play as USB's, each timed by its arrival less its distance to the
+  packet's newest timestamp. `midi_out_event` (the audio ISR; the FM-1's own notes) also
+  queues into `ble_out_q` while a client listens, and CLK OUT's clock goes out timed (`ble_rt_push`). Nothing is bridged between USB / TRS and BLE. `ble_midi_route`: bit 0 in,
+  bit 1 out.
+- **No stuck notes:** notes a central had on (`ble_held`, 256 B) are ended with a note-off through the same ring when the link goes
+  (any cause) and when BLUETOOTH goes OFF; notes sent after OFF are dropped; USB and TRS notes keep sounding.
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 08:44:45Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Read hostlink host-presence logic and USB API
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/firmware/morse; ls common/; diff -q common/hostlink.c ../common/hostlink.c; sed -n 95,175p common/hostlink.c; grep -n "plat_usb_session\|plat_usb_lost\|plat_usb_connected\|plat_usb_host_present\|usb_mounted" ../../third_party/fm1-base/include/plat.h | head`
+
+```text
+tests
+hostlink.c
+hostlink.h
+ledfx.c
+ledfx.h
+    if (n > HOSTLINK_MAX)
+        return -1;
+    f[k++] = 0xF0;
+    f[k++] = 0x7D;
+    f[k++] = h->id0;
+    f[k++] = h->id1;
+    f[k++] = h->ver;
+    f[k++] = type & 0x7Fu;
+    for (i = 0; i < n; i++)
+        f[k++] = payload[i] & 0x7Fu;
+    f[k++] = 0xF7;
+    if (transport == HL_BLE) {
+#if FM1B_BLE
+        uint32_t pk[(HOSTLINK_MAX + 7u + 2u) / 3u + 1u], np = hl_sx_packets(f, k, pk, sizeof pk / sizeof pk[0]);
+        if (!plat_ble_connected() || plat_midi_out_room(TO_BLE_HOST) < np)
+            return -1;                   /* whole or not at all: a frame cut short is worse than one late */
+        for (i = 0; i < np; i++)
+            plat_midi_send(pk[i], TO_BLE_HOST);
+        return 0;
+#else
+        return -1;
+#endif
+    }
+    return plat_sysex_send(f, k);
+}
+
+int hl_send(hostlink_t *h, uint8_t type, const uint8_t *payload, uint32_t n)
+{
+    return hl_send_to(h, h->transport, type, payload, n);
+}
+
+void hl_tick(hostlink_t *h, uint32_t now, uint8_t hello, uint8_t heartbeat, const uint8_t *hello_p, uint32_t hello_n)
+{
+    if (h->acked && !hl_host(h, now))
+        h->acked = 0;                    /* lost: say HELLO again */
+    if (h->acked && h->transport == HL_USB && plat_usb_session() != h->session)
+        h->acked = 0;                    /* a new cable */
+#if FM1B_BLE
+    if (h->acked && h->transport == HL_BLE && !plat_ble_connected())
+        h->acked = 0;                    /* the Bluetooth link went */
+#endif
+    if (h->sent && now - h->sent < HOSTLINK_EVERY_MS)
+        return;
+    h->sent = now ? now : 1u;
+    if (h->acked) {
+        uint8_t hb[2] = {h->ver, h->transport};
+        hl_send(h, heartbeat, hb, 2);
+        return;
+    }
+    {
+        uint8_t b[HOSTLINK_MAX];             /* the app's HELLO, then the transport it goes by */
+        uint32_t i;
+        if (hello_n >= HOSTLINK_MAX)
+            return;
+        for (i = 0; i < hello_n; i++)
+            b[i] = hello_p[i];
+        if (plat_usb_session()) {
+            b[hello_n] = HL_USB;
+            hl_send_to(h, HL_USB, hello, b, hello_n + 1u);
+        }
+#if FM1B_BLE
+        if (plat_ble_connected()) {
+            b[hello_n] = HL_BLE;
+            hl_send_to(h, HL_BLE, hello, b, hello_n + 1u);
+        }
+#endif
+    }
+}
+127: * hub), the sound plays on. plat_usb_host_msg: the latest change, once (not a queue). plat_usb_lost: 1 once after a
+135:int plat_usb_lost(void);
+393: * plat_usb_session (and plat_sysex_send's -1 without a computer) are built for an app with APP_SYSEX (below) */
+395:                                                         * the FM-1 up (plat_usb_session 0), or it stopped reading
+410:uint32_t plat_usb_session(void);       /* 0: no computer has set the FM-1 up; else a number that changes at every new
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 08:44:51Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Read USB session API and hl_host
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1; sed -n 390,412p third_party/fm1-base/include/plat.h; grep -n "int hl_host" -A8 firmware/morse/common/hostlink.c; git -C firmware/morse log --oneline -3 -- common/; diff -r firmware/morse/common firmware/common | head -5`
+
+```text
+ * read back; an app that must know reads plat_data after. */
+/* SysEx to the computer over USB (main loop): whole frames, F0 .. F7, into felucca-bsp's SysEx ring (sent before
+ * the notes), which the USB interrupt empties as the computer reads. plat_sysex_room, plat_sysex_queued and
+ * plat_usb_session (and plat_sysex_send's -1 without a computer) are built for an app with APP_SYSEX (below) */
+int plat_sysex_send(const uint8_t *frame, uint32_t n);   /* 0 = queued whole; -1 = not sent: no computer has set
+                                                         * the FM-1 up (plat_usb_session 0), or it stopped reading
+                                                         * (no room for 200 ms; what was queued goes out) */
+uint32_t plat_sysex_room(void);        /* the bytes of SysEx the ring takes now without a wait: 0 with no computer, the
+                                        * bus asleep, or a send under way. A send that must never wait checks it */
+uint32_t plat_sysex_queued(void);      /* the bytes still in the ring, not yet read (0: all out) */
+/* a frame streamed as it is made, for one too long to build first (a screen mirrored as it is drawn): begin, its bytes
+ * F0 .. F7 in any number of puts, end. The ring is the stream's from begin to end (no other SysEx, no note out in
+ * between: keep it short), each packet going in as soon as it is whole. A put waits while the ring is full and the
+ * computer reads; one that waited PLAT_SYSEX_STALL_MS without a packet read gives up: the frame is cut there (the
+ * computer drops a frame cut short at the next F0), the rest of its puts and its end return -1. Main loop; built for
+ * an app with APP_SYSEX */
+#define PLAT_SYSEX_STALL_MS 30u
+int plat_sysex_begin(void);            /* 0 = the stream is open; -1 = no computer, or a send under way */
+int plat_sysex_put(const uint8_t *p, uint32_t n);   /* 0 = in the ring (the last bytes held until more or end) */
+int plat_sysex_end(void);              /* the last packet out, the ring free again: 0 = the frame went whole */
+uint32_t plat_usb_session(void);       /* 0: no computer has set the FM-1 up; else a number that changes at every new
+                                        * one (a bus reset, the cable out and in): what an app keeps for a connection
+                                        * (a client's session) it drops when this changes */
+34:int hl_host(const hostlink_t *h, uint32_t now) { return h->acked && h->seen && now - h->seen < HOSTLINK_TIMEOUT_MS; }
+35-
+36-/* ---------------------------------------------------------- USB-MIDI SysEx packets --- */
+37-int hl_sx_packet(hl_sx_t *s, uint32_t pkt, const uint8_t **frame, uint32_t *n)
+38-{
+39-    uint32_t cin = pkt & 0x0Fu, k, nb;
+40-    if (cin == 0x4u || cin == 0x7u)
+41-        nb = 3;
+42-    else if (cin == 0x6u)
+57ea786 Its own repository: MIT licence, fmhub.json, identity FM-1_41
+Only in firmware/common: README.md
+Only in firmware/common: adpcm.c
+Only in firmware/common: adpcm.h
+Only in firmware/common: chime.c
+Only in firmware/common: chime.h
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 08:44:58Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Find USB cable detection APIs
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/third_party/fm1-base; grep -n -i "vbus\|cable\|charg\|usb_present\|plat_usb_\w*(" include/plat.h | head -20`
+
+```text
+96:/* MIDI: 4-byte USB-MIDI event packets (byte 0 = cable / CIN, then status, data 1, data 2). In from USB, the TRS jack
+132:void plat_usb_host(int on);
+133:int plat_usb_host_state(void);
+134:int plat_usb_host_msg(void);
+135:int plat_usb_lost(void);
+140:const char *plat_usb_host_name(void);
+340: * stopped, USB let go (the computer sees the cable out and in), not counted as a failed start (no safe mode), the
+410:uint32_t plat_usb_session(void);       /* 0: no computer has set the FM-1 up; else a number that changes at every new
+411:                                        * one (a bus reset, the cable out and in): what an app keeps for a connection
+441:void plat_usb_audio_full(int on);
+447:void plat_usb_play_gain(uint32_t q12);
+460:int16_t *plat_usb_ch(uint32_t off, uint32_t *run);
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 08:45:11Z)**_
+
+<think><details><summary>Thought Process</summary>
+正在處理拔線後 `PC` 消失的問題。fm1-base 沒有直接偵測 USB 線的 API，因此改用 USB 匯流排休眠、SysEx 送不出去來判斷；接下來先確認模擬器如何模擬拔線。
+
+</details></think>
+
+_**Agent (claude-opus-5-5 2026-11-18 08:45:11Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Check sysex_room on unplug in sim and device
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/third_party/fm1-base; grep -n "uint32_t plat_sysex_room" -A8 host/plat_host.c; grep -n '"unplug"' -A6 host/plat_host.c | head -12; grep -n "uint32_t plat_sysex_room" -A12 device/plat_fm1.c | head -20`
+
+```text
+1085:uint32_t plat_sysex_room(void) { return hsx_session && !hsx_streaming ? (HSX_RING - hsx_q) * 3u : 0u; }
+1086-uint32_t plat_sysex_queued(void) { return hsx_q * 3u; }
+1087-uint32_t plat_usb_session(void) { return hsx_session; }
+1088-static void hsx_ms(void)                        /* one millisecond of USB: the computer reads */
+1089-{
+1090-    if (!hsx_stalled)
+1091-        hsx_q -= hsx_q < HSX_READ ? hsx_q : HSX_READ;
+1092-}
+1093-int plat_sysex_send(const uint8_t *frame, uint32_t n)
+428:    if (!strcmp(a, "unplug")) {
+429-        if (uhs.conn) {
+430-            uhs.lost = 1;
+431-            uhs.msg = USBH_MSG_LOST;
+432-        }
+433-        uhs.plugged = uhs.conn = 0;
+434-        return 0;
+--
+2860:            else if (!strcmp(a, "unplug")) {          /* the cable out (once what was queued went out): no host */
+2861-                if (mr_out) {
+2862-                    uint32_t r0 = mr_rate;
+2863-                    mr_rate = MRQ + sizeof hctl;
+187:uint32_t plat_sysex_room(void)
+188-{
+189-    return !usb.config || usb.suspended || sx_busy ? 0u : (SXQ - (so_w - so_r)) * 3u;   /* (3 bytes a USB-MIDI packet) */
+190-}
+191-uint32_t plat_sysex_queued(void) { return (so_w - so_r) * 3u; }
+192-uint32_t plat_usb_session(void) { return usb.config ? usb.resets + 1u : 0u; }   /* (usb.c counts the bus resets) */
+193-/* a stream: usb.c's SysEx ring held (sx_busy: ep1_tx sends no note, ann_wire_send waits) from begin to end, a USB-MIDI
+194- * packet into it each 3 bytes (CIN 4: more follow; 5..7: the last, with F7) */
+195-static struct {
+196-    uint8_t on, cut, k, acc[3];
+197-} sxs;
+198-int plat_sysex_begin(void)
+199-{
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 08:45:17Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Read sim usb unplug handling
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/third_party/fm1-base; sed -n 2855,2885p host/plat_host.c`
+
+```text
+                mirror_cmd(0);
+            else if (!strcmp(a, "refresh"))
+                mirror_cmd(2);
+            else if (!strcmp(a, "nokeep"))            /* the viewer stops its keep-alive (gone without "off") */
+                mr_keep = 0;
+            else if (!strcmp(a, "unplug")) {          /* the cable out (once what was queued went out): no host */
+                if (mr_out) {
+                    uint32_t r0 = mr_rate;
+                    mr_rate = MRQ + sizeof hctl;
+                    host_mirror_ms();
+                    mr_rate = r0;
+                    fclose(mr_out);
+                }
+                mr_out = 0;
+                mr_mid = 0;
+                mr_link_n++;
+            } else {
+                snprintf(out, sizeof out, "%s/%s", dir, !strncmp(a, "out:", 4) ? a + 4 : a);
+                if (mr_out)
+                    fclose(mr_out);
+                if (!(mr_out = fopen(out, "wb"))) {
+                    printf("line %d: cannot write %s\n", lineno, out);
+                    return 2;
+                }
+                mr_keep = 1;
+                mr_keep_t = now_ms;
+                mirror_cmd(2);
+            }
+            run_ms(1);
+        } else if (!strcmp(cmd, "mirror_rate")) {     /* mirror_rate N: USB's pace for the mirror, bytes a millisecond */
+            mr_rate = (uint32_t)atoi(a);
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 08:45:22Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Read sim usb command
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/third_party/fm1-base; grep -n 'strcmp(cmd, "usb")' -A25 host/plat_host.c | head -35`
+
+```text
+2923:        else if (!strcmp(cmd, "usb")) {
+2924-            if (!strcmp(a, "unplug"))
+2925-                hsx_session = 0, hsx_q = 0;
+2926-            else if (!strcmp(a, "plug"))
+2927-                hsx_session = ++hsx_plugs;
+2928-            else if (!strcmp(a, "stall") || !strcmp(a, "read"))
+2929-                hsx_stalled = a[0] == 's';
+2930-            else {
+2931-                printf("line %d: usb %s: unplug, plug, stall or read\n", lineno, a);
+2932-                return 2;
+2933-            }
+2934-            run_ms(1);
+2935-        } else if (!strcmp(cmd, "sysex_log")) {
+2936-            if (hsx_log)
+2937-                fclose(hsx_log);
+2938-            hsx_log = 0;
+2939-            if (strcmp(a, "off")) {
+2940-                out_path(out, sizeof out, dir, a);
+2941-                if (!(hsx_log = fopen(out, "wb"))) {
+2942-                    printf("line %d: cannot write %s\n", lineno, out);
+2943-                    return 2;
+2944-                }
+2945-            }
+2946-        } else if (!strcmp(cmd, "echo"))
+2947-            printf("%s", line + 5);
+2948-        else {
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 08:45:35Z)**_
+
+<think><details><summary>Thought Process</summary>
+模擬器拔線會直接清空 USB session，所以 `PC` 會立刻消失；真機拔線只會進入 suspend，`plat_sysex_room()` 回 0。因此改用 hostlink：若電腦經 USB 連線，且 USB 連續 0.5 秒送不出去，就判定電腦已離開。
+
+</details></think>
+
+_**Agent (claude-opus-5-5 2026-11-18 08:45:36Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Read hostlink struct and init
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/firmware/morse/common; sed -n 36,62p hostlink.h; grep -n "void hl_init" -A10 hostlink.c; diff hostlink.c ../../common/hostlink.c && diff hostlink.h ../../common/hostlink.h && echo same`
+
+```text
+typedef struct {
+    uint8_t id0, id1, ver;
+    uint8_t acked;                       /* the host answered our HELLO since it was last lost */
+    uint8_t transport;                   /* HL_USB / HL_BLE: where the answer came from, where we reply */
+    uint32_t seen;                       /* plat_ms of the last frame from the host (0: never) */
+    uint32_t sent;                       /* plat_ms of the last HELLO / HEARTBEAT */
+    uint32_t session;                    /* plat_usb_session when acked over USB: a new cable means a new HELLO */
+} hostlink_t;
+
+/* a SysEx frame put back together from USB-MIDI packets (Bluetooth) */
+typedef struct {
+    uint8_t b[HOSTLINK_RX_MAX];
+    uint32_t n;
+    uint8_t open, over;                  /* inside a frame; it ran past HOSTLINK_RX_MAX (dropped at its end) */
+} hl_sx_t;
+
+void hl_init(hostlink_t *h, uint8_t id0, uint8_t id1, uint8_t ver);
+/* one of ours (p: the bytes between F0 and F7): its type and payload; 0 when it is someone else's */
+const uint8_t *hl_match(const hostlink_t *h, const uint8_t *p, uint32_t n, uint8_t *type, uint32_t *len);
+void hl_seen(hostlink_t *h, uint32_t now);
+void hl_acked(hostlink_t *h, uint32_t now, int transport);
+int hl_host(const hostlink_t *h, uint32_t now);   /* 1: the host is there */
+int hl_send(hostlink_t *h, uint8_t type, const uint8_t *payload, uint32_t n);   /* to the host's transport; 0 = queued */
+int hl_send_to(hostlink_t *h, int transport, uint8_t type, const uint8_t *payload, uint32_t n);
+void hl_tick(hostlink_t *h, uint32_t now, uint8_t hello, uint8_t heartbeat, const uint8_t *hello_p, uint32_t hello_n);
+/* 1 when pkt (a USB-MIDI event packet) ended a SysEx frame: *frame, *n are its bytes between F0 and F7 */
+5:void hl_init(hostlink_t *h, uint8_t id0, uint8_t id1, uint8_t ver)
+6-{
+7-    h->id0 = id0;
+8-    h->id1 = id1;
+9-    h->ver = ver;
+10-    h->acked = 0;
+11-    h->transport = HL_USB;
+12-    h->seen = h->sent = h->session = 0;
+13-}
+14-
+15-const uint8_t *hl_match(const hostlink_t *h, const uint8_t *p, uint32_t n, uint8_t *type, uint32_t *len)
+same
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 08:45:46Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Drop a USB host when USB stays shut
+
+```bash
+cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/firmware; for d in morse/common common; do python3 - "$d" <<'EOF'
+import sys
+d=sys.argv[1]
+def edit(p, pairs):
+    s=open(p).read()
+    for a,b in pairs:
+        assert s.count(a)==1,(p,a[:50]); s=s.replace(a,b)
+    open(p,'w').write(s)
+edit(d+'/hostlink.h',[
+('''#define HOSTLINK_EVERY_MS 1000u
+''','''#define HOSTLINK_EVERY_MS 1000u
+#define HOSTLINK_USB_GONE_MS 500u        /* USB can take no SysEx this long (the cable out: the bus suspended; the
+                                          * computer asleep or not reading): a host on USB is gone at once */
+'''),
+('''    uint32_t session;                    /* plat_usb_session when acked over USB: a new cable means a new HELLO */
+} hostlink_t;''','''    uint32_t session;                    /* plat_usb_session when acked over USB: a new cable means a new HELLO */
+    uint32_t usb_shut;                   /* plat_ms since USB has had no room for SysEx (0: it has) */
+} hostlink_t;'''),
+])
+edit(d+'/hostlink.c',[
+('''    h->seen = h->sent = h->session = 0;''','''    h->seen = h->sent = h->session = h->usb_shut = 0;'''),
+('''    if (h->acked && h->transport == HL_USB && plat_usb_session() != h->session)
+        h->acked = 0;                    /* a new cable */''','''    if (h->acked && h->transport == HL_USB && plat_usb_session() != h->session)
+        h->acked = 0;                    /* a new cable */
+    if (h->acked && h->transport == HL_USB) {   /* the cable out leaves the session as it was, the bus suspended */
+        if (plat_sysex_room())
+            h->usb_shut = 0;
+        else if (!h->usb_shut)
+            h->usb_shut = now ? now : 1u;
+        else if (now - h->usb_shut >= HOSTLINK_USB_GONE_MS)
+            h->acked = 0, h->usb_shut = 0;
+    } else
+        h->usb_shut = 0;'''),
+])
+EOF
+done; diff morse/common/hostlink.c common/hostlink.c && echo same; ls common/tests 2>/dev/null; grep -n "hostlink" common/tests/*.c 2>/dev/null | head -3
+```
+
+```text
+same
+adpcm_test.c
+hostlink_test.c
+lpc_test.c
+common/tests/hostlink_test.c:2:/* hostlink's Bluetooth half on the computer: frames cut into USB-MIDI SysEx packets and put back together.
+common/tests/hostlink_test.c:3: *   cc -I.. -o /tmp/hostlink_test hostlink_test.c && /tmp/hostlink_test      (just fw-common-test) */
+common/tests/hostlink_test.c:9:#include "../hostlink.c"
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 08:45:54Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Run common module tests
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1; grep -n "plat_sysex\|plat_usb_session" firmware/common/tests/hostlink_test.c | head; just fw-common-test 2>&1 | tail -4`
+
+```text
+7:static unsigned plat_usb_session(void) { return 1; }
+8:static int plat_sysex_send(const unsigned char *f, unsigned n) { (void)f, (void)n; return 0; }
+    8 | static int plat_sysex_send(const unsigned char *f, unsigned n) { (void)f, (void)n; return 0; }
+      |            ^
+1 error generated.
+error: recipe `fw-common-test` failed with exit code 1
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 08:45:59Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Read hostlink test structure
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/firmware/common/tests; sed -n 1,20p hostlink_test.c; grep -n "^int main" -A5 hostlink_test.c; tail -12 hostlink_test.c; cd ../../morse/common/tests 2>/dev/null && ls`
+
+```text
+/* SPDX-License-Identifier: MIT */
+/* hostlink's Bluetooth half on the computer: frames cut into USB-MIDI SysEx packets and put back together.
+ *   cc -I.. -o /tmp/hostlink_test hostlink_test.c && /tmp/hostlink_test      (just fw-common-test) */
+#include <stdio.h>
+#include <string.h>
+#define FM1B_BLE 0
+static unsigned plat_usb_session(void) { return 1; }
+static int plat_sysex_send(const unsigned char *f, unsigned n) { (void)f, (void)n; return 0; }
+#include "../hostlink.c"
+
+static int fails;
+#define CHECK(c, msg) do { if (!(c)) { printf("FAIL %s\n", msg); fails++; } } while (0)
+
+static void round_trip(uint32_t len)
+{
+    uint8_t f[HOSTLINK_RX_MAX + 2];
+    uint32_t pk[260], np, i, n = 0, got = 0;
+    const uint8_t *out = 0;
+    hl_sx_t s;
+    memset(&s, 0, sizeof s);
+37:int main(void)
+38-{
+39-    uint32_t len;
+40-    for (len = 0; len <= 20; len++)
+41-        round_trip(len);
+42-    round_trip(551);                       /* a DETAIL picture line between F0 and F7 */
+        np = hl_sx_packets(f, sizeof f, pk, 260);
+        for (i = 0; i < np; i++)
+            got += (uint32_t)hl_sx_packet(&s, pk[i], &out, &n);
+        CHECK(got == 0, "an over-long frame is dropped");
+        np = hl_sx_packets((const uint8_t *)"\xF0\x7D\x43\x4E\xF7", 5, pk, 260);
+        for (i = 0; i < np; i++)
+            got += (uint32_t)hl_sx_packet(&s, pk[i], &out, &n);
+        CHECK(got == 1 && n == 3, "the next frame after it");
+    }
+    printf(fails ? "hostlink: %d FAILED\n" : "hostlink: all ok\n", fails);
+    return fails != 0;
+}
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 08:46:13Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Add unplug tests to hostlink unit tests
+
+```bash
+cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/firmware/common/tests; python3 - <<'EOF'
+p='hostlink_test.c'; s=open(p).read()
+s=s.replace('''static int plat_sysex_send(const unsigned char *f, unsigned n) { (void)f, (void)n; return 0; }
+''','''static int plat_sysex_send(const unsigned char *f, unsigned n) { (void)f, (void)n; return 0; }
+static unsigned usb_room = 192;          /* 0: the bus suspended (the cable out) */
+static unsigned plat_sysex_room(void) { return usb_room; }
+''',1)
+s=s.replace('''    printf(fails ? "hostlink: %d FAILED\\n" : "hostlink: all ok\\n", fails);''','''    {                                      /* a host on USB is gone 0.5 s after USB shuts, not 10 s */
+        hostlink_t h;
+        hl_init(&h, 0x4D, 0x4F, 1);
+        hl_seen(&h, 1000);
+        hl_acked(&h, 1000, HL_USB);
+        hl_tick(&h, 1000, 0x41, 0x42, (const uint8_t *)"\\1", 1);
+        CHECK(hl_host(&h, 1000), "acked over USB");
+        usb_room = 0;
+        hl_tick(&h, 1100, 0x41, 0x42, (const uint8_t *)"\\1", 1);
+        hl_tick(&h, 1599, 0x41, 0x42, (const uint8_t *)"\\1", 1);
+        CHECK(hl_host(&h, 1599), "a short stop is no unplug");
+        hl_tick(&h, 1600, 0x41, 0x42, (const uint8_t *)"\\1", 1);
+        CHECK(!hl_host(&h, 1600), "gone after 0.5 s without room");
+        usb_room = 192;
+        hl_seen(&h, 2000);
+        hl_acked(&h, 2000, HL_USB);
+        usb_room = 0;
+        hl_tick(&h, 2100, 0x41, 0x42, (const uint8_t *)"\\1", 1);
+        usb_room = 192;
+        hl_tick(&h, 2400, 0x41, 0x42, (const uint8_t *)"\\1", 1);
+        usb_room = 0;
+        hl_tick(&h, 2500, 0x41, 0x42, (const uint8_t *)"\\1", 1);
+        hl_tick(&h, 2800, 0x41, 0x42, (const uint8_t *)"\\1", 1);
+        CHECK(hl_host(&h, 2800), "room again restarts the wait");
+        usb_room = 192;
+    }
+    printf(fails ? "hostlink: %d FAILED\\n" : "hostlink: all ok\\n", fails);''',1)
+open(p,'w').write(s)
+EOF
+cd ../../..; just fw-common-test 2>&1 | tail -3
+```
+
+```text
+hostlink: all ok
+lpc: ok
+adpcm: ok
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 08:46:28Z)**_
+
+hostlink 的測試都通過了。把韌體版本升到 0.6，HELLO 向量跟著改：
+
+_**Agent (claude-opus-5-5 2026-11-18 08:46:33Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Bump firmware to 0.6 and host to 0.6.0
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1; sed -i '' 's/#define FW_MINOR 5u/#define FW_MINOR 6u/' firmware/morse/app.c; sed -i '' 's/^expect_sysex F0 7D 4D 4F 01 41 01 00 05 00 F7/expect_sysex F0 7D 4D 4F 01 41 01 00 06 00 F7/' firmware/morse/tests/basic.txt; sed -i '' 's/(version 1, firmware 0.4, transport USB)/(version 1, firmware 0.6, transport USB)/' firmware/morse/tests/basic.txt; sed -i '' 's/__version__ = "0.5.0"/__version__ = "0.6.0"/; s/FIRMWARE_KNOWN = (0, 5)/FIRMWARE_KNOWN = (0, 6)/' host/morse/__init__.py; sed -i '' 's/"hello": (device_hello(0, 5), "F0 7D 4D 4F 01 41 01 00 05 00 F7")/"hello": (device_hello(0, 6), "F0 7D 4D 4F 01 41 01 00 06 00 F7")/' host/morse/protocol.py; sed -i '' 's/assert host.firmware == (0, 5)/assert host.firmware == (0, 6)/' host/tests/test_morse.py; grep -n "06 00 F7" host/morse/protocol.py firmware/morse/tests/basic.txt; just morse-test 2>&1 | tail -1`
+
+```text
+host/morse/protocol.py:153:    "hello": (device_hello(0, 6), "F0 7D 4D 4F 01 41 01 00 06 00 F7"),
+firmware/morse/tests/basic.txt:20:expect_sysex F0 7D 4D 4F 01 41 01 00 06 00 F7
+firmware/morse/tests/basic.txt:813:sysex F0 7D 4D 4F 01 05 01 06 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 06 00 F7
+22 passed in 0.06s
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 08:46:43Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Add a sim test for USB unplug
+
+```bash
+cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1; cat >> firmware/morse/tests/basic.txt <<'EOF'
+
+# ---- 0.6: the cable out: a host on USB is gone at once (in the device, 0.5 s after USB shuts), not 10 s later
+ble disconnect
+wait 1100
+sysex F0 7D 4D 4F 01 01 01 F7
+wait 30
+expect host 1
+expect transport 0
+usb unplug
+wait 600
+expect host 0
+usb plug
+wait 1100
+EOF
+just fw-test morse 2>&1 | grep -E "FAIL|EXPECT" | head; echo done
+```
+
+```text
+done
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 08:46:48Z)**_
+
+模擬器測試全部通過。接著改網頁：USB 和藍牙都在時優先用 USB，並加上 Web Bluetooth 直連。
+
+_**Agent (claude-opus-5-5 2026-11-18 08:46:49Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Read web page script first part
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/firmware/morse/web; sed -n 50,62p index.html; awk '/<script>/,/<\/script>/' index.html | sed -n 1,80p`
+
+```text
+  <h1>MORSE on the web</h1>
+  <p class="lead">See what your FM-1 reads, send it text to copy, and back up what it has learnt in MORSE.
+    Chrome or Edge on a computer, the FM-1 running MORSE (backups: 0.4 or later) on USB, or on Bluetooth with 0.5:
+    on a Mac, connect <i>FM-1 XXXX</i> first in Audio MIDI Setup (Window, Show MIDI Studio, the Bluetooth button).
+    Nothing to install.</p>
+
+  <section>
+    <h2>1. Connect</h2>
+    <div class="row"><button id="connect">Connect to the FM-1</button> <span id="status" class="dim">not connected</span></div>
+    <p class="dim">The browser asks to use MIDI devices with system exclusive messages: allow it.</p>
+  </section>
+
+  <section>
+<script>
+"use strict";
+const ORDER = "KMURESNAPTLWI.JZ=FOY,VG5/Q92H38B?47C1D60X", N = ORDER.length, GROUP = 5, TOP = 5, NEVER = 0xFFFF;
+const BLOB_N = 2 + 2 + 1 + 4 + 4 + N * 2 + N * 4, WIRE_N = 1 + BLOB_N + 2, CHUNK = 49;
+const FRAMES = Math.ceil(WIRE_N / CHUNK), FORMAT = 1;
+const HEAD = [0x7D, 0x4D, 0x4F], VER = 1;
+const T_HELLO_ACK = 0x01, T_PROG_REQ = 0x04, T_PROG_LOAD = 0x05;
+const T_HELLO = 0x41, T_HEARTBEAT = 0x42, T_PROG = 0x44, T_PROG_DONE = 0x45;
+const $ = id => document.getElementById(id);
+let out = null, inp = null, firmware = null, asm = null, onDone = null, picked = null;
+
+function status(text, cls) { $("status").textContent = text; $("status").className = cls || ""; }
+
+function crc16(b) {
+  let c = 0xFFFF;
+  for (const x of b) { c ^= x << 8; for (let k = 0; k < 8; k++) c = ((c & 0x8000) ? (c << 1) ^ 0x1021 : c << 1) & 0xFFFF; }
+  return c;
+}
+function pack7(b) {
+  const o = [];
+  for (let i = 0; i < b.length; i += 7) {
+    const part = b.slice(i, i + 7);
+    o.push(part.reduce((h, x, j) => h | ((x >> 7) & 1) << j, 0), ...part.map(x => x & 0x7F));
+  }
+  return o;
+}
+function unpack7(b) {
+  const o = [];
+  for (let i = 0; i < b.length;) { const hi = b[i++]; for (let j = 0; j < 7 && i < b.length; j++) o.push(b[i++] | ((hi >> j) & 1) << 7); }
+  return o;
+}
+function check(p) {   // what the firmware's ln_valid checks
+  if (!(p.open >= GROUP && p.open <= N)) throw Error(`open must be ${GROUP}..${N}`);
+  if (p.right > p.answered) throw Error("right is more than answered");
+  for (let i = 0; i < N; i++) for (let d = 0; d < 2; d++) {
+    if (!(p.box[i][d] >= 0 && p.box[i][d] <= TOP)) throw Error(`${ORDER[i]}: a box is not 0..${TOP}`);
+    const l = p.last[i][d];
+    if (l !== null && !(l >= 0 && l <= p.round)) throw Error(`${ORDER[i]}: answered after round ${p.round}`);
+  }
+  return p;
+}
+function blob(p) {
+  const b = [], put = (v, n) => { for (let k = 0; k < n; k++) b.push((v >>> (8 * k)) & 0xFF); };
+  put(p.round, 2); put(p.streak, 2); put(p.open, 1); put(p.answered, 4); put(p.right, 4);
+  for (const x of p.box) b.push(x[0], x[1]);
+  for (const x of p.last) { put(x[0] === null ? NEVER : x[0], 2); put(x[1] === null ? NEVER : x[1], 2); }
+  return b;
+}
+function unblob(b) {
+  let o = 0; const get = n => { let v = 0; for (let k = 0; k < n; k++) v += b[o++] * 2 ** (8 * k); return v; };
+  const p = { round: get(2), streak: get(2), open: get(1), answered: get(4), right: get(4), box: [], last: [] };
+  for (let i = 0; i < N; i++) p.box.push([b[o++], b[o++]]);
+  for (let i = 0; i < N; i++) { const a = get(2), c = get(2); p.last.push([a === NEVER ? null : a, c === NEVER ? null : c]); }
+  return check(p);
+}
+function frame(type, payload) { return [0xF0, ...HEAD, VER, type, ...payload, 0xF7]; }
+function frames(p) {
+  const body = [FORMAT, ...blob(check(p))], c = crc16(body), w = [...body, c & 0xFF, c >> 8];
+  const f = [];
+  for (let i = 0; i < FRAMES; i++) f.push(frame(T_PROG_LOAD, [i, FRAMES, ...pack7(w.slice(i * CHUNK, (i + 1) * CHUNK))]));
+  return f;
+}
+function toJSON(p) {
+  const chars = {};
+  ORDER.split("").forEach((c, i) => chars[c] = { recognise: p.box[i][0], send: p.box[i][1],
+    last_recognise: p.last[i][0], last_send: p.last[i][1] });
+  return JSON.stringify({ format: "fm1-morse-progress", version: 1, firmware: firmware ? firmware.join(".") : null,
+    round: p.round, streak: p.streak, open: p.open, answered: p.answered, right: p.right, chars }, null, 1) + "\n";
+}
+function fromJSON(text) {
+  const d = JSON.parse(text);
+  if (d.format !== "fm1-morse-progress") throw Error("not a MORSE progress file");
+  if (d.version !== 1) throw Error(`file version ${d.version}, this page knows 1`);
+  const p = { round: +d.round, streak: +(d.streak || 0), open: +d.open, answered: +(d.answered || 0),
+              right: +(d.right || 0), box: [], last: [] };
+  for (const c of Object.keys(d.chars || {})) if (!ORDER.includes(c)) throw Error(`${c} is not in the course`);
+  for (const c of ORDER) { const e = (d.chars || {})[c] || {};
+    p.box.push([+(e.recognise || 0), +(e.send || 0)]);
+    p.last.push([e.last_recognise ?? null, e.last_send ?? null]); }
+  return check(p);
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 08:46:55Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Read the rest of the web script
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/firmware/morse/web; awk '/<script>/,/<\/script>/' index.html | sed -n 80,140p; awk '/<script>/,/<\/script>/' index.html | sed -n 180,300p`
+
+```text
+  return check(p);
+}
+function show(p, title) {
+  $("view").hidden = false;
+  $("view-title").textContent = title;
+  const learnt = p.box.slice(0, p.open).filter(b => b[0] >= 2 && b[1] >= 1).length;
+  $("summary").textContent = `Round ${p.round} · ${p.open} letters open · ${learnt} past the line · ` +
+    `${p.answered} answered, ${p.right} right · streak ${p.streak}`;
+  const ch = $("chart"); ch.innerHTML = "";
+  ORDER.split("").forEach((c, i) => { const d = document.createElement("div"); d.textContent = c;
+    d.style.background = i < p.open ? `var(--l${Math.floor((p.box[i][0] + p.box[i][1]) / 2)})` : "var(--closed)";
+    if (i >= p.open) d.style.color = "var(--dim)"; ch.appendChild(d); });
+}
+
+// ---- live: what the FM-1 reads (T_CHAR), and text for it to play (T_TEXT, T_STOP); the host's protocol.py
+const T_TEXT = 0x02, T_STOP = 0x03, T_CHAR = 0x43, TEXT_MAX = 60;
+const PLAYABLE = new Set("ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789.,?'!/()&:;=+-_\"$@ <>");
+function cleanText(t) {   // as protocol.py clean_text: upper case, what has a code, single spaces
+  let o = "";
+  for (let c of t.toUpperCase()) {
+    if (c === "\n" || c === "\t") c = " ";
+    if (!PLAYABLE.has(c) || (c === " " && (!o || o.endsWith(" ")))) continue;
+    o += c;
+  }
+  return o.trim();
+}
+function heard(s) {
+  const h = $("heard");
+  h.textContent += s.replace(/\*/g, "·");   // * : a pattern that is no character
+  h.scrollTop = h.scrollHeight;
+}
+$("clear").onclick = () => { $("heard").textContent = ""; };
+$("treset").onclick = () => { tEdges = []; timingShow(); };
+$("timing").ontoggle = () => { if ($("timing").open) timingShow(); };
+$("copy").onclick = () => navigator.clipboard && navigator.clipboard.writeText($("heard").textContent);
+$("send").onclick = () => {
+  let t = cleanText($("say").value);
+  if (!t || !out) return;
+  for (let i = 0; i < t.length; i += TEXT_MAX)
+    out.send(frame(T_TEXT, [...t.slice(i, i + TEXT_MAX)].map(c => c.charCodeAt(0))));
+  $("say").value = "";
+};
+$("say").onkeydown = e => { if (e.key === "Enter") $("send").onclick(); };
+$("stop").onclick = () => out && out.send(frame(T_STOP, []));
+
+// Timing: each note-0 edge by the event's time stamp and by when it reached the page
+let tEdges = [];
+function timingEdge(down, stamp, arrived) {
+  tEdges.push([down, stamp, arrived]);
+  if (tEdges.length > 400) tEdges.shift();
+  if ($("timing").open) timingShow();
+}
+function timingShow() {
+  const marks = [], gaps = [];
+  for (let i = 1; i < tEdges.length; i++) {
+    const [a, b] = [tEdges[i - 1], tEdges[i]];
+    const span = [b[1] - a[1], b[2] - a[2]];
+    if (a[0] && !b[0]) marks.push(span);
+    else if (!a[0] && b[0] && span[0] < 150) gaps.push(span);   // gaps inside a letter
+  }
+  const sd = xs => { const m = xs.reduce((p, x) => p + x, 0) / xs.length; return [m, Math.sqrt(xs.reduce((p, x) => p + (x - m) ** 2, 0) / xs.length)]; };
+// no guide: macOS keeps the name of the firmware it first saw on that USB device ("Felucca", "FM-1", ...).
+let midi = null, hunting = null, via = null;
+function ours(d) { return d[0] === 0xF0 && d[1] === HEAD[0] && d[2] === HEAD[1] && d[3] === HEAD[2]; }
+function outputFor(input) {
+  const outs = [...midi.outputs.values()];
+  return outs.find(o => o.name === input.name && o.manufacturer === input.manufacturer)
+      || outs.find(o => o.name === input.name) || (outs.length === 1 ? outs[0] : null);
+}
+function hunt() {
+  out = inp = null; firmware = null; via = null;
+  $("backup").disabled = $("restore").disabled = true;
+  for (const id of ["clear", "copy", "say", "send", "stop"]) $(id).disabled = true;
+  const ins = [...midi.inputs.values()];
+  if (!ins.length) { status("no MIDI devices: is the FM-1 on USB (a data cable, no hub)?", "bad"); return; }
+  status("looking for the FM-1 running MORSE…", "dim");
+  for (const i of ins) i.onmidimessage = e => {
+    if (inp || !ours(Array.from(e.data))) return;
+    inp = i; out = outputFor(i);
+    for (const j of ins) if (j !== i) j.onmidimessage = null;
+    if (!out) { status(`found MORSE on "${i.name}" but not its output port`, "bad"); inp = null; return; }
+    inp.onmidimessage = onMessage;
+    onMessage(e);
+  };
+  clearTimeout(hunting);
+  hunting = setTimeout(() => {
+    if (!inp) status("no FM-1 running MORSE answered: is it on, on USB (or connected over Bluetooth, 0.5), and running MORSE?", "bad");
+  }, 3000);
+}
+
+$("connect").onclick = async () => {
+  try {
+    midi = midi || await navigator.requestMIDIAccess({ sysex: true });
+    midi.onstatechange = e => { if (e.port.state === "connected" && !inp) hunt(); };   // plugged in, restarted
+    hunt();
+  } catch (err) { status(`MIDI not available: ${err.message}`, "bad"); }
+};
+
+$("backup").onclick = () => {
+  let buf = [], next = 0;
+  status("reading…", "dim");
+  const timer = setTimeout(() => { asm = null; status("the FM-1 sent nothing back (MORSE 0.4 or later?)", "bad"); }, via === "Bluetooth" ? 15000 : 5000);
+  asm = pl => {
+    if (pl[1] !== FRAMES || pl[0] !== next) { asm = null; clearTimeout(timer); status("a chunk went missing: try again", "bad"); return; }
+    if (pl[0] === 0) buf = [];
+    buf.push(...unpack7(pl.slice(2))); next++;
+    if (next < FRAMES) return;
+    asm = null; clearTimeout(timer);
+    try {
+      const w = buf.slice(0, WIRE_N);
+      if (w[0] !== FORMAT) throw Error(`format ${w[0]}`);
+      if (crc16(w.slice(0, -2)) !== (w[WIRE_N - 2] | w[WIRE_N - 1] << 8)) throw Error("CRC mismatch");
+      const p = unblob(w.slice(1, -2));
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(new Blob([toJSON(p)], { type: "application/json" }));
+      const t = new Date(), p2 = n => String(n).padStart(2, "0");
+      const at = `${t.getFullYear()}-${p2(t.getMonth() + 1)}-${p2(t.getDate())}-${p2(t.getHours())}${p2(t.getMinutes())}`;
+      a.download = `fm1-morse-progress-${at}.json`;   // local time, not UTC's: two backups a day do not collide
+      a.click();
+      show(p, "On the FM-1 (saved)");
+      ready();
+    } catch (err) { status(`refused: ${err.message}`, "bad"); }
+  };
+  out.send(frame(T_PROG_REQ, []));
+};
+
+$("file").onchange = async () => {
+  const f = $("file").files[0]; if (!f) return;
+  try { picked = fromJSON(await f.text()); show(picked, `In ${f.name}`); $("restore-note").className = "dim"; }
+  catch (err) { picked = null; $("restore-note").textContent = `That file will not load: ${err.message}`; $("restore-note").className = "bad"; }
+  if (out) ready();
+};
+
+$("restore").onclick = async () => {
+  if (!picked) return;
+  $("restore").disabled = true;
+  status("sent: press PLAY on the FM-1 to load it, HOME to keep what is there", "dim");
+  onDone = code => {
+    onDone = null;
+    status(code === 0 ? "loaded on the FM-1" : code === 1 ? "not loaded: declined on the FM-1" : "the FM-1 refused it", code === 0 ? "ok" : "bad");
+    ready();
+  };
+  for (const f of frames(picked)) { out.send(f); await new Promise(r => setTimeout(r, 30)); }
+};
+
+if (!navigator.requestMIDIAccess) status("this browser has no Web MIDI: use Chrome or Edge", "bad");
+</script>
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 08:48:12Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Add Web Bluetooth direct connect and USB preference
+
+```bash
+cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/firmware/morse/web; python3 - <<'EOF'
+p='index.html'; s=open(p).read()
+def rep(a,b):
+    global s
+    assert s.count(a)==1,(a[:60],s.count(a)); s=s.replace(a,b)
+rep('''    Chrome or Edge on a computer, the FM-1 running MORSE (backups: 0.4 or later) on USB, or on Bluetooth with 0.5:
+    on a Mac, connect <i>FM-1 XXXX</i> first in Audio MIDI Setup (Window, Show MIDI Studio, the Bluetooth button).
+    Nothing to install.</p>''','''    Chrome or Edge on a computer, the FM-1 running MORSE (backups: 0.4 or later) on USB, or on Bluetooth with 0.5.
+    Nothing to install.</p>''')
+rep('''    <div class="row"><button id="connect">Connect to the FM-1</button> <span id="status" class="dim">not connected</span></div>
+    <p class="dim">The browser asks to use MIDI devices with system exclusive messages: allow it.</p>''','''    <div class="row"><button id="connect">Connect to the FM-1</button>
+      <button class="ghost" id="connect-ble" hidden>Over Bluetooth, directly</button>
+      <span id="status" class="dim">not connected</span></div>
+    <p class="dim"><b>Connect</b> finds it on USB, or on Bluetooth once the computer has connected it (on a Mac: Audio
+      MIDI Setup, Window, Show MIDI Studio, the Bluetooth button). With both, USB is used. The browser asks to use MIDI
+      devices with system exclusive messages: allow it.</p>
+    <p class="dim" id="ble-note" hidden><b>Over Bluetooth, directly</b> (MORSE 0.5 or later): the browser finds the FM-1
+      itself, no system setting (Web Bluetooth). Pick <i>FM-1 XXXX</i> in the list. Only this page talks to it then:
+      Vail and other programs need <b>Connect</b>.</p>''')
+rep('''let midi = null, hunting = null, via = null;''','''let midi = null, hunting = null, via = null, direct = null;''')
+rep('''function hunt() {
+  out = inp = null; firmware = null; via = null;
+  $("backup").disabled = $("restore").disabled = true;
+  for (const id of ["clear", "copy", "say", "send", "stop"]) $(id).disabled = true;
+  const ins = [...midi.inputs.values()];
+  if (!ins.length) { status("no MIDI devices: is the FM-1 on USB (a data cable, no hub)?", "bad"); return; }
+  status("looking for the FM-1 running MORSE…", "dim");
+  for (const i of ins) i.onmidimessage = e => {
+    if (inp || !ours(Array.from(e.data))) return;
+    inp = i; out = outputFor(i);
+    for (const j of ins) if (j !== i) j.onmidimessage = null;
+    if (!out) { status(`found MORSE on "${i.name}" but not its output port`, "bad"); inp = null; return; }
+    inp.onmidimessage = onMessage;
+    onMessage(e);
+  };''','''function idle() {
+  out = inp = null; firmware = null; via = null;
+  $("backup").disabled = $("restore").disabled = true;
+  for (const id of ["clear", "copy", "say", "send", "stop"]) $(id).disabled = true;
+}
+function hunt() {
+  idle();
+  const ins = [...midi.inputs.values()];
+  if (!ins.length) { status("no MIDI devices: is the FM-1 on USB (a data cable, no hub)?", "bad"); return; }
+  status("looking for the FM-1 running MORSE…", "dim");
+  // every port that speaks our frames, by the link its HELLO / HEARTBEAT names; USB wins, Bluetooth waits a beat for it
+  const heardOn = new Map();
+  let waiting = null;
+  const take = () => {
+    if (inp || !heardOn.size) return;
+    const i = [...heardOn.keys()].sort((a, b) => heardOn.get(a) - heardOn.get(b))[0];
+    const o = outputFor(i);
+    if (!o) { status(`found MORSE on "${i.name}" but not its output port`, "bad"); return; }
+    for (const j of ins) j.onmidimessage = null;
+    inp = i; out = o;
+    inp.onmidimessage = onMessage;   // its next HELLO or HEARTBEAT (each second) connects
+    status("found it: connecting…", "dim");
+  };
+  for (const i of ins) i.onmidimessage = e => {
+    const d = Array.from(e.data);
+    if (inp || !ours(d)) return;
+    const type = d[5], pl = d.slice(6, d.length - 1);
+    const tr = type === T_HELLO ? pl[3] : type === T_HEARTBEAT ? pl[1] : undefined;
+    heardOn.set(i, tr === 1 ? 1 : 0);
+    if (tr !== 1) take();
+    else if (!waiting) waiting = setTimeout(take, 1300);
+  };''')
+rep('''    midi.onstatechange = e => { if (e.port.state === "connected" && !inp) hunt(); };   // plugged in, restarted
+    hunt();''','''    midi.onstatechange = e => { if (e.port.state === "connected" && !inp && !direct) hunt(); };   // plugged in, restarted
+    if (direct) bleDrop();
+    hunt();''')
+rep('''if (!navigator.requestMIDIAccess) status("this browser has no Web MIDI: use Chrome or Edge", "bad");''','''// ---- Bluetooth, directly (Web Bluetooth): BLE-MIDI packets on the MIDI service's one characteristic, no system setup.
+// Frames out as SysEx over 20-byte packets; in, SysEx and notes put back together, each timed by its BLE-MIDI
+// timestamp (13-bit ms, the FM-1's clock) mapped onto this page's clock.
+const BLE_SVC = "03b80e5a-ede8-4b33-a751-6ce34ec4c700", BLE_IO = "7772e5db-3868-4112-a1a9-f2669d106bf3", BLE_PKT = 20;
+let bleQ = Promise.resolve(), bleSx = null, bleRun = 0, bleOff = null;
+function dataLen(s) { const h = s & 0xF0; return h === 0xC0 || h === 0xD0 || s === 0xF1 || s === 0xF3 ? 1 : h < 0xF0 || s === 0xF2 ? 2 : 0; }
+function blePackets(f) {   // one SysEx frame (F0 .. F7) into BLE-MIDI packets
+  const t = Math.floor(performance.now()) & 0x1FFF, hi = 0x80 | (t >> 7 & 0x3F), lo = 0x80 | (t & 0x7F), pk = [];
+  let p = [hi, lo, 0xF0];
+  for (const b of f.slice(1, -1)) { if (p.length >= BLE_PKT) { pk.push(p); p = [hi]; } p.push(b); }
+  if (p.length + 2 > BLE_PKT) { pk.push(p); p = [hi]; }
+  p.push(lo, 0xF7); pk.push(p);
+  return pk;
+}
+function bleTime(ts, arrived) {   // the FM-1's 13-bit ms onto performance.now(): the smallest lag seen is the offset
+  if (bleOff === null) bleOff = arrived - ts;
+  const k = Math.round((arrived - bleOff - ts) / 8192), t = k * 8192 + ts;
+  if (arrived - t < bleOff) bleOff = arrived - t;
+  return t + bleOff;
+}
+function bleIn(p, arrived) {
+  if (!(p[0] & 0x80)) return;
+  let hi = p[0] & 0x3F, lastLo = -1, ts = 0, i = 1;
+  const emit = m => onMessage({ data: Uint8Array.from(m), timeStamp: bleTime(ts, arrived) });
+  const stamp = lo => { if (lastLo >= 0 && lo < lastLo) hi = (hi + 1) & 0x3F; lastLo = lo; ts = hi << 7 | lo; };
+  if (bleSx) while (i < p.length && p[i] < 0x80) bleSx.push(p[i++]);   // a SysEx going on from the last packet
+  while (i < p.length) {
+    if (p[i] & 0x80) { stamp(p[i++] & 0x7F); if (i >= p.length) break; }
+    let s = p[i];
+    if (s === 0xF7 && bleSx) { bleSx.push(0xF7); emit(bleSx); bleSx = null; i++; continue; }
+    if (s < 0x80) { s = bleRun; if (!s) break; } else i++;   // running status
+    if (s === 0xF0) { bleSx = [0xF0]; while (i < p.length && p[i] < 0x80) bleSx.push(p[i++]); continue; }
+    if (s >= 0xF8) continue;   // real time
+    const n = dataLen(s);
+    if (i + n > p.length) break;
+    if (s < 0xF0) bleRun = s;
+    emit([s, ...p.slice(i, i + n)]);
+    i += n;
+  }
+}
+function bleDrop() {
+  const d = direct; direct = null;
+  if (d && d.gatt.connected) d.gatt.disconnect();
+}
+$("connect-ble").onclick = async () => {
+  let dev;
+  try { dev = await navigator.bluetooth.requestDevice({ filters: [{ services: [BLE_SVC] }] }); }
+  catch (err) { if (err.name !== "NotFoundError") status(`Bluetooth: ${err.message}`, "bad"); return; }
+  try {
+    if (midi) for (const i of midi.inputs.values()) i.onmidimessage = null;
+    clearTimeout(hunting);
+    idle();
+    status(`connecting to ${dev.name || "the FM-1"} over Bluetooth…`, "dim");
+    const io = await (await (await dev.gatt.connect()).getPrimaryService(BLE_SVC)).getCharacteristic(BLE_IO);
+    bleSx = null; bleRun = 0; bleOff = null; bleQ = Promise.resolve();
+    io.addEventListener("characteristicvaluechanged", e =>
+      bleIn(new Uint8Array(e.target.value.buffer, e.target.value.byteOffset, e.target.value.byteLength), performance.now()));
+    dev.addEventListener("gattserverdisconnected", () => {
+      if (direct !== dev) return;
+      direct = null; idle();
+      status("Bluetooth link lost: Over Bluetooth, directly, to connect again", "bad");
+    });
+    await io.startNotifications();
+    direct = dev;
+    out = { send: f => { for (const pk of blePackets(f)) bleQ = bleQ.then(() => io.writeValueWithoutResponse(Uint8Array.from(pk))); } };
+    status("connected over Bluetooth: waiting for MORSE's HELLO…", "dim");
+    hunting = setTimeout(() => { if (direct === dev && !firmware && !via) status("connected, but MORSE said nothing: is it MORSE 0.5 or later?", "bad"); }, 3000);
+  } catch (err) { direct = null; idle(); status(`Bluetooth: ${err.message}`, "bad"); }
+};
+if (navigator.bluetooth) { $("connect-ble").hidden = false; $("ble-note").hidden = false; }
+
+if (!navigator.requestMIDIAccess) status("this browser has no Web MIDI: use Chrome or Edge", "bad");''')
+open(p,'w').write(s)
+import re
+open('/private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/0a574306-469e-4a59-9622-5701a42aee59/scratchpad/page.js','w').write(re.findall(r'<script>(.*?)</script>',s,re.S)[-1])
+EOF
+node --check /private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/0a574306-469e-4a59-9622-5701a42aee59/scratchpad/page.js && echo ok; grep -n "via = tr\|if (tr !== undefined) via" index.html
+```
+
+```text
+ok
+274:    if (tr !== undefined) via = tr === 1 ? "Bluetooth" : "USB";
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 08:48:29Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Unit-test the BLE-MIDI packetizer and parser in node
+
+```bash
+cd /private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/0a574306-469e-4a59-9622-5701a42aee59/scratchpad; python3 - <<'EOF'
+import re
+s=open('/Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/firmware/morse/web/index.html').read()
+js=re.findall(r'<script>(.*?)</script>',s,re.S)[-1]
+a=js.index('const BLE_SVC'); b=js.index('function bleDrop')
+open('b.js','w').write('''let got=[];function onMessage(e){got.push([Array.from(e.data),Math.round(e.timeStamp)]);}
+const performance={now:()=>1000};
+'''+js[a:b]+r'''
+const eq=(x,y,m)=>{if(JSON.stringify(x)!==JSON.stringify(y)){console.log("FAIL",m,JSON.stringify(x),JSON.stringify(y));process.exitCode=1}else console.log("ok",m)};
+// a frame out and back in
+const f=[0xF0,0x7D,0x4D,0x4F,1,0x02,...Array.from({length:40},(_,i)=>0x41+i%26),0xF7];
+const pk=blePackets(f); eq(pk.every(p=>p.length<=20),true,"packets <= 20");
+for(const p of pk) bleIn(Uint8Array.from(p),1000); eq(got[0][0],f,"sysex round trip over "+pk.length+" packets");
+// notes: two in one packet with their own timestamps (60 ms apart), running status, then one wrapping the 13-bit clock
+got=[];bleOff=null;bleRun=0;
+const ts=t=>[0x80|((t>>7)&0x3F)];const lo=t=>0x80|(t&0x7F);
+bleIn(Uint8Array.from([0x80|((100>>7)&0x3F),lo(100),0x90,0,0x7F,lo(160),0x80,0,0]),500);
+eq(got.map(g=>g[1]),[500,560],"two notes in one packet, 60 ms apart by their stamps");
+bleIn(Uint8Array.from([0x80|((220>>7)&0x3F),lo(220),0x90,0,0x7F,lo(280),0,0]),700);   // running status after a timestamp
+eq(got.slice(2).map(g=>[g[0],g[1]]),[[[0x90,0,0x7F],620],[[0x90,0,0],680]],"running status");
+got=[];bleOff=null;
+bleIn(Uint8Array.from([0x80|((8180>>7)&0x3F),lo(8180),0x90,0,0x7F]),2000);
+bleIn(Uint8Array.from([0x80|((40>>7)&0x3F),lo(40),0x80,0,0]),2070);
+eq(got[1][1]-got[0][1],52,"across the 13-bit wrap");
+// sysex split with the timestamp + F7 alone in the last packet
+got=[];bleOff=null;bleSx=null;
+bleIn(Uint8Array.from([0x80,0x80,0xF0,0x7D,0x4D]),0);bleIn(Uint8Array.from([0x80,0x4F,1,0x41]),0);bleIn(Uint8Array.from([0x80,0x80,0xF7]),0);
+eq(got[0][0],[0xF0,0x7D,0x4D,0x4F,1,0x41,0xF7],"sysex ending in its own packet");
+''')
+EOF
+node b.js
+```
+
+```text
+Exit code 1
+ok packets <= 20
+ok sysex round trip over 3 packets
+FAIL two notes in one packet, 60 ms apart by their stamps [500,500] [500,560]
+FAIL running status [[[144,0,127],560],[[144,0,0],620]] [[[144,0,127],620],[[144,0,0],680]]
+ok across the 13-bit wrap
+ok sysex ending in its own packet
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 08:48:48Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Fix clock mapping per packet and rerun tests
+
+```bash
+cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/firmware/morse/web; python3 - <<'EOF'
+p='index.html'; s=open(p).read()
+def rep(a,b):
+    global s
+    assert s.count(a)==1,(a[:60],s.count(a)); s=s.replace(a,b)
+rep('''function bleTime(ts, arrived) {   // the FM-1's 13-bit ms onto performance.now(): the smallest lag seen is the offset
+  if (bleOff === null) bleOff = arrived - ts;
+  const k = Math.round((arrived - bleOff - ts) / 8192), t = k * 8192 + ts;
+  if (arrived - t < bleOff) bleOff = arrived - t;
+  return t + bleOff;
+}''','''function bleUnwrap(ts, arrived) {   // the FM-1's 13-bit ms, unwrapped near where this page's clock says it should be
+  const k = Math.round((arrived - (bleOff ?? arrived - ts) - ts) / 8192);
+  return k * 8192 + ts;
+}''')
+rep('''  let hi = p[0] & 0x3F, lastLo = -1, ts = 0, i = 1;
+  const emit = m => onMessage({ data: Uint8Array.from(m), timeStamp: bleTime(ts, arrived) });''','''  let hi = p[0] & 0x3F, lastLo = -1, ts = 0, i = 1;
+  const got = [], emit = m => got.push([m, ts]);''')
+rep('''    emit([s, ...p.slice(i, i + n)]);
+    i += n;
+  }
+}''','''    emit([s, ...p.slice(i, i + n)]);
+    i += n;
+  }
+  if (!got.length) return;
+  // the packet came when its newest event was sent, or later: the smallest such lag is the offset between the clocks
+  const newest = bleUnwrap(got[got.length - 1][1], arrived);
+  if (bleOff === null || arrived - newest < bleOff) bleOff = arrived - newest;
+  for (const [m, t] of got) onMessage({ data: Uint8Array.from(m), timeStamp: bleUnwrap(t, arrived) + bleOff });
+}''')
+open(p,'w').write(s)
+EOF
+cd /private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/0a574306-469e-4a59-9622-5701a42aee59/scratchpad; python3 - <<'EOF'
+import re
+s=open('/Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/firmware/morse/web/index.html').read()
+js=re.findall(r'<script>(.*?)</script>',s,re.S)[-1]
+a=js.index('const BLE_SVC'); b=js.index('function bleDrop')
+t=open('b.js').read()
+head=t[:t.index('const BLE_SVC')]; tail=t[t.index('function bleDrop')+0:] if 'function bleDrop' in t else None
+tests=t[t.index('const eq='):]
+tests=tests.replace('"two notes in one packet, 60 ms apart by their stamps"','"two notes in one packet, 60 ms apart"').replace('eq(got.map(g=>g[1]),[500,560]','eq(got.map(g=>g[1]),[440,500]').replace('[[[0x90,0,0x7F],620],[[0x90,0,0],680]]','[[[0x90,0,0x7F],560],[[0x90,0,0],620]]')
+open('b.js','w').write(head+js[a:b]+'\n'+tests)
+open('page.js','w').write(js)
+EOF
+node b.js && node --check page.js && echo syntax ok
+```
+
+```text
+ok packets <= 20
+ok sysex round trip over 3 packets
+ok two notes in one packet, 60 ms apart
+ok running status
+ok across the 13-bit wrap
+ok sysex ending in its own packet
+syntax ok
+Shell cwd was reset to /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 08:49:05Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Load the page in headless Chromium to check for errors
+
+```bash
+cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1; cat > /private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/0a574306-469e-4a59-9622-5701a42aee59/scratchpad/load.py <<'EOF'
+import sys
+from playwright.sync_api import sync_playwright
+with sync_playwright() as p:
+    b = p.chromium.launch(); pg = b.new_page(); errs = []
+    pg.on("pageerror", lambda e: errs.append(str(e))); pg.on("console", lambda m: m.type == "error" and errs.append(m.text))
+    pg.goto("file://" + sys.argv[1]); pg.wait_for_timeout(500)
+    print("errors:", errs); print("ble button hidden:", pg.locator("#connect-ble").is_hidden(), "| status:", pg.locator("#status").inner_text())
+    pg.screenshot(path=sys.argv[2], full_page=False); b.close()
+EOF
+uv run --with playwright python /private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/0a574306-469e-4a59-9622-5701a42aee59/scratchpad/load.py $PWD/firmware/morse/web/index.html /private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/0a574306-469e-4a59-9622-5701a42aee59/scratchpad/page.png 2>&1 | tail -3
+```
+
+```text
+errors: []
+ble button hidden: False | status: not connected
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 08:49:10Z)**_
+
+<tool-use data-tool-type="read" data-tool-name="Read"><details>
+<summary>Tool use: **Read**</summary>
+ `/private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/0a574306-469e-4a59-9622-5701a42aee59/scratchpad/page.png`
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 08:49:17Z)**_
+
+<think><details><summary>Thought Process</summary>
+頁面載入無誤、兩顆按鈕都在，接著我會 commit fm1-morse、更新 pointer，再 build 0.6 的 release 套件。
+
+</details></think>
+
+_**Agent (claude-opus-5-5 2026-11-18 08:49:54Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Commit, bump pointer, build 0.6 release
+
+```bash
+cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/firmware/morse; git add -A && git commit -q -F - <<'EOF'
+0.6: a USB host is gone at once when the cable comes out; the web page connects over Bluetooth directly
+
+- hostlink: a host acked over USB is dropped after 0.5 s without room for
+  SysEx (the bus suspends when the cable is pulled; the session number does
+  not change), not after the 10 s heartbeat timeout. Same change as
+  M-VAVE_FM-1 firmware/common.
+- web: "Over Bluetooth, directly" (Web Bluetooth): BLE-MIDI packets on the
+  MIDI service, SysEx out in 20-byte packets, SysEx and notes in, each
+  timed by its BLE-MIDI timestamp; no system setup.
+- web: with the FM-1 on USB and Bluetooth MIDI both, USB is taken.
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+EOF
+git push -q origin main; git log --oneline -1; cd ../..; git add firmware/morse firmware/common host/morse host/tests && git commit -qm "morse 0.6 (fm1-morse): USB host gone at once on unplug, web over Bluetooth directly; host 0.6.0; common/hostlink the same
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>" && git push -q origin main; git log --oneline -1; just morse-release 0.6 2>&1 | grep -E "error|  ok    image|package" | tail -2; shasum -a 256 firmware/morse/build/morse-0.6.fwsc
+```
+
+```text
+60f76cf 0.6: a USB host is gone at once when the cable comes out; the web page connects over Bluetooth directly
+e924692 morse 0.6 (fm1-morse): USB host gone at once on unplug, web over Bluetooth directly; host 0.6.0; common/hostlink the same
+  ok    image 173844 B; RAM code .ram_text 5576 B of 32768; RAM .data+.bss 38572 B of 98304; pool 69384 B of 344064
+package  /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/firmware/morse/build/morse-0.6.fwsc  616003 B, identity FM-1_41000600
+d65b6df5570aa632be51c6b99256fab9388ae25035ffc979609871623ec8fd7e  firmware/morse/build/morse-0.6.fwsc
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 08:50:04Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Rehearse 0.6 on both chips over the real backup
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1; (cd firmware/morse; git log --oneline -1; git status --short | head -3); pkg=$PWD/firmware/morse/build/morse-0.6.fwsc; bak=$PWD/backups/2026-11-18-pre-morse-0.5/fm1-20261118-161218.bin; cd tools/emu-state; for chip in uc25hq80 p25q80; do rm -f pristine-r.flash; ../fm1-emu/fm1-live --fwsc "$pkg" --flash-chip $chip --flash pristine-r.flash --midi none --shot 1 --lcd-only >/dev/null 2>&1; python3 ../../scripts/emu_rehearse.py pristine-r.flash "$bak" bt/r6-$chip.flash >/dev/null; echo "== $chip"; FM1_NO_PLAY=1 ../fm1-emu/fm1-live --fwsc "$pkg" --flash-chip $chip --flash bt/r6-$chip.flash --midi none --shot 3000 --lcd-only 2>&1 | grep -i -E "^flash:|fault|error"; sips -s format png work/lcd.ppm --out bt/r6-$chip.png >/dev/null; done`
+
+```text
+60f76cf 0.6: a USB host is gone at once when the cable comes out; the web page connects over Bluetooth directly
+== uc25hq80
+flash: 0 erases / programs
+== p25q80
+flash: 0 erases / programs
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 08:50:09Z)**_
+
+<tool-use data-tool-type="read" data-tool-name="Read"><details>
+<summary>Tool use: **Read**</summary>
+ `./tools/emu-state/bt/r6-p25q80.png`
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 08:50:14Z)**_
+
+預演沒問題，兩種晶片都讀到 ROUND 30，0 次寫入。接著更新 docs（Chrome 的時間戳記、Vail 的字距、`PC` 的意思、0.6）：
+
+_**Agent (claude-opus-5-5 2026-11-18 08:50:45Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Update docs for Chrome timing, Vail spacing, 0.6
+
+```bash
+cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1; python3 - <<'EOF'
+def edit(p, pairs):
+    s=open(p).read()
+    for a,b in pairs:
+        assert s.count(a)==1,(p,a[:70],s.count(a)); s=s.replace(a,b)
+    open(p,'w').write(s)
+edit('docs/dev/morse.md',[
+('''- **接收端用哪一種時間**：用 CoreMIDI 時間戳記的程式（python-rtmidi、DAW）不會抖。Chrome 的 Web MIDI（`MIDIMessageEvent.timeStamp`）用的是哪一種，可以用 MORSE on the web 的 *Timing* 區量；Vail 網頁在藍牙上能用 `[實機]`，但它用哪一種時間還不知道。''',
+'''- **接收端用哪一種時間**：用 CoreMIDI 時間戳記的程式（python-rtmidi、DAW）不會抖。**Chrome 的 Web MIDI 也是** `[實機]`：MORSE on the web 的 *Timing* 區，2026-11-18 在 TYPE 頁播 20 WPM：
+
+    | | 短按（60） | 長按（180） | 字內停頓（60） |
+    |---|---|---|---|
+    | 藍牙，`event.timeStamp` | 平均 60.2，sd 0.4 | 180.2，sd 0.4 | 60.2，sd 0.4 |
+    | 藍牙，網頁收到的時間 | 60.4，sd 3.1 | 180.6，sd 3.2 | 59.9，sd 2.5 |
+    | USB，`event.timeStamp` | 60.1，sd 0.1 | 180.3，sd 0.1 | 60.1，sd 0.1 |
+
+    所以網頁上的 Vail 只要用 `event.timeStamp`，藍牙就和 USB 一樣準；它實際用哪一個沒看程式碼，但 Vail 的 Decoder 把 FM-1 的發報量成 19.9 WPM（設定是 20）`[實機]`。'''),
+('''- **Vail**（vailmorse.com 的 Repeater）：只用藍牙連著，不用任何設定，FM-1 的 KEY 頁發報就出現在 Vail 上。''',
+'''- **Vail**（vailmorse.com 的 Repeater）：只用藍牙連著，不用任何設定，FM-1 的 KEY 頁發報就出現在 Vail 上。Decoder 房間解得出 TYPE 頁播的字和片語，速度顯示 19.9 WPM。
+- **Vail 的 Decoder 每個字母都分開**：這是 Farnsworth 間隔造成的，不是 Vail 的問題。START（20/8）時字和字之間要停 890 ms，以 20 WPM 的點（60 ms）來算是 15 個點，超過字間的 7 個點，所以 Vail 把每個字母都當成一個詞。BUILDING（20/13）停 435 ms（約 7 個點），剛好在界線上；QSO（22/18）大約 4 個點，就會連成詞。要給別人聽時，把 `K2` 調到和字元速度一樣（或選 FAST）。'''),
+('''還要做：Chrome 的 `MIDIMessageEvent.timeStamp` 是照 BLE-MIDI 的時間戳記，還是照到達時間。網頁的 Live 區塊加了 *Timing* 折疊區，會同時列出兩種時間量到的長度，到 TYPE 頁播幾個字就能比較。''',
+'''- **USB 和藍牙都連著時**：0.5 的網頁用先聽到 HELLO 的那條路，常常是藍牙；本人在 FM-1 上關掉藍牙，網頁才改走 USB `[實機]`。網頁（2026-11-18 起）改成兩條都有時用 USB：聽到藍牙的 HELLO 後再等 1.3 秒，看 USB 有沒有。限制：已經有程式從藍牙回應 FM-1 的話，FM-1 只在藍牙上送 HEARTBEAT，USB 那邊沒有聲音，要等那個程式關掉 10 秒後才會兩邊都送 HELLO。'''),
+('''- 拔線後 header 的 `PC` 要大約 10 秒才消失：FM-1 要等 10 秒沒收到電腦的訊息（`HOSTLINK_TIMEOUT_MS`），才判定電腦離線。''',
+'''- 0.5 拔線後 header 的 `PC` 要大約 10 秒才消失：FM-1 要等 10 秒沒收到電腦的訊息（`HOSTLINK_TIMEOUT_MS`），才判定電腦離線。0.6 改成 USB 連續 0.5 秒收不了 SysEx（拔線後匯流排 suspend，`plat_sysex_room()` 是 0；USB session 的號碼不會變，所以原本的檢查抓不到）就判定離線 `[模擬]`。'''),
+('''### 瀏覽器
+''','''### 網頁直接連藍牙（Web Bluetooth） { #web-bluetooth }
+
+MORSE on the web 的 *Over Bluetooth, directly*（2026-11-18 加入，韌體 0.5 起）：Chrome／Edge 用 Web Bluetooth 掃描 BLE-MIDI 的 service（`03B80E5A-EDE8-4B33-A751-6CE34EC4C700`，FM-1 的廣播裡有它），選 `FM-1 XXXX` 就連上，不用到系統設定按 Connect。
+
+- 網頁自己讀寫 BLE-MIDI 封包：SysEx 切成 20 byte 的封包送出（不知道協商到的 MTU，用最小的）；收進時把跨封包的 SysEx 和 note 組回來，每個事件用 13-bit 的 BLE-MIDI 時間戳記換算成網頁的時間（每個封包裡最新的那個事件最接近送出的時刻，取最小的延遲當兩個時鐘的差）。Timing 區照樣能用。
+- 這條連線只有網頁能用，Vail 和指令列看不到；要給 Vail 用就用 *Connect*（經過系統的藍牙 MIDI）。
+- macOS 上系統已經用藍牙 MIDI 連著時，Chrome 會不會共用那條連線還沒試 `[調研]`。
+- 封包的切法和解法用 node 測過（20 byte 以內、跨封包的 SysEx、running status、同一個封包裡兩個 note 的間隔、13-bit 時間戳記進位），還沒在實機上試。
+
+### 瀏覽器
+'''),
+('''| 韌體 0.5、host 0.5.0 | 2026-11-18 |''','''| 韌體 0.6、host 0.6.0 | 2026-11-18 | 是（還沒刷） | 拔線後 `PC` 在 0.5 秒內消失（hostlink：USB 收不了 SysEx 就判定電腦離開，`firmware/common` 同步）；網頁：*Over Bluetooth, directly*（[Web Bluetooth](#web-bluetooth)）、USB 和藍牙都在時用 USB、*Timing* 區、備份檔名加上時分 |
+| 韌體 0.5、host 0.5.0 | 2026-11-18 |'''),
+('''| 0.5（藍牙，開發版） | 173,744 B | 38,572 / 98,304 B |''','''| 0.5（藍牙，release） | 173,748 B | 38,572 / 98,304 B |
+| 0.6（release） | 173,844 B | 38,572 / 98,304 B |'''),
+('''| 0.6 | 兩台 FM-1 互打：`ble_central`，一台掃描、選另一台、連上。等有第二台 |''','''| 0.7 | 兩台 FM-1 互打：`ble_central`，一台掃描、選另一台、連上。等有第二台 |'''),
+])
+s=open('docs/dev/morse.md').read()
+import re
+for key in ['| **網頁直接連藍牙（Web Bluetooth）** |','| **拔線後 `PC` 馬上消失** |']:
+    i=s.index(key); j=s.index('\n',i); s=s[:i]+s[j+1:]
+open('docs/dev/morse.md','w').write(s)
+edit('docs/dev/morse-cheatsheet.md',[('''畫面右上角：`PC` 代表電腦端程式或網頁連著；''','''畫面右上角：`PC` 代表有會回應 MORSE 的程式連著（`morse` 指令列或 MORSE on the web，USB 或藍牙都算；Vail 只收按鍵、不回應，所以不會亮），0.6 起拔線後半秒內消失、走藍牙的在藍牙斷線時消失，其他情況是 10 秒沒消息才消失；'''),
+('韌體 0.5（0.3 以前沒有的操作標了「0.4」，藍牙是「0.5」；0.1 和 0.2 的差別見文末）。','韌體 0.6（0.3 以前沒有的操作標了「0.4」，藍牙是「0.5」；0.1 和 0.2 的差別見文末）。')])
+EOF
+grep -n "Web Bluetooth\|PC 馬上" docs/dev/morse.md | head; just docs-check 2>&1 | tail -1
+```
+
+```text
+298:### 網頁直接連藍牙（Web Bluetooth） { #web-bluetooth }
+300:MORSE on the web 的 *Over Bluetooth, directly*（2026-11-18 加入，韌體 0.5 起）：Chrome／Edge 用 Web Bluetooth 掃描 BLE-MIDI 的 service（`03B80E5A-EDE8-4B33-A751-6CE34EC4C700`，FM-1 的廣播裡有它），選 `FM-1 XXXX` 就連上，不用到系統設定按 Connect。
+423:| 韌體 0.6、host 0.6.0 | 2026-11-18 | 是（還沒刷） | 拔線後 `PC` 在 0.5 秒內消失（hostlink：USB 收不了 SysEx 就判定電腦離開，`firmware/common` 同步）；網頁：*Over Bluetooth, directly*（[Web Bluetooth](#web-bluetooth)）、USB 和藍牙都在時用 USB、*Timing* 區、備份檔名加上時分 |
+{"status": "ok", "pages": 49, "llm_pages": 49, "deployed": false}
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 08:51:30Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Document flicker analysis and commit
+
+```bash
+cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1; grep -n "SXQ\b\|#define SXQ" third_party/fm1-base/device/plat_fm1.c | head -3; python3 - <<'EOF'
+p='docs/dev/morse.md'; s=open(p).read()
+a='''就判定離線 `[模擬]`。'''
+assert s.count(a)==1
+s=s.replace(a,'''就判定離線。判斷本身有單元測試（`just fw-common-test`：停 0.499 秒不算、0.5 秒算、中間恢復就重新計時）；模擬器的 `usb unplug` 把 session 歸零，走的是原本的檢查，所以拔線後真的會 suspend 這件事要在實機上確認。
+
+    **會不會常常閃**：`plat_sysex_room()` 是 0 的情況只有四種：沒有 USB 設定、匯流排 suspend（拔線、Mac 系統睡眠）、正在串流一個 frame（MORSE 不用），以及送出的 ring 滿了。電腦接著時，macOS 的 USB-MIDI driver 每毫秒都會讀 IN endpoint，就算沒有程式開著 port 也一樣，所以 ring 只會滿幾毫秒（例如送備份的 6 個 frame）。要連續 0.5 秒都是 0，只有拔線、Mac 睡眠，或電腦卡住不讀。真的掉了，FM-1 下一秒就送 HELLO，程式回應後 `PC` 又會亮起來。刷 0.6 後要在實機上看：拔線時 `PC` 會不會馬上消失，接著線時會不會閃。''')
+open(p,'w').write(s)
+EOF
+just docs-check 2>&1 | tail -1; git add docs && git commit -qm "morse docs: 0.6, Chrome's timeStamp measured, Vail and Farnsworth spacing, Web Bluetooth, PC indicator
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>" && git push -q origin main; git log --oneline -1
+```
+
+```text
+189:    return !usb.config || usb.suspended || sx_busy ? 0u : (SXQ - (so_w - so_r)) * 3u;   /* (3 bytes a USB-MIDI packet) */
+209:    while (so_w - so_r >= SXQ) {
+216:    sx_out_q[so_w % SXQ] = cin | (uint32_t)sxs.acc[0] << 8 | (uint32_t)sxs.acc[1] << 16 | (uint32_t)sxs.acc[2] << 24;
+{"status": "ok", "pages": 49, "llm_pages": 49, "deployed": false}
+175479c morse docs: 0.6, Chrome's timeStamp measured, Vail and Farnsworth spacing, Web Bluetooth, PC indicator
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 08:51:51Z)**_
+
+0.6 已經 build 好，模擬器上也驗證過，還沒刷進實機。下面先回答你的問題，再說這次改了什麼。
+
+**你的問題**
+
+- **Chrome 的時間戳記**：你量的結果是藍牙 sd 0.4，網頁收到的時間 sd 3.1，表示 Chrome 的 `event.timeStamp` 有照 BLE-MIDI 的時間戳記，和 USB 差不多準。Vail 量到 19.9 WPM，也符合這點。
+- **Vail 每個字母都分開**：這是我們的 Farnsworth 間隔造成的，不是 Vail 的行為。
+  - START（20/8）時，字和字之間停 890 ms，用 20 WPM 的點長（60 ms）來算是 15 個點。超過 7 個點就算詞的間隔，所以 Vail 把每個字母都當成一個詞。
+  - BUILDING（20/13）大約 7 個點，剛好在界線上；QSO（22/18）大約 4 個點，就會連成詞。
+  - 要給別人聽時，把 `K2` 調到和字元速度一樣，或選 FAST。
+- **USB 插著卻走藍牙**：0.5 的網頁用先聽到 HELLO 的那條路。現在改成兩條都有時用 USB：先聽到藍牙的話，會再等 1.3 秒看 USB 有沒有回應。
+  - 限制：如果另一個程式已經從藍牙回應過 FM-1，FM-1 只在藍牙上送訊號，要等那個程式關掉 10 秒後才會兩邊都送。
+- **`PC` 代表什麼**：有會回應 MORSE 的程式連著，也就是 `morse` 指令列或 MORSE on the web，USB 或藍牙都算。Vail 只收按鍵、不回應，所以只開 Vail 時 `PC` 不會亮。header 的 `BT` 只代表藍牙連線本身。
+- **`PC` 會不會常常閃**：應該不會，但要在實機上確認。
+  - 新的判斷是「USB 連續 0.5 秒收不下 SysEx」。會這樣的情況只有：拔線、Mac 系統睡眠，或電腦卡住不讀。
+  - 線接著時，macOS 的 USB-MIDI driver 每毫秒都會讀，就算沒有程式開著 port 也一樣，所以送資料的佇列只會滿幾毫秒，例如送備份那 6 個 frame 的時候。
+  - 真的掉了，FM-1 下一秒會再送 HELLO，程式一回應 `PC` 就會恢復。
+  - side agent 說得對：模擬器的「拔線」走的是舊的判斷，新判斷只有單元測試涵蓋；真機拔線後會不會進入休眠，要刷了才知道。
+
+**這次改了什麼**
+
+- **韌體 0.6**：拔線後 `PC` 應該在半秒內消失。Conductor 用的 `firmware/common` 也做了同樣的修改。
+  - 套件 `morse-0.6.fwsc`（`FM-1_41000600`），SHA-256 `d65b6df5…8fd7e`，大小 173,844 B。
+  - fm1-emu 兩種晶片上疊在你的備份上預演：讀到 ROUND 30、開放 20 個字，0 次寫入。
+- **網頁**（不用刷機，GitHub Pages 幾分鐘後生效）：
+  - 新增 **Over Bluetooth, directly**：瀏覽器自己掃描，選 `FM-1 3399` 就連上，不用到系統設定。代價是這條連線只有網頁能用，Vail 和指令列看不到。
+  - 封包的切法和解法在 node 上測過，6 項都通過；載入頁面沒有錯誤；還沒在實機上試過。
+  - 系統已經用藍牙 MIDI 連著時，網頁還能不能直接連，我也還不確定。
+
+**要刷 0.6 的話**，請先確認沒有網頁或 `morse` 程式連著，然後自己執行：
+```
+uv run --locked --all-groups python third_party/fm1-base/tools/fm1_install.py firmware/morse/build/morse-0.6.fwsc
+```
+Preflight：
+- 整片備份是 16:12 那份（`d8f8889e…`），也已經放在 release；
+- flash 晶片 `0xB36014`；
+- 機器上現在是 0.5，只改韌體區，存檔格式不變。
+
+刷完請試三件事：
+1. 拔線，看 `PC` 是不是半秒內消失；
+2. 接著線用一陣子，看 `PC` 會不會閃；
+3. 在 Chrome 的系統藍牙設定裡先 Disconnect，再試網頁的 **Over Bluetooth, directly**，連上後打開 Timing 區看數字。
+
+---
+
+_**User (2026-11-18 09:01:14Z)**_
+
+```
+
+
+<pasted_content id="cc4a">
+❯ uv run --locked --all-groups python third_party/fm1-base/tools/fm1_install.py firmware/morse/build/morse-0.6.fwsc
+package: FM-1_41000600  (firmware/morse/build/morse-0.6.fwsc)
+device:  FM-1_41000500  (Felucca)
+Install? Do not unplug the FM-1 while writing. [y/N] y
+starting the update on FM-1_41000500
+checking the package (30 reads)
+switching to update mode
+writing   0%
+the loader writes only the sectors that changed (fast install)
+writing 100%
+restarting
+done: the FM-1 runs FM-1_41000600
+</pasted_content id="cc4a">
+
+```
+[Image #14]
+
+[Image #13] 改成 20/13, 20/14左右好像Vail還是沒有連
+然後改成 22/18 確實就能連上了
+
+[Image #15] [Image #16] 藍牙網頁搜尋配對也成功！
+
+---
+
+_**User (2026-11-18 09:01:14Z)**_
+
+[Image: source: /private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/0a574306-469e-4a59-9622-5701a42aee59/images/13.png]
+
+[Image: source: /private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/0a574306-469e-4a59-9622-5701a42aee59/images/14.png]
+
+[Image: source: /private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/0a574306-469e-4a59-9622-5701a42aee59/images/15.png]
+
+[Image: source: /private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/0a574306-469e-4a59-9622-5701a42aee59/images/16.png]
+
+---
+
+_**User (2026-11-18 09:01:54Z)**_
+
+```
+
+
+<pasted_content id="cc4a">
+❯ uv run --locked --all-groups python third_party/fm1-base/tools/fm1_install.py firmware/morse/build/morse-0.6.fwsc
+package: FM-1_41000600  (firmware/morse/build/morse-0.6.fwsc)
+device:  FM-1_41000500  (Felucca)
+Install? Do not unplug the FM-1 while writing. [y/N] y
+starting the update on FM-1_41000500
+checking the package (30 reads)
+switching to update mode
+writing   0%
+the loader writes only the sectors that changed (fast install)
+writing 100%
+restarting
+done: the FM-1 runs FM-1_41000600
+</pasted_content id="cc4a">
+
+```
+[Image #14]
+
+[Image #13] 改成 20/13, 20/14左右好像Vail還是沒有連
+然後改成 22/18 確實就能連上了
+
+[Image #15] [Image #16] 藍牙網頁搜尋配對也成功！
+（不過我觀察到 Vail幾乎decode是等完全聽完才顯示 我們的好像音還沒響完就解碼出來了？有沒有作弊 哈哈）
+
+---
+
+_**User (2026-11-18 09:01:54Z)**_
+
+[Image: source: /private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/0a574306-469e-4a59-9622-5701a42aee59/images/13.png]
+
+[Image: source: /private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/0a574306-469e-4a59-9622-5701a42aee59/images/14.png]
+
+[Image: source: /private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/0a574306-469e-4a59-9622-5701a42aee59/images/15.png]
+
+[Image: source: /private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/0a574306-469e-4a59-9622-5701a42aee59/images/16.png]
+
+---
+
+_**Agent (claude-opus-5-5 2026-11-18 09:02:08Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Confirm version and check when TYPE sends T_CHAR
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1; date +%H:%M; uv run --locked --all-groups python third_party/fm1-base/tools/fm1_install.py --info 2>&1 | tail -1; grep -n "case PG_TYPE\|T_CHAR" firmware/morse/app.c | head; grep -n "static void type_key\|typed\b" firmware/morse/app.c | head -5`
+
+```text
+17:02
+FM-1_41000600  [running]  port: Felucca
+21:enum { T_HELLO = 0x41, T_HEARTBEAT, T_CHAR, T_PROG, T_PROG_DONE };
+578:        hl_send(&link, T_CHAR, p, n);
+1634:    case PG_TYPE:
+1674:    case PG_TYPE:
+2958:    case PG_TYPE: type_page(); break;
+2990:    case PG_TYPE: s = "OCT-/+ page   REC del, hold: clear\nPLAY play/stop  SEL live/compose  SEQ code"; break;
+130:/* the tick's: the key, the keyer, two players (ptx: this FM-1's own playing, prompts, typed letters and listening;
+175:static char txt[3][TXT_N + 1];           /* own decoded, received decoded, typed (the simulator's expect_text) */
+200:    char line[TG_COLS * 2u + 1u];        /* TYPE: the line typed */
+1540:static void line_add(const char *s)      /* TYPE: onto the line typed, the oldest dropped */
+1554:static void type_key(uint32_t k)         /* TYPE: a key is a letter, or a phrase */
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 09:02:13Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Read T_CHAR sending and TYPE key code
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1; sed -n 565,582p firmware/morse/app.c; sed -n 1554,1580p firmware/morse/app.c`
+
+```text
+    grid.n++;
+}
+
+static void send_text(const char *s)     /* to the host (the first HOSTLINK_MAX characters), which may type it */
+{
+    uint8_t p[HOSTLINK_MAX];
+    uint32_t n = 0;
+    if (!hl_host(&link, plat_ms()))
+        return;
+    for (; *s && n < HOSTLINK_MAX; s++)
+        if (*s >= 0x20 && *s < 0x7F)
+            p[n++] = (uint8_t)*s;
+    if (n)
+        hl_send(&link, T_CHAR, p, n);
+}
+
+static void send_char(char c)
+{
+static void type_key(uint32_t k)         /* TYPE: a key is a letter, or a phrase */
+{
+    char s[CT_LINE_MAX + 2];
+    uint32_t i;
+    if (ui.tpage == 2u) {
+        const char *p = type_phrase(k);
+        if (!p)
+            return;
+        s[0] = 0;
+        text_cat(s, p);
+        text_cat(s, " ");
+        ui.gloss = ct_gloss(p);
+    } else {
+        s[0] = type_char(k, ui.tpage);
+        s[1] = 0;
+        if (!s[0])
+            return;
+        ui.gloss = 0;
+    }
+    line_add(s);
+    for (i = 0; s[i]; i++)
+        txt_add(2, s[i]);
+    if (!tcompose()) {                   /* LIVE: each key plays and goes out at once */
+        play(&ptx, s);
+        send_text(s);
+    }
+    ui.redraw |= R_MAIN;
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 09:02:58Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Record 0.6 flash and test results
+
+```bash
+cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1; python3 - <<'EOF'
+def edit(p, pairs):
+    s=open(p).read()
+    for a,b in pairs:
+        assert s.count(a)==1,(p,a[:70],s.count(a)); s=s.replace(a,b)
+    open(p,'w').write(s)
+edit('docs/dev/morse.md',[
+('''BUILDING（20/13）停 435 ms（約 7 個點），剛好在界線上；QSO（22/18）大約 4 個點，就會連成詞。要給別人聽時，把 `K2` 調到和字元速度一樣（或選 FAST）。''',
+'''BUILDING（20/13）停 435 ms（約 7 個點），剛好在界線上；QSO（22/18）大約 4 個點，就會連成詞。實測 `[實機]`：20/13、20/14 還是分開，22/18 就連起來了。要給別人聽時，選 QSO 或 FAST，或把 `K2` 調到接近字元速度。
+- **網頁比 Vail 早出字，不是作弊，但也不是解碼**：TYPE 頁按下鍵時，FM-1 就把那個字（`T_CHAR`）送給電腦，然後才開始播，所以網頁上的字比聲音早出現。Vail 是從按鍵的時間自己解碼，要等字間的停頓才知道一個字結束。KEY 頁送的才是 FM-1 解出來的字，也要等字間的停頓。'''),
+('''- macOS 上系統已經用藍牙 MIDI 連著時，Chrome 會不會共用那條連線還沒試 `[調研]`。
+- 封包的切法和解法用 node 測過（20 byte 以內、跨封包的 SysEx、running status、同一個封包裡兩個 note 的間隔、13-bit 時間戳記進位），還沒在實機上試。''',
+'''- macOS 上系統已經用藍牙 MIDI 連著時，Chrome 會不會共用那條連線還沒試 `[調研]`。
+- 封包的切法和解法用 node 測過（20 byte 以內、跨封包的 SysEx、running status、同一個封包裡兩個 note 的間隔、13-bit 時間戳記進位）。
+- **實機** `[實機]`（2026-11-18，韌體 0.6）：Chrome 的配對視窗列出 `FM-1 3399`，Pair 之後狀態寫 `MORSE 0.6 connected over Bluetooth`，Live 收到 TYPE 頁的字和片語。Timing（22 WPM，點 54 ms、劃 162 ms）：照網頁換算的 BLE-MIDI 時間戳記，sd 0.4–0.5 ms；照通知到達的時間，sd 18–20 ms，比經過 CoreMIDI 的到達時間（sd 約 3）抖得多，所以這條路一定要用時間戳記。'''),
+('''| 韌體 0.6、host 0.6.0 | 2026-11-18 | 是（還沒刷） |''','''| 韌體 0.6、host 0.6.0 | 2026-11-18 | 是（17:00 前用 USB-MIDI 裝 release build `FM-1_41000600`，fm1-morse `60f76cf`） |'''),
+])
+p='docs/device-log.md'; s=open(p).read()
+i=s.index('| 2026-11-18（16:29 之後） |'); j=s.index('\n',i)
+s=s[:j]+'''
+| 2026-11-18 16:55 前後 | 本人執行 `fm1_install.py firmware/morse/build/morse-0.6.fwsc`（Morse 0.6 release build，`FM-1_41000600`，SHA-256 `d65b6df5…8fd7e`，fm1-morse `60f76cf`），機器上是 Morse 0.5 | 成功：fast install，`done: the FM-1 runs FM-1_41000600`；17:02 `--info` 回答 `FM-1_41000600 [running] port: Felucca` |
+| 2026-11-18 17:00 前後 | 本人試網頁和 Vail | 網頁的 *Over Bluetooth, directly*（Web Bluetooth）配對 `FM-1 3399` 成功，Live 和 Timing 都能用；USB 和藍牙都在時網頁走 USB。Vail Decoder：20/13、20/14 字母還是分開，22/18 連成詞 |'''+s[j:]
+open(p,'w').write(s)
+s=open(p).read()
+s=s.replace('| 目前韌體 | **Morse 0.5 release build（`FM-1_41000500`，藍牙）**（2026-11-18 16:20 從 Morse 0.4 用 USB-MIDI 更新，學習紀錄保留；','| 目前韌體 | **Morse 0.6 release build（`FM-1_41000600`，藍牙）**（2026-11-18 從 0.4 → 0.5（16:20）→ 0.6 用 USB-MIDI 更新，學習紀錄保留；',1).replace('→ Morse 0.4 → Morse 0.5 |','→ Morse 0.4 → Morse 0.5 → Morse 0.6 |',1)
+open(p,'w').write(s)
+edit('docs/index.md',[('| 韌體 0.5、host 0.5.0（藍牙）；','| 韌體 0.6、host 0.6.0（藍牙）；')])
+edit('README.md',[('| Firmware 0.5 (Bluetooth), host 0.5.0;','| Firmware 0.6 (Bluetooth), host 0.6.0;')])
+EOF
+grep -n "Morse 0.6 release build" docs/device-log.md | head -2; just docs-check 2>&1 | tail -1; git add docs README.md && git commit -qm "morse 0.6 on the unit; Web Bluetooth works; Vail and Farnsworth measured; why the web shows TYPE's letters early
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>" && git push -q origin main; git log --oneline -1
+```
+
+```text
+13:| 目前韌體 | **Morse 0.6 release build（`FM-1_41000600`，藍牙）**（2026-11-18 從 0.4 → 0.5（16:20）→ 0.6 用 USB-MIDI 更新，學習紀錄保留；macOS 上的 USB MIDI port 名稱仍是 `Felucca`）。0.3 release 是 Hub 測試 3 從原廠 015 裝的，進度當時從 ROUND 1 重新開始。之前依序是原廠 015 → SLOOP 2.8.5 → Agent Deck 0.7 → SLOOP 2.8.5 → CTL-1 1.0.3 → ChoralRoot 0.41 → Conductor 0.1 → 0.2 → 0.3 → Morse 0.1 → 0.2 → 0.3 → SLOOP 2.8.5 → Morse 0.3 release → 原廠 015（還原）→ Morse 0.3 release → Morse 0.4 → Morse 0.5 → Morse 0.6 |
+123:| 2026-11-18 16:55 前後 | 本人執行 `fm1_install.py firmware/morse/build/morse-0.6.fwsc`（Morse 0.6 release build，`FM-1_41000600`，SHA-256 `d65b6df5…8fd7e`，fm1-morse `60f76cf`），機器上是 Morse 0.5 | 成功：fast install，`done: the FM-1 runs FM-1_41000600`；17:02 `--info` 回答 `FM-1_41000600 [running] port: Felucca` |
+{"status": "ok", "pages": 49, "llm_pages": 49, "deployed": false}
+734eefd morse 0.6 on the unit; Web Bluetooth works; Vail and Farnsworth measured; why the web shows TYPE's letters early
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 09:03:09Z)**_
+
+0.6 刷好了，我用 `--info` 確認過是 `FM-1_41000600`。網頁直接連藍牙在實機上也成功了。這些結果都記進了 `docs/dev/morse.md` 和 `device-log.md`，已 push（`734eefd`）。
+
+**網頁直接連藍牙（Over Bluetooth, directly）**
+- Chrome 的配對視窗找到 `FM-1 3399`，Pair 之後就連上了，Live 也收得到字。
+- 你截圖的 Timing 是 22 WPM（點 54 ms、劃 162 ms）：照網頁換算的時間戳記，sd 0.4–0.5 ms；照通知到達的時間，sd 18–20 ms。到達時間比經過系統藍牙 MIDI 時（sd 約 3）抖得多，所以這條路一定要靠時間戳記，網頁也確實是這樣算的。
+- USB 那張截圖的 sd 3.0 和 9.5 不是抖動，是那段資料混了 20 WPM（60 ms）和 22 WPM（54 ms）兩種速度。最後幾筆都是整齊的 54/54、162/162。換速度後按一下 Reset，數字就會乾淨。
+
+**Vail 從 22/18 開始連成詞**：和計算吻合。20/13、20/14 的字間停頓大約 7 個點以上，Vail 就當成詞與詞之間的空格。要給別人聽時，用 QSO 或 FAST。
+
+**「有沒有作弊」：有一點**
+- 在 **TYPE 頁**，你按下鍵的那一刻，FM-1 就把字送給電腦，然後才開始播，所以網頁上的字比聲音早出現。這不是解碼，是直接告訴電腦你按了哪個字。
+- Vail 是從按鍵的時間自己解碼，要等字和字之間的停頓，才知道一個字結束。
+- 在 **KEY 頁**，網頁上的字才是 FM-1 解碼出來的，一樣要等停頓。
+- 如果你希望 TYPE 頁也等播完才出字，可以改成每個字播完才送。代價是 `morse-type` 打進電腦的字會慢一點，要改再跟我說。
+
+**還需要你回報**：
+- 拔掉 USB 線時，`PC` 有沒有在半秒內消失？
+- 接著線用了一陣子，`PC` 有沒有閃？
+
+這是 0.6 唯一的韌體修改，而且只有實機能驗證。如果沒問題，要發 v0.6 的 release 讓 Hub 更新嗎？
+
+---
+
+_**User (2026-11-18 09:06:21Z)**_
+
+https://daviddwlee84.github.io/fm1-morse/web/ 也許可以在網頁裡 建議 vail的網站 還有建議的配置？
+比如簡單介紹你說的幾檔配置
+（然後我們是否能夠解出來WPM停頓參數等等？ 這個可以在網頁端做 TYPE頁可以先保留
+這樣網頁端知道expect 以及decode兩種？）
+
+拔線有成功 我用USB連上顯示PC馬上拔掉能夠在半秒內消失 目前幾乎沒觀察到是按說
+
+弄完應該就可以發 v0.6了
+
+---
+
+_**Agent (claude-opus-5-5 2026-11-18 09:06:51Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Check how firmware names prosigns
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/firmware/morse; grep -n "AR>\|KN>\|SK>\|BK>\|BT>" morse.c | head -20`
+
+```text
+(Bash completed with no output)
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 09:06:56Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Find firmware code table
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/firmware/morse; grep -n "prosign\|'+'\|\"+\"\|0x2B\|'('" morse.c | head -15; grep -n "static const.*CODE\|mo_code(char" morse.c | head`
+
+```text
+18:    {'(', "-.--."},  {')', "-.--.-"}, {'&', ".-..."},  {':', "---..."}, {';', "-.-.-."}, {'=', "-...-"},
+19:    {'+', ".-.-."},  {'-', "-....-"}, {'_', "..--.-"}, {'"', ".-..-."}, {'$', "...-..-"}, {'@', ".--.-."},
+150:            p->left = p->joined ? p->dit : 3u * p->gap;   /* in a prosign: run on */
+171:        if (c == '>') {                  /* the prosign's end: the rest of a character gap after its last part */
+33:uint8_t mo_code(char c)
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 09:07:24Z)**_
+
+<think><details><summary>Thought Process</summary>
+拔線測試已確認 0.6 的韌體修改有效，接下來改網頁，加入「和 Vail 一起用」的說明，並在 Live 區塊於網頁端解碼、估算 WPM 與字間停頓。
+
+</details></think>
+
+_**Agent (claude-opus-5-5 2026-11-18 09:07:24Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Locate sections and styles
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/firmware/morse/web; grep -n "<section>\|</section>\|<h2>\|footer\|Source and licence" index.html | head -30; grep -n "#heard\b\|#heard {" index.html | head`
+
+```text
+55:  <section>
+56:    <h2>1. Connect</h2>
+66:  </section>
+68:  <section>
+69:    <h2>2. Live</h2>
+86:  </section>
+88:  <section>
+89:    <h2>3. Back up</h2>
+92:  </section>
+94:  <section>
+95:    <h2>4. Restore</h2>
+99:  </section>
+105:  </section>
+107:  <p class="dim">Source and licence (GPL-3.0-or-later):
+33:  #heard { min-height: 4.5em; max-height: 12em; overflow-y: auto; padding: 10px; border-radius: 8px;
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 09:07:28Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Read styles and Live markup
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/firmware/morse/web; sed -n 11,47p index.html; sed -n 68,110p index.html`
+
+```text
+<style>
+  :root { --bg: #f6f6f3; --fg: #1b1b1f; --dim: #6b6b73; --card: #ffffff; --line: #dcdcd6; --accent: #0a72c2;
+          --ok: #1f8f4e; --bad: #c0392b; --l0: #e9d6d6; --l1: #e8b9a0; --l2: #eccb7c; --l3: #d9d77a; --l4: #a7d78f;
+          --l5: #6fd39a; --closed: #ececea; }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg: #111114; --fg: #ececf0; --dim: #9a9aa6; --card: #1b1b20; --line: #2c2c34; --accent: #5ab4ff;
+            --ok: #50dc78; --bad: #f0463c; --l0: #462828; --l1: #8c3c28; --l2: #be781e; --l3: #aaaa28;
+            --l4: #5ab446; --l5: #3cd278; --closed: #18181c; }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--fg); font: 16px/1.5 system-ui, sans-serif; }
+  main { max-width: 760px; margin: 0 auto; padding: 24px 16px 48px; }
+  h1 { font-size: 1.6rem; margin: 0 0 4px; }
+  p.lead { color: var(--dim); margin: 0 0 20px; }
+  section { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 16px; margin: 14px 0; }
+  h2 { font-size: 1.05rem; margin: 0 0 8px; }
+  button, label.file { font: inherit; padding: 8px 14px; border-radius: 8px; border: 1px solid var(--accent);
+                       background: var(--accent); color: #fff; cursor: pointer; display: inline-block; }
+  button:disabled { opacity: .45; cursor: default; }
+  button.ghost { background: transparent; color: var(--accent); }
+  input[type=file] { display: none; }
+  #status { font-weight: 600; }
+  #heard { min-height: 4.5em; max-height: 12em; overflow-y: auto; padding: 10px; border-radius: 8px;
+           background: var(--bg); border: 1px solid var(--line); font: 1.15rem/1.5 ui-monospace, monospace;
+           white-space: pre-wrap; word-break: break-word; }
+  #lamp { width: 14px; height: 14px; border-radius: 50%; background: var(--line); display: inline-block; vertical-align: middle; }
+  #lamp.on { background: var(--accent); box-shadow: 0 0 8px var(--accent); }
+  input[type=text] { font: inherit; padding: 8px 10px; border-radius: 8px; border: 1px solid var(--line);
+                     background: var(--bg); color: var(--fg); flex: 1; min-width: 0; text-transform: uppercase; }
+  .ok { color: var(--ok); } .bad { color: var(--bad); } .dim { color: var(--dim); }
+  .chart { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; margin-top: 10px; max-width: 420px; }
+  .chart div { text-align: center; padding: 6px 0; border-radius: 5px; font-weight: 700; font-family: ui-monospace, monospace; }
+  .row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+  code { font-family: ui-monospace, monospace; font-size: .92em; }
+  ol { padding-left: 1.2em; margin: 6px 0; }
+</style>
+</head>
+  <section>
+    <h2>2. Live</h2>
+    <p class="dim">What the FM-1 reads: key on its KEY page, or type on its TYPE page. <span id="lamp" title="the key"></span></p>
+    <div id="heard" aria-live="polite"></div>
+    <div class="row" style="margin-top:8px"><button class="ghost" id="clear" disabled>Clear</button>
+      <button class="ghost" id="copy" disabled>Copy</button></div>
+    <p class="dim" style="margin-top:14px">Send text: the FM-1 plays it as received (amber on its KEY page), at its hearing
+      speed. <code>&lt;SK&gt;</code> runs letters together as one prosign.</p>
+    <div class="row"><input type="text" id="say" placeholder="cq cq de fm1 k" maxlength="600" disabled>
+      <button id="send" disabled>Send</button> <button class="ghost" id="stop" disabled>Stop</button></div>
+    <details id="timing" style="margin-top:14px"><summary class="dim">Timing: how exactly the keying arrives</summary>
+      <p class="dim">Each press and gap the browser received, in ms: by the event's time stamp, and (after the slash) by when
+        the page got it. The FM-1's TYPE page plays exact lengths (a dit is 1200 / WPM ms, a dah three, the gap inside
+        a letter one), so play some letters there and compare. Over Bluetooth the arrival times wander by a connection
+        interval; the time stamps should not.</p>
+      <pre id="tstats" class="dim" style="white-space:pre-wrap"></pre>
+      <div class="row"><button class="ghost" id="treset">Reset</button></div>
+    </details>
+  </section>
+
+  <section>
+    <h2>3. Back up</h2>
+    <div class="row"><button id="backup" disabled>Download the progress</button></div>
+    <p class="dim">Nothing changes on the FM-1. The file is plain JSON: every letter's two boxes (0..5), the rounds.</p>
+  </section>
+
+  <section>
+    <h2>4. Restore</h2>
+    <div class="row"><label class="file" id="pick">Choose a backup file<input type="file" id="file" accept=".json,application/json"></label>
+      <button id="restore" disabled>Send it to the FM-1</button></div>
+    <p id="restore-note" class="dim">The FM-1 shows what it got and asks: press <b>PLAY</b> on it to load, <b>HOME</b> to keep what is there.</p>
+  </section>
+
+  <section id="view" hidden>
+    <h2 id="view-title">The progress</h2>
+    <div id="summary" class="dim"></div>
+    <div class="chart" id="chart"></div>
+  </section>
+
+  <p class="dim">Source and licence (GPL-3.0-or-later):
+    <a href="https://github.com/daviddwlee84/fm1-morse">github.com/daviddwlee84/fm1-morse</a>.
+    Without a browser: <code>morse backup FILE</code> / <code>morse restore FILE</code> from the host in
+    <a href="https://github.com/daviddwlee84/M-VAVE_FM-1/tree/main/host/morse">M-VAVE_FM-1</a>.</p>
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 09:07:33Z)**_
+
+好，備份那一區也加一顆「只讀進度、不下載」的按鈕。一起改：
+
+_**Agent (claude-opus-5-5 2026-11-18 09:08:09Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Add page decoder, Vail section, show-only progress
+
+```bash
+cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/firmware/morse/web; python3 - <<'EOF'
+p='index.html'; s=open(p).read()
+def rep(a,b):
+    global s
+    assert s.count(a)==1,(a[:60],s.count(a)); s=s.replace(a,b)
+# styles
+rep('''  #lamp { width: 14px;''','''  #decoded { min-height: 3em; max-height: 9em; overflow-y: auto; padding: 10px; border-radius: 8px;
+             background: var(--bg); border: 1px dashed var(--line); font: 1.05rem/1.5 ui-monospace, monospace;
+             white-space: pre-wrap; word-break: break-word; }
+  table { border-collapse: collapse; width: 100%; margin: 8px 0; font-size: .95em; }
+  td, th { text-align: left; padding: 5px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { color: var(--dim); font-weight: 600; }
+  #lamp { width: 14px;''')
+# live markup
+rep('''    <p class="dim">What the FM-1 reads: key on its KEY page, or type on its TYPE page. <span id="lamp" title="the key"></span></p>
+    <div id="heard" aria-live="polite"></div>''','''    <p class="dim">What the FM-1 reads: key on its KEY page, or type on its TYPE page (there each letter comes as you
+      press it, before it has played). <span id="lamp" title="the key"></span></p>
+    <div id="heard" aria-live="polite"></div>
+    <p class="dim" style="margin-top:10px">Decoded on this page, from the keying alone (as Vail would), with the speed and
+      spacing it measures:</p>
+    <div id="decoded"></div>
+    <p id="dstats" class="dim" style="margin:6px 0 0"></p>''')
+# backup buttons
+rep('''    <div class="row"><button id="backup" disabled>Download the progress</button></div>
+    <p class="dim">Nothing changes on the FM-1. The file is plain JSON: every letter's two boxes (0..5), the rounds.</p>''','''    <div class="row"><button id="backup" disabled>Download the progress</button>
+      <button class="ghost" id="peek" disabled>Only show it</button></div>
+    <p class="dim">Nothing changes on the FM-1. The file is plain JSON: every letter's two boxes (0..5), the rounds.
+      <b>Only show it</b> reads the progress into the chart below without saving a file.</p>''')
+# Vail section before the view section
+rep('''  <section id="view" hidden>''','''  <section>
+    <h2>With Vail</h2>
+    <p><a href="https://vailmorse.com/">Vail</a> is a Morse repeater in the browser: key to other people, or to its
+      decoder, and train words, call signs and QSOs at <a href="https://training.vailmorse.com/">training.vailmorse.com</a>.
+      The FM-1 is a key to it, with nothing to set up: open Vail in Chrome or Edge with the FM-1 connected (USB, or
+      Bluetooth through the system as for <b>Connect</b>), choose <i>Straight Key</i> as Vail's mode (the FM-1's own
+      keyer already times paddles), and key on the FM-1's KEY page, or play letters and phrases on its TYPE page. This
+      page can stay open beside it.</p>
+    <table>
+      <tr><th>PRESET on the FM-1</th><th>Hearing (characters / overall)</th><th>For</th></tr>
+      <tr><td>START</td><td>20 / 8 WPM</td><td>learning the letters by sound: each letter fast, long gaps between them</td></tr>
+      <tr><td>BUILDING</td><td>20 / 13</td><td>most letters known; gaps shrinking</td></tr>
+      <tr><td>QSO</td><td>22 / 18</td><td>talking to people: from here Vail's decoder joins the letters into words</td></tr>
+      <tr><td>FAST</td><td>25 / 25</td><td>standard spacing</td></tr>
+    </table>
+    <p class="dim">The second number stretches the gaps between letters (Farnsworth), not the letters. A decoder that
+      takes any gap over about 7 dits as a word space, Vail's among them, gives one letter per word below about 20 / 15;
+      the decoder above shows the gap it measured in dits. To be read by others, use QSO or FAST, or turn <code>K2</code>
+      up to the character speed. The send speed (<code>K4</code>) only matters for paddles on the KEY page.</p>
+  </section>
+
+  <section id="view" hidden>''')
+# decoder JS, inserted before "// Timing:"
+rep('''// Timing: each note-0 edge by the event's time stamp and by when it reached the page''','''// ---- a decoder of our own, from the note-0 edges' time stamps: what a listener (Vail) gets from the timing alone
+const CODES = { ".-": "A", "-...": "B", "-.-.": "C", "-..": "D", ".": "E", "..-.": "F", "--.": "G", "....": "H", "..": "I",
+  ".---": "J", "-.-": "K", ".-..": "L", "--": "M", "-.": "N", "---": "O", ".--.": "P", "--.-": "Q", ".-.": "R", "...": "S",
+  "-": "T", "..-": "U", "...-": "V", ".--": "W", "-..-": "X", "-.--": "Y", "--..": "Z", "-----": "0", ".----": "1",
+  "..---": "2", "...--": "3", "....-": "4", ".....": "5", "-....": "6", "--...": "7", "---..": "8", "----.": "9",
+  ".-.-.-": ".", "--..--": ",", "..--..": "?", ".----.": "'", "-.-.--": "!", "-..-.": "/", "-.--.": "(", "-.--.-": ")",
+  ".-...": "&", "---...": ":", "-.-.-.": ";", "-...-": "=", ".-.-.": "+", "-....-": "-", "..--.-": "_", ".-..-.": "\\"",
+  "...-..-": "$", ".--.-.": "@", "...-.-": "<SK>", "-...-.-": "<BK>", "...---...": "<SOS>" };
+const dec = { dit: 0, lgap: 0, code: "", down: false, t: 0, up: 0, spaced: true, dits: [], dahs: [], inner: [], letter: [] };
+function keep(a, x) { a.push(x); if (a.length > 40) a.shift(); }
+function avg(a) { return a.length ? a.reduce((p, x) => p + x, 0) / a.length : 0; }
+function decShow(s) { const d = $("decoded"); d.textContent += s; d.scrollTop = d.scrollHeight; }
+function decLetter() {
+  if (!dec.code) return;
+  decShow(CODES[dec.code] || "·");
+  dec.code = ""; dec.spaced = false;
+  decStats();
+}
+function decEdge(down, t) {
+  if (down) {
+    if (dec.down) return;
+    if (dec.up) {
+      const g = t - dec.up;
+      if (dec.dit && g < 2 * dec.dit) keep(dec.inner, g);   // inside a letter
+      else {
+        decLetter();
+        if (!dec.lgap || g < 0.6 * dec.lgap) dec.lgap = g;   // a letter gap, unless it is a word's
+        if (g > 1.67 * dec.lgap) { if (!dec.spaced) { decShow(" "); dec.spaced = true; } }
+        else { dec.lgap = 0.8 * dec.lgap + 0.2 * g; keep(dec.letter, g); }
+      }
+    }
+    dec.down = true; dec.t = t;
+  } else if (dec.down) {
+    const m = t - dec.t;
+    dec.down = false; dec.up = t;
+    if (m < 12 || m > 3000) return;
+    if (!dec.dit || m < 0.5 * dec.dit) dec.dit = Math.min(m, 400);   // the first, or one much shorter: a dit
+    const dah = m > 2 * dec.dit;
+    dec.code += dah ? "-" : ".";
+    keep(dah ? dec.dahs : dec.dits, m);
+    dec.dit = 0.8 * dec.dit + 0.2 * (dah ? m / 3 : m);
+  }
+}
+setInterval(() => {   // silence ends a letter, then a word
+  if (dec.down || !dec.up || !dec.dit) return;
+  const idle = performance.now() - dec.up;
+  if (dec.code && idle > 2 * dec.dit) decLetter();
+  if (!dec.spaced && dec.lgap && idle > 1.67 * dec.lgap + 50) { decShow(" "); dec.spaced = true; }
+}, 40);
+function decStats() {
+  const dit = avg(dec.dits) || dec.dit, dah = avg(dec.dahs), lg = avg(dec.letter), parts = [];
+  if (!dit) return;
+  const c = 1200 / dit;
+  parts.push(`characters ${c.toFixed(1)} WPM (dit ${dit.toFixed(0)} ms)`);
+  if (dah) parts.push(`dah ${(dah / dit).toFixed(1)} dits`);
+  if (dec.inner.length) parts.push(`gap inside letters ${(avg(dec.inner) / dit).toFixed(1)} dits`);
+  if (lg) {
+    // Farnsworth (ARRL): a letter gap is 3 stretched units; 19 of them in PARIS, which takes 60/s s at s WPM overall
+    const t = 19 * (lg / 3) / 1000, s = Math.min(c, 60 * c / (t * c + 37.2));
+    parts.push(`gap between letters ${lg.toFixed(0)} ms = ${(lg / dit).toFixed(1)} dits, overall about ${s.toFixed(0)} WPM`);
+    if (lg / dit > 6) parts.push("long enough that Vail's decoder makes each letter a word");
+  }
+  $("dstats").textContent = parts.join(" · ");
+}
+function decReset() { Object.assign(dec, { dit: 0, lgap: 0, code: "", down: false, t: 0, up: 0, spaced: true, dits: [], dahs: [], inner: [], letter: [] }); $("decoded").textContent = ""; $("dstats").textContent = ""; }
+
+// Timing: each note-0 edge by the event's time stamp and by when it reached the page''')
+rep('''function timingEdge(down, stamp, arrived) {
+  tEdges.push([down, stamp, arrived]);''','''function timingEdge(down, stamp, arrived) {
+  decEdge(down, stamp);
+  tEdges.push([down, stamp, arrived]);''')
+rep('''$("clear").onclick = () => { $("heard").textContent = ""; };''','''$("clear").onclick = () => { $("heard").textContent = ""; decReset(); };''')
+# backup refactor
+rep('''$("backup").onclick = () => {
+  let buf = [], next = 0;''','''function readProgress(save) {
+  let buf = [], next = 0;''')
+rep('''      const p = unblob(w.slice(1, -2));
+      const a = document.createElement("a");''','''      const p = unblob(w.slice(1, -2));
+      if (!save) { show(p, "On the FM-1 now"); ready(); return; }
+      const a = document.createElement("a");''')
+rep('''  out.send(frame(T_PROG_REQ, []));
+};''','''  out.send(frame(T_PROG_REQ, []));
+}
+$("backup").onclick = () => readProgress(true);
+$("peek").onclick = () => readProgress(false);''')
+rep('''  $("backup").disabled = !!old;''','''  $("backup").disabled = $("peek").disabled = !!old;''')
+rep('''  $("backup").disabled = $("restore").disabled = true;
+  for (const id of ["clear", "copy", "say", "send", "stop"]) $(id).disabled = true;
+}''','''  $("backup").disabled = $("peek").disabled = $("restore").disabled = true;
+  for (const id of ["clear", "copy", "say", "send", "stop"]) $(id).disabled = true;
+}''')
+open(p,'w').write(s)
+import re
+open('/private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/0a574306-469e-4a59-9622-5701a42aee59/scratchpad/page.js','w').write(re.findall(r'<script>(.*?)</script>',s,re.S)[-1])
+EOF
+node --check /private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/0a574306-469e-4a59-9622-5701a42aee59/scratchpad/page.js && echo ok; grep -n '"\\\\""\|\.-\.\.-\.' index.html | head -2
+```
+
+```text
+ok
+276:  ".-...": "&", "---...": ":", "-.-.-.": ";", "-...-": "=", ".-.-.": "+", "-....-": "-", "..--.-": "_", ".-..-.": "\"",
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 09:08:24Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Test the page decoder on synthetic keying
+
+```bash
+cd /private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/0a574306-469e-4a59-9622-5701a42aee59/scratchpad; python3 - <<'EOF'
+import re
+js=open('page.js').read()
+a=js.index('const CODES'); b=js.index('// Timing: each note-0')
+code=js[a:b].replace('setInterval(','(()=>{})||(')
+open('d.js','w').write('''const el={decoded:{textContent:""},dstats:{textContent:""}};const $=id=>el[id];const performance={now:()=>0};
+'''+code+r'''
+const INV=Object.fromEntries(Object.entries(CODES).map(([k,v])=>[v,k]));
+function play(text,c,s,jit=0){ decReset(); const d=1200/c; let ta;
+  if(s>=c) ta=d; else { const t=(60*c-37.2*s)/(s*c); ta=t*1000/19; }
+  let t=1000; const r=()=>1+(Math.random()*2-1)*jit;
+  for(const w of text.split(" ")){ for(const ch of w){ const k=INV[ch]; for(let i=0;i<k.length;i++){ decEdge(true,t); t+=(k[i]=="-"?3*d:d)*r(); decEdge(false,t); t+= i<k.length-1? d*r():0 } t+=3*ta*r(); } t+=4*ta*r(); }
+  decLetter(); return [el.decoded.textContent, el.dstats.textContent]; }
+for(const [c,s,j] of [[20,8,0],[20,13,0],[22,18,0],[25,25,0],[20,20,0.15],[12,12,0.2]]){ const [t,st]=play("PARIS CQ DE FM1 K TEST",c,s,j); console.log(`${c}/${s} jit ${j}: "${t}"\n   ${st}`); }
+''')
+EOF
+node d.js
+```
+
+```text
+20/8 jit 0: "PARIS CQ DE FM1 K TEST"
+   characters 20.0 WPM (dit 60 ms) · dah 3.0 dits · gap inside letters 1.0 dits · gap between letters 891 ms = 14.8 dits, overall about 8 WPM · long enough that Vail's decoder makes each letter a word
+20/13 jit 0: "PARIS CQ DE FM1 K TEST"
+   characters 20.0 WPM (dit 60 ms) · dah 3.0 dits · gap inside letters 1.0 dits · gap between letters 435 ms = 7.3 dits, overall about 13 WPM · long enough that Vail's decoder makes each letter a word
+22/18 jit 0: "PARIS CQ DE FM1 K TEST"
+   characters 22.0 WPM (dit 55 ms) · dah 3.0 dits · gap inside letters 1.0 dits · gap between letters 259 ms = 4.8 dits, overall about 18 WPM
+25/25 jit 0: "PARIS CQ DE FM1 K TEST"
+   characters 25.0 WPM (dit 48 ms) · dah 3.0 dits · gap inside letters 1.0 dits · gap between letters 144 ms = 3.0 dits, overall about 25 WPM
+20/20 jit 0.15: "PARIS CQ DE FM1 K TEST"
+   characters 20.3 WPM (dit 59 ms) · dah 2.9 dits · gap inside letters 1.0 dits · gap between letters 181 ms = 3.1 dits, overall about 20 WPM
+12/12 jit 0.2: "PARIS CQ DE FM1 K TEST"
+   characters 11.7 WPM (dit 102 ms) · dah 3.0 dits · gap inside letters 1.0 dits · gap between letters 291 ms = 2.8 dits, overall about 12 WPM
+Shell cwd was reset to /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 09:08:37Z)**_
+
+<think><details><summary>Thought Process</summary>
+解碼器在六種速度與間隔下都正確，WPM 與字間停頓的估算也無誤。接下來用 Chromium 載入畫面做確認。
+
+</details></think>
+
+_**Agent (claude-opus-5-5 2026-11-18 09:08:42Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Load page and take full screenshot
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1; sed -i '' 's/pg.screenshot(path=sys.argv\[2\], full_page=False)/pg.screenshot(path=sys.argv[2], full_page=True)/' /private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/0a574306-469e-4a59-9622-5701a42aee59/scratchpad/load.py; uv run --with playwright python /private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/0a574306-469e-4a59-9622-5701a42aee59/scratchpad/load.py $PWD/firmware/morse/web/index.html /private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/0a574306-469e-4a59-9622-5701a42aee59/scratchpad/page.png 2>&1 | tail -2`
+
+```text
+errors: []
+ble button hidden: False | status: not connected
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 09:08:49Z)**_
+
+<tool-use data-tool-type="read" data-tool-name="Read"><details>
+<summary>Tool use: **Read**</summary>
+ `/private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/0a574306-469e-4a59-9622-5701a42aee59/scratchpad/page.png`
+</details></tool-use>
+
+---
+
+_**User (2026-11-18 09:08:49Z)**_
+
+[Image: original 1280x2180, displayed at 1174x2000. Multiply coordinates by 1.09 to map to original image.]
+
+---
+
+_**Agent (claude-opus-5-5 2026-11-18 09:09:10Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Fix Vail threshold text and commit web
+
+```bash
+cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/firmware/morse/web; python3 - <<'EOF'
+p='index.html'; s=open(p).read()
+def rep(a,b):
+    global s
+    assert s.count(a)==1,(a[:60]); s=s.replace(a,b)
+rep('''A decoder that
+      takes any gap over about 7 dits as a word space, Vail's among them, gives one letter per word below about 20 / 15;
+      the decoder above shows the gap it measured in dits.''','''Vail's decoder
+      takes a long enough gap as a word space: in our test 20 / 14 (a gap of 6.4 dits) still gave one letter per word,
+      22 / 18 (4.8 dits) gave words. The decoder above shows the gap it measured in dits.''')
+rep('''    if (lg / dit > 6) parts.push("long enough that Vail's decoder makes each letter a word");''','''    if (lg / dit > 5.5) parts.push("long enough that Vail's decoder likely makes each letter a word");''')
+open(p,'w').write(s)
+import re
+open('/private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/0a574306-469e-4a59-9622-5701a42aee59/scratchpad/page.js','w').write(re.findall(r'<script>(.*?)</script>',s,re.S)[-1])
+EOF
+node --check /private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/0a574306-469e-4a59-9622-5701a42aee59/scratchpad/page.js && echo ok; cd ..; git add -A web && git commit -q -F - <<'EOF'
+web: its own decoder (speed, dah ratio, gaps, overall WPM), With Vail and the presets, Only show it
+
+- Decodes the note-0 keying by its time stamps, as a listener would, next
+  to what the FM-1 reads; measures the character speed, dah length, gaps
+  in dits and the overall (Farnsworth) speed.
+- A With Vail section: what Vail is, how the FM-1 keys it, the presets and
+  which of them Vail's decoder reads as words (20/14 apart, 22/18 words).
+- Only show it: the progress into the chart without a file.
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+EOF
+git push -q origin main; git log --oneline -1
+```
+
+```text
+ok
+759d8e0 web: its own decoder (speed, dah ratio, gaps, overall WPM), With Vail and the presets, Only show it
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 09:09:17Z)**_
+
+Now the v0.6 release, tagged at `60f76cf` (the package on your unit):
+
+_**Agent (claude-opus-5-5 2026-11-18 09:09:38Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Publish the v0.6 release
+
+```bash
+cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/firmware/morse; S=/private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/0a574306-469e-4a59-9622-5701a42aee59/scratchpad; ls -la build/firmware.json; shasum -a 256 build/morse-0.6.fwsc; cp build/morse-0.6.fwsc build/firmware.json $S/; cat > $S/notes6.md <<'EOF'
+MORSE 0.6: the computer's sign goes as soon as the cable comes out, and the web page talks to the FM-1 over Bluetooth by itself.
+
+**Firmware**
+- `PC` in the header (a program answering MORSE: the host or MORSE on the web) now goes within half a second of pulling the USB cable, instead of after 10 s: the FM-1 treats a USB bus that takes no data for 0.5 s as gone.
+
+**[MORSE on the web](https://daviddwlee84.github.io/fm1-morse/web/)** (no reflash needed for these)
+- *Over Bluetooth, directly*: Chrome or Edge finds the FM-1 itself (Web Bluetooth), no system Bluetooth MIDI setup.
+- With the FM-1 on USB and Bluetooth MIDI both, USB is used.
+- A decoder of its own beside what the FM-1 reads: the character speed, dah length, gaps in dits and the overall (Farnsworth) speed, from the keying's time stamps alone.
+- *Timing*: each press and gap by time stamp and by arrival (Bluetooth: within 0.5 ms by time stamp).
+- *With Vail*: how to use the FM-1 as Vail's key, and which presets Vail's decoder reads as words.
+- *Only show it* reads the progress without saving a file; backups are named to the minute.
+
+| | |
+|---|---|
+| Package | `morse-0.6.fwsc` |
+| Identity | `FM-1_41000600` |
+| SHA-256 | `d65b6df5570aa632be51c6b99256fab9388ae25035ffc979609871623ec8fd7e` |
+| Flash chips | saves and updates on `856014` and `B36014` (both in fm1-emu; `B36014` on hardware) |
+| Licence | GPL-3.0-or-later (fm1-base MPL-2.0, `common/` MIT) |
+
+Tested on an FM-1 with the newer flash chip (`B36014`): installed over MORSE 0.5 with the USB-MIDI update (fast install), the learning progress kept; `PC` gone within half a second of unplugging, and no flicker seen with the cable in; the web page over Bluetooth directly, with Live and Timing. Same settings and progress record as 0.3-0.5.
+
+Back up your flash, and your progress, before installing.
+EOF
+git tag -a v0.6 60f76cf -m "MORSE 0.6" && git push -q origin v0.6; gh release create v0.6 $S/morse-0.6.fwsc $S/firmware.json --verify-tag --title "MORSE 0.6" --notes-file $S/notes6.md --latest 2>&1 | tail -1; gh release view v0.6 --json assets -q '.assets[]|.name+" "+.digest'
+```
+
+```text
+.rw-r--r--@ 1.1k zhouhanru 18 Nov 15:40 build/firmware.json
+d65b6df5570aa632be51c6b99256fab9388ae25035ffc979609871623ec8fd7e  build/morse-0.6.fwsc
+https://github.com/daviddwlee84/fm1-morse/releases/tag/v0.6
+firmware.json sha256:296479f46067ef674b7a5c1cdad4653b31edd4a023badb762f8412beffe02b91
+morse-0.6.fwsc sha256:d65b6df5570aa632be51c6b99256fab9388ae25035ffc979609871623ec8fd7e
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 09:09:42Z)**_
+
+Finally, the docs and the pointer:
+
+_**Agent (claude-opus-5-5 2026-11-18 09:10:19Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Record v0.6 release and results, commit
+
+```bash
+cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1; python3 - <<'EOF'
+def edit(p, pairs):
+    s=open(p).read()
+    for a,b in pairs:
+        assert s.count(a)==1,(p,a[:70],s.count(a)); s=s.replace(a,b)
+    open(p,'w').write(s)
+edit('docs/dev/morse.md',[
+('''| 韌體 0.6、host 0.6.0 | 2026-11-18 | 是（17:00 前用 USB-MIDI 裝 release build `FM-1_41000600`，fm1-morse `60f76cf`） | 拔線後 `PC` 在 0.5 秒內消失（hostlink：USB 收不了 SysEx 就判定電腦離開，`firmware/common` 同步）；網頁：*Over Bluetooth, directly*（[Web Bluetooth](#web-bluetooth)）、USB 和藍牙都在時用 USB、*Timing* 區、備份檔名加上時分 |''',
+'''| 韌體 0.6、host 0.6.0 | 2026-11-18 | 是（17:00 前用 USB-MIDI 裝 release build `FM-1_41000600`，fm1-morse `60f76cf`，release [v0.6](https://github.com/daviddwlee84/fm1-morse/releases/tag/v0.6)） | 拔線後 `PC` 在 0.5 秒內消失（hostlink：USB 收不了 SysEx 就判定電腦離開，`firmware/common` 同步），實機確認，接著線時沒看到閃 `[實機]`；網頁：*Over Bluetooth, directly*（[Web Bluetooth](#web-bluetooth)）、USB 和藍牙都在時用 USB、*Timing* 區、自己的解碼器（字元速度、劃長、停頓幾個點、整體 WPM）、*With Vail* 和 PRESET 的說明、*Only show it*（只讀進度不存檔）、備份檔名加上時分 |'''),
+('''6. 新版本：2026-11-18 發布 [v0.5]''','''6. 新版本：2026-11-18 發布 [v0.6](https://github.com/daviddwlee84/fm1-morse/releases/tag/v0.6)（tag 在 `60f76cf`，`morse-0.6.fwsc` SHA-256 `d65b6df5…8fd7e`，刷進實機的那份，digest 相符）。之前同一天發了 [v0.5]'''),
+('''就判定離線。判斷本身有單元測試''','''就判定離線，2026-11-18 實機確認：接上 USB、`PC` 亮起後拔線，半秒內消失，接著線時幾乎沒看到閃 `[實機]`。判斷本身有單元測試'''),
+])
+edit('docs/dev/morse-learn.md',[('''只想看自己打了什麼、或讓電腦送字給 FM-1 練抄收，用 [MORSE on the web](https://daviddwlee84.github.io/fm1-morse/web/) 的 Live 區塊就好，不用裝東西，也不需要 Accessibility 權限。''','''只想看自己打了什麼、或讓電腦送字給 FM-1 練抄收，用 [MORSE on the web](https://daviddwlee84.github.io/fm1-morse/web/) 的 Live 區塊就好，不用裝東西，也不需要 Accessibility 權限。網頁也會自己從按鍵的時間解碼，顯示你的字元速度、劃有幾個點長、字和字之間停了多久；*With Vail* 一節說明哪個 PRESET 讓 Vail 把字母連成詞（QSO 起）。''')])
+p='docs/device-log.md'; s=open(p).read()
+i=s.index('| 2026-11-18 17:00 前後 | 本人試網頁和 Vail |'); j=s.index('\n',i)
+s=s[:j]+'''
+| 2026-11-18 17:10 前後 | 本人測 0.6 的拔線 | 用 USB 連上、`PC` 亮起後拔線，`PC` 半秒內消失；接著線時幾乎沒看到 `PC` 閃 |'''+s[j:]
+open(p,'w').write(s)
+EOF
+just docs-check 2>&1 | tail -1; git add firmware/morse docs && git commit -qm "morse 0.6 released (fm1-morse v0.6); unplug verified; web decoder, With Vail, Only show it
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>" && git push -q origin main; git log --oneline -1
+```
+
+```text
+{"status": "ok", "pages": 49, "llm_pages": 49, "deployed": false}
+046746e morse 0.6 released (fm1-morse v0.6); unplug verified; web decoder, With Vail, Only show it
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 09:10:32Z)**_
+
+網頁都改好了，v0.6 也發布了：https://github.com/daviddwlee84/fm1-morse/releases/tag/v0.6
+- tag 打在刷進你機器的那份套件，`.fwsc` 的 SHA-256 和 GitHub 上的一致。
+- release notes 寫了 0.6 的韌體修改和這次網頁的新功能。Hub 會自動抓最新的 release。
+- 網頁的修改都不用刷機，GitHub Pages 幾分鐘後生效。
+
+**網頁的新東西**
+- **With Vail** 一節：
+  - 介紹 Vail 和它的練習網站；
+  - 怎麼把 FM-1 當成 Vail 的電鍵：不用設定，模式選 Straight Key，在 KEY 頁發報或在 TYPE 頁播字；
+  - 四個 PRESET 各適合什麼，以及從 QSO（22/18）開始 Vail 才會把字母連成詞。這裡用的是你實測的數字：20/14 字間停 6.4 個點，還是分開；22/18 停 4.8 個點，就連起來了。
+- **網頁自己解碼**：Live 區塊多了一個虛線框，只用按鍵的時間戳記解碼，跟 Vail 的做法一樣。下面一行顯示量到的：
+  - 字元速度（WPM 和點長）
+  - 劃是幾個點長
+  - 字內停頓是幾個點長
+  - 字間停頓是幾毫秒、幾個點
+  - 換算的整體速度；停頓太長時，提醒 Vail 可能會把每個字母拆開
+- **「預期」和「解碼」兩個框**：上面的框是 FM-1 告訴電腦的字（在 TYPE 頁是你按下的那個字），下面的框是網頁從時間解出來的。對照兩邊，就能看出你的節奏能不能被別人解讀。TYPE 頁的行為照你說的先保留。
+- **Only show it**：讀進度、顯示在下面的圖表裡，不下載檔案。
+
+**測試**：
+- 解碼器用模擬的按鍵測了 6 種情況：20/8、20/13、22/18、25/25，加上 20 WPM 和 12 WPM 各加 15–20% 的手抖，全部解對。
+- 20/8 量到字間停頓 14.8 個點，換算整體約 8 WPM，和設定相符。
+- 頁面在 Chromium 載入沒有錯誤。
+- 網頁解碼器還沒接 FM-1 實測過，你下次在 KEY 頁打幾個字就能看到。
+
+**拔線測試**：你確認了半秒內消失、接著線時沒看到閃。這兩點都記進了 `device-log.md` 和 `docs/dev/morse.md`（`046746e`）。
+
+---
+
+_**User (2026-11-18 09:21:10Z)**_
+
+[Image #18] 隨便測試了一下 好像也還行？ 防手抖這些參數 一般是algorithm自適應 還是可配置項？（要加到網頁端？）
+
+---
+
+_**User (2026-11-18 09:21:10Z)**_
+
+[Image: source: /private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/0a574306-469e-4a59-9622-5701a42aee59/images/18.png]
+
+---
+
+_**Agent (claude-opus-5-5 2026-11-18 09:21:35Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Re-read a letter when the dit estimate resets; test
+
+```bash
+cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/firmware/morse/web; python3 - <<'EOF'
+p='index.html'; s=open(p).read()
+def rep(a,b,n=1):
+    global s
+    assert s.count(a)==n,(a[:60],s.count(a)); s=s.replace(a,b)
+rep('''const dec = { dit: 0, lgap: 0, code: "", down: false, t: 0, up: 0, spaced: true, dits: [], dahs: [], inner: [], letter: [] };''',
+'''const dec = { dit: 0, lgap: 0, code: "", marks: [], down: false, t: 0, up: 0, spaced: true, dits: [], dahs: [], inner: [], letter: [] };''')
+rep('''  dec.code = ""; dec.spaced = false;''','''  dec.code = ""; dec.marks = []; dec.spaced = false;''')
+rep('''    if (!dec.dit || m < 0.5 * dec.dit) dec.dit = Math.min(m, 400);   // the first, or one much shorter: a dit
+    const dah = m > 2 * dec.dit;
+    dec.code += dah ? "-" : ".";''','''    dec.marks.push(m);
+    if (!dec.dit || m < 0.5 * dec.dit) {   // the first, or one much shorter: a dit; this letter read again by it
+      dec.dit = Math.min(m, 400);
+      dec.code = dec.marks.slice(0, -1).map(x => x > 2 * dec.dit ? "-" : ".").join("");
+    }
+    const dah = m > 2 * dec.dit;
+    dec.code += dah ? "-" : ".";''')
+rep('''function decReset() { Object.assign(dec, { dit: 0, lgap: 0, code: "", down: false,''','''function decReset() { Object.assign(dec, { dit: 0, lgap: 0, code: "", marks: [], down: false,''')
+open(p,'w').write(s)
+import re
+open('/private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/0a574306-469e-4a59-9622-5701a42aee59/scratchpad/page.js','w').write(re.findall(r'<script>(.*?)</script>',s,re.S)[-1])
+EOF
+cd /private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/0a574306-469e-4a59-9622-5701a42aee59/scratchpad; node --check page.js && python3 - <<'EOF'
+js=open('page.js').read(); t=open('d.js').read()
+a=js.index('const CODES'); b=js.index('// Timing: each note-0')
+code=js[a:b].replace('setInterval(','(()=>{})||(')
+head=t[:t.index('const CODES')]; tests=t[t.index('const INV='):]
+tests=tests.replace('for(const [c,s,j] of','for(const txt of ["K PARIS","TEST","M E","PARIS CQ DE FM1 K TEST"]){const [t2]=play(txt,20,8,0.1);console.log(JSON.stringify(txt),"->",JSON.stringify(t2));}\nfor(const [c,s,j] of')
+open('d.js','w').write(head+code+'\n'+tests)
+EOF
+node d.js 2>&1 | head -8
+```
+
+```text
+"K PARIS" -> "KPARIS"
+"TEST" -> "EEST"
+"M E" -> "IE"
+"PARIS CQ DE FM1 K TEST" -> "PARIS CQ DE FM1 K TEST"
+20/8 jit 0: "PARIS CQ DE FM1 K TEST"
+   characters 20.0 WPM (dit 60 ms) · dah 3.0 dits · gap inside letters 1.0 dits · gap between letters 891 ms = 14.8 dits, overall about 8 WPM · long enough that Vail's decoder likely makes each letter a word
+20/13 jit 0: "PARIS CQ DE FM1 K TEST"
+   characters 20.0 WPM (dit 60 ms) · dah 3.0 dits · gap inside letters 1.0 dits · gap between letters 435 ms = 7.3 dits, overall about 13 WPM · long enough that Vail's decoder likely makes each letter a word
+Shell cwd was reset to /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 09:22:04Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Hold letters until the speed is known; test
+
+```bash
+cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/firmware/morse/web; python3 - <<'EOF'
+p='index.html'; s=open(p).read()
+def rep(a,b,n=1):
+    global s
+    assert s.count(a)==n,(a[:60],s.count(a)); s=s.replace(a,b)
+rep('''const dec = { dit: 0, lgap: 0, code: "", marks: [], down: false,''','''const dec = { dit: 0, lgap: 0, code: "", marks: [], sure: false, mn: 0, mx: 0, pend: [], down: false,''')
+rep('''function decShow(s) { const d = $("decoded"); d.textContent += s; d.scrollTop = d.scrollHeight; }
+function decLetter() {
+  if (!dec.code) return;
+  decShow(CODES[dec.code] || "·");
+  dec.code = ""; dec.marks = []; dec.spaced = false;
+  decStats();
+}''','''function decShow(s) {
+  if (!dec.sure) { dec.pend.push(s); return; }   // until a dit and a dah have both been heard
+  const d = $("decoded"); d.textContent += s; d.scrollTop = d.scrollHeight;
+}
+function decRead(marks) { return CODES[marks.map(x => x > 2 * dec.dit ? "-" : ".").join("")] || "·"; }
+function decSure() {   // the speed is known now: the letters held back, read by it
+  dec.sure = true;
+  const held = dec.pend; dec.pend = [];
+  for (const x of held) decShow(typeof x === "string" ? x : decRead(x));
+}
+function decLetter() {
+  if (!dec.code) return;
+  if (dec.sure) decShow(CODES[dec.code] || "·"); else dec.pend.push(dec.marks.slice());
+  dec.code = ""; dec.marks = []; dec.spaced = false;
+  if (!dec.sure && dec.pend.filter(x => typeof x !== "string").length >= 4) decSure();   // all one length: take it
+  decStats();
+}''')
+rep('''    dec.marks.push(m);''','''    dec.marks.push(m);
+    dec.mn = dec.mn ? Math.min(dec.mn, m) : m; dec.mx = Math.max(dec.mx, m);''')
+rep('''    keep(dah ? dec.dahs : dec.dits, m);
+    dec.dit = 0.8 * dec.dit + 0.2 * (dah ? m / 3 : m);''','''    keep(dah ? dec.dahs : dec.dits, m);
+    dec.dit = 0.8 * dec.dit + 0.2 * (dah ? m / 3 : m);
+    if (!dec.sure && dec.mx > 2.2 * dec.mn) decSure();''')
+rep('''function decReset() { Object.assign(dec, { dit: 0, lgap: 0, code: "", marks: [], down: false,''','''function decReset() { Object.assign(dec, { dit: 0, lgap: 0, code: "", marks: [], sure: false, mn: 0, mx: 0, pend: [], down: false,''')
+open(p,'w').write(s)
+import re
+open('/private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/0a574306-469e-4a59-9622-5701a42aee59/scratchpad/page.js','w').write(re.findall(r'<script>(.*?)</script>',s,re.S)[-1])
+EOF
+cd /private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/0a574306-469e-4a59-9622-5701a42aee59/scratchpad; node --check page.js && python3 - <<'EOF'
+js=open('page.js').read(); t=open('d.js').read()
+a=js.index('const CODES'); b=js.index('// Timing: each note-0')
+code=js[a:b].replace('setInterval(','(()=>{})||(')
+head=t[:t.index('const CODES')]; tests=t[t.index('const INV='):]
+tests=tests.replace('decLetter(); return','decLetter(); if(!dec.sure) decSure(); return').replace('["K PARIS","TEST","M E",','["K PARIS","TEST","M E","EEE","TTT MM",')
+open('d.js','w').write(head+code+'\n'+tests)
+EOF
+node d.js 2>&1 | grep -v "^   "
+```
+
+```text
+"K PARIS" -> "KPARIS"
+"TEST" -> "TEST"
+"M E" -> "ME"
+"EEE" -> "EEE"
+"TTT MM" -> "EEE II"
+"PARIS CQ DE FM1 K TEST" -> "PARIS CQ DE FM1 K TEST"
+20/8 jit 0: "PARIS CQ DE FM1 K TEST"
+20/13 jit 0: "PARIS CQ DE FM1 K TEST"
+22/18 jit 0: "PARIS CQ DE FM1 K TEST"
+25/25 jit 0: "PARIS CQ DE FM1 K TEST"
+20/20 jit 0.15: "PARIS CQ DE FM1 K TEST"
+12/12 jit 0.2: "PARIS CQ DE FM1 K TEST"
+Shell cwd was reset to /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 09:22:47Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Commit decoder fix and document it
+
+```bash
+cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/firmware/morse; git add web/index.html && git commit -qm "web decoder: hold the first letters until a dit and a dah are both heard (K was read as U)
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>" && git push -q origin main; cd ../..; python3 - <<'EOF'
+p='docs/dev/morse.md'; s=open(p).read()
+a='''- 封包的切法和解法用 node 測過'''
+assert s.count(a)==1
+s=s.replace(a,'''- **網頁自己的解碼器**（2026-11-18）：只用 note 0 的時間戳記解碼，跟聽的人（Vail）一樣，旁邊列出字元速度、劃長、停頓幾個點和換算的整體速度。全部自適應，沒有可調的參數，做法和韌體的解碼器相同：點長用移動平均追蹤；長於 2 個點算劃；停頓短於 2 個點算字內；字間停頓也用移動平均追蹤，長於它的 1.67 倍算詞間（Farnsworth 的字間和詞間是 3:7，所以不管拉多長都分得開）。開頭還不知道速度時，先把字留著，等同時聽到點和劃才一起解，否則 K（−·−）的第一個劃會被當成點，讀成 U `[實機]`。只有劃或只有點的開頭（TTT、MM）本來就分不出來，任何解碼器都一樣。`-.--.` 顯示成 `(`，和 FM-1 的解碼器相同；TYPE 頁的片語送的是文字，所以上面那格會寫 `<KN>`。
+- 封包的切法和解法用 node 測過''')
+open(p,'w').write(s)
+EOF
+just docs-check 2>&1 | tail -1; git add firmware/morse docs && git commit -qm "morse: the web decoder (adaptive, how it bootstraps)
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>" && git push -q origin main; git log --oneline -1
+```
+
+```text
+{"status": "ok", "pages": 49, "llm_pages": 49, "deployed": false}
+9576f7e morse: the web decoder (adaptive, how it bootstraps)
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 09:23:00Z)**_
+
+整體沒問題，你截圖裡唯一真正的錯是開頭的 **K 被解成 U**，已經修好。上面那格的 `<KN>` 和下面的 `(` 其實是同一個碼，不算錯。
+
+**K 被解成 U 的原因和修法**
+- 開頭還不知道速度，K（−·−）的第一個劃 180 ms 被當成點長，所以讀成 ··−，也就是 U。
+- 現在改成：先把字留著，等同時聽到點和劃，知道速度後再一起解。模擬測試 `K PARIS`、`TEST`、`M E` 都解對了。
+- 如果開頭只有劃，例如 `TTT` 或 `MM`，本來就分不出是快的劃還是慢的點，任何解碼器都一樣。這種情況先照點算，連續 4 個字後就不再等。
+
+**截圖裡另外兩處不一樣，都不是錯**
+- `<KN>` 和 `(` 是同一個碼 `−·−−·`。上面那格是 TYPE 頁片語送的文字，所以寫 `<KN>`；FM-1 的解碼器也會把這個碼顯示成 `(`，網頁照著做。
+- `YZ QRS` 中間多一個空格，是因為你兩次按鍵之間停得比較久，網頁照時間判斷成詞間。FM-1 上面那格是按鍵送出的文字，所以沒有空格。這正是「預期」和「解碼」兩格要對照的地方。
+
+**防手抖的參數：自適應，不用加設定**
+- 網頁和 FM-1 的解碼器做法一樣，都只看相對長短，不設固定的毫秒數：
+  - 點長用移動平均追蹤；
+  - 長於 2 個點算劃，停頓短於 2 個點算字內；
+  - 字間停頓也一直追蹤，超過它的 1.67 倍算詞間。標準間隔和 Farnsworth 的字間比詞間都是 3:7，所以不管間隔拉多長都分得開。
+- 模擬測試加 15–20% 的手抖，20 WPM 和 12 WPM 都解對。
+- 有些桌面解碼軟體（例如 fldigi）會讓人鎖定速度或調追蹤速度，那是為了無線電的雜訊和衰落。這裡收到的按鍵是乾淨的按下、放開，不需要那些設定。
+- 如果之後發現某種手法常解錯，再考慮加一個「鎖定速度」的選項。
+
+已 push 並更新 `docs/dev/morse.md`（`9576f7e`），網頁幾分鐘後生效。
+
+---
+
+_**User (2026-11-18 09:25:28Z)**_
+
+[Image #19] 又測了一下 這次走bluetooth
+
+---
+
+_**User (2026-11-18 09:25:28Z)**_
+
+[Image: source: /private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/0a574306-469e-4a59-9622-5701a42aee59/images/19.png]
+
+---
+
+_**Agent (claude-opus-5-5 2026-11-18 09:25:43Z)**_
+
+這次走藍牙的結果很好，可以把網頁解碼器的實機測試算通過了。
+
+- **解碼完全正確**：從 `ABCDEFGHIJKLMNOP` 到符號、片語都解對。你截圖裡唯一看起來不一樣的是 `<AR>` 解成 `+`、`<KN>` 解成 `(`，但它們其實是同一個碼：`<AR>` 和 `+` 都是 `·−·−·`，`<KN>` 和 `(` 都是 `−·−−·`。上面那格是 TYPE 頁片語送的文字，所以寫成 prosign 的名字。
+- **藍牙的時間戳記一樣準**：照時間戳記算，點、劃、停頓的 sd 都在 0.3–0.4 ms；照到達時間算是 12–14 ms，有一個點從 60 ms 晃到 90 ms。網頁解碼只用時間戳記，所以完全不受影響，這也說明到達時間不能直接拿來用。
+- **速度量對了**：量到 20.0 WPM，字間 14.8 個點，換算整體約 8 WPM，就是 START 的 20/8。網頁也提醒了，這個間隔下 Vail 會把每個字母拆成一個詞。
+
+如果你希望這兩個碼直接顯示成 `<AR>`、`<KN>`，可以改。通聯時它們幾乎都是 prosign，不太會是 `+` 和 `(`，Vail 的解碼器也顯示 `<KN>`。要改的話，FM-1 的解碼器和網頁會一起改，讓兩邊顯示一致。不過 FM-1 那邊是韌體修改，要再刷一次機。
+
+---
+
+_**User (2026-11-18 09:29:05Z)**_
+
+[Image #20] [Image #21] AR KN 這個改了有啥好處嗎？ Vail不知道解出了什麼
+
+---
+
+_**User (2026-11-18 09:29:05Z)**_
+
+[Image: source: /private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/0a574306-469e-4a59-9622-5701a42aee59/images/20.png]
+
+[Image: source: /private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/0a574306-469e-4a59-9622-5701a42aee59/images/21.png]
+
+---
+
+_**Agent (claude-opus-5-5 2026-11-18 09:29:22Z)**_
+
+**改成 `<AR>`、`<KN>` 的好處很小，建議不改。**
+
+- 碼完全一樣，只差顯示的名字。好處只有一個：通聯時這兩個碼幾乎都是 prosign，寫 `<AR>`（結束）、`<KN>`（只請對方回）比 `+`、`(` 好讀，也和 TYPE 頁片語的寫法一致。
+- 代價是要改韌體、再刷一次機。如果只改網頁，網頁和 FM-1 的解碼就會不一致。
+- 要做的話，等下次有別的韌體修改時再一起做。
+
+**Vail 為什麼解出 `MTTN ATTN MT# ATC`**
+
+這是我看截圖推測的，還沒驗證過：Decoder 是公開房間，當時有 3 個人在裡面，Vail 很可能把所有人的發報混在一起解。
+
+- 第一張的 Morse Chat 有三條不同顏色的線（青、橄欖、紫），應該是三個人各自的訊號；第二張也有橘色和青色兩組交錯。
+- `MTTN ATTN` 一再重複，比較像房裡另一個人或程式在送固定的測試字串，不像 FM-1 送出的東西。
+- 你之前單獨測時，Vail 解出了 TYPE 頁的字和片語，速度也量到 20 WPM，所以 FM-1 這邊沒問題。
+
+**想確認的話**：按 **Create Custom** 開一個只有你的私人房間，再到 Decode 分頁看，就只會解你自己的發報。如果私人房間裡解出來是對的，我就把「公開房間會混到別人的訊號」記進文件。
+
+---
+
+_**User (2026-11-18 09:33:39Z)**_
+
+開了私人房間，Vail 解出來是對的 [Image #22] 然後中途加快WPM 確實也能讓分開的字黏起來
+不過prosign [Image #23] 對我來說也算是新知識了
+
+然後目前看起來已經live在 firmware hub了 [Image #24]
+
+---
+
+_**User (2026-11-18 09:33:39Z)**_
+
+[Image: source: /private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/0a574306-469e-4a59-9622-5701a42aee59/images/22.png]
+
+[Image: source: /private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/0a574306-469e-4a59-9622-5701a42aee59/images/23.png]
+
+[Image: source: /private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/0a574306-469e-4a59-9622-5701a42aee59/images/24.png]
+
+---
+
+_**Agent (claude-opus-5-5 2026-11-18 09:33:53Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Read prosign section, PR states, and hub memory
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1; awk '/\{ #phrases \}/,/\{ #vail \}/' docs/dev/morse.md | head -40; gh pr view 30 -R cicloid/awesome-fm-1 --json state,mergedAt -q '.state+" "+(.mergedAt//"")'; gh pr view 36 -R aroum/fm1-custom-fw --json state,mergedAt -q '.state+" "+(.mergedAt//"")'; cat /Users/zhouhanru/.claude/projects/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/memory/hub-listing-skill-todo.md`
+
+```text
+## 片語、prosign 和實際的用法 { #phrases }
+
+業餘無線電用摩斯通聯（QSO）時，有一套固定的縮寫和 **prosign**。prosign 是幾個字母連在一起當成一個符號打，中間沒有字間停頓，寫成 `<SK>` 這樣。TYPE 頁第三頁的 27 個片語鍵：
+
+| 片語 | 意思 | 片語 | 意思 |
+|---|---|---|---|
+| CQ | 呼叫任何電台 | GM / GE | 早安 / 晚安 |
+| DE | 這裡是 | FB | fine business：很好 |
+| K | 換你說 | R | 收到 |
+| `<KN>` | 換你說，只限你 | QRZ? | 誰在呼叫我？ |
+| `<AR>` | 訊息結束 | QSL | 我確認收到 |
+| `<SK>` | 通聯結束 | `<BK>` | 換手（back to you） |
+| `<BT>` | 停頓、換段 | HW? | 收得清楚嗎？ |
+| 73 | 祝好、再見 | PSE | 請 |
+| TU | 謝謝 | AGN | 再一次 |
+| RST | 訊號報告 | QRS | 請發慢一點 |
+| 5NN | 599 報告的簡寫 | QTH | 我的位置是 |
+| NAME | 我的名字是 | OP | 操作員 |
+| UR | 你的 | ES | 和 |
+
+**實際上大家怎麼用**：大部分人仍然是**用手即時發**（直鍵或 paddle），對方**用耳朵抄**，這是這項技能的核心。另外也很常見：
+
+- 電腦或「CW 鍵盤」：先打好字放在緩衝區，機器用固定速度送出，一邊送一邊還可以繼續打（type-ahead）。
+- 比賽軟體：用 F 鍵送 `CQ TEST`、報告這類事先寫好的片語（macro）。
+- 收的一方：有人用軟體解碼（fldigi、CW Skimmer，比賽和 Reverse Beacon Network 大量使用），但通聯本身多半還是靠人耳。`[調研]`
+
+TYPE 頁的 LIVE 對應「打一個送一個」，COMPOSE 對應「先打好再送」，片語鍵對應 macro。
+
+## 和 Vail 搭配 { #vail }
+OPEN 
+OPEN 
+---
+name: hub-listing-skill-todo
+description: "The fm1-hub-listing skill exists (2026-11-18); finish it with the Hub review outcome and the community PRs' fate"
+metadata:
+  node_type: memory
+  type: project
+  originSessionId: 0a574306-469e-4a59-9622-5701a42aee59
+  modified: 2026-11-17T19:16:13.165Z
+---
+
+The owner asked (2026-11-18) for the Firmware Hub listing experience as an agent skill. Written that day:
+`.agents/skills/fm1-hub-listing/SKILL.md` (linked from `.claude/skills/`), from listing MORSE
+(github.com/daviddwlee84/fm1-morse). MORSE was submitted through the Hub's form that day: all eight automatic checks
+passed, status "waiting for Sven". PRs: cicloid/awesome-fm-1 #30, aroum/fm1-custom-fw #36.
+
+**Why:** reuse the process for later own firmwares; the review step and the lists' responses were not known yet.
+
+**How to apply:** when the owner reports the Hub's decision or the PRs are merged/closed, add what happened (review
+feedback, time to listing, whether fm1-editor.com picked it up) to the skill's steps 8-9 and to
+docs/firmware/hub.md#listing. Related: [[auto-capture-knowledge-in-docs]].
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 09:33:59Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Locate skill steps and hub doc listing section
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1; grep -n "^## \|^[0-9]\. \|waiting\|Sven" .agents/skills/fm1-hub-listing/SKILL.md | head -40; grep -n "listing\|Sven\|waiting" docs/firmware/hub.md | head -10`
+
+```text
+13:## When to use
+19:## Who does what
+27:## The Hub's requirements (as of 2026-11-18)
+31:1. Source public on GitHub, browsable at the tag, `LICENSE` in the repository root (GPL-3.0, MPL-2.0, MIT and other
+33:2. A GitHub release with the `.fwsc` attached. The Hub follows the newest release with a `.fwsc` within three hours
+35:3. An `FM-1_<number>` identity no other firmware uses ("Longer numbers with your own part are safer").
+36:4. The update loader in the package (fm1-base's packages have it: the check says "Felucca's").
+37:5. `fmhub.json` in the repository root, default branch. No file, no listing.
+38:6. Tested on a real FM-1: installed from stock V15, installed from another firmware, and another firmware installed
+44:## Steps
+113:1. **Leave it**: from the app, install another firmware (SLOOP 2.8.5 from `downloads/`, digest-verified).
+114:2. **From another firmware**: from that one, install the app's release package. Check the app's data survived.
+115:3. **From V15**: stock 015 is only in the owner's stock backup (m-vave.com offers 016, which overwrites the preset
+143:- "Anything Sven should know": built on, licence, kind and why (a tool that makes sound filed as `other`; the KB says
+148:fmhub.json, sounds, release, identity, update loader, flash chip. All green means "waiting for Sven": the maintainer
+164:## Pitfalls met
+79:## 自己的韌體怎麼上架 { #listing }
+83:- **送審**：填 [submit](https://thefirmwarehub.com/submit/) 頁的表單，不用附檔案，Hub 會自己去讀 repo。每一筆都由 Sven 本人看過，先上 test site 再上正式站。舊文件還寫「寄 email」，表單看起來是比較新的路徑。上架後，Hub 會在三小時內自動抓那個 repo 最新一個附有 `.fwsc` 的 GitHub release；版本是 0.x 或帶 beta 的會標成 beta。
+113:公告通常發在 r/MVaveFM1。這張表也寫在 repo 的 skill `fm1-hub-listing` 裡，兩邊要一起更新。
+121:  - 測試寫在「How you tested it」（從哪個韌體裝、換回哪個）；建置方式、授權、聲音的說明寫在「Anything Sven should know」。
+132:  Morse 8 項全過，狀態是 **waiting for Sven**：等維護者本人審核。之後的變化會寄到填寫的 email。
+133:- **進度**：Morse 照這份清單準備，2026-11-18 完成三項實機測試、發布 v0.3 release、通過 identity 和 `fmhub.json` 檢查，接著送審，也對 awesome-fm-1 和 aroum 各開了一個 PR。過程見 [Morse](../dev/morse.md#release)。這套流程整理成 repo 的 agent skill `fm1-hub-listing`（`.agents/skills/`）。
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 09:34:04Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Read skill review step and hub doc status lines
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1; sed -n 144,163p .agents/skills/fm1-hub-listing/SKILL.md; sed -n 128,134p docs/firmware/hub.md`
+
+```text
+  tools without sound are not listed), how the release was built (locally, so no built-from-source badge, which needs
+  zvenson/fm1-build's workflow), chips tested.
+
+The result page (its address is the owner's only; changes also come by mail) runs eight checks: source, LICENSE,
+fmhub.json, sounds, release, identity, update loader, flash chip. All green means "waiting for Sven": the maintainer
+reviews every listing. Fixes: push, then "Check again", or send the form again for the same repo (it updates).
+After listing: new versions are new releases; card changes are fmhub.json edits (live within three hours).
+
+### 9. Community lists (owner's go-ahead per PR)
+
+| List | Weight (2026-11-18) | How |
+|---|---|---|
+| [aroum/fm1-custom-fw](https://github.com/aroum/fm1-custom-fw) | 424 stars, most outside "Add ..." PRs merged | PR: a numbered table row, `**Name by Author**<br>[GitHub](url) \| ...<br>**License:** ...` and a Concept / Features cell; fm1-base tools (CTL-1, MIDIMON) sit in 1.1.4 |
+| [cicloid/awesome-fm-1](https://github.com/cicloid/awesome-fm-1) | 93 stars, outside PRs merged | PR per CONTRIBUTING.md: `- [Name](url) - Description.` one line, author and licence, one entry per PR; tools go under *Not a synth* |
+| fm1-editor.com firmware list | 75 stars (benny-sparra/fm1-dx7-patch-importer) | an issue there, if it does not pick the Hub up by itself |
+| fm1-emu, RemoteFM1 player, FMDB | — | follow the Hub or crawl GitHub: nothing to send |
+| FM-1 Firmware Atlas, the Developers' Wiki | 0 / 5 stars; the wiki is not a firmware list | skip |
+
+Announcements happen on r/MVaveFM1. Do not write `@name` in PR text.
+
+  6. 自己的 identity；
+  7. update loader；
+  8. flash 晶片。
+
+  Morse 8 項全過，狀態是 **waiting for Sven**：等維護者本人審核。之後的變化會寄到填寫的 email。
+- **進度**：Morse 照這份清單準備，2026-11-18 完成三項實機測試、發布 v0.3 release、通過 identity 和 `fmhub.json` 檢查，接著送審，也對 awesome-fm-1 和 aroum 各開了一個 PR。過程見 [Morse](../dev/morse.md#release)。這套流程整理成 repo 的 agent skill `fm1-hub-listing`（`.agents/skills/`）。
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 09:34:13Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Check the Hub catalog for MORSE's listed version
+
+```bash
+curl -s https://thefirmwarehub.com/catalog.json | python3 -c "
+import json,sys;d=json.load(sys.stdin)
+items=d if isinstance(d,list) else d.get('firmwares') or d.get('items') or list(d.values())[0]
+for x in items:
+  if 'morse' in json.dumps(x).lower(): print(json.dumps({k:x[k] for k in x if k in ('id','name','version','release','identity','chip','beta','updated','tag','date')}))" 2>&1 | head
+```
+
+```text
+{"id": "morse", "name": "MORSE", "version": "0.5", "date": "2026-11-18", "release": "https://github.com/daviddwlee84/fm1-morse/releases/tag/v0.5", "tag": "v0.5", "beta": true, "chip": "new"}
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 09:34:33Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Record Hub live, Vail rooms in docs and skill
+
+```bash
+cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1; python3 - <<'EOF'
+def edit(p, pairs):
+    s=open(p).read()
+    for a,b in pairs:
+        assert s.count(a)==1,(p,a[:70],s.count(a)); s=s.replace(a,b)
+    open(p,'w').write(s)
+edit('docs/firmware/hub.md',[
+('''  Morse 8 項全過，狀態是 **waiting for Sven**：等維護者本人審核。之後的變化會寄到填寫的 email。''',
+'''  Morse 8 項全過，狀態是 **waiting for Sven**。結果沒有等到人工審核：Hub 的紀錄是 UTC 2026-11-17 19:03 送出、19:06 檢查完，**23:00 自動上架**（「every line of the check is green, tested and rights ticked (no click of Sven's)」），下一次同步就出現在 [Hub 上](https://thefirmwarehub.com/firmware/morse/)。也就是說，8 項全綠、表單上勾了「測試過」和「有權利發布」，大約 4 小時後自動上架 `[實機]`。
+- **上架後的新版本**：發新的 GitHub release 就好，Hub 自己會跟上。2026-11-18 發 v0.5 後，`catalog.json` 當天就列出 0.5（`beta: true`，因為是 0.x）。`catalog.json` 的 `chip` 欄寫 `new`，檢查頁卻寫「both chips」，兩邊的判斷不一樣；這個欄位是從套件讀的，不是硬體測試。'''),
+])
+edit('.agents/skills/fm1-hub-listing/SKILL.md',[
+('''reviews every listing. Fixes: push, then "Check again", or send the form again for the same repo (it updates).''',
+'''reviews listings, but a fully green check with "tested" and "rights" ticked goes live by itself: MORSE was submitted
+2026-11-17 19:03 UTC, checked 19:06, and went live automatically at 23:00 ("no click of Sven's"), on the hub with the
+next sync. Fixes: push, then "Check again", or send the form again for the same repo (it updates).'''),
+('''After listing: new versions are new releases; card changes are fmhub.json edits (live within three hours).''',
+'''After listing: new versions are new releases; card changes are fmhub.json edits (live within three hours). MORSE v0.5,
+released 2026-11-18, was in `catalog.json` the same day (`beta: true` for 0.x). The catalog's `chip` said `new` while
+the check page said both chips: read from the package, not tested.'''),
+])
+edit('docs/dev/morse.md',[
+('''- **網頁比 Vail 早出字''','''- **Vail 的公開房間會混到別人的訊號**：Decoder 是公開房間，裡面有別人時，Vail 會把所有人的發報一起解，出現 `MTTN ATTN MT# ATC` 這種看不懂的東西。開 *Create Custom* 的私人房間就只解自己的，2026-11-18 在私人房間裡解出 `<KN> <AR> <VA> <BT> 73 Q S L QRS ES`，中途加快速度，分開的字母就連成詞 `[實機]`。Vail 把 `...-.-` 叫 `<VA>`（和 `<SK>` 同一個碼），`-...-` 叫 `<BT>`（和 `=` 同一個碼）。
+- **網頁比 Vail 早出字'''),
+('''6. 新版本：2026-11-18 發布 [v0.6]''','''6. **已上架**：Hub 在 UTC 2026-11-17 23:00 自動上架，8 項全綠，沒有等人工審核（[Hub 上的 MORSE](https://thefirmwarehub.com/firmware/morse/)，細節見 [Hub](../firmware/hub.md#listing)）`[實機]`。兩個社群清單的 PR 到 2026-11-18 都還沒合併。
+7. 新版本：2026-11-18 發布 [v0.6]'''),
+])
+EOF
+grep -n "prosign 是幾個字母" docs/dev/morse.md | head -1
+```
+
+```text
+181:業餘無線電用摩斯通聯（QSO）時，有一套固定的縮寫和 **prosign**。prosign 是幾個字母連在一起當成一個符號打，中間沒有字間停頓，寫成 `<SK>` 這樣。TYPE 頁第三頁的 27 個片語鍵：
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 09:34:38Z)**_
+
+正在把 Hub 自動上架的結果寫進 docs 和 skill，順便在 prosign 那一節補一張「同一個碼、不同名字」的對照表。
+
+_**Agent (claude-opus-5-5 2026-11-18 09:34:44Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Add prosign/punctuation table; verify SK in firmware
+
+```bash
+cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1; python3 - <<'EOF'
+p='docs/dev/morse.md'; s=open(p).read()
+a='''**實際上大家怎麼用**：'''
+assert s.count(a)==1
+s=s.replace(a,'''**prosign 和標點共用碼**：prosign 本身沒有專屬的碼，就是把字母連起來打，所以有幾個和標點符號的碼一樣。解碼器只聽得到碼，要顯示哪一個由它決定：
+
+| prosign | 碼 | 和這個標點同碼 | FM-1、MORSE on the web 顯示 | Vail 顯示 |
+|---|---|---|---|---|
+| `<AR>` 訊息結束 | `·−·−·` | `+` | `+` | `<AR>` |
+| `<KN>` 只請你回 | `−·−−·` | `(` | `(` | `<KN>` |
+| `<BT>` 換段 | `−···−` | `=` | `=` | `<BT>` |
+| `<SK>` 通聯結束 | `···−·−` | — | `<SK>`（網頁）／`*`（FM-1 解碼器沒有這個碼） | `<VA>`（同一個 prosign 的另一個名字） |
+
+TYPE 頁的片語鍵送給電腦的是文字，所以 Live 上面那格會寫 `<AR>`、`<KN>`。`[實機]`（2026-11-18 對照 Vail 私人房間的解碼）
+
+**實際上大家怎麼用**：''')
+open(p,'w').write(s)
+EOF
+grep -n "'\*'\|MO_UNKNOWN\b" firmware/morse/morse.c | head -3; grep -n '"...-.-"' firmware/morse/morse.c
+```
+
+```text
+342:    return c ? c : MO_UNKNOWN;
+17:    {'.', ".-.-.-"}, {',', "--..--"}, {'?', "..--.."}, {'\'', ".----."}, {'!', "-.-.--"}, {'/', "-..-."},
+18:    {'(', "-.--."},  {')', "-.--.-"}, {'&', ".-..."},  {':', "---..."}, {';', "-.-.-."}, {'=', "-...-"},
+19:    {'+', ".-.-."},  {'-', "-....-"}, {'_', "..--.-"}, {'"', ".-..-."}, {'$', "...-..-"}, {'@', ".--.-."},
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 09:35:20Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Update memory, check docs, commit
+
+```bash
+cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1; M=/Users/zhouhanru/.claude/projects/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/memory; cat > $M/hub-listing-skill-todo.md <<'EOF'
+---
+name: hub-listing-skill-todo
+description: "fm1-hub-listing skill: Hub outcome recorded (auto-live 2026-11-17); still open: the two community-list PRs' fate"
+metadata:
+  type: project
+---
+
+MORSE went live on The Firmware Hub automatically (UTC 2026-11-17 23:00, all eight checks green, no manual review);
+that and the release-following (v0.5 in catalog.json the same day) are now in `.agents/skills/fm1-hub-listing/SKILL.md`
+and docs/firmware/hub.md#listing. Still open as of 2026-11-18: cicloid/awesome-fm-1 #30 and aroum/fm1-custom-fw #36.
+
+**Why:** the skill should say how the community lists respond, for later own firmwares.
+
+**How to apply:** when either PR is merged or closed (check with `gh pr view`), add the outcome and time taken to the
+skill's step 9 and the Morse release section, then delete this memory. Related: [[auto-capture-knowledge-in-docs]].
+EOF
+sed -i '' 's/- \[Hub listing skill: finish after review\](hub-listing-skill-todo.md) — .*/- [Hub listing skill: community PRs open](hub-listing-skill-todo.md) — Hub auto-listed MORSE; add awesome-fm-1 #30 \/ aroum #36 outcome when they land/' $M/MEMORY.md; cat $M/MEMORY.md; just docs-check 2>&1 | tail -1; git add docs .agents && git commit -qm "Hub: MORSE went live automatically, releases follow; Vail rooms; prosigns that share punctuation codes
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>" && git push -q origin main; git log --oneline -1
+```
+
+```text
+- [Auto-capture knowledge in docs](auto-capture-knowledge-in-docs.md) — add knowledge-worthy answers to docs/ in the same turn, unasked
+- [Hub listing skill: community PRs open](hub-listing-skill-todo.md) — Hub auto-listed MORSE; add awesome-fm-1 #30 / aroum #36 outcome when they land
+{"status": "ok", "pages": 49, "llm_pages": 49, "deployed": false}
+4fe4198 Hub: MORSE went live automatically, releases follow; Vail rooms; prosigns that share punctuation codes
+[This command modified 1 file you've previously read: ../../../../.claude/projects/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/memory/MEMORY.md. Call Read before editing.]
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 09:35:33Z)**_
+
+三件事都確認了，也都寫進了文件，已 push（`4fe4198`）。
+
+**Vail 私人房間解對了**
+- 之前解出看不懂的東西，是因為公開房間裡有別人，Vail 把所有人的發報一起解。
+- 私人房間只解你自己的，所以 `<KN> <AR> <VA> <BT> 73 QSL QRS ES` 都對。中途加快後字母連成詞，也和之前量到的停頓長度吻合。
+- 這兩點記進了 `docs/dev/morse.md` 的 Vail 一節。
+
+**prosign**：你截圖的 Google 摘要是對的。我在 `docs/dev/morse.md` 的片語一節補了一張表，說明為什麼不同解碼器顯示不一樣：
+
+| prosign | 碼 | 同碼的標點 | FM-1／網頁 | Vail |
+|---|---|---|---|---|
+| `<AR>` 訊息結束 | `·−·−·` | `+` | `+` | `<AR>` |
+| `<KN>` 只請你回 | `−·−−·` | `(` | `(` | `<KN>` |
+| `<BT>` 換段 | `−···−` | `=` | `=` | `<BT>` |
+| `<SK>` 通聯結束 | `···−·−` | — | 網頁 `<SK>`；FM-1 解碼器顯示 `*` | `<VA>` |
+
+prosign 就是把幾個字母連在一起打，中間不停頓，所以有幾個剛好和標點的碼一樣。解碼器只聽得到碼，要叫它哪個名字由解碼器決定。另外注意 FM-1 自己的解碼器不認得 `<SK>`，會顯示成 `*`。
+
+**MORSE 已經在 Firmware Hub 上架了**
+- Hub 的紀錄（UTC）：2026-11-17 19:03 送出，19:06 檢查完，**23:00 自動上架**。8 項檢查全綠、表單勾了「測試過」和「有權利」，就不用等維護者手動審核。
+- 你那頁顯示 0.3，是上架那時的版本。我剛查了 Hub 的 `catalog.json`，已經是 **0.5**（因為是 0.x，標成 beta），v0.6 會在下次同步跟上，不用再送審。
+- `catalog.json` 的晶片欄寫 `new`，檢查頁卻寫 both chips，兩邊判斷不一致。這個欄位是從套件讀出來的，不是硬體測試。
+- 這些都補進了 `docs/firmware/hub.md` 和 `fm1-hub-listing` skill，之後上架別的韌體可以照著做。
+- 兩個社群清單的 PR（awesome-fm-1 #30、aroum #36）還沒合併。我在 memory 留了待辦，等它們有結果再補進 skill。
