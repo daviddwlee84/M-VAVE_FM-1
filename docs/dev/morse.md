@@ -283,9 +283,26 @@ USB 和藍牙都連著時：
     | 藍牙，CoreMIDI 時間戳記 | sd 0.3，最差 ±1 ms | sd 0.4，±1 | sd 0.4，±1 |
 
     **CoreMIDI 照 FM-1 送的 BLE-MIDI 時間戳記排時間，結果和 USB 一樣準**，誤差在 1 ms 以內（13-bit 時間戳記的精度就是 1 ms）。照到達時間算，最差會差 16 ms，大約是一個點的 25%，和研究時的預估相同。第一輪錄音有幾個劃只有 106–123 ms，兩種時間都一樣短，比較像是播放真的被下一個鍵打斷了，不是傳輸造成的；第二輪每個字都等播完再按，就沒有再出現。
-- **接收端用哪一種時間**：用 CoreMIDI 時間戳記的程式（python-rtmidi、DAW）不會抖。Chrome 的 Web MIDI（`MIDIMessageEvent.timeStamp`）用的是哪一種，可以用 MORSE on the web 的 *Timing* 區量；Vail 網頁在藍牙上能用 `[實機]`，但它用哪一種時間還不知道。
+- **接收端用哪一種時間**：用 CoreMIDI 時間戳記的程式（python-rtmidi、DAW）不會抖。**Chrome 的 Web MIDI 也是** `[實機]`：MORSE on the web 的 *Timing* 區，2026-11-18 在 TYPE 頁播 20 WPM：
+
+    | | 短按（60） | 長按（180） | 字內停頓（60） |
+    |---|---|---|---|
+    | 藍牙，`event.timeStamp` | 平均 60.2，sd 0.4 | 180.2，sd 0.4 | 60.2，sd 0.4 |
+    | 藍牙，網頁收到的時間 | 60.4，sd 3.1 | 180.6，sd 3.2 | 59.9，sd 2.5 |
+    | USB，`event.timeStamp` | 60.1，sd 0.1 | 180.3，sd 0.1 | 60.1，sd 0.1 |
+
+    所以網頁上的 Vail 只要用 `event.timeStamp`，藍牙就和 USB 一樣準；它實際用哪一個沒看程式碼，但 Vail 的 Decoder 把 FM-1 的發報量成 19.9 WPM（設定是 20）`[實機]`。
 - **收進**：FM-1 照送出端的時間解碼（見上面第 6 點）`[模擬]`，模擬器的藍牙替身沒有時間戳記，所以只驗證了程式路徑。
 - **用 velocity 帶長度的備案**：接收端照時間戳記排時就不需要。只有在接收端用到達時間、又會誤判時才考慮（見 [Backlog](#backlog)）。
+
+### 網頁直接連藍牙（Web Bluetooth） { #web-bluetooth }
+
+MORSE on the web 的 *Over Bluetooth, directly*（2026-11-18 加入，韌體 0.5 起）：Chrome／Edge 用 Web Bluetooth 掃描 BLE-MIDI 的 service（`03B80E5A-EDE8-4B33-A751-6CE34EC4C700`，FM-1 的廣播裡有它），選 `FM-1 XXXX` 就連上，不用到系統設定按 Connect。
+
+- 網頁自己讀寫 BLE-MIDI 封包：SysEx 切成 20 byte 的封包送出（不知道協商到的 MTU，用最小的）；收進時把跨封包的 SysEx 和 note 組回來，每個事件用 13-bit 的 BLE-MIDI 時間戳記換算成網頁的時間（每個封包裡最新的那個事件最接近送出的時刻，取最小的延遲當兩個時鐘的差）。Timing 區照樣能用。
+- 這條連線只有網頁能用，Vail 和指令列看不到；要給 Vail 用就用 *Connect*（經過系統的藍牙 MIDI）。
+- macOS 上系統已經用藍牙 MIDI 連著時，Chrome 會不會共用那條連線還沒試 `[調研]`。
+- 封包的切法和解法用 node 測過（20 byte 以內、跨封包的 SysEx、running status、同一個封包裡兩個 note 的間隔、13-bit 時間戳記進位），還沒在實機上試。
 
 ### 瀏覽器
 
@@ -312,13 +329,16 @@ USB 和藍牙都連著時：
 實機 `[實機]`（2026-11-18）：
 - Mac 用藍牙連上 `FM-1 3399`（port 叫 `FM-1 3399 Bluetooth`），拔掉 USB：`just morse-send paris` 播得出來；`just morse-backup` 走藍牙 1.7 秒，內容和走 USB 時相同。
 - 抖動：見上面的[時間準不準](#bluetooth)，CoreMIDI 時間戳記的誤差 ≤ 1 ms。
-- 拔線後 header 的 `PC` 要大約 10 秒才消失：FM-1 要等 10 秒沒收到電腦的訊息（`HOSTLINK_TIMEOUT_MS`），才判定電腦離線。
+- 0.5 拔線後 header 的 `PC` 要大約 10 秒才消失：FM-1 要等 10 秒沒收到電腦的訊息（`HOSTLINK_TIMEOUT_MS`），才判定電腦離線。0.6 改成 USB 連續 0.5 秒收不了 SysEx（拔線後匯流排 suspend，`plat_sysex_room()` 是 0；USB session 的號碼不會變，所以原本的檢查抓不到）就判定離線。判斷本身有單元測試（`just fw-common-test`：停 0.499 秒不算、0.5 秒算、中間恢復就重新計時）；模擬器的 `usb unplug` 把 session 歸零，走的是原本的檢查，所以拔線後真的會 suspend 這件事要在實機上確認。
+
+    **會不會常常閃**：`plat_sysex_room()` 是 0 的情況只有四種：沒有 USB 設定、匯流排 suspend（拔線、Mac 系統睡眠）、正在串流一個 frame（MORSE 不用），以及送出的 ring 滿了。電腦接著時，macOS 的 USB-MIDI driver 每毫秒都會讀 IN endpoint，就算沒有程式開著 port 也一樣，所以 ring 只會滿幾毫秒（例如送備份的 6 個 frame）。要連續 0.5 秒都是 0，只有拔線、Mac 睡眠，或電腦卡住不讀。真的掉了，FM-1 下一秒就送 HELLO，程式回應後 `PC` 又會亮起來。刷 0.6 後要在實機上看：拔線時 `PC` 會不會馬上消失，接著線時會不會閃。
 
 - **MORSE on the web**（Chrome）經藍牙連上，狀態寫 `MORSE 0.5 connected over Bluetooth`，Live 顯示 FM-1 讀到的字。
-- **Vail**（vailmorse.com 的 Repeater）：只用藍牙連著，不用任何設定，FM-1 的 KEY 頁發報就出現在 Vail 上。
+- **Vail**（vailmorse.com 的 Repeater）：只用藍牙連著，不用任何設定，FM-1 的 KEY 頁發報就出現在 Vail 上。Decoder 房間解得出 TYPE 頁播的字和片語，速度顯示 19.9 WPM。
+- **Vail 的 Decoder 每個字母都分開**：這是 Farnsworth 間隔造成的，不是 Vail 的問題。START（20/8）時字和字之間要停 890 ms，以 20 WPM 的點（60 ms）來算是 15 個點，超過字間的 7 個點，所以 Vail 把每個字母都當成一個詞。BUILDING（20/13）停 435 ms（約 7 個點），剛好在界線上；QSO（22/18）大約 4 個點，就會連成詞。要給別人聽時，把 `K2` 調到和字元速度一樣（或選 FAST）。
 - 拔掉 USB 只用電池，用藍牙連續使用一段時間，沒有斷線（還沒正式計時）。
 
-還要做：Chrome 的 `MIDIMessageEvent.timeStamp` 是照 BLE-MIDI 的時間戳記，還是照到達時間。網頁的 Live 區塊加了 *Timing* 折疊區，會同時列出兩種時間量到的長度，到 TYPE 頁播幾個字就能比較。
+- **USB 和藍牙都連著時**：0.5 的網頁用先聽到 HELLO 的那條路，常常是藍牙；本人在 FM-1 上關掉藍牙，網頁才改走 USB `[實機]`。網頁（2026-11-18 起）改成兩條都有時用 USB：聽到藍牙的 HELLO 後再等 1.3 秒，看 USB 有沒有。限制：已經有程式從藍牙回應 FM-1 的話，FM-1 只在藍牙上送 HEARTBEAT，USB 那邊沒有聲音，要等那個程式關掉 10 秒後才會兩邊都送 HELLO。
 
 ## 設計
 
@@ -353,7 +373,8 @@ USB 和藍牙都連著時：
 | 0.2 | 127,712 B | 28,444 / 98,304 B |
 | 0.3 | 127,880 B | 28,444 / 98,304 B |
 | 0.4 | 138,076 B（release） | 29,084 / 98,304 B |
-| 0.5（藍牙，開發版） | 173,744 B | 38,572 / 98,304 B |
+| 0.5（藍牙，release） | 173,748 B | 38,572 / 98,304 B |
+| 0.6（release） | 173,844 B | 38,572 / 98,304 B |
 
 上限是 581,564 B；RAM code 5,576 / 32,768 B（0.5）；套件 616,003 B，開發版 identity `FM-1_4100`。0.5 開了 own BLE stack（peripheral），多 35.7 KB；之後加 central 大約再多 13–22 KB（fm1-base 的數字），仍然很寬裕。
 
@@ -401,6 +422,7 @@ USB 和藍牙都連著時：
 | 版本 | 日期 | 要刷機 | 內容 |
 |---|---|---|---|
 | 韌體 0.1、host 0.1.0 | 2026-11-17 | 是（22:54 刷入，`c3b5cd6`） | 第一版：KEY、TYPE、PRACTICE、CHART、SETTINGS，兩種學習方式，Vail 格式的 MIDI，host 的 `type`／`send`／`listen`。原本規劃分成 0.1（核心）和 0.2（閃卡），因為一起做完、都還沒刷，合併成 0.1 |
+| 韌體 0.6、host 0.6.0 | 2026-11-18 | 是（還沒刷） | 拔線後 `PC` 在 0.5 秒內消失（hostlink：USB 收不了 SysEx 就判定電腦離開，`firmware/common` 同步）；網頁：*Over Bluetooth, directly*（[Web Bluetooth](#web-bluetooth)）、USB 和藍牙都在時用 USB、*Timing* 區、備份檔名加上時分 |
 | 韌體 0.5、host 0.5.0 | 2026-11-18 | 是（16:20 用 USB-MIDI 裝 release build `FM-1_41000500`，fm1-morse `a75c29e`，release [v0.5](https://github.com/daviddwlee84/fm1-morse/releases/tag/v0.5)） | [藍牙](#bluetooth)：fm1-base own stack 的 BLE-MIDI peripheral，和 USB 同時用；SETTINGS 加 BLUETOOTH 開關（存在紀錄裡，格式不變）；header 顯示 `BT`；SETTINGS 頁可以捲動；收訊按鍵照送出端的時間解碼；host 印出走哪條路、兩條都有時優先 USB、`--bluetooth` 打開 Mac 的藍牙 MIDI 視窗；網頁顯示走哪條路 |
 | 韌體 0.4、host 0.4.0 | 2026-11-18 | 是（05:20 用 USB-MIDI 裝 release build `FM-1_41000400`，fm1-morse `323d79b`） | 實機回饋（ROUND 14 還停在第一組）：打碼卡改用答案自己的節奏判斷（[判定](#judging)），手速跨卡延續，評級和 SHOULD／YOU 對照圖，ALMOST；SET 頁的 JUDGING 可以切回 STRICT；CHART 編輯、分級測驗、開始畫面列出擋住下一組的字，SOUND 模式下新字和答案可以按 `SEQ` 偷看點劃，弱卡在同一回合重複出現、熟字只在有空位時補，[手動修改都要按 PLAY 確認](#progress)；進度的[備份與還原](#backup)（`T_PROG_*`、host 的 `backup`／`restore`、網頁）。藍牙順延到 0.5 |
 | 韌體 0.3 release（`FM-1_41000300`） | 2026-11-18 | 是（Hub 測試時用 USB-MIDI 裝過三次） | fm1-morse 的第一個 release [v0.3](https://github.com/daviddwlee84/fm1-morse/releases/tag/v0.3)：identity 改成 `FM-1_41`，授權改成 GPL-3.0-or-later，程式和 0.3 相同 |
@@ -435,7 +457,7 @@ USB 和藍牙都連著時：
 | 版本 | 內容 |
 |---|---|
 | 0.5 | [藍牙](#bluetooth) peripheral：Mac、iPad、手機上的 Vail 和 MORSE on the web 走藍牙。已做好，等實機驗證和量抖動 |
-| 0.6 | 兩台 FM-1 互打：`ble_central`，一台掃描、選另一台、連上。等有第二台 |
+| 0.7 | 兩台 FM-1 互打：`ble_central`，一台掃描、選另一台、連上。等有第二台 |
 | 之後 | host 送日期，讓間隔複習改成天數；USB-C 直連（見[接口與連線](../hardware/io.md#two-units)） |
 
 ### Backlog { #backlog }
@@ -446,5 +468,3 @@ USB 和藍牙都連著時：
 |---|---|---|
 | **更多符號進閃卡**：`' ! ( ) & : ; + - _ " $ @`，以及 `<AR>` `<SK>` `<KN>` 等 prosign（2026-11-18 試用時提出） | 課程是 LCWO 的 41 字 Koch 課表，通聯和考試幾乎只用這些。這些符號很少用，prosign 在 LISTEN 的 QSO 節目和 TYPE 的片語頁裡聽得到。每個字的盒號存在大小固定的紀錄裡（`LN_N = 41`，`ln_state_t`），加字就要改存檔格式：韌體的 `REC_VER` 升到 2 並寫升級程式，備份格式（`PROG_FORMAT`、host 的 `progress.py`、網頁）也要升版，舊備份要能讀 | 等學完 41 個字。做法：在 Koch 順序之後加第 9、10 組（常用的 prosign 一組，其他符號一組），prosign 的卡片用 `<..>` 連在一起播 |
 | **用 velocity 帶 mark 的長度** | 2026-11-18 實測，CoreMIDI 照時間戳記排，誤差 ≤ 1 ms，不需要 `[實機]` | 只在 Chrome 或 Vail 被證實用到達時間、而且會誤判時才做：note off 的 velocity 帶上長度（10 ms 一格），收方也是 MORSE 時用它 |
-| **網頁直接連藍牙（Web Bluetooth）** | 現在要先在系統的「音訊 MIDI 設定」按 Connect，Web MIDI 沒辦法掃描或連接藍牙裝置 | Chrome／Edge 的 Web Bluetooth 可以直接掃描 BLE-MIDI 的 service（`03B80E5A-EDE8-4B33-A751-6CE34EC4C700`），選 `FM-1 XXXX` 後網頁自己讀寫 BLE-MIDI 封包，不用經過系統設定 `[調研]`。代價：網頁要自己實作封包和時間戳記（大約一兩百行 JS）；連線只有網頁能用（Vail 和指令列看不到）；FM-1 一次只連一台電腦；Safari 不支援 |
-| **拔線後 `PC` 馬上消失** | 現在要等 10 秒沒收到訊息才判定電腦離線 | 收到 `plat_usb_lost`，或 USB session 改變、而且電腦是從 USB 連的時，馬上判定離線 |
