@@ -126,17 +126,72 @@ LED：NECK 亮調內的音（主音 mid、其他 glow），SHAPE 亮和弦的組
 | 指板核心 | `just guitar-unit` | 299,610 個檢查全部通過 |
 | 畫面、辨認、聲音、存檔 | `just fw-test guitar`（`tests/basic.txt`） | 全部 ok：G 大調開機、琴鍵燈、單音 `G4 1`、和弦 `C IV`、CAGED E 與 3NPS 的格子、捲動、音名與級數標示、`PLAY` 跑音階、換調換音階、D 小調五聲 2NPS、`SEL` 加琴鍵；SHAPE 的 C `x32010` 指法 `032010`、strum 5 個聲部、彈 Am 得到 `x02210`、F、B7 `x21202`、Bbm、Gm、烏克麗麗 C `0003`；存檔、重開讀回 |
 | 實機套件 | `just fw-build guitar`（本人的 Mac，dev build `FM-1_5300`，改 identity 之前） | app 125,944 B（槽 581,564 B），RAM `.data+.bss` 29,052 / 98,304 B，`.ram_text` 5,100 / 32,768 B；沒有 soft-double，`firmware/guitar` 沒有 compiler warning；套件 616,003 B |
+| 換 identity 後重做 | 合併 main（含 RHYTHM）後在本人的 Mac 上 `fw-build`，再用 fm1-emu 兩種晶片開機 | 套件 identity `FM-1_5500`，616,003 B，SHA-256 `90e0d1cc…4bef4`；大小同上；兩種晶片都開機，0 次寫入 |
 | 兩種晶片：改設定、重開讀回 | fm1-emu `uc25hq80`、`p25q80` headless，`FM1_BENCH_KEYS` 轉 `SELECT` 到 A major、按 `HOME` 到 SHAPE | 每次存檔寫 3 次；重開 0 次寫入，讀回 SHAPE 頁與 A major |
 | 疊在實機備份上 | `emu_rehearse.py` 疊在 `2026-11-18-pre-theory-0.2`，兩種晶片 | 開機 0 次寫入；存檔只寫 `0xD4000`（見[存檔](#flash)） |
 
 刷進實機之前要照 AGENTS.md：兩種晶片都跑過存檔與重開、`emu-rehearse` 報告寫入的 sector、完整備份、本人逐次同意。
 
+## v0.2 計畫 { #v02 }
+
+2026-11-18 本人試用 v0.1 的回饋：「體驗不錯」；想要封閉和弦、power chord、不同把位（參考 [learning-guitar 的音階頁](https://marsishandsome.github.io/learning-guitar/01_Basic/01_Guitar_Scale.html)），以及像 THEORY、MORSE 那樣的學習模式：按調由淺入深學和弦，C 調先學、G 調多學一個、再往下到 F 調，新手按不好封閉和弦時也有開放和弦可用。
+
+### 1. 封閉和弦與 power chord { #v02-shapes }
+
+- **Power chord**：v0.1 的搜尋要求至少 4 根弦有聲，所以 `5` 和弦只找得到 `022400` 這種有空弦的按法，找不到吉他手常用的兩、三根弦的 `x355xx`、`022xxx`。v0.2 讓 `5` 和弦只用 2–3 根相鄰的弦（根音、五度、八度），根音在 6 弦或 5 弦，再加上 E 型與 A 型的可移動版本。
+- **封閉和弦**：搜尋本來就會找到 barre（F `133211`、Bm `x24432`），只是排在開放和弦後面。SHAPE 加一個 `K3` 篩選：**EASY**（現在的排序）、**OPEN**（只要有空弦的）、**BARRE**（只要封閉和弦）、**MOVABLE**（沒有空弦、可以整個平移的）。每個封閉和弦標出它是哪一型（E 型、A 型、C、G、D 型；用 CAGED 的五個形狀比對），和 NECK 的 CAGED 把位對得起來。
+- 單元測試：E 型、A 型的大、小、7、m7、maj7 在每個根音都找得到；power chord 在每個根音都有 6 弦根與 5 弦根兩個版本。
+
+### 2. 更多把位：Do、Re、Mi、Sol、La 型 { #v02-positions }
+
+那個頁面教五種「型」（Do 型、Re 型、Mi 型、Sol 型、La 型，另外還有高把位的 Mi 型），以及怎麼把兩個型接起來。它們和 CAGED 是同一組五個把位，只是用唱名來命名。頁面的圖沒有文字說明，所以**每個型對應哪個 CAGED 形狀還沒對照過** `[調研]`。v0.2 的做法：
+
+- NECK 的 `K3` 把位清單加上唱名的命名（設定可以選 CAGED 或唱名），名稱依照實際對照的結果決定（要先看那幾張圖，或請本人確認）。
+- **CONNECT**：一次顯示相鄰的兩個把位，重疊的音用另一個顏色，練換把。
+- 每個把位的手指編號（原本規劃的 BOX 頁）：5 品放大，點裡寫 1–4。
+
+### 3. 學習模式 LEARN { #v02-learn }
+
+比照 MORSE 的 PRACTICE 和 THEORY 規劃中的 TODAY：一回合交錯的卡片，用 Leitner box 排程，進度跨天保存。
+
+**課綱：按調解鎖，每個調只多學幾個新和弦。** 順序是開放和弦最友善的調先學，接著才是要用封閉和弦的調：
+
+| 階段 | 調 | 這一階段的新和弦（v0.2 草案） | 封閉和弦的簡易替代 |
+|---|---|---|---|
+| 1 | C | C、G、Am、F | F 先用 `xx3211`（四弦小 F），F 的完整封閉 `133211` 留到第 6 階段 |
+| 2 | C（補完） | Em、Dm、G7 | — |
+| 3 | G | D、（Em、C、G、Am 已會） | — |
+| 4 | D | A、Bm | Bm 先用 `x20432` 或 `x2443x`，完整的 `x24432` 留到第 6 階段 |
+| 5 | A、E | E、F#m（`244222`）、C#m | F#m、C#m 先用三、四弦的小按法 |
+| 6 | F（封閉和弦） | F `133211`、Bb、Bm `x24432`、Gm | 這一階段才要求 E 型、A 型封閉 |
+
+（每一階段大約 3 個新和弦，像 MORSE 的 Koch 方式：前一階段的和弦都到 box 2 才解鎖下一階段。實際的和弦清單先寫在 TSV，之後可以用網頁匯入，比照 THEORY。）
+
+**卡片題型**（FM-1 只有琴鍵，沒有弦，所以練的是「認得按法」和「知道組成音」）：
+
+1. **名稱 → 按法**：畫面給 `Am`，從 4 個和弦圖選一個（`SELECT` 選、`PLAY` 確定）。錯的選項用相似的按法（同一個型的另一個和弦、差一根弦的），比照 Morse 的 `ln_alike`。
+2. **按法 → 名稱**：畫一個和弦圖，在琴鍵上按出它的組成音（不分八度、不分轉位，用 THEORY 的 `th_identify` 判斷）；按錯了就秀出正確的音。
+3. **調裡的級數**：「G 調的 IV 是什麼？」按出 C 的組成音。把 THEORY 的級數和吉他的按法接起來。
+4. **換和弦**（之後，和 RHYTHM 合作）：節拍器下輪流顯示 `C → Am → F → G`，每拍按出那個和弦，評早晚。
+
+**簡易版與完整版**：每個和弦卡記住使用者目前學的是哪個按法。新手階段給簡易版；到第 6 階段，同一個和弦多一張「完整封閉」的卡。SHAPE 頁也有 BEGINNER 開關，打開時封閉和弦一律先顯示簡易版。
+
+**存檔**：進度需要另一個物件，在 `APP_STORE_MAP` 裡加一個 sector pair（候選 `0xD0000`，要先用最新備份和 `emu-rehearse` 確認是空的，而且 RHYTHM 在 `0xD2000`、THEORY 0.2 在 `0xD6000`）。網頁備份與匯入沿用 Morse 的 hostlink（之後）。
+
+### 4. 順序
+
+1. Power chord 與 `K3` 篩選（小改動，先做）。
+2. 唱名把位命名、CONNECT、BOX 指法（先確認五個型與 CAGED 的對應）。
+3. LEARN：課綱 TSV、卡片 1 和 2、Leitner、進度存檔。
+4. 卡片 3、換和弦練習（等 RHYTHM 的節拍器穩定）。
+
+**待本人決定**：課綱第 1 階段要不要先教 Em、Am（兩、三指，最容易），還是照提案先教 C 調的 I–IV–V–vi；F 在第 1 階段用小 F 還是延後到第 2 階段。
+
 ## 之後 { #next }
 
-- 換成 `FM-1_55` 之後重做一次 `fw-build`（只差 identity），刷實機前照 AGENTS.md 做完整 preflight。
+- 刷實機前照 AGENTS.md 做完整 preflight（`FM-1_5500` 的套件已經在本人的 Mac 上 build 過）。
 - release 版要在 `fm1.toml` 補 `install`、`screenshot`（build 會提醒）。
 - 指板方向可以反過來（低音弦在上）、左手吉他鏡像。
-- BOX 頁：5 品放大的音階指法，每個點寫手指編號。
 - SHAPE 的轉位與 slash chord（`C/E`）、jazz 的 shell voicing（目前要求根音在低音）。
-- FIND 找音練習，和 THEORY 的 TODAY 共用 Leitner 回合。
+- FIND 找音練習（LEARN 的另一種卡）。
 - 網頁匯入自訂 tuning。
