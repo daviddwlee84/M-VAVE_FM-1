@@ -66,6 +66,7 @@ nav = [
     { "摩斯電碼機操作速查" = "dev/morse-cheatsheet.md" },
     { "裝置端語音合成" = "dev/tts.md" },
     { "背單字 app（構想）" = "dev/vocab.md" },
+    { "節奏練習機" = "dev/rhythm.md" },
     { "樂理練習機（構想）" = "dev/theory.md" },
     { "吉他指板與和弦書" = "dev/guitar.md" },
   ] },

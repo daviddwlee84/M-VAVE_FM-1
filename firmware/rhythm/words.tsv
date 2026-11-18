@@ -1,0 +1,21 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+# RHYTHM's words for a screen reader (fm1-reader): the text on the screen <TAB> what to say.
+# url: https://daviddwlee84.github.io/M-VAVE_FM-1/dev/rhythm/
+RHYTHM	rhythm
+METRO	metronome
+ECHO	echo
+BPM	beats per minute
+GAP	gap
+SUB	subdivision
+LAT	latency
+MS	milliseconds
+TA-A	ta a
+TI-TI	ti ti
+TIKA-TIKA	tika tika
+TI-TIKA	ti tika
+TIKA-TI	tika ti
+TIM-KA	tim ka
+SYN-CO-PA	syn co pa
+TRI-O-LA	tri o la
+16THS	sixteenths
+8THS	eighths
