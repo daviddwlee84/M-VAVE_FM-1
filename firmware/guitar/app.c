@@ -52,6 +52,7 @@ typedef struct {
 static rec_t rec;
 static uint32_t saves;
 static uint32_t dirty_at;
+static uint32_t ln_unsaved_at;           /* LEARN: an answer not on flash yet, saved after LN_SAVE_MS without one */
 
 static void defaults(void)
 {
@@ -80,6 +81,7 @@ static void rec_save(void)
     rec.magic = REC_MAGIC;
     rec.ver = REC_VER;
     rec.size = (uint16_t)sizeof rec;
+    ln_unsaved_at = 0;
     if (plat_store_save(OBJ_GUITAR, &rec, sizeof rec) == 0)
         saves++;
     dirty_at = 0;
@@ -419,6 +421,7 @@ static struct {
     int pick, answer, right, nright, opened, played;
     uint32_t rng;
 } ln;
+#define LN_SAVE_MS 20000u                /* longer than the settings' 3 s: a round is 8 answers, not 8 saves */
 
 static void ln_setup(int kind)
 {
@@ -461,6 +464,7 @@ static void ln_answer(int right)
     ln.right = right;
     ln.nright += right;
     if (ls_answer(&rec.learn, ln.item, right)) ln.opened = 1;
+    ln_unsaved_at = plat_ms() | 1u;
     ln.state = LN_SHOWN;
     th_chord_name(ls_chord(ln.item), t);
     app_say(right ? "RIGHT" : "IT IS", t);
@@ -1208,6 +1212,7 @@ void app_init(void)
     zero(&ln, sizeof ln);
     saves = 0;
     dirty_at = 0;
+    ln_unsaved_at = 0;
     n = plat_store_load(OBJ_GUITAR, &rec, sizeof rec);
     if (n == (int)REC_V1_SIZE && rec.ver == 1u && rec.size == REC_V1_SIZE) {    /* 0.1: no LEARN progress yet */
         ls_reset(&rec.learn);
@@ -1247,7 +1252,7 @@ void app_frame(void)
         last_toast = ui.toast_until && now >= ui.toast_until;
         ui.redraw |= R_FOOT;
     }
-    if (dirty_at && (int32_t)(now - dirty_at) > 3000)
+    if ((dirty_at && (int32_t)(now - dirty_at) > 3000) || (ln_unsaved_at && now - ln_unsaved_at > LN_SAVE_MS))
         rec_save();
     lights(now);
     speak();
@@ -1287,6 +1292,7 @@ int app_expect(const char *what, int *got)
     else if (!strcmp(what, "lcard")) *got = ln.i;
     else if (!strcmp(what, "lpick")) *got = ln.pick;
     else if (!strcmp(what, "lright")) *got = ln.nright;
+    else if (!strcmp(what, "lunsaved")) *got = ln_unsaved_at != 0;
     else if (!strcmp(what, "rec_size")) *got = (int)sizeof rec;
     else if (!strncmp(what, "lbox", 4)) *got = rec.learn.box[atoi(what + 4)];
     else if (!strncmp(what, "mask", 4)) *got = (int)ui.mask[atoi(what + 4)];

@@ -241,6 +241,10 @@ expect lstate 1
 expect lright 1
 expect playing 1
 shot learn_right.png
+# an answer mid-round is kept: saved once no other answer comes for 20 s
+expect lunsaved 1
+wait 20100
+expect lunsaved 0
 tap PLAY
 wait 60
 expect lcard 1

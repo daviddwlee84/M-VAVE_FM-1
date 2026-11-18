@@ -146,7 +146,7 @@ F 和 Bm 在前面的階段先學簡易版，第 6 階段再多一張完整封�
 
 ## 存檔 { #flash }
 
-設定是一筆 `rec_t`（`GT01`；v0.1 是 24 bytes 的 `ver 1`，v0.2 是 60 bytes 的 `ver 2`，後面多了 LEARN 的進度：每個和弦的 box、開放到第幾階段、完成幾回合），透過 fm1-base 的 store（`APP_STORE_MAP {0xDC000, 0xD4000}`）存在 `0xD4000`。讀到 v0.1 的 24 bytes 記錄時保留原本的設定，LEARN 進度從頭開始。LEARN 在每一回合結束時存一次（換頁時也會跟著設定存）。選這裡是因為：`0xD6000` 是 THEORY 0.2 的閃卡進度、`0xD8000` 是 THEORY 的設定、`0xDA000` 是 Morse、`0xDC000` 是面板校正，而 `0xFC000` 是 SLOOP、Agent Deck、CTL-1 共用的設定區。
+設定是一筆 `rec_t`（`GT01`；v0.1 是 24 bytes 的 `ver 1`，v0.2 是 60 bytes 的 `ver 2`，後面多了 LEARN 的進度：每個和弦的 box、開放到第幾階段、完成幾回合），透過 fm1-base 的 store（`APP_STORE_MAP {0xDC000, 0xD4000}`）存在 `0xD4000`。讀到 v0.1 的 24 bytes 記錄時保留原本的設定，LEARN 進度從頭開始。LEARN 在每一回合結束時存一次；回合中途的答案在 20 秒沒有新答案時存（一回合不會存 8 次，關機也最多掉最後 20 秒的答案）；換頁時也會跟著設定存。store 是 A/B 兩個 sector 輪流寫，所以連續存兩次會看到 `0xD4000` 和 `0xD5000` 都改了，兩個都在 GUITAR 自己的範圍內。選這裡是因為：`0xD6000` 是 THEORY 0.2 的閃卡進度、`0xD8000` 是 THEORY 的設定、`0xDA000` 是 Morse、`0xDC000` 是面板校正，而 `0xFC000` 是 SLOOP、Agent Deck、CTL-1 共用的設定區。
 
 疊在 `2026-11-18-pre-theory-0.2` 備份上預演（兩種晶片，`[模擬]`）：開機 0 次寫入；存檔只改 `0xD4000` 一個 sector；`0xD6000`、`0xD8000`（THEORY）、`0xDA000`（Morse）、`0xFC000` 都和備份相同。備份本身的 `0xD4000`–`0xD5FFF` 全是 `0xFF`。這份備份是裝 THEORY 0.2 之前做的，THEORY 0.2 的閃卡進度在 `0xD6000`，GUITAR 不碰那裡。
 
@@ -164,6 +164,18 @@ F 和 Bm 在前面的階段先學簡易版，第 6 階段再多一張完整封�
 | 疊在實機備份上 | `emu_rehearse.py` 疊在 `2026-11-18-pre-theory-0.2`，兩種晶片 | 開機 0 次寫入；存檔只寫 `0xD4000`（見[存檔](#flash)） |
 
 刷進實機之前要照 AGENTS.md：兩種晶片都跑過存檔與重開、`emu-rehearse` 報告寫入的 sector、完整備份、本人逐次同意。
+
+## v0.2 驗證 { #v02-verify }
+
+2026-11-18，全部 `[模擬]`，在本人的 Mac 上跑（commit `c328228`；之後只加了回合中途的存檔，見[存檔](#flash)）。
+
+| 項目 | 結果 |
+|---|---|
+| `just guitar-unit` | 298,903 個檢查全部通過 |
+| `just fw-test guitar` | 全部 ok（含 LEARN 一整個回合、選對、選錯、按出 C 的組成音、重開讀回進度） |
+| `just fw-build guitar` | app 131,944 B（槽 581,564 B），RAM `.data+.bss` 29,212 / 98,304 B，`.ram_text` 5,100 / 32,768 B；沒有 soft-double，`firmware/guitar` 沒有 compiler warning；套件 `FM-1_5500`，616,003 B，SHA-256 `336772c5…7d79ec`（第一次 build 剛好碰到 Docker daemon 重啟而失敗，重跑成功） |
+| fm1-emu 兩種晶片 | `HOME` 兩次進 LEARN（`WHICH IS F?`）、`SELECT` 選錯、`PLAY` 顯示 `NO: F` 並框出 F、`PLAY` 下一題、回 NECK：存 2 次，每次 3 次寫入；重開 0 次寫入 |
+| 疊在 `2026-11-18-pre-theory-0.2` 備份上 | 開機 0 次寫入；存檔只改 `0xD4000` 與 `0xD5000`（A/B 輪流）；`0xD6000`、`0xD8000`、`0xDA000`、`0xFC000` 都和備份相同 |
 
 ## v0.2 計畫 { #v02 }
 
