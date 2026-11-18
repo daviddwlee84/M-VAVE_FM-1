@@ -431,6 +431,82 @@ static void test_solfege(void)
     }
 }
 
+/* the finder: SIMPLE shapes, registers of the neck, a capo */
+static th_chord_t chordq(const char *root, int q)
+{
+    th_chord_t c;
+    c.root = (int8_t)F(root);
+    c.q = (uint8_t)q;
+    c.bass = c.root;
+    return c;
+}
+
+static void test_finder(void)
+{
+    fr_shape_t out[FR_SHAPES_MAX];
+    fr_tuning_t capo;
+    int8_t w[6];
+    int n, i, r, q, z, s;
+    static const uint8_t QS[] = { TH_MAJ, TH_MIN, TH_7, TH_M7, TH_MAJ7 };
+    /* the simplified shapes guitar books give first */
+    n = fr_shapes_filter(STD, chordq("F", TH_MAJ), FR_F_SIMPLE, out, FR_SHAPES_MAX);
+    parse_frets("xx3211", w, 6);
+    CHECK(has(out, n, w), "F SIMPLE has xx3211 (first: %s)", n ? frets_text(&out[0], 6) : "-");
+    {   /* fingered with a mini barre: 0 0 3 2 1 1 */
+        fr_shape_t sh;
+        CHECK(fr_shape_make(STD, w, &sh) && sh.finger[2] == 3 && sh.finger[3] == 2 && sh.finger[4] == 1
+                  && sh.finger[5] == 1 && !sh.barre, "xx3211 fingers");
+    }
+    n = fr_shapes_filter(STD, chordq("B", TH_MIN), FR_F_SIMPLE, out, FR_SHAPES_MAX);
+    parse_frets("x2443x", w, 6);
+    i = has(out, n, w);
+    parse_frets("xx4432", w, 6);
+    CHECK(i || has(out, n, w), "Bm SIMPLE has x2443x or xx4432 (first: %s)", n ? frets_text(&out[0], 6) : "-");
+    n = fr_shapes_filter(STD, chordq("G", TH_7), FR_F_SIMPLE, out, FR_SHAPES_MAX);
+    CHECK(n > 0, "G7 has a SIMPLE shape (a shell voicing)");
+    /* every SIMPLE shape: 3-4 neighbouring strings, no barre, every needed tone, the root lowest; every zone holds */
+    for (r = 0; r < 12; r++)
+        for (q = 0; q < (int)sizeof QS; q++) {
+            th_chord_t c;
+            c.root = (int8_t)th_spell_pc(r, 0);
+            c.q = QS[q];
+            c.bass = c.root;
+            n = fr_shapes_filter(STD, c, FR_F_SIMPLE, out, FR_SHAPES_MAX);
+            CHECK(n > 0, "SIMPLE %d %d: none", r, q);
+            for (i = 0; i < n; i++) {
+                int k = 0, first = -1, last = -1;
+                for (s = 0; s < 6; s++)
+                    if (out[i].fret[s] >= 0) {
+                        if (first < 0) first = s;
+                        last = s;
+                        k++;
+                    }
+                CHECK(k >= 3 && k <= 4 && last - first + 1 == k && !out[i].barre, "SIMPLE: %s", frets_text(&out[i], 6));
+                CHECK(fr_shape_root_string(STD, &out[i]) == first
+                          && fr_midi(STD, first, out[i].fret[first]) % 12 == r, "SIMPLE root lowest: %s",
+                      frets_text(&out[i], 6));
+            }
+            for (z = FR_Z_LOW; z < FR_NZONES; z++) {
+                n = fr_shapes_find(STD, c, FR_F_EASY, z, out, FR_SHAPES_MAX);
+                CHECK(n > 0, "zone %d: %d %d none", z, r, q);
+                for (i = 0; i < n; i++) CHECK(fr_zone_of(&out[i], 6) == z, "zone %d: %s", z, frets_text(&out[i], 6));
+            }
+        }
+    n = fr_shapes_find(STD, chordq("C", TH_MAJ), FR_F_EASY, FR_Z_LOW, out, FR_SHAPES_MAX);
+    CHECK(n && !strcmp(frets_text(&out[0], 6), "x32010"), "C LOW: x32010 first");
+    n = fr_shapes_find(STD, chordq("C", TH_MAJ), FR_F_BARRE, FR_Z_MID, out, FR_SHAPES_MAX);
+    parse_frets("8aa988", w, 6);
+    CHECK(has(out, n, w), "C BARRE MID: the E form at 8");
+    /* a capo: Bb with capo 1 is played as A, x02220 above the capo, and sounds Bb */
+    fr_capo(STD, 1, &capo);
+    n = fr_shapes(&capo, chordq("Bb", TH_MAJ), out, FR_SHAPES_MAX);
+    CHECK(n && !strcmp(frets_text(&out[0], 6), "x02220"), "Bb capo 1: %s", n ? frets_text(&out[0], 6) : "-");
+    if (n) CHECK(fr_midi(&capo, 1, 0) == 46, "capo 1: the A string sounds Bb");
+    fr_capo(STD, 3, &capo);
+    n = fr_shapes(&capo, chordq("Bb", TH_MAJ), out, FR_SHAPES_MAX);
+    CHECK(n && !strcmp(frets_text(&out[0], 6), "320003"), "Bb capo 3 is the G shape: %s", n ? frets_text(&out[0], 6) : "-");
+}
+
 int main(void)
 {
     test_tunings();
@@ -439,6 +515,7 @@ int main(void)
     test_forms();
     test_lesson();
     test_solfege();
+    test_finder();
     printf("%d checks, %d failed\n", checks, fails);
     return fails != 0;
 }

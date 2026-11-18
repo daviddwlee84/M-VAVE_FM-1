@@ -55,9 +55,19 @@ typedef struct {
  * at most four fingers (one barre counts as one). A power chord (TH_5) also gets its two- and three-string shapes.
  * Returns how many (at most max). */
 int fr_shapes(const fr_tuning_t *t, th_chord_t c, fr_shape_t *out, int max);
-enum { FR_F_EASY, FR_F_OPEN, FR_F_BARRE, FR_F_MOVABLE, FR_NFILTERS };   /* fr_shapes_filter: all, with an open
-                                                                          * string, barred, no open string */
+/* fr_shapes_filter: all, with an open string, barred, no open string, simple (three or four neighbouring strings,
+ * no barre, the bass on the lowest of them, open strings only near the nut: the small F xx3211, Bm x2443x,
+ * top-string triads, shell voicings of 7th chords) */
+enum { FR_F_EASY, FR_F_OPEN, FR_F_BARRE, FR_F_MOVABLE, FR_F_SIMPLE, FR_NFILTERS };
 int fr_shapes_filter(const fr_tuning_t *t, th_chord_t c, int filter, fr_shape_t *out, int max);
+/* the same in one register of the neck, by the hand's lowest fretted fret (an all-open shape counts as 0):
+ * ANY, LOW 0-4, MID 5-9, HIGH 10 and up; MID and HIGH only closed shapes (no open string) */
+enum { FR_Z_ANY, FR_Z_LOW, FR_Z_MID, FR_Z_HIGH, FR_NZONES };
+int fr_shapes_find(const fr_tuning_t *t, th_chord_t c, int filter, int zone, fr_shape_t *out, int max);
+int fr_zone_of(const fr_shape_t *sh, int n);     /* FR_Z_LOW .. FR_Z_HIGH */
+/* a capo at fret c: the tuning with every open string c semitones up. Shapes found on it are written relative to the
+ * capo (0 = the capo), and sound at their real pitch */
+void fr_capo(const fr_tuning_t *t, int c, fr_tuning_t *out);
 int fr_shape_open(const fr_shape_t *sh, int n);  /* an open string sounds */
 int fr_shape_root_string(const fr_tuning_t *t, const fr_shape_t *sh);   /* the string with the lowest note */
 int fr_shape_make(const fr_tuning_t *t, const int8_t *fret, fr_shape_t *sh);   /* given frets, fingered; 0 if

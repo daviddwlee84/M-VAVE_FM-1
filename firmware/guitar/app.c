@@ -1,5 +1,5 @@
 /* SPDX-License-Identifier: GPL-3.0-or-later */
-/* GUITAR: the NECK, SHAPE and LEARN pages (see app.h). The neck is fret.c; theory.c, synth.c and gtext.c are THEORY's.
+/* GUITAR: MENU, the NECK, SHAPE and LEARN pages, SETTINGS (see app.h). The neck is fret.c; theory.c, synth.c and gtext.c are THEORY's.
  * Part of fm1-base's unity build, after the platform: gfx.c and announce.c are in scope. */
 #include "gtext.h"
 #define TH_GLYPH_SHARP GT_SHARP
@@ -14,18 +14,25 @@
 #include "lesson.c"
 
 #define FW_MAJOR 0
-#define FW_MINOR 2
+#define FW_MINOR 3
 
 /* ---------------------------------------------------------------- settings --- */
 #define REC_MAGIC 0x31305447u            /* "GT01" */
-#define REC_VER 2u                       /* 2: the LEARN progress appended (0.2) */
+#define REC_VER 3u                       /* 2: the LEARN progress appended; 3: MENU is page 0, capo, zone, flags */
 #define REC_V1_SIZE 24u
 
-enum { PG_NECK, PG_SHAPE, PG_LEARN, PG_N };
+enum { PG_MENU, PG_NECK, PG_SHAPE, PG_LEARN, PG_SET, PG_N };
 enum { LB_DOTS, LB_NAMES, LB_DEGREES, LB_N };
-static const char *const PAGE_NAME[PG_N] = { "NECK", "SHAPE", "LEARN" };
+static const char *const PAGE_NAME[PG_N] = { "MENU", "NECK", "SHAPE", "LEARN", "SETTINGS" };
+static const char *const PAGE_WHAT[PG_N] = { "", "scales and positions", "chord shapes",
+                                             "chords key by key", "tuning, neck view" };
+static const char *const ZONE_NAME[FR_NZONES] = { "ANY FRET", "FRETS 0-4", "FRETS 5-9", "FRETS 10+" };
+static const char *const ZONE_SHORT[FR_NZONES] = { "", "0-4", "5-9", "10+" };
+#define CAPO_MAX 7
+#define FL_FLIP 1u                       /* the neck drawn with the low string on top */
+enum { SR_TUNING, SR_VIEW, SR_RESET, SR_ROWS };
 static const char *const LABEL_NAME[LB_N] = { "DOTS", "NAMES", "DEGREES" };
-static const char *const FILTER_NAME[FR_NFILTERS] = { "EASY", "OPEN", "BARRE", "MOVABLE" };
+static const char *const FILTER_NAME[FR_NFILTERS] = { "EASY", "OPEN", "BARRE", "MOVABLE", "SIMPLE" };
 
 /* the chord qualities SHAPE steps through with K1, the common ones first */
 static const uint8_t QUALS[] = { TH_MAJ, TH_MIN, TH_7, TH_M7, TH_MAJ7, TH_SUS4, TH_SUS2, TH_5, TH_DIM, TH_AUG,
@@ -46,7 +53,10 @@ typedef struct {
     int8_t root;                         /* SHAPE: the chord's root on the line of fifths */
     uint8_t qual;                        /* QUALS[] */
     uint8_t filter;                      /* SHAPE: FR_F_* (0.1 left it 0: EASY) */
-    uint8_t rsv[4];
+    uint8_t capo;                        /* SHAPE: 0 .. CAPO_MAX (0.3) */
+    uint8_t zone;                        /* SHAPE: FR_Z_* (0.3) */
+    uint8_t flags;                       /* FL_* (0.3) */
+    uint8_t rsv;
     ls_prog_t learn;                     /* LEARN: the boxes and the stage open (0.2) */
 } rec_t;
 static rec_t rec;
@@ -62,6 +72,9 @@ static void defaults(void)
     rec.pos = 0;
     rec.tuning = FR_STANDARD;
     rec.page = PG_NECK;
+    rec.capo = 0;
+    rec.zone = FR_Z_ANY;
+    rec.flags = 0;
     rec.oct = 0;
     rec.root = 0;                        /* C */
     rec.qual = 0;
@@ -71,7 +84,8 @@ static void defaults(void)
 static int rec_valid(const rec_t *r)
 {
     return r->magic == REC_MAGIC && r->ver == REC_VER && r->size == sizeof *r && r->tonic >= -9 && r->tonic <= 12
-           && r->scale < TH_NSCALES && r->labels < LB_N && r->pos < 16 && r->tuning < FR_NTUNINGS && r->page < PG_N
+           && r->scale < TH_NSCALES && r->labels < LB_N && r->pos < 16 && r->tuning < FR_NTUNINGS && r->page < PG_N && r->capo <= CAPO_MAX
+           && r->zone < FR_NZONES
            && r->oct >= -2 && r->oct <= 2 && r->root >= -9 && r->root <= 12 && r->qual < NQUALS && r->filter < FR_NFILTERS
            && ls_valid(&r->learn);
 }
@@ -96,6 +110,13 @@ static th_key_t cur_key(void)
 }
 
 static const fr_tuning_t *tun(void) { return &fr_tunings[rec.tuning]; }
+
+static fr_tuning_t capo_t;               /* SHAPE: the tuning with the capo on it */
+static const fr_tuning_t *shp_tun(void)
+{
+    fr_capo(tun(), rec.capo, &capo_t);
+    return &capo_t;
+}
 
 static th_chord_t cur_chord(void)
 {
@@ -146,6 +167,9 @@ static struct {
     int seq_s, seq_f;                    /* the run's note now, to mark on the neck */
     char toast[2][24];
     uint32_t toast_until;
+    uint8_t back;                        /* the page HOME goes back to from MENU */
+    uint8_t msel, srow;                  /* MENU's and SETTINGS' row */
+    uint8_t armed;                       /* SETTINGS: RESET LEARN asked, PLAY to do it */
     uint32_t lit, mid, glow;
 } ui;
 static int host_fails;
@@ -218,6 +242,24 @@ static void shape_text(char *t)          /* "x32010" */
     }
 }
 
+/* "OFF", or "3: AS G" (the shape's chord below the capo) */
+static void capo_text(char *t)
+{
+    th_chord_t c = cur_chord();
+    char nm[TH_CHORD_MAX];
+    t[0] = 0;
+    if (!rec.capo) {
+        tcat(t, "OFF");
+        return;
+    }
+    tint(t, rec.capo);
+    tcat(t, ": AS ");
+    c.root = (int8_t)th_key_for_pc((th_pc(c.root) + 12 - rec.capo) % 12, TH_MAJOR);   /* spelled as a major key */
+    c.bass = c.root;
+    th_chord_name(c, nm);
+    tcat(t, nm);
+}
+
 static void toast(const char *a, const char *b)
 {
     uint32_t i;
@@ -274,7 +316,7 @@ static void neck_update(void)
 
 static void shapes_update(void)
 {
-    ui.nshapes = fr_shapes_filter(tun(), cur_chord(), rec.filter, ui.shapes, FR_SHAPES_MAX);
+    ui.nshapes = fr_shapes_find(shp_tun(), cur_chord(), rec.filter, rec.zone, ui.shapes, FR_SHAPES_MAX);
     ui.shape = 0;
 }
 
@@ -324,7 +366,7 @@ static void strum_shape(const fr_tuning_t *t, const fr_shape_t *sh)
 
 static void strum(void)
 {
-    if (ui.shape < ui.nshapes) strum_shape(tun(), &ui.shapes[ui.shape]);
+    if (ui.shape < ui.nshapes) strum_shape(shp_tun(), &ui.shapes[ui.shape]);
     else seq_stop();
 }
 
@@ -525,14 +567,45 @@ static void chord_say(void)
     app_say("CHORD", t);
 }
 
+/* pages as in THEORY and Morse: ALGO turns through them, HOME opens MENU and goes back */
 static void set_page(int p)
 {
+    p = (int)th_mod(p, PG_N);
+    if (p == rec.page) return;
     seq_stop();
-    rec.page = (uint8_t)th_mod(p, PG_N);
+    if (rec.page != PG_MENU) ui.back = rec.page;
+    rec.page = (uint8_t)p;
     ui.sh = SH_NONE;
-    if (rec.page == PG_LEARN && !ln.n) ln_round();
-    app_say("PAGE", PAGE_NAME[rec.page]);
+    ui.armed = 0;
+    if (p == PG_MENU) ui.msel = (uint8_t)(ui.back > 0 ? ui.back - 1 : 0);
+    if (p == PG_LEARN && !ln.n) ln_round();
+    app_say("PAGE", PAGE_NAME[p]);
     changed(R_ALL);
+}
+
+static void set_tuning(int e)
+{
+    rec.tuning = (uint8_t)th_mod(rec.tuning + e, FR_NTUNINGS);
+    seq_stop();
+    neck_update();
+    shapes_update();
+    app_say("TUNING", tun()->name);
+    changed(R_ALL);
+}
+
+/* SETTINGS: a row changed by K1 or a press of SEL */
+static void settings_change(int e)
+{
+    if (ui.srow == SR_TUNING) set_tuning(e);
+    else if (ui.srow == SR_VIEW) {
+        rec.flags ^= FL_FLIP;
+        app_say("NECK", rec.flags & FL_FLIP ? "LOW STRING ON TOP" : "HIGH STRING ON TOP");
+        changed(R_MAIN);
+    } else {
+        ui.armed = 1;                    /* RESET LEARN: PLAY does it */
+        app_say("RESET LEARN?", "PLAY: YES");
+        ui.redraw |= R_MAIN | R_FOOT;
+    }
 }
 
 static void input(void)
@@ -545,7 +618,8 @@ static void input(void)
     for (k = 0; k < NKEYS; k++) {
         uint32_t bit = 1u << k;
         if ((keys & bit) && !(ui.keys & bit)) {
-            if ((btn >> B_SEL & 1u) && rec.page != PG_LEARN) {     /* SEL held: this note becomes the key's tonic, or the chord's root */
+            if ((btn >> B_SEL & 1u) && (rec.page == PG_NECK || rec.page == PG_SHAPE)) {   /* SEL held: this note becomes
+                                                                                            * the key's tonic, or the chord's root */
                 if (rec.page == PG_NECK) {
                     set_tonic(th_spell_pc(KEY_MIDI(k) % 12, 0));
                     key_text(t);
@@ -582,10 +656,24 @@ static void input(void)
     for (k = 0; k < NB; k++) {
         uint32_t bit = 1u << k;
         if (!(btn & bit) || (ui.btn & bit)) continue;
-        if (k == B_HOME) {               /* the next page (ALGO turns either way, as in THEORY and Morse) */
-            set_page(rec.page + 1);
+        if (k == B_HOME) {               /* MENU, and back */
+            set_page(rec.page == PG_MENU ? (ui.back ? ui.back : PG_NECK) : PG_MENU);
+        } else if (k == B_SEL && rec.page == PG_MENU) {
+            set_page(ui.msel + 1);
+        } else if (k == B_SEL && rec.page == PG_SET) {
+            settings_change(1);
         } else if (k == B_PLAY) {
-            if (rec.page == PG_LEARN) {
+            if (rec.page == PG_MENU) set_page(ui.msel + 1);
+            else if (rec.page == PG_SET) {
+                if (ui.armed && ui.srow == SR_RESET) {
+                    ls_reset(&rec.learn);
+                    zero(&ln, sizeof ln);
+                    ui.armed = 0;
+                    rec_save();
+                    app_say("LEARN", "FROM THE START");
+                    ui.redraw |= R_MAIN;
+                }
+            } else if (rec.page == PG_LEARN) {
                 if (ln.state != LN_ASK) ln_next();
                 else if (ln.kind == LS_NAME_TO_SHAPE) ln_answer(ln.pick == ln.answer);
                 else strum_shape(LSTD, &ln.sh[0]);       /* NOTES: hear it, as often as wanted */
@@ -604,15 +692,24 @@ static void input(void)
             }
         }
     }
-    if (rec.page == PG_LEARN) {          /* LEARN: SELECT picks a shape; the knobs rest */
-        if ((e = plat_enc(EN_SELECT)) != 0 && ln.state == LN_ASK && ln.kind == LS_NAME_TO_SHAPE) {
-            ln.pick = (int)th_mod(ln.pick + e, 4);
-            ui.redraw |= R_MAIN;
+    if (rec.page == PG_LEARN || rec.page == PG_MENU || rec.page == PG_SET) {
+        /* LEARN: SELECT picks a shape. MENU: SELECT picks a page. SETTINGS: SELECT a row, K1 changes it. The other
+         * knobs rest */
+        if ((e = plat_enc(EN_SELECT)) != 0) {
+            if (rec.page == PG_LEARN && ln.state == LN_ASK && ln.kind == LS_NAME_TO_SHAPE)
+                ln.pick = (int)th_mod(ln.pick + e, 4);
+            else if (rec.page == PG_MENU) ui.msel = (uint8_t)th_mod(ui.msel + e, PG_N - 1);
+            else if (rec.page == PG_SET) {
+                ui.srow = (uint8_t)th_mod(ui.srow + e, SR_ROWS);
+                ui.armed = 0;
+            }
+            ui.redraw |= R_MAIN | R_FOOT;
         }
-        (void)plat_enc(EN_K1);
+        if ((e = plat_enc(EN_K1)) != 0 && rec.page == PG_SET) settings_change(e > 0 ? 1 : -1);
         (void)plat_enc(EN_K2);
         (void)plat_enc(EN_K3);
         (void)plat_enc(EN_K4);
+        (void)plat_enc(EN_PRESET);
     } else if ((e = plat_enc(EN_SELECT)) != 0) {
         if (rec.page == PG_NECK) {       /* around the circle of fifths */
             set_tonic(rec.tonic + e);
@@ -652,7 +749,7 @@ static void input(void)
         }
         changed(R_MAIN | R_FOOT);
     }
-    if ((e = plat_enc(EN_K3)) != 0 && rec.page == PG_SHAPE) {    /* which shapes: easy, open, barre, movable */
+    if ((e = plat_enc(EN_K3)) != 0 && rec.page == PG_SHAPE) {    /* which shapes: easy, open, barre, movable, simple */
         rec.filter = (uint8_t)th_mod(rec.filter + e, FR_NFILTERS);
         shapes_update();
         seq_stop();
@@ -666,16 +763,28 @@ static void input(void)
         app_say("POSITION", t);
         changed(R_MAIN | R_FOOT);
     }
-    if ((e = plat_enc(EN_K4)) != 0) {    /* the instrument and tuning */
-        rec.tuning = (uint8_t)th_mod(rec.tuning + e, FR_NTUNINGS);
-        seq_stop();
-        neck_update();
+    if ((e = plat_enc(EN_K4)) != 0) {
+        if (rec.page == PG_SHAPE) {      /* the capo: open shapes for any key */
+            int c = clamp(rec.capo + e, 0, CAPO_MAX);
+            if (c != rec.capo) {
+                rec.capo = (uint8_t)c;
+                shapes_update();
+                seq_stop();
+                capo_text(t);
+                app_say("CAPO", t);
+                changed(R_MAIN | R_FOOT);
+            }
+        } else
+            set_tuning(e);               /* NECK: the instrument and tuning (also in SETTINGS) */
+    }
+    if ((e = plat_enc(EN_PRESET)) != 0 && rec.page == PG_SHAPE) {   /* where on the neck */
+        rec.zone = (uint8_t)th_mod(rec.zone + e, FR_NZONES);
         shapes_update();
-        app_say("TUNING", tun()->name);
-        changed(R_ALL);
+        seq_stop();
+        app_say("SHAPES", ZONE_NAME[rec.zone]);
+        changed(R_MAIN | R_FOOT);
     }
     if ((e = plat_enc(EN_ALGO)) != 0) set_page(rec.page + e);   /* pages: ALGO, as THEORY and Morse */
-    (void)plat_enc(EN_PRESET);
     ui.btn = btn;
 }
 
@@ -689,6 +798,9 @@ static void lights(uint32_t now)
     if (rec.page == PG_NECK) {
         mask = fr_scale_pcs(cur_key());
         tpc = th_pc(rec.tonic);
+    } else if (rec.page == PG_MENU || rec.page == PG_SET) {
+        mask = 0;
+        tpc = -1;
     } else if (rec.page == PG_LEARN) {   /* the answer's notes once it is shown, nothing before */
         mask = ln.n && ln.state == LN_SHOWN ? ls_pcs(ln.item) : 0;
         tpc = ln.n ? th_pc(ls_items[ln.item].root) : -1;
@@ -758,7 +870,10 @@ static int32_t nk_x(int slot) { return slot == 0 ? NK_X0 - 8 : NK_X0 + NK_W * sl
 
 static int32_t nk_gap(void) { return tun()->n > 1 ? (146 - NK_Y0) / (tun()->n - 1) : 0; }
 
-static int32_t nk_y(int s) { return NK_Y0 + nk_gap() * (tun()->n - 1 - s); }
+static int32_t nk_y(int s)               /* the high string on top, unless SETTINGS turned the neck over */
+{
+    return NK_Y0 + nk_gap() * (rec.flags & FL_FLIP ? s : tun()->n - 1 - s);
+}
 
 static void draw_neck_at(int32_t oy)
 {
@@ -775,9 +890,9 @@ static void draw_neck_at(int32_t oy)
     }
     for (slot = 0; slot <= 12; slot++) {
         int32_t x = NK_X0 + NK_W * slot, f = ui.view + slot;
-        if (slot == 0) cv_rect(x - 1, nk_y(t->n - 1) - oy, ui.view ? 1 : 3, nk_y(0) - nk_y(t->n - 1) + 1,
+        if (slot == 0) cv_rect(x - 1, NK_Y0 - oy, ui.view ? 1 : 3, nk_gap() * (t->n - 1) + 1,
                                ui.view ? C_DIM : C_GRAY);
-        else cv_rect(x, nk_y(t->n - 1) - oy, 1, nk_y(0) - nk_y(t->n - 1) + 1, C_LINE);
+        else cv_rect(x, NK_Y0 - oy, 1, nk_gap() * (t->n - 1) + 1, C_LINE);
         if (slot && (f % 12 == 3 || f % 12 == 5 || f % 12 == 7 || f % 12 == 9 || f % 12 == 0)) {
             lab[0] = 0;
             tint(lab, f);
@@ -819,7 +934,7 @@ static void draw_neck_at(int32_t oy)
  * root string. Standard-tuned six strings only (empty otherwise) */
 static void form_text(const fr_shape_t *sh, char *t)
 {
-    int rs = fr_shape_root_string(tun(), sh);
+    int rs = fr_shape_root_string(shp_tun(), sh);
     t[0] = 0;
     if (rec.tuning != FR_STANDARD && rec.tuning != FR_DROPD) return;
     if (fr_shape_open(sh, tun()->n) || rs < 0 || rs > 2) return;
@@ -828,8 +943,13 @@ static void form_text(const fr_shape_t *sh, char *t)
         tint(t, 6 - rs);
         return;
     }
-    if (!sh->barre) return;
-    tcat(t, rs == 0 ? "E FORM" : rs == 1 ? "A FORM" : "D FORM");
+    {   /* CAGED: E, A, D have the root at the hand's lowest fret, on the 6th, 5th, 4th string; G and C three frets
+         * above it, on the 6th and 5th */
+        int d = sh->fret[rs] - fr_shape_lo(sh, tun()->n);
+        const char *f = d == 0 ? (rs == 0 ? "E FORM" : rs == 1 ? "A FORM" : "D FORM")
+                        : d == 3 && rs < 2 ? (rs == 0 ? "G FORM" : "C FORM") : "";
+        tcat(t, f);
+    }
 }
 
 /* SHAPE: a chord diagram as chord books draw it, the low string on the left, the nut on top */
@@ -840,7 +960,7 @@ static void form_text(const fr_shape_t *sh, char *t)
 
 static void draw_shape_at(int32_t oy)
 {
-    const fr_tuning_t *t = tun();
+    const fr_tuning_t *t = shp_tun();
     const fr_shape_t *sh = ui.shape < ui.nshapes ? &ui.shapes[ui.shape] : 0;
     th_chord_t c = cur_chord();
     int32_t gap = (110 / (t->n - 1)), x, y;
@@ -854,7 +974,8 @@ static void draw_shape_at(int32_t oy)
     for (s = 0; s < t->n; s++) cv_rect(SH_X0 + gap * s, SH_Y0 - oy, 1, SH_ROW * SH_ROWS + 1, C_GRAY);
     for (r = 0; r <= SH_ROWS; r++)
         cv_rect(SH_X0, SH_Y0 + SH_ROW * r - oy - (r == 0 && start == 1 ? 3 : 0), gap * (t->n - 1) + 1,
-                r == 0 && start == 1 ? 4 : 1, r == 0 && start == 1 ? C_WHITE : C_GRAY);
+                r == 0 && start == 1 ? 4 : 1, r == 0 && start == 1 ? (rec.capo ? C_AMB : C_WHITE) : C_GRAY);  /* the nut,
+                                                                                            * or the capo */
     if (start > 1) {
         lab[0] = 0;
         tint(lab, start);
@@ -922,7 +1043,21 @@ static void draw_shape_at(int32_t oy)
         shape_text(lab);
         cv_text(x, 140 - oy, &FONT_T, lab, C_DIM);
     }
-    cv_text(x, 156 - oy, &FONT_T, FILTER_NAME[rec.filter], rec.filter ? C_HI : C_DIM);
+    lab[0] = 0;                          /* which shapes, and where */
+    tcat(lab, FILTER_NAME[rec.filter]);
+    if (rec.zone) {
+        tcat(lab, " ");
+        tcat(lab, ZONE_SHORT[rec.zone]);
+    }
+    cv_text(x, 156 - oy, &FONT_T, lab, rec.filter || rec.zone ? C_HI : C_DIM);
+    if (rec.capo) {                      /* CAPO 3: AS G */
+        char ct[TH_CHORD_MAX + 12];
+        capo_text(ct);
+        lab[0] = 0;
+        tcat(lab, "CAPO ");
+        gtext(x, 24 - oy, &FONT_T, lab, C_AMB);
+        gtext(x + gtext_w(&FONT_T, lab), 24 - oy, &FONT_T, ct, C_AMB);
+    }
 }
 
 /* LEARN: a chord diagram anywhere, any size (standard tuning). fingers: the finger numbers in the dots */
@@ -1044,6 +1179,46 @@ static void draw_learn_at(int32_t oy)
     }
 }
 
+static void draw_menu_at(int32_t oy)   /* as THEORY's */
+{
+    int i;
+    for (i = 1; i < PG_N; i++) {
+        int32_t y = 8 + (i - 1) * 34 - oy;
+        int on = ui.msel == i - 1;
+        if (on) cv_rect(4, y - 4, 232, 30, C_LINE);
+        cv_text(14, y + 1, &FONT_B, PAGE_NAME[i], on ? C_WHITE : C_GRAY);
+        cv_text(112, y + 4, &FONT_XS, PAGE_WHAT[i], on ? C_HI : C_DIM);
+    }
+}
+
+static void draw_set_at(int32_t oy)
+{
+    static const char *const ROW[SR_ROWS] = { "TUNING", "NECK VIEW", "RESET LEARN" };
+    char t[24];
+    int i;
+    for (i = 0; i < SR_ROWS; i++) {
+        int32_t y = 8 + i * 30 - oy;
+        int on = ui.srow == i;
+        if (on) cv_rect(4, y - 3, 232, 25, C_LINE);
+        cv_text(12, y, &FONT_B, ROW[i], on ? C_WHITE : C_GRAY);
+        t[0] = 0;
+        if (i == SR_TUNING) tcat(t, tun()->name);
+        else if (i == SR_VIEW) tcat(t, rec.flags & FL_FLIP ? "LOW ON TOP" : "HIGH ON TOP");
+        else if (ui.armed) tcat(t, "PLAY: YES");
+        else {
+            tcat(t, "STAGE ");
+            tint(t, rec.learn.stage + 1);
+        }
+        cv_text(228 - text_w(&FONT_B, t), y, &FONT_B, t, ui.armed && i == SR_RESET ? C_WHITE : C_HI);
+    }
+    t[0] = 0;
+    tcat(t, "GUITAR ");
+    tint(t, FW_MAJOR);
+    tcat(t, ".");
+    tint(t, FW_MINOR);
+    cv_text(12, 156 - oy, &FONT_XS, t, C_DIM);
+}
+
 static void draw_main(void)
 {
     int h;
@@ -1051,6 +1226,8 @@ static void draw_main(void)
         cv_begin(240, MAIN_H / 2, C_BLACK);
         if (rec.page == PG_NECK) draw_neck_at(h * MAIN_H / 2);
         else if (rec.page == PG_LEARN) draw_learn_at(h * MAIN_H / 2);
+        else if (rec.page == PG_MENU) draw_menu_at(h * MAIN_H / 2);
+        else if (rec.page == PG_SET) draw_set_at(h * MAIN_H / 2);
         else draw_shape_at(h * MAIN_H / 2);
         cv_blit(0, 32 + (uint32_t)(h * MAIN_H / 2));
     }
@@ -1099,7 +1276,7 @@ static void draw_header(void)
     else if (rec.page == PG_LEARN) learn_title(t);
     else {
         t[0] = 0;
-        tcat(t, "CHORD SHAPES");
+        tcat(t, rec.page == PG_MENU ? "GUITAR" : rec.page == PG_SET ? "SETTINGS" : "CHORD SHAPES");
     }
     gtext(8, 7, &FONT_B, t, C_WHITE);
     x -= text_w(&FONT_T, PAGE_NAME[rec.page]);
@@ -1164,10 +1341,13 @@ static void draw_footer(void)
             else if (rec.page == PG_LEARN) learn_foot(t);
             else {
                 t[0] = 0;
-                tcat(t, "PLAY STRUMS");
+                tcat(t, rec.page == PG_MENU ? "SELECT, PLAY   ALGO: PAGES"
+                        : rec.page == PG_SET ? "SELECT: ROW   K1 / SEL: CHANGE"
+                                             : "PLAY A CHORD: ITS SHAPES");
             }
             cv_text(8, 10, &FONT_T, t, C_GRAY);
-            cv_text(232 - text_w(&FONT_T, tun()->name), 10, &FONT_T, tun()->name, C_DIM);
+            if (rec.page != PG_MENU && rec.page != PG_SET)
+                cv_text(232 - text_w(&FONT_T, tun()->name), 10, &FONT_T, tun()->name, C_DIM);
         }
     }
     cv_blit(0, 208);
@@ -1192,7 +1372,11 @@ static void speak(void)
         tcat(t, ". ");
         if (rec.page == PG_NECK) key_text(k);
         else if (rec.page == PG_LEARN) learn_title(k);
-        else th_chord_name(cur_chord(), k);
+        else if (rec.page == PG_SHAPE) th_chord_name(cur_chord(), k);
+        else {
+            k[0] = 0;
+            tcat(k, rec.page == PG_MENU ? PAGE_NAME[ui.msel + 1] : "SETTINGS");
+        }
         gt_ascii(k, a, sizeof a);
         tcat(t, a);
         ann_say(t, 0, ANN_NOW);
@@ -1223,15 +1407,20 @@ void app_init(void)
     n = plat_store_load(OBJ_GUITAR, &rec, sizeof rec);
     if (n == (int)REC_V1_SIZE && rec.ver == 1u && rec.size == REC_V1_SIZE) {    /* 0.1: no LEARN progress yet */
         ls_reset(&rec.learn);
-        rec.ver = REC_VER;
+        rec.ver = 2u;
         rec.size = (uint16_t)sizeof rec;
         n = (int)sizeof rec;
+    }
+    if (n == (int)sizeof rec && rec.ver == 2u && rec.size == sizeof rec) {   /* 0.2: pages from NECK = 0, rsv zero */
+        rec.page = (uint8_t)(rec.page + 1u);
+        rec.ver = REC_VER;
     }
     if (n != (int)sizeof rec || !rec_valid(&rec)) {
         zero(&rec, sizeof rec);
         defaults();
     }
     ui.seq_s = -1;
+    ui.back = rec.page == PG_MENU ? PG_NECK : rec.page;
     synth_init();
     synth_stop();
     neck_update();
@@ -1276,6 +1465,12 @@ int app_expect(const char *what, int *got)
     else if (!strcmp(what, "labels")) *got = rec.labels;
     else if (!strcmp(what, "pos")) *got = rec.pos;
     else if (!strcmp(what, "tuning")) *got = rec.tuning;
+    else if (!strcmp(what, "capo")) *got = rec.capo;
+    else if (!strcmp(what, "zone")) *got = rec.zone;
+    else if (!strcmp(what, "flags")) *got = rec.flags;
+    else if (!strcmp(what, "msel")) *got = ui.msel;
+    else if (!strcmp(what, "srow")) *got = ui.srow;
+    else if (!strcmp(what, "back")) *got = ui.back;
     else if (!strcmp(what, "page")) *got = rec.page;
     else if (!strcmp(what, "oct")) *got = rec.oct;
     else if (!strcmp(what, "root")) *got = rec.root;
@@ -1348,6 +1543,7 @@ int app_host_cmd(const char *cmd, const char *a, const char *b, const char *c, c
             tcat(raw, one);
         }
     } else if (!strcmp(a, "tuning")) tcat(raw, tun()->name);
+    else if (!strcmp(a, "capo")) capo_text(raw);
     else if (!strcmp(a, "footer")) {
         footer_text(raw, small);
         if (small[0]) {

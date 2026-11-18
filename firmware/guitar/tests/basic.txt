@@ -2,7 +2,7 @@
 # Keys: 0 is F3; A3 4, C4 7, E4 11, F#4 13, G4 14, A4 16, B4 18, C5 19, D5 21.
 wait 600
 shot boot.png
-expect page 0
+expect page 1
 expect tonic 1
 expect scale 0
 expect pos 0
@@ -110,10 +110,10 @@ wait 60
 expect voices 0
 expect_text key A_major
 
-# ---- SHAPE: chord diagrams
-tap HOME
+# ---- SHAPE: chord diagrams (ALGO turns the pages: MENU 0, NECK 1, SHAPE 2, LEARN 3, SETTINGS 4)
+turn ALGO 1
 wait 60
-expect page 1
+expect page 2
 expect_text chord C
 expect_text frets x32010
 expect_text fingers 032010
@@ -206,28 +206,78 @@ key 7 up
 release SEL
 wait 60
 expect_text chord C
-turn K4 6
+
+# ---- 0.3, the finder. K4: a capo; C with the capo at 3 is the A shape
+turn K4 3
+wait 60
+expect capo 3
+expect_text capo 3:_AS_A
+expect_text frets x02220
+expect voices 0
+tap PLAY
+wait 400
+expect voices >0
+shot shape_capo.png
+turn K4 -3
+wait 1500
+expect capo 0
+expect_text frets x32010
+# PRESET: a register of the neck, closed shapes only up the neck
+turn PRESET 2
+wait 60
+expect zone 2
+expect_text frets 875558
+expect_text form G_FORM
+shot shape_zone.png
+turn PRESET 1
+wait 60
+expect zone 3
+turn PRESET 1
+wait 60
+expect zone 0
+# K3 SIMPLE: three or four strings, no barre (F is the small F)
+turn K3 4
+wait 60
+expect filter 4
+expect_text frets x3201x
+turn K2 5
+wait 60
+expect_text chord F
+expect_text frets xx3211
+# the index across the top two strings, as books finger the small F
+expect_text fingers 003211
+shot shape_simple.png
+turn K2 -5
+wait 60
+turn K3 -4
+wait 60
+expect filter 0
+expect_text chord C
+
+# the tuning is in SETTINGS (and on NECK's K4)
+turn ALGO 2
+wait 60
+expect page 4
+turn K1 6
 wait 60
 expect_text tuning UKULELE
+turn ALGO -2
+wait 60
+expect page 2
 expect_text frets 0003
 shot shape_uke.png
-tap HOME
-wait 30
-expect page 2
-tap HOME
+turn ALGO -1
 wait 60
-expect page 0
+expect page 1
 shot neck_uke.png
 turn K4 2
 wait 60
 expect_text tuning STANDARD
 
 # ---- LEARN: rounds of chord cards, stage 1 (key of C: C G Am F)
-tap HOME
-wait 30
-tap HOME
+turn ALGO 2
 wait 60
-expect page 2
+expect page 3
 expect lstage 0
 expect lstate 0
 expect lcard 0
@@ -319,32 +369,73 @@ tap PLAY
 wait 60
 expect lstate 0
 expect lcard 0
+turn ALGO -2
+wait 60
+expect page 1
+
+# ---- MENU: HOME opens it and goes back, as in THEORY and Morse; SELECT and PLAY open a page
 tap HOME
 wait 60
 expect page 0
-
-# ---- pages also turn with ALGO, either way (as in THEORY and Morse)
-turn ALGO -1
+expect msel 0
+shot menu.png
+tap HOME
 wait 60
-expect page 2
-turn ALGO 1
+expect page 1
+tap HOME
 wait 60
-expect page 0
+turn SELECT 3
+wait 60
+expect msel 3
+tap PLAY
+wait 60
+expect page 4
+shot settings.png
+# SETTINGS: the neck turned over (the low string on top)
+turn SELECT 1
+wait 60
+expect srow 1
+turn K1 1
+wait 60
+expect flags 1
+turn ALGO -3
+wait 60
+expect page 1
+shot neck_flip.png
+turn ALGO 3
+wait 60
+turn K1 1
+wait 60
+expect flags 0
+# RESET LEARN: SEL asks, PLAY does it
+turn SELECT 1
+wait 60
+expect srow 2
+tap SEL
+wait 60
+shot settings_reset.png
+tap PLAY
+wait 60
+expect lrounds 0
+expect lstage 0
+turn ALGO -3
+wait 60
+expect page 1
 
 # ---- kept: saved once the knobs rest, read back after a restart
 tap OCT-
 wait 30
 expect oct -1
-tap HOME
+turn ALGO 1
 wait 3200
 expect saves >0
 expect store_writes >0
 reboot
 wait 600
-expect page 1
+expect page 2
 expect_text key A_major
 expect_text chord C
 expect oct -1
 expect_text frets x32010
-expect lrounds 1
+expect lrounds 0
 shot reboot.png
