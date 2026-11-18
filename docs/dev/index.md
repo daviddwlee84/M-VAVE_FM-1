@@ -14,6 +14,7 @@ firmware/morse/            摩斯電碼機（見摩斯電碼機頁）
 firmware/common/           app 之間共用的模組（hostlink、ledfx、chime、lpc、adpcm）
 firmware/voicelab/         語音解碼器的驗證 app（見裝置端語音合成頁；不刷實機）
 firmware/theory/           樂理練習機 THEORY（見樂理練習機頁）
+firmware/guitar/           吉他指板與和弦書 GUITAR（見吉他指板與和弦書頁）
 firmware/<app>/            之後的 app
 tools/jieli/               JieLi toolchain（gitignore）
 tools/fw-AC79_AIoT_SDK/    JieLi AC79 SDK，固定 tag（gitignore）

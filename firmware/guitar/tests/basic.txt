@@ -1,0 +1,214 @@
+# GUITAR in the host simulator: just fw-test guitar (screenshots and audio in firmware/guitar/build/host/)
+# Keys: 0 is F3; A3 4, C4 7, E4 11, F#4 13, G4 14, A4 16, B4 18, C5 19, D5 21.
+wait 600
+shot boot.png
+expect page 0
+expect tonic 1
+expect scale 0
+expect pos 0
+expect_text key G_major
+expect_text pos WHOLE_NECK
+expect_text tuning STANDARD
+# G major on the keys: G mid, the rest of the scale glowing
+expect mid_keys 67125252
+expect lit_keys 0
+
+# ---- NECK: one note, then a chord
+key 14 down
+wait 60
+expect shown 1
+expect_text footer G4_1
+expect voices 1
+shot neck_note.png
+key 14 up
+wait 30
+key 7 down
+key 11 down
+key 14 down
+wait 60
+expect_text footer C_IV
+shot neck_chord.png
+key 7 up
+key 11 up
+key 14 up
+wait 400
+expect voices 0
+
+# ---- positions: CAGED C A G E D, then 3NPS 1-7
+turn K3 4
+wait 60
+expect pos 4
+expect_text pos CAGED_E
+# the E shape of G major: frets 2-5 (string 0 = low E: 2 3 5)
+expect mask0 44
+expect mask4 40
+expect view 0
+shot neck_caged_e.png
+turn K3 2
+wait 60
+expect_text pos 3NPS_1
+expect mask0 168
+expect mask5 416
+shot neck_3nps.png
+# a position past the 12th fret scrolls the neck
+turn K3 3
+wait 60
+expect_text pos 3NPS_4
+expect view >0
+shot neck_scrolled.png
+turn K3 -9
+wait 60
+expect pos 0
+# labels: note names, degrees
+turn K2 1
+wait 60
+expect labels 1
+shot neck_names.png
+turn K2 1
+wait 60
+expect labels 2
+shot neck_degrees.png
+turn K2 1
+wait 60
+expect labels 0
+# PLAY runs the scale up the position
+turn K3 4
+wait 60
+tap PLAY
+wait 100
+expect playing 1
+expect voices >0
+shot neck_run.png
+wait 4000
+expect playing 0
+turn K3 -4
+wait 60
+
+# ---- around the circle; the scale; SEL and a key
+turn SELECT 1
+wait 60
+expect_text key D_major
+turn K1 10
+wait 60
+expect_text key D_minor_pentatonic
+expect_text pos WHOLE_NECK
+turn K3 6
+wait 60
+expect_text pos 2NPS_1
+expect mask0 9216
+shot neck_penta.png
+turn K3 -6
+wait 60
+turn K1 -10
+wait 60
+press SEL
+key 4 down
+wait 60
+key 4 up
+release SEL
+wait 60
+expect voices 0
+expect_text key A_major
+
+# ---- SHAPE: chord diagrams
+tap HOME
+wait 60
+expect page 1
+expect_text chord C
+expect_text frets x32010
+expect_text fingers 032010
+expect nshapes 8
+shot shape_c.png
+turn SELECT 1
+wait 60
+expect shape 1
+turn SELECT -1
+wait 60
+# PLAY strums it
+tap PLAY
+wait 300
+expect voices 5
+wait 1500
+# a chord from the keys: its shapes
+key 4 down
+key 7 down
+key 11 down
+wait 60
+expect_text chord Am
+expect_text frets x02210
+key 4 up
+key 7 up
+key 11 up
+wait 30
+# K1 the quality, K2 the root: F major, a barre among its shapes
+turn K1 -1
+wait 60
+expect_text chord A
+turn K2 -4
+wait 60
+expect_text chord F
+shot shape_f.png
+turn K1 2
+wait 60
+expect_text chord F7
+turn K2 6
+wait 60
+expect_text chord B7
+expect_text frets x21202
+shot shape_b7.png
+turn K1 -1
+wait 60
+turn K2 -1
+wait 60
+expect_text chord Bbm
+shot shape_bbm.png
+# SEL and a key: the root
+press SEL
+key 14 down
+wait 60
+key 14 up
+release SEL
+wait 60
+expect_text chord Gm
+expect_text frets 310033
+expect_text fingers 210034
+
+# ---- tunings: the ukulele's C, the neck with four strings
+turn K1 -1
+wait 60
+press SEL
+key 7 down
+wait 60
+key 7 up
+release SEL
+wait 60
+expect_text chord C
+turn K4 6
+wait 60
+expect_text tuning UKULELE
+expect_text frets 0003
+shot shape_uke.png
+tap HOME
+wait 60
+expect page 0
+shot neck_uke.png
+turn K4 2
+wait 60
+expect_text tuning STANDARD
+
+# ---- kept: saved once the knobs rest, read back after a restart
+tap OCT-
+wait 30
+expect oct -1
+tap HOME
+wait 3200
+expect saves >0
+expect store_writes >0
+reboot
+wait 600
+expect page 1
+expect_text key A_major
+expect_text chord C
+expect oct -1
+expect_text frets x32010
+shot reboot.png

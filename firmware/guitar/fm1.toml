@@ -1,0 +1,19 @@
+# GUITAR's build settings (fm1-base tools/build.py)
+name = "GUITAR"
+title = "GUITAR"
+id_prefix = "FM-1_55"          # package identity: dev FM-1_5500, release 0.1 FM-1_55000100 (free in the Hub's catalog of 2026-11-18 12:01 UTC; FM-1_52 and FM-1_53 are taken)
+usb_manufacturer = "fm1-base"
+usb_product = "GUITAR FM-1"
+o2 = []
+include = ["../common", "../theory"]   # ledfx (firmware/common, MIT); theory.c, synth.c, gtext.c (GPL-3.0-or-later)
+words = "words.tsv"
+font_full = ["T", "M"]         # lower case in the 12 px font (degrees, scale names) and the 24 px one (chord names)
+ble = false                    # USB only for now
+tagline = "a pocket guitar neck and chord book"
+repo = "https://github.com/daviddwlee84/M-VAVE_FM-1"
+site = "https://daviddwlee84.github.io/M-VAVE_FM-1/dev/guitar/"
+licence = "GPL-3.0-or-later"
+credits = "Built on fm1-base by Charles Vestal. The theory, the voice and the music signs are THEORY's (firmware/theory). Chord shapes are searched, not copied; ChordRoot was the inspiration."
+author = "daviddwlee84"
+description = "A pocket guitar neck and chord book. NECK: a key's scale on frets 0-12 of a guitar, bass, ukulele or mandolin in eight tunings, the whole neck or one position at a time (CAGED, three notes per string); play a note and every place it lies lights up. SHAPE: chord diagrams with fingers, barres, open and muted strings, easiest first; play a chord and its shapes appear, PLAY strums it."
+tags = ["utility"]

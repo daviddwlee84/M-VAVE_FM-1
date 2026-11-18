@@ -1,0 +1,12 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+# GUITAR's words for a screen reader (fm1-reader): the text on the screen <TAB> what to say.
+# url: https://daviddwlee84.github.io/M-VAVE_FM-1/dev/guitar/
+GUITAR	guitar
+NECK	neck
+SHAPE	shape
+CAGED	caged
+NPS	notes per string
+DOTS	dots
+NAMES	note names
+DEGREES	degrees
+TUNING	tuning
