@@ -347,6 +347,22 @@ theory-emu chip="uc25hq80":
 theory-vectors:
     uv run --quiet --no-project --with music21==10.5.2 python -I host/theory/make_vectors.py
 
+# ---- guitar: a pocket guitar neck and chord book (firmware/guitar, docs/dev/guitar.md) ----
+
+# fret.c on this computer: tunings, scale positions (CAGED, NPS), chord shapes against the open chords a
+# guitarist learns, every chord on every tuning checked playable. Strict flags, as for theory-unit.
+guitar-unit:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    mkdir -p build
+    cc -std=c99 -Wall -Wextra -pedantic -Wdouble-promotion -Wfloat-equal -Wshadow -Ifirmware/theory \
+      -o build/fret_test firmware/guitar/tests/fret_test.c
+    build/fret_test
+
+# GUITAR in the emulator (build it first: just fw-build guitar). Its simulator test is `just fw-test guitar`.
+guitar-emu chip="uc25hq80":
+    just emu-run firmware/guitar/build/guitar.fwsc "{{chip}}"
+
 # ---- voice lab: speech options for a vocabulary app (host/voicelab, docs/dev/tts.md) ----
 
 # Upstream code the lab builds on, at pinned commits, into vendor/ (git-ignored): Moonshine's Klatt TTS (MIT),
