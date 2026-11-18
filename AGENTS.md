@@ -30,6 +30,7 @@ experimental firmware apps under `firmware/`, built on the `fm1-base` submodule.
 | `firmware/common/` | Modules shared by own apps (`hostlink`, `ledfx`, `chime`, and the speech decoders `lpc`, `adpcm`; MIT). Apps add `include = ["../common"]`. |
 | `firmware/theory/` | THEORY, own music theory trainer (GPL-3.0-or-later, identity `FM-1_49`, settings at `0xD8000`). v0.1 is the WHEEL page (circle of fifths, naming a played chord, the key's chords on the white keys), on the owner's unit since 2026-11-18 (installed over Morse 0.6, whose record at `0xDA000` it leaves alone). Its platform-free core `theory.c` (spelling, scales, keys, chords, Roman numerals, voicing) is checked against music21 (`tests/vectors.h`, generated). Design: `docs/dev/theory.md`. |
 | `firmware/voicelab/` | Spike app (MIT): each key says a test word with the `lpc` / `adpcm` decoders. Not for installing. Its data (`gen/`) is generated and git-ignored. Design: `docs/dev/tts.md`. |
+| `firmware/rhythm/` | RHYTHM, own rhythm trainer (GPL-3.0-or-later, identity `FM-1_54`, settings at `0xD2000`). v0.1: METRO (metronome, subdivisions, tap tempo, gap click) and ECHO (hear a bar or two, tap it back, per-onset ms error and a hint). Platform-free core `rhythm.c`. Host simulator only so far. Design: `docs/dev/rhythm.md`. |
 | `host/conductor/` | Conductor's host daemon (Python, MIT): backends `hc`, `herdr`, `fake`. Protocol spec in `PROTOCOL.md`; tests in `host/tests/`. |
 | `host/morse/` | Morse's host (Python, MIT): types what the FM-1 reads into the Mac, sends text for it to play. Protocol in `PROTOCOL.md` (keying is Vail-format MIDI note 0). |
 | `host/voicelab/` | Listening lab (Python, MIT): renders test words with every speech option (macOS `say`, Moonshine Klatt, 386DX, LPC, ADPCM, SPELLBOX in fm1-emu) into `build/voicelab/`, scores them with Whisper. GPL engines stay in `vendor/`; generated audio is never committed. |
@@ -86,6 +87,9 @@ just voice-lab [ENGINE...]  # render host/voicelab/words.txt with every speech o
 just voice-score       # Whisper (base.en) as a stand-in listener, onto the page
 just voice-open        # the listening page, build/voicelab/index.html
 just voice-fw          # the test words into firmware/voicelab (gen/, git-ignored) + its host simulator test
+
+just rhythm-unit       # firmware/rhythm core on this computer (strict C99)
+just rhythm-emu [CHIP] # RHYTHM in fm1-emu (after `just fw-build rhythm`; `just fw-test rhythm` is its simulator test)
 
 just fw-setup          # submodules + Python tools (needs `brew install libraqm`)
 just fw-test [APP]     # host simulator build + tests/basic.txt; no toolchain, no hardware
