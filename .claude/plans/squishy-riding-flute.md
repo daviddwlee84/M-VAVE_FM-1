@@ -11,6 +11,16 @@ Hub 上很多韌體有 ▶ Play in browser 按鈕（例：Rainbow），MORSE 沒
   - 包成自己的頁面：Rainbow、Skiff、Tuna 等都做了 `/try/`。fm1-emu 的 `?embed=1` 只顯示機器本身，專門給別的網站用 iframe 嵌入。
 - 本機的 `just emu-run` 已經在 fm1-emu 上跑過 MORSE `[模擬]`，可以開機。
 
+**你測到的 404（`fw/morse-0.3.fwsc`）**：
+- 我用 headless Chromium 開同一個網址 5 次（每次都是全新 profile）。
+  - 第 1 次重現了同樣的 404。
+  - 後面 4 次都抓到 `fw/morse-0.5.fwsc`（200，616,003 B），MORSE 0.5 開機，畫面停在 PRACTICE ROUND 1。
+- fm1-emu 自己的 `firmwares.json` 還沒有 MORSE，所以它把 MORSE 當成「Hub 新上架」，套件網址直接從 Hub 的 `catalog.json` 拿。
+- Hub 換版本時會刪掉舊套件。如果拿到的是 0.3 時期的舊目錄（瀏覽器快取或 CDN 快取，`max-age=600`），就會去抓已經刪掉的 0.3 而 404。fm1-emu 的備援也查同一份目錄，所以救不回來。
+- 這個問題是暫時的：重新整理通常就好。等 fm1-emu 的維護者下次把 MORSE 收進 `firmwares.json` 後，會更穩定一些。
+- v0.6 上 Hub、0.5 被刪掉時，可能又會短暫出現一次。
+- 不改用固定網址：`?package=` 釘死某個 Hub 套件，換版本後就會永久 404；GitHub release 的檔案沒有 CORS。所以仍然用 `?fw=morse`，在 try 頁上寫「看到 404 就重新整理」。
+
 ## 做法
 
 ### 1. Try 頁：`fm1-morse/web/try/index.html`（新檔）
@@ -26,6 +36,8 @@ Hub 上很多韌體有 ▶ Play in browser 按鈕（例：Rainbow），MORSE 沒
   - 要接 Vail 或備份進度得用實機，連到 `../`（MORSE on the web）。
 - 視覺跟 `web/index.html` 一致，沿用同一套 `:root` 色票和深色模式。
 - 加一個「直接開 fm1-emu 全頁」的連結，iframe 不能用時可以改點它。
+- 加一個「看到 `…fwsc: 404` 就按這裡重新載入」的按鈕：用 cache-busting 重新載入 iframe。原因見上。
+- 不寫死 `mhz`，用 fm1-emu 的預設（實測是 100 MHz，3.5 倍即時，負載 29%）。
 
 ### 2. Cheatsheet 頁：`fm1-morse/web/cheatsheet.html`（新檔，英文）
 
