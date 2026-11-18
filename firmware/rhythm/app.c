@@ -96,7 +96,13 @@ typedef struct {
 static voice_t vo[NV];
 static uint32_t vo_rr;
 
-static uint32_t tick_at(uint32_t t) { return tr.start + (uint32_t)(((uint64_t)t * tr.tick_q8 + 128u) >> 8); }
+/* q8 steps in 32-bit arithmetic only: the device links no 64-bit division (no libgcc), and its 64-bit multiplies
+ * beside loads can corrupt a register (felucca-bsp docs/CPU.md). Exact for 2^24 steps (a day at 240 BPM in ticks) */
+static uint32_t q8_mul(uint32_t n, uint32_t q8) { return n * (q8 >> 8) + ((n * (q8 & 255u) + 128u) >> 8); }
+
+static int32_t smp_ms(int32_t x) { return (x * 20 + (x < 0 ? -441 : 441)) / 882; }   /* samples -> ms, rounded */
+
+static uint32_t tick_at(uint32_t t) { return tr.start + q8_mul(t, tr.tick_q8); }
 
 static int metro_gap(uint32_t beat)      /* METRO: this beat is in a silent bar */
 {
@@ -324,7 +330,7 @@ static void changed(uint32_t r)
 }
 
 /* --------------------------------------------------------------- transport --- */
-static uint32_t beat_smp_q8(void) { return (uint32_t)((uint64_t)SR * 60u * 256u / rec.bpm); }
+static uint32_t beat_smp_q8(void) { return SR * 60u * 256u / rec.bpm; }   /* (677,376,000: fits) */
 
 static void tr_stop(void)
 {
@@ -354,7 +360,7 @@ static int32_t tick_now(void)            /* the tick playing now; negative befor
 {
     int32_t d = (int32_t)(now_smp() - tr.start);
     if (!tr.run) return -1;
-    return d < 0 ? -1 : (int32_t)((uint64_t)(uint32_t)d * 256u / tr.tick_q8);
+    return d < 0 ? -1 : (int32_t)((float)d * 256.0f / (float)tr.tick_q8);
 }
 
 /* ------------------------------------------------------------------ METRO --- */
@@ -373,9 +379,9 @@ static void metro_tap(uint32_t smp)
     uint32_t bq = beat_smp_q8();
     int32_t d = (int32_t)(smp - tr.start), b, err;
     if (!ui.running || d < -(int32_t)(bq >> 9)) return;
-    b = (int32_t)(((int64_t)d * 256 + (int64_t)(bq / 2)) / (int64_t)bq);
+    b = (int32_t)((float)d * 256.0f / (float)bq + 0.5f);
     if (b < 0) b = 0;
-    err = (int32_t)((int64_t)d * 1000 / SR) - (int32_t)((int64_t)b * bq / 256 * 1000 / SR) - rec.lat;
+    err = smp_ms(d - (int32_t)q8_mul((uint32_t)b, bq)) - rec.lat;
     ui.mt_err[ui.mt_n % MT_N] = (int16_t)clamp(err, -999, 999);
     ui.mt_gap[ui.mt_n % MT_N] = (uint8_t)(tr.gap_on && metro_gap((uint32_t)b));
     ui.mt_n++;
@@ -464,7 +470,7 @@ static void echo_tap(uint32_t smp)
     int32_t d = (int32_t)(smp - t0), ms;
     if (ui.es != ES_COUNT2 && ui.es != ES_TAP) return;
     if (d < -(int32_t)(bq / 256u / 2u)) return;   /* more than half a beat early: still counting in */
-    ms = (int32_t)((int64_t)d * 1000 / SR) - rec.lat;
+    ms = smp_ms(d) - rec.lat;
     if (ui.ntaps < RH_MAX_TAPS) ui.taps[ui.ntaps++] = ms;
     ui.redraw |= R_MAIN;
 }
@@ -753,9 +759,9 @@ static int32_t tl_x(int32_t ms_or_tick, int is_tick)
     int32_t total = ui.pat.nbeats * RH_TPB;
     if (!is_tick) {                      /* ms -> ticks */
         int32_t tick_us = (int32_t)rh_tick_ms_x1000(rec.bpm);
-        ms_or_tick = (int32_t)((int64_t)ms_or_tick * 1000 / tick_us);
+        ms_or_tick = ms_or_tick * 1000 / tick_us;   /* (ms within a few bars: no overflow) */
     }
-    return TL_X + (int32_t)((int64_t)ms_or_tick * TL_W / (total ? total : 1));
+    return TL_X + ms_or_tick * TL_W / (total ? total : 1);
 }
 
 static void draw_echo(int32_t oy)

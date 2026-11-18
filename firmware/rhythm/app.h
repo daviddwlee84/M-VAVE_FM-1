@@ -15,11 +15,11 @@
 #define APP_BLOCK 256u                   /* frames per audio block: 5.8 ms at 44.1 kHz */
 #define APP_TICK                         /* 1 kHz: the keys' onsets, timed against the audio's own sample count */
 
-/* the settings, one record (app.c rec_t), at 0xD6000: below THEORY's 0xD8000 and Morse's 0xDA000, a sector pair
- * empty in this unit's backups (docs/hardware/flash-map.md; rehearse with just emu-rehearse before a flash). GUITAR
- * takes 0xD4000. The panel calibration is the platform's */
+/* the settings, one record (app.c rec_t), at 0xD2000. Taken around it: THEORY 0x{D6,D8}000 (0.2's card progress at
+ * 0xD6000), Morse 0xDA000, the panel 0xDC000; GUITAR is planned at 0xD4000 (docs/hardware/flash-map.md). Check it
+ * is blank in the latest backup with just emu-rehearse before a flash. The panel calibration is the platform's */
 enum { OBJ_PANEL, OBJ_RHYTHM, OBJ_NOBJ };
-#define APP_STORE_MAP {0xDC000u, 0xD6000u}
+#define APP_STORE_MAP {0xDC000u, 0xD2000u}
 
 void app_init(void);
 void app_render(int32_t *lr, uint32_t n, uint32_t master_q12);

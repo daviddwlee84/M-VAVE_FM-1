@@ -1,7 +1,7 @@
 # RHYTHM's build settings (fm1-base tools/build.py)
 name = "RHYTHM"
 title = "RHYTHM"
-id_prefix = "FM-1_52"          # package identity: dev FM-1_5200, release 0.1 FM-1_52000100. NOT yet checked against the Hub's catalog (GUITAR has 53)
+id_prefix = "FM-1_54"          # package identity: dev FM-1_5400, release 0.1 FM-1_54000100 (not in the Hub's catalog of 2026-11-18 12:01 UTC; 52 is RemoteFM1, JAMTRACK, QUADRO)
 usb_manufacturer = "fm1-base"
 usb_product = "RHYTHM FM-1"
 o2 = []

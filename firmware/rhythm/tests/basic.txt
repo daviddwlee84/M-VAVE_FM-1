@@ -144,7 +144,8 @@ metrotap 4 -10
 wait 2000
 expect metro_taps 4
 expect metro_gap_taps 3
-expect metro_avg -10
+# (the 1 kHz tick dates a press up to 1 ms after its sample: -10 reads -9.x, the average truncates)
+expect metro_avg -9
 shot metro_gap.png
 tap PLAY
 expect running 0

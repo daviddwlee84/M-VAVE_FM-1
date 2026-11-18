@@ -5,8 +5,8 @@
 **狀態（2026-11-18）：v0.1（METRO + ECHO）只在 host simulator 驗證過 `[模擬]`。還沒有 device build，沒有在 fm1-emu 跑過，也沒有刷進實機。**
 
 - 韌體在 `firmware/rhythm/`，GPL-3.0-or-later，名稱 RHYTHM。
-- 識別碼暫定 `FM-1_52`（GUITAR 用 `FM-1_53`）。**還沒有對照 Hub 的 catalog 確認沒人用**：雲端環境連不到 `thefirmwarehub.com`。上 Hub 或刷機前要先查。
-- 設定存在 `0xD6000`（`APP_STORE_MAP {0xDC000, 0xD6000}`），在 THEORY 的 `0xD8000` 與 Morse 的 `0xDA000` 下面；GUITAR 用 `0xD4000`。這一段在這台機器的備份裡是不是空的，**還沒用 `just emu-rehearse` 確認**，刷機前要做（AGENTS.md 的規則）。
+- 識別碼 `FM-1_54`。2026-11-18 對照 Hub 的 catalog（12:01 UTC 版）沒人用。原本暫定的 `FM-1_52` 已經被 RemoteFM1、JAMTRACK、QUADRO 用掉（RemoteFM1 的 pattern 正好吃到 `FM-1_5200`）。
+- 設定存在 `0xD2000`（`APP_STORE_MAP {0xDC000, 0xD2000}`）。附近已經有人用：THEORY 0.2 的 `0xD8000` 與 `0xD6000`（閃卡進度）、Morse 的 `0xDA000`、面板校正的 `0xDC000`；GUITAR 預定用 `0xD4000`。原本選的 `0xD6000` 和 THEORY 0.2 撞到，第一次存檔就會蓋掉 THEORY 的進度，所以改了。`0xD2000` 在 THEORY 0.2 之後的備份裡是不是空的，**刷機前要用 `just emu-rehearse` 確認**。
 - 為什麼另做一個韌體而不是放進 THEORY：本人 2026-11-18 決定 RHYTHM 與 GUITAR 都各自是獨立韌體。
 
 ## 操作 { #controls }
@@ -99,7 +99,13 @@ simulator 的劇本有幾個 app 自己的指令：`pattern q_ee_r_q` 指定 ECH
 
 - `just rhythm-unit`：43,688 個檢查全部通過。
 - `just fw-test rhythm`：70 個 expect 全部通過。內容：ECHO 準時 tap 得 100% 與 `GOOD`；整體早 45 ms 得 `RUSHING`、晚 45 ms 得 `DRAGGING`；只有休止符後晚 60 ms 得 `LATE AFTER RESTS`；漏一個音，其他三個仍然 GOOD；90 BPM 的切分音晚 150 ms 得 `SYNCOPATION SQUARED`；難度 4、兩小節的隨機題準時 tap 得 100%。METRO 有聲音、tap 偏 +20 ms 量到 +20、gap 小節裡沒有聲音（peak < -60 dB）而且靜音小節的 tap 照樣算、tap tempo 4 下得 120 BPM、設定重開後還在。
-- **沒做的**：`just fw-build rhythm`（雲端環境沒有 JieLi toolchain），所以也沒有 `.fwsc`、沒在 fm1-emu 的兩種晶片上跑過存檔與重開、沒有 `emu-rehearse`。這些都要在本人的電腦上做，刷機要本人逐次同意。
+- 2026-11-18 在本人的 Mac 上，用獨立的 worktree 驗證第一版 `[模擬]`：
+    - **`just fw-build rhythm` 在 link 時失敗**：device 上沒有 libgcc 的 64-bit 除法（`__divdi3`、`__udivdi3`）。host simulator 不會發現這種問題。現在 `app.c` 的 device 端改成只用 32-bit 整數與 float 運算（`q8_mul`、`smp_ms`）；build 也提醒，64-bit 乘法放在 load 旁邊可能弄壞暫存器。
+    - 修正後的版本可以 build。套件 616,003 B，app 100,416 B，RAM 的 `.data`+`.bss` 是 39,600 / 98,304 B。
+    - fm1-emu 的 `uc25hq80` 與 `p25q80`：開機進 ECHO；改 BPM 3 秒後存檔，重開後設定還在；METRO 與 ECHO 一輪都跑得起來。
+    - 疊在 `2026-11-18-pre-theory-0.2` 備份上預演：開機 0 次寫入，存檔只寫設定所在的 sector，沒有碰 `0xD8000`、`0xDA000`、`0xDC000`、`0xFC000`。
+    - **找到兩個衝突，已經改掉**：identity `FM-1_52` 已經有人用，改成 `FM-1_54`；設定原本放 `0xD6000`，和 THEORY 0.2 的閃卡進度撞到，改成 `0xD2000`。
+- **還沒做的**：修正後的版本還要在 Mac 上重新 build、在兩種晶片上跑，並用 THEORY 0.2 之後的備份 `emu-rehearse`，確認 `0xD2000` 是空的。刷機要本人逐次同意。
 
 ## 之後 { #next }
 
