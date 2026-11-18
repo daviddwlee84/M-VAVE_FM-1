@@ -1,203 +1,129 @@
-# 樂理練習機（FM-1）：設計文件 + 樂理核心
+# THEORY v0.1：WHEEL（五度圈 + 和弦辨識）
 
 ## Context 背景
 
-使用者想把 Morse（閃卡 + Leitner rounds）和背單字構想（FSRS、Anki）的經驗，延伸成 FM-1 上的**樂理、鍵盤、聽力練習機**：五度圈、和弦進行、各調音階與琶音，偏流行編曲，但古典基本功也要有。使用者小時候在 Yamaha 練過聽音，想加入相對音感、絕對音感，以及**節奏聽寫**。節奏聽寫和 Morse 的盲聽節奏很像，題型有兩種：看小譜面選出聽到的是哪一個，或盲聽之後把它彈出來。
+樂理核心（`firmware/theory/theory.c`，26,661 個檢查）和設計文件（`docs/dev/theory.md`）已經 commit（`d33b979`、`7731b3d`）。本人決定 v0.1 做 **WHEEL**：隨身的樂理參考，不打分數。
 
-已決定的事（2026-11-18，本人回答）：
+本人在 fm1-emu 試用了 Keyboard Academy：「效果還可以，但一直有琴鍵燈提示，所以非常簡單。」這對應到運動學習的 guidance hypothesis：提示太頻繁、太好用時，練習的表現很好，但學的人會依賴提示，拿掉之後就彈不出來。所以 WHEEL 的 LED 只顯示調，不帶彈；之後的卡片也要讓提示逐漸撤掉。這點要寫進設計文件。
 
-- **v0.1 的體驗是 WHEEL**：五度圈探索，加上和弦辨識。
-- **教材格式**：音階、和弦、調號由程式生成；和弦進行用羅馬數字 TSV；旋律用 **Alda 子集**。要有**網頁**可以匯入教材、備份進度，比照 Morse。
-- **這一輪的範圍**：設計文件，加上**開始寫 platform-free 的樂理核心**（C）和 unit test。WHEEL 的 app 本體、synth、畫面下一輪才做。
+已決定（2026-11-18，本人）：
+- 名稱 **THEORY**。
+- 順級和弦模式的白鍵預設是 **字母 = 根音**：D 大調按 F 是 F#m，按 C 是 C#dim。另一種「C 鍵永遠是 I」放在設定裡。
 
-## 研究結論（寫進文件，附來源）
+這一輪只做到 host simulator 和 fm1-emu，不刷實機。實刷另外走 preflight，並要本人批准。
 
-**有人做過（2026-11-18 查）**
+## 機器上的行為
 
-- **Shed**（`Luisnvb/fm1-shed`）：FM-1 上的 jazz 聽力訓練。
-  - 有 9 種 drill，先放 cadence 再出題，一回合 20 題，弱項較常出現。
-  - 建在 FM1 Open SDK 上，GPL-3.0 + SDK exception。
-  - **沒有 release、不在 Hub**，2026-10-23 之後沒有更新，音名拼法沒有定義。
-- **FM1 Keyboard Academy**（`chmess/fm1-keyboard-academy`）：初學者課程。
-  - 流程是 listen → watch → play → review，按鍵 LED 帶彈，正確率 80% 解鎖下一課，附 30 首旋律。
-  - 有 `.fwsc` v0.1.2，不在 Hub。
-- 其他 FM-1 作品：
-  - Kris Jangle：聽旋律再彈出來。
-  - Midi-Mania：音符落下的節奏遊戲。
-  - Flyfish：練一首曲子。
-  - 和弦樂器類（ChoralRoot、fm1-chord、CTL-1、FoMni）是用來彈的，不是用來教的。
-- 其他平台：Functional Ear Trainer、Melodics、Simply Piano、Synthesia（wait mode）、Casio、LUMI（按鍵發光）、Launchkey（scale / chord mode）；開源的有 OpenEar（MIT）、Solfege、LenMus（GPL）。微控制器上只有 Gingoduino（MIT，樂理引擎）。
-- **空缺**：
-  - 跨天的 SRS，同一套排程同時管樂理、聽力、節奏、手上技巧。
-  - 五度圈和和弦辨識，當隨身參考。
-  - 流行與華語的和弦進行（王道進行、4536251、卡農）配 Nashville number。
-  - 15 個調號都拼對音名。
-  - 網頁備份。
+**畫面（240×240）**
 
-**Best practice → 設計原則**
+- **Header**（y 0–31）：左邊是調名（`D major`、`E dorian`），右邊是調號（`2♯`、`3♭`），角落小字標出琴鍵模式 `NOTES` / `CHORDS`。
+- **Main**（y 32–207，分兩個 240×88 的半張畫，因為 canvas 最多 240×144）：
+  - **左邊 176×176 是五度圈。** 外圈是 12 個大調（S 字型，半徑約 70），內圈是關係小調，用小寫表示（XS 字型，半徑約 44），圓周用 `fm_sinf` / `fm_cosf` 算點，`cv_pset` 畫。
+  - 目前調號所在位置的 c−1、c、c+1，外圈加內圈共 6 格，用 `C_AMB` 標出：這就是調內的 6 個大、小和弦。主音另外用 `C_HI` 框起來。
+  - 剛彈的和弦如果是大或小三和弦家族，在它的位置畫圈。這樣副屬和弦、借用和弦會出現在鄰近 6 格之外，一眼看得出是調外的和弦。
+  - **右邊 64 px 寬，列出 7 個順級和弦**：級數（T 字型）加和弦名（S 字型）。
+- **Footer**（y 208–239）：剛彈的東西。
+  - 和弦：用 M 字型顯示名稱（`F#m7/A`），旁邊是級數（`iii7`）和轉位。
+  - 單音：音名加級數（`F#4 3`）。
+  - 兩個音：音程（`M3`）。
+  - 認不出來：列出音名。
+  - 轉旋鈕改設定時，footer 暫時顯示 1.5 秒（例如 `MODE DORIAN`）。
+- ♯ ♭ ° ø 用自己畫的小 bitmap（`gtext`）。app 在 include `theory.c` 之前把 `TH_GLYPH_*` 定義成 `\x01`–`\x04`，`gtext` 遇到這些位元組就畫 bitmap，其他文字交給 `cv_text`。`fm1.toml` 加 `font_full = ["M"]`，M 字型才有小寫（`m`、`b`）。
 
-1. 用彈的來回答。
-2. 先短暫集中，再交錯（Carter & Grahn 2016、Wong 2021）。
-3. 短回合（約 20 張卡）。
-4. 聽力先放 cadence 建立調性（Functional Ear Trainer、Bruce Arnold、Chenette）。
-5. 調性螺旋（ABRSM）：從 C 往五度圈兩側展開。
-6. 知識交給 SRS；手上技巧看實際表現評分，速度階梯要練到、甚至超過目標速度（Allingham & Wöllner 2022），錯誤點集中練（Duke 2009）。
-7. 每個階段同時包含樂理、鍵盤、聽力、流行應用。
-8. 寫文件時另外查核兩件事，查不到就標 `[調研]` 或寫明是本人的經驗：成人絕對音感訓練的研究（例如 Wong et al. 2020），以及 Yamaha 音樂教室聽音課的做法。
+**操作**
 
-**機器條件**（`plat.h`、`gfx.c`）
+| 操作 | 作用 |
+|---|---|
+| 轉 `SELECT` | 沿五度圈換調（調式不變） |
+| 按住 `SEL` 再按琴鍵 | 跳到以那個音為主音的調（`th_key_for_pc`） |
+| `K1` | 調式：大調、小調、和聲小調、旋律小調、dorian、phrygian、lydian、mixolydian、locrian |
+| `K2` | 三和弦或七和弦 |
+| `K3` | 順級和弦的標示：和弦名、Roman 或 Nashville |
+| `K4` | 和弦鍵的對應：字母 = 根音（預設），或 C = I |
+| `PLAY` | 切換琴鍵模式：**NOTES**（彈什麼就辨認什麼）或 **CHORDS**（白鍵彈順級和弦；`PLAY` 亮綠燈） |
+| `OCT-` / `OCT+` | 發聲的八度，−2 到 +2，不影響辨認 |
 
-- 琴鍵 27 鍵（F3–G5，MIDI 53–79），每鍵一顆 LED。
-- 螢幕 240×240 彩色，沒有畫圓的 primitive，字型只有 ASCII，♯♭ 要自己做 bitmap。
-- fm1-base 沒有 synth，`common/chime` 的 2-op FM 可以當起點。
-- 有 `fm1.toml gen = [...]`（build-time generator）。
-- 一個 store object 最多 3,840 B。
-- 韌體槽 581,564 B，Morse 用了約 138 KB。
+**琴鍵與 LED**
 
-## 交付 1：設計文件 `docs/dev/theory.md`（繁體中文，構想草案）
+- **NOTES 模式**：每個琴鍵發出自己的音，`th_identify` 辨認目前按住的所有鍵。一次按和弦的過程中，記住音最多的那一組，全部放開後畫面繼續顯示它。
+- **CHORDS 模式**：
+  - 白鍵的字母決定級數，`th_diatonic` 算出和弦。
+  - `th_voice_near` 依前一個和弦選就近的轉位，範圍 G3–E5，另外加一個低八度的根音當 bass。
+  - 放開琴鍵時，關掉這個鍵觸發的所有音。黑鍵在 v0.1 不出聲。
+- **LED**（用 `firmware/common/ledfx`）：調內的音 glow，主音 mid，按住的鍵 lit。CHORDS 模式下，白鍵 glow，I 級的鍵 mid。
+- 按鍵的音同時從 USB-MIDI 送出（`plat_midi_send`，note on / off），可以錄進 DAW。
 
-章節順序比照 `docs/dev/vocab.md`：
+**聲音**：新的 `synth.c`，從 `common/chime` 的 2-op FM 做法改寫，標示出處。
+- 8 個 voice，不夠時搶走最舊的。
+- 128 格的 phase increment 表在 `app_init` 用 `fm_exp2f` 算好，render 只用 `fm_sin_turns`。
+- envelope：attack 3 ms，接著指數 decay 到 sustain，FM index 隨 envelope 變小（音色變暗，像電鋼琴）。note off 之後約 200 ms release。音量依 velocity（開 `APP_TOUCH`）。
+- note event 用單一寫入者的 ring buffer 傳遞：只有主迴圈（`app_input_only` / `app_frame`）寫，render 在每個 block 開頭讀完。
+- 混音每個 voice 約 0.12，總線過 `fm_tanhf` 軟限幅，再乘上 `master_q12`，然後直接寫進 `lr`（覆蓋，不是相加）。
 
-1. 定位和狀態列（2026-11-18：構想 + 樂理核心）。
-2. **有沒有人做過**：表格，加上和 Shed、Keyboard Academy 的差異。
-3. **學習方法**：上面的原則，附來源。
-4. **課綱**：7 個階段，每階段有樂理、鍵盤、聽力、節奏、流行五部分。主題 × 調的矩陣依五度圈解鎖，像 Koch 的字組。
-5. **頁面**：用 `ALGO` 切換，比照 Morse。每頁附 ASCII 草圖：
-   - **WHEEL**（v0.1）：五度圈；轉 `SELECT` 換調，或按一個琴鍵直接跳到那個調。畫面顯示調號、關係小調、I–vii° 的 Roman 與 Nashville；LED 亮出音階、主音最亮。彈一個和弦，畫面說出名字、轉位、在這個調裡的級數（含 `bVII`、`V7/V`）。白鍵按下去聽順級和弦，轉位用 nearest voice。
-   - **TODAY**：交錯的 SRS 回合。
-   - **DRILL**：音階和琶音，節拍器、LED 帶彈、速度階梯、時間均勻度條狀圖。
-   - **GROOVE**：流行和弦進行伴奏，`OCT±` 沿五度圈移調。
-   - **LISTEN**：被動聆聽。
-   - **CHART**：五度圈熱圖。
-   - **SETTINGS**。
-   - 再附按鍵對應表。
-6. **卡片種類**：
-   - 樂理：調號、五度圈關係、拼音階、組和弦、級數。
-   - 聽音：
-     - **相對音感**（主線）：cadence 之後聽級數、調內音程、和弦性質、和弦進行（7 個白鍵代表 I–vii）、bass。
-     - **絕對音感**（選用的「固定音名」線）：沒有調性脈絡的單音，每題換音色和音域，題與題之間放干擾聲。
-   - **節奏**：
-     - 聽 1–2 小節，從 4 個小譜面選一個；4 個選項用 E4 F4 G4 A4 作答，同 Morse 的 `CHOICE_KEY`。
-     - 盲聽之後在任一鍵 tap 回來，依 onset 時間評分，沿用 Morse RHYTHM 的經驗。
-     - 看譜面 tap 出來，先有 count-in。
-   - **旋律**：聽 3–8 個音再彈回來；看小五線譜彈出來。
-   - **鍵盤**：音階、琶音、cadence 與轉位、移調，自動評分。
-   - 評分對應到 Again / Hard / Good / Easy。
-7. **小譜面怎麼畫**：
-   - 節奏用單線譜，旋律用五線譜。
-   - 符頭、符桿、符尾、beam、休止符、附點、連結線用小 bitmap 加線段，依時值程式產生。
-   - 4 個節奏選項每個約 40 px 高，放得進 176 px 的主畫面。
-8. **節奏也用程式生成**：
-   - 依 Kodály 式的節奏單元（cell）分級：ta、ti-ti、休止、ta-a、tika-tika、附點、切分、三連音、連結線。
-   - 選項中的錯誤答案只改一個 cell，比照 Morse 的 `ln_alike`。
-   - 時值用每拍 12 tick（可以表示三連音）。
-9. **機器限制怎麼處理**：
-   - 27 鍵：判斷時不分八度；左手 F3–E4，右手 F4–G5。
-   - LED、畫圓、♯♭ glyph。
-   - synth：8 voice FM EP、bass、click，音符依 sample 數在 render 裡排程。
-10. **內容表示，三層**：
-    - 裝置上用 line of fifths 程式生成。
-    - 羅馬數字 TSV 經 `gen` 轉成 C 表。
-    - 旋律用 Alda 子集，自己寫的 Python parser 在 build 時轉成 2 B/事件的 bytecode，同時輸出 `.mid` 試聽。MIDI 只在電腦端用 mido 匯入。
-    - Alda 官方工具（EPL-2.0）只拿來選用對照。
-11. **網頁：匯入教材、備份進度**：
-    - Web MIDI 頁，同 Morse 的 `web/index.html`，用 hostlink SysEx。
-    - 備份和還原進度。
-    - 匯入自己寫的進行或旋律：瀏覽器解析 TSV / Alda 子集 → SysEx → FM-1 問一次（`PLAY` 確認）→ 存進 **store object**。
-    - **走 `APP_STORE_MAP`，不需要改 AGENTS.md 的 flash 規則。** 單一 object 3,840 B，大約可以放 100 個進行或短旋律。真的需要更大的 deck，才走 vocab 頁的資料區草案。
-    - parser 有 Python（build）和 JS（網頁）兩份，用共用的 test vectors 確保一致（Morse 的 protocol vectors 也是這樣做）。
-12. **排程與存檔**：
-    - item = (skill, key, variant)，每個約 3 B。
-    - v1 沿用 Morse 的 Leitner rounds，之後可以和 vocab 共用 FSRS。
-    - store sector 避開 `0xDA000`、`0xDC000`，實作時用 `emu-rehearse` 確認。
-13. **內容來源與 licence**：自己寫內容；Hooktheory 不能用；OMT 是 CC BY-SA（只和 GPLv3 相容）；musictheory.net 的課文是 CC BY 4.0；teoria 不能用。
-14. **Roadmap**：
-    - 本輪：核心 + unit test。
-    - v0.1：WHEEL + 和弦辨識（app、synth、畫圓、glyph）。
-    - v0.2：TODAY，含樂理卡、級數與和弦性質聽音卡、進度備份網頁。
-    - v0.3：節奏與旋律聽寫，含小譜面、節奏生成。
-    - v0.4：DRILL。
-    - v0.5：GROOVE，加上 TSV/Alda pipeline 和網頁匯入。
-    - 之後：獨立 repo，上 Hub。
-    - 開工前先在 fm1-emu 試用 Keyboard Academy，並讀 Shed 的 SHED_SPEC。
-15. **還沒決定的事**：名稱、app 最後的 licence、要不要和 vocab 共用 SRS。
+**存檔**
+- `enum { OBJ_PANEL, OBJ_THEORY, OBJ_NOBJ }`，`APP_STORE_MAP { 0xDC000u, 0xD8000u }`。
+- `0xD8000` / `0xD9000` 在這台機器的 23 份備份裡都沒被寫過，而且不和 Morse 的 `0xDA000`（Morse 0.6 的學習進度在那裡）或面板校正的 `0xDC000` 重疊。
+- 紀錄格式：magic `TH01`、版本、長度，加上調、調式、三或七和弦、標示方式、對應方式、琴鍵模式、八度。設定改了 3 秒後存檔，和 Morse 一樣。讀回時 magic 或範圍不對就用預設值。
 
-## 交付 2：樂理核心 `firmware/theory/`（GPL-3.0、C99、沒有 libc、沒有 float）
+## 要新增或修改的檔案
 
-寫法比照 Morse 的 `learn.c`：platform-free，用 `#include "../theory.c"` 拿到電腦上測。
+**新增在 `firmware/theory/`**
+- `fm1.toml`：
+  - `name = "THEORY"`、`id_prefix = "FM-1_49"`（dev 版是 `FM-1_4900`）。這個前綴查過 Hub catalog 沒人用，也避開了 LOOM-8 佔用的 1x。
+  - `usb_product = "THEORY FM-1"`、`include = ["../common"]`、`words = "words.tsv"`、`font_full = ["M"]`、`ble = false`。
+  - `licence = "GPL-3.0-or-later"`，以及 tagline、description、credits（fm1-base、chime 的做法、music21 只是測試工具）。
+- `app.h`：`APP_NAME`、`APP_TOUCH`、`APP_STORE_MAP`、物件的 enum，以及 `#ifdef PLAT_HOST` 裡的 `APP_HOST_EXPECT` / `APP_HOST_CMD` / `APP_HOST_FAILS`。
+- `app.c`：
+  - fm1-base 的必要 hook：`app_init`、`app_render`、`app_panic`、`app_ui_init`、`app_frame`、`app_input_only`、`app_say`。
+  - 狀態、輸入（`plat_keys` 遮罩比對、`plat_buttons`、`plat_enc`，沒用到的 encoder 也每個 frame 讀掉）、存檔、`R_HEAD` / `R_MAIN` / `R_FOOT` 局部重畫（照 Morse 的 `draw()`）。
+  - host simulator 的 `app_expect`：`tonic`、`mode`、`keymode`、`sevenths`、`labels`、`mapping`、`oct`、`voices`、`lit_keys`、`dim_keys`、`glow_keys`。
+  - host simulator 的 `app_host_cmd`：`expect_text chord|roman|footer|key TEXT`，寫法照 Morse 的 `expect_text`（`firmware/morse/app.c` 約 3322 行）。
+- `synth.h` / `synth.c`：8 voice 的 FM 電鋼琴，event ring，`synth_active()`。
+- `gtext.h` / `gtext.c`：♯ ♭ ° ø 的 1-bit bitmap（16 px 和 24 px 兩種大小），`gtext()` 和 `gtext_w()`。
+- `words.tsv`：螢幕閱讀器的字，第一行是 `# url:`，只能用 ASCII（格式照 `firmware/voicelab/words.tsv`）。
+- `tests/basic.txt`：host simulator 腳本，內容見下面的驗證。
+- `.gitignore`：`build/`、`web/words/`（同 `firmware/conductor/.gitignore`）。
+- `LICENSE`：GPL-3.0 全文，從 `firmware/morse/LICENSE` 複製。
 
-**`firmware/theory/theory.h` / `theory.c`**
+**沿用、不改**：`theory.c` / `theory.h`、`firmware/common/ledfx`、fastmath。
 
-- **Pitch**：spelled pitch class 是 line of fifths 上的位置 `f`（C=0、G=+1、F=−1、F#=+6、Bb=−2）。
-  - `th_pc(f)`：`7f mod 12`。
-  - `th_letter(f)`：`"FCGDAEB"[(f+1) mod 7]` 換成 C 起算的字母。
-  - `th_acc(f)`：floor((f+1)/7)。
-  - `th_name(f, buf)`：輸出 `"F#"`、`"Bb"`、`"F##"`。
-  - `th_spell_pc(pc, key_f)`：離調中心最近的拼法；D 調的 pc 6 是 F#，Db 調是 Gb。
-  - `th_note_name(midi, key_f, buf)`：例如 `"C#4"`。B#、Cb 的八度要處理對。
-- **Interval**：用 fifths offset 表示（m2 −5、M2 +2、m3 −3、M3 +4、P4 −1、A4 +6、d5 −6、P5 +1…），可以輸出名稱。
-- **Scale**：fifths offset 表，約 12 種：major、自然小調、和聲小調、旋律小調、6 個 mode、大小調五聲音階、blues。
-  - `th_scale(tonic_f, scale, out[])`：拼出音階。
-  - 調號：`th_keysig(tonic_f, mode)`，回傳升降記號的數量，加上依序排列的記號。
-- **Circle**：屬調、下屬調、關係小調、平行調、五度圈上的順序（15 個調號，−7…+7）。
-- **Chord**：約 20 種 quality 的 fifths offset 表（maj、m、dim、aug、sus2、sus4、6、m6、7、maj7、m7、mMaj7、m7b5、dim7、add9、9、maj9、m9、7sus4…），加上 ASCII 符號。
-  - `th_chord(root_f, q, out[])`：拼出和弦音。
-  - `th_diatonic(key, degree, sevenths)`：順級三和弦或七和弦。
-- **Roman numeral**：
-  - `th_roman_name(key, chord, buf)`：輸出 `I`、`ii`、`vii°`、`IVM7`、`bVII`、`V7/V`（secondary dominant 用簡單規則判斷）。
-  - `th_roman_parse(str, key, &chord)`：用來測 TSV，以及 `IVM7 V7 iii7 vi` 在各調的轉換。Nashville 數字也要能解析。
-- **Identify（和弦辨識）**：`th_identify(midi[], n, key, &result)`。
-  - 每個 pc 都試當根音，和 quality 表比對 pc-set（七和弦允許省略五音）。
-  - 排序規則：完全符合 > 根音就是 bass > 調內和弦 > 比較簡單的 quality。
-  - 輸出根音、quality、bass（slash / 轉位）、用調性脈絡拼好的名稱，以及級數。
-  - C6 和 Am7 這種同一組音的和弦，由 bass 決定。
-- **Voice**：`th_voice_near(prev[], chord, lo, hi, out[])`。在 27 鍵範圍裡選總移動量最小的轉位，給 WHEEL 試聽和之後的 GROOVE 用。
-
-**`firmware/theory/tests/theory_test.c`**：用 Morse 的 `CHECK` 巨集。
-
-- 15 個大調和 15 個小調（自然、和聲）的音階逐音比對：C# 大調要有 E#、B#；Cb 大調要有 Fb；G# 和聲小調要有 F##。
-- 所有 7 音音階在所有調都是連續的 7 個不同字母。
-- `th_pc` 和名稱 round trip。
-- 調號的數量和順序。
-- 五度圈關係。
-- C 大調、A 小調順級三和弦與七和弦的 Roman 名稱。
-- identify 的案例：C/E；Am7 對 C6（看 bass）；G7=V7；D7=V7/V；Bb=bVII；dim7；aug；省略五音的 7。
-- `th_spell_pc` 的 F# / Gb。
-- 王道進行和 4536251 在 C、Eb、F# 的轉換。
-- `th_voice_near` 的總移動量不大於任何其他轉位。
-
-**對照用的 vectors**：`host/theory/make_vectors.py`（GPL-3.0）。
-
-- 用 `uv run --with music21`（BSD-3）產生 `firmware/theory/tests/vectors.h`：所有調 × 音階、和弦 quality × 根音的拼法。
-- 檔案 commit 進 repo，測試時不需要網路。
-- 如果 music21 和我們的結果不一致，逐項檢查，把結論寫進測試註解。
-
-**其他**：`firmware/theory/README.md`（英文，說明目前只有核心）。這一輪還沒有 `app.c`、`fm1.toml`。
-
-## 要改的檔案
-
-- **新增**：
-  - `docs/dev/theory.md`
-  - `firmware/theory/theory.h`、`theory.c`、`tests/theory_test.c`、`tests/vectors.h`、`README.md`
-  - `host/theory/make_vectors.py`
+**其他**
 - `Justfile`：
-  - `theory-unit`：`cc -std=c99 -Wall -Wextra -pedantic`，同 `morse-unit`。
-  - `theory-vectors`：重新產生 vectors。
-- `zensical.toml`：在 `dev/vocab.md` 之後加 `{ "樂理練習機（構想）" = "dev/theory.md" }`。
-- `docs/firmware/index.md`：新增「學習類」小節，列 Shed、Keyboard Academy、Kris Jangle、Midi-Mania、Flyfish、MORSE，註明 Hub 上的晶片標示，以及是否上架、有沒有 release。
-- `AGENTS.md`：
-  - Layout 加 `firmware/theory/` 一列。
-  - Commands 加 `just theory-unit`。
-  - 「Not set up yet」加一句樂理 app 還在構想階段，網頁匯入走 store layer。
-- `docs/dev/vocab.md`：加一行互相連結，提到可能共用 SRS 模組。
-- `docs/dev/index.md`：結構圖加 `firmware/theory/`。
-
-不 commit，除非本人要求。
+  - `theory-emu chip="uc25hq80"`：用 `just emu-run firmware/theory/build/theory.fwsc`。
+  - `theory-unit` 不變。
+- 文件：
+  - `docs/dev/theory.md`：
+    - 狀態改成 v0.1。
+    - Keyboard Academy 試用心得，加上「提示要逐漸撤掉」的原則，來源是 guidance hypothesis（Salmoni, Schmidt & Walter 1984）。只讀到二手資料，例如 [Frontiers 2010](https://www.frontiersin.org/articles/10.3389/fpsyg.2010.00190/full)，所以標 `[調研]`。
+    - WHEEL 最後定下的操作（`K4` = 對應方式）。
+    - synth、識別碼 `FM-1_49`、存檔位置 `0xD8000`。
+    - 驗證結果標 `[模擬]`。
+  - `docs/hardware/flash-map.md`：加一列 THEORY 的 `0xD8000–0xD9FFF`，附 rehearse 的結果。
+  - `firmware/theory/README.md`：說明現在是 app 了。
+  - `AGENTS.md`：layout 那一列（現在是 app，識別碼 `FM-1_49`）和指令（`fw-test theory`、`theory-emu`）。
+- 不 commit，除非本人要求。
 
 ## Verification 驗證
 
-- `just theory-unit`：全部 CHECK 通過，回報 check 數量。
-- `just theory-vectors` 能重新產生 `vectors.h`，而且和 commit 的版本一致（`git diff --exit-code`）。
-- 核心可以用 `-std=c99 -pedantic -Wdouble-promotion -Wfloat-equal` 乾淨編譯，`grep` 確認沒有 `float`、`double`，也沒有 `#include` libc（測試檔除外）。這樣之後放進 fm1-base 才不會撞到 no-double 規則。
-- `just docs-check` 通過，新頁在 nav 裡，連結有效。
-- 文件的外部說法都有來源，沒查核的標 `[調研]`。
+1. **`just theory-unit`**：核心沒變，26,661 個檢查照樣全過。
+2. **`just fw-test theory`**：host simulator，`tests/basic.txt` 全部 `ok`，截圖輸出到 `firmware/theory/build/host/`。內容：
+    - 開機截圖；`expect tonic 0`。
+    - `turn SELECT 2` → `tonic 2`，`expect_text key D major`，截圖。
+    - NOTES 模式下 `key 7/11/14 down`（C4、E4、G4）→ `expect_text chord C`、`roman I`。先 `peakreset` 再 `expect peak_db_min -40`，確認有聲音。
+    - C/E 的轉位，以及 D7 → `V7/V`。
+    - 單音 → `footer` 顯示音名和級數；放開所有鍵後，footer 保留剛才的和弦。
+    - `lit_keys` / `glow_keys` 的位元遮罩符合 D 大調音階。
+    - `tap PLAY` → `keymode 1`；`tapkey w4`（C4）在 D 大調是 `C#dim`，`tapkey` D 鍵是 `D`；`voices` 是 4。
+    - `turn K4 1` → C = I：`tapkey w4` 是 `D`。
+    - 按住 `SEL` 再按 Eb 鍵 → `tonic -3`。
+    - `turn K1` → 調式變了，順級和弦的列表也跟著變。
+    - `turn K2` → `roman IM7`。
+    - 等 3 秒 → `expect store_writes >0`；`reboot` → 所有設定都讀回。
+    - 截圖：五度圈、CHORDS 模式、♯♭ glyph。
+3. **`just fw-build theory`**：build 出 `firmware/theory/build/theory.fwsc`，自帶的檢查要全部 ok（沒有 soft-double，大小在 581,564 B 以內）。
+4. **fm1-emu 兩種晶片**（`uc25hq80`、`p25q80`）：
+    - `just emu-shot` 開機，記下寫入次數。
+    - 用 `FM1_BENCH_KEYS` 腳本轉 `SELECT`、切 `PLAY`、等待存檔，再用同一個 `--flash` 檔重開，截圖確認調和模式都讀回。
+5. **`just emu-rehearse`**：疊在最新的實機備份上（`backups/` 裡最新的那份，目前是 `2026-11-18-pre-morse-0.5`）。回報開機和存檔時各寫了哪些 sector：預期只有 `0xD8000` / `0xD9000`，而且 `0xDA000` 的 Morse 紀錄要完整保留。
+6. **`just docs-check`** 通過。
+7. 回報結果之後，如果本人想刷實機，再另外提出完整的 preflight（備份與 SHA-256、晶片 `0xB36014`、套件 SHA-256、目前是 Morse 0.6 和這次寫入會改變什麼），等本人批准。

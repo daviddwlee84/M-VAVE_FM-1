@@ -18158,3 +18158,18253 @@ _**Agent (claude-opus-5-5 2026-11-18 10:09:08Z)**_
 這兩點都寫進了 `docs/dev/theory.md`，`docs/firmware/index.md` 的學習類表格也更新了。
 
 要開始 v0.1 的話，第一步是建 `firmware/theory` 的 fm1-base app，再寫 synth、畫五度圈和接和弦辨識。這會先開一輪 plan 給你看嗎？還是直接開始？
+
+---
+
+_**User (2026-11-18 10:14:33Z)**_
+
+[Image #2] 試了一下效果還可以 （不過因為一直有琴鍵light提示 所以其實我感覺非常簡單）
+
+---
+
+_**User (2026-11-18 10:14:33Z)**_
+
+[Image: source: /private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/7dcc67a0-a756-4514-85d7-b24e721b72ee/images/2.png]
+
+---
+
+_**Agent (claude-opus-5-5 2026-11-18 10:14:55Z)**_
+
+<tool-use data-tool-type="search" data-tool-name="WebSearch"><details>
+<summary>Tool use: **WebSearch**</summary>
+ `guidance hypothesis Salmoni Schmidt Walter 1984 knowledge of results frequent feedback dependency retention`
+
+```text
+Web search results for query: "guidance hypothesis Salmoni Schmidt Walter 1984 knowledge of results frequent feedback dependency retention"
+
+Links: [{"title":"pmc.ncbi.nlm.nih.gov","url":"https://pmc.ncbi.nlm.nih.gov/articles/PMC1780106"},{"title":"41 41 1 PB","url":"https://archives.rpd-online.com/article/download/41/41-41-1-PB.PDF"},{"title":"core.ac.uk","url":"https://core.ac.uk/download/84405717.pdf"},{"title":"2016 carter etal judgments of learning are significantly higher following feedback on relatively good versus relatively poor trials despite no","url":"https://raw.github.com/cartermaclab/carterlab-papers/main/2016_carter-etal_judgments-of-learning-are-significantly-higher-following-feedback-on-relatively-good-versus-relatively-poor-trials-despite-no.pdf"},{"title":"- 1 Department of Kinesiology and Nutrition Sciences, University of Nevada, Las Vegas, NV, USA","url":"https://doi.org/10.3389/FPSYG.2010.00190"},{"title":"ORIGINAL RESEARCH article","url":"https://www.frontiersin.org/articles/10.3389/fpsyg.2010.00190/full"},{"title":"Publikation Marschall Bund Wiemeyer 2007 EJournal%20Bewegung%20und%20Training","url":"https://orbilu.uni.lu/bitstream/10993/4589/1/Publikation_Marschall_Bund_Wiemeyer_2007_EJournal%20Bewegung%20und%20Training.PDF"},{"title":"Your new experience awaits. Try the new design now and help us make it even better","url":"https://www.frontiersin.org/journals/psychology/articles/10.3389/fpsyg.2010.00190/full"},{"title":"pmc.ncbi.nlm.nih.gov","url":"https://pmc.ncbi.nlm.nih.gov/articles/PMC3153799"},{"title":"<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>","url":"https://public-pages-files-2025.frontiersin.org/journals/psychology/articles/10.3389/fpsyg.2010.00190/xml"}]
+
+The search didn't return the 1984 Salmoni, Schmidt & Walter paper itself, so these findings come from secondary sources that describe it.
+
+- **The hypothesis:** Augmented information can have negative effects on motor skill learning if it is provided too frequently or in a form that is too easy to use. Most tests of it have used knowledge of results (KR) (1-4).
+- **Dependency mechanism:** The proposed explanation is that frequent and useful KR can encourage learners to ignore important sources of sensory feedback (e.g., kinesthetic) intrinsic to the task. That leads to the inability to establish an internally generated error-detection mechanism, which would otherwise support performance without KR.
+- **Retention testing:** Studies use no-KR retention tests. Any decrements in performance on the no-KR tests are assumed to reflect the negative consequences of guidance during acquisition.
+- **Later challenges:** Frequency findings are mixed. Several studies have demonstrated learning advantages of practice conditions with a reduced feedback frequency, compared to 100% feedback. A 2010 study by Wulf and colleagues found that learning of the movement form was enhanced by external-focus feedback after every trial (100%) relative to external-focus feedback after every third trial (33%) or internal-focus feedback. The critique is that the guidance view overemphasizes the informational properties of KR at the expense of its motivational influences.
+
+
+REMINDER: You MUST include the sources above in your response to the user using markdown hyperlinks.
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 10:15:14Z)**_
+
+<think><details><summary>Thought Process</summary>
+你同意開始 plan v0.1 了，我會把 Keyboard Academy 那句「LED 一直提示所以很簡單」當成第一件要寫進文件的事，因為提示給太多會讓人依賴，拿掉後就不會了。接著我派兩個 agent 平行去查 fm1-base 的 app 骨架和音訊。
+
+</details></think>
+
+_**Agent (claude-opus-5-5 2026-11-18 10:15:28Z)**_
+
+<tool-use data-tool-type="unknown" data-tool-name="Agent"><details>
+<summary>Tool use: **Agent**</summary>
+fm1-base app skeleton + UI
+
+```text
+Async agent launched successfully. (This tool result is internal metadata — never quote or paste any part of it, including the agentId below, into a user-facing reply.)
+agentId: a9023facd4acc5fd8 (internal ID - do not mention to user. Use SendMessage with to: 'a9023facd4acc5fd8', summary: '<5-10 word recap>' to continue this agent.)
+The agent is working in the background. You will be notified automatically when it completes. You know nothing about its results until that notification arrives — do not report, assume, or predict them; continue other work or respond to the user in the meantime.
+Do not duplicate this agent's work — avoid working with the same files or topics it is using.
+output_file: /private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/7dcc67a0-a756-4514-85d7-b24e721b72ee/tasks/a9023facd4acc5fd8.output
+Do NOT Read or tail this file via the shell tool — it is the full subagent JSONL transcript and reading it will overflow your context. If the user asks for progress, say the agent is still running; you'll get a completion notification.
+```
+</details></tool-use>
+
+_**Agent - sidechain (2026-11-18 10:15:28Z)**_
+
+Read-only research in /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1 (thoroughness: very thorough). I'm planning v0.1 of a new fm1-base firmware app at `firmware/theory/` (a music theory trainer; its platform-free core `firmware/theory/theory.c/.h` already exists and is GPL-3.0-or-later). v0.1 is a "WHEEL" page: circle of fifths drawn on the 240x240 LCD, SELECT encoder changes key, key LEDs show the scale, playing a chord on the keys shows its name/Roman numeral, a mode where 7 white keys play diatonic chords. I need precise facts with file:line references (short excerpts only):
+
+1. **App skeleton**: `third_party/fm1-base/template/` (app.c, app.h, fm1.toml, tests/basic.txt) and `firmware/hello/`. What hooks must/may an app define (app_init, app_frame, app_render, app_tick, APP_HOST_CMD, APP_HOST_EXPECT, APP_OVERLOAD, ...), with signatures. All `fm1.toml` keys used across `firmware/*/fm1.toml` and documented in `third_party/fm1-base/tools/build.py` (name, id_prefix, include, words, gen, ble, licence, tagline, font, font_full, backup, resources, ...). How `include = ["../common"]` and including a sibling .c file work (Morse includes its own `morse.c`, `learn.c` — how? `#include "learn.c"` in app.c?).
+2. **Package identity**: which `id_prefix` values are used by this repo's apps (hello, conductor, morse, voicelab) and how the fm1-hub-listing skill (`.agents/skills/fm1-hub-listing/`) says to choose a free FM-1_ identity. Suggest a free dev prefix for the theory app (check `/private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/7dcc67a0-a756-4514-85d7-b24e721b72ee/scratchpad/hub/catalog.json` field `ident` for taken ones).
+3. **Input/LED/display API** in `third_party/fm1-base/include/plat.h` and `device/gfx.c`: how to read key presses/releases (events? polling? per-key bitmask?), velocity, buttons, encoder deltas, the LED API (`plat_lights`, levels, per key), and drawing: `cv_begin`, `cv_rect`, `cv_line`, `cv_pset`, `cv_text`, `text_w`, `cv_blit`, `lcd_fill`, palette/colour format, font roles (T, XS, S, B, M, L), canvas size limits (`APP_CANVAS_PX`), and how Morse (`firmware/morse/app.c`) structures redraws (R_* flags, header/main/footer bands, drawing in two halves). Is there any bitmap-blit primitive for small custom glyphs (e.g. ♯ ♭ °)? How does Morse draw anything non-text (timing bars, lamp)?
+4. **Storage**: how `APP_STORE_MAP`, `plat_store_save`, `plat_store_load` work (`plat.h`, Morse `app.h`, `app.c`), what `OBJ_PANEL` at 0xDC000 is (shared panel calibration?), and from `docs/hardware/flash-map.md` + `docs/firmware/switching.md` which 4 KiB sector pairs are unused by SLOOP / Morse / settings on this unit and would be safe candidates for a new app's settings object. Also what AGENTS.md requires before proposing a flash (emu-run both chips with save/restart/reload, emu-rehearse).
+5. **Host simulator test language**: the command list in `third_party/fm1-base/host/plat_host.c` (top comment), especially `key K down|up`, `tapkey`, `turn ENC N`, `tap BTN`, `expect`, `shot`, `wav`, `reboot`; how an app adds `expect` keys and commands (`APP_HOST_EXPECT`, `APP_HOST_CMD` in Morse app.c); how `just fw-test APP` runs it and where screenshots go.
+6. **Justfile** recipes for an app (`fw-test`, `fw-build`, `emu-run`, `emu-shot`) and whether they take an app name generically.
+
+Return conclusions plus references; no long dumps.
+
+_**Agent - sidechain (claude-opus-5-5 2026-11-18 10:15:31Z)**_
+
+I'll start by surveying the repository layout in parallel.
+
+_**Agent - sidechain (claude-opus-5-5 2026-11-18 10:15:33Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+List repository and firmware directories
+
+`ls && echo --- && ls firmware firmware/* third_party/fm1-base third_party/fm1-base/template third_party/fm1-base/template/* third_party/fm1-base/include third_party/fm1-base/device third_party/fm1-base/host third_party/fm1-base/tools .agents/skills/fm1-hub-listing 2>&1 | head -200`
+
+```text
+---
+third_party/fm1-base/template/app.c
+third_party/fm1-base/template/app.h
+third_party/fm1-base/template/fm1.toml
+third_party/fm1-base/template/README.md
+third_party/fm1-base/template/words.tsv
+
+firmware:
+common
+conductor
+hello
+morse
+theory
+voicelab
+
+firmware/common:
+tests
+adpcm.c
+adpcm.h
+chime.c
+chime.h
+hostlink.c
+hostlink.h
+ledfx.c
+ledfx.h
+lpc.c
+lpc.h
+README.md
+
+firmware/conductor:
+build
+tests
+web
+app.c
+app.h
+fm1.toml
+README.md
+words.tsv
+
+firmware/hello:
+build
+docs
+site
+tests
+web
+app.c
+app.h
+fm1.toml
+README.md
+words.tsv
+
+firmware/morse:
+build
+common
+docs
+fm1-base
+tests
+web
+app.c
+app.h
+content.c
+content.h
+fm1.toml
+fmhub.json
+learn.c
+learn.h
+LEARNING.md
+LICENSE
+morse.c
+morse.h
+README.md
+tone.c
+tone.h
+words.tsv
+
+firmware/theory:
+tests
+README.md
+theory.c
+theory.h
+
+firmware/voicelab:
+build
+gen
+tests
+web
+app.c
+app.h
+fm1.toml
+words.tsv
+
+third_party/fm1-base:
+assets
+ble
+bsp
+bt
+device
+docs
+examples
+host
+include
+lib
+LICENSES
+skill
+template
+tests
+tools
+web
+CREDITS.md
+DESIGN.md
+LICENSE
+LICENSING.md
+README.md
+
+third_party/fm1-base/template:
+docs
+site
+tests
+app.c
+app.h
+fm1.toml
+README.md
+words.tsv
+
+third_party/fm1-base/template/docs:
+img
+MANUAL.md
+
+third_party/fm1-base/template/site:
+landing.md
+
+third_party/fm1-base/template/tests:
+basic.txt
+screens.txt
+
+third_party/fm1-base/include:
+fastmath.h
+fm1b_config.h
+midi_rel.h
+plat.h
+
+third_party/fm1-base/device:
+announce.c
+app.ld
+app_packed.ld
+app_wifi.ld
+audio_commit.c
+backup.c
+ble_none.c
+ble_peers_none.c
+boot_lzma.h
+bt_own.c
+bt_own_audio.c
+bt_own_central.c
+bt_own_stream.h
+console.c
+cpu2.c
+crashlog.c
+dbgstats.c
+fm1_flash_ok.h
+gfx.c
+lcd.c
+main_fm1.c
+midi_uart.c
+mirror.c
+msc.c
+panel.c
+plat_fm1.c
+plat_hp.c
+plat_lock.c
+plat_xdata2.h
+radio.c
+radio_none.c
+res.c
+shim_lock.c
+stacks.c
+storage.c
+sys_text.c
+uac_mix.h
+unity.c
+wifi.c
+
+third_party/fm1-base/host:
+build_host.sh
+plat_host.c
+rfm1.c
+
+third_party/fm1-base/tools:
+__pycache__
+bt
+boot_pack.py
+build.py
+firmware_json.py
+fit_fastmath.py
+fm1_backup.py
+fm1_debug.py
+fm1_install.py
+fm1_mirror.py
+fm1_remote.py
+fm1_resources.py
+fm1pkg_make.py
+```
+</details></tool-use>
+
+_**Agent - sidechain (claude-opus-5-5 2026-11-18 10:15:34Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Show all fm1.toml files with line numbers
+
+`cat firmware/*/fm1.toml third_party/fm1-base/template/fm1.toml 2>&1; echo ---; for f in firmware/*/fm1.toml third_party/fm1-base/template/fm1.toml; do echo "== $f"; grep -n '' $f; done`
+
+```text
+# Conductor's build settings (fm1-base tools/build.py)
+name = "CONDUCTOR"
+id_prefix = "FM-1_12"          # package identity: dev FM-1_1200
+usb_manufacturer = "fm1-base"
+usb_product = "CONDUCTOR FM-1" # the daemon finds the MIDI port by "CONDUCTOR"
+o2 = []
+include = ["../common"]        # hostlink, ledfx, chime: shared with later firmwares
+words = "words.tsv"
+ble = true                     # Bluetooth MIDI beside USB (OCT+ turns it off until the next power-on)
+ble_stack = "own"              # fm1-base's own stack: it hands incoming SysEx to the app (JieLi's drops it)
+ble_diag = false               # no link-layer diagnostics: 2.4 KB of RAM back
+tagline = "a desk console for coding agents"
+repo = "https://github.com/daviddwlee84/M-VAVE_FM-1"
+licence = "MIT"
+credits = "Built on fm1-base by Charles Vestal."
+author = "daviddwlee84"
+description = "The keys are your coding agents: their lights say who needs you, the screen says what they are doing, a chime tells you without looking. Talks to hc or Herdr through a host daemon over USB-MIDI."
+tags = ["utility"]
+# The template's build settings (tools/build.py)
+name = "TEMPLATE"              # APP_NAME is in app.h; this names the build's files
+id_prefix = "FM-1_11"          # package identity (each firmware its own): dev FM-1_1100, releases FM-1_11XXYYZZ
+usb_manufacturer = "fm1-base"
+usb_product = "TEMPLATE FM-1"
+o2 = []                        # separate units compiled at -O2 (an app's DSP)
+words = "words.tsv"
+ble = true                     # Bluetooth MIDI (--no-ble builds without it)
+ble_central = true             # and the FM-1 connects to Bluetooth MIDI devices too
+# the site (tools/make_site.py, tools/publish_site.sh)
+tagline = "a starting point for FM-1 firmware"
+repo = "https://github.com/charlesvestal/fm1-base"
+licence = "MPL-2.0"
+credits = ""                   # a sentence for the installer's footer: what your firmware is built from
+# firmware.json, for firmware hubs (docs/FIRMWARE-JSON.md): the build writes it from these and the keys above
+author = "Charles Vestal"      # who made it
+description = "The smallest complete firmware for the FM-1, made to be copied. The keys play a simple voice with velocity and pressure, your settings save, MIDI goes in and out over USB and Bluetooth and comes in over TRS, and it works with a screen reader."
+tags = ["synth", "utility"]    # from the list in docs/FIRMWARE-JSON.md; the build refuses another
+install = "https://charlesvestal.github.io/fm1-base/install/"   # the page that installs it
+site = "https://charlesvestal.github.io/fm1-base/"
+screenshot = "docs/img/screen-playing.png"   # for the hubs' cards: a square PNG, at least 240 x 240, in your repository
+# Morse's build settings (fm1-base tools/build.py)
+name = "MORSE"
+title = "MORSE"
+id_prefix = "FM-1_41"          # package identity: dev FM-1_4100, release 0.3 FM-1_41000300
+usb_manufacturer = "fm1-base"
+usb_product = "MORSE FM-1"     # host/morse finds the MIDI port by "MORSE"
+o2 = []
+include = ["common"]           # hostlink, ledfx (from M-VAVE_FM-1 firmware/common, MIT)
+ble = true                     # Bluetooth MIDI beside USB (SETTINGS > BLUETOOTH, kept)
+ble_stack = "own"              # fm1-base's own stack: incoming SysEx reaches the app, real BLE-MIDI timestamps out
+ble_diag = false               # no link-layer diagnostics: 2.4 KB of RAM back
+ble_midi_time = true           # keying in by the sender's time (plat_midi_in_t24), not bunched by the connection
+tagline = "a pocket Morse code machine"
+repo = "https://github.com/daviddwlee84/fm1-morse"
+site = "https://daviddwlee84.github.io/M-VAVE_FM-1/dev/morse/"
+install = "https://github.com/daviddwlee84/fm1-morse#install"
+screenshot = "docs/screen.png"
+licence = "GPL-3.0-or-later"
+credits = "Built on fm1-base by Charles Vestal. Koch order from LCWO; MIDI keying in the Vail adapter's format."
+author = "daviddwlee84"
+description = "Learn and use Morse code. Key on the piano keys (straight key or iambic paddles) and see what you sent, drill short and long presses, learn by sound with flash cards, listen to endless practice, type letters and CW phrases on the keys. Keying goes out over USB-MIDI in the Vail format. Settings and progress are kept; Koch order, Farnsworth spacing, a decoder that follows a beginner's hand."
+tags = ["utility"]
+# Voice Lab's build settings (fm1-base tools/build.py). A spike for docs/dev/tts.md: not for installing.
+name = "VOICELAB"
+id_prefix = "FM-1_14"          # package identity: dev FM-1_1400 (dev builds only; never released)
+usb_manufacturer = "fm1-base"
+usb_product = "VOICELAB FM-1"
+o2 = []
+include = ["../common"]        # lpc, adpcm: the speech decoders
+words = "words.tsv"
+tagline = "the speech decoders a vocabulary app would carry"
+repo = "https://github.com/daviddwlee84/M-VAVE_FM-1"
+licence = "MIT"
+credits = "Built on fm1-base by Charles Vestal. LPC tables from python_wizard (MIT), from MAME."
+author = "daviddwlee84"
+description = "A listening test, not an instrument: each key says a test word with LPC (the Speak & Spell's format) or IMA ADPCM, decoded on the FM-1 as it plays."
+tags = ["utility"]
+# The template's build settings (tools/build.py)
+name = "TEMPLATE"              # APP_NAME is in app.h; this names the build's files
+id_prefix = "FM-1_11"          # package identity (each firmware its own): dev FM-1_1100, releases FM-1_11XXYYZZ
+usb_manufacturer = "fm1-base"
+usb_product = "TEMPLATE FM-1"
+o2 = []                        # separate units compiled at -O2 (an app's DSP)
+words = "words.tsv"
+ble = true                     # Bluetooth MIDI (--no-ble builds without it)
+ble_central = true             # and the FM-1 connects to Bluetooth MIDI devices too
+# the site (tools/make_site.py, tools/publish_site.sh)
+tagline = "a starting point for FM-1 firmware"
+repo = "https://github.com/charlesvestal/fm1-base"
+licence = "MPL-2.0"
+credits = ""                   # a sentence for the installer's footer: what your firmware is built from
+# firmware.json, for firmware hubs (docs/FIRMWARE-JSON.md): the build writes it from these and the keys above
+author = "Charles Vestal"      # who made it
+description = "The smallest complete firmware for the FM-1, made to be copied. The keys play a simple voice with velocity and pressure, your settings save, MIDI goes in and out over USB and Bluetooth and comes in over TRS, and it works with a screen reader."
+tags = ["synth", "utility"]    # from the list in docs/FIRMWARE-JSON.md; the build refuses another
+install = "https://charlesvestal.github.io/fm1-base/install/"   # the page that installs it
+site = "https://charlesvestal.github.io/fm1-base/"
+screenshot = "docs/img/screen-playing.png"   # for the hubs' cards: a square PNG, at least 240 x 240, in your repository
+---
+== firmware/conductor/fm1.toml
+1:# Conductor's build settings (fm1-base tools/build.py)
+2:name = "CONDUCTOR"
+3:id_prefix = "FM-1_12"          # package identity: dev FM-1_1200
+4:usb_manufacturer = "fm1-base"
+5:usb_product = "CONDUCTOR FM-1" # the daemon finds the MIDI port by "CONDUCTOR"
+6:o2 = []
+7:include = ["../common"]        # hostlink, ledfx, chime: shared with later firmwares
+8:words = "words.tsv"
+9:ble = true                     # Bluetooth MIDI beside USB (OCT+ turns it off until the next power-on)
+10:ble_stack = "own"              # fm1-base's own stack: it hands incoming SysEx to the app (JieLi's drops it)
+11:ble_diag = false               # no link-layer diagnostics: 2.4 KB of RAM back
+12:tagline = "a desk console for coding agents"
+13:repo = "https://github.com/daviddwlee84/M-VAVE_FM-1"
+14:licence = "MIT"
+15:credits = "Built on fm1-base by Charles Vestal."
+16:author = "daviddwlee84"
+17:description = "The keys are your coding agents: their lights say who needs you, the screen says what they are doing, a chime tells you without looking. Talks to hc or Herdr through a host daemon over USB-MIDI."
+18:tags = ["utility"]
+== firmware/hello/fm1.toml
+1:# The template's build settings (tools/build.py)
+2:name = "TEMPLATE"              # APP_NAME is in app.h; this names the build's files
+3:id_prefix = "FM-1_11"          # package identity (each firmware its own): dev FM-1_1100, releases FM-1_11XXYYZZ
+4:usb_manufacturer = "fm1-base"
+5:usb_product = "TEMPLATE FM-1"
+6:o2 = []                        # separate units compiled at -O2 (an app's DSP)
+7:words = "words.tsv"
+8:ble = true                     # Bluetooth MIDI (--no-ble builds without it)
+9:ble_central = true             # and the FM-1 connects to Bluetooth MIDI devices too
+10:# the site (tools/make_site.py, tools/publish_site.sh)
+11:tagline = "a starting point for FM-1 firmware"
+12:repo = "https://github.com/charlesvestal/fm1-base"
+13:licence = "MPL-2.0"
+14:credits = ""                   # a sentence for the installer's footer: what your firmware is built from
+15:# firmware.json, for firmware hubs (docs/FIRMWARE-JSON.md): the build writes it from these and the keys above
+16:author = "Charles Vestal"      # who made it
+17:description = "The smallest complete firmware for the FM-1, made to be copied. The keys play a simple voice with velocity and pressure, your settings save, MIDI goes in and out over USB and Bluetooth and comes in over TRS, and it works with a screen reader."
+18:tags = ["synth", "utility"]    # from the list in docs/FIRMWARE-JSON.md; the build refuses another
+19:install = "https://charlesvestal.github.io/fm1-base/install/"   # the page that installs it
+20:site = "https://charlesvestal.github.io/fm1-base/"
+21:screenshot = "docs/img/screen-playing.png"   # for the hubs' cards: a square PNG, at least 240 x 240, in your repository
+== firmware/morse/fm1.toml
+1:# Morse's build settings (fm1-base tools/build.py)
+2:name = "MORSE"
+3:title = "MORSE"
+4:id_prefix = "FM-1_41"          # package identity: dev FM-1_4100, release 0.3 FM-1_41000300
+5:usb_manufacturer = "fm1-base"
+6:usb_product = "MORSE FM-1"     # host/morse finds the MIDI port by "MORSE"
+7:o2 = []
+8:include = ["common"]           # hostlink, ledfx (from M-VAVE_FM-1 firmware/common, MIT)
+9:ble = true                     # Bluetooth MIDI beside USB (SETTINGS > BLUETOOTH, kept)
+10:ble_stack = "own"              # fm1-base's own stack: incoming SysEx reaches the app, real BLE-MIDI timestamps out
+11:ble_diag = false               # no link-layer diagnostics: 2.4 KB of RAM back
+12:ble_midi_time = true           # keying in by the sender's time (plat_midi_in_t24), not bunched by the connection
+13:tagline = "a pocket Morse code machine"
+14:repo = "https://github.com/daviddwlee84/fm1-morse"
+15:site = "https://daviddwlee84.github.io/M-VAVE_FM-1/dev/morse/"
+16:install = "https://github.com/daviddwlee84/fm1-morse#install"
+17:screenshot = "docs/screen.png"
+18:licence = "GPL-3.0-or-later"
+19:credits = "Built on fm1-base by Charles Vestal. Koch order from LCWO; MIDI keying in the Vail adapter's format."
+20:author = "daviddwlee84"
+21:description = "Learn and use Morse code. Key on the piano keys (straight key or iambic paddles) and see what you sent, drill short and long presses, learn by sound with flash cards, listen to endless practice, type letters and CW phrases on the keys. Keying goes out over USB-MIDI in the Vail format. Settings and progress are kept; Koch order, Farnsworth spacing, a decoder that follows a beginner's hand."
+22:tags = ["utility"]
+== firmware/voicelab/fm1.toml
+1:# Voice Lab's build settings (fm1-base tools/build.py). A spike for docs/dev/tts.md: not for installing.
+2:name = "VOICELAB"
+3:id_prefix = "FM-1_14"          # package identity: dev FM-1_1400 (dev builds only; never released)
+4:usb_manufacturer = "fm1-base"
+5:usb_product = "VOICELAB FM-1"
+6:o2 = []
+7:include = ["../common"]        # lpc, adpcm: the speech decoders
+8:words = "words.tsv"
+9:tagline = "the speech decoders a vocabulary app would carry"
+10:repo = "https://github.com/daviddwlee84/M-VAVE_FM-1"
+11:licence = "MIT"
+12:credits = "Built on fm1-base by Charles Vestal. LPC tables from python_wizard (MIT), from MAME."
+13:author = "daviddwlee84"
+14:description = "A listening test, not an instrument: each key says a test word with LPC (the Speak & Spell's format) or IMA ADPCM, decoded on the FM-1 as it plays."
+15:tags = ["utility"]
+== third_party/fm1-base/template/fm1.toml
+1:# The template's build settings (tools/build.py)
+2:name = "TEMPLATE"              # APP_NAME is in app.h; this names the build's files
+3:id_prefix = "FM-1_11"          # package identity (each firmware its own): dev FM-1_1100, releases FM-1_11XXYYZZ
+4:usb_manufacturer = "fm1-base"
+5:usb_product = "TEMPLATE FM-1"
+6:o2 = []                        # separate units compiled at -O2 (an app's DSP)
+7:words = "words.tsv"
+8:ble = true                     # Bluetooth MIDI (--no-ble builds without it)
+9:ble_central = true             # and the FM-1 connects to Bluetooth MIDI devices too
+10:# the site (tools/make_site.py, tools/publish_site.sh)
+11:tagline = "a starting point for FM-1 firmware"
+12:repo = "https://github.com/charlesvestal/fm1-base"
+13:licence = "MPL-2.0"
+14:credits = ""                   # a sentence for the installer's footer: what your firmware is built from
+15:# firmware.json, for firmware hubs (docs/FIRMWARE-JSON.md): the build writes it from these and the keys above
+16:author = "Charles Vestal"      # who made it
+17:description = "The smallest complete firmware for the FM-1, made to be copied. The keys play a simple voice with velocity and pressure, your settings save, MIDI goes in and out over USB and Bluetooth and comes in over TRS, and it works with a screen reader."
+18:tags = ["synth", "utility"]    # from the list in docs/FIRMWARE-JSON.md; the build refuses another
+19:install = "https://charlesvestal.github.io/fm1-base/install/"   # the page that installs it
+20:site = "https://charlesvestal.github.io/fm1-base/"
+21:screenshot = "docs/img/screen-playing.png"   # for the hubs' cards: a square PNG, at least 240 x 240, in your repository
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 10:15:39Z)**_
+
+<tool-use data-tool-type="unknown" data-tool-name="Agent"><details>
+<summary>Tool use: **Agent**</summary>
+Audio synth options for app
+
+```text
+Async agent launched successfully. (This tool result is internal metadata — never quote or paste any part of it, including the agentId below, into a user-facing reply.)
+agentId: a952794dd9f33090d (internal ID - do not mention to user. Use SendMessage with to: 'a952794dd9f33090d', summary: '<5-10 word recap>' to continue this agent.)
+The agent is working in the background. You will be notified automatically when it completes. You know nothing about its results until that notification arrives — do not report, assume, or predict them; continue other work or respond to the user in the meantime.
+Do not duplicate this agent's work — avoid working with the same files or topics it is using.
+output_file: /private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/7dcc67a0-a756-4514-85d7-b24e721b72ee/tasks/a952794dd9f33090d.output
+Do NOT Read or tail this file via the shell tool — it is the full subagent JSONL transcript and reading it will overflow your context. If the user asks for progress, say the agent is still running; you'll get a completion notification.
+```
+</details></tool-use>
+
+_**Agent - sidechain (2026-11-18 10:15:39Z)**_
+
+Read-only research in /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1 (thoroughness: medium-to-thorough). I'm planning a small polyphonic synth for a new fm1-base app (`firmware/theory/`, a music theory trainer): ~8 voices of a 2-operator FM electric-piano-ish tone so chords sound pleasant through the FM-1's speaker, plus a short click for a metronome later. fm1-base has no synth; the app writes samples in `app_render`. I need facts with file:line references (short excerpts):
+
+1. `firmware/common/chime.c` / `chime.h`: its 2-op FM voice — oscillator/phase representation, envelope, which fastmath functions it uses, how it mixes into the app's render buffer (format of `lr`, Q23?, `master_q12`), CPU cost hints. Could it be generalised to N voices with note-on/note-off and per-voice envelope?
+2. `firmware/morse/tone.c` / `tone.h`: its 2 sine voices with smoothstep ramps; how gate state is passed from the 1 kHz tick or main loop to the render (locking, `plat_lock`).
+3. fm1-base audio contract: `third_party/fm1-base/include/plat.h`, `DESIGN.md`, `bsp/docs/BOARD_IO.md`, `include/fastmath.h`, `include/fm1b_config.h`: `app_render` signature and timing, `APP_BLOCK`, sample rate, sample format and headroom, `master_q12`, RAM-resident audio code attribute (e.g. `PLAT_RAM` / `.ram_text`), second-core render option, `plat_cpu_pct`, `plat_xruns`, `APP_OVERLOAD`, and the no-double rule (what flags/compile checks). Which fastmath functions exist (`fm_sinf`, `fm_exp2f`, table sizes) and whether a sine lookup table is provided.
+4. Template app's voice (`third_party/fm1-base/template/app.c`): how it maps key presses to notes (MIDI 53..79?), handles velocity, last-note priority.
+5. Any other synth in the repo or in `third_party/fm1-base` (examples, `examples/`, `apps/`), e.g. an FM or wavetable voice with polyphony and voice stealing, that a GPL app may reuse (note licence: fm1-base is MPL-2.0; `firmware/common` is MIT).
+6. How the host simulator records audio (`wav FILE` command in `third_party/fm1-base/host/plat_host.c`) so a test can check that a chord produces sound (e.g. RMS or non-silence check? any `expect` on audio?).
+7. CPU budget evidence: anything in docs (`docs/dev/*.md`, `docs/firmware/**`) about how many voices other firmwares run (SLOOP 8/32 voices, CTL-1 GM synth), and Morse's measured `plat_cpu_pct`.
+
+Return conclusions plus references; keep it compact.
+
+_**Agent - sidechain (claude-opus-5-5 2026-11-18 10:15:39Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Read template app.h and test file
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/third_party/fm1-base/template && grep -n '' app.h && echo ==== && wc -l app.c tests/*.txt README.md && cat -n tests/basic.txt`
+
+```text
+1:/* SPDX-License-Identifier: MPL-2.0
+2: * Copyright (C) 2026 Charles Vestal */
+3:/* The template: the smallest complete fm1-base firmware. Copy this directory to start a firmware.
+4: * This header is the app's half of the contract with the platform (device/unity.c, host/plat_host.c). */
+5:#pragma once
+6:#include <stdint.h>
+7:#include "plat.h"
+8:
+9:#define APP_NAME "TEMPLATE"
+10:#define APP_SPLASH_RGB RGB(242, 120, 72)
+11:#define APP_BLOCK 256u                   /* frames per audio block: 5.8 ms at 44.1 kHz */
+12:#define APP_TOUCH                        /* velocity and pressure from the keys (lib/touch.h) */
+13:#define APP_BTDEV                        /* Bluetooth MIDI devices (lib/btdev.h) */
+14:#define APP_BLE_AT_BOOT (!template_ble_off())   /* Bluetooth at power-on: as the player left it (REC held) */
+15:int template_ble_off(void);
+16:
+17:/* the store: the app's objects, the panel calibration (the platform's) and Bluetooth's address and pairing among
+18: * them, and their flash offsets */
+19:enum { OBJ_SETTINGS, OBJ_PANEL, OBJ_BLE, OBJ_NOBJ };
+20:#define APP_STORE_MAP {0xFC000u, 0xDC000u, 0xDE000u}
+21:
+22:/* the contract: the platform calls these */
+23:void app_init(void);                     /* boot: the engine, then the saved settings (or defaults) */
+24:void app_render(int32_t *lr, uint32_t n, uint32_t master_q12);   /* audio interrupt: n stereo frames, 24-bit */
+25:void app_panic(void);                    /* silence now (before an update rewrites the flash) */
+26:void app_ui_init(void);                  /* the first screen, after the splash */
+27:void app_frame(void);                    /* the UI: input and a redraw, about 60 times a second */
+28:void app_input_only(void);               /* between frames: input only */
+29:void app_say(const char *a, const char *b);   /* a short message on the screen and to a screen reader */
+30:
+31:/* the host simulator's checks (host/plat_host.c "expect"): octave, wave, note (-1 none), dirty, turnsN */
+32:#define APP_HOST_EXPECT
+33:int app_expect(const char *what, int *got);
+====
+     524 app.c
+     159 tests/basic.txt
+      16 tests/screens.txt
+      71 README.md
+     770 total
+     1	# The template in the host simulator: tools/build.py template --host, then
+     2	#   template/build/host/template_host template/tests/basic.txt template/build/host
+     3	wait 600
+     4	shot boot.png
+     5	key 7 down
+     6	wait 50
+     7	expect note 60
+     8	expect midi_out 1
+     9	shot key.png
+    10	key 7 up
+    11	wait 50
+    12	expect note -1
+    13	tap OCT+
+    14	wait 30
+    15	expect octave 1
+    16	expect dirty 1
+    17	turn PRESET 1
+    18	wait 30
+    19	expect wave 1
+    20	turn K3 3
+    21	wait 300
+    22	expect turns5 3
+    23	press FX
+    24	wait 30
+    25	shot controls.png
+    26	release FX
+    27	tap SAVE
+    28	wait 30
+    29	expect dirty 0
+    30	expect store_writes 1
+    31	reboot
+    32	wait 600
+    33	expect octave 1
+    34	expect wave 1
+    35	midi 90 3C 64
+    36	wait 30
+    37	expect note 60
+    38	wav note.wav
+    39	wait 200
+    40	wavstop
+    41	expect peak_db_min -30
+    42	midi 80 3C 00
+    43	listen
+    44	wait 100
+    45	said TEMPLATE. OCTAVE +1. WAVE TRIANGLE
+    46	tap ARP
+    47	wait 30
+    48	said BUTTON ARP
+    49	# MASTER turned while a note plays: the gain glides, so no sample jumps further than the wave itself does
+    50	midi 90 45 64
+    51	wait 100
+    52	wav master.wav
+    53	master 4096
+    54	wait 20
+    55	master 300
+    56	wait 20
+    57	master 4096
+    58	wait 50
+    59	wavstop
+    60	midi 80 45 00
+    61	# velocity and pressure (lib/touch.c): a key landing at 40 plays at about 40; pressed 80 % more, it has pressure
+    62	key 7 down 40
+    63	wait 60
+    64	expect vel >30
+    65	expect vel <50
+    66	key 7 up
+    67	wait 50
+    68	key 7 down 100 80
+    69	wait 600
+    70	expect prs >40
+    71	shot touch.png
+    72	key 7 up
+    73	wait 50
+    74	# REC held a second: Bluetooth off (and saved: off after a restart too), then on again
+    75	listen
+    76	wait 1200
+    77	press REC
+    78	wait 1100
+    79	release REC
+    80	wait 50
+    81	said BLUETOOTH OFF
+    82	expect ble 0
+    83	tap SAVE
+    84	wait 30
+    85	reboot
+    86	wait 1200
+    87	expect ble 0
+    88	press REC
+    89	wait 1100
+    90	release REC
+    91	wait 1200
+    92	said BLUETOOTH ON
+    93	expect ble 2
+    94	# REC: look for Bluetooth MIDI devices, connect to the one found, let it go (lib/btdev)
+    95	tap REC
+    96	said BLE SCANNING
+    97	wait 700
+    98	said DEVICE BLE MIDI
+    99	tap REC
+   100	said CONNECTING BLE MIDI
+   101	wait 500
+   102	said DEVICE CONNECTED
+   103	expect ble_dev 4
+   104	tap REC
+   105	said BLE DISCONNECTED
+   106	wait 100
+   107	expect ble_dev 0
+   108	unsaid LOST
+   109	# each port's messages counted (plat_midi_count): this is the fifth from USB in this script
+   110	midi USB 90 40 50
+   111	wait 20
+   112	expect midi_in_usb 5
+   113	midi USB 80 40 00
+   114	# Bluetooth's two links, the computer's and the device's: TO_BLE goes to both, each with its own room; their MIDI
+   115	# comes in on PORT_BLE, and plat_midi_in_from says which link (MIDI thru sends it to every other)
+   116	ble connect
+   117	tap REC
+   118	wait 700
+   119	tap REC
+   120	wait 500
+   121	expect ble_dev 4
+   122	expect room_ble 64
+   123	expect room_ble_dev 64
+   124	out
+   125	key 7 down
+   126	wait 50
+   127	key 7 up
+   128	wait 50
+   129	expect_out BLE 80 48 00
+   130	expect_out BLE-DEV 80 48 00
+   131	midi BLE-DEV 90 3C 64
+   132	wait 20
+   133	expect note 60
+   134	expect midi_in_from 8
+   135	midi BLE 80 3C 00
+   136	wait 20
+   137	expect note -1
+   138	expect midi_in_from 2
+   139	midi TRS 90 3C 64
+   140	wait 20
+   141	expect midi_in_from 0
+   142	midi USB 80 3C 00
+   143	wait 20
+   144	expect midi_in_from 1
+   145	# the computer gone: the device's link alone
+   146	ble disconnect
+   147	expect room_ble 0
+   148	expect room_ble_dev 64
+   149	out
+   150	key 7 down
+   151	wait 50
+   152	key 7 up
+   153	wait 50
+   154	expect_out BLE-DEV 80 48 00
+   155	expect_no_out BLE 80 48 00
+   156	tap REC
+   157	wait 100
+   158	expect ble_dev 0
+   159	expect room_ble_dev 0
+```
+</details></tool-use>
+
+_**Agent - sidechain (claude-opus-5-5 2026-11-18 10:15:39Z)**_
+
+<tool-use data-tool-type="read" data-tool-name="Read"><details>
+<summary>Tool use: **Read**</summary>
+ `./third_party/fm1-base/template/app.c`
+
+```text
+1	/* SPDX-License-Identifier: MPL-2.0
+2	 * Copyright (C) 2026 Charles Vestal */
+3	/* The template app: every control on the screen as it arrives, by the name the app knows it by (plat.h B_*, EN_*,
+4	 * the keys), and a few of them doing something: the keys play a voice and go out over USB-MIDI (MIDI in plays it
+5	 * too), OCT- / OCT+ set the octave, PRESET the wave, MASTER the volume, SAVE stores the settings; the keys are
+6	 * played with velocity and pressure (lib/touch.h), shown on them. One of each thing the platform offers, kept short. Part of the unity build (device/unity.c, host/plat_host.c), after the platform:
+7	 * gfx.c and announce.c are in scope. */
+8	#include "fastmath.h"
+9	
+10	#define SET_MAGIC 0x54504C31u            /* "TPL1": the settings record; another magic loads defaults */
+11	typedef struct {
+12	    uint32_t magic;
+13	    int8_t octave;                       /* -2 .. +2 */
+14	    uint8_t wave;                        /* 0 sine, 1 triangle */
+15	    uint8_t ble_off;                     /* Bluetooth switched off (REC held); 0, the default: on */
+16	    uint8_t rsv[1];
+17	} settings_t;
+18	static settings_t set;
+19	static uint8_t set_dirty;                /* changed since the last save: SAVE is lit */
+20	
+21	static const char *const WAVE_NAME[] = {"SINE", "TRIANGLE"};
+22	/* the controls by their names in plat.h, in its order */
+23	static const char *const BTN_NAME[NB] = {"FX", "SEL", "ENV", "LFO", "EDIT", "GLO", "HOME", "SAVE", "ARP", "SEQ",
+24	                                         "PLAY", "REC", "OCT-", "OCT+"};
+25	static const char *const ENC_NAME[NE] = {"SELECT", "ALGO", "PRESET", "K1", "K2", "K3", "K4"};
+26	
+27	/* ------------------------------------------------------------------ voice --- */
+28	/* one voice, the last note wins; the main loop and MIDI in set it, the audio interrupt plays it */
+29	static volatile int32_t voice_note = -1;     /* MIDI note, -1 = released */
+30	static volatile float voice_vel = 1.0f;      /* the note's velocity, 0..1 */
+31	static float voice_phase, voice_level, gain_now;   /* gain_now glides to MASTER: no step at a block's edge */
+32	
+33	static void note_on(int32_t note, uint32_t vel)
+34	{
+35	    voice_vel = (float)vel / 127.0f;
+36	    voice_note = note;
+37	}
+38	static void note_off(int32_t note)
+39	{
+40	    if (voice_note == note)
+41	        voice_note = -1;
+42	}
+43	
+44	static volatile uint32_t midi_last, midi_last_port, midi_count;   /* the last message in (shown), and how many */
+45	static void midi_in(void)                    /* audio interrupt: the packets that came in */
+46	{
+47	    uint32_t pkt;
+48	    int port;
+49	    while (plat_midi_in(&pkt, &port)) {
+50	        uint32_t st = (pkt >> 8) & 0xFFu, d1 = (pkt >> 16) & 0x7Fu, d2 = pkt >> 24;
+51	        if (st != 0xF8u && st != 0xFEu) {    /* (clock and active sensing would flood the screen) */
+52	            midi_last = pkt;
+53	            midi_last_port = (uint32_t)port;
+54	            midi_count++;
+55	        }
+56	        if ((st & 0xF0u) == 0x90u && d2)
+57	            note_on((int32_t)d1, d2);
+58	        else if ((st & 0xF0u) == 0x80u || (st & 0xF0u) == 0x90u)
+59	            note_off((int32_t)d1);
+60	    }
+61	}
+62	
+63	void app_render(int32_t *lr, uint32_t n, uint32_t master_q12)
+64	{
+65	    uint32_t i;
+66	    int32_t note = voice_note;
+67	    float target = note >= 0 ? 0.25f * voice_vel : 0.0f;
+68	    float inc = note >= 0 ? 440.0f * fm_exp2f((float)(note - 69) / 12.0f) / 44100.0f : 0.0f;
+69	    float gain = (float)master_q12 / 4096.0f * 8300000.0f;   /* MASTER, read once a block */
+70	    midi_in();
+71	    for (i = 0; i < n; i++) {
+72	        float s;
+73	        voice_level += (target - voice_level) * 0.002f;          /* ~10 ms attack and release */
+74	        gain_now += (gain - gain_now) * 0.004f;                  /* ~5 ms: turning MASTER does not click */
+75	        voice_phase += inc;
+76	        if (voice_phase >= 1.0f)
+77	            voice_phase -= 1.0f;
+78	        s = set.wave ? 4.0f * fm_fabsf(voice_phase - 0.5f) - 1.0f : fm_sinf(voice_phase * 6.2831853f);
+79	        s *= voice_level * gain_now;
+80	        lr[2 * i] = (int32_t)s;
+81	        lr[2 * i + 1] = (int32_t)s;
+82	    }
+83	}
+84	
+85	void app_panic(void)
+86	{
+87	    voice_note = -1;
+88	    voice_level = 0.0f;
+89	}
+90	
+91	/* --------------------------------------------------------------- settings --- */
+92	static void settings_defaults(void)
+93	{
+94	    set.magic = SET_MAGIC;
+95	    set.octave = 0;
+96	    set.wave = 0;
+97	    set.ble_off = 0;
+98	}
+99	
+100	void app_init(void)
+101	{
+102	    if (plat_store_load(OBJ_SETTINGS, &set, sizeof set) != (int)sizeof set || set.magic != SET_MAGIC
+103	        || set.octave < -2 || set.octave > 2 || set.wave > 1u || set.ble_off > 1u)
+104	        settings_defaults();
+105	}
+106	
+107	/* --------------------------------------------------------------------- UI --- */
+108	static struct {
+109	    char msg[2][24];                     /* a short message over the header */
+110	    uint32_t msg_until;
+111	    uint32_t keys, btn;                  /* held at the last input */
+112	    uint8_t vel[NKEYS], prs[NKEYS];      /* each key's last velocity, and its pressure while held */
+113	    int32_t last_key;                    /* the key pressed last: its numbers in the header */
+114	    uint8_t looking;                     /* Bluetooth MIDI devices: REC pressed, the scan's list up (lib/btdev) */
+115	    uint32_t rec_t;                      /* REC went down (0: not held, or its hold already acted) */
+116	    int32_t turns[NE];                   /* detents since boot, per encoder */
+117	    uint32_t turned_at[NE];              /* when each was last turned: it shows lit for a moment */
+118	    uint8_t redraw;
+119	} ui;
+120	
+121	static void text_cat(char *d, const char *s)
+122	{
+123	    while (*d)
+124	        d++;
+125	    while (*s)
+126	        *d++ = *s++;
+127	    *d = 0;
+128	}
+129	
+130	static void int_text(int32_t v, char *b)     /* signed, no padding */
+131	{
+132	    char t[12];
+133	    int n = 0;
+134	    uint32_t u = (uint32_t)(v < 0 ? -v : v);
+135	    do
+136	        t[n++] = (char)('0' + u % 10u);
+137	    while ((u /= 10u) && n < 11);
+138	    if (v < 0)
+139	        *b++ = '-';
+140	    while (n)
+141	        *b++ = t[--n];
+142	    *b = 0;
+143	}
+144	
+145	void app_say(const char *a, const char *b)
+146	{
+147	    uint32_t i;
+148	    char t[48];
+149	    for (i = 0; i < 23u && a && a[i]; i++)
+150	        ui.msg[0][i] = a[i];
+151	    ui.msg[0][i] = 0;
+152	    for (i = 0; i < 23u && b && b[i]; i++)
+153	        ui.msg[1][i] = b[i];
+154	    ui.msg[1][i] = 0;
+155	    ui.msg_until = plat_ms() + 1300u;
+156	    ui.redraw = 1;
+157	    if (ann_on()) {                          /* and to a screen reader (announce.c, fm1-reader) */
+158	        t[0] = 0;
+159	        text_cat(t, ui.msg[0]);
+160	        if (ui.msg[1][0]) {
+161	            text_cat(t, " ");
+162	            text_cat(t, ui.msg[1]);
+163	        }
+164	        ann_say(t, 0, ANN_NOW);
+165	    }
+166	}
+167	
+168	static void octave_text(char *t)
+169	{
+170	    t[0] = set.octave < 0 ? '-' : '+';
+171	    t[1] = (char)('0' + (set.octave < 0 ? -set.octave : set.octave));
+172	    t[2] = 0;
+173	}
+174	
+175	/* a screen reader that has just started listening (or asks) hears the whole screen */
+176	static void speak(void)
+177	{
+178	    char t[96], o[4];
+179	    if (ann_on() && ann_where()) {
+180	        octave_text(o);
+181	        t[0] = 0;
+182	        text_cat(t, APP_NAME ". OCTAVE ");
+183	        text_cat(t, o);
+184	        text_cat(t, ". WAVE ");
+185	        text_cat(t, WAVE_NAME[set.wave]);
+186	        if (midi_count) {                    /* the last MIDI message in, as the screen shows it */
+187	            static const char *const PORT[NPORTS] = {"USB", "BLE", "TRS"};
+188	            static const char HEX[] = "0123456789ABCDEF";
+189	            uint32_t m = midi_last, b;
+190	            char h[10];
+191	            for (b = 0; b < 3u; b++) {
+192	                uint32_t v = (m >> (8u + 8u * b)) & 0xFFu;
+193	                h[3 * b] = HEX[v >> 4];
+194	                h[3 * b + 1] = HEX[v & 15u];
+195	                h[3 * b + 2] = b < 2u ? ' ' : 0;
+196	            }
+197	            text_cat(t, ". MIDI IN ");
+198	            text_cat(t, midi_last_port < NPORTS ? PORT[midi_last_port] : "");
+199	            text_cat(t, " ");
+200	            text_cat(t, h);
+201	        }
+202	        ann_say(t, 0, ANN_NOW);
+203	    }
+204	    ann_tick(plat_ms());
+205	}
+206	
+207	static void note_name(int32_t note, char *b)
+208	{
+209	    static const char *const N[] = {"C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"};
+210	    char o[12];
+211	    b[0] = 0;
+212	    text_cat(b, N[note % 12]);
+213	    int_text(note / 12 - 1, o);
+214	    text_cat(b, o);
+215	}
+216	
+217	static void octave_step(int32_t d)
+218	{
+219	    int32_t o = clamp(set.octave + d, -2, 2);
+220	    char t[4];
+221	    if (o == set.octave)
+222	        return;
+223	    voice_note = -1;                         /* a key held across the change would not find its note off */
+224	    set.octave = (int8_t)o;
+225	    set_dirty = 1;
+226	    octave_text(t);
+227	    app_say("OCTAVE", t);
+228	}
+229	
+230	int template_ble_off(void) { return set.ble_off; }
+231	
+232	/* REC held a second: Bluetooth off or on (kept with the settings, so it stays so at the next power-on) */
+233	static void ble_toggle(void)
+234	{
+235	    set.ble_off = (uint8_t)!set.ble_off;
+236	    set_dirty = 1;
+237	    plat_ble_enable(!set.ble_off);
+238	    app_say("BLUETOOTH", set.ble_off ? "OFF" : "ON");
+239	}
+240	
+241	/* REC: a Bluetooth MIDI device (FM1B_BLE_CENTRAL, lib/btdev): look for devices, then connect to the one ALGORITHM
+242	 * picks, then let it go */
+243	static void ble_device_say(void)
+244	{
+245	    char name[21];
+246	    if (btdev_found(btdev_pick(), name, 0))
+247	        app_say("DEVICE", name);
+248	    else
+249	        app_say("BLE", "SCANNING");
+250	}
+251	static void ble_device_button(void)
+252	{
+253	    int ev;
+254	    if (!btdev_busy() && !ui.looking) {
+255	        ui.looking = 1;
+256	        app_say("BLE", "SCANNING");
+257	        return;
+258	    }
+259	    ev = btdev_save();
+260	    ui.looking = 0;
+261	    app_say(ev == BTDEV_CONNECTING ? btdev_word(ev) : "BLE", ev == BTDEV_CONNECTING ? btdev_name() : btdev_word(ev));
+262	}
+263	
+264	static void input(void)
+265	{
+266	    uint32_t keys, btn = plat_buttons(), k;
+267	    int32_t e;
+268	    touch_poll();                            /* the sensed keys' presses, velocities and pressure */
+269	    keys = touch_keys();
+270	    for (k = 0; k < NKEYS; k++) {            /* key 0 is F3 (MIDI 53) */
+271	        uint32_t bit = 1u << k, v;
+272	        int32_t note = 53 + (int32_t)k + 12 * set.octave;
+273	        if ((keys & bit) && !(ui.keys & bit)) {
+274	            v = touch_vel(k);
+275	            ui.vel[k] = (uint8_t)v;
+276	            ui.prs[k] = 0;
+277	            ui.last_key = (int32_t)k;
+278	            note_on(note, v);
+279	            plat_midi_send(0x09u | 0x90u << 8 | (uint32_t)note << 16 | v << 24, TO_USB | TO_BLE);   /* BLE: if built with it */
+280	        } else if (!(keys & bit) && (ui.keys & bit)) {
+281	            ui.prs[k] = 0;
+282	            note_off(note);
+283	            plat_midi_send(0x08u | 0x80u << 8 | (uint32_t)note << 16, TO_USB | TO_BLE);
+284	        } else if ((keys & bit) && touch_pressure(k) != ui.prs[k]) {   /* pressure: poly aftertouch */
+285	            ui.prs[k] = touch_pressure(k);
+286	            ui.redraw = 1;
+287	            plat_midi_send(0x0Au | 0xA0u << 8 | (uint32_t)note << 16 | (uint32_t)ui.prs[k] << 24, TO_USB | TO_BLE);
+288	        }
+289	    }
+290	    for (k = 0; k < NB; k++) {               /* a button pressed: its name, and what it does here */
+291	        uint32_t bit = 1u << k;
+292	        if (!(btn & bit) || (ui.btn & bit))
+293	            continue;
+294	        if (k == B_OCTDN)
+295	            octave_step(-1);
+296	        else if (k == B_OCTUP)
+297	            octave_step(1);
+298	        else if (k == B_REC && FM1B_BLE)
+299	            ui.rec_t = plat_ms();                /* a press: on release (a hold switches Bluetooth) */
+300	        else if (k == B_SAVE) {
+301	            if (plat_store_save(OBJ_SETTINGS, &set, sizeof set) == 0) {
+302	                set_dirty = 0;
+303	                app_say("SAVED", "");
+304	            } else {
+305	                app_say("SAVE", "FAILED");
+306	            }
+307	        } else {
+308	            app_say("BUTTON", BTN_NAME[k]);
+309	        }
+310	    }
+311	    if (FM1B_BLE && ui.rec_t) {             /* REC: held a second, Bluetooth on / off; a press, a device */
+312	        if (btn >> B_REC & 1u) {
+313	            if (plat_ms() - ui.rec_t >= 1000u) {
+314	                ui.rec_t = 0;
+315	                ble_toggle();
+316	            }
+317	        } else {
+318	            ui.rec_t = 0;
+319	            if (FM1B_BLE_CENTRAL && !set.ble_off)
+320	                ble_device_button();
+321	            else
+322	                app_say("BUTTON", "REC");
+323	        }
+324	    }
+325	    for (k = 0; k < NE; k++) {               /* an encoder turned: its count; PRESET also changes the wave */
+326	        char t[12];
+327	        if ((e = plat_enc((int)k)) == 0)
+328	            continue;
+329	        ui.turns[k] += e;
+330	        ui.turned_at[k] = plat_ms();
+331	        ui.redraw = 1;
+332	        if (k == EN_ALGO && FM1B_BLE_CENTRAL && ui.looking) {
+333	            btdev_choose(btdev_pick() + e);
+334	            ble_device_say();
+335	        } else if (k == EN_PRESET) {
+336	            set.wave ^= 1u;
+337	            set_dirty = 1;
+338	            app_say("WAVE", WAVE_NAME[set.wave]);
+339	        } else {
+340	            int_text(ui.turns[k], t);
+341	            app_say(ENC_NAME[k], t);
+342	        }
+343	    }
+344	    if (keys != ui.keys || btn != ui.btn)
+345	        ui.redraw = 1;
+346	    ui.keys = keys;
+347	    ui.btn = btn;
+348	    plat_glow(1);                            /* the unlit buttons glow, readable in the dark */
+349	    plat_leds(btn | (set_dirty ? 1u << B_SAVE : 0u), keys);
+350	}
+351	
+352	void app_input_only(void) { input(); }
+353	
+354	static void cell(int32_t x, int32_t y, int32_t w, const char *s, int on)   /* a labelled box, lit when on */
+355	{
+356	    cv_rect(x, y, w, 18, on ? C_HI : C_LINE);
+357	    cv_text(x + (w - text_w(&FONT_XS, s)) / 2, y + 2, &FONT_XS, s, on ? C_BLACK : C_GRAY);
+358	}
+359	
+360	static void key_cell(int32_t x, int32_t y, int32_t w, int32_t h, uint32_t k, uint16_t off)
+361	{
+362	    int32_t v, p;
+363	    cv_rect(x, y, w, h, off);
+364	    if (!(ui.keys >> k & 1u))
+365	        return;
+366	    v = (ui.vel[k] * h + 126) / 127;
+367	    p = (ui.prs[k] * h + 126) / 127;
+368	    cv_rect(x, y + h - v, w, v, C_HI);
+369	    if (p)
+370	        cv_rect(x + 2, y + h - p, w - 4, p, C_WHITE);
+371	}
+372	
+373	static void draw(void)
+374	{
+375	    char t[24];
+376	    int32_t note = voice_note;
+377	    uint32_t i, now = plat_ms(), pct = plat_master() * 100u / 4096u;
+378	    static const uint8_t WK[16] = PLAT_WHITE_KEYS, BK[11] = PLAT_BLACK_KEYS;
+379	    /* the header: the name and the note, or a message for a moment */
+380	    cv_begin(240, 32, C_BLACK);
+381	    if (now < ui.msg_until) {
+382	        int32_t x = cv_text(10, 6, &FONT_B, ui.msg[0], C_WHITE);
+383	        cv_text(x + 8, 6, &FONT_B, ui.msg[1], C_HI);
+384	    } else {
+385	        int32_t x = cv_text(10, 6, &FONT_B, APP_NAME, C_WHITE);
+386	        if (FM1B_BLE)                        /* Bluetooth: grey while it waits, lit while a computer is connected */
+387	            x = cv_text(x + 8, 10, &FONT_XS, "BLE", plat_ble_connected() ? C_HI : C_DIM);
+388	        if (FM1B_BLE_CENTRAL)                /* a Bluetooth MIDI device: lit while connected */
+389	            cv_text(x + 6, 10, &FONT_XS, "DEV", plat_ble_device() == BLE_DEV_READY ? C_HI : C_DIM);
+390	        if (note >= 0) {                     /* the note, and the last key's velocity and pressure */
+391	            int32_t x;
+392	            note_name(note, t);
+393	            x = 230 - text_w(&FONT_B, t);
+394	            cv_text(x, 6, &FONT_B, t, C_HI);
+395	            if (ui.keys >> ui.last_key & 1u) {
+396	                char n[24] = "V ";
+397	                int_text(ui.vel[ui.last_key], t);
+398	                text_cat(n, t);
+399	                text_cat(n, "  P ");
+400	                int_text(ui.prs[ui.last_key], t);
+401	                text_cat(n, t);
+402	                cv_text(x - 12 - text_w(&FONT_XS, n), 10, &FONT_XS, n, C_GRAY);
+403	            }
+404	        }
+405	    }
+406	    cv_blit(0, 0);
+407	    /* the buttons, 4 to a row, lit while held; the encoders and their counts, lit for a moment after a turn */
+408	    cv_begin(240, 144, C_BLACK);
+409	    for (i = 0; i < NB; i++)
+410	        cell(4 + (int32_t)(i % 4u) * 58, (int32_t)(i / 4u) * 21, 56, BTN_NAME[i], (ui.btn >> i) & 1u);
+411	    for (i = 0; i < NE; i++) {
+412	        int32_t x = 4 + (int32_t)(i % 4u) * 58, y = 88 + (int32_t)(i / 4u) * 28;
+413	        int lit = ui.turned_at[i] && now - ui.turned_at[i] < 300u;
+414	        cv_text(x, y, &FONT_XS, ENC_NAME[i], lit ? C_HI : C_GRAY);
+415	        int_text(ui.turns[i], t);
+416	        cv_text(x, y + 13, &FONT_XS, t, lit ? C_WHITE : C_DIM);
+417	    }
+418	    cv_blit(0, 36);
+419	    /* the keys, black above white: a held key fills to its velocity (amber), its pressure over that (white) */
+420	    cv_begin(240, 60, C_BLACK);
+421	    for (i = 0; i < 16u; i++)
+422	        key_cell(4 + (int32_t)i * 14, 14, 13, 14, WK[i], C_DIM);
+423	    for (i = 0; i < 11u; i++) {
+424	        static const uint8_t AT[11] = {0, 1, 2, 4, 5, 7, 8, 9, 11, 12, 14};   /* the white key each one follows */
+425	        key_cell(4 + (int32_t)AT[i] * 14 + 8, 0, 11, 12, BK[i], C_LINE);
+426	    }
+427	    octave_text(t);
+428	    cv_text(4, 36, &FONT_XS, "OCT", C_GRAY);
+429	    cv_text(30, 36, &FONT_XS, t, C_HI);
+430	    cv_text(64, 36, &FONT_XS, "PRESET", C_GRAY);
+431	    cv_text(112, 36, &FONT_XS, WAVE_NAME[set.wave], C_HI);
+432	    if (midi_count) {                        /* the last MIDI message in, and where from */
+433	        static const char *const PORT[NPORTS] = {"USB", "BLE", "TRS"};
+434	        static const char HEX[] = "0123456789ABCDEF";
+435	        uint32_t m = midi_last, b;
+436	        char h[12];
+437	        for (b = 0; b < 3u; b++) {
+438	            uint32_t v = (m >> (8u + 8u * b)) & 0xFFu;
+439	            h[3 * b] = HEX[v >> 4];
+440	            h[3 * b + 1] = HEX[v & 15u];
+441	            h[3 * b + 2] = b < 2u ? ' ' : 0;
+442	        }
+443	        cv_text(4, 48, &FONT_XS, "MIDI IN", C_GRAY);
+444	        cv_text(52, 48, &FONT_XS, midi_last_port < NPORTS ? PORT[midi_last_port] : "", C_HI);
+445	        cv_text(82, 48, &FONT_XS, h, C_WHITE);
+446	    }
+447	    cv_text(178, 36, &FONT_XS, "VOL", C_GRAY);
+448	    int_text((int32_t)pct, t);
+449	    text_cat(t, "%");
+450	    cv_text(204, 36, &FONT_XS, t, C_HI);
+451	    cv_blit(0, 180);
+452	}
+453	
+454	void app_ui_init(void)
+455	{
+456	    touch_on(1);                             /* velocity and pressure: the keys' readings on */
+457	    lcd_fill(0, 0, 240, 240, C_BLACK);
+458	    ui.redraw = 1;
+459	}
+460	
+461	void app_frame(void)
+462	{
+463	    static uint32_t last_pct, lit_until, last_ble, last_midi;
+464	    uint32_t i, now = plat_ms(), pct = plat_master() * 100u / 4096u;
+465	    input();
+466	    speak();
+467	    for (i = 0; i < NE; i++)                 /* an encoder's light goes out */
+468	        if (ui.turned_at[i] && now - ui.turned_at[i] < 400u && now > lit_until)
+469	            lit_until = ui.turned_at[i] + 300u;
+470	    if (lit_until && now >= lit_until) {
+471	        lit_until = 0;
+472	        ui.redraw = 1;
+473	    }
+474	    if (FM1B_BLE_CENTRAL) {                  /* looking: a device found is named at once (REC connects to it) */
+475	        static int found;
+476	        int n = ui.looking ? btdev_count() : 0, ev;
+477	        btdev_page(ui.looking && !set.ble_off);
+478	        if (n > found && btdev_pick() < n)
+479	            ble_device_say();
+480	        found = n;
+481	        while ((ev = btdev_event()) != BTDEV_NONE)   /* a device connected, given up or lost */
+482	            if (ev == BTDEV_CONNECTED || ev == BTDEV_NO_ANSWER || ev == BTDEV_LOST)
+483	                app_say("DEVICE", btdev_word(ev));
+484	    }
+485	    if (midi_count != last_midi) {
+486	        last_midi = midi_count;
+487	        ui.redraw = 1;
+488	    }
+489	    if (pct != last_pct || (uint32_t)(plat_ble_connected() | plat_ble_device() << 1) != last_ble ||
+490	        (ui.msg_until && now >= ui.msg_until)) {
+491	        last_pct = pct;
+492	        last_ble = (uint32_t)(plat_ble_connected() | plat_ble_device() << 1);
+493	        if (now >= ui.msg_until)
+494	            ui.msg_until = 0;
+495	        ui.redraw = 1;
+496	    }
+497	    if (ui.redraw) {
+498	        ui.redraw = 0;
+499	        draw();
+500	    }
+501	}
+502	
+503	#ifdef PLAT_HOST
+504	int app_expect(const char *what, int *got)
+505	{
+506	    if (!strcmp(what, "octave"))
+507	        *got = set.octave;
+508	    else if (!strcmp(what, "wave"))
+509	        *got = set.wave;
+510	    else if (!strcmp(what, "note"))
+511	        *got = voice_note;
+512	    else if (!strcmp(what, "dirty"))
+513	        *got = set_dirty;
+514	    else if (!strcmp(what, "vel"))           /* the last key's velocity and pressure */
+515	        *got = ui.vel[ui.last_key];
+516	    else if (!strcmp(what, "prs"))
+517	        *got = ui.prs[ui.last_key];
+518	    else if (!strncmp(what, "turns", 5))    /* turnsN: encoder N's count (plat.h EN_*) */
+519	        *got = ui.turns[atoi(what + 5) % NE];
+520	    else
+521	        return 0;
+522	    return 1;
+523	}
+524	#endif
+525
+```
+</details></tool-use>
+
+_**Agent - sidechain (claude-opus-5-5 2026-11-18 10:15:44Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+List key directories
+
+`ls firmware firmware/common firmware/morse third_party/fm1-base third_party/fm1-base/include third_party/fm1-base/template third_party/fm1-base/host 2>&1; ls docs docs/dev docs/firmware 2>&1 | head -80`
+
+```text
+firmware:
+common
+conductor
+hello
+morse
+theory
+voicelab
+
+firmware/common:
+tests
+adpcm.c
+adpcm.h
+chime.c
+chime.h
+hostlink.c
+hostlink.h
+ledfx.c
+ledfx.h
+lpc.c
+lpc.h
+README.md
+
+firmware/morse:
+build
+common
+docs
+fm1-base
+tests
+web
+app.c
+app.h
+content.c
+content.h
+fm1.toml
+fmhub.json
+learn.c
+learn.h
+LEARNING.md
+LICENSE
+morse.c
+morse.h
+README.md
+tone.c
+tone.h
+words.tsv
+
+third_party/fm1-base:
+assets
+ble
+bsp
+bt
+device
+docs
+examples
+host
+include
+lib
+LICENSES
+skill
+template
+tests
+tools
+web
+CREDITS.md
+DESIGN.md
+LICENSE
+LICENSING.md
+README.md
+
+third_party/fm1-base/include:
+fastmath.h
+fm1b_config.h
+midi_rel.h
+plat.h
+
+third_party/fm1-base/template:
+docs
+site
+tests
+app.c
+app.h
+fm1.toml
+README.md
+words.tsv
+
+third_party/fm1-base/host:
+build_host.sh
+plat_host.c
+rfm1.c
+docs:
+agentic
+assets
+dev
+firmware
+getting-started
+hardware
+notes
+device-log.md
+ecosystem.md
+index.md
+official.md
+playground.md
+resources.md
+watch.md
+
+docs/dev:
+index.md
+morse-cheatsheet.md
+morse-learn.md
+morse.md
+theory.md
+tts.md
+vocab.md
+
+docs/firmware:
+agent-deck
+choralroot
+ctl-1
+remotefm1
+sloop
+hub.md
+index.md
+switching.md
+```
+</details></tool-use>
+
+_**Agent - sidechain (claude-opus-5-5 2026-11-18 10:15:46Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Find APP_ hook macros in platform files
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/third_party/fm1-base && wc -l include/plat.h device/gfx.c device/unity.c host/plat_host.c tools/build.py && grep -n 'APP_[A-Z_]*' include/plat.h device/unity.c device/gfx.c | head -150`
+
+```text
+     664 include/plat.h
+     315 device/gfx.c
+     456 device/unity.c
+    2976 host/plat_host.c
+    1781 tools/build.py
+    6192 total
+device/unity.c:10: *          flash map APP_STORE_MAP
+device/unity.c:13: *   APP_NAME "TEMPLATE"     on the splash, crash and safe-mode screens and for the screen reader
+device/unity.c:14: *   APP_VERSION "DEV"       a release build passes its own (tools/build.py --release)
+device/unity.c:15: *   APP_BLOCK 256           frames per audio half (5.8 ms at 44.1 kHz), the render's block
+device/unity.c:26: *   APP_TOUCH               velocity and pressure from the keys (lib/touch.h)
+device/unity.c:38:#ifdef APP_TOUCH
+device/unity.c:41:#ifdef APP_KEY_SENSE              /* the keys' readings (plat_sense) to the app, by key: 0..26 */
+device/unity.c:82:#define FM1B_T5_APP_DIV (FM1B_T5_HZ / 1000)
+device/unity.c:112:#include "fm1b_config.h"          /* APP_NAME, APP_VERSION, APP_BLOCK ...: the app's, or the defaults */
+device/unity.c:113:#include "sys_text.c"             /* the faces of the platform's own screens: fm1-base's, or the app's (APP_SYS_TEXT) */
+device/unity.c:114:#define HALF_FRAMES APP_BLOCK     /* the audio half, as felucca-bsp's usb.c expects it */
+device/unity.c:193:#if defined APP_USB_HOST_NAME && FM1B_USB_HOST
+device/unity.c:197:#ifdef APP_SYSEX_BYTE
+device/unity.c:198:#define FELUCCA_SYSEX_BYTE(b) app_sysex_byte(b)   /* the app's, every SysEx byte from USB (plat.h APP_SYSEX_BYTE) */
+device/unity.c:291:#define ANN_NAME APP_NAME " " APP_VERSION
+device/unity.c:336:static void mr_redraw(void)                         /* the app draws everything again (APP_REDRAW) */
+device/unity.c:338:#ifdef APP_REDRAW
+device/unity.c:342:static int mr_test(int on)                          /* a test session (APP_MIRROR_TEST): 1 done, 0 refused */
+device/unity.c:344:#ifdef APP_MIRROR_TEST
+device/unity.c:418:    sys_box(0, 156, 240, SYS_S, APP_BACKUP_WHAT, C_GRAY, 1);
+device/unity.c:419:    ann_say("Restore from USB? It " APP_BACKUP_WHAT ". SEL: yes. HOME: no.", 0, ANN_NOW | ANN_KEEP);
+device/unity.c:449:#ifdef APP_TOUCH
+device/unity.c:452:#ifdef APP_BTDEV
+include/plat.h:64:uint32_t plat_master(void);            /* MASTER pot's position, 0..4096 (the render gets it as a gain: APP_GAIN) */
+include/plat.h:66:                                        * yet (the keys' readings own the converter: APP_KEY_SENSE) */
+include/plat.h:70:                                        * app that shows the volts itself; built for an app with APP_BATTERY_RAW (below) */
+include/plat.h:84:/* the dim ones at any brightness, not the glow's two (an app with APP_DIM_LEVELS): ns is the pulse each scan frame, in
+include/plat.h:138: * APP_USB_HOST_NAME (below): felucca-bsp's FELUCCA_USB_HOST_NAME reads it at the connection (another app's image stays
+include/plat.h:192:/* The devices one by one, for an app that keeps a list of its own (remembered devices, their bonds: APP_BLE_PEERS in
+include/plat.h:233: * on starts it (or advertises again). Whether it starts at power-on: APP_BLE_AT_BOOT (app.h, e.g. a saved setting;
+include/plat.h:238: * APP_BLE_STORE in app.h and gives the two calls below; it then needs no OBJ_BLE. app_ble_load: at Bluetooth's start
+include/plat.h:332:/* the 1 kHz tick (app_tick, an app with APP_TICK) runs in the timer interrupt: the main loop locks it out around
+include/plat.h:342: * millisecond, a "reboot"). Built for an app whose app.h defines APP_RESTART */
+include/plat.h:346: * live there too, at the offsets it gave them (APP_STORE_MAP), so it keeps to the rest. Main loop only; an erase or a
+include/plat.h:393: * plat_usb_session (and plat_sysex_send's -1 without a computer) are built for an app with APP_SYSEX (below) */
+include/plat.h:405: * an app with APP_SYSEX */
+include/plat.h:413:/* the resource region (fm1.toml resources = FILE, FM1B_RES; app.h APP_RES_BASE, APP_RES_SECTORS: device/res.c):
+include/plat.h:432: * an app with APP_USB_CMD: app_usb_cmd(d, n) gets each frame whose cmd the platform does not take (d: the decoded
+include/plat.h:462:/* the keys' velocity and pressure (an app with APP_KEY_SENSE): on, the scan reads the keys on the analog rows and
+include/plat.h:479:/* an app with a pool (app.h APP_STORE_POOL: storage.c): the sectors free for its pooled objects' next copies (a save
+include/plat.h:483:/* An app may pool some objects (APP_STORE_POOL, APP_STORE_POOL_BASE / _N / _OBJ0 / _OBJN / _OLD: storage.c): those
+include/plat.h:484: * share sectors instead of a pair each, and APP_STORE_MAP's entries for them are not used. APP_STORE_POOL_EMPTY(obj, p,
+include/plat.h:488: * ends with OBJ_NOBJ, and APP_STORE_MAP, each object's flash offset: two 4 KiB sectors (A/B) from there, inside the
+include/plat.h:498:                                        * built for an app with APP_CPU_KHZ (below) */
+include/plat.h:510: * blocks (plat_disk_t) and calls plat_disk_poll from its main loop (APP_LOOP: every pass) while on. Host: nothing
+include/plat.h:538: * with its own simulation defines APP_HOST_CPU2 and has them all). */
+include/plat.h:556: * while the simulated second core runs a job (an app with APP_HOST_CPU2 has its own) */
+include/plat.h:583: *   APP_STATS        void app_stats(uint8_t out[PLAT_STATS_APP])   its bytes, once a second (main loop; zeroed before)
+include/plat.h:584: *   APP_STATS_LAYOUT "name width ..."   what they are, for the readout: each field a name and its width in bytes (1,
+include/plat.h:586: *   APP_STATS_QUIET  int app_stats_quiet(void)   1: a flash write now disturbs nothing (the transport stopped). A
+include/plat.h:606: *   APP_TICK        void app_tick(void)           1 kHz, in the timer interrupt (a clock, a sequencer)
+include/plat.h:607: *   APP_BOOT        void app_boot(void)           once, after the platform is up, before app_ui_init (a radio)
+include/plat.h:608: *   APP_LOOP        void app_loop(void)           every pass of the main loop (a radio's tasks)
+include/plat.h:609: *   APP_YIELD       void app_yield(void)          from plat_yield, inside long work
+include/plat.h:610: *   APP_BLE_PEERS   app_ble_scan_report, app_ble_device_keys   the devices one by one (plat_ble_connect_peer, above):
+include/plat.h:612: *   APP_OVERLOAD    void app_overload(void)       the render took over 90 % of its time (shed voices)
+include/plat.h:613: *   APP_SPLASH      void app_splash(void)         the first screen at boot, instead of the name
+include/plat.h:614: *   APP_GAIN(m)     the render's gain from MASTER's position m (0..4096; default the square, m * m >> 12)
+include/plat.h:615: *   APP_BATTERY_RAW (no function) plat_battery_raw is built (the battery's reading, for an app's own volts)
+include/plat.h:616: *   APP_CPU_KHZ     (no function) plat_cpu_khz is built (the CPU's clock)
+include/plat.h:617: *   APP_DIM_LEVELS  (no function) plat_dim_ns is built (the dim lights at any of many brightnesses)
+include/plat.h:618: *   APP_QUIET       void app_quiet(int32_t *lr, uint32_t n)   the render while the flash must not be read (the
+include/plat.h:620: *   APP_KEY_SENSE   void app_key_sample(uint32_t key, uint32_t v, uint32_t ticks, int driven) (rows PA7 / PA8),
+include/plat.h:624: *   APP_SYSEX       int app_sysex(const uint8_t *p, uint32_t n)   a SysEx frame from USB the platform does not take
+include/plat.h:626: *   APP_SYSEX_BYTE  void app_sysex_byte(uint8_t b)   every byte of a SysEx from USB, F0 and F7 too (realtime bytes
+include/plat.h:628: *                   than APP_SYSEX's (640 bytes between F0 and F7; a DX7 bank is 4104). In the USB interrupt: keep it short
+include/plat.h:629: *   APP_USB_CMD     void app_usb_cmd(const uint8_t *d, uint32_t n)   a frame in the update's framing (above). Main loop
+include/plat.h:630: *   APP_USB_HOST_NAME (no function) plat_usb_host_name is built (the USB host reads the device's product string)
+include/plat.h:631: *   APP_REDRAW      void app_redraw(void)        draw the whole screen again at the next frame (the mirror lost a part)
+include/plat.h:632: *   APP_MIRROR_TEST int app_mirror_test(int on)  the mirror's remote asks for a test session (on 1, off 0): 1 done
+include/plat.h:633: *   APP_CSTART      void app_cstart(void)         first thing at a start, before the RAM is cleared and with nothing
+include/plat.h:636: *   APP_BT_FRAMES   const int32_t *app_bt_frames(const int32_t *lr, uint32_t n)   the frames Bluetooth audio takes from
+include/plat.h:640: *   APP_FAULT       void app_fault(const fm1_crash_t *c)   a crash, before the crash screen (c: the record): an app's
+include/plat.h:642: *   APP_LOG         void app_log(void (*line)(const char *t))   the development readout over USB-MIDI (F0 7D 4C 47 F7,
+include/plat.h:648: * with APP_REDRAW gets back what a slow link dropped.
+include/plat.h:652: *   APP_BACKUP_OBJS {OBJ_PROJ, ...}   the objects, in order (not OBJ_PANEL: the calibration is the unit's)
+include/plat.h:653: *   APP_BACKUP_MAGIC 0x...u           its image's magic (4 ASCII bytes, little-endian), APP_BACKUP_VERSION its format
+include/plat.h:654: *   APP_BACKUP_WHAT "replaces all songs"   the restore question's second line
+include/plat.h:655: *   APP_BACKUP_BUF io_buf             optional: the app's own buffer of at least 3840 B (uint8_t name[], not static,
+device/gfx.c:18:#ifndef APP_CANVAS_PX
+device/gfx.c:19:#define APP_CANVAS_PX (240u * 144u)   /* X0X: the main area, both bands, is 240 x 144 */
+device/gfx.c:21:#define CV_MAX APP_CANVAS_PX      /* (app.h may give less: a WiFi build needs the pool; cv_begin keeps to it) */
+device/gfx.c:171:#if defined(APP_FONT_CACHE) && APP_FONT_CACHE
+device/gfx.c:172:/* APP_FONT_CACHE bytes (app.h): the packed glyphs drawn lately kept decoded, an alpha a byte, so a glyph drawn again
+device/gfx.c:174: * glyph). Slots by the glyph's data address (2^APP_FONT_CACHE_BITS, a glyph each: one taking another's slot decodes
+device/gfx.c:177:#ifndef APP_FONT_CACHE_BITS
+device/gfx.c:178:#define APP_FONT_CACHE_BITS 7                        /* 2^7 slots (app.h may give more) */
+device/gfx.c:180:#define FONT_CACHE_SLOTS (1u << APP_FONT_CACHE_BITS)
+device/gfx.c:181:_Static_assert(APP_FONT_CACHE >= FONT_BOX_MAX, "APP_FONT_CACHE: at least the largest glyph's box (FONT_BOX_MAX)");
+device/gfx.c:184:static uint8_t fc_px[APP_FONT_CACHE];
+device/gfx.c:190:    uint32_t s = ((uint32_t)(uintptr_t)gd * 2654435761u) >> (32 - APP_FONT_CACHE_BITS), i, bit = 0, prev = 0;
+device/gfx.c:192:    _Static_assert(APP_FONT_CACHE <= 65535u, "font_cached: 16 bits an offset");
+device/gfx.c:195:    if (fc_used + n > APP_FONT_CACHE) {              /* full: all forgotten */
+device/gfx.c:226:#ifdef FONT_CACHED                   /* (APP_FONT_CACHE: the alphas decoded once, then read; the box clipped once) */
+```
+</details></tool-use>
+
+_**Agent - sidechain (claude-opus-5-5 2026-11-18 10:15:48Z)**_
+
+<tool-use data-tool-type="read" data-tool-name="Read"><details>
+<summary>Tool use: **Read**</summary>
+ `./third_party/fm1-base/include/plat.h`
+
+```text
+1	/* SPDX-License-Identifier: MPL-2.0
+2	 * Copyright (C) 2026 Charles Vestal */
+3	/* fm1-base's platform interface (from X0X's, by way of FoMni-1): everything the app needs from the hardware.
+4	 *
+5	 * The device implementation (plat_fm1.c) wraps Felucca's HAL and panel map; the
+6	 * host implementation (host/plat_host.c) is a simulator fed by a script, which is
+7	 * what lets the whole app — UI, sequencer, engines — run and be tested on a Mac.
+8	 * Drawing goes through Felucca's lcd_fill / lcd_blit (lcd.c on the device, a
+9	 * framebuffer on the host) and gfx.c on top. */
+10	#pragma once
+11	#include <stdint.h>
+12	
+13	/* big zero-initialised buffers go in the .pool RAM region on the device */
+14	#ifdef PLAT_HOST
+15	#define PLAT_POOL
+16	#else
+17	#define PLAT_POOL __attribute__((section(".pool")))
+18	#endif
+19	
+20	/* PLAT_RAM_CODE: a function that runs from RAM (section .app_ram, copied at boot with .ram_text, at the start of
+21	 * the RAMTEXT region they share: 32 KiB, 24 KiB with WiFi; with fm1.toml ram_layout = "packed", device/app_packed.ld,
+22	 * at the start of the packed SRAM, as big as its one budget lets it), out of the way
+23	 * of the XIP cache's misses: an audio path. It may call
+24	 * only RAM code (other PLAT_RAM_CODE functions, felucca-bsp's RAM functions) and nothing through a pointer; the build
+25	 * checks it over the disassembly, to any depth (tools/ramcode.py; fm1.toml ram_code_allow names the exceptions an app
+26	 * vouches for). Not for code that runs with the flash off: it may read constants in the flash. XIP code it may not
+27	 * call: the compiler's own calls (memcpy for a struct copy, a 64-bit divide), and a static inline helper the compiler
+28	 * keeps out of line (at -Os it often does: fastmath.h's fm_exp2f), whose one copy is in XIP; a helper RAM code uses
+29	 * is always_inline, or PLAT_RAM_CODE itself.
+30	 * PLAT_FAR(fn): fn through a pointer the compiler cannot turn back into a direct call. RAM code and XIP code are
+31	 * mostly farther apart than a direct call reaches (+-4 MiB), so XIP code calls RAM code this way (the linker refuses
+32	 * a direct call that does not reach: "relocation truncated to fit"); a call from RAM code into XIP this way is one
+33	 * the check refuses, unless allowed. The host: plain calls. */
+34	#ifdef PLAT_HOST
+35	#define PLAT_RAM_CODE
+36	#define PLAT_FAR(fn) (&(fn))
+37	#else
+38	#define PLAT_RAM_CODE __attribute__((section(".app_ram")))
+39	static inline __attribute__((always_inline)) void *plat_far_ptr(void *fn)
+40	{
+41	    void *volatile held = fn;           /* read back from memory: the compiler no longer knows the target */
+42	    return held;
+43	}
+44	#define PLAT_FAR(fn) ((__typeof__(&(fn)))plat_far_ptr((void *)&(fn)))
+45	#endif
+46	
+47	/* panel controls, by printed label (Felucca's panel.c map turns these into matrix ids; Felucca
+48	 * calls the second button SCL, the panel prints SEL) */
+49	enum { B_FX, B_SEL, B_ENV, B_LFO, B_EDIT, B_GLO, B_HOME, B_SAVE, B_ARP, B_SEQ, B_PLAY, B_REC,
+50	       B_OCTDN, B_OCTUP, NB };
+51	enum { EN_SELECT, EN_ALGO, EN_PRESET, EN_K1, EN_K2, EN_K3, EN_K4, NE };
+52	
+53	#define NKEYS 27                       /* F3 .. G5 */
+54	/* key k by colour: the 16 white keys and the 11 black keys, left to right (initialisers for a uint8_t array) */
+55	#define PLAT_WHITE_KEYS {0, 2, 4, 6, 7, 9, 11, 12, 14, 16, 18, 19, 21, 23, 24, 26}
+56	#define PLAT_BLACK_KEYS {1, 3, 5, 8, 10, 13, 15, 17, 20, 22, 25}
+57	
+58	static inline int32_t clamp(int32_t v, int32_t lo, int32_t hi) { return v < lo ? lo : v > hi ? hi : v; }
+59	
+60	uint32_t plat_ms(void);
+61	uint32_t plat_buttons(void);           /* held: bit B_* */
+62	uint32_t plat_keys(void);              /* held: bit k = key k (0 = F3) */
+63	int32_t plat_enc(int role);            /* detents since the last call, + = clockwise; EN_* */
+64	uint32_t plat_master(void);            /* MASTER pot's position, 0..4096 (the render gets it as a gain: APP_GAIN) */
+65	int plat_battery(void);                /* the battery: 0 (empty) .. 3 (full), 4 a USB host powers the FM-1, -1 not read
+66	                                        * yet (the keys' readings own the converter: APP_KEY_SENSE) */
+67	int32_t plat_battery_raw(void);        /* the reading plat_battery's bars come from: ADC channel 3 (the battery's divider),
+68	                                        * the main loop's slow average, in the converter's counts (the bars' thresholds
+69	                                        * 531 / 561 / 591); 0 = not read yet. Whether USB powers the FM-1 or not. For an
+70	                                        * app that shows the volts itself; built for an app with APP_BATTERY_RAW (below) */
+71	int plat_headphones(void);             /* the headphone jack's switch (PB5: 0 with a plug in), with fm1.toml headphones = true
+72	                                        * (FM1B_HEADPHONES; without it -1 on the device, never read), read by the main loop every
+73	                                        * pass and debounced (a state counts once the pin held it 100 ms: the contact
+74	                                        * bounces ~150 ms a plug): 1 headphones in, 0 nothing plugged; -1 not read yet (the
+75	                                        * host: its script's "jack"). The speaker mutes itself in hardware on a plug */
+76	
+77	/* lights: bright buttons and keys, and dim ones (a short pulse each scan frame; a bright bit wins); glow 0 the dim
+78	 * ones off, 1 low, 2 high. Bit NB in buttons / dim_buttons is PLAY's second, green LED */
+79	void plat_lights(uint32_t buttons, uint32_t keys, uint32_t dim_buttons, uint32_t dim_keys, int glow);
+80	#define LED_PLAY_GREEN (1u << NB)
+81	/* a third level, between the glow and lit (~12 % of lit; ~8 % with glow 1): these buttons and keys, unless lit, until
+82	 * the next call (0, 0: none). Call it after plat_lights each time the lights change */
+83	void plat_lights_mid(uint32_t buttons, uint32_t keys);
+84	/* the dim ones at any brightness, not the glow's two (an app with APP_DIM_LEVELS): ns is the pulse each scan frame, in
+85	 * nanoseconds (a lit LED is lit ~95 us a frame, plat_lights' glow 2 is 3,200 ns and glow 1 1,600 ns); the FM-1 takes
+86	 * 500 .. 4,000, a value outside it is clamped to it. 0 hands the dim ones back to plat_lights' glow. One pulse serves
+87	 * every dim LED (the buttons' glow and the keys': a scan frame has one), so it is the brightness of the whole dim layer;
+88	 * the half level of plat_lights_mid is not changed. The host simulator keeps it (expect dim_ns, and "leds" prints it) */
+89	void plat_dim_ns(uint32_t ns);
+90	/* the same, simpler: the lit buttons and keys, the unlit buttons glowing if plat_glow(1); PLAY lights green, red
+91	 * while plat_play_red(1) */
+92	void plat_leds(uint32_t buttons, uint32_t keys);
+93	void plat_glow(int on);
+94	void plat_play_red(int red);
+95	
+96	/* MIDI: 4-byte USB-MIDI event packets (byte 0 = cable / CIN, then status, data 1, data 2). In from USB, the TRS jack
+97	 * (in only: the FM-1 has no MIDI out jack) and Bluetooth (FM1B_BLE); out to USB and Bluetooth. Bluetooth has two
+98	 * links with FM1B_BLE_CENTRAL (below), the computer's and the device's: both come in on PORT_BLE, TO_BLE goes to
+99	 * both, TO_BLE_HOST or TO_BLE_DEV to one. MIDI thru with nothing echoed back where it came from: after plat_midi_in,
+100	 * plat_midi_send(pkt, (TO_USB | TO_BLE) & ~plat_midi_in_from()) */
+101	enum { PORT_USB, PORT_BLE, PORT_TRS, NPORTS };
+102	#define TO_USB (1u << PORT_USB)
+103	#define TO_BLE_HOST (1u << PORT_BLE)   /* the computer (a phone, a tablet) connected to the FM-1 */
+104	#define TO_BLE_DEV (1u << 3)           /* the Bluetooth MIDI device the FM-1 connected to (FM1B_BLE_CENTRAL) */
+105	#define TO_BLE (TO_BLE_HOST | TO_BLE_DEV)
+106	int plat_midi_in(uint32_t *pkt, int *port);   /* 1 = got one, from port PORT_* (port may be 0) */
+107	/* when the last message plat_midi_in gave came in, on plat_ticks24's clock (called where plat_midi_in is): USB's and the
+108	 * TRS jack's, with fm1.toml midi_stamp = true (FM1B_MIDI_STAMP; else when it was read), within 0.05 ms of landing on the FM-1 (a 10 kHz look at the endpoint and the jack's ring, inside the render
+109	 * too, while the 2 kHz poll that takes them may wait for it); Bluetooth's: when it was read, or with fm1.toml ble_midi_time (ble_stack = "own") when the sender stamped it, the connection's bunching taken out (the transport then comes at once, not held to the sender's time). For an app that follows a
+110	 * clock or places notes by time; host: when it was read */
+111	uint32_t plat_midi_in_t24(void);
+112	uint32_t plat_midi_in_from(void);      /* where the last one came from, as an out: TO_USB, TO_BLE_HOST or TO_BLE_DEV
+113	                                        * (0: the TRS jack, which has no out); called where plat_midi_in is */
+114	void plat_midi_send(uint32_t pkt, uint32_t to);   /* to: TO_USB | TO_BLE, or one link; main loop, the render or the
+115	                                                   * tick */
+116	void plat_midi_out(uint32_t pkt);      /* plat_midi_send(pkt, TO_USB) */
+117	uint32_t plat_midi_out_room(uint32_t to);   /* the free slots in the out queues of to (TO_USB, TO_BLE, a link: each
+118	                                        * has its own): the fewest among the ones someone listens on; 0 when nobody
+119	                                        * does. A sequencer keeps room for the note-offs it owes before it sends a
+120	                                        * note-on */
+121	uint32_t plat_midi_out_link(void);     /* a number that changes at each new USB connection (a host to tell its
+122	                                        * sounds again: programs, volumes) */
+123	/* USB MIDI host (fm1.toml usb_host = true: FM1B_USB_HOST 1; felucca-bsp docs/USB_HOST.md): the USB port plays host to
+124	 * a USB-MIDI controller or synth, directly or behind one powered hub; the FM-1 gives the port no power (a powered hub
+125	 * or adapter). It comes in on PORT_USB and TO_USB goes to it; no computer meanwhile (no USB audio, backup, mirror).
+126	 * Boot is always a device. plat_usb_host (main loop) asks; connecting blocks the main loop a moment (seconds behind a
+127	 * hub), the sound plays on. plat_usb_host_msg: the latest change, once (not a queue). plat_usb_lost: 1 once after a
+128	 * USB session ended (a device lost, the mode changed): release what its notes hold. Without FM1B_USB_HOST all stay
+129	 * USBH_OFF / 0. */
+130	enum { USBH_OFF, USBH_LOOKING, USBH_CONNECTED };
+131	enum { USBH_MSG_NONE, USBH_MSG_ON, USBH_MSG_OFF, USBH_MSG_MIDI, USBH_MSG_NOMIDI, USBH_MSG_LOW, USBH_MSG_LOST };
+132	void plat_usb_host(int on);
+133	int plat_usb_host_state(void);
+134	int plat_usb_host_msg(void);
+135	int plat_usb_lost(void);
+136	/* the connected device's product string, as it names itself ("Launchkey Mini MK3 MIDI"): ASCII, other characters as
+137	 * '?', at most 31; "" while nothing is connected, and for a device without one. Built for an app with
+138	 * APP_USB_HOST_NAME (below): felucca-bsp's FELUCCA_USB_HOST_NAME reads it at the connection (another app's image stays
+139	 * as it was, byte for byte). Main loop */
+140	const char *plat_usb_host_name(void);
+141	uint32_t plat_midi_count(int port, int out);   /* messages through port PORT_* since the start (out: sent), real-time (clock...) left out */
+142	uint32_t plat_midi_ago(int port, int out);     /* ms since the last one (0xFFFFFFFF: none yet) */
+143	
+144	/* Bluetooth MIDI (fm1.toml ble = true: FM1B_BLE 1): JieLi's BT libraries on fm1-base's shim (ble/), started at
+145	 * every boot unless the last Bluetooth run crashed (then by hand: plat_ble_start). The app gives it a store object,
+146	 * OBJ_BLE (the radio's address and pairing). Without it (FM1B_BLE 0, tools/build.py --no-ble) nothing of JieLi's is
+147	 * linked, and the state stays BLE_OFF */
+148	#ifndef FM1B_BLE
+149	#define FM1B_BLE 0
+150	#endif
+151	enum { BLE_OFF, BLE_STARTING, BLE_READY, BLE_FAILED };
+152	int plat_ble_state(void);
+153	int plat_ble_connected(void);          /* a central is connected and listening */
+154	int plat_ble_linked(void);             /* a central is connected, listening or not yet (a Mac whose MIDI driver
+155	                                        * never subscribed holds the link, and the FM-1 stops advertising) */
+156	void plat_ble_start(void);
+157	/* A stream of SysEx frames to the computer's link (ble_stack = "own"; a screen mirrored): the radio reads it in its own
+158	 * interrupts, a connection event at a time, as much as the link takes (full notifications, as many as the stack puts
+159	 * in an event), so it is never held to the main loop's pace or the out queue's 64 slots. peek: the next USB-MIDI
+160	 * SysEx packet (CIN 4..7) written whole, 0 none (asked again until pop); pop: it went; mid: a frame begun and not
+161	 * ended, which goes on before any message queued (plat_midi_send's) so none ends it; between frames those go
+162	 * first. All three run in the radio's interrupts while a computer listens (plat_ble_connected): short, no lock, a
+163	 * single-consumer ring the main loop fills. 1: taken; 0: not on this platform (the JieLi stack, no Bluetooth, the
+164	 * host), send by plat_midi_send. NULL: none again */
+165	struct plat_ble_stream {
+166	    int (*peek)(uint32_t *pkt);
+167	    void (*pop)(void);
+168	    int (*mid)(void);
+169	};
+170	int plat_ble_stream(const struct plat_ble_stream *s);
+171	/* the computer's link as agreed (ble_stack = "own"; 0 each when none, or another stack): v[0] the LL data length
+172	 * (octets), v[1] the ATT MTU, v[2] the connection interval (x 1.25 ms), v[3..6] the central's own LL_LENGTH values
+173	 * (MaxRxOctets, MaxRxTime, MaxTxOctets, MaxTxTime) */
+174	void plat_ble_link_info(uint32_t v[7]);
+175	uint32_t plat_ble_log_total(void);     /* lines written since the last start (survives a reset) */
+176	const char *plat_ble_log_line(int back);   /* 0 = the newest */
+177	/* Bluetooth MIDI devices (fm1.toml ble_central = true: FM1B_BLE_CENTRAL 1): the FM-1 connects to one (a keyboard,
+178	 * a controller), beside a computer connected to it. Its MIDI comes in as PORT_BLE too (plat_midi_in_from:
+179	 * TO_BLE_DEV), and TO_BLE goes to both (TO_BLE_DEV to the device alone, TO_BLE_HOST to the computer).
+180	 * Scanning finds the devices that advertise the MIDI service (up to 8); connecting stops the scan. */
+181	#ifndef FM1B_BLE_CENTRAL
+182	#define FM1B_BLE_CENTRAL 0
+183	#endif
+184	enum { BLE_DEV_OFF, BLE_DEV_SCANNING, BLE_DEV_CONNECTING, BLE_DEV_SEARCHING, BLE_DEV_READY };
+185	void plat_ble_scan(int on);
+186	int plat_ble_found(int i, char *name, int *rssi);   /* device i of the scan (name: 21 bytes); 0 = none */
+187	int plat_ble_connect(int i);           /* 0 = connecting */
+188	void plat_ble_disconnect(void);
+189	int plat_ble_device(void);             /* BLE_DEV_*: READY is connected, MIDI both ways */
+190	int plat_ble_passkey(void);            /* a pairing with a device waits for its user to type this code (0..999999):
+191	                                        * show it; -1: none (ble_stack = "own" only: an iPhone app asks for one) */
+192	/* The devices one by one, for an app that keeps a list of its own (remembered devices, their bonds: APP_BLE_PEERS in
+193	 * app.h; ble_stack = "own" only, else none of this does anything): every advertising report the scan hears goes to the
+194	 * app too (app_ble_scan_report, main loop; pdu: the advertising PDU, its 2-byte header, AdvA and data, n bytes; rssi:
+195	 * the radio's reading), plat_ble_connect_peer connects to one by its address with the bond the app kept, and the keys
+196	 * a pairing with it gave come to the app (app_ble_device_keys, main loop). The state is
+197	 * plat_ble_device's; the bytes are least significant first, as on the air. ble_central = 3: the central without pairing
+198	 * (no keys, no passkey; a device that asks for security fails with PLAT_BLE_CF_NEED_PAIR) */
+199	struct plat_ble_peer {
+200	    uint8_t addr[6], addr_rand;        /* its address as heard (addr_rand: TxAdd, a random one) */
+201	    uint8_t bonded;                    /* ltk / rand / ediv are its bond: the link is encrypted with them */
+202	    uint8_t sec;                       /* PLAT_BLE_PEER_* */
+203	    uint8_t ltk[16], rand[8];
+204	    uint16_t ediv;
+205	};
+206	#define PLAT_BLE_PEER_AUTH 1u          /* its bond is authenticated (a passkey pairing) */
+207	#define PLAT_BLE_PEER_MITM 2u          /* it needs an authenticated link: a pairing goes straight to the passkey */
+208	struct plat_ble_keys {
+209	    uint8_t has;                       /* PLAT_BLE_KEYS_* */
+210	    uint8_t ltk[16], rand[8];
+211	    uint16_t ediv;
+212	    uint8_t irk[16], id[6], id_rand;   /* its identity: behind a private address, plat_ble_rpa_resolve finds it */
+213	};
+214	#define PLAT_BLE_KEYS_LTK 1u           /* ltk / rand / ediv: the bond */
+215	#define PLAT_BLE_KEYS_ID 2u            /* irk / id / id_rand */
+216	#define PLAT_BLE_KEYS_AUTH 4u          /* the pairing was authenticated (a passkey) */
+217	enum { PLAT_BLE_CF_NONE, PLAT_BLE_CF_LOST, PLAT_BLE_CF_NO_MIDI, PLAT_BLE_CF_PAIRING, PLAT_BLE_CF_AUTH, PLAT_BLE_CF_GATT,
+218	       PLAT_BLE_CF_NEED_MITM, PLAT_BLE_CF_KEY, PLAT_BLE_CF_NEED_PAIR };   /* why a connection to a device ended: lost,
+219	                                        * no MIDI found, the pairing failed, the encryption refused, the GATT failed, it
+220	                                        * needs a passkey (connect again with PLAT_BLE_PEER_MITM, no unauthenticated
+221	                                        * bond), it refused our bond, it asked for security (ble_central = 3) */
+222	#define PLAT_BLE_DF_PAIRING 1u         /* plat_ble_device_flags: a pairing of ours runs on the link */
+223	#define PLAT_BLE_DF_PROMPTED 2u        /* one started on the last attempt's link (its user was asked) */
+224	#define PLAT_BLE_DF_MITM 4u            /* the last attempt's device needs an authenticated link (a passkey) */
+225	int plat_ble_connect_peer(const struct plat_ble_peer *p);   /* 0 = connecting (plat_ble_device), -1 not now */
+226	int plat_ble_device_fail(uint32_t *code);   /* why the last connection to a device ended (PLAT_BLE_CF_*); code: its
+227	                                        * code (the link layer's reason, the ATT error or the SMP reason) */
+228	uint32_t plat_ble_device_flags(void);  /* PLAT_BLE_DF_* */
+229	int plat_ble_rpa_resolve(const uint8_t irk[16], const uint8_t addr[6]);   /* 1: addr is a private address made from irk */
+230	void app_ble_scan_report(const uint8_t *pdu, uint32_t n, uint32_t rssi);
+231	void app_ble_device_keys(const struct plat_ble_keys *k);
+232	/* Bluetooth on or off, as the player asks: off ends every link, stops advertising and scanning (the radio quiet);
+233	 * on starts it (or advertises again). Whether it starts at power-on: APP_BLE_AT_BOOT (app.h, e.g. a saved setting;
+234	 * default 1) */
+235	void plat_ble_enable(int on);
+236	/* What Bluetooth keeps (the own stack, ble_stack = "own"), by default in the app's store object OBJ_BLE. An app that
+237	 * keeps it in its own saved data instead (a settings record it has, with these fields at its own places) defines
+238	 * APP_BLE_STORE in app.h and gives the two calls below; it then needs no OBJ_BLE. app_ble_load: at Bluetooth's start
+239	 * (main loop), 1 with r filled, 0 none kept (the platform makes the address then, and saves it); app_ble_save: main
+240	 * loop, once something changed (a new address, a pairing, a remembered audio device), 0 kept (the app may write it
+241	 * to the flash later, with its own data) */
+242	struct plat_ble_rec {
+243	    uint8_t addr[6];                   /* our BLE address (static random: the top two bits 1) */
+244	    uint8_t bonded, rsv;               /* the computer's bond (ble_pairing): bonded, ediv, rand, ltk */
+245	    uint16_t bond_ediv;
+246	    uint8_t bond_rand[8], bond_ltk[16];
+247	    uint8_t bta_addr[6], bta_addr_set;   /* Bluetooth audio (bt_audio): our BR/EDR address, once made */
+248	    uint8_t bta_n;                     /* the remembered audio devices, the last one first */
+249	    struct plat_bta_dev {
+250	        uint8_t addr[6], bonded, link_key[16];   /* link_key: from its pairing (air order), when bonded */
+251	        char name[17];
+252	    } bta[4];
+253	};
+254	int app_ble_load(struct plat_ble_rec *r);
+255	int app_ble_save(const struct plat_ble_rec *r);
+256	
+257	/* Bluetooth audio out (fm1.toml bt_audio = true, with ble_stack = "own": FM1B_BT_AUDIO 1): an A2DP source to headphones
+258	 * and speakers (SBC), beside Bluetooth MIDI on the one radio. While it streams, the render goes to the device and the
+259	 * FM-1's own output is muted. Four devices are remembered with their keys (in OBJ_BLE), the last one first. Expect
+260	 * 150-300 ms from a key to the ear (the device's own buffer): for listening, not for playing in time. */
+261	#ifndef FM1B_BT_AUDIO
+262	#define FM1B_BT_AUDIO 0
+263	#endif
+264	enum { PLAT_BTA_OFF, PLAT_BTA_SCANNING, PLAT_BTA_FOUND, PLAT_BTA_NONE, PLAT_BTA_PAGING, PLAT_BTA_LINKED, PLAT_BTA_SETUP,
+265	       PLAT_BTA_STREAMING, PLAT_BTA_REFUSED, PLAT_BTA_NO_LAST, PLAT_BTA_FAILED, PLAT_BTA_READY };
+266	void plat_bta_on(int on);              /* on: the radio up (Bluetooth MIDI's start, if not yet), ready to scan / connect */
+267	void plat_bta_scan(int on);            /* look for devices (about 10 s): 1 a fresh list, 2 again with the list kept
+268	                                        * (only when nothing else is under way: a page goes on), 0 stop */
+269	int plat_bta_found(int i, char *name); /* found device i: its name (17 bytes) -> 0: none */
+270	int plat_bta_known(int i, char *name); /* remembered device i (0 the last one) -> 0: none */
+271	void plat_bta_pick(int i);             /* connect found device i (pairing if new; it becomes the last one) */
+272	int plat_bta_reconnect(int i);         /* connect remembered device i -> 0 paging */
+273	void plat_bta_forget(int i);
+274	void plat_bta_hangup(void);
+275	int plat_bta_state(void);              /* PLAT_BTA_* */
+276	/* while it streams, where the sound goes: 1 the device, 0 the FM-1's own output (the stream suspended, the link
+277	 * kept: back to the device at once, without a new connection) */
+278	void plat_bta_output(int to_device);
+279	int plat_bta_out_device(void);         /* 1: the sound goes to the device (the default) */
+280	/* a link that ended by itself (the device left, or refused): where it had got to, once (then PLAT_BTA_LOST_NONE) */
+281	enum { PLAT_BTA_LOST_NONE, PLAT_BTA_LOST_LINK, PLAT_BTA_LOST_PAIRING, PLAT_BTA_LOST_ENCRYPTION, PLAT_BTA_LOST_SETUP,
+282	       PLAT_BTA_LOST_STREAMING, PLAT_BTA_LOST_REFUSED };
+283	int plat_bta_lost(void);
+284	int plat_bta_timed_out(void);          /* PLAT_BTA_REFUSED because the set-up timed out (the device never said no) */
+285	int32_t plat_bta_latency_us(void);     /* what the stream adds on the FM-1's side (its queue), us; -1: not streaming.
+286	                                        * An app that follows a clock may play that much earlier (the device's own
+287	                                        * buffer comes on top and is not known) */
+288	/* Bluetooth audio's big buffers in the app's memory (fm1.toml bt_audio_mem = "app": FM1B_BTA_MEM 1): the audio packets'
+289	 * queue and the receptions' ring, which only a run of the Classic radio uses (a scan, a page, a link), are a block the
+290	 * app lends while an AUDIO mode is on, instead of static RAM: an app that switches Bluetooth audio off has that RAM
+291	 * back. Without it (FM1B_BTA_MEM 0) they are static and these say so (bytes 0, the block refused).
+292	 *   plat_bta_mem_bytes()  the block's size (4-aligned), 0: static buffers
+293	 *   plat_bta_mem(p)       p: the block lent (before plat_bta_on(1), which does nothing without one) -> 0;
+294	 *                         0: taken back -> 0 done (the radio's code and interrupts no longer read it), -1 still in use
+295	 *                         (an AUDIO mode on, or its run not over yet: plat_bta_on(0) first, then again later) */
+296	#ifndef FM1B_BTA_MEM
+297	#define FM1B_BTA_MEM 0
+298	#endif
+299	uint32_t plat_bta_mem_bytes(void);
+300	int plat_bta_mem(void *p);
+301	int plat_bta_streams(void);            /* 1: the last render went to Bluetooth (the FM-1's own output muted for it); for the
+302	                                        * render (the audio interrupt) to plan its block by. 0 without Bluetooth audio */
+303	
+304	/* WiFi (fm1.toml wifi = true: FM1B_WIFI 1): a station on JieLi's WiFi libraries and the SDK's lwIP, on the same shim.
+305	 * Off until the app turns it on; then it joins the networks it joined before (kept in the app's store object OBJ_WIFI,
+306	 * six, the most recent first). The app's network code runs in a task of its own (plat_net_task) with lwIP's sockets
+307	 * (lwip/sockets.h): a socket call waits, and the main loop must not. A build has Bluetooth or WiFi, not both (yet). */
+308	#ifndef FM1B_WIFI
+309	#define FM1B_WIFI 0
+310	#endif
+311	enum { WIFI_OFF, WIFI_STARTING, WIFI_ON, WIFI_JOINING, WIFI_ADDRESS, WIFI_CONNECTED, WIFI_FAILED };
+312	void plat_wifi_on(int on);             /* on: the radio starts (its first second holds the sound) and joins */
+313	int plat_wifi_state(void);             /* WIFI_*: ON is on with no network; ADDRESS, joined and asking for one */
+314	const char *plat_wifi_why(void);       /* WIFI_FAILED: "not found", "wrong password?", "no address"... */
+315	const char *plat_wifi_ssid(void);      /* the network joined, or being joined */
+316	uint32_t plat_wifi_ip(void);           /* connected: the address, its first byte lowest; else 0 */
+317	int plat_wifi_rssi(void);              /* connected: the signal */
+318	int plat_wifi_scan(void);              /* the networks around: plat_wifi_found once it is done (0 = asked) */
+319	int plat_wifi_found(int i, char *ssid, int *rssi, int *secured);   /* the scan's network i (ssid: 33 bytes), the
+320	                                                                     * strongest first; 0 = none */
+321	int plat_wifi_found_channel(int i);    /* its channel (1..14), 0 = none */
+322	int plat_wifi_join(const char *ssid, const char *pass);   /* pass 0: the saved one's, or none; kept once joined */
+323	int plat_wifi_saved(int i, char *ssid);   /* the networks kept, the most recent first; 0 = none */
+324	void plat_wifi_forget(int i);
+325	int plat_wifi_kept(const char *ssid);  /* the network is kept (its password known): plat_wifi_join(ssid, 0) joins it */
+326	void plat_wifi_rx(uint32_t *frames, int *rssi);   /* reception: frames received in the last second (anyone's), their
+327	                                                   * average signal */
+328	uint32_t plat_wifi_scans(void);        /* scans done since the start: a change means plat_wifi_found has new results */
+329	int plat_net_task(void (*fn)(void *), void *arg, const char *name);   /* a task for the app's network code (8 KiB
+330	                                                                        * of stack); 0 = made */
+331	
+332	/* the 1 kHz tick (app_tick, an app with APP_TICK) runs in the timer interrupt: the main loop locks it out around
+333	 * what they share. It nests, and plat_unlock takes what its plat_lock returned: the outermost unlock switches the
+334	 * interrupts back on only if they were on at its lock, so a lock is safe inside an interrupt (app_render, app_tick)
+335	 * or with them already off: they stay off */
+336	uint32_t plat_lock(void);
+337	void plat_unlock(uint32_t f);
+338	void plat_yield(void);
+339	/* the FM-1 restarts, on purpose (an app's own restore done, a session that starts from a clean boot): the sound
+340	 * stopped, USB let go (the computer sees the cable out and in), not counted as a failed start (no safe mode), the
+341	 * crash record and .noinit kept. Main loop; it does not return (the host simulator: the restart at the end of the
+342	 * millisecond, a "reboot"). Built for an app whose app.h defines APP_RESTART */
+343	void plat_restart(void);
+344	void plat_log(const char *line);
+345	/* the flash's data area, 0x97000..0xDFFFF, for an app's own big data (a table it builds, samples): its store objects
+346	 * live there too, at the offsets it gave them (APP_STORE_MAP), so it keeps to the rest. Main loop only; an erase or a
+347	 * write stops everything for a moment (the sound too: no flash reads meanwhile).
+348	 * Two more windows for big data, outside the store: PLAT_XDATA0 (16 KiB, just above the app area) and PLAT_XDATA1
+349	 * (92 KiB, above the update's staging). The update loader clears an update record it finds in the last 256 bytes of
+350	 * a sector there (bsp/loader/ldr_core.c: "AT" at bytes 0xF06..0xF07, a nonzero CRC-16 at 0xF00 over the 78 bytes
+351	 * from 0xF02), so in these two an app keeps bytes 0xF00..0xF07 of every sector erased (0xFF), or else makes sure
+352	 * those bytes never read as a record: never "AT" at 0xF06 (LOOM-8's sample bank moves its data so, and refuses a
+353	 * bank that has it).
+354	 * A fourth, on request (fm1.toml xdata2 = true: FM1B_XDATA2): PLAT_XDATA2, the three sectors 0xFC000..0xFEFFF
+355	 * (12 KiB) between the SDK's last area (USR, up to 0xFBFFF) and its key_mac sector (0xFF000, never written), where
+356	 * Felucca keeps its globals: an app that was a Felucca firmware reads and writes its own bytes there. The update loader
+357	 * looks for records below 0xFC000 only, so no 0xF00 rule here. Store objects may sit there too (the template's
+358	 * settings pair is 0xFC000 / 0xFD000): with the window on, plat_data_erase and plat_data_write refuse a store
+359	 * object's sectors in it, so an app with this window puts its objects elsewhere (or keeps to the rest) */
+360	#define PLAT_DATA_LO 0x97000u
+361	#define PLAT_DATA_HI 0xE0000u
+362	#define PLAT_XDATA0_LO 0x93000u
+363	#define PLAT_XDATA0_HI 0x97000u
+364	#define PLAT_XDATA1_LO 0xE5000u
+365	#define PLAT_XDATA1_HI 0xFC000u
+366	#define PLAT_XDATA2_LO 0xFC000u
+367	#define PLAT_XDATA2_HI 0xFF000u
+368	#if FM1B_XDATA2
+369	#define PLAT_DATA_OK(off, n) (plat_in((off), (n), PLAT_DATA_LO, PLAT_DATA_HI) || \
+370	                              plat_in((off), (n), PLAT_XDATA0_LO, PLAT_XDATA0_HI) || \
+371	                              plat_in((off), (n), PLAT_XDATA1_LO, PLAT_XDATA1_HI) || \
+372	                              plat_in((off), (n), PLAT_XDATA2_LO, PLAT_XDATA2_HI))
+373	#else
+374	#define PLAT_DATA_OK(off, n) (plat_in((off), (n), PLAT_DATA_LO, PLAT_DATA_HI) || \
+375	                              plat_in((off), (n), PLAT_XDATA0_LO, PLAT_XDATA0_HI) || \
+376	                              plat_in((off), (n), PLAT_XDATA1_LO, PLAT_XDATA1_HI))
+377	#endif
+378	static inline int plat_in(uint32_t off, uint32_t n, uint32_t lo, uint32_t hi)   /* [off, off + n) in [lo, hi) */
+379	{
+380	    return off >= lo && off <= hi && n <= hi - off;
+381	}
+382	const uint8_t *plat_data(uint32_t off);   /* read in place; 0 = outside the windows */
+383	int plat_data_erase(uint32_t off);        /* the 4 KiB sector at off (aligned); 0 = done */
+384	int plat_data_write(uint32_t off, const void *src, uint32_t n);   /* src in RAM; 0 = done */
+385	/* plat_data_write programs, as NOR flash does: each byte becomes what it was AND what is written (bits go from 1 to
+386	 * 0 only, and only an erase sets them again). So it writes into erased flash, and it may also clear bits in place, in
+387	 * bytes written before, without an erase: a record's state byte marked used, then dead (0xFF, 0x7F, 0x3F), a bitmap's
+388	 * bits taken one by one. Guaranteed on the device (felucca-bsp's fl_write: page program, no erase, no read-back) and
+389	 * in the host simulator (the same AND). A 1 written over a 0 stays 0, and is not an error: plat_data_write does not
+390	 * read back; an app that must know reads plat_data after. */
+391	/* SysEx to the computer over USB (main loop): whole frames, F0 .. F7, into felucca-bsp's SysEx ring (sent before
+392	 * the notes), which the USB interrupt empties as the computer reads. plat_sysex_room, plat_sysex_queued and
+393	 * plat_usb_session (and plat_sysex_send's -1 without a computer) are built for an app with APP_SYSEX (below) */
+394	int plat_sysex_send(const uint8_t *frame, uint32_t n);   /* 0 = queued whole; -1 = not sent: no computer has set
+395	                                                         * the FM-1 up (plat_usb_session 0), or it stopped reading
+396	                                                         * (no room for 200 ms; what was queued goes out) */
+397	uint32_t plat_sysex_room(void);        /* the bytes of SysEx the ring takes now without a wait: 0 with no computer, the
+398	                                        * bus asleep, or a send under way. A send that must never wait checks it */
+399	uint32_t plat_sysex_queued(void);      /* the bytes still in the ring, not yet read (0: all out) */
+400	/* a frame streamed as it is made, for one too long to build first (a screen mirrored as it is drawn): begin, its bytes
+401	 * F0 .. F7 in any number of puts, end. The ring is the stream's from begin to end (no other SysEx, no note out in
+402	 * between: keep it short), each packet going in as soon as it is whole. A put waits while the ring is full and the
+403	 * computer reads; one that waited PLAT_SYSEX_STALL_MS without a packet read gives up: the frame is cut there (the
+404	 * computer drops a frame cut short at the next F0), the rest of its puts and its end return -1. Main loop; built for
+405	 * an app with APP_SYSEX */
+406	#define PLAT_SYSEX_STALL_MS 30u
+407	int plat_sysex_begin(void);            /* 0 = the stream is open; -1 = no computer, or a send under way */
+408	int plat_sysex_put(const uint8_t *p, uint32_t n);   /* 0 = in the ring (the last bytes held until more or end) */
+409	int plat_sysex_end(void);              /* the last packet out, the ring free again: 0 = the frame went whole */
+410	uint32_t plat_usb_session(void);       /* 0: no computer has set the FM-1 up; else a number that changes at every new
+411	                                        * one (a bus reset, the cable out and in): what an app keeps for a connection
+412	                                        * (a client's session) it drops when this changes */
+413	/* the resource region (fm1.toml resources = FILE, FM1B_RES; app.h APP_RES_BASE, APP_RES_SECTORS: device/res.c):
+414	 * the file's bytes read in place, *len their count; 0 (and *len 0) while the FM-1 does not hold this build's (not
+415	 * yet written after an update, torn, another build's): the app does without. The host writes it
+416	 * (tools/fm1_resources.py; the installer after an update); a sound reading it is stopped first (app_panic) */
+417	const uint8_t *plat_res(uint32_t *len);
+418	
+419	/* the USB serial console (fm1.toml usb_console = true: FM1B_CDC 1): a CDC-ACM function beside USB MIDI, for the app's
+420	 * own text (logs, a command line): the platform carries the bytes, the app says what they mean. Main loop only. Not with
+421	 * usb_audio_out_feedback or usb_audio_split (they take the console's endpoint, EP3). Without it, and on the host: never
+422	 * open, nothing read, nothing written */
+423	int plat_console_open(void);              /* a computer has the port open (its DTR) */
+424	int plat_console_read(void);              /* the next byte from the computer; -1 none */
+425	uint32_t plat_console_room(void);         /* the bytes plat_console_write takes now (0 while not open) */
+426	uint32_t plat_console_write(const void *p, uint32_t n);   /* -> the bytes taken (at most the room: never waits) */
+427	void plat_console_present(int on);        /* the console presented (the default) or not, e.g. from a setting: in app_init
+428	                                           * before USB starts; later, the FM-1 leaves the bus and comes back as the
+429	                                           * other device */
+430	
+431	/* the app's own commands in the update's SysEx framing (F0 pack7(00 59 cmd len24 body ~sum) F7: felucca-bsp ota.c),
+432	 * an app with APP_USB_CMD: app_usb_cmd(d, n) gets each frame whose cmd the platform does not take (d: the decoded
+433	 * frame, cmd d[2], the body from d + 6). Inside it the app may pull data from the host as an update does: */
+434	int plat_host_read(uint32_t addr, uint8_t *dst, uint32_t n);   /* n bytes (512 at most) at the host's addr; 0 = ok.
+435	                                                                 * Waits (tries: 3); main loop only */
+436	void plat_host_patience(uint32_t try_ms, uint32_t total_ms);   /* each try's wait (default 5000) and the whole
+437	                                                                 * transfer's (0: no limit) */
+438	
+439	/* USB audio full (FM1B_UAC): 1, the USB audio input at full level (the app's render at gain 4096), MASTER for the
+440	 * speaker and headphones only; 0, both at MASTER (the default) */
+441	void plat_usb_audio_full(int on);
+442	/* the computer's audio (FM1B_UAC_OUT, usb_audio_out: the computer plays through the FM-1): the level it is mixed in
+443	 * at, 0 muted .. 4096 as sent (the default; above is 4096), times MASTER. Muted, the FM-1 still takes the stream, so
+444	 * the computer sees no change and turning it up again starts in step. The USB recording (usb_audio_in) is taken
+445	 * before the computer's audio is mixed in, whatever this is: recording the FM-1 never records the computer's own
+446	 * playback (device/uac_mix.h). Without usb_audio_out, nothing */
+447	void plat_usb_play_gain(uint32_t q12);
+448	/* the app's own channels of the USB audio input (fm1.toml usb_audio_channels = N, 4..10, even: FM1B_UAC_CH): channels 3..N,
+449	 * PLAT_USB_CH of them, beside the master on 1 and 2, as 16-bit samples (32767: the master's full scale, the render's
+450	 * 1 << 22 at 4096). In app_render, the frame off frames into the block being rendered: its channels at p[0] ..
+451	 * p[PLAT_USB_CH - 1], the next frame's PLAT_USB_CH_STRIDE on, for *run frames (where the ring wraps: ask again from
+452	 * there). They start at 0 each block; the app adds into them, on either core (one writer a sample at a time), and the
+453	 * platform sends them with the master's frames once app_render returns. NULL (*run 0) when no computer records (the
+454	 * app then skips the work), and always with 2 channels; the host: a block's buffer, always taken */
+455	#ifndef FM1B_UAC_CH
+456	#define FM1B_UAC_CH 2
+457	#endif
+458	#define PLAT_USB_CH (FM1B_UAC_CH - 2)
+459	#define PLAT_USB_CH_STRIDE FM1B_UAC_CH
+460	int16_t *plat_usb_ch(uint32_t off, uint32_t *run);
+461	
+462	/* the keys' velocity and pressure (an app with APP_KEY_SENSE): on, the scan reads the keys on the analog rows and
+463	 * hands each reading to the app (app_key_sample, app_key_probe); off by default */
+464	void plat_sense(int on);
+465	uint32_t plat_analog_mask(void);       /* bit k: key k is on an analog row (PA7 / PA8; the top row is probed) */
+466	
+467	/* 16 bytes unique to this FM-1 (its flash part's factory ID; the same across updates, firmwares and a wiped store):
+468	 * for an address that must not change (the WiFi MAC, the Bluetooth name); 0 = unknown (and in a build without a radio) */
+469	const uint8_t *plat_chip_uid(void);
+470	
+471	/* persistent storage (Felucca storage.c objects: A/B sectors, CRC, torn-write safe) */
+472	int plat_store_load(uint32_t obj, void *dst, uint32_t max);   /* bytes loaded, < 0 = none / bad (an empty object is
+473	                                                               * none: a restore writes one for an absent object) */
+474	int plat_store_head(uint32_t obj, void *dst, uint32_t n);     /* its first n bytes (a header): n, < 0 = none / bad /
+475	                                                               * shorter */
+476	int plat_store_size(uint32_t obj);                           /* its length in bytes, < 0 = none / bad (an app that
+477	                                                               * wants it whole or not at all checks it first) */
+478	int plat_store_save(uint32_t obj, const void *src, uint32_t len);   /* 0 = ok; -8: the pool is full (nothing written) */
+479	/* an app with a pool (app.h APP_STORE_POOL: storage.c): the sectors free for its pooled objects' next copies (a save
+480	 * of n objects that finds n keeps every previous copy); -1 no pool */
+481	int plat_store_room(void);
+482	#define PLAT_STORE_MAX 3840u           /* bytes per object */
+483	/* An app may pool some objects (APP_STORE_POOL, APP_STORE_POOL_BASE / _N / _OBJ0 / _OBJN / _OLD: storage.c): those
+484	 * share sectors instead of a pair each, and APP_STORE_MAP's entries for them are not used. APP_STORE_POOL_EMPTY(obj, p,
+485	 * n), if the app defines it: true for an old copy that holds nothing worth a sector (a placeholder of the layout
+486	 * before the pool): the move into the pool drops the object instead (every copy of it erased).
+487	 * The objects are the app's (app.h): an enum that includes OBJ_PANEL (the panel calibration, the platform's) and
+488	 * ends with OBJ_NOBJ, and APP_STORE_MAP, each object's flash offset: two 4 KiB sectors (A/B) from there, inside the
+489	 * data area (0x97000..0xDFFFF) or Felucca's settings sector pair at 0xFC000. An object's number is written in its
+490	 * record, so an app keeps its numbering from one release to the next. */
+491	
+492	/* audio load in % of the render budget, and xruns since boot (device: from the ISR) */
+493	uint32_t plat_cpu_pct(void);
+494	uint32_t plat_cpu_khz(void);           /* the CPU's clock, kHz: 360000 when its registers hold the stock set-up (M-VAVE's
+495	                                        * 360 MHz, which the start sets whichever boot loader ran: fm1_clock.h), 0 when
+496	                                        * not (unknown: the start could not set it) and on the host. For an app that
+497	                                        * turns the render's microseconds into instructions (a CPU guard's cost model);
+498	                                        * built for an app with APP_CPU_KHZ (below) */
+499	uint32_t plat_xruns(void);
+500	
+501	/* a free-running count of PLAT_TICKS_PER_US ticks a microsecond, for timing spans shorter than plat_ms can: a part of
+502	 * the render, say. Device: TIMER4, from the 24 MHz crystal (one register read); host: its monotonic clock, at the same
+503	 * rate. No lock and no state, so the audio interrupt and the tick may call it too. It wraps every 2^32 ticks (179 s):
+504	 * a span is the unsigned difference of two reads */
+505	#define PLAT_TICKS_PER_US 24u
+506	uint32_t plat_ticks24(void);
+507	
+508	/* Disk mode (fm1.toml msc = true: FM1B_MSC; device/msc.c on felucca-bsp's FELUCCA_MSC): the FM-1 shows the computer a
+509	 * USB drive, the app's blocks, until it goes back to itself; meanwhile it has no USB MIDI or audio. The app keeps the
+510	 * blocks (plat_disk_t) and calls plat_disk_poll from its main loop (APP_LOOP: every pass) while on. Host: nothing
+511	 * comes (PLAT_DISK_WAITING) */
+512	typedef struct {
+513	    uint32_t blocks;                                   /* 512-byte blocks */
+514	    const uint8_t *(*read)(uint32_t lba);              /* the block (512 bytes, kept until the next call); 0: zeros */
+515	    int (*write)(uint32_t lba, const uint8_t *b);      /* 0 = written (it may hold it until flush) */
+516	    void (*flush)(void);                               /* what is held, written (the computer synced or ejected) */
+517	    const char *vendor, *product;                      /* what the computer calls it: 8 and 16 characters at most */
+518	} plat_disk_t;
+519	enum { PLAT_DISK_OFF, PLAT_DISK_WAITING, PLAT_DISK_MOUNTED, PLAT_DISK_EJECTED };
+520	void plat_disk_mode(const plat_disk_t *d);             /* d: the FM-1 drops off USB and comes back as this disk; 0:
+521	                                                        * flushed, then back as itself */
+522	int plat_disk_poll(void);                              /* main loop: serve the computer -> PLAT_DISK_* (EJECTED: the
+523	                                                        * computer let it go) */
+524	uint32_t plat_disk_idle_ms(void);                      /* since the computer's last command */
+525	
+526	/* code loaded at run time (fm1-ripple's currents: plug-ins copied from its disk into the pool and run there): the
+527	 * guard's RAM code window (felucca-bsp fm1_guard.h, normally .ram_text alone) widened from .ram_text up to end, so
+528	 * code there may run. Main loop, after the guards are on (app_init or later); host: nothing */
+529	void plat_code_window(const void *end);
+530	
+531	/* The second core (fm1.toml cpu2 = true: FM1B_CPU2; felucca-bsp's chip/fm1_cpu1.h, Melodee's): a worker for a part of
+532	 * the render. Start it in app_init (the one time it may start: at power-on, before the audio and the timers); the
+533	 * render hands it a job, does its own share, then waits for it. One job at a time. A failure (it misread a job, it
+534	 * faulted, a job was not back in 8 ms, it did not answer at its start) restarts the FM-1, the reason in the crash
+535	 * record (vec 0x101..0x105: gave_up's numbers below); two failed starts are safe mode. With cpu2_fallback = true
+536	 * instead: it is given up (held; the render does the work itself) and barred, one core at every start until
+537	 * power-off or a new build (FM1B_BUILD), and one core after a failed start. Host: a job runs at once, in order (an app
+538	 * with its own simulation defines APP_HOST_CPU2 and has them all). */
+539	int plat_cpu2_set(int on);             /* on 1, in app_init: 0 = it runs; -1 = one core (not now, barred, or it did not
+540	                                        * answer). On 0: held (from the main loop: no job outstanding) */
+541	int plat_cpu2_on(void);                /* it takes jobs */
+542	int plat_cpu2_run(void (*fn)(uint32_t), uint32_t arg);   /* render: 1 = it has fn(arg); 0 = do it yourself */
+543	int plat_cpu2_wait(void);              /* render: 0 = done; -1 = it was given up and the job dropped: do it yourself
+544	                                        * (cpu2_fallback only) */
+545	void plat_cpu2_sync(void);             /* a barrier between the cores' reads and writes (a job's own sharing) */
+546	int plat_cpu2_busy(void);              /* 1 = the job handed over is not done yet (no waiting) */
+547	int plat_cpu2_gave_up(void);           /* why it is off: 0 no, 1 it misread a job, 2 one was late, 3 barred, 4 it
+548	                                        * faulted, 5 it did not answer at its start */
+549	uint32_t plat_cpu2_bad(void);          /* the jobs it misread */
+550	int plat_cpu2_barred(void);            /* 1: one core until power-off (given up, or the first core crashed beside it) */
+551	uint32_t plat_cpu2_stack(void);        /* how deep its stack (2816 B; fm1.toml cpu2_stack) has gone, in bytes; 0: not
+552	                                       * marked this start (it never started, or was barred) */
+553	/* which core runs the caller: 0 the first, 1 the second (a job plat_cpu2_run handed it). For state a job keeps per core
+554	 * (a scratch buffer each core renders into). No lock, no state: any core, any context; from code that runs from RAM
+555	 * through a pointer, as any flash function. Device: the core's number register (felucca-bsp's fm1_cnum); host: 1
+556	 * while the simulated second core runs a job (an app with APP_HOST_CPU2 has its own) */
+557	uint32_t plat_core(void);
+558	/* Cache RAM (fm1.toml cache_ram_ways = 2, 4 or 7: FM1B_CACHE_RAM; felucca-bsp's chip/fm1_cache_ram.h): that many of the
+559	 * data cache's 8 ways of 4 KiB used as RAM at 0x01F28000, set and tested at the start before anything else runs; a
+560	 * failed test puts the cache back and gives 0 bytes. Objects the app places there itself (section .cache_ram, NOLOAD:
+561	 * zeroed by the test, never RAM after a failure) come first; base is what is left after them, for the app's own use
+562	 * (main loop memory: whether the second core and DMA read these ways has not been measured, so nothing they read goes
+563	 * there). The flash's data goes through the ways kept as a cache: fewer of them make big reads from the flash slower
+564	 * (Optimist's FM-1, 7 ways as RAM: reads over 16 KiB 57x slower; 2 ways in daily use for days). Host: a buffer of the
+565	 * same size stands in; FM1B_CACHE_RAM_FAIL=1 in the environment: its test failed */
+566	enum { PLAT_CR_OFF, PLAT_CR_OK, PLAT_CR_BUSY, PLAT_CR_REG, PLAT_CR_BAD };   /* not built / ready / the cache never idled /
+567	                                                                          * the masks not taken / the test failed */
+568	struct plat_cache_ram {
+569	    uint8_t *base;                     /* the free part's start, 0: none */
+570	    uint32_t bytes;                    /* its bytes (the ways less the .cache_ram objects), 0: none */
+571	    uint32_t ways, status;             /* the ways asked for (fm1.toml), PLAT_CR_* */
+572	    uint32_t dway, iway, bad_at;       /* the data and instruction way masks after, the first failing address */
+573	};
+574	const struct plat_cache_ram *plat_cache_ram(void);
+575	
+576	
+577	/* Debug stats (device/dbgstats.c; fm1.toml debug_stats = true, FM1B_DBGSTATS): a 64-byte snapshot of the platform's counters (the audio's halves, late ones and
+578	 * longest render, the timer's gaps, the longest interrupts-off and main-loop pass, the second core's and the radios'
+579	 * state, starts and crashes) and the app's own PLAT_STATS_APP bytes, kept in flash every 5 minutes of uptime while
+580	 * on, and one with every crash whatever the switch; the last 60 (5 hours) read over USB-MIDI (F0 7D 4C 53 F7,
+581	 * tools/fm1_remote.py stats). Off at every start: an app with a setting for it turns it on after loading it. The
+582	 * flash is the update's staging's last sector: every install starts the stats again. The app's side (app.h):
+583	 *   APP_STATS        void app_stats(uint8_t out[PLAT_STATS_APP])   its bytes, once a second (main loop; zeroed before)
+584	 *   APP_STATS_LAYOUT "name width ..."   what they are, for the readout: each field a name and its width in bytes (1,
+585	 *                    2 or 4, little-endian), in order ("c10 1 drops 2"); without it the bytes are printed raw
+586	 *   APP_STATS_QUIET  int app_stats_quiet(void)   1: a flash write now disturbs nothing (the transport stopped). A
+587	 *                    snapshot waits for it up to 4 minutes, then is written anyway (one 64-byte page); without it a
+588	 *                    snapshot is written at once
+589	 * The host simulator keeps them too (its flash dump has the sector) */
+590	#define PLAT_STATS_APP 7u
+591	/* The stacks' room (device/stacks.c, fm1.toml crash_history = true or debug_stats = true; without them plat_stack_left
+592	 * and plat_stack_least_ever are -1 on the device, and the stats are off): CPU0's main and interrupt stacks are painted
+593	 * at every start, the second core's marked by felucca-bsp; the bytes never used. plat_stack_left: since this start (-1: not measured, the second core
+594	 * off or not built). plat_stack_least_ever: the least ever seen, across restarts (.noinit) and power-offs (the debug
+595	 * stats' newest record in flash, and the crash records' room at each crash); -1 not known yet. Main loop. Each crash
+596	 * record keeps every stack's room at the crash (F0 7D 4C 48 F7's "stk" line) */
+597	enum { PLAT_STK_MAIN, PLAT_STK_IRQ, PLAT_STK_C1 };
+598	int32_t plat_stack_left(int k);
+599	int32_t plat_stack_least_ever(int k);
+600	void plat_stats_enable(int on);        /* the snapshots every 5 minutes on (1) or off (0) */
+601	int plat_stats_on(void);
+602	void app_stats(uint8_t out[PLAT_STATS_APP]);
+603	int app_stats_quiet(void);
+604	
+605	/* the app's optional hooks (app.h defines the macro when it has the function):
+606	 *   APP_TICK        void app_tick(void)           1 kHz, in the timer interrupt (a clock, a sequencer)
+607	 *   APP_BOOT        void app_boot(void)           once, after the platform is up, before app_ui_init (a radio)
+608	 *   APP_LOOP        void app_loop(void)           every pass of the main loop (a radio's tasks)
+609	 *   APP_YIELD       void app_yield(void)          from plat_yield, inside long work
+610	 *   APP_BLE_PEERS   app_ble_scan_report, app_ble_device_keys   the devices one by one (plat_ble_connect_peer, above):
+611	 *                   each advertising report a scan hears, a pairing's keys
+612	 *   APP_OVERLOAD    void app_overload(void)       the render took over 90 % of its time (shed voices)
+613	 *   APP_SPLASH      void app_splash(void)         the first screen at boot, instead of the name
+614	 *   APP_GAIN(m)     the render's gain from MASTER's position m (0..4096; default the square, m * m >> 12)
+615	 *   APP_BATTERY_RAW (no function) plat_battery_raw is built (the battery's reading, for an app's own volts)
+616	 *   APP_CPU_KHZ     (no function) plat_cpu_khz is built (the CPU's clock)
+617	 *   APP_DIM_LEVELS  (no function) plat_dim_ns is built (the dim lights at any of many brightnesses)
+618	 *   APP_QUIET       void app_quiet(int32_t *lr, uint32_t n)   the render while the flash must not be read (the
+619	 *                   radio's first second, FM1B_BLE): keep time without sound (default: silence)
+620	 *   APP_KEY_SENSE   void app_key_sample(uint32_t key, uint32_t v, uint32_t ticks, int driven) (rows PA7 / PA8),
+621	 *                   int app_key_drive(uint32_t key) (read it driven), void app_key_probe(uint32_t key, uint32_t v,
+622	 *                   uint32_t pressed) (the top row), int app_key_led_ok(uint32_t key) (0: its column dark when read);
+623	 *                   from the scan's interrupt
+624	 *   APP_SYSEX       int app_sysex(const uint8_t *p, uint32_t n)   a SysEx frame from USB the platform does not take
+625	 *                   (p: the bytes between F0 and F7); 1 = the app's. Its answers: plat_sysex_send. Main loop
+626	 *   APP_SYSEX_BYTE  void app_sysex_byte(uint8_t b)   every byte of a SysEx from USB, F0 and F7 too (realtime bytes
+627	 *                   left out; another status inside ends the frame, unseen here), as it comes: an app's own frames longer
+628	 *                   than APP_SYSEX's (640 bytes between F0 and F7; a DX7 bank is 4104). In the USB interrupt: keep it short
+629	 *   APP_USB_CMD     void app_usb_cmd(const uint8_t *d, uint32_t n)   a frame in the update's framing (above). Main loop
+630	 *   APP_USB_HOST_NAME (no function) plat_usb_host_name is built (the USB host reads the device's product string)
+631	 *   APP_REDRAW      void app_redraw(void)        draw the whole screen again at the next frame (the mirror lost a part)
+632	 *   APP_MIRROR_TEST int app_mirror_test(int on)  the mirror's remote asks for a test session (on 1, off 0): 1 done
+633	 *   APP_CSTART      void app_cstart(void)         first thing at a start, before the RAM is cleared and with nothing
+634	 *                   set up (registers only, no RAM): an app's own second core that a reset left running, held
+635	 *                   (fm1-base's own, cpu2 = true, needs none of these)
+636	 *   APP_BT_FRAMES   const int32_t *app_bt_frames(const int32_t *lr, uint32_t n)   the frames Bluetooth audio takes from
+637	 *                   the render just made (lr, n frames, 24-bit; 0 = silence): for an app whose own output differs from
+638	 *                   what Bluetooth should get. Audio interrupt, after each render (Bluetooth audio built). Without it
+639	 *                   Bluetooth takes the output
+640	 *   APP_FAULT       void app_fault(const fm1_crash_t *c)   a crash, before the crash screen (c: the record): an app's
+641	 *                   own second core given up; or the crash is on that core (c->sp on its stacks): it stops there
+642	 *   APP_LOG         void app_log(void (*line)(const char *t))   the development readout over USB-MIDI (F0 7D 4C 47 F7,
+643	 *                   "LG"): the app's own lines, each through line (ASCII, 40 characters at most), before its "end".
+644	 *                   Main loop
+645	 *
+646	 * Screen mirroring (fm1.toml mirror = true: FM1B_MIRROR 1, device/mirror.c): the screen and the panel live on a
+647	 * computer (base/web/mirror/, tools/fm1_mirror.py), and the panel played from it. Nothing for the app to call; an app
+648	 * with APP_REDRAW gets back what a slow link dropped.
+649	 *
+650	 * Backup and restore over USB (fm1.toml backup = true: FM1B_BACKUP 1, device/backup.c; tools/fm1_backup.py): the
+651	 * app's saved objects, all or nothing. The app's app.h:
+652	 *   APP_BACKUP_OBJS {OBJ_PROJ, ...}   the objects, in order (not OBJ_PANEL: the calibration is the unit's)
+653	 *   APP_BACKUP_MAGIC 0x...u           its image's magic (4 ASCII bytes, little-endian), APP_BACKUP_VERSION its format
+654	 *   APP_BACKUP_WHAT "replaces all songs"   the restore question's second line
+655	 *   APP_BACKUP_BUF io_buf             optional: the app's own buffer of at least 3840 B (uint8_t name[], not static,
+656	 *                                     4-aligned) lent to a restore, which then needs none of its own (3840 B of the
+657	 *                                     pool); a scratch buffer the app fills and empties within a call (a restore runs
+658	 *                                     with the app's frame stopped and reloads everything after). Never one an
+659	 *                                     interrupt or the second core uses. A resource transfer (res.c) borrows it too,
+660	 *                                     and a refused or failed restore leaves it overwritten as well (no
+661	 *                                     app_backup_restored then: the app's frame starts again from app_ui_init)
+662	 * and these: int app_backup_playing(void) (1: no restore now, STOP FIRST), void app_backup_flush(void) (what is not
+663	 * saved yet, saved: a backup starts), void app_backup_hold(int on) (no saving while a backup streams),
+664	 * void app_backup_restored(void) (everything from the flash again) */
+665
+```
+</details></tool-use>
+
+_**Agent - sidechain (claude-opus-5-5 2026-11-18 10:15:49Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Read chime source
+
+`cat -n firmware/common/chime.h; cat -n firmware/common/chime.c`
+
+```text
+     1	/* SPDX-License-Identifier: MIT */
+     2	/* chime: a small two-operator FM voice for notification sounds, with a queue of a few notes.
+     3	 *
+     4	 *   chime_play(CHIME_UP);                         main loop: queue a figure (drops it if one is playing)
+     5	 *   chime_render(lr, n, gain);                    audio interrupt: adds the chime into lr (24-bit stereo)
+     6	 *
+     7	 * Figures are short note lists (MIDI note, length in ms); add your own with chime_notes(). */
+     8	#pragma once
+     9	#include <stdint.h>
+    10	
+    11	enum { CHIME_UP, CHIME_DONE, CHIME_ERROR, CHIME_TICK, CHIME_N };
+    12	
+    13	void chime_play(int figure);
+    14	void chime_notes(const uint8_t *notes, const uint16_t *ms, uint32_t n);
+    15	void chime_render(int32_t *lr, uint32_t n, float gain);
+    16	int chime_busy(void);
+    17	void chime_stop(void);
+     1	/* SPDX-License-Identifier: MIT */
+     2	/* chime: see chime.h. One voice: a sine carrier, a sine modulator at 2x, the index falling with the note's
+     3	 * envelope (a bell). Needs fastmath.h (fm_sinf, fm_exp2f) from fm1-base, in scope in the unity build. */
+     4	#include "chime.h"
+     5	
+     6	#define CHIME_MAX 6u
+     7	#define CHIME_SR 44100.0f
+     8	
+     9	static volatile uint8_t ch_note[CHIME_MAX];
+    10	static volatile uint16_t ch_ms[CHIME_MAX];
+    11	static volatile uint32_t ch_n, ch_i;      /* notes queued, the one playing (ch_i == ch_n: silent) */
+    12	static uint32_t ch_left;                 /* samples left of the note playing */
+    13	static float ch_pc, ch_pm, ch_env, ch_inc;
+    14	
+    15	static const uint8_t FIG_NOTES[CHIME_N][3] = {
+    16	    {76, 81, 0},                         /* UP: E5 A5, someone needs you */
+    17	    {72, 76, 79},                        /* DONE: C5 E5 G5 */
+    18	    {57, 53, 0},                         /* ERROR: A3 F3 */
+    19	    {84, 0, 0},                          /* TICK */
+    20	};
+    21	static const uint16_t FIG_MS[CHIME_N][3] = {{110, 220, 0}, {90, 90, 260}, {180, 320, 0}, {40, 0, 0}};
+    22	
+    23	void chime_notes(const uint8_t *notes, const uint16_t *ms, uint32_t n)
+    24	{
+    25	    uint32_t i;
+    26	    if (ch_i < ch_n)
+    27	        return;                          /* one figure at a time: no pile-up when many agents change at once */
+    28	    if (n > CHIME_MAX)
+    29	        n = CHIME_MAX;
+    30	    ch_n = 0;                            /* silent while the queue is refilled (the render reads it) */
+    31	    ch_i = 0;
+    32	    for (i = 0; i < n; i++) {
+    33	        ch_note[i] = notes[i];
+    34	        ch_ms[i] = ms[i];
+    35	    }
+    36	    ch_left = 0;
+    37	    ch_n = n;
+    38	}
+    39	
+    40	void chime_play(int f)
+    41	{
+    42	    uint32_t n = 0;
+    43	    if (f < 0 || f >= CHIME_N)
+    44	        return;
+    45	    while (n < 3u && FIG_NOTES[f][n])
+    46	        n++;
+    47	    chime_notes(FIG_NOTES[f], FIG_MS[f], n);
+    48	}
+    49	
+    50	int chime_busy(void) { return ch_i < ch_n; }
+    51	void chime_stop(void) { ch_i = ch_n; }
+    52	
+    53	void chime_render(int32_t *lr, uint32_t n, float gain)
+    54	{
+    55	    uint32_t i;
+    56	    for (i = 0; i < n; i++) {
+    57	        float m, s;
+    58	        if (!ch_left) {
+    59	            if (ch_i >= ch_n) {
+    60	                ch_env = 0.0f;
+    61	                return;
+    62	            }
+    63	            ch_inc = 440.0f * fm_exp2f(((float)ch_note[ch_i] - 69.0f) / 12.0f) / CHIME_SR;
+    64	            ch_left = (uint32_t)ch_ms[ch_i] * 44u;
+    65	            ch_env = 1.0f;
+    66	            ch_i++;
+    67	        }
+    68	        ch_left--;
+    69	        ch_env *= 0.99985f;              /* ~150 ms to a third */
+    70	        ch_pc += ch_inc;
+    71	        if (ch_pc >= 1.0f)
+    72	            ch_pc -= 1.0f;
+    73	        ch_pm += ch_inc * 2.0f;
+    74	        if (ch_pm >= 1.0f)
+    75	            ch_pm -= 1.0f;
+    76	        m = fm_sinf(ch_pm * 6.2831853f) * 1.5f * ch_env;
+    77	        s = fm_sinf((ch_pc + m * 0.159f) * 6.2831853f) * ch_env * 0.2f * gain;
+    78	        if (ch_left < 220u)              /* 5 ms out: no click at the note's end */
+    79	            s *= (float)ch_left / 220.0f;
+    80	        lr[2 * i] += (int32_t)s;
+    81	        lr[2 * i + 1] += (int32_t)s;
+    82	    }
+    83	}
+```
+</details></tool-use>
+
+_**Agent - sidechain (claude-opus-5-5 2026-11-18 10:15:51Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Read morse tone source
+
+`cat -n firmware/morse/tone.h; cat -n firmware/morse/tone.c`
+
+```text
+     1	/* SPDX-License-Identifier: GPL-3.0-or-later */
+     2	/* tone: the sidetone, two sine voices keyed on and off without a click (a 5 ms raised ramp each way), one for what
+     3	 * this FM-1 sends and one for what it receives, at different pitches.
+     4	 *
+     5	 *   tone_pitch(TONE_TX, 600.0f);         main loop
+     6	 *   tone_gate(TONE_TX, 1);               the 1 kHz tick (or anywhere): key down
+     7	 *   tone_render(lr, n, gain);            audio interrupt: adds the voices into lr (24-bit stereo)
+     8	 *
+     9	 * The gate is read once per audio block (APP_BLOCK frames, 5.8 ms at 256): that is the keying's jitter. Muted, the
+    10	 * voices run silent (the screen and the lights show the keying instead). Needs fastmath.h (fm_sinf). */
+    11	#pragma once
+    12	#include <stdint.h>
+    13	
+    14	enum { TONE_TX, TONE_RX, TONE_N };
+    15	
+    16	void tone_pitch(int v, float hz);
+    17	void tone_gate(int v, int on);
+    18	void tone_mute(int on);
+    19	int tone_gated(int v);                   /* the gate as last set */
+    20	void tone_render(int32_t *lr, uint32_t n, float gain);
+    21	void tone_stop(void);                    /* both silent now (app_panic) */
+     1	/* SPDX-License-Identifier: GPL-3.0-or-later */
+     2	/* tone: see tone.h */
+     3	#include "tone.h"
+     4	
+     5	#define TONE_RATE 44100.0f
+     6	#define TONE_RAMP (1.0f / (0.005f * TONE_RATE))   /* 5 ms from silent to full */
+     7	#define TONE_AMP 0.3f
+     8	
+     9	static struct {
+    10	    volatile uint8_t gate;
+    11	    volatile float inc;                  /* phase step per frame, of a turn */
+    12	    float phase, ramp;                   /* ramp 0..1, shaped into the level */
+    13	} tone_v[TONE_N];
+    14	static volatile uint8_t tone_muted;
+    15	
+    16	void tone_pitch(int v, float hz)
+    17	{
+    18	    if (v >= 0 && v < TONE_N)
+    19	        tone_v[v].inc = hz / TONE_RATE;
+    20	}
+    21	
+    22	void tone_gate(int v, int on)
+    23	{
+    24	    if (v >= 0 && v < TONE_N)
+    25	        tone_v[v].gate = (uint8_t)(on != 0);
+    26	}
+    27	
+    28	void tone_mute(int on) { tone_muted = (uint8_t)(on != 0); }
+    29	
+    30	int tone_gated(int v) { return v >= 0 && v < TONE_N && tone_v[v].gate; }
+    31	
+    32	void tone_stop(void)
+    33	{
+    34	    uint32_t v;
+    35	    for (v = 0; v < TONE_N; v++) {
+    36	        tone_v[v].gate = 0;
+    37	        tone_v[v].ramp = 0.0f;
+    38	    }
+    39	}
+    40	
+    41	void tone_render(int32_t *lr, uint32_t n, float gain)
+    42	{
+    43	    uint32_t v, i;
+    44	    for (v = 0; v < TONE_N; v++) {
+    45	        float inc = tone_v[v].inc, phase = tone_v[v].phase, ramp = tone_v[v].ramp;
+    46	        int on = tone_v[v].gate;
+    47	        if (!on && ramp <= 0.0f)
+    48	            continue;
+    49	        for (i = 0; i < n; i++) {
+    50	            float lvl, s;
+    51	            ramp += on ? TONE_RAMP : -TONE_RAMP;
+    52	            ramp = ramp < 0.0f ? 0.0f : ramp > 1.0f ? 1.0f : ramp;
+    53	            phase += inc;
+    54	            if (phase >= 1.0f)
+    55	                phase -= 1.0f;
+    56	            if (tone_muted)
+    57	                continue;
+    58	            lvl = ramp * ramp * (3.0f - 2.0f * ramp);   /* smoothstep: the ramp's corners rounded */
+    59	            s = fm_sinf(phase * 6.2831853f) * lvl * TONE_AMP * gain;
+    60	            lr[2 * i] += (int32_t)s;
+    61	            lr[2 * i + 1] += (int32_t)s;
+    62	        }
+    63	        tone_v[v].phase = phase;
+    64	        tone_v[v].ramp = ramp;
+    65	    }
+    66	}
+```
+</details></tool-use>
+
+_**Agent - sidechain (claude-opus-5-5 2026-11-18 10:15:53Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Read fastmath and config headers
+
+`cat -n third_party/fm1-base/include/fastmath.h; cat -n third_party/fm1-base/include/fm1b_config.h`
+
+```text
+     1	/* SPDX-License-Identifier: MPL-2.0
+     2	 * Copyright (C) 2026 Charles Vestal */
+     3	/* X0X single-precision maths, with no libm.
+     4	 *
+     5	 * The FM-1's FPU is float-only (-mfprev1) and the firmware links no libm, so this
+     6	 * is the whole maths library of the DSP. The same code runs in the host build,
+     7	 * which is what lets a host render stand in for the device: build the host with
+     8	 * -ffp-contract=off (the device has no fused multiply-add) and the two compute
+     9	 * the same samples.
+    10	 *
+    11	 * Accuracy (tests/host/fastmath_test.c checks every bound against libm):
+    12	 *   fm_exp2f  rel 3e-7 on [-126, 127]      fm_expf  rel 6e-7 on [-87, 88]
+    13	 *   fm_log2f  abs 3e-7 on [0.25, 4], 4e-6 on [1e-30, 1e30]
+    14	 *   fm_powf   rel 1e-5 (x > 0)             fm_tanhf abs 3e-7
+    15	 *   fm_sinf / fm_cosf abs 1e-6 on [-100, 100] (three-part 2pi reduction)
+    16	 *   fm_tanf   rel 1e-6 on (-pi/2, pi/2)   fm_sqrtf rel 2e-7
+    17	 *
+    18	 * Every function is static inline and branch-light. None may be called with
+    19	 * NaN; none returns a denormal for an in-range argument. */
+    20	#pragma once
+    21	#include <stdint.h>
+    22	
+    23	#define FM_PI 3.14159265358979f
+    24	#define FM_TWO_PI 6.28318530717959f
+    25	#define FM_LN2 0.693147180559945f
+    26	#define FM_LOG2E 1.44269504088896f
+    27	
+    28	typedef union { float f; uint32_t u; int32_t i; } fm_bits_t;
+    29	
+    30	static inline float fm_fabsf(float x) { fm_bits_t b; b.f = x; b.u &= 0x7FFFFFFFu; return b.f; }
+    31	static inline float fm_minf(float a, float b) { return a < b ? a : b; }
+    32	static inline float fm_maxf(float a, float b) { return a > b ? a : b; }
+    33	static inline float fm_clampf(float x, float lo, float hi) { return x < lo ? lo : x > hi ? hi : x; }
+    34	
+    35	/* floor for |x| < 2^31 */
+    36	static inline float fm_floorf(float x)
+    37	{
+    38	    int32_t i = (int32_t)x;
+    39	    float f = (float)i;
+    40	    return f > x ? f - 1.0f : f;
+    41	}
+    42	
+    43	/* 2^n * 2^f for an integer n and |f| <= 0.5 (or a little more) */
+    44	static inline float fm_exp2_nf(int32_t n, float f)
+    45	{
+    46	    fm_bits_t b;
+    47	    float p;
+    48	    if (n < -126)
+    49	        return 0.0f;                 /* flush instead of a denormal */
+    50	    p = 1.534580891e-04f;            /* 2^f on [-0.5, 0.5]: degree 6, fitted (tools/fit_fastmath.py) */
+    51	    p = p * f + 1.339993158e-03f;
+    52	    p = p * f + 9.618488972e-03f;
+    53	    p = p * f + 5.550328776e-02f;
+    54	    p = p * f + 2.402264689e-01f;
+    55	    p = p * f + 6.931472057e-01f;
+    56	    p = p * f + 1.0f;
+    57	    b.f = p;
+    58	    b.i += n << 23;
+    59	    return b.f;
+    60	}
+    61	
+    62	/* 2^x. Split x = n + f, f in [-0.5, 0.5]; fitted polynomial for 2^f. */
+    63	static inline float fm_exp2f(float x)
+    64	{
+    65	    float fl;
+    66	    if (x < -126.0f)
+    67	        return 0.0f;
+    68	    if (x > 127.0f)
+    69	        x = 127.0f;
+    70	    fl = fm_floorf(x + 0.5f);
+    71	    return fm_exp2_nf((int32_t)fl, x - fl);
+    72	}
+    73	
+    74	/* e^x with Cody-Waite reduction: x = n ln2 + r, so |x| * eps never reaches the result */
+    75	static inline float fm_expf(float x)
+    76	{
+    77	    float n;
+    78	    if (x < -87.3f)
+    79	        return 0.0f;
+    80	    if (x > 88.7f)
+    81	        x = 88.7f;
+    82	    n = fm_floorf(x * FM_LOG2E + 0.5f);
+    83	    x = (x - n * 0.693145752f) - n * 1.42860677e-6f;      /* ln2 split: hi has 16 bits */
+    84	    return fm_exp2_nf((int32_t)n, x * FM_LOG2E);            /* |x log2e| <= 0.5 */
+    85	}
+    86	
+    87	/* log2(x), x > 0 (denormals and 0 return -126 / -127-ish, never NaN) */
+    88	static inline float fm_log2f(float x)
+    89	{
+    90	    fm_bits_t b;
+    91	    float m, t, t2, p;
+    92	    int32_t e;
+    93	    b.f = x;
+    94	    if (b.i <= 0)
+    95	        return -127.0f;
+    96	    e = ((b.i >> 23) & 0xFF) - 127;
+    97	    b.i = (b.i & 0x007FFFFF) | 0x3F800000;     /* mantissa in [1, 2) */
+    98	    m = b.f;
+    99	    if (m > 1.41421356f) {                     /* centre on 1: m in [0.707, 1.414) */
+   100	        m *= 0.5f;
+   101	        e += 1;
+   102	    }
+   103	    /* log2(m) = 2/ln2 * atanh(t), t = (m-1)/(m+1), |t| <= 0.1716 */
+   104	    t = (m - 1.0f) / (m + 1.0f);
+   105	    t2 = t * t;
+   106	    p = 3.428278367e-01f;                       /* odd polynomial in t, fitted */
+   107	    p = p * t2 + 4.115337810e-01f;
+   108	    p = p * t2 + 5.770866525e-01f;
+   109	    p = p * t2 + 9.617966483e-01f;
+   110	    p = p * t2 + 2.885390082e+00f;
+   111	    return (float)e + p * t;
+   112	}
+   113	
+   114	static inline float fm_logf(float x) { return fm_log2f(x) * FM_LN2; }
+   115	
+   116	/* x^y for x > 0 (x <= 0 returns 0) */
+   117	static inline float fm_powf(float x, float y)
+   118	{
+   119	    if (x <= 0.0f)
+   120	        return 0.0f;
+   121	    return fm_exp2f(y * fm_log2f(x));
+   122	}
+   123	
+   124	/* 10^(db/20) */
+   125	static inline float fm_db2lin(float db) { return fm_exp2f(db * 0.166096405f); }
+   126	
+   127	static inline float fm_tanhf(float x)
+   128	{
+   129	    float a = fm_fabsf(x), e, r;
+   130	    if (a < 0.0004f)
+   131	        return x;                                /* tanh x = x - x^3/3: below float resolution here */
+   132	    if (a < 0.5f) {                              /* Taylor to x^13: the next term is 4e-8 at 0.5. No exp2, */
+   133	        float z = x * x;                         /* no divide: most clippers spend most samples here */
+   134	        return x * (1.0f + z * (-0.333333333f + z * (0.133333333f + z * (-0.0539682540f + z * (0.0218694885f +
+   135	                    z * (-0.00886323552f + z * 0.00359212803f))))));
+   136	    }
+   137	    if (a > 9.0f)
+   138	        return x > 0.0f ? 1.0f : -1.0f;
+   139	    e = fm_exp2f(2.0f * FM_LOG2E * a);
+   140	    r = 1.0f - 2.0f / (e + 1.0f);
+   141	    return x > 0.0f ? r : -r;
+   142	}
+   143	
+   144	/* sin on [-pi, pi]: odd polynomial, degree 13 */
+   145	static inline float fm_sin_pi(float x)
+   146	{
+   147	    float x2 = x * x, p;
+   148	    p = 1.345176048e-10f;                      /* degree 13, fitted */
+   149	    p = p * x2 - 2.467706523e-08f;
+   150	    p = p * x2 + 2.752946668e-06f;
+   151	    p = p * x2 - 1.984015614e-04f;
+   152	    p = p * x2 + 8.333310417e-03f;
+   153	    p = p * x2 - 1.666666459e-01f;
+   154	    p = p * x2 + 9.999999946e-01f;
+   155	    return p * x;
+   156	}
+   157	
+   158	static inline float fm_wrap_pi(float x)                /* to [-pi, pi), 2pi in three parts */
+   159	{
+   160	    float k = fm_floorf(x * (1.0f / FM_TWO_PI) + 0.5f);
+   161	    return ((x - k * 6.28125f) - k * 1.9353071693331003e-3f) - k * 1.0253131561401567e-11f;
+   162	}
+   163	
+   164	static inline float fm_sinf(float x) { return fm_sin_pi(fm_wrap_pi(x)); }
+   165	static inline float fm_cosf(float x)
+   166	{
+   167	    float r = fm_wrap_pi(x) + 0.5f * FM_PI;          /* reduce first: adding pi/2 to a big x loses bits */
+   168	    if (r >= FM_PI)
+   169	        r -= FM_TWO_PI;
+   170	    return fm_sin_pi(r);
+   171	}
+   172	/* tan on (-pi/2, pi/2), the filter-coefficient range: cos(x) = sin(pi/2 - |x|), which keeps
+   173	 * its relative accuracy next to the pole where cos is small */
+   174	static inline float fm_tanf(float x)
+   175	{
+   176	    float a = fm_fabsf(x), c = (1.57079637f - a) - 4.37113883e-8f;
+   177	    return fm_sin_pi(x) / fm_sin_pi(c);
+   178	}
+   179	
+   180	/* sine of a phase in turns (0..1 = one cycle): the cheap oscillator form */
+   181	static inline float fm_sin_turns(float ph)
+   182	{
+   183	    float x = ph - fm_floorf(ph + 0.5f);          /* [-0.5, 0.5) */
+   184	    return fm_sin_pi(x * FM_TWO_PI);
+   185	}
+   186	
+   187	static inline float fm_sqrtf(float x)
+   188	{
+   189	    fm_bits_t b;
+   190	    float y;
+   191	    if (x <= 0.0f)
+   192	        return 0.0f;
+   193	    b.f = x;
+   194	    b.u = 0x5F375A86u - (b.u >> 1);              /* 1/sqrt seed, then Newton x3 */
+   195	    y = b.f;
+   196	    y = y * (1.5f - 0.5f * x * y * y);
+   197	    y = y * (1.5f - 0.5f * x * y * y);
+   198	    y = y * (1.5f - 0.5f * x * y * y);
+   199	    return x * y;
+   200	}
+   201	
+   202	/* 1 / sqrt(x), x > 0: the seed and two Newton steps (rel 5e-6). For gains, not for values that are
+   203	 * shown or compared: fm_sqrtf keeps three. */
+   204	static inline float fm_rsqrtf(float x)
+   205	{
+   206	    fm_bits_t b;
+   207	    float y;
+   208	    b.f = x;
+   209	    b.u = 0x5F375A86u - (b.u >> 1);
+   210	    y = b.f;
+   211	    y = y * (1.5f - 0.5f * x * y * y);
+   212	    return y * (1.5f - 0.5f * x * y * y);
+   213	}
+   214	
+   215	/* denormal / tiny-value flush for filter states */
+   216	static inline float fm_flush(float x) { return fm_fabsf(x) < 1e-20f ? 0.0f : x; }
+     1	/* SPDX-License-Identifier: MPL-2.0
+     2	 * Copyright (C) 2026 Charles Vestal */
+     3	/* The app's configuration (app.h) with fm1-base's defaults; shared by the device (device/unity.c) and the host
+     4	 * simulator (host/plat_host.c). Included after app.h and gfx.c (RGB). */
+     5	#pragma once
+     6	#ifndef APP_NAME
+     7	#define APP_NAME "TEMPLATE"              /* on the splash, crash and safe-mode screens and for the screen reader */
+     8	#endif
+     9	#ifndef APP_BIG_FONT
+    10	#define APP_BIG_FONT FONT_L              /* the splash's name and the panel's screens (capitals): FONT_M saves 20 KB */
+    11	#endif
+    12	#ifndef APP_SPLASH_RGB
+    13	#define APP_SPLASH_RGB RGB(242, 120, 72) /* the name on the splash screen */
+    14	#endif
+    15	#ifndef APP_PALETTE
+    16	#define APP_PALETTE 1u                   /* gfx.c PALETTES: the screen's colours (1 amber) */
+    17	#endif
+    18	#ifndef APP_TAGLINE
+    19	#define APP_TAGLINE ""                   /* under the name on the splash screen */
+    20	#endif
+    21	#ifndef APP_GAIN
+    22	#define APP_GAIN(m) ((m) * (m) >> 12)    /* the render's gain from MASTER's position: the square, 0..~4096 */
+    23	#endif
+    24	#ifndef APP_VERSION
+    25	#define APP_VERSION "DEV"                /* a release build passes its own (tools/build.py --release) */
+    26	#endif
+    27	#ifndef APP_BLE_AT_BOOT
+    28	#define APP_BLE_AT_BOOT 1                /* Bluetooth starts at power-on (an app's setting may say no) */
+    29	#endif
+    30	#ifndef APP_BLOCK
+    31	#define APP_BLOCK 256u                   /* frames per audio half and render: 5.8 ms at 44.1 kHz */
+    32	#endif
+```
+</details></tool-use>
+
+_**Agent - sidechain (claude-opus-5-5 2026-11-18 10:15:54Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Read plat.h
+
+`cat -n third_party/fm1-base/include/plat.h`
+
+```text
+<persisted-output>
+Output too large (58.6KB). Full output saved to: /Users/zhouhanru/.claude/projects/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/7dcc67a0-a756-4514-85d7-b24e721b72ee/tool-results/bjmpck3p4.txt
+
+Preview (first 2KB):
+     1	/* SPDX-License-Identifier: MPL-2.0
+     2	 * Copyright (C) 2026 Charles Vestal */
+     3	/* fm1-base's platform interface (from X0X's, by way of FoMni-1): everything the app needs from the hardware.
+     4	 *
+     5	 * The device implementation (plat_fm1.c) wraps Felucca's HAL and panel map; the
+     6	 * host implementation (host/plat_host.c) is a simulator fed by a script, which is
+     7	 * what lets the whole app — UI, sequencer, engines — run and be tested on a Mac.
+     8	 * Drawing goes through Felucca's lcd_fill / lcd_blit (lcd.c on the device, a
+     9	 * framebuffer on the host) and gfx.c on top. */
+    10	#pragma once
+    11	#include <stdint.h>
+    12	
+    13	/* big zero-initialised buffers go in the .pool RAM region on the device */
+    14	#ifdef PLAT_HOST
+    15	#define PLAT_POOL
+    16	#else
+    17	#define PLAT_POOL __attribute__((section(".pool")))
+    18	#endif
+    19	
+    20	/* PLAT_RAM_CODE: a function that runs from RAM (section .app_ram, copied at boot with .ram_text, at the start of
+    21	 * the RAMTEXT region they share: 32 KiB, 24 KiB with WiFi; with fm1.toml ram_layout = "packed", device/app_packed.ld,
+    22	 * at the start of the packed SRAM, as big as its one budget lets it), out of the way
+    23	 * of the XIP cache's misses: an audio path. It may call
+    24	 * only RAM code (other PLAT_RAM_CODE functions, felucca-bsp's RAM functions) and nothing through a pointer; the build
+    25	 * checks it over the disassembly, to any depth (tools/ramcode.py; fm1.toml ram_code_allow names the exceptions an app
+    26	 * vouches for). Not for code that runs with the flash off: it may read constants in the flash. XIP code it may not
+    27	 * call: the compiler's own calls (memcpy for a struct copy, a 64-bit divide), and a static inline helper the compiler
+    28	 * keeps out of line (at -Os it often does: fastmath.h's fm_exp2f), whose one copy is in XIP; a helper RAM code uses
+    29	 * is always_inline, or PLAT_RAM_CODE itself.
+...
+</persisted-output>
+```
+</details></tool-use>
+
+_**Agent - sidechain (claude-opus-5-5 2026-11-18 10:15:54Z)**_
+
+<tool-use data-tool-type="read" data-tool-name="Read"><details>
+<summary>Tool use: **Read**</summary>
+ `./third_party/fm1-base/device/gfx.c`
+
+```text
+1	/* SPDX-License-Identifier: MPL-2.0
+2	 * Copyright (C) 2026 Charles Vestal
+3	 * Copyright (C) 2026 Leo Kuroshita (@kurogedelic), Hügelton Instruments */
+4	/* Small-canvas renderer (no full framebuffer). Draw text/lines into
+5	 * an off-screen strip, then blit it in one DMA transfer. Pixels are stored
+6	 * byte-swapped (the panel takes RGB565 big-endian). */
+7	typedef struct {               /* proportional, see tools/gen_font.py */
+8	    uint8_t h;
+9	    uint8_t pad;               /* bitmap starts this many pixels left of the pen */
+10	    uint8_t first, last;
+11	    const uint8_t *adv;        /* advance per glyph */
+12	    const uint8_t *bw;         /* bitmap width per glyph (starts FONT_PAD left of the pen) */
+13	    const uint16_t *off;       /* byte offset of each glyph */
+14	    const uint8_t *data;
+15	} felucca_font_t;
+16	#include "felucca_font.h"
+17	
+18	#ifndef APP_CANVAS_PX
+19	#define APP_CANVAS_PX (240u * 144u)   /* X0X: the main area, both bands, is 240 x 144 */
+20	#endif
+21	#define CV_MAX APP_CANVAS_PX      /* (app.h may give less: a WiFi build needs the pool; cv_begin keeps to it) */
+22	static uint16_t cv_px[CV_MAX] __attribute__((section(".pool")));
+23	static uint32_t cv_w, cv_h;
+24	static int32_t cv_oy;            /* y offset for graph drawing */
+25	static int32_t cv_y0, cv_y1;     /* X0X: the rows drawing may touch (cv_band) */
+26	
+27	#define RGB(r, g, b) ((uint16_t)((((r) >> 3) << 11) | (((g) >> 2) << 5) | ((b) >> 3)))
+28	#define C_BLACK 0x0000u
+29	#define C_WHITE 0xFFFFu              /* accent only: what is being touched / where we are */
+30	/* The screen's five steps, darkest to brightest, plus white; picked as THEME in GLOBAL. */
+31	typedef struct {
+32	    const char *name;
+33	    uint16_t c[5];
+34	} palette_t;
+35	/* X0X: the first three steps are neutral greys in every theme (structure: rules, empty cells,
+36	 * labels); only the two brightest carry the theme's hue (values, highlights). Colour on the
+37	 * screen then means something: a part, a value, an alarm. */
+38	#define NEUTRALS RGB(34, 34, 40), RGB(74, 74, 82), RGB(150, 150, 158)
+39	static const palette_t PALETTES[] = {
+40	    {"GREEN", {NEUTRALS, RGB(80, 220, 120), RGB(150, 255, 175)}},
+41	    {"AMBER", {NEUTRALS, RGB(232, 136, 30), RGB(255, 184, 70)}},
+42	    {"CYAN", {NEUTRALS, RGB(60, 180, 235), RGB(150, 225, 255)}},
+43	    {"RED", {NEUTRALS, RGB(232, 76, 60), RGB(255, 132, 112)}},
+44	    {"MONO", {NEUTRALS, RGB(196, 196, 202), RGB(236, 236, 240)}},
+45	};
+46	#define NPALETTES (sizeof(PALETTES) / sizeof(PALETTES[0]))
+47	static uint16_t pal[5];
+48	#define C_LINE pal[0]                /* 1 rules, separators */
+49	#define C_DIM pal[1]                 /* 2 inactive, empty steps, units */
+50	#define C_GRAY pal[2]                /* 3 labels */
+51	#define C_AMB pal[3]                 /* 4 secondary text */
+52	#define C_HI pal[4]                  /* 5 values, curves */
+53	
+54	static void palette_set(uint32_t i)
+55	{
+56	    uint32_t k;
+57	    for (k = 0; k < 5u; k++)
+58	        pal[k] = PALETTES[i % NPALETTES].c[k];
+59	}
+60	
+61	static inline uint16_t swap16(uint32_t c) { return (uint16_t)(((c >> 8) & 0xFFu) | ((c & 0xFFu) << 8)); }
+62	
+63	static void cv_begin(uint32_t w, uint32_t h, uint16_t bg)
+64	{
+65	    uint32_t i, n;
+66	    if (w * h > CV_MAX)
+67	        h = CV_MAX / w;
+68	    lcd_sync();                     /* the last blit may still read cv_px */
+69	    cv_w = w;
+70	    cv_h = h;
+71	    cv_oy = cv_y0 = 0;
+72	    cv_y1 = (int32_t)h;
+73	    n = w * h;
+74	    for (i = 0; i < n; i++)
+75	        cv_px[i] = swap16(bg);
+76	}
+77	
+78	/* X0X: draw the next things as if the canvas were rows y0 .. y0+h-1 alone (one band of a
+79	 * canvas that holds several, sent in one transfer so the bands change on screen together) */
+80	static void cv_band(int32_t y0, int32_t h)
+81	{
+82	    cv_oy = cv_y0 = y0;
+83	    cv_y1 = y0 + h;
+84	}
+85	
+86	static void cv_blit(uint32_t x, uint32_t y) { lcd_blit(x, y, cv_w, cv_h, cv_px); }
+87	
+88	/* canvas rows r0 .. cv_h-1 only, to screen row y + r0 */
+89	static void cv_blit_from(uint32_t x, uint32_t y, uint32_t r0)
+90	{
+91	    if (r0 < cv_h)
+92	        lcd_blit(x, y + r0, cv_w, cv_h - r0, cv_px + r0 * cv_w);
+93	}
+94	
+95	static inline void cv_pset(int32_t x, int32_t y, uint16_t c)
+96	{
+97	    y += cv_oy;
+98	    if ((uint32_t)x < cv_w && y >= cv_y0 && y < cv_y1)
+99	        cv_px[(uint32_t)y * cv_w + (uint32_t)x] = swap16(c);
+100	}
+101	
+102	static void cv_rect(int32_t x, int32_t y, int32_t w, int32_t h, uint16_t c)
+103	{
+104	    int32_t x1 = x + w, y1 = y + h + cv_oy, i;
+105	    uint16_t sc = swap16(c);
+106	    y += cv_oy;                             /* clipped once, then filled row by row */
+107	    if (x < 0)
+108	        x = 0;
+109	    if (y < cv_y0)
+110	        y = cv_y0;
+111	    if (x1 > (int32_t)cv_w)
+112	        x1 = (int32_t)cv_w;
+113	    if (y1 > cv_y1)
+114	        y1 = cv_y1;
+115	    for (; y < y1; y++)
+116	        for (i = x; i < x1; i++)
+117	            cv_px[(uint32_t)y * cv_w + (uint32_t)i] = sc;
+118	}
+119	
+120	static void cv_line(int32_t x0, int32_t y0, int32_t x1, int32_t y1, uint16_t c)
+121	{
+122	    int32_t dx = x1 > x0 ? x1 - x0 : x0 - x1, sx = x0 < x1 ? 1 : -1;
+123	    int32_t dy = y1 > y0 ? y0 - y1 : y1 - y0, sy = y0 < y1 ? 1 : -1;
+124	    int32_t err = dx + dy, guard = 2000;
+125	    while (guard--) {                       /* bounded: a line is never longer than 480 px */
+126	        int32_t e2 = 2 * err;               /* both tests use the same error value */
+127	        cv_pset(x0, y0, c);
+128	        if (x0 == x1 && y0 == y1)
+129	            break;
+130	        if (e2 >= dy) {
+131	            err += dy;
+132	            x0 += sx;
+133	        }
+134	        if (e2 <= dx) {
+135	            err += dx;
+136	            y0 += sy;
+137	        }
+138	    }
+139	}
+140	
+141	/* glyph index of a character: lower case folds to upper case when the font
+142	 * has none, anything missing (and C1 controls) draws as '?' */
+143	static uint32_t glyph(const felucca_font_t *f, uint32_t ch)
+144	{
+145	    if (ch >= 'a' && ch <= 'z' && f->last < 'a')
+146	        ch -= 32u;
+147	    if (ch < f->first || ch > f->last || (ch >= 127u && ch < 160u))
+148	        ch = '?';
+149	    return ch - f->first;
+150	}
+151	
+152	#ifdef FONT_PACK
+153	/* the next alpha of a packed glyph (tools/gen_font.py FM1_FONT_PACK): t its code (the counts of each length, then the
+154	 * alphas in code order), d the glyph's bits, *bit the next one's index */
+155	static uint32_t font_alpha(const uint8_t *t, const uint8_t *d, uint32_t *bit)
+156	{
+157	    uint32_t len, code = 0, first = 0, at = 0;
+158	    for (len = 0; len < FONT_HUF_LEN; len++) {
+159	        uint32_t n = t[len];
+160	        code |= (uint32_t)(d[*bit >> 3] >> (7u - (*bit & 7u))) & 1u;
+161	        ++*bit;
+162	        if (code - first < n)
+163	            return t[FONT_HUF_LEN + at + code - first];
+164	        at += n;
+165	        first = (first + n) << 1;
+166	        code <<= 1;
+167	    }
+168	    return 0;                                        /* (no code that long: not from gen_font.py) */
+169	}
+170	
+171	#if defined(APP_FONT_CACHE) && APP_FONT_CACHE
+172	/* APP_FONT_CACHE bytes (app.h): the packed glyphs drawn lately kept decoded, an alpha a byte, so a glyph drawn again
+173	 * (every frame's labels and digits) costs a read, not its Huffman decode again (about 3.5x fewer instructions a
+174	 * glyph). Slots by the glyph's data address (2^APP_FONT_CACHE_BITS, a glyph each: one taking another's slot decodes
+175	 * again); the bytes taken in turn, all forgotten when the next glyph does not fit. The same alphas, the same pixels */
+176	#define FONT_CACHED 1
+177	#ifndef APP_FONT_CACHE_BITS
+178	#define APP_FONT_CACHE_BITS 7                        /* 2^7 slots (app.h may give more) */
+179	#endif
+180	#define FONT_CACHE_SLOTS (1u << APP_FONT_CACHE_BITS)
+181	_Static_assert(APP_FONT_CACHE >= FONT_BOX_MAX, "APP_FONT_CACHE: at least the largest glyph's box (FONT_BOX_MAX)");
+182	static const uint8_t *fc_gd[FONT_CACHE_SLOTS];      /* a slot's glyph: its coded rows (0: none) */
+183	static uint16_t fc_at[FONT_CACHE_SLOTS];             /* its alphas in fc_px */
+184	static uint8_t fc_px[APP_FONT_CACHE];
+185	static uint32_t fc_used;
+186	
+187	/* the n alphas of the glyph whose coded rows are gd (face f), decoded */
+188	static const uint8_t *font_cached(const felucca_font_t *f, const uint8_t *gd, uint32_t n)
+189	{
+190	    uint32_t s = ((uint32_t)(uintptr_t)gd * 2654435761u) >> (32 - APP_FONT_CACHE_BITS), i, bit = 0, prev = 0;
+191	    uint8_t *p;
+192	    _Static_assert(APP_FONT_CACHE <= 65535u, "font_cached: 16 bits an offset");
+193	    if (fc_gd[s] == gd)
+194	        return fc_px + fc_at[s];
+195	    if (fc_used + n > APP_FONT_CACHE) {              /* full: all forgotten */
+196	        for (i = 0; i < FONT_CACHE_SLOTS; i++)
+197	            fc_gd[i] = 0;
+198	        fc_used = 0;
+199	    }
+200	    p = fc_px + fc_used;
+201	    for (i = 0; i < n; i++)
+202	        p[i] = (uint8_t)(prev = font_alpha(f->data + FONT_HUF_SZ * (prev == 0u ? 0u : prev == 15u ? 1u : 2u), gd, &bit));
+203	    fc_gd[s] = gd;
+204	    fc_at[s] = (uint16_t)fc_used;
+205	    fc_used += n;
+206	    return p;
+207	}
+208	#endif
+209	#endif
+210	
+211	/* text in colour c, each pixel's coverage blended over what is already on the canvas (an
+212	 * anti-aliased face on a coloured box gets no dark fringe); returns the end x */
+213	static int32_t cv_text(int32_t x, int32_t y, const felucca_font_t *f, const char *s, uint16_t c)
+214	{
+215	    uint32_t r = c >> 11, g = (c >> 5) & 63u, b = c & 31u;
+216	    for (; *s; s++) {
+217	        uint32_t gi = glyph(f, (uint8_t)*s), gx, gy, w, bpr;
+218	        const uint8_t *gd;
+219	        w = f->bw[gi];
+220	        bpr = (w + 1u) / 2u;
+221	        gd = f->data + f->off[gi];
+222	#ifdef FONT_TRIM                     /* (tools/gen_font.py FM1_FONT_TRIM: the glyph's lit box, after its left, top, rows) */
+223	        int32_t bx = x - f->pad + gd[0], by = y + gd[1] + cv_oy;
+224	        uint32_t rows = gd[2];
+225	        gd += 3;
+226	#ifdef FONT_CACHED                   /* (APP_FONT_CACHE: the alphas decoded once, then read; the box clipped once) */
+227	        {
+228	            int32_t x0 = bx < 0 ? -bx : 0, x1 = bx + (int32_t)w > (int32_t)cv_w ? (int32_t)cv_w - bx : (int32_t)w;
+229	            int32_t y0 = by < cv_y0 ? cv_y0 - by : 0, y1 = by + (int32_t)rows > cv_y1 ? cv_y1 - by : (int32_t)rows, i, j;
+230	            const uint8_t *ca = x0 < x1 && y0 < y1 ? font_cached(f, gd, w * rows) : 0;   /* (nothing shown: not decoded) */
+231	            (void)bpr;
+232	            for (j = y0; ca && j < y1; j++) {
+233	                const uint8_t *ar = ca + (uint32_t)j * w;
+234	                uint16_t *row = &cv_px[(uint32_t)(by + j) * cv_w];
+235	                for (i = x0; i < x1; i++) {
+236	                    uint32_t a = ar[i];
+237	                    uint16_t *p = &row[(uint32_t)(bx + i)];
+238	                    if (!a)
+239	                        continue;
+240	                    if (a == 15u) {
+241	                        *p = swap16(c);
+242	                    } else {
+243	                        uint32_t bg = swap16(*p);
+244	                        uint32_t br = bg >> 11, bgg = (bg >> 5) & 63u, bb = bg & 31u;
+245	                        uint32_t nr = (r * a + br * (15u - a)) / 15u, ng = (g * a + bgg * (15u - a)) / 15u,
+246	                                 nb = (b * a + bb * (15u - a)) / 15u;
+247	                        *p = swap16((nr << 11) | (ng << 5) | nb);
+248	                    }
+249	                }
+250	            }
+251	            x += f->adv[gi];
+252	            continue;
+253	        }
+254	#endif
+255	#ifdef FONT_PACK                     /* (FM1_FONT_PACK: the alphas in turn, each by the code for the one before) */
+256	        uint32_t bit = 0, prev = 0;
+257	        (void)bpr;
+258	#endif
+259	        for (gy = 0; gy < rows; gy++)
+260	            for (gx = 0; gx < w; gx++) {
+261	#ifdef FONT_PACK
+262	                uint32_t a = font_alpha(f->data + FONT_HUF_SZ * (prev == 0u ? 0u : prev == 15u ? 1u : 2u), gd, &bit);
+263	                prev = a;
+264	#else
+265	                uint32_t a = gd[gy * bpr + gx / 2u];
+266	#endif
+267	                int32_t px = bx + (int32_t)gx, py = by + (int32_t)gy;
+268	#else
+269	        for (gy = 0; gy < f->h; gy++)
+270	            for (gx = 0; gx < w; gx++) {
+271	                uint32_t a = gd[gy * bpr + gx / 2u];
+272	                int32_t px = x - f->pad + (int32_t)gx, py = y + (int32_t)gy + cv_oy;
+273	#endif
+274	#ifndef FONT_PACK
+275	                a = (gx & 1u) ? (a & 15u) : (a >> 4);
+276	#endif
+277	                if (!a || (uint32_t)px >= cv_w || py < cv_y0 || py >= cv_y1)
+278	                    continue;
+279	                if (a == 15u) {
+280	                    cv_px[(uint32_t)py * cv_w + (uint32_t)px] = swap16(c);
+281	                } else {
+282	                    uint32_t bg = swap16(cv_px[(uint32_t)py * cv_w + (uint32_t)px]);
+283	                    uint32_t br = bg >> 11, bgg = (bg >> 5) & 63u, bb = bg & 31u;
+284	                    uint32_t nr = (r * a + br * (15u - a)) / 15u, ng = (g * a + bgg * (15u - a)) / 15u,
+285	                             nb = (b * a + bb * (15u - a)) / 15u;
+286	                    cv_px[(uint32_t)py * cv_w + (uint32_t)px] = swap16((nr << 11) | (ng << 5) | nb);
+287	                }
+288	            }
+289	        x += f->adv[gi];
+290	    }
+291	    return x;
+292	}
+293	
+294	static int32_t text_w(const felucca_font_t *f, const char *s)
+295	{
+296	    int32_t w = 0;
+297	    for (; *s; s++)
+298	        w += f->adv[glyph(f, (uint8_t)*s)];
+299	    return w;
+300	}
+301	
+302	/* one-shot: text in a box, cleared to black, blitted */
+303	static void draw_text_box(uint32_t x, uint32_t y, uint32_t w, const felucca_font_t *f, const char *s,
+304	                          uint16_t c, int align)
+305	{
+306	    int32_t tw = text_w(f, s), tx = 0;
+307	    cv_begin(w, f->h, C_BLACK);
+308	    if (align == 1)
+309	        tx = ((int32_t)w - tw) / 2;
+310	    else if (align == 2)
+311	        tx = (int32_t)w - tw;
+312	    cv_text(tx, 0, f, s, c);
+313	    cv_blit(x, y);
+314	    lcd_sync();                     /* one-shots (boot, crash, UBOOT, update) finish here */
+315	}
+316
+```
+</details></tool-use>
+
+_**Agent - sidechain (claude-opus-5-5 2026-11-18 10:15:59Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Grep audio contract terms in plat.h
+
+`grep -n -i -E "app_render|APP_BLOCK|44100|sample rate|Q23|24-bit|headroom|master_q12|PLAT_RAM|ram_text|core|cpu_pct|xrun|OVERLOAD|double|plat_lock|plat_unlock|app_tick|1 kHz|app_panic|app_key|velocity" third_party/fm1-base/include/plat.h | head -150`
+
+```text
+20:/* PLAT_RAM_CODE: a function that runs from RAM (section .app_ram, copied at boot with .ram_text, at the start of
+24: * only RAM code (other PLAT_RAM_CODE functions, felucca-bsp's RAM functions) and nothing through a pointer; the build
+29: * is always_inline, or PLAT_RAM_CODE itself.
+35:#define PLAT_RAM_CODE
+38:#define PLAT_RAM_CODE __attribute__((section(".app_ram")))
+66:                                        * yet (the keys' readings own the converter: APP_KEY_SENSE) */
+332:/* the 1 kHz tick (app_tick, an app with APP_TICK) runs in the timer interrupt: the main loop locks it out around
+333: * what they share. It nests, and plat_unlock takes what its plat_lock returned: the outermost unlock switches the
+334: * interrupts back on only if they were on at its lock, so a lock is safe inside an interrupt (app_render, app_tick)
+336:uint32_t plat_lock(void);
+337:void plat_unlock(uint32_t f);
+350: * a sector there (bsp/loader/ldr_core.c: "AT" at bytes 0xF06..0xF07, a nonzero CRC-16 at 0xF00 over the 78 bytes
+416: * (tools/fm1_resources.py; the installer after an update); a sound reading it is stopped first (app_panic) */
+450: * 1 << 22 at 4096). In app_render, the frame off frames into the block being rendered: its channels at p[0] ..
+452: * there). They start at 0 each block; the app adds into them, on either core (one writer a sample at a time), and the
+453: * platform sends them with the master's frames once app_render returns. NULL (*run 0) when no computer records (the
+462:/* the keys' velocity and pressure (an app with APP_KEY_SENSE): on, the scan reads the keys on the analog rows and
+463: * hands each reading to the app (app_key_sample, app_key_probe); off by default */
+492:/* audio load in % of the render budget, and xruns since boot (device: from the ISR) */
+493:uint32_t plat_cpu_pct(void);
+499:uint32_t plat_xruns(void);
+527: * guard's RAM code window (felucca-bsp fm1_guard.h, normally .ram_text alone) widened from .ram_text up to end, so
+531:/* The second core (fm1.toml cpu2 = true: FM1B_CPU2; felucca-bsp's chip/fm1_cpu1.h, Melodee's): a worker for a part of
+536: * instead: it is given up (held; the render does the work itself) and barred, one core at every start until
+537: * power-off or a new build (FM1B_BUILD), and one core after a failed start. Host: a job runs at once, in order (an app
+539:int plat_cpu2_set(int on);             /* on 1, in app_init: 0 = it runs; -1 = one core (not now, barred, or it did not
+545:void plat_cpu2_sync(void);             /* a barrier between the cores' reads and writes (a job's own sharing) */
+550:int plat_cpu2_barred(void);            /* 1: one core until power-off (given up, or the first core crashed beside it) */
+553:/* which core runs the caller: 0 the first, 1 the second (a job plat_cpu2_run handed it). For state a job keeps per core
+554: * (a scratch buffer each core renders into). No lock, no state: any core, any context; from code that runs from RAM
+555: * through a pointer, as any flash function. Device: the core's number register (felucca-bsp's fm1_cnum); host: 1
+556: * while the simulated second core runs a job (an app with APP_HOST_CPU2 has its own) */
+557:uint32_t plat_core(void);
+562: * (main loop memory: whether the second core and DMA read these ways has not been measured, so nothing they read goes
+578: * longest render, the timer's gaps, the longest interrupts-off and main-loop pass, the second core's and the radios'
+593: * at every start, the second core's marked by felucca-bsp; the bytes never used. plat_stack_left: since this start (-1: not measured, the second core
+606: *   APP_TICK        void app_tick(void)           1 kHz, in the timer interrupt (a clock, a sequencer)
+612: *   APP_OVERLOAD    void app_overload(void)       the render took over 90 % of its time (shed voices)
+620: *   APP_KEY_SENSE   void app_key_sample(uint32_t key, uint32_t v, uint32_t ticks, int driven) (rows PA7 / PA8),
+621: *                   int app_key_drive(uint32_t key) (read it driven), void app_key_probe(uint32_t key, uint32_t v,
+622: *                   uint32_t pressed) (the top row), int app_key_led_ok(uint32_t key) (0: its column dark when read);
+634: *                   set up (registers only, no RAM): an app's own second core that a reset left running, held
+637: *                   the render just made (lr, n frames, 24-bit; 0 = silence): for an app whose own output differs from
+641: *                   own second core given up; or the crash is on that core (c->sp on its stacks): it stops there
+659: *                                     interrupt or the second core uses. A resource transfer (res.c) borrows it too,
+```
+</details></tool-use>
+
+_**Agent - sidechain (claude-opus-5-5 2026-11-18 10:15:59Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Read build.py header documentation
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/third_party/fm1-base && sed -n 1,140p tools/build.py`
+
+```text
+#!/usr/bin/env python3
+# SPDX-License-Identifier: MPL-2.0
+# Copyright (C) 2026 Charles Vestal
+# Copyright (C) 2026 Leo Kuroshita (@kurogedelic), Hügelton Instruments
+"""Build an fm1-base firmware: the app, the update loader (felucca-bsp's) and an installable .fwsc package.
+
+  tools/build.py APP_DIR [--release X.Y[.Z][-suffix]] [--no-ble]
+  tools/build.py APP_DIR --host        the host simulator instead: APP_DIR/build/host/NAME_host (cc, no toolchain)
+  tools/build.py APP_DIR --web         the browser emulator instead: APP_DIR/build/emu/ (emcc); the page is the
+                                       simulator alone (panel, screen, sound, screen reader), for a site to link or frame;
+                                       an app may bring its own (APP_DIR/web/emu/index.html, worklet.js)
+  tools/build.py APP_DIR --rfm1        the app as an .rfm1 instead: APP_DIR/build/rfm1/ID-dev+COMMIT.rfm1 (emcc), the
+                                       host simulator in WebAssembly for host apps (RemoteFM1 for iOS: RemoteFM1IOS's
+                                       docs/RFM1-FORMAT.md); host/rfm1.c, tools/rfm1_pack.py. With --release X.Y:
+                                       APP_DIR/build/NAME-X.Y.rfm1, beside the release's package
+
+APP_DIR holds the app (app.h, app.c, its sources) and its fm1.toml:
+  name = "TEMPLATE"          the build's file names (lower case)
+  id_prefix = "FM-1_0"       package identity: dev builds are the prefix + "00", releases the prefix + XXYYZZ
+  usb_manufacturer = "..."   the USB names (felucca-bsp FELUCCA_USB_MANUFACTURER / FELUCCA_USB_PRODUCT)
+  usb_product = "..."
+  o2 = ["dsp/engine.c"]      separate units compiled at -O2 (the app's DSP), relative to APP_DIR (globs too); each with
+                             its own directory on the include path
+  unity_opt = "z"            the unity build (the platform, the app but its o2 units) at -Oz instead of -Os: smaller,
+                             a little slower (what runs in the audio interrupt outside the o2 units, too)
+  o2_cflags = ["-DX=1"]      more flags for those; o2_include = ["lib/prefix.h"]: a header included first in each
+  include = ["dsp/lib"]      more include directories, relative to APP_DIR
+  device_include = ["inc"]   include directories for the firmware only (headers the toolchain lacks)
+  mmio_skip = ["dsp/lib/"]   paths whose numbers are not addresses (a library's tables): the register check skips
+                             its address literals there (still checks casts, asm and register macros)
+  rom_check_skip = ["pv_log2"]   functions whose constants only look like ROM addresses (0xFFC00000..): the check
+                             that nothing calls or loads the chip ROM skips them
+  mul64_check_skip = ["mul_f256"]   functions the note on inlined 64-bit multiplies beside loads leaves out
+                             (felucca-bsp docs/CPU.md; the compiler runtime's __* are left out anyway)
+  web_cflags = ["-sX=1"]     more emcc flags for the emulator, compiling and linking (fm1-ripple: Lua's setjmp in
+                             WebAssembly itself, -sSUPPORT_LONGJMP=wasm)
+  web = ["build/web/*.c"]    units for the browser's emulator only (relative to APP_DIR, globs too): what the device
+                             loads at run time, linked in (fm1-ripple's currents)
+  web_link = ["build/web/*.a"]   archives linked into the browser's emulator as they are (relative to APP_DIR, globs
+                             too): what a firmware builds for it itself (fm1-ripple: its C++ currents, by emcc)
+  vendored = ["third_party/"]   other people's libraries, compiled for the FM-1 with their machine-specific code off
+                             by flags: the register check skips them entirely (it reads the text: x86 asm behind
+                             an #if would fail it)
+  rfm1_memory_mib = 8        the .rfm1's fixed memory (MiB, 1..32; default 8)
+  authors = ["Name"]         the .rfm1 manifest's authors (default: author, below, else the app repository's first
+                             commit's author)
+  words = "words.tsv"        the screen reader's words (fm1-reader), relative to APP_DIR
+  font_full = ["L"]          font roles with lower case too (by default M and L have capitals and digits only)
+  font_trim = true           each glyph stored as its lit box only (tools/gen_font.py FM1_FONT_TRIM): the same
+                             pixels drawn, the fonts about 55 % smaller in flash
+  font_pack = true           (with font_trim) each glyph's alphas Huffman-coded too (FM1_FONT_PACK), decoded as
+                             device/gfx.c draws: the same pixels, Barlow's faces about a third smaller again; text
+                             then costs about 3x the instructions, which app.h's APP_FONT_CACHE gives back: that many
+                             bytes of RAM (e.g. 6144u, at least the header's FONT_BOX_MAX) keep the glyphs drawn lately
+                             decoded, APP_FONT_CACHE_BITS (default 7) the log2 of its slots, 6 B each
+  ble_stack_kb = 6           the Bluetooth tasks' stacks, KB each (default 8: three of them, in the pool; radio.c
+                             logs each one's deepest, "stacks", 10 s after Bluetooth is ready and as they grow)
+  ble_heap_kb = 16           its heap, KB (default 24, in RAM; the same log line's "heap": its most ever)
+  ble_trim = true            Bluetooth as a MIDI peripheral only: JieLi's central, classic and test code cut (flash and
+                             RAM: Melodee's measure ~18 KB and ~4 KB); not with ble_central
+  ble_no_pairing = true      with ble_trim: no pairing or encryption either (~19 KB more flash; iOS and macOS connect)
+  ble_central = true         and the FM-1 connects to Bluetooth MIDI devices too (FM1B_BLE_CENTRAL), beside a computer;
+                             with ble_stack = "own", 3: without pairing (no bonds, no passkey: smaller)
+  bt_audio_mem = "app"       with bt_audio: its audio packets' queue and the receptions' ring (17.7 KB) lent by the app
+                             while an AUDIO mode is on, not static RAM (FM1B_BTA_MEM; plat.h plat_bta_mem): an app
+                             whose arena gets them back while Bluetooth audio is off. Default "static"
+  bt_audio_sim = true        with bt_audio: the host simulator and the browser emulator built with FM1B_BT_AUDIO, on
+                             fm1-base's stand-in for plat_bta_* (the script's "bta add NAME"); off by default, so an
+                             app keeps its own stand-in there (without FM1B_BT_AUDIO)
+  usb_audio_in = true        the FM-1 recordable over USB (FM1B_UAC; the default: true)
+  usb_audio_out = true       a computer plays through the FM-1 over USB (FM1B_UAC_OUT; the default: true)
+  usb_audio_channels = 10    the USB audio input's channels, 4, 6, 8 or 10 (the default 2: the master alone): the master on 1 and
+                             2, the app's own on 3..N (FM1B_UAC_CH: plat_usb_ch in plat.h; felucca-bsp FELUCCA_UAC_CH).
+                             44.1 kHz only; the ring takes 2 N bytes a frame (768 frames with FM1B_UAC_DEEP: 15 KB at 10)
+  usb_audio_first = true     the USB audio streaming interfaces listed first in the audio control collection
+                             (felucca-bsp FELUCCA_UAC_AS_FIRST, from Felucca 1.5.1): macOS then shows the FM-1 as an audio
+                             device beside its MIDI; bcdDevice +0.08 (a changed device to the computer). Not enough
+                             for macOS 13-15 (fm1-loom#7, Felucca #67): usb_midi_last is; with it this changes nothing
+  usb_midi_last = false      the USB MIDI interface after the audio streaming ones (felucca-bsp FELUCCA_UAC_MIDI_LAST;
+                             the default: true, with usb_audio_in): audio control, audio in, audio out, MIDI, and the
+                             audio control collection in that order. macOS 13-15 show no USB audio device while MIDI is
+                             interface 1, between audio control and audio streaming (bisected by darosh on macOS 15.8.1);
+                             bcdDevice +0.80. false: the order of fm1-base before 2026-10-31 (MIDI interface 1).
+                             2: MIDI left out of the collection too (a test build: no USB MIDI on Linux)
+  usb_iad = true             without the USB console, an interface association descriptor over the audio function, the
+                             device then misc / IAD (felucca-bsp FELUCCA_UAC_IAD; the default: false); bcdDevice +2.00
+  usb_console = true         a USB serial console beside USB MIDI (FM1B_CDC: felucca-bsp's CDC-ACM function, device/
+                             console.c): the app's text over plat_console_* (plat.h); FM1B_CDC=0 / 1 in the
+                             environment over it
+  midi_stamp = true          MIDI in from USB and the TRS jack stamped where it lands (FM1B_MIDI_STAMP: felucca-bsp's
+                             FELUCCA_MIDI_STAMP, usb_midi_peek and midi_uart.c's uart_midi_peek from TIMER5's 10 kHz
+                             tick, the render's ticks too): plat_midi_in_t24 within 0.05 ms of the arrival (half a
+                             TIMER5 tick: input_hz) instead of when the app read it; off by default; FM1B_MIDI_STAMP=0 /
+                             1 in the environment over it
+  crash_history = true       the crash records kept in flash across power-offs (FM1B_CRASHLOG: device/crashlog.c, the
+                             update's staging area's 0xE2000..0xE3FFF, which an install erases; read with F0 7D 4C 48 F7,
+                             tools/fm1_remote.py crashes), and each stack's room at a crash (stacks.c: plat_stack_left;
+                             the stacks painted at every start); off by default
+  debug_stats = true         and the debug stats (FM1B_DBGSTATS: device/dbgstats.c, a snapshot every 5 minutes while the
+                             app has plat_stats_enable on, and one at each crash, in the staging's last sector
+                             0xE4000..0xE4EFF; F0 7D 4C 53 F7, fm1_remote.py stats); with the crash history
+  usb_host = true            the USB port as a MIDI host when the app asks (FM1B_USB_HOST: felucca-bsp's
+                             FELUCCA_USB_HOST, docs/USB_HOST.md; plat_usb_host in plat.h): a USB-MIDI controller or
+                             synth, directly or behind one powered hub (the FM-1 gives no power). Boot is a device
+  mirror = true              the screen and panel mirrored over USB (FM1B_MIRROR: device/mirror.c; web/mirror/,
+                             tools/fm1_mirror.py), the panel played from the host; FM1B_MIRROR=1 in the environment
+                             builds it in whatever fm1.toml says (an app's demo build), FM1B_POOL_SPARE=N the
+                             spare the build insists on (8192 B of the pool; of the SRAM with ram_layout =
+                             "packed"; 2048 B of the pool with WiFi; a demo build may spend it)
+  pool_spare = 2048          the spare this app's builds insist on (8192 B, of the SRAM with ram_layout = "packed": the
+                             margin for what comes next; an app that spent it on purpose says how much it keeps)
+  msc = true                 disk mode: the FM-1 as a USB drive of the app's blocks (FM1B_MSC: device/msc.c, plat_disk_* in
+                             plat.h; felucca-bsp usb.c FELUCCA_MSC), no USB MIDI or audio meanwhile
+  lcd_panel = true           the M-VAVE panel's own ST7789V setup after the reset (FM1B_LCD_PANEL: porch, gate voltages, VCOM
+                             0x18, supplies, 60 Hz, gammas; device/lcd.c LCD_SEQ). Off: the init is byte-identical
+  backup = true              backup and restore of the app's saved objects over USB (FM1B_BACKUP: device/backup.c;
+                             tools/fm1_backup.py); app.h gives APP_BACKUP_OBJS, _MAGIC, _VERSION and the app_backup_* hooks
+  resources = "FILE"         the resource region (FM1B_RES: device/res.c, plat_res in plat.h; with backup): FILE (relative
+                             to APP_DIR, {gen} the generated headers' directory: an app's gen step may make it) kept out
+                             of the image in app.h's APP_RES_BASE (a number), APP_RES_SECTORS. The package carries it and
+                             the update loader writes it after the app, from any host; build/NAME-res.bin beside the
+                             package is for the host's own write (tools/fm1_resources.py, fm1_install.py and the
+                             installer page: a region there already answers at once); the host and web builds have it
+                             compiled in. resources_what (and
+                             resources_what_ja): what it holds, in the installer's words ("the 909 cymbals")
+  cpu2 = true                the second core (FM1B_CPU2: device/cpu2.c, plat_cpu2_* in plat.h, on felucca-bsp's
+                             chip/fm1_cpu1.*): a worker for a part of the render. A failure of it (a misread, a
+                             fault, a late job) restarts the FM-1, the reason in the crash record (Melodee's releases)
+  cpu2_fallback = true       instead, one core after a failure, until power-off (FM1_CPU1_FALLBACK); FM1B_BUILD, a
+                             hash of the sources, lifts that bar for a new build
+  cpu2_stack = 4096          its jobs' stack, bytes (FM1_CPU1_USTACK_BYTES: default 2816, the lowest 256 a guard the
+                             core's stack limit traps in), a multiple of 8, 1024..16384: an app whose jobs go deeper
+                             (plat_cpu2_stack reads how deep they went)
+  cache_ram_ways = 2         2, 4 or 7 of the data cache's 8 ways of 4 KiB used as RAM at 0x01F28000 (FM1B_CACHE_RAM:
+                             felucca-bsp's chip/fm1_cache_ram.h, plat_cache_ram in plat.h): set and tested at the start,
+                             before anything uses them; a failed test puts the cache back and gives 0 bytes. The ways
+                             kept are the flash's data cache: fewer of them make big flash reads slower (7 as RAM: 57x
+                             over 16 KiB on an FM-1; 2 in daily use there). The host: a buffer of that size stands in.
+                             An app's own objects in section .cache_ram come first (the build checks they fit)
+  ram_layout = "packed"      one SRAM budget (device/app_packed.ld): the RAM code, .data/.bss and the pool packed from
+```
+</details></tool-use>
+
+_**Agent - sidechain (claude-opus-5-5 2026-11-18 10:16:00Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Find fm1.toml keys read by build.py
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/third_party/fm1-base && grep -n "cfg\.get\|cfg\[\|conf\.get\|toml\.get\|\.get(\"" tools/build.py | head -150`
+
+```text
+301:DOCKER_IMAGE = os.environ.get("JIELI_DOCKER_IMAGE", "debian:bookworm-slim")
+361:    tc = os.environ.get("JIELI_TOOLCHAIN")
+370:    return os.environ.get("JIELI_DOCKER", "0" if native else "1") == "1"
+425:    with ThreadPoolExecutor(min(len(cmds), int(os.environ.get("FM1B_JOBS", "4")))) as ex:
+434:              [tools / "gen_words.py", APP / CONF.get("words", "words.tsv"), APP / "web" / "words", GEN / "ann_words.h"]]:
+435:        env = {**os.environ, "FM1_FONT_FULL": " ".join(CONF.get("font_full", [])),
+436:               "FM1_FONT_TRIM": "1" if CONF.get("font_trim") else "",
+437:               "FM1_FONT_PACK": "1" if CONF.get("font_pack") else ""}
+443:    for line in CONF.get("gen", []):          # the app's own generators: a script (relative to APP_DIR) and its arguments
+450:    if CONF.get("resources"):
+488:    if not CONF.get("backup"):
+624:    if BLE and CONF.get("ble_trim"):
+625:        for d in (BLE_CONFIG, BLE_CONFIG_NO_SM if CONF.get("ble_no_pairing") else {}):
+643:    pick = os.environ.get("FM1B_STUBS")           # (a bisection: only these members' stubs, e.g. "ll_scan,gatt_client")
+696:    return bool(BLE and OWN and CONF.get("bt_audio") and CONF.get("bt_audio_sim"))
+701:    v = CONF.get("bt_audio_mem", "static")
+704:    return ["-DFM1B_BTA_MEM=1"] if v == "app" and CONF.get("bt_audio") else []
+711:    sdk = Path(os.environ.get("AC79_SDK", Path.home() / "fw-AC79_AIoT_SDK"))
+737:    if CONF.get("ble_stack_kb"):                  # the Bluetooth tasks' stacks, KB each (default 8)
+739:    if CONF.get("ble_heap_kb") and not WIFI:      # its heap, KB (default 24, in RAM)
+750:    if BLE and CONF.get("ble_central"):
+780:        app_inc = inc(APP, SRC / "include", GEN, *(APP / d for d in CONF.get("include", []) + CONF.get("device_include", [])
+781:                                                     + CONF.get("net_include", [])))
+782:        for u in CONF.get("net", []):            # the app's network code: as the SDK builds code that talks lwIP
+785:                units.append(("cc", *BLE_CF, *LWIP_CF, *CONF.get("net_cflags", []), *lwip_inc, *app_inc, "-c", f,
+789:    if BLE and CONF.get("ble_trim") and CONF.get("ble_central"):
+791:    trimmed = ble_trim(dst) if BLE and CONF.get("ble_trim") else {}
+800:    v = os.environ.get("FM1B_CACHE_RAM")
+801:    n = int(v) if v is not None and v.isdigit() else CONF.get("cache_ram_ways", 0)
+811:    n = CONF.get("cpu2_stack")
+821:                                 *(APP / d for d in CONF.get("include", []) + CONF.get("device_include", [])))]
+824:        if CONF.get("ble_central"):
+826:            if CONF.get("ble_central") == 3:      # the central without pairing (bt/ble/ble_cfg.h BLE_CENTRAL 3)
+828:        if CONF.get("bt_audio"):                   # Bluetooth audio out (A2DP source, bt/br)
+830:            if CONF.get("bt_log"):                 # its step-by-step lines on the radio's log (fm1_remote.py log)
+832:        if CONF.get("ble_midi_time"):              # BLE MIDI in by the sender's time (plat_midi_in_t24), transport not held
+834:        if CONF.get("ble_pairing"):                # pairing and an encrypted link (LE legacy, Just Works; the bond kept)
+836:        if CONF.get("ble_diag") is False:          # the link layer's diagnostics left out (bt/ble/ble_diag.h)
+844:        if CONF.get("ble_central"):
+852:    if CONF.get("usb_audio_first"):
+854:    midi_last = CONF.get("usb_midi_last", True)   # (the bsp leaves it out without the USB audio input)
+858:    if CONF.get("usb_iad"):
+860:    if CONF.get("usb_console") and "FM1B_CDC" not in os.environ:
+862:    if CONF.get("crash_history") or CONF.get("debug_stats"):
+864:    if CONF.get("debug_stats"):
+866:    if CONF.get("midi_stamp") and "FM1B_MIDI_STAMP" not in os.environ:
+879:    if CONF.get("audio_aside") or CONF.get("audio_ahead"):   # each half rendered aside, copied in while the DMA's half is free
+881:    if CONF.get("audio_ahead"):                  # and a block ahead
+883:    clk = CONF.get("cpu_clock", 360)
+901:    unity_opt = CONF.get("unity_opt", "s")        # the unity build's level: -Os, or -Oz (the o2 units stay -O2)
+905:    ir = CONF.get("ir_pass")                      # the app's pass over the IR (see the top)
+915:    for a in CONF.get("asm", []):                 # the app's own assembly units
+920:    o2_more = [*CONF.get("o2_cflags", []),
+921:               *[a for h in CONF.get("o2_include", []) for a in ("-include", str((APP / h).resolve().relative_to(ROOT)))]]
+923:    for u in CONF.get("o2", []):
+947:        if os.environ.get("FM1B_OPT_IR") == "1" or CONF.get("stack_check"):   # each unit's IR as its code is made from it (the optimiser's
+977:    if CONF.get("boot_pack"):                     # boot_pack = true: .ram_text and .data stored LZMA-packed from _rt_load
+1013:    v = CONF.get("ram_layout", "fixed")
+1062:    bounds = {k: int(v) for k, v in (b.split("=") for b in CONF.get("stack_bounds", []))}
+1101:    found, fn, body, skip = [], "", [], set(CONF.get("mul64_check_skip", [])) | {"vsnprintf"}
+1156:    if CONF.get("stack_check"):
+1160:    ar_errors, ar_notes = ramcode.check(syms, dis, CONF.get("ram_code_allow", []))
+1164:    for val in romref.rom_refs(dis, set(CONF.get("rom_check_skip", []))):   # rom_check_skip: a vendored function whose
+1182:    if CONF.get("ble") and not BLE:
+1204:    if isinstance(CONF.get("pool_spare"), int) and not isinstance(CONF.get("pool_spare"), bool):   # an app that has spent the margin knowingly (fm1.toml)
+1212:    if os.environ.get("FM1B_POOL_SPARE", "").isdigit():   # an app's own build for itself (a demo build with mirror)
+1269:    skip = CONF.get("mmio_skip", [])
+1272:               and not any(str(f.relative_to(APP)).startswith(v) for v in CONF.get("vendored", []))]]
+1291:    return [f for u in CONF.get("o2", []) for f in (sorted(APP.glob(u)) if any(ch in u for ch in "*?[") else [APP / u])]
+1297:    extra = [*CONF.get("o2_cflags", []), *[a for h in CONF.get("o2_include", []) for a in ("-include", str(APP / h))]]
+1317:    files = [f for u in CONF.get("web", []) for f in (sorted(APP.glob(u)) if any(ch in u for ch in "*?[") else [APP / u])]
+1365:    hz = CONF.get("input_hz", 10000)
+1397:    n = CONF.get("usb_audio_channels", 2)
+1400:    if n > 2 and CONF.get("usb_audio_in") is False:
+1411:    inc_dirs = [f"-I{d}" for d in (SRC / "device", SRC / "include", SRC / "lib", APP, GEN, *(APP / d for d in CONF.get("include", [])))]
+1412:    o2_objs = o2_objects(os.environ.get("CC", "cc"), ["-O2", "-ffp-contract=off", "-std=c99", "-w", "-DPLAT_HOST", *opt_flags(), *inc_dirs],
+1414:    cmd = [os.environ.get("CC", "cc"), "-O2", "-ffp-contract=off", "-std=c99", "-Wall", "-Wextra",
+1415:           "-Wno-unused-function", "-Wno-unused-parameter", "-DPLAT_HOST", *opt_flags(), f"-DFM1B_BUILD={build_id():#010x}u", *["-DFM1B_BLE=1"] * BLE, *["-DFM1B_BLE_CENTRAL=1"] * (BLE and bool(CONF.get("ble_central"))), *["-DFM1B_BT_AUDIO=1"] * bta_sim(), *(bta_mem_flags() if bta_sim() else []), *["-DFM1B_WIFI=1"] * WIFI,
+1416:           *(f"-I{d}" for d in (SRC / "device", SRC / "include", SRC / "lib", APP, GEN, *(APP / d for d in CONF.get("include", [])))),
+1446:    env = os.environ.get("FM1B_EMU")
+1450:        asked = list(CONF.get("emu", []))
+1536:    web_inc = [f"-I{d}" for d in (SRC / "host", SRC / "device", SRC / "include", SRC / "lib", APP, GEN, *(APP / d for d in CONF.get("include", [])))]
+1537:    wf = CONF.get("web_cflags", [])
+1544:           "-Wno-unused-variable", "-DPLAT_HOST", "-DPLAT_WEB", *opt_flags(), *(f"-DFM1B_EMU_{p.upper()}=1" for p in parts), *["-DFM1B_BLE=1"] * BLE, *["-DFM1B_BLE_CENTRAL=1"] * (BLE and bool(CONF.get("ble_central"))), *["-DFM1B_BT_AUDIO=1"] * bta_sim(), *(bta_mem_flags() if bta_sim() else []), *["-DFM1B_WIFI=1"] * WIFI, *(f'-DAPP_VERSION="{VERSION}"',) * bool(VERSION),
+1545:           *(f"-I{d}" for d in (SRC / "host", SRC / "device", SRC / "include", SRC / "lib", APP, GEN, *(APP / d for d in CONF.get("include", [])))),
+1548:           *[str(f) for u in CONF.get("web_link", []) for f in (sorted(APP.glob(u)) if any(ch in u for ch in "*?[")
+1558:    page = page.replace("{{NAME}}", CONF.get("name", NAME)).replace("{{ID}}", NAME)
+1566:    reader = Path(os.environ.get("FM1_READER", found[0] if found else SRC.parent / "fm1-reader" / "web"))
+1606:                    CONF.get("name", NAME))
+1609:    url = CONF.get("repo") or re.sub(r"^git@github\.com:", "https://github.com/", git("remote", "get-url", "origin"))
+1615:    authors = CONF.get("authors") or ([CONF["author"]] if CONF.get("author") else None)
+1617:    mem = int(CONF.get("rfm1_memory_mib", 8))
+1624:    elif CONF.get("credits"):
+1629:    licence = CONF.get("licence", "MPL-2.0")
+1652:    inc = [f"-I{d}" for d in (SRC / "host", SRC / "device", SRC / "include", SRC / "lib", APP, GEN, *(APP / d for d in CONF.get("include", [])))]
+1654:            *["-DFM1B_BLE_CENTRAL=1"] * (BLE and bool(CONF.get("ble_central"))), *["-DFM1B_WIFI=1"] * WIFI,
+1699:    NAME = CONF.get("name", APP.name).lower()
+1700:    BLE = bool(CONF.get("ble")) and not a.no_ble
+1701:    OWN = BLE and CONF.get("ble_stack", "jieli") == "own"
+1702:    if CONF.get("ble_stack", "jieli") not in ("jieli", "own"):
+1704:    WIFI = bool(CONF.get("wifi"))
+1705:    CPU2 = (bool(CONF.get("cpu2")) and os.environ.get("FM1B_CPU2") != "0") or os.environ.get("FM1B_CPU2") == "1"
+1708:    STEM = NAME + ("-usb" if CONF.get("ble") and not BLE else "")
+1712:    prefix = CONF.get("id_prefix", "FM-1_0")
+1731:    words = firmware_json.words_published(APP / CONF.get("words", "words.tsv"))
+1735:    for f in firmware_json.targets(APP, no_ble=bool(CONF.get("ble")) and not BLE):
+1764:    region = res_file(res_payload()) if CONF.get("resources") else None
+```
+</details></tool-use>
+
+_**Agent - sidechain (claude-opus-5-5 2026-11-18 10:16:02Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Read plat.h key sections
+
+`sed -n 20,60p third_party/fm1-base/include/plat.h | cat -n | sed 's/^/+19 /'; echo ----; awk 'NR>=325 && NR<=345' third_party/fm1-base/include/plat.h; echo ----; awk 'NR>=440 && NR<=560' third_party/fm1-base/include/plat.h`
+
+```text
++19      1	/* PLAT_RAM_CODE: a function that runs from RAM (section .app_ram, copied at boot with .ram_text, at the start of
++19      2	 * the RAMTEXT region they share: 32 KiB, 24 KiB with WiFi; with fm1.toml ram_layout = "packed", device/app_packed.ld,
++19      3	 * at the start of the packed SRAM, as big as its one budget lets it), out of the way
++19      4	 * of the XIP cache's misses: an audio path. It may call
++19      5	 * only RAM code (other PLAT_RAM_CODE functions, felucca-bsp's RAM functions) and nothing through a pointer; the build
++19      6	 * checks it over the disassembly, to any depth (tools/ramcode.py; fm1.toml ram_code_allow names the exceptions an app
++19      7	 * vouches for). Not for code that runs with the flash off: it may read constants in the flash. XIP code it may not
++19      8	 * call: the compiler's own calls (memcpy for a struct copy, a 64-bit divide), and a static inline helper the compiler
++19      9	 * keeps out of line (at -Os it often does: fastmath.h's fm_exp2f), whose one copy is in XIP; a helper RAM code uses
++19     10	 * is always_inline, or PLAT_RAM_CODE itself.
++19     11	 * PLAT_FAR(fn): fn through a pointer the compiler cannot turn back into a direct call. RAM code and XIP code are
++19     12	 * mostly farther apart than a direct call reaches (+-4 MiB), so XIP code calls RAM code this way (the linker refuses
++19     13	 * a direct call that does not reach: "relocation truncated to fit"); a call from RAM code into XIP this way is one
++19     14	 * the check refuses, unless allowed. The host: plain calls. */
++19     15	#ifdef PLAT_HOST
++19     16	#define PLAT_RAM_CODE
++19     17	#define PLAT_FAR(fn) (&(fn))
++19     18	#else
++19     19	#define PLAT_RAM_CODE __attribute__((section(".app_ram")))
++19     20	static inline __attribute__((always_inline)) void *plat_far_ptr(void *fn)
++19     21	{
++19     22	    void *volatile held = fn;           /* read back from memory: the compiler no longer knows the target */
++19     23	    return held;
++19     24	}
++19     25	#define PLAT_FAR(fn) ((__typeof__(&(fn)))plat_far_ptr((void *)&(fn)))
++19     26	#endif
++19     27	
++19     28	/* panel controls, by printed label (Felucca's panel.c map turns these into matrix ids; Felucca
++19     29	 * calls the second button SCL, the panel prints SEL) */
++19     30	enum { B_FX, B_SEL, B_ENV, B_LFO, B_EDIT, B_GLO, B_HOME, B_SAVE, B_ARP, B_SEQ, B_PLAY, B_REC,
++19     31	       B_OCTDN, B_OCTUP, NB };
++19     32	enum { EN_SELECT, EN_ALGO, EN_PRESET, EN_K1, EN_K2, EN_K3, EN_K4, NE };
++19     33	
++19     34	#define NKEYS 27                       /* F3 .. G5 */
++19     35	/* key k by colour: the 16 white keys and the 11 black keys, left to right (initialisers for a uint8_t array) */
++19     36	#define PLAT_WHITE_KEYS {0, 2, 4, 6, 7, 9, 11, 12, 14, 16, 18, 19, 21, 23, 24, 26}
++19     37	#define PLAT_BLACK_KEYS {1, 3, 5, 8, 10, 13, 15, 17, 20, 22, 25}
++19     38	
++19     39	static inline int32_t clamp(int32_t v, int32_t lo, int32_t hi) { return v < lo ? lo : v > hi ? hi : v; }
++19     40	
++19     41	uint32_t plat_ms(void);
+----
+int plat_wifi_kept(const char *ssid);  /* the network is kept (its password known): plat_wifi_join(ssid, 0) joins it */
+void plat_wifi_rx(uint32_t *frames, int *rssi);   /* reception: frames received in the last second (anyone's), their
+                                                   * average signal */
+uint32_t plat_wifi_scans(void);        /* scans done since the start: a change means plat_wifi_found has new results */
+int plat_net_task(void (*fn)(void *), void *arg, const char *name);   /* a task for the app's network code (8 KiB
+                                                                        * of stack); 0 = made */
+
+/* the 1 kHz tick (app_tick, an app with APP_TICK) runs in the timer interrupt: the main loop locks it out around
+ * what they share. It nests, and plat_unlock takes what its plat_lock returned: the outermost unlock switches the
+ * interrupts back on only if they were on at its lock, so a lock is safe inside an interrupt (app_render, app_tick)
+ * or with them already off: they stay off */
+uint32_t plat_lock(void);
+void plat_unlock(uint32_t f);
+void plat_yield(void);
+/* the FM-1 restarts, on purpose (an app's own restore done, a session that starts from a clean boot): the sound
+ * stopped, USB let go (the computer sees the cable out and in), not counted as a failed start (no safe mode), the
+ * crash record and .noinit kept. Main loop; it does not return (the host simulator: the restart at the end of the
+ * millisecond, a "reboot"). Built for an app whose app.h defines APP_RESTART */
+void plat_restart(void);
+void plat_log(const char *line);
+/* the flash's data area, 0x97000..0xDFFFF, for an app's own big data (a table it builds, samples): its store objects
+----
+ * speaker and headphones only; 0, both at MASTER (the default) */
+void plat_usb_audio_full(int on);
+/* the computer's audio (FM1B_UAC_OUT, usb_audio_out: the computer plays through the FM-1): the level it is mixed in
+ * at, 0 muted .. 4096 as sent (the default; above is 4096), times MASTER. Muted, the FM-1 still takes the stream, so
+ * the computer sees no change and turning it up again starts in step. The USB recording (usb_audio_in) is taken
+ * before the computer's audio is mixed in, whatever this is: recording the FM-1 never records the computer's own
+ * playback (device/uac_mix.h). Without usb_audio_out, nothing */
+void plat_usb_play_gain(uint32_t q12);
+/* the app's own channels of the USB audio input (fm1.toml usb_audio_channels = N, 4..10, even: FM1B_UAC_CH): channels 3..N,
+ * PLAT_USB_CH of them, beside the master on 1 and 2, as 16-bit samples (32767: the master's full scale, the render's
+ * 1 << 22 at 4096). In app_render, the frame off frames into the block being rendered: its channels at p[0] ..
+ * p[PLAT_USB_CH - 1], the next frame's PLAT_USB_CH_STRIDE on, for *run frames (where the ring wraps: ask again from
+ * there). They start at 0 each block; the app adds into them, on either core (one writer a sample at a time), and the
+ * platform sends them with the master's frames once app_render returns. NULL (*run 0) when no computer records (the
+ * app then skips the work), and always with 2 channels; the host: a block's buffer, always taken */
+#ifndef FM1B_UAC_CH
+#define FM1B_UAC_CH 2
+#endif
+#define PLAT_USB_CH (FM1B_UAC_CH - 2)
+#define PLAT_USB_CH_STRIDE FM1B_UAC_CH
+int16_t *plat_usb_ch(uint32_t off, uint32_t *run);
+
+/* the keys' velocity and pressure (an app with APP_KEY_SENSE): on, the scan reads the keys on the analog rows and
+ * hands each reading to the app (app_key_sample, app_key_probe); off by default */
+void plat_sense(int on);
+uint32_t plat_analog_mask(void);       /* bit k: key k is on an analog row (PA7 / PA8; the top row is probed) */
+
+/* 16 bytes unique to this FM-1 (its flash part's factory ID; the same across updates, firmwares and a wiped store):
+ * for an address that must not change (the WiFi MAC, the Bluetooth name); 0 = unknown (and in a build without a radio) */
+const uint8_t *plat_chip_uid(void);
+
+/* persistent storage (Felucca storage.c objects: A/B sectors, CRC, torn-write safe) */
+int plat_store_load(uint32_t obj, void *dst, uint32_t max);   /* bytes loaded, < 0 = none / bad (an empty object is
+                                                               * none: a restore writes one for an absent object) */
+int plat_store_head(uint32_t obj, void *dst, uint32_t n);     /* its first n bytes (a header): n, < 0 = none / bad /
+                                                               * shorter */
+int plat_store_size(uint32_t obj);                           /* its length in bytes, < 0 = none / bad (an app that
+                                                               * wants it whole or not at all checks it first) */
+int plat_store_save(uint32_t obj, const void *src, uint32_t len);   /* 0 = ok; -8: the pool is full (nothing written) */
+/* an app with a pool (app.h APP_STORE_POOL: storage.c): the sectors free for its pooled objects' next copies (a save
+ * of n objects that finds n keeps every previous copy); -1 no pool */
+int plat_store_room(void);
+#define PLAT_STORE_MAX 3840u           /* bytes per object */
+/* An app may pool some objects (APP_STORE_POOL, APP_STORE_POOL_BASE / _N / _OBJ0 / _OBJN / _OLD: storage.c): those
+ * share sectors instead of a pair each, and APP_STORE_MAP's entries for them are not used. APP_STORE_POOL_EMPTY(obj, p,
+ * n), if the app defines it: true for an old copy that holds nothing worth a sector (a placeholder of the layout
+ * before the pool): the move into the pool drops the object instead (every copy of it erased).
+ * The objects are the app's (app.h): an enum that includes OBJ_PANEL (the panel calibration, the platform's) and
+ * ends with OBJ_NOBJ, and APP_STORE_MAP, each object's flash offset: two 4 KiB sectors (A/B) from there, inside the
+ * data area (0x97000..0xDFFFF) or Felucca's settings sector pair at 0xFC000. An object's number is written in its
+ * record, so an app keeps its numbering from one release to the next. */
+
+/* audio load in % of the render budget, and xruns since boot (device: from the ISR) */
+uint32_t plat_cpu_pct(void);
+uint32_t plat_cpu_khz(void);           /* the CPU's clock, kHz: 360000 when its registers hold the stock set-up (M-VAVE's
+                                        * 360 MHz, which the start sets whichever boot loader ran: fm1_clock.h), 0 when
+                                        * not (unknown: the start could not set it) and on the host. For an app that
+                                        * turns the render's microseconds into instructions (a CPU guard's cost model);
+                                        * built for an app with APP_CPU_KHZ (below) */
+uint32_t plat_xruns(void);
+
+/* a free-running count of PLAT_TICKS_PER_US ticks a microsecond, for timing spans shorter than plat_ms can: a part of
+ * the render, say. Device: TIMER4, from the 24 MHz crystal (one register read); host: its monotonic clock, at the same
+ * rate. No lock and no state, so the audio interrupt and the tick may call it too. It wraps every 2^32 ticks (179 s):
+ * a span is the unsigned difference of two reads */
+#define PLAT_TICKS_PER_US 24u
+uint32_t plat_ticks24(void);
+
+/* Disk mode (fm1.toml msc = true: FM1B_MSC; device/msc.c on felucca-bsp's FELUCCA_MSC): the FM-1 shows the computer a
+ * USB drive, the app's blocks, until it goes back to itself; meanwhile it has no USB MIDI or audio. The app keeps the
+ * blocks (plat_disk_t) and calls plat_disk_poll from its main loop (APP_LOOP: every pass) while on. Host: nothing
+ * comes (PLAT_DISK_WAITING) */
+typedef struct {
+    uint32_t blocks;                                   /* 512-byte blocks */
+    const uint8_t *(*read)(uint32_t lba);              /* the block (512 bytes, kept until the next call); 0: zeros */
+    int (*write)(uint32_t lba, const uint8_t *b);      /* 0 = written (it may hold it until flush) */
+    void (*flush)(void);                               /* what is held, written (the computer synced or ejected) */
+    const char *vendor, *product;                      /* what the computer calls it: 8 and 16 characters at most */
+} plat_disk_t;
+enum { PLAT_DISK_OFF, PLAT_DISK_WAITING, PLAT_DISK_MOUNTED, PLAT_DISK_EJECTED };
+void plat_disk_mode(const plat_disk_t *d);             /* d: the FM-1 drops off USB and comes back as this disk; 0:
+                                                        * flushed, then back as itself */
+int plat_disk_poll(void);                              /* main loop: serve the computer -> PLAT_DISK_* (EJECTED: the
+                                                        * computer let it go) */
+uint32_t plat_disk_idle_ms(void);                      /* since the computer's last command */
+
+/* code loaded at run time (fm1-ripple's currents: plug-ins copied from its disk into the pool and run there): the
+ * guard's RAM code window (felucca-bsp fm1_guard.h, normally .ram_text alone) widened from .ram_text up to end, so
+ * code there may run. Main loop, after the guards are on (app_init or later); host: nothing */
+void plat_code_window(const void *end);
+
+/* The second core (fm1.toml cpu2 = true: FM1B_CPU2; felucca-bsp's chip/fm1_cpu1.h, Melodee's): a worker for a part of
+ * the render. Start it in app_init (the one time it may start: at power-on, before the audio and the timers); the
+ * render hands it a job, does its own share, then waits for it. One job at a time. A failure (it misread a job, it
+ * faulted, a job was not back in 8 ms, it did not answer at its start) restarts the FM-1, the reason in the crash
+ * record (vec 0x101..0x105: gave_up's numbers below); two failed starts are safe mode. With cpu2_fallback = true
+ * instead: it is given up (held; the render does the work itself) and barred, one core at every start until
+ * power-off or a new build (FM1B_BUILD), and one core after a failed start. Host: a job runs at once, in order (an app
+ * with its own simulation defines APP_HOST_CPU2 and has them all). */
+int plat_cpu2_set(int on);             /* on 1, in app_init: 0 = it runs; -1 = one core (not now, barred, or it did not
+                                        * answer). On 0: held (from the main loop: no job outstanding) */
+int plat_cpu2_on(void);                /* it takes jobs */
+int plat_cpu2_run(void (*fn)(uint32_t), uint32_t arg);   /* render: 1 = it has fn(arg); 0 = do it yourself */
+int plat_cpu2_wait(void);              /* render: 0 = done; -1 = it was given up and the job dropped: do it yourself
+                                        * (cpu2_fallback only) */
+void plat_cpu2_sync(void);             /* a barrier between the cores' reads and writes (a job's own sharing) */
+int plat_cpu2_busy(void);              /* 1 = the job handed over is not done yet (no waiting) */
+int plat_cpu2_gave_up(void);           /* why it is off: 0 no, 1 it misread a job, 2 one was late, 3 barred, 4 it
+                                        * faulted, 5 it did not answer at its start */
+uint32_t plat_cpu2_bad(void);          /* the jobs it misread */
+int plat_cpu2_barred(void);            /* 1: one core until power-off (given up, or the first core crashed beside it) */
+uint32_t plat_cpu2_stack(void);        /* how deep its stack (2816 B; fm1.toml cpu2_stack) has gone, in bytes; 0: not
+                                       * marked this start (it never started, or was barred) */
+/* which core runs the caller: 0 the first, 1 the second (a job plat_cpu2_run handed it). For state a job keeps per core
+ * (a scratch buffer each core renders into). No lock, no state: any core, any context; from code that runs from RAM
+ * through a pointer, as any flash function. Device: the core's number register (felucca-bsp's fm1_cnum); host: 1
+ * while the simulated second core runs a job (an app with APP_HOST_CPU2 has its own) */
+uint32_t plat_core(void);
+/* Cache RAM (fm1.toml cache_ram_ways = 2, 4 or 7: FM1B_CACHE_RAM; felucca-bsp's chip/fm1_cache_ram.h): that many of the
+ * data cache's 8 ways of 4 KiB used as RAM at 0x01F28000, set and tested at the start before anything else runs; a
+ * failed test puts the cache back and gives 0 bytes. Objects the app places there itself (section .cache_ram, NOLOAD:
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 10:16:05Z)**_
+
+兩個 agent 在跑，我先把 plan 檔改成 v0.1 的草稿。這是新的任務，所以直接覆蓋上一份 plan。
+
+_**Agent - sidechain (claude-opus-5-5 2026-11-18 10:16:05Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Read remaining build.py header documentation
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/third_party/fm1-base && sed -n 140,300p tools/build.py`
+
+```text
+  ram_layout = "packed"      one SRAM budget (device/app_packed.ld): the RAM code, .data/.bss and the pool packed from
+                             the SRAM's bottom up to the stacks, 8 KiB kept spare, the rest free above _pool_end (the
+                             default, "fixed", is device/app.ld: RAM code 32 KiB, .data/.bss 96 KiB, pool 336 KiB, each
+                             region checked on its own). Not with wifi_stack = "jieli" (app_wifi.ld's fixed map)
+  main_stack = 9216          the main loop's stack (crt0's sp), bytes above its 256-byte guard band, a multiple of 256,
+  irq_stack = 6400           2048..24320 (default 24320); the interrupts' (ssp), the same, 2048..7936 (default 7936):
+                             device/app_packed.ld's SRAM ends that much lower or higher (its free RAM, an app's arena),
+                             the reset-kept record and the stacks' tops stay. Only with ram_layout = "packed"
+  stack_check = true         the stacks' static worst (tools/stack_depth.py: the deepest call path's frames, the
+                             interrupts nested at their worst, the fault path on top) checked against those: a stack
+                             whose worst is over its size fails the build; one within it but under its margin (25 % or
+                             1 KiB, the larger) is said. Each unit's optimised IR is written beside its code
+                             (OUT/*.opt.ll: the indirect calls' targets, stack_ir.py). stack_bounds: an app's
+                             function that calls itself at most N levels deep (its source's own bound): ["f=N", ..]
+  emu = ["midi", "data"]     the browser emulator's optional parts (--web): web/emu/parts/NAME.js on the page and
+                             NAME_worklet.js in the worklet, each file saying what it does; a part's own needs come
+                             with it; FM1B_EMU_NAME=1 for the C. "resample" (the device's 44.1 kHz to the browser's
+                             rate) is on without asking, where the page takes parts (fm1-base's page and worklet, or
+                             an app's own that load app_worklet.js and call fm1App); "-resample" leaves it out.
+                             FM1B_EMU="midi data" in the environment instead: those parts and no others ("" for
+                             none). Without any, the page, the worklet and app.wasm are what they were
+  xdata2 = true              a fourth plat_data window, PLAT_XDATA2 0xFC000..0xFEFFF (FM1B_XDATA2: plat.h; Felucca's
+                             globals' sectors, for an app that was a Felucca firmware); the store's objects there are
+                             refused to plat_data_erase / plat_data_write
+  headphones = true          the headphone jack read every main-loop pass, debounced (FM1B_HEADPHONES: device/plat_hp.c,
+                             felucca-bsp's boards/fm1/fm1_jack.h, PB5): plat_headphones 1 / 0; without it -1 on the
+                             device, nothing read (the host simulator's script jack in / jack out either way)
+  audio_aside = true         each audio half rendered into a buffer of its own and copied into the DMA's half only
+                             while that half is still free (FM1B_AUDIO_ASIDE, device/audio_commit.c, Henri David's): a
+                             late render leaves the half playing whole instead of tearing it. 2 KiB of RAM; off by default
+  cpu_clock = 396            the CPU at 396 MHz instead of the stock 360 (FM1B_CPU_396: PLL1's multiplier 297, felucca-bsp
+                             fm1_clock_pll1; set after safe mode's choice, so two hung starts fall back to 360; fm1-base
+                             puts the stock clock back before its resets and updates). JieLi's top, not for mass
+                             production: try it on several FM-1s before a release. Off by default (360)
+  audio_ahead = true         audio_aside a block ahead (FM1B_AUDIO_AHEAD): the block rendered last time copied in first,
+                             then the next rendered, so a render may run up to two halves long without a dropout (a
+                             spike at a chord's start); two late in a row drop a half as before. One block (5.8 ms) more
+                             latency; implies audio_aside. Off by default
+  input_hz = 5000            the input scan's rate: keys, buttons, knobs and LEDs, one of the 11 columns a tick
+                             (FM1B_INPUT_HZ: device/unity.c, felucca-bsp's boards/fm1/fm1_input.h FM1_INPUT_HZ, which
+                             derives every count of ticks or frames from it: times stay times). 10000 (the default, as
+                             before), 5000, 2000 or 1000. The scan's GPIO work is ~7.5 % of core 0 at 10000, and goes
+                             with the rate; what it costs (a frame = 11 ticks; core 0 freed estimated, not measured:
+                             the scan's share, and ~1 us for each timer interrupt no longer taken):
+                               rate   frame   key press      release  knob: every step  LEDs (refresh; flicker)    freed
+                               10000  1.1 ms  1.1-2.2 ms     8.8 ms   to ~225 clicks/s  909 Hz                     -
+                                5000  2.2 ms  2.2-4.4 ms     8.8 ms   to ~110 clicks/s  455 Hz; none               ~4 %
+                                2000  5.5 ms  0-5.5 ms (1)   11 ms    to ~45 clicks/s   182 Hz; breath, sweep's    ~6.5 %
+                                                                                        tail, mid level (DIM LO)
+                                1000  11 ms   0-11 ms (1)    22 ms    to ~23 clicks/s   91 Hz; breath, sweep's     ~7 %
+                                                                                        tail, mid level, trails
+                             (1): one closed sample presses (two at 10000 and 5000: a stray one plays nothing). A
+                             knob turned faster than that loses steps (a flick, once moving: about twice it); faster
+                             still, from 3/4 of a click a frame, they can count backwards (felucca-bsp
+                             tests/input_rate_test.c measures each rate). The glow is dimmer below
+                             10000 (~1/50 of lit at 5000, ~1/250 at 1000: its pulse stops where the tick would wait);
+                             the mid level brighter (fm1_input.h). USB is never polled slower: TIMER5 stays at 2 kHz
+                             or more (1000: the scan on every other tick of 2 kHz), so USB MIDI and USB audio work as
+                             at 10000; with usb_audio_channels TIMER5 stays at 10 kHz (the stream serviced every
+                             0.1 ms) and only the scan's work is freed. midi_stamp's stamps are within half a TIMER5
+                             tick (0.1 ms at 5000, 0.25 at 2000 and 1000). Velocity and pressure (lib/touch) read each
+                             key every two frames (4.4 ms at 5000 instead of 2.2): a note's velocity comes that much
+                             later, and the readings were measured at 10000 only. Below 5000 the build warns
+Optional parts: only what an fm1.toml asks for is built in (Bluetooth, USB audio; an app's lib/touch by APP_TOUCH in
+app.h); the build prints what it has.
+  boot_pack = true           .ram_text and .data stored LZMA-packed (tools/boot_pack.py, Melodee's; device/boot_lzma.h): the
+                             boot unpacks them, the decoder's tables in the pool before it is cleared (about 9 KB of
+                             flash back on a large app)
+  ble_stack = "own"          with ble: Optimist's own Bluetooth stack (bt/: Henri David's, docs/bt/BLE-STACK.md;
+                             FM1B_BLE_OWN) instead of JieLi's libraries: nothing of the SDK's linked, no shim
+  ble_pairing = true         with ble_stack = "own": pairing and an encrypted link (LE legacy pairing, Just Works),
+                             the bond kept in OBJ_BLE; without it a pairing is refused (macOS and iOS connect anyway)
+  ble_diag = false           with ble_stack = "own": the link layer's diagnostics left out (bt/ble/ble_diag.h BLE_DIAG 0:
+                             its counters and event rings, ~2.4 KB of RAM, and the radio log's "BT ll" line); kept by default
+  ble_midi_time = true       with ble_stack = "own": Bluetooth MIDI in by the sender's time (FM1B_BLE_MIDI_TIME): each
+                             message's time sent, from its BLE-MIDI timestamp (bt/ble/ble_time.c), for plat_midi_in_t24;
+                             the transport then comes at once instead of held to the sender's time
+  ble = true                 Bluetooth MIDI (FM1B_BLE): ble/ on JieLi's BT libraries, from the AC79 SDK ($AC79_SDK);
+                             --no-ble builds without it (NAME-usb.fwsc), and the build checks nothing of JieLi's is in
+  wifi = true                WiFi (FM1B_WIFI): a station on JieLi's WiFi libraries and the SDK's lwIP (built from its
+                             sources), on the same shim (ble/shim, ble/wifi) with fm1-radio's RAM split (device/
+                             app_wifi.ld). Not with ble (yet)
+  net = ["net/stream.c"]     with wifi: the app's network code (lwIP's sockets), compiled as the SDK builds code that
+                             talks lwIP (its flags and headers), relative to APP_DIR (globs too: "tls/src/**/*.c"); it
+                             calls the platform through plat.h, runs in a task of its own (plat_net_task)
+  net_include = ["tls/inc"]  more include directories for those, relative to APP_DIR
+  net_cflags = ["-DX=0"]     more flags for those
+  gen = ["tools/places.py --out {gen}/places.h"]   the app's generators, run before the build (relative to APP_DIR;
+                             {gen} is the generated headers' directory, on the include path)
+  asm = ["cpu1/entry.S"]     the app's own assembly units (relative to APP_DIR), assembled as felucca-bsp's are; an
+                             app's hardware code outside the BSP (its own second core, say) is the app's to keep
+                             apart (vendored, so the register check leaves it)
+  ir_pass = "tools/size_fns.py"   a pass over the LLVM IR of each unit before its code is made (relative to APP_DIR):
+                             the build compiles unity.c and each o2 unit to IR without the optimiser, runs
+                             `ir_pass IN.ll OUT.ll [UNIT]` (UNIT: an o2 unit's path relative to APP_DIR; none for
+                             unity.c), then compiles OUT.ll at the unit's level (an app marking its cold code
+                             minsize: Melodee's idea). Without changes the round trip makes the same code
+The app's own code that runs from RAM (out of the XIP cache's way: an audio path) goes in section .app_ram (plat.h
+PLAT_RAM_CODE): copied at boot with .ram_text, inside the guard's RAM code window (between _ar_start and _ar_end). It
+may call only RAM code, to any depth, and nothing through a pointer (tools/ramcode.py, over the disassembly). XIP code
+calls it through a pointer (PLAT_FAR: a direct call does not reach); a call from it into XIP, direct or through a
+pointer, the check refuses, unless:
+  ram_code_allow = ["fn"]    the app's RAM functions whose calls out of RAM or through a pointer it vouches for (a cold
+                             path; a pointer that only holds RAM code); printed by every build
+The second core's code that runs from RAM goes in section .c1_text: in .ram_text (copied at boot, inside the guard's
+RAM code window), between _c1_start and _c1_end; the check that RAM code calls nothing in the flash leaves it out
+(core 1 runs only while core 0 waits for it in the audio interrupt, and core 0 turns the flash off only with
+interrupts off).
+The firmware described for firmware hubs (firmware.json, docs/FIRMWARE-JSON.md; tools/firmware_json.py): these keys, and
+the site's (tools/make_site.py). A key left out is left out of the file.
+  tagline = "..."            a line: what the firmware is ("A MIDI controller for the FM-1")
+  repo = "https://..."       its source
+  licence = "MPL-2.0"        its licence, an SPDX expression
+  credits = "..."            a sentence: what it is built from (the installer's footer too)
+  author = "Name"            who made it (else authors, above, joined)
+  description = "..."        one paragraph, at most 600 characters
+  tags = ["synth", "fm"]     what it is, from a fixed list (tools/firmware_json.py TAGS; the build refuses another)
+  install = "https://..."    the page that installs it
+  site = "https://..."       its site
+  title = "..."              the name people see, when it is not usb_manufacturer (Radio's is fm1-radio)
+  screenshot = "docs/img/x.png"  a picture for the hubs' cards: a square PNG, at least 240 x 240, at most 2 MiB,
+                             relative to the repository's root (the parent of an APP_DIR named app), / between
+                             folders, no ".."; the build checks it (a host simulator's screenshot fits as it is)
+The name is title (else usb_manufacturer, else app.h's APP_NAME), the id fm1.toml's name in lower case; the hardware's features
+are the parts this build has (printed as "parts"). A --release build of the firmware refuses without author (or
+authors), licence, tagline, description, tags, install, repo and a screenshot that passes the checks; any other
+build warns and writes the file without them.
+Outputs in APP_DIR/build/: NAME.bin (app), loader/ota.bin (update loader), NAME.fwsc (package), firmware.json
+(firmware-usb.json from --no-ble; every build writes it, --host, --web and --rfm1 too). An app in a firmware's
+repository (APP_DIR named app) also has the repository's firmware.json written, when it changes.
+
+The JieLi toolchain is Linux x86-64 only. JIELI_TOOLCHAIN points at it; on
+macOS (or with JIELI_DOCKER=1) each tool runs in a linux/amd64 container.
+"""
+import argparse
+import functools
+import hashlib
+import os
+import platform
+import re
+import struct
+import subprocess
+import sys
+from concurrent.futures import ThreadPoolExecutor
+from pathlib import Path
+
+SRC = Path(__file__).resolve().parents[1]        # fm1-base
+BSP = SRC / "bsp"                                 # felucca-bsp (git submodule)
+APP = OUT = GEN = LDR = ROOT = None               # set by main() from APP_DIR
+CONF = {}
+LAYOUT = {}                                       # the linked script's MEMORY regions: {name: (origin, length)}
+sys.path.insert(0, str(SRC / "tools"))
+import fm1pkg_make  # noqa: E402
+import boot_pack  # noqa: E402
+import firmware_json  # noqa: E402
+import lz4blk  # noqa: E402
+
+APP_XIP = 0x02000120                # app.bin offset 0 in the XIP map; the SPL jumps here
+APP_SLOT = fm1pkg_make.APP_SLOT
+LOADER_LOAD = 0x01C0A800
+LOADER_NAME = b"usb_hid_ota.bin"    # the file name the SPL looks for
+```
+</details></tool-use>
+
+_**Agent - sidechain (claude-opus-5-5 2026-11-18 10:16:06Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Read plat.h app hooks section
+
+`awk 'NR>=596 && NR<=700' third_party/fm1-base/include/plat.h`
+
+```text
+ * record keeps every stack's room at the crash (F0 7D 4C 48 F7's "stk" line) */
+enum { PLAT_STK_MAIN, PLAT_STK_IRQ, PLAT_STK_C1 };
+int32_t plat_stack_left(int k);
+int32_t plat_stack_least_ever(int k);
+void plat_stats_enable(int on);        /* the snapshots every 5 minutes on (1) or off (0) */
+int plat_stats_on(void);
+void app_stats(uint8_t out[PLAT_STATS_APP]);
+int app_stats_quiet(void);
+
+/* the app's optional hooks (app.h defines the macro when it has the function):
+ *   APP_TICK        void app_tick(void)           1 kHz, in the timer interrupt (a clock, a sequencer)
+ *   APP_BOOT        void app_boot(void)           once, after the platform is up, before app_ui_init (a radio)
+ *   APP_LOOP        void app_loop(void)           every pass of the main loop (a radio's tasks)
+ *   APP_YIELD       void app_yield(void)          from plat_yield, inside long work
+ *   APP_BLE_PEERS   app_ble_scan_report, app_ble_device_keys   the devices one by one (plat_ble_connect_peer, above):
+ *                   each advertising report a scan hears, a pairing's keys
+ *   APP_OVERLOAD    void app_overload(void)       the render took over 90 % of its time (shed voices)
+ *   APP_SPLASH      void app_splash(void)         the first screen at boot, instead of the name
+ *   APP_GAIN(m)     the render's gain from MASTER's position m (0..4096; default the square, m * m >> 12)
+ *   APP_BATTERY_RAW (no function) plat_battery_raw is built (the battery's reading, for an app's own volts)
+ *   APP_CPU_KHZ     (no function) plat_cpu_khz is built (the CPU's clock)
+ *   APP_DIM_LEVELS  (no function) plat_dim_ns is built (the dim lights at any of many brightnesses)
+ *   APP_QUIET       void app_quiet(int32_t *lr, uint32_t n)   the render while the flash must not be read (the
+ *                   radio's first second, FM1B_BLE): keep time without sound (default: silence)
+ *   APP_KEY_SENSE   void app_key_sample(uint32_t key, uint32_t v, uint32_t ticks, int driven) (rows PA7 / PA8),
+ *                   int app_key_drive(uint32_t key) (read it driven), void app_key_probe(uint32_t key, uint32_t v,
+ *                   uint32_t pressed) (the top row), int app_key_led_ok(uint32_t key) (0: its column dark when read);
+ *                   from the scan's interrupt
+ *   APP_SYSEX       int app_sysex(const uint8_t *p, uint32_t n)   a SysEx frame from USB the platform does not take
+ *                   (p: the bytes between F0 and F7); 1 = the app's. Its answers: plat_sysex_send. Main loop
+ *   APP_SYSEX_BYTE  void app_sysex_byte(uint8_t b)   every byte of a SysEx from USB, F0 and F7 too (realtime bytes
+ *                   left out; another status inside ends the frame, unseen here), as it comes: an app's own frames longer
+ *                   than APP_SYSEX's (640 bytes between F0 and F7; a DX7 bank is 4104). In the USB interrupt: keep it short
+ *   APP_USB_CMD     void app_usb_cmd(const uint8_t *d, uint32_t n)   a frame in the update's framing (above). Main loop
+ *   APP_USB_HOST_NAME (no function) plat_usb_host_name is built (the USB host reads the device's product string)
+ *   APP_REDRAW      void app_redraw(void)        draw the whole screen again at the next frame (the mirror lost a part)
+ *   APP_MIRROR_TEST int app_mirror_test(int on)  the mirror's remote asks for a test session (on 1, off 0): 1 done
+ *   APP_CSTART      void app_cstart(void)         first thing at a start, before the RAM is cleared and with nothing
+ *                   set up (registers only, no RAM): an app's own second core that a reset left running, held
+ *                   (fm1-base's own, cpu2 = true, needs none of these)
+ *   APP_BT_FRAMES   const int32_t *app_bt_frames(const int32_t *lr, uint32_t n)   the frames Bluetooth audio takes from
+ *                   the render just made (lr, n frames, 24-bit; 0 = silence): for an app whose own output differs from
+ *                   what Bluetooth should get. Audio interrupt, after each render (Bluetooth audio built). Without it
+ *                   Bluetooth takes the output
+ *   APP_FAULT       void app_fault(const fm1_crash_t *c)   a crash, before the crash screen (c: the record): an app's
+ *                   own second core given up; or the crash is on that core (c->sp on its stacks): it stops there
+ *   APP_LOG         void app_log(void (*line)(const char *t))   the development readout over USB-MIDI (F0 7D 4C 47 F7,
+ *                   "LG"): the app's own lines, each through line (ASCII, 40 characters at most), before its "end".
+ *                   Main loop
+ *
+ * Screen mirroring (fm1.toml mirror = true: FM1B_MIRROR 1, device/mirror.c): the screen and the panel live on a
+ * computer (base/web/mirror/, tools/fm1_mirror.py), and the panel played from it. Nothing for the app to call; an app
+ * with APP_REDRAW gets back what a slow link dropped.
+ *
+ * Backup and restore over USB (fm1.toml backup = true: FM1B_BACKUP 1, device/backup.c; tools/fm1_backup.py): the
+ * app's saved objects, all or nothing. The app's app.h:
+ *   APP_BACKUP_OBJS {OBJ_PROJ, ...}   the objects, in order (not OBJ_PANEL: the calibration is the unit's)
+ *   APP_BACKUP_MAGIC 0x...u           its image's magic (4 ASCII bytes, little-endian), APP_BACKUP_VERSION its format
+ *   APP_BACKUP_WHAT "replaces all songs"   the restore question's second line
+ *   APP_BACKUP_BUF io_buf             optional: the app's own buffer of at least 3840 B (uint8_t name[], not static,
+ *                                     4-aligned) lent to a restore, which then needs none of its own (3840 B of the
+ *                                     pool); a scratch buffer the app fills and empties within a call (a restore runs
+ *                                     with the app's frame stopped and reloads everything after). Never one an
+ *                                     interrupt or the second core uses. A resource transfer (res.c) borrows it too,
+ *                                     and a refused or failed restore leaves it overwritten as well (no
+ *                                     app_backup_restored then: the app's frame starts again from app_ui_init)
+ * and these: int app_backup_playing(void) (1: no restore now, STOP FIRST), void app_backup_flush(void) (what is not
+ * saved yet, saved: a backup starts), void app_backup_hold(int on) (no saving while a backup streams),
+ * void app_backup_restored(void) (everything from the flash again) */
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 10:16:09Z)**_
+
+<tool-use data-tool-type="write" data-tool-name="Write"><details>
+<summary>Tool use: **Write**</summary>
+
+```markdown
+# THEORY v0.1：WHEEL（五度圈 + 和弦辨識）
+
+## Context 背景
+
+樂理核心（`firmware/theory/theory.c`，26,661 個檢查）和設計文件（`docs/dev/theory.md`）已經 commit（`d33b979`、`7731b3d`）。本人決定 v0.1 先做 **WHEEL**：隨身的樂理參考，不打分數。
+
+本人在 fm1-emu 試用了 Keyboard Academy，覺得「效果還可以，但一直有琴鍵燈提示，所以非常簡單」。這對應到運動學習的 guidance hypothesis（Salmoni, Schmidt & Walter 1984）：提示給得太頻繁、太好用，練習時表現好，拿掉之後卻記不住。這要寫進設計文件，WHEEL 的 LED 也只顯示調，不帶彈。
+
+（草稿：等兩個探索 agent 回來後補完。）
+
+```
+
+```text
+The file /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/.claude/plans/firmware-morse-concurrent-crane.md has been updated successfully. (file state is current in your context — no need to Read it back)
+```
+</details></tool-use>
+
+_**Agent - sidechain (claude-opus-5-5 2026-11-18 10:16:11Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Check font generation and roles
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/third_party/fm1-base && sed -n 425,460p tools/build.py; grep -n '"font"\|font_full\|FONT_' tools/build.py | head; ls tools | head -80; grep -n 'FONT_T\b\|FONT_XS\|FONT_S\b\|FONT_B\b\|FONT_M\b\|FONT_L\b\|ROLES\|role' tools/gen_font.py | head -40`
+
+```text
+    with ThreadPoolExecutor(min(len(cmds), int(os.environ.get("FM1B_JOBS", "4")))) as ex:
+        return list(ex.map(lambda c: tc(*c), cmds))
+
+
+def generate():
+    """generated headers: the fonts, the screen reader's words link (fm1-reader)"""
+    GEN.mkdir(parents=True, exist_ok=True)
+    tools = SRC / "tools"
+    for c in [[tools / "gen_font.py", GEN / "felucca_font.h"],
+              [tools / "gen_words.py", APP / CONF.get("words", "words.tsv"), APP / "web" / "words", GEN / "ann_words.h"]]:
+        env = {**os.environ, "FM1_FONT_FULL": " ".join(CONF.get("font_full", [])),
+               "FM1_FONT_TRIM": "1" if CONF.get("font_trim") else "",
+               "FM1_FONT_PACK": "1" if CONF.get("font_pack") else ""}
+        r = subprocess.run([sys.executable, *map(str, c)], capture_output=True, text=True, env=env)
+        sys.stdout.write(r.stdout)
+        if r.returncode:
+            sys.stderr.write(r.stderr)
+            raise SystemExit(f"build: {c[0].name} failed")
+    for line in CONF.get("gen", []):          # the app's own generators: a script (relative to APP_DIR) and its arguments
+        c = [a.replace("{gen}", str(GEN)) for a in line.split()]
+        r = subprocess.run([sys.executable, str(APP / c[0]), *c[1:]], cwd=APP, capture_output=True, text=True)
+        sys.stdout.write(r.stdout)
+        if r.returncode:
+            sys.stderr.write(r.stderr)
+            raise SystemExit(f"build: {c[0]} failed")
+    if CONF.get("resources"):
+        gen_resources()
+
+
+RES_MAGIC = 0x31534552                        # "RES1" (device/res.c)
+
+
+def res_payload():
+    """the resource region's payload: fm1.toml resources = FILE"""
+    f = APP / CONF["resources"].replace("{gen}", str(GEN))
+    if not f.is_file():
+48:  font_full = ["L"]          font roles with lower case too (by default M and L have capitals and digits only)
+49:  font_trim = true           each glyph stored as its lit box only (tools/gen_font.py FM1_FONT_TRIM): the same
+51:  font_pack = true           (with font_trim) each glyph's alphas Huffman-coded too (FM1_FONT_PACK), decoded as
+53:                             then costs about 3x the instructions, which app.h's APP_FONT_CACHE gives back: that many
+54:                             bytes of RAM (e.g. 6144u, at least the header's FONT_BOX_MAX) keep the glyphs drawn lately
+55:                             decoded, APP_FONT_CACHE_BITS (default 7) the log2 of its slots, 6 B each
+435:        env = {**os.environ, "FM1_FONT_FULL": " ".join(CONF.get("font_full", [])),
+436:               "FM1_FONT_TRIM": "1" if CONF.get("font_trim") else "",
+437:               "FM1_FONT_PACK": "1" if CONF.get("font_pack") else ""}
+__pycache__
+bt
+boot_pack.py
+build.py
+firmware_json.py
+fit_fastmath.py
+fm1_backup.py
+fm1_debug.py
+fm1_install.py
+fm1_mirror.py
+fm1_remote.py
+fm1_resources.py
+fm1pkg_make.py
+fm1ports.py
+gen_font.py
+gen_words.py
+get_toolchain.sh
+lz4blk.py
+make_site.py
+manual_html.py
+provenance.py
+publish_site.sh
+ram_run.py
+ramcode.py
+rfm1_pack.py
+romref.py
+stack_depth.py
+stack_ir.py
+25:# X0X: six roles, T (footers), XS (grid labels, units, hints), S (body), B (headers, names, the selected
+65:# FM1_FONT_FULL="L M": those roles with every printable character (lower case too), for an app that writes words in
+```
+</details></tool-use>
+
+_**Agent - sidechain (claude-opus-5-5 2026-11-18 10:16:11Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Grep app hooks and render in plat.h
+
+`grep -n -E "void app_|render|master|q12|1 << 2[0-9]|full scale|clip" third_party/fm1-base/include/plat.h | head -80`
+
+```text
+64:uint32_t plat_master(void);            /* MASTER pot's position, 0..4096 (the render gets it as a gain: APP_GAIN) */
+108: * TRS jack's, with fm1.toml midi_stamp = true (FM1B_MIDI_STAMP; else when it was read), within 0.05 ms of landing on the FM-1 (a 10 kHz look at the endpoint and the jack's ring, inside the render
+114:void plat_midi_send(uint32_t pkt, uint32_t to);   /* to: TO_USB | TO_BLE, or one link; main loop, the render or the
+230:void app_ble_scan_report(const uint8_t *pdu, uint32_t n, uint32_t rssi);
+231:void app_ble_device_keys(const struct plat_ble_keys *k);
+258: * and speakers (SBC), beside Bluetooth MIDI on the one radio. While it streams, the render goes to the device and the
+301:int plat_bta_streams(void);            /* 1: the last render went to Bluetooth (the FM-1's own output muted for it); for the
+302:                                        * render (the audio interrupt) to plan its block by. 0 without Bluetooth audio */
+334: * interrupts back on only if they were on at its lock, so a lock is safe inside an interrupt (app_render, app_tick)
+439:/* USB audio full (FM1B_UAC): 1, the USB audio input at full level (the app's render at gain 4096), MASTER for the
+447:void plat_usb_play_gain(uint32_t q12);
+449: * PLAT_USB_CH of them, beside the master on 1 and 2, as 16-bit samples (32767: the master's full scale, the render's
+450: * 1 << 22 at 4096). In app_render, the frame off frames into the block being rendered: its channels at p[0] ..
+453: * platform sends them with the master's frames once app_render returns. NULL (*run 0) when no computer records (the
+492:/* audio load in % of the render budget, and xruns since boot (device: from the ISR) */
+497:                                        * turns the render's microseconds into instructions (a CPU guard's cost model);
+502: * the render, say. Device: TIMER4, from the 24 MHz crystal (one register read); host: its monotonic clock, at the same
+532: * the render. Start it in app_init (the one time it may start: at power-on, before the audio and the timers); the
+533: * render hands it a job, does its own share, then waits for it. One job at a time. A failure (it misread a job, it
+536: * instead: it is given up (held; the render does the work itself) and barred, one core at every start until
+542:int plat_cpu2_run(void (*fn)(uint32_t), uint32_t arg);   /* render: 1 = it has fn(arg); 0 = do it yourself */
+543:int plat_cpu2_wait(void);              /* render: 0 = done; -1 = it was given up and the job dropped: do it yourself
+554: * (a scratch buffer each core renders into). No lock, no state: any core, any context; from code that runs from RAM
+578: * longest render, the timer's gaps, the longest interrupts-off and main-loop pass, the second core's and the radios'
+583: *   APP_STATS        void app_stats(uint8_t out[PLAT_STATS_APP])   its bytes, once a second (main loop; zeroed before)
+602:void app_stats(uint8_t out[PLAT_STATS_APP]);
+606: *   APP_TICK        void app_tick(void)           1 kHz, in the timer interrupt (a clock, a sequencer)
+607: *   APP_BOOT        void app_boot(void)           once, after the platform is up, before app_ui_init (a radio)
+608: *   APP_LOOP        void app_loop(void)           every pass of the main loop (a radio's tasks)
+609: *   APP_YIELD       void app_yield(void)          from plat_yield, inside long work
+612: *   APP_OVERLOAD    void app_overload(void)       the render took over 90 % of its time (shed voices)
+613: *   APP_SPLASH      void app_splash(void)         the first screen at boot, instead of the name
+614: *   APP_GAIN(m)     the render's gain from MASTER's position m (0..4096; default the square, m * m >> 12)
+618: *   APP_QUIET       void app_quiet(int32_t *lr, uint32_t n)   the render while the flash must not be read (the
+620: *   APP_KEY_SENSE   void app_key_sample(uint32_t key, uint32_t v, uint32_t ticks, int driven) (rows PA7 / PA8),
+621: *                   int app_key_drive(uint32_t key) (read it driven), void app_key_probe(uint32_t key, uint32_t v,
+626: *   APP_SYSEX_BYTE  void app_sysex_byte(uint8_t b)   every byte of a SysEx from USB, F0 and F7 too (realtime bytes
+629: *   APP_USB_CMD     void app_usb_cmd(const uint8_t *d, uint32_t n)   a frame in the update's framing (above). Main loop
+631: *   APP_REDRAW      void app_redraw(void)        draw the whole screen again at the next frame (the mirror lost a part)
+633: *   APP_CSTART      void app_cstart(void)         first thing at a start, before the RAM is cleared and with nothing
+637: *                   the render just made (lr, n frames, 24-bit; 0 = silence): for an app whose own output differs from
+638: *                   what Bluetooth should get. Audio interrupt, after each render (Bluetooth audio built). Without it
+640: *   APP_FAULT       void app_fault(const fm1_crash_t *c)   a crash, before the crash screen (c: the record): an app's
+642: *   APP_LOG         void app_log(void (*line)(const char *t))   the development readout over USB-MIDI (F0 7D 4C 47 F7,
+662: * and these: int app_backup_playing(void) (1: no restore now, STOP FIRST), void app_backup_flush(void) (what is not
+663: * saved yet, saved: a backup starts), void app_backup_hold(int on) (no saving while a backup streams),
+664: * void app_backup_restored(void) (everything from the flash again) */
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 10:16:12Z)**_
+
+The plan file now has a v0.1 draft; it gets filled in once both agents report.
+
+_**Agent - sidechain (claude-opus-5-5 2026-11-18 10:16:16Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Read gen_font.py header for font roles
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/third_party/fm1-base && sed -n 1,110p tools/gen_font.py`
+
+```text
+#!/usr/bin/env python3
+# SPDX-License-Identifier: MPL-2.0
+# Copyright (C) 2026 Charles Vestal
+# Copyright (C) 2026 Leo Kuroshita (@kurogedelic), Hügelton Instruments
+"""Render the bitmap fonts to a C header (assets/fonts/):
+  T / XS / S / B / M / L: Terminus 12 (T: digits and capitals), 12, 16, 16 bold, 24 bold, 32 bold (BDF, SIL OFL 1.1); see SIZES. TTF fonts also work through render()
+(anti-aliased, tabular figures via the OpenType `tnum` feature).
+
+Glyph format: per glyph an advance width, a bitmap width and an offset; the
+bitmap starts FONT_PAD pixels left of the pen position (room for side
+bearings); rows top to bottom, 2 pixels per byte (high nibble first),
+alpha 0..15. With FM1_FONT_TRIM=1 (fm1.toml font_trim) a glyph is only its lit box: its left
+column, top row and row count (a byte each), then those rows, the bitmap width the box's. With FM1_FONT_PACK=1 too
+(fm1.toml font_pack) those rows' alphas are Huffman-coded (see PACK below).
+"""
+import heapq
+import sys
+from pathlib import Path
+
+from PIL import Image, ImageDraw, ImageFont
+
+FONTS = Path(__file__).resolve().parents[1] / "assets" / "fonts"
+# (name, file, px, scale, pixel, first, last): pixel fonts are rendered without
+# anti-aliasing at their design size and enlarged by an integer factor
+# X0X: six roles, T (footers), XS (grid labels, units, hints), S (body), B (headers, names, the selected
+# row), M (knob values) and L (the big readout). Each set gives them a face and a pixel size,
+# chosen so the line height stays near the layout's 12 / 16 / 24 / 32. X0X_FONTSET picks one.
+# A TTF entry "file.ttf@wght=600" sets a variable font's axis.
+FONTSETS = {
+    "terminus": [("T", "ter-u12n.bdf", 12, 1, True, 32, 95),
+                 ("XS", "ter-u12n.bdf", 12, 1, True, 32, 126),
+                 ("S", "ter-u16n.bdf", 16, 1, True, 32, 126),
+                 ("B", "ter-u16b.bdf", 16, 1, True, 32, 126),
+                 ("M", "ter-u24b.bdf", 24, 1, True, 32, 95),
+                 ("L", "ter-u32b.bdf", 32, 1, True, 32, 95)],
+    "barlow": [("T", "BarlowSemiCondensed-SemiBold.ttf", 10, 1, False, 32, 95),   # footers (from X0X)
+               ("XS", "BarlowSemiCondensed-SemiBold.ttf", 12, 1, False, 32, 126),
+               ("S", "BarlowSemiCondensed-Medium.ttf", 15, 1, False, 32, 126),
+               ("B", "BarlowSemiCondensed-Bold.ttf", 15, 1, False, 32, 126),
+               ("M", "BarlowSemiCondensed-SemiBold.ttf", 23, 1, False, 32, 95),
+               ("L", "BarlowSemiCondensed-Bold.ttf", 31, 1, False, 32, 95)],    # capitals and digits, as the others
+                                                                                  # (the splash, the panel: 14 KB less)
+    "inter": [("T", "Inter[opsz,wght].ttf@wght=600", 9, 1, False, 32, 95),
+              ("XS", "Inter[opsz,wght].ttf@wght=600", 11, 1, False, 32, 126),
+              ("S", "Inter[opsz,wght].ttf@wght=500", 14, 1, False, 32, 126),
+              ("B", "Inter[opsz,wght].ttf@wght=700", 14, 1, False, 32, 126),
+              ("M", "Inter[opsz,wght].ttf@wght=650", 21, 1, False, 32, 95),
+              ("L", "Inter[opsz,wght].ttf@wght=700", 29, 1, False, 32, 95)],
+    "rajdhani": [("T", "Rajdhani-SemiBold.ttf", 12, 1, False, 32, 95),
+                 ("XS", "Rajdhani-Bold.ttf", 14, 1, False, 32, 126),
+                 ("S", "Rajdhani-SemiBold.ttf", 17, 1, False, 32, 126),
+                 ("B", "Rajdhani-Bold.ttf", 17, 1, False, 32, 126),
+                 ("M", "Rajdhani-Bold.ttf", 26, 1, False, 32, 95),
+                 ("L", "Rajdhani-Bold.ttf", 35, 1, False, 32, 95)],
+    "chakra": [("XS", "ChakraPetch-SemiBold.ttf", 11, 1, False, 32, 126),
+               ("S", "ChakraPetch-Medium.ttf", 14, 1, False, 32, 126),
+               ("B", "ChakraPetch-Bold.ttf", 14, 1, False, 32, 126),
+               ("M", "ChakraPetch-SemiBold.ttf", 21, 1, False, 32, 95),
+               ("L", "ChakraPetch-Bold.ttf", 29, 1, False, 32, 95)],
+}
+import os  # noqa: E402
+FONTSET = os.environ.get("X0X_FONTSET", "barlow")    # the others need X0X_FONT_DIRS (not in assets/)
+FONTDIRS = [Path(p) for p in os.environ.get("X0X_FONT_DIRS", "").split(":") if p]
+SIZES = FONTSETS[FONTSET]
+# FM1_FONT_FULL="L M": those roles with every printable character (lower case too), for an app that writes words in
+# them (fm1.toml font_full; the others keep the set's range)
+FULL = set(os.environ.get("FM1_FONT_FULL", "").split())
+# FM1_FONT_TRIM=1: each glyph only its lit box (fm1.toml font_trim): the box's left column, top row and row count
+# first (3 bytes), then its rows; BW the box's width. device/gfx.c draws it so (FONT_TRIM, in the header)
+TRIM = os.environ.get("FM1_FONT_TRIM") == "1"
+# FM1_FONT_PACK=1 (with FM1_FONT_TRIM; fm1.toml font_pack): each trimmed glyph's alphas coded, w a row, its rows in
+# turn, by a canonical Huffman code of three: the one for the alpha after a 0, after a 15, after anything else (a
+# glyph starts after a 0), its bits from the high one down, the glyph padded to a byte. The face's data starts with the
+# three codes (HUF_CODES, FONT_HUF_SZ bytes each: the count of codes of each length 1..HUF_LEN, then the alphas in code
+# order); the offsets count from the data's start, as before. device/gfx.c decodes it as it draws (FONT_PACK)
+PACK = os.environ.get("FM1_FONT_PACK") == "1"
+if PACK and not TRIM:
+    raise SystemExit("gen_font: FM1_FONT_PACK needs FM1_FONT_TRIM (fm1.toml font_pack needs font_trim)")
+HUF_LEN = 12                    # the longest code (a longer one: the counts halved until none is)
+HUF_CODES = 3
+SIZES = [(n, f, px, sc, pix, first, 126 if n in FULL else last) for n, f, px, sc, pix, first, last in SIZES]
+PAD = 2
+
+
+def upscale(px_, w, h, scale):
+    """integer nearest-neighbour enlargement of a w x h glyph"""
+    if scale == 1:
+        return px_
+    big = []
+    for y in range(h):
+        row = []
+        for x in range(w):
+            row += [px_[y * w + x]] * scale
+        big += row * scale
+    return big
+
+
+def render_bdf(path, scale, first, last):
+    """BDF bitmap font (Terminus 8x16): exact pixels, cell = the font bounding box."""
+    lines = path.read_text(errors="replace").splitlines()
+    fbb = next(l for l in lines if l.startswith("FONTBOUNDINGBOX")).split()
+    cw, ch, fx, fy = int(fbb[1]), int(fbb[2]), int(fbb[3]), int(fbb[4])
+    base = ch + fy                                     # rows above the baseline
+    glyphs, i = {}, 0
+    while i < len(lines):
+        if lines[i].startswith("ENCODING"):
+            code = int(lines[i].split()[1])
+            j = i
+            while not lines[j].startswith("BBX"):
+                j += 1
+```
+</details></tool-use>
+
+_**Agent - sidechain (claude-opus-5-5 2026-11-18 10:16:18Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Find app_render declarations
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/third_party/fm1-base && grep -rn "app_render" --include=*.h --include=*.c --include=*.md . | grep -v "^./docs/.*:.*app_render.*app_render" | head -40`
+
+```text
+(eval):1: no matches found: --include=*.h
+```
+</details></tool-use>
+
+_**Agent - sidechain (claude-opus-5-5 2026-11-18 10:16:21Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Read Morse app.h and list files
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/firmware/morse && wc -l *.c *.h && cat -n app.h && ls -la common fm1-base tests docs`
+
+```text
+    3446 app.c
+     231 content.c
+     498 learn.c
+     556 morse.c
+      66 tone.c
+      45 app.h
+      31 content.h
+     100 learn.h
+     126 morse.h
+      21 tone.h
+    5120 total
+     1	/* SPDX-License-Identifier: GPL-3.0-or-later */
+     2	/* Morse: the FM-1 as a pocket Morse code machine. Key on the piano keys (a straight key, or two halves as iambic
+     3	 * paddles) and read what you sent; type letters on the keys and hear them; learn the code with flash cards a few
+     4	 * minutes at a time (Leitner boxes, Koch order); keep it silent and read the lights instead. Keying goes out and comes
+     5	 * in as USB-MIDI note 0 on channel 1, the Vail adapter's format, so vailmorse.com and its training tools take it.
+     6	 * A host program (host/morse) can type what you send into the computer and send text to play.
+     7	 * Built on fm1-base (MPL-2.0, its headers). This app is GPL-3.0-or-later; common/ (hostlink, ledfx) is MIT. */
+     8	#pragma once
+     9	#include <stdint.h>
+    10	#include "plat.h"
+    11	
+    12	#define APP_NAME "MORSE"
+    13	#define APP_SPLASH_RGB RGB(90, 200, 255)
+    14	#define APP_BLOCK 256u                   /* frames per audio block: 5.8 ms at 44.1 kHz (the sidetone's jitter) */
+    15	#define APP_TICK                         /* 1 kHz: the key, the keyer, the players, MIDI in and out */
+    16	#define APP_SYSEX                        /* our frames from the host (PROTOCOL.md in github.com/daviddwlee84/M-VAVE_FM-1 host/morse) */
+    17	
+    18	/* the settings and the flash cards' progress, one record (app.c rec_t), at 0xDA000: away from the 0xFC000 settings
+    19	 * sector SLOOP, Agent Deck and CTL-1 share (docs/hardware/flash-map.md). The panel calibration is the platform's */
+    20	enum { OBJ_PANEL, OBJ_MORSE, OBJ_NOBJ };
+    21	#define APP_STORE_MAP {0xDC000u, 0xDA000u}
+    22	/* Bluetooth's record is kept by the app, in RAM only (app.c app_ble_load / app_ble_save): nothing of it is written.
+    23	 * Whether it starts at power-on: SETTINGS > BLUETOOTH, read from the record before app_init */
+    24	#define APP_BLE_STORE
+    25	int morse_ble_off(void);
+    26	#define APP_BLE_AT_BOOT (!morse_ble_off())
+    27	
+    28	void app_init(void);
+    29	void app_render(int32_t *lr, uint32_t n, uint32_t master_q12);
+    30	void app_panic(void);
+    31	void app_ui_init(void);
+    32	void app_frame(void);
+    33	void app_input_only(void);
+    34	void app_say(const char *a, const char *b);
+    35	void app_tick(void);
+    36	int app_sysex(const uint8_t *p, uint32_t n);
+    37	
+    38	/* host simulator: checks (page, mute, wpm, ps, card, ...), commands (expect_text, sendkeys, answer, clear_text) and
+    39	 * the failures of those commands */
+    40	#define APP_HOST_EXPECT
+    41	int app_expect(const char *what, int *got);
+    42	#define APP_HOST_CMD
+    43	int app_host_cmd(const char *cmd, const char *a, const char *b, const char *c, const char *d);
+    44	#define APP_HOST_FAILS
+    45	int app_host_fails(void);
+common:
+drwxr-xr-x@    - zhouhanru 18 Nov 02:31 tests
+.rw-r--r--@ 5.4k zhouhanru 18 Nov 16:45 hostlink.c
+.rw-r--r--@ 4.5k zhouhanru 18 Nov 16:45 hostlink.h
+.rw-r--r--@ 1.2k zhouhanru 18 Nov 02:31 ledfx.c
+.rw-r--r--@ 1.4k zhouhanru 18 Nov 02:31 ledfx.h
+
+fm1-base:
+
+tests:
+.rw-r--r--@ 16k zhouhanru 18 Nov 16:46 basic.txt
+.rw-r--r--@ 26k zhouhanru 18 Nov 04:56 morse_test.c
+
+docs:
+drwxr-xr-x@    - zhouhanru 18 Nov 15:49 screens
+.rw-r--r--@ 173k zhouhanru 18 Nov 02:31 screen.png
+```
+</details></tool-use>
+
+_**Agent - sidechain (claude-opus-5-5 2026-11-18 10:16:23Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Find app_render references
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/third_party/fm1-base && grep -rn "app_render" . --include='*.h' --include='*.c' --include='*.md' | head -50`
+
+```text
+DESIGN.md:61:The app provides the other side: `app_init`, `app_frame` (the UI, about 60 a second), `app_render` (the audio,
+host/plat_host.c:2026:    app_render(blk, APP_BLOCK, uac_full ? 4096u : APP_GAIN(master));
+skill/felucca-to-fm1-base/PORTING.md:64:| the main loop's calls into the app (its init, the saved data's load, the UI's frame, the render) | `app/app.c`: `app_init`, `app_ui_init`, `app_frame`, `app_input_only`, `app_render`, `app_panic`, `app_say` call the app's own functions (CTL-1's `app/app.c` is one) |
+skill/felucca-to-fm1-base/PORTING.md:86:| `app_render(int32_t *lr, uint32_t n, uint32_t master_q12)` | in the audio interrupt: n stereo frames, 24-bit; keep it short, it runs on an 8 KiB stack |
+include/plat.h:334: * interrupts back on only if they were on at its lock, so a lock is safe inside an interrupt (app_render, app_tick)
+include/plat.h:450: * 1 << 22 at 4096). In app_render, the frame off frames into the block being rendered: its channels at p[0] ..
+include/plat.h:453: * platform sends them with the master's frames once app_render returns. NULL (*run 0) when no computer records (the
+tests/dim_app/app.h:20:void app_render(int32_t *lr, uint32_t n, uint32_t master_q12);
+tests/lock_test.c:63:    /* inside an interrupt (app_render in ALNK0): the CPU has the global enable off */
+tests/core_app/app.c:15:void app_render(int32_t *lr, uint32_t n, uint32_t master_q12)
+tests/usbh_app/app.c:31:void app_render(int32_t *lr, uint32_t n, uint32_t master_q12)
+tests/cpukhz_app/app.h:20:void app_render(int32_t *lr, uint32_t n, uint32_t master_q12);
+tests/sysex_app/app.c:20:void app_render(int32_t *lr, uint32_t n, uint32_t master_q12)
+tests/dim_app/app.c:23:void app_render(int32_t *lr, uint32_t n, uint32_t master_q12)
+tests/reboot_app/app.h:20:void app_render(int32_t *lr, uint32_t n, uint32_t master_q12);
+tests/bta_app/app.h:17:void app_render(int32_t *lr, uint32_t n, uint32_t master_q12);
+tests/core_app/app.h:20:void app_render(int32_t *lr, uint32_t n, uint32_t master_q12);
+tests/reboot_app/app.c:26:void app_render(int32_t *lr, uint32_t n, uint32_t master_q12)
+tests/usbh_app/app.h:22:void app_render(int32_t *lr, uint32_t n, uint32_t master_q12);
+tests/sysex_app/app.h:20:void app_render(int32_t *lr, uint32_t n, uint32_t master_q12);
+tests/bta_app/app.c:16:void app_render(int32_t *lr, uint32_t n, uint32_t master_q12)
+tests/cpukhz_app/app.c:7:void app_render(int32_t *lr, uint32_t n, uint32_t master_q12)
+tests/battery_app/app.h:20:void app_render(int32_t *lr, uint32_t n, uint32_t master_q12);
+tests/peers_app/app.h:22:void app_render(int32_t *lr, uint32_t n, uint32_t master_q12);
+tests/backup_app/app.h:27:void app_render(int32_t *lr, uint32_t n, uint32_t master_q12);
+template/app.h:24:void app_render(int32_t *lr, uint32_t n, uint32_t master_q12);   /* audio interrupt: n stereo frames, 24-bit */
+template/README.md:63:5. Write your app in `app.c`: `app_render` for the sound, `app_frame` for the screen and the controls, and the rest
+docs/SECOND-CORE.md:50:void app_render(int32_t *lr, uint32_t n, uint32_t master_q12)
+tests/backup_app/app.c:26:void app_render(int32_t *lr, uint32_t n, uint32_t master_q12)
+tests/battery_app/app.c:7:void app_render(int32_t *lr, uint32_t n, uint32_t master_q12)
+tests/peers_app/app.c:66:void app_render(int32_t *lr, uint32_t n, uint32_t master_q12)
+template/app.c:63:void app_render(int32_t *lr, uint32_t n, uint32_t master_q12)
+examples/wifi/app.h:22:void app_render(int32_t *lr, uint32_t n, uint32_t master_q12);
+examples/ble_own/README.md:45:5. Write your app in `app.c`: `app_render` for the sound, `app_frame` for the screen and the controls, and the rest
+examples/wifi/app.c:19:void app_render(int32_t *lr, uint32_t n, uint32_t master_q12)
+examples/ble_own/app.c:63:void app_render(int32_t *lr, uint32_t n, uint32_t master_q12)
+examples/ble_own/app.h:24:void app_render(int32_t *lr, uint32_t n, uint32_t master_q12);   /* audio interrupt: n stereo frames, 24-bit */
+device/plat_lock.c:5: * the timer interrupt) or the audio render (app_render, in the ALNK0 interrupt). Part of plat_fm1.c; on its own for
+device/unity.c:8: *   app.h  its configuration (below) and the contract: app_init, app_render, app_panic, app_ui_init,
+device/main_fm1.c:16:#define REND_FRAMES HALF_FRAMES             /* app_render's frames per call */
+device/main_fm1.c:83:                app_render(o + 2u * k, REND_FRAMES, full ? 4096u : gain);
+```
+</details></tool-use>
+
+_**Agent - sidechain (claude-opus-5-5 2026-11-18 10:16:26Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Read template app source
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/third_party/fm1-base && cat -n template/app.c; cat -n template/app.h`
+
+```text
+     1	/* SPDX-License-Identifier: MPL-2.0
+     2	 * Copyright (C) 2026 Charles Vestal */
+     3	/* The template app: every control on the screen as it arrives, by the name the app knows it by (plat.h B_*, EN_*,
+     4	 * the keys), and a few of them doing something: the keys play a voice and go out over USB-MIDI (MIDI in plays it
+     5	 * too), OCT- / OCT+ set the octave, PRESET the wave, MASTER the volume, SAVE stores the settings; the keys are
+     6	 * played with velocity and pressure (lib/touch.h), shown on them. One of each thing the platform offers, kept short. Part of the unity build (device/unity.c, host/plat_host.c), after the platform:
+     7	 * gfx.c and announce.c are in scope. */
+     8	#include "fastmath.h"
+     9	
+    10	#define SET_MAGIC 0x54504C31u            /* "TPL1": the settings record; another magic loads defaults */
+    11	typedef struct {
+    12	    uint32_t magic;
+    13	    int8_t octave;                       /* -2 .. +2 */
+    14	    uint8_t wave;                        /* 0 sine, 1 triangle */
+    15	    uint8_t ble_off;                     /* Bluetooth switched off (REC held); 0, the default: on */
+    16	    uint8_t rsv[1];
+    17	} settings_t;
+    18	static settings_t set;
+    19	static uint8_t set_dirty;                /* changed since the last save: SAVE is lit */
+    20	
+    21	static const char *const WAVE_NAME[] = {"SINE", "TRIANGLE"};
+    22	/* the controls by their names in plat.h, in its order */
+    23	static const char *const BTN_NAME[NB] = {"FX", "SEL", "ENV", "LFO", "EDIT", "GLO", "HOME", "SAVE", "ARP", "SEQ",
+    24	                                         "PLAY", "REC", "OCT-", "OCT+"};
+    25	static const char *const ENC_NAME[NE] = {"SELECT", "ALGO", "PRESET", "K1", "K2", "K3", "K4"};
+    26	
+    27	/* ------------------------------------------------------------------ voice --- */
+    28	/* one voice, the last note wins; the main loop and MIDI in set it, the audio interrupt plays it */
+    29	static volatile int32_t voice_note = -1;     /* MIDI note, -1 = released */
+    30	static volatile float voice_vel = 1.0f;      /* the note's velocity, 0..1 */
+    31	static float voice_phase, voice_level, gain_now;   /* gain_now glides to MASTER: no step at a block's edge */
+    32	
+    33	static void note_on(int32_t note, uint32_t vel)
+    34	{
+    35	    voice_vel = (float)vel / 127.0f;
+    36	    voice_note = note;
+    37	}
+    38	static void note_off(int32_t note)
+    39	{
+    40	    if (voice_note == note)
+    41	        voice_note = -1;
+    42	}
+    43	
+    44	static volatile uint32_t midi_last, midi_last_port, midi_count;   /* the last message in (shown), and how many */
+    45	static void midi_in(void)                    /* audio interrupt: the packets that came in */
+    46	{
+    47	    uint32_t pkt;
+    48	    int port;
+    49	    while (plat_midi_in(&pkt, &port)) {
+    50	        uint32_t st = (pkt >> 8) & 0xFFu, d1 = (pkt >> 16) & 0x7Fu, d2 = pkt >> 24;
+    51	        if (st != 0xF8u && st != 0xFEu) {    /* (clock and active sensing would flood the screen) */
+    52	            midi_last = pkt;
+    53	            midi_last_port = (uint32_t)port;
+    54	            midi_count++;
+    55	        }
+    56	        if ((st & 0xF0u) == 0x90u && d2)
+    57	            note_on((int32_t)d1, d2);
+    58	        else if ((st & 0xF0u) == 0x80u || (st & 0xF0u) == 0x90u)
+    59	            note_off((int32_t)d1);
+    60	    }
+    61	}
+    62	
+    63	void app_render(int32_t *lr, uint32_t n, uint32_t master_q12)
+    64	{
+    65	    uint32_t i;
+    66	    int32_t note = voice_note;
+    67	    float target = note >= 0 ? 0.25f * voice_vel : 0.0f;
+    68	    float inc = note >= 0 ? 440.0f * fm_exp2f((float)(note - 69) / 12.0f) / 44100.0f : 0.0f;
+    69	    float gain = (float)master_q12 / 4096.0f * 8300000.0f;   /* MASTER, read once a block */
+    70	    midi_in();
+    71	    for (i = 0; i < n; i++) {
+    72	        float s;
+    73	        voice_level += (target - voice_level) * 0.002f;          /* ~10 ms attack and release */
+    74	        gain_now += (gain - gain_now) * 0.004f;                  /* ~5 ms: turning MASTER does not click */
+    75	        voice_phase += inc;
+    76	        if (voice_phase >= 1.0f)
+    77	            voice_phase -= 1.0f;
+    78	        s = set.wave ? 4.0f * fm_fabsf(voice_phase - 0.5f) - 1.0f : fm_sinf(voice_phase * 6.2831853f);
+    79	        s *= voice_level * gain_now;
+    80	        lr[2 * i] = (int32_t)s;
+    81	        lr[2 * i + 1] = (int32_t)s;
+    82	    }
+    83	}
+    84	
+    85	void app_panic(void)
+    86	{
+    87	    voice_note = -1;
+    88	    voice_level = 0.0f;
+    89	}
+    90	
+    91	/* --------------------------------------------------------------- settings --- */
+    92	static void settings_defaults(void)
+    93	{
+    94	    set.magic = SET_MAGIC;
+    95	    set.octave = 0;
+    96	    set.wave = 0;
+    97	    set.ble_off = 0;
+    98	}
+    99	
+   100	void app_init(void)
+   101	{
+   102	    if (plat_store_load(OBJ_SETTINGS, &set, sizeof set) != (int)sizeof set || set.magic != SET_MAGIC
+   103	        || set.octave < -2 || set.octave > 2 || set.wave > 1u || set.ble_off > 1u)
+   104	        settings_defaults();
+   105	}
+   106	
+   107	/* --------------------------------------------------------------------- UI --- */
+   108	static struct {
+   109	    char msg[2][24];                     /* a short message over the header */
+   110	    uint32_t msg_until;
+   111	    uint32_t keys, btn;                  /* held at the last input */
+   112	    uint8_t vel[NKEYS], prs[NKEYS];      /* each key's last velocity, and its pressure while held */
+   113	    int32_t last_key;                    /* the key pressed last: its numbers in the header */
+   114	    uint8_t looking;                     /* Bluetooth MIDI devices: REC pressed, the scan's list up (lib/btdev) */
+   115	    uint32_t rec_t;                      /* REC went down (0: not held, or its hold already acted) */
+   116	    int32_t turns[NE];                   /* detents since boot, per encoder */
+   117	    uint32_t turned_at[NE];              /* when each was last turned: it shows lit for a moment */
+   118	    uint8_t redraw;
+   119	} ui;
+   120	
+   121	static void text_cat(char *d, const char *s)
+   122	{
+   123	    while (*d)
+   124	        d++;
+   125	    while (*s)
+   126	        *d++ = *s++;
+   127	    *d = 0;
+   128	}
+   129	
+   130	static void int_text(int32_t v, char *b)     /* signed, no padding */
+   131	{
+   132	    char t[12];
+   133	    int n = 0;
+   134	    uint32_t u = (uint32_t)(v < 0 ? -v : v);
+   135	    do
+   136	        t[n++] = (char)('0' + u % 10u);
+   137	    while ((u /= 10u) && n < 11);
+   138	    if (v < 0)
+   139	        *b++ = '-';
+   140	    while (n)
+   141	        *b++ = t[--n];
+   142	    *b = 0;
+   143	}
+   144	
+   145	void app_say(const char *a, const char *b)
+   146	{
+   147	    uint32_t i;
+   148	    char t[48];
+   149	    for (i = 0; i < 23u && a && a[i]; i++)
+   150	        ui.msg[0][i] = a[i];
+   151	    ui.msg[0][i] = 0;
+   152	    for (i = 0; i < 23u && b && b[i]; i++)
+   153	        ui.msg[1][i] = b[i];
+   154	    ui.msg[1][i] = 0;
+   155	    ui.msg_until = plat_ms() + 1300u;
+   156	    ui.redraw = 1;
+   157	    if (ann_on()) {                          /* and to a screen reader (announce.c, fm1-reader) */
+   158	        t[0] = 0;
+   159	        text_cat(t, ui.msg[0]);
+   160	        if (ui.msg[1][0]) {
+   161	            text_cat(t, " ");
+   162	            text_cat(t, ui.msg[1]);
+   163	        }
+   164	        ann_say(t, 0, ANN_NOW);
+   165	    }
+   166	}
+   167	
+   168	static void octave_text(char *t)
+   169	{
+   170	    t[0] = set.octave < 0 ? '-' : '+';
+   171	    t[1] = (char)('0' + (set.octave < 0 ? -set.octave : set.octave));
+   172	    t[2] = 0;
+   173	}
+   174	
+   175	/* a screen reader that has just started listening (or asks) hears the whole screen */
+   176	static void speak(void)
+   177	{
+   178	    char t[96], o[4];
+   179	    if (ann_on() && ann_where()) {
+   180	        octave_text(o);
+   181	        t[0] = 0;
+   182	        text_cat(t, APP_NAME ". OCTAVE ");
+   183	        text_cat(t, o);
+   184	        text_cat(t, ". WAVE ");
+   185	        text_cat(t, WAVE_NAME[set.wave]);
+   186	        if (midi_count) {                    /* the last MIDI message in, as the screen shows it */
+   187	            static const char *const PORT[NPORTS] = {"USB", "BLE", "TRS"};
+   188	            static const char HEX[] = "0123456789ABCDEF";
+   189	            uint32_t m = midi_last, b;
+   190	            char h[10];
+   191	            for (b = 0; b < 3u; b++) {
+   192	                uint32_t v = (m >> (8u + 8u * b)) & 0xFFu;
+   193	                h[3 * b] = HEX[v >> 4];
+   194	                h[3 * b + 1] = HEX[v & 15u];
+   195	                h[3 * b + 2] = b < 2u ? ' ' : 0;
+   196	            }
+   197	            text_cat(t, ". MIDI IN ");
+   198	            text_cat(t, midi_last_port < NPORTS ? PORT[midi_last_port] : "");
+   199	            text_cat(t, " ");
+   200	            text_cat(t, h);
+   201	        }
+   202	        ann_say(t, 0, ANN_NOW);
+   203	    }
+   204	    ann_tick(plat_ms());
+   205	}
+   206	
+   207	static void note_name(int32_t note, char *b)
+   208	{
+   209	    static const char *const N[] = {"C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"};
+   210	    char o[12];
+   211	    b[0] = 0;
+   212	    text_cat(b, N[note % 12]);
+   213	    int_text(note / 12 - 1, o);
+   214	    text_cat(b, o);
+   215	}
+   216	
+   217	static void octave_step(int32_t d)
+   218	{
+   219	    int32_t o = clamp(set.octave + d, -2, 2);
+   220	    char t[4];
+   221	    if (o == set.octave)
+   222	        return;
+   223	    voice_note = -1;                         /* a key held across the change would not find its note off */
+   224	    set.octave = (int8_t)o;
+   225	    set_dirty = 1;
+   226	    octave_text(t);
+   227	    app_say("OCTAVE", t);
+   228	}
+   229	
+   230	int template_ble_off(void) { return set.ble_off; }
+   231	
+   232	/* REC held a second: Bluetooth off or on (kept with the settings, so it stays so at the next power-on) */
+   233	static void ble_toggle(void)
+   234	{
+   235	    set.ble_off = (uint8_t)!set.ble_off;
+   236	    set_dirty = 1;
+   237	    plat_ble_enable(!set.ble_off);
+   238	    app_say("BLUETOOTH", set.ble_off ? "OFF" : "ON");
+   239	}
+   240	
+   241	/* REC: a Bluetooth MIDI device (FM1B_BLE_CENTRAL, lib/btdev): look for devices, then connect to the one ALGORITHM
+   242	 * picks, then let it go */
+   243	static void ble_device_say(void)
+   244	{
+   245	    char name[21];
+   246	    if (btdev_found(btdev_pick(), name, 0))
+   247	        app_say("DEVICE", name);
+   248	    else
+   249	        app_say("BLE", "SCANNING");
+   250	}
+   251	static void ble_device_button(void)
+   252	{
+   253	    int ev;
+   254	    if (!btdev_busy() && !ui.looking) {
+   255	        ui.looking = 1;
+   256	        app_say("BLE", "SCANNING");
+   257	        return;
+   258	    }
+   259	    ev = btdev_save();
+   260	    ui.looking = 0;
+   261	    app_say(ev == BTDEV_CONNECTING ? btdev_word(ev) : "BLE", ev == BTDEV_CONNECTING ? btdev_name() : btdev_word(ev));
+   262	}
+   263	
+   264	static void input(void)
+   265	{
+   266	    uint32_t keys, btn = plat_buttons(), k;
+   267	    int32_t e;
+   268	    touch_poll();                            /* the sensed keys' presses, velocities and pressure */
+   269	    keys = touch_keys();
+   270	    for (k = 0; k < NKEYS; k++) {            /* key 0 is F3 (MIDI 53) */
+   271	        uint32_t bit = 1u << k, v;
+   272	        int32_t note = 53 + (int32_t)k + 12 * set.octave;
+   273	        if ((keys & bit) && !(ui.keys & bit)) {
+   274	            v = touch_vel(k);
+   275	            ui.vel[k] = (uint8_t)v;
+   276	            ui.prs[k] = 0;
+   277	            ui.last_key = (int32_t)k;
+   278	            note_on(note, v);
+   279	            plat_midi_send(0x09u | 0x90u << 8 | (uint32_t)note << 16 | v << 24, TO_USB | TO_BLE);   /* BLE: if built with it */
+   280	        } else if (!(keys & bit) && (ui.keys & bit)) {
+   281	            ui.prs[k] = 0;
+   282	            note_off(note);
+   283	            plat_midi_send(0x08u | 0x80u << 8 | (uint32_t)note << 16, TO_USB | TO_BLE);
+   284	        } else if ((keys & bit) && touch_pressure(k) != ui.prs[k]) {   /* pressure: poly aftertouch */
+   285	            ui.prs[k] = touch_pressure(k);
+   286	            ui.redraw = 1;
+   287	            plat_midi_send(0x0Au | 0xA0u << 8 | (uint32_t)note << 16 | (uint32_t)ui.prs[k] << 24, TO_USB | TO_BLE);
+   288	        }
+   289	    }
+   290	    for (k = 0; k < NB; k++) {               /* a button pressed: its name, and what it does here */
+   291	        uint32_t bit = 1u << k;
+   292	        if (!(btn & bit) || (ui.btn & bit))
+   293	            continue;
+   294	        if (k == B_OCTDN)
+   295	            octave_step(-1);
+   296	        else if (k == B_OCTUP)
+   297	            octave_step(1);
+   298	        else if (k == B_REC && FM1B_BLE)
+   299	            ui.rec_t = plat_ms();                /* a press: on release (a hold switches Bluetooth) */
+   300	        else if (k == B_SAVE) {
+   301	            if (plat_store_save(OBJ_SETTINGS, &set, sizeof set) == 0) {
+   302	                set_dirty = 0;
+   303	                app_say("SAVED", "");
+   304	            } else {
+   305	                app_say("SAVE", "FAILED");
+   306	            }
+   307	        } else {
+   308	            app_say("BUTTON", BTN_NAME[k]);
+   309	        }
+   310	    }
+   311	    if (FM1B_BLE && ui.rec_t) {             /* REC: held a second, Bluetooth on / off; a press, a device */
+   312	        if (btn >> B_REC & 1u) {
+   313	            if (plat_ms() - ui.rec_t >= 1000u) {
+   314	                ui.rec_t = 0;
+   315	                ble_toggle();
+   316	            }
+   317	        } else {
+   318	            ui.rec_t = 0;
+   319	            if (FM1B_BLE_CENTRAL && !set.ble_off)
+   320	                ble_device_button();
+   321	            else
+   322	                app_say("BUTTON", "REC");
+   323	        }
+   324	    }
+   325	    for (k = 0; k < NE; k++) {               /* an encoder turned: its count; PRESET also changes the wave */
+   326	        char t[12];
+   327	        if ((e = plat_enc((int)k)) == 0)
+   328	            continue;
+   329	        ui.turns[k] += e;
+   330	        ui.turned_at[k] = plat_ms();
+   331	        ui.redraw = 1;
+   332	        if (k == EN_ALGO && FM1B_BLE_CENTRAL && ui.looking) {
+   333	            btdev_choose(btdev_pick() + e);
+   334	            ble_device_say();
+   335	        } else if (k == EN_PRESET) {
+   336	            set.wave ^= 1u;
+   337	            set_dirty = 1;
+   338	            app_say("WAVE", WAVE_NAME[set.wave]);
+   339	        } else {
+   340	            int_text(ui.turns[k], t);
+   341	            app_say(ENC_NAME[k], t);
+   342	        }
+   343	    }
+   344	    if (keys != ui.keys || btn != ui.btn)
+   345	        ui.redraw = 1;
+   346	    ui.keys = keys;
+   347	    ui.btn = btn;
+   348	    plat_glow(1);                            /* the unlit buttons glow, readable in the dark */
+   349	    plat_leds(btn | (set_dirty ? 1u << B_SAVE : 0u), keys);
+   350	}
+   351	
+   352	void app_input_only(void) { input(); }
+   353	
+   354	static void cell(int32_t x, int32_t y, int32_t w, const char *s, int on)   /* a labelled box, lit when on */
+   355	{
+   356	    cv_rect(x, y, w, 18, on ? C_HI : C_LINE);
+   357	    cv_text(x + (w - text_w(&FONT_XS, s)) / 2, y + 2, &FONT_XS, s, on ? C_BLACK : C_GRAY);
+   358	}
+   359	
+   360	static void key_cell(int32_t x, int32_t y, int32_t w, int32_t h, uint32_t k, uint16_t off)
+   361	{
+   362	    int32_t v, p;
+   363	    cv_rect(x, y, w, h, off);
+   364	    if (!(ui.keys >> k & 1u))
+   365	        return;
+   366	    v = (ui.vel[k] * h + 126) / 127;
+   367	    p = (ui.prs[k] * h + 126) / 127;
+   368	    cv_rect(x, y + h - v, w, v, C_HI);
+   369	    if (p)
+   370	        cv_rect(x + 2, y + h - p, w - 4, p, C_WHITE);
+   371	}
+   372	
+   373	static void draw(void)
+   374	{
+   375	    char t[24];
+   376	    int32_t note = voice_note;
+   377	    uint32_t i, now = plat_ms(), pct = plat_master() * 100u / 4096u;
+   378	    static const uint8_t WK[16] = PLAT_WHITE_KEYS, BK[11] = PLAT_BLACK_KEYS;
+   379	    /* the header: the name and the note, or a message for a moment */
+   380	    cv_begin(240, 32, C_BLACK);
+   381	    if (now < ui.msg_until) {
+   382	        int32_t x = cv_text(10, 6, &FONT_B, ui.msg[0], C_WHITE);
+   383	        cv_text(x + 8, 6, &FONT_B, ui.msg[1], C_HI);
+   384	    } else {
+   385	        int32_t x = cv_text(10, 6, &FONT_B, APP_NAME, C_WHITE);
+   386	        if (FM1B_BLE)                        /* Bluetooth: grey while it waits, lit while a computer is connected */
+   387	            x = cv_text(x + 8, 10, &FONT_XS, "BLE", plat_ble_connected() ? C_HI : C_DIM);
+   388	        if (FM1B_BLE_CENTRAL)                /* a Bluetooth MIDI device: lit while connected */
+   389	            cv_text(x + 6, 10, &FONT_XS, "DEV", plat_ble_device() == BLE_DEV_READY ? C_HI : C_DIM);
+   390	        if (note >= 0) {                     /* the note, and the last key's velocity and pressure */
+   391	            int32_t x;
+   392	            note_name(note, t);
+   393	            x = 230 - text_w(&FONT_B, t);
+   394	            cv_text(x, 6, &FONT_B, t, C_HI);
+   395	            if (ui.keys >> ui.last_key & 1u) {
+   396	                char n[24] = "V ";
+   397	                int_text(ui.vel[ui.last_key], t);
+   398	                text_cat(n, t);
+   399	                text_cat(n, "  P ");
+   400	                int_text(ui.prs[ui.last_key], t);
+   401	                text_cat(n, t);
+   402	                cv_text(x - 12 - text_w(&FONT_XS, n), 10, &FONT_XS, n, C_GRAY);
+   403	            }
+   404	        }
+   405	    }
+   406	    cv_blit(0, 0);
+   407	    /* the buttons, 4 to a row, lit while held; the encoders and their counts, lit for a moment after a turn */
+   408	    cv_begin(240, 144, C_BLACK);
+   409	    for (i = 0; i < NB; i++)
+   410	        cell(4 + (int32_t)(i % 4u) * 58, (int32_t)(i / 4u) * 21, 56, BTN_NAME[i], (ui.btn >> i) & 1u);
+   411	    for (i = 0; i < NE; i++) {
+   412	        int32_t x = 4 + (int32_t)(i % 4u) * 58, y = 88 + (int32_t)(i / 4u) * 28;
+   413	        int lit = ui.turned_at[i] && now - ui.turned_at[i] < 300u;
+   414	        cv_text(x, y, &FONT_XS, ENC_NAME[i], lit ? C_HI : C_GRAY);
+   415	        int_text(ui.turns[i], t);
+   416	        cv_text(x, y + 13, &FONT_XS, t, lit ? C_WHITE : C_DIM);
+   417	    }
+   418	    cv_blit(0, 36);
+   419	    /* the keys, black above white: a held key fills to its velocity (amber), its pressure over that (white) */
+   420	    cv_begin(240, 60, C_BLACK);
+   421	    for (i = 0; i < 16u; i++)
+   422	        key_cell(4 + (int32_t)i * 14, 14, 13, 14, WK[i], C_DIM);
+   423	    for (i = 0; i < 11u; i++) {
+   424	        static const uint8_t AT[11] = {0, 1, 2, 4, 5, 7, 8, 9, 11, 12, 14};   /* the white key each one follows */
+   425	        key_cell(4 + (int32_t)AT[i] * 14 + 8, 0, 11, 12, BK[i], C_LINE);
+   426	    }
+   427	    octave_text(t);
+   428	    cv_text(4, 36, &FONT_XS, "OCT", C_GRAY);
+   429	    cv_text(30, 36, &FONT_XS, t, C_HI);
+   430	    cv_text(64, 36, &FONT_XS, "PRESET", C_GRAY);
+   431	    cv_text(112, 36, &FONT_XS, WAVE_NAME[set.wave], C_HI);
+   432	    if (midi_count) {                        /* the last MIDI message in, and where from */
+   433	        static const char *const PORT[NPORTS] = {"USB", "BLE", "TRS"};
+   434	        static const char HEX[] = "0123456789ABCDEF";
+   435	        uint32_t m = midi_last, b;
+   436	        char h[12];
+   437	        for (b = 0; b < 3u; b++) {
+   438	            uint32_t v = (m >> (8u + 8u * b)) & 0xFFu;
+   439	            h[3 * b] = HEX[v >> 4];
+   440	            h[3 * b + 1] = HEX[v & 15u];
+   441	            h[3 * b + 2] = b < 2u ? ' ' : 0;
+   442	        }
+   443	        cv_text(4, 48, &FONT_XS, "MIDI IN", C_GRAY);
+   444	        cv_text(52, 48, &FONT_XS, midi_last_port < NPORTS ? PORT[midi_last_port] : "", C_HI);
+   445	        cv_text(82, 48, &FONT_XS, h, C_WHITE);
+   446	    }
+   447	    cv_text(178, 36, &FONT_XS, "VOL", C_GRAY);
+   448	    int_text((int32_t)pct, t);
+   449	    text_cat(t, "%");
+   450	    cv_text(204, 36, &FONT_XS, t, C_HI);
+   451	    cv_blit(0, 180);
+   452	}
+   453	
+   454	void app_ui_init(void)
+   455	{
+   456	    touch_on(1);                             /* velocity and pressure: the keys' readings on */
+   457	    lcd_fill(0, 0, 240, 240, C_BLACK);
+   458	    ui.redraw = 1;
+   459	}
+   460	
+   461	void app_frame(void)
+   462	{
+   463	    static uint32_t last_pct, lit_until, last_ble, last_midi;
+   464	    uint32_t i, now = plat_ms(), pct = plat_master() * 100u / 4096u;
+   465	    input();
+   466	    speak();
+   467	    for (i = 0; i < NE; i++)                 /* an encoder's light goes out */
+   468	        if (ui.turned_at[i] && now - ui.turned_at[i] < 400u && now > lit_until)
+   469	            lit_until = ui.turned_at[i] + 300u;
+   470	    if (lit_until && now >= lit_until) {
+   471	        lit_until = 0;
+   472	        ui.redraw = 1;
+   473	    }
+   474	    if (FM1B_BLE_CENTRAL) {                  /* looking: a device found is named at once (REC connects to it) */
+   475	        static int found;
+   476	        int n = ui.looking ? btdev_count() : 0, ev;
+   477	        btdev_page(ui.looking && !set.ble_off);
+   478	        if (n > found && btdev_pick() < n)
+   479	            ble_device_say();
+   480	        found = n;
+   481	        while ((ev = btdev_event()) != BTDEV_NONE)   /* a device connected, given up or lost */
+   482	            if (ev == BTDEV_CONNECTED || ev == BTDEV_NO_ANSWER || ev == BTDEV_LOST)
+   483	                app_say("DEVICE", btdev_word(ev));
+   484	    }
+   485	    if (midi_count != last_midi) {
+   486	        last_midi = midi_count;
+   487	        ui.redraw = 1;
+   488	    }
+   489	    if (pct != last_pct || (uint32_t)(plat_ble_connected() | plat_ble_device() << 1) != last_ble ||
+   490	        (ui.msg_until && now >= ui.msg_until)) {
+   491	        last_pct = pct;
+   492	        last_ble = (uint32_t)(plat_ble_connected() | plat_ble_device() << 1);
+   493	        if (now >= ui.msg_until)
+   494	            ui.msg_until = 0;
+   495	        ui.redraw = 1;
+   496	    }
+   497	    if (ui.redraw) {
+   498	        ui.redraw = 0;
+   499	        draw();
+   500	    }
+   501	}
+   502	
+   503	#ifdef PLAT_HOST
+   504	int app_expect(const char *what, int *got)
+   505	{
+   506	    if (!strcmp(what, "octave"))
+   507	        *got = set.octave;
+   508	    else if (!strcmp(what, "wave"))
+   509	        *got = set.wave;
+   510	    else if (!strcmp(what, "note"))
+   511	        *got = voice_note;
+   512	    else if (!strcmp(what, "dirty"))
+   513	        *got = set_dirty;
+   514	    else if (!strcmp(what, "vel"))           /* the last key's velocity and pressure */
+   515	        *got = ui.vel[ui.last_key];
+   516	    else if (!strcmp(what, "prs"))
+   517	        *got = ui.prs[ui.last_key];
+   518	    else if (!strncmp(what, "turns", 5))    /* turnsN: encoder N's count (plat.h EN_*) */
+   519	        *got = ui.turns[atoi(what + 5) % NE];
+   520	    else
+   521	        return 0;
+   522	    return 1;
+   523	}
+   524	#endif
+     1	/* SPDX-License-Identifier: MPL-2.0
+     2	 * Copyright (C) 2026 Charles Vestal */
+     3	/* The template: the smallest complete fm1-base firmware. Copy this directory to start a firmware.
+     4	 * This header is the app's half of the contract with the platform (device/unity.c, host/plat_host.c). */
+     5	#pragma once
+     6	#include <stdint.h>
+     7	#include "plat.h"
+     8	
+     9	#define APP_NAME "TEMPLATE"
+    10	#define APP_SPLASH_RGB RGB(242, 120, 72)
+    11	#define APP_BLOCK 256u                   /* frames per audio block: 5.8 ms at 44.1 kHz */
+    12	#define APP_TOUCH                        /* velocity and pressure from the keys (lib/touch.h) */
+    13	#define APP_BTDEV                        /* Bluetooth MIDI devices (lib/btdev.h) */
+    14	#define APP_BLE_AT_BOOT (!template_ble_off())   /* Bluetooth at power-on: as the player left it (REC held) */
+    15	int template_ble_off(void);
+    16	
+    17	/* the store: the app's objects, the panel calibration (the platform's) and Bluetooth's address and pairing among
+    18	 * them, and their flash offsets */
+    19	enum { OBJ_SETTINGS, OBJ_PANEL, OBJ_BLE, OBJ_NOBJ };
+    20	#define APP_STORE_MAP {0xFC000u, 0xDC000u, 0xDE000u}
+    21	
+    22	/* the contract: the platform calls these */
+    23	void app_init(void);                     /* boot: the engine, then the saved settings (or defaults) */
+    24	void app_render(int32_t *lr, uint32_t n, uint32_t master_q12);   /* audio interrupt: n stereo frames, 24-bit */
+    25	void app_panic(void);                    /* silence now (before an update rewrites the flash) */
+    26	void app_ui_init(void);                  /* the first screen, after the splash */
+    27	void app_frame(void);                    /* the UI: input and a redraw, about 60 times a second */
+    28	void app_input_only(void);               /* between frames: input only */
+    29	void app_say(const char *a, const char *b);   /* a short message on the screen and to a screen reader */
+    30	
+    31	/* the host simulator's checks (host/plat_host.c "expect"): octave, wave, note (-1 none), dirty, turnsN */
+    32	#define APP_HOST_EXPECT
+    33	int app_expect(const char *what, int *got);
+```
+</details></tool-use>
+
+_**Agent - sidechain (claude-opus-5-5 2026-11-18 10:16:26Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Read device main_fm1.c render path
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/third_party/fm1-base && sed -n 1,140p device/main_fm1.c | cat -n`
+
+```text
+     1	/* SPDX-License-Identifier: MPL-2.0
+     2	 * Copyright (C) 2026 Charles Vestal
+     3	 * Boot, audio ISR and main loop adapted from Felucca's main.c / audio.c, Copyright (C) 2026
+     4	 * Leo Kuroshita (@kurogedelic), Hugelton Instruments. */
+     5	/* The platform's boot and main loop (from X0X's, by way of FoMni-1): boot (WDT first, boot-loop guard, guards), LCD, input (TIMER5
+     6	 * 10 kHz), audio (ALNK0), USB; then the main loop: UI at ~60 frames/s, input polled in between. */
+     7	extern uint32_t _data_start[], _data_end[], _data_load[], _bss_start[], _bss_end[];
+     8	extern uint32_t _pool_start[], _pool_end[], _rt_start[], _rt_end[], _rt_load[];
+     9	extern uint8_t _app_xip_end[];
+    10	#include "boot_lzma.h"
+    11	
+    12	/* --------------------------------------------------------------- audio --- */
+    13	/* HALF_FRAMES (unity.c, from APP_BLOCK): the I2S half buffer, 256 frames = 5.8 ms at 44.1 kHz by default */
+    14	#define HALF_WORDS (HALF_FRAMES * 2u)
+    15	#define FS 44100u
+    16	#define REND_FRAMES HALF_FRAMES             /* app_render's frames per call */
+    17	static int32_t abuf[2u * HALF_WORDS] __attribute__((aligned(4)));
+    18	
+    19	#define DBG_MAGIC 0x44424731u                       /* "DBG1": read with `fm1t memr` */
+    20	struct fm1b_dbg {
+    21	    uint32_t magic, halves, max_us, nested, in_audio, late, timer_irqs, ui_frames;
+    22	    uint32_t last_us, cpu_q12, boots, stage;
+    23	    uint32_t crash_seen;                            /* the crash count already reported at a boot */
+    24	#if FM1B_CRASHLOG
+    25	    uint32_t crash_kept, crash_saving;              /* the crash count already in the flash history; a boot's save of it
+    26	                                                     * under way (crashlog.c cl_boot: one cut short is not tried again) */
+    27	#endif
+    28	} fm1b_dbg __attribute__((section(".noinit")));
+    29	static uint8_t safe_mode;                           /* two failed boots: no audio, USB on (safe_main) */
+    30	int8_t clock_fix;                                   /* fm1_clock_stock() at the start: 0 stock already, 1 set, -1 failed */
+    31	static uint8_t power_boot[4];                       /* ANA_CON0, CON5, CON7, WLDO12_AUTO as the start found them */
+    32	static int8_t power_fix;                            /* fm1_power_stock(): 1 the DC-DC turned on, 0 it was on */
+    33	static uint32_t clock_boot[6];                      /* the clock's registers as the boot loader left them (fm1_clock_read) */
+    34	static uint8_t rails_boot[2], rails_tries;          /* VDC14's and SYSVDD's registers as the boot loader left them, and
+    35	                                                     * the raises it took to read back M-VAVE's levels (the log) */
+    36	static uint32_t wdt_stage __attribute__((section(".noinit")));   /* the main loop's step when the watchdog fired:
+    37	                                                                  * 2 Bluetooth, 3 the app's loop, 4 USB, 5 a frame,
+    38	                                                                  * 6 input, 7 the debug stats (fm1b_dbg.stage) */
+    39	
+    40	#if FM1B_BT_AUDIO
+    41	static int own_bta_feed(const int32_t *o, uint32_t n);   /* bt_own_audio.c */
+    42	static int bta_frame(const uint8_t *p, uint32_t n);
+    43	#endif
+    44	#if FM1B_BLE_OWN && FM1B_BLE_CENTRAL
+    45	static int dev_frame(const uint8_t *p, uint32_t n);   /* bt_own_central.c */
+    46	#endif
+    47	#include "uac_mix.h"                                /* the USB recording, the computer's audio, in that order */
+    48	#include "fm1_flash_ok.h"                          /* the flash parts the storage may use (FM1B_FLASH_JEDEC_OK) */
+    49	#if FM1B_BT_AUDIO
+    50	static volatile uint8_t bta_streamed;               /* the last render went to Bluetooth (plat_bta_streams) */
+    51	int plat_bta_streams(void) { return bta_streamed; }
+    52	#else
+    53	int plat_bta_streams(void) { return 0; }
+    54	#endif
+    55	static void render_block(int32_t *o)                /* ALNK0: one half, measured */
+    56	{
+    57	    uint32_t t0 = fm1_ticks(), us, budget = HALF_FRAMES * 1000000u / FS;
+    58	    fm1b_dbg.in_audio = 1;
+    59	#if FELUCCA_UAC
+    60	    if (!radio_quiet)                                 /* (USB audio's code is in the flash too: none while the radio
+    61	                                                     * calibrates, when a fetch can come back corrupted; a CTL-1 crashed
+    62	                                                     * so, returning to a garbled address, 0.6 s into each start) */
+    63	        uac_render_start();
+    64	#endif
+    65	    {
+    66	        uint32_t k, gain = APP_GAIN(master_pos);
+    67	#if FELUCCA_UAC
+    68	        const int full = uac_full != 0;             /* USB audio full: the render at full level for the USB audio
+    69	                                                     * input, MASTER for the speaker after it (plat_usb_audio_full) */
+    70	#else
+    71	        const int full = 0;
+    72	#endif
+    73	        for (k = 0; k < HALF_FRAMES; k += REND_FRAMES) {
+    74	            if (radio_quiet) {                        /* the radio calibrating: no flash reads (radio.c) */
+    75	#ifdef APP_QUIET
+    76	                app_quiet(o + 2u * k, REND_FRAMES);
+    77	#else
+    78	                uint32_t i;
+    79	                for (i = 0; i < 2u * REND_FRAMES; i++)
+    80	                    o[2u * k + i] = 0;
+    81	#endif
+    82	            } else {
+    83	                app_render(o + 2u * k, REND_FRAMES, full ? 4096u : gain);
+    84	            }
+    85	            if (radio_quiet)
+    86	                continue;
+    87	            uac_mix(o + 2u * k, REND_FRAMES, gain, master_pos, full, usb_play_q12);   /* the USB
+    88	                                                     * recording, then the computer's audio, then MASTER if full */
+    89	#if FM1B_BT_AUDIO
+    90	#ifdef APP_BT_FRAMES
+    91	            bta_streamed = (uint8_t)own_bta_feed(app_bt_frames(o + 2u * k, REND_FRAMES), REND_FRAMES);   /* (the app's
+    92	                                                     * frames for Bluetooth: 0 silence) */
+    93	#else
+    94	            bta_streamed = (uint8_t)own_bta_feed(o + 2u * k, REND_FRAMES);
+    95	#endif
+    96	            if (bta_streamed) {                     /* Bluetooth audio streams: the FM-1's own output muted */
+    97	                uint32_t i;
+    98	                for (i = 0; i < 2u * REND_FRAMES; i++)
+    99	                    o[2u * k + i] = 0;
+   100	            }
+   101	#endif
+   102	        }
+   103	    }
+   104	    us = (fm1_ticks() - t0) / FM1_TICKS_PER_US;
+   105	#ifdef APP_OVERLOAD
+   106	    if (us > budget * 9u / 10u)
+   107	        app_overload();                             /* over 90 % of its time: the app sheds what it can */
+   108	#endif
+   109	    /* cpu_q12 is the load smoothed over about 16 blocks, in 1/4096 of the budget. The +8 rounds the division, so
+   110	     * a steady load settles within half a percent of its true value from either side. us * 4096 wraps above about
+   111	     * 1 s in one block, which only an interrupt stuck that long reaches: the reading is then wrong until it decays. */
+   112	    fm1b_dbg.cpu_q12 = (fm1b_dbg.cpu_q12 * 15u + us * 4096u / budget + 8u) / 16u;
+   113	    audio_cpu_pct = (fm1b_dbg.cpu_q12 * 100u + 2048u) >> 12;   /* whole percent, rounded to nearest */
+   114	    fm1b_dbg.halves++;
+   115	    fm1b_dbg.last_us = us;
+   116	    if (us > fm1b_dbg.max_us)
+   117	        fm1b_dbg.max_us = us;
+   118	    fm1b_dbg.in_audio = 0;
+   119	}
+   120	
+   121	#ifndef FM1B_AUDIO_ASIDE
+   122	#define FM1B_AUDIO_ASIDE 0                          /* fm1.toml audio_aside = true: 1 */
+   123	#endif
+   124	#ifndef FM1B_AUDIO_AHEAD
+   125	#define FM1B_AUDIO_AHEAD 0                          /* fm1.toml audio_ahead = true: 1 (with FM1B_AUDIO_ASIDE) */
+   126	#endif
+   127	#if FM1B_AUDIO_ASIDE
+   128	#include "audio_commit.c"                           /* the half rendered aside, copied in while its half is free;
+   129	                                                     * FM1B_AUDIO_ASIDE 0 (the default): straight into the DMA's half */
+   130	#endif
+   131	
+   132	void fm1_alnk0_irq(void)                            /* via isr_alnk0 (hal/fm1_isr.S) */
+   133	{
+   134	    uint8_t p = fm1_audio_pending();
+   135	    fm1_audio_ack_aux(p);
+   136	    if (p & FM1_AUDIO_HALF) {
+   137	        uint32_t half = fm1_audio_free_half();
+   138	#if FM1B_AUDIO_ASIDE && FM1B_AUDIO_AHEAD
+   139	        uint32_t ok;
+   140	        static uint8_t behind;                      /* (renders in a row that ran past their half) */
+```
+</details></tool-use>
+
+_**Agent - sidechain (claude-opus-5-5 2026-11-18 10:16:27Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Find includes in firmware apps and submodules
+
+`grep -n '#include' firmware/morse/app.c firmware/morse/learn.c firmware/morse/morse.c firmware/morse/content.c firmware/morse/tone.c firmware/conductor/app.c firmware/voicelab/app.c firmware/hello/app.c | head -50; echo ---; cat .gitmodules 2>/dev/null; git submodule status 2>/dev/null | head; ls -la firmware/morse/ | head -40`
+
+```text
+firmware/morse/learn.c:3:#include "learn.h"
+firmware/morse/learn.c:4:#include "morse.h"
+firmware/morse/app.c:7:#include "fastmath.h"
+firmware/morse/app.c:8:#include "hostlink.c"
+firmware/morse/app.c:9:#include "ledfx.c"
+firmware/morse/app.c:10:#include "morse.c"
+firmware/morse/app.c:11:#include "learn.c"
+firmware/morse/app.c:12:#include "content.c"
+firmware/morse/app.c:13:#include "tone.c"
+firmware/morse/content.c:3:#include "content.h"
+firmware/morse/content.c:4:#include "learn.h"
+firmware/morse/tone.c:3:#include "tone.h"
+firmware/morse/morse.c:3:#include "morse.h"
+firmware/voicelab/app.c:5:#include "fastmath.h"
+firmware/voicelab/app.c:6:#include "lpc.c"
+firmware/voicelab/app.c:7:#include "adpcm.c"
+firmware/voicelab/app.c:18:#include "gen/voicedata.h"           /* host/voicelab/fwdata.py: VL_N, vl_words[] */
+firmware/hello/app.c:8:#include "fastmath.h"
+firmware/conductor/app.c:4:#include "fastmath.h"
+firmware/conductor/app.c:5:#include "hostlink.c"
+firmware/conductor/app.c:6:#include "ledfx.c"
+firmware/conductor/app.c:7:#include "chime.c"
+---
+[submodule "third_party/fm1-base"]
+	path = third_party/fm1-base
+	url = https://github.com/charlesvestal/fm1-base.git
+[submodule "firmware/morse"]
+	path = firmware/morse
+	url = https://github.com/daviddwlee84/fm1-morse.git
+ a7a90a38043607cbc34055ad9b9743389699d499 firmware/morse (v0.6-2-ga7a90a3)
+ c8e05997ce970875038156d2bbd69e712eac1543 third_party/fm1-base (heads/main)
+drwxr-xr-x@    - zhouhanru 18 Nov 16:49 build
+drwxr-xr-x@    - zhouhanru 18 Nov 02:31 common
+drwxr-xr-x@    - zhouhanru 18 Nov 04:35 docs
+drwxr-xr-x@    - zhouhanru 18 Nov 02:31 fm1-base
+drwxr-xr-x@    - zhouhanru 18 Nov 16:46 tests
+drwxr-xr-x@    - zhouhanru 18 Nov 05:34 web
+.rw-r--r--@   42 zhouhanru 18 Nov 02:31 .git
+.rw-r--r--@    7 zhouhanru 18 Nov 02:31 .gitignore
+.rw-r--r--@   93 zhouhanru 18 Nov 02:31 .gitmodules
+.rw-r--r--@ 119k zhouhanru 18 Nov 16:46 app.c
+.rw-r--r--@ 2.5k zhouhanru 18 Nov 15:39 app.h
+.rw-r--r--@ 9.6k zhouhanru 18 Nov 02:37 content.c
+.rw-r--r--@ 1.6k zhouhanru 18 Nov 02:37 content.h
+.rw-r--r--@ 1.6k zhouhanru 18 Nov 15:39 fm1.toml
+.rw-r--r--@  613 zhouhanru 18 Nov 16:36 fmhub.json
+.rw-r--r--@  16k zhouhanru 18 Nov 04:56 learn.c
+.rw-r--r--@ 6.6k zhouhanru 18 Nov 04:23 learn.h
+.rw-r--r--@ 7.0k zhouhanru 18 Nov 04:56 LEARNING.md
+.rw-r--r--@  35k zhouhanru 18 Nov 02:37 LICENSE
+.rw-r--r--@  17k zhouhanru 18 Nov 04:33 morse.c
+.rw-r--r--@ 8.5k zhouhanru 18 Nov 04:22 morse.h
+.rw-r--r--@  13k zhouhanru 18 Nov 15:49 README.md
+.rw-r--r--@ 1.9k zhouhanru 18 Nov 02:37 tone.c
+.rw-r--r--@ 1.1k zhouhanru 18 Nov 02:37 tone.h
+.rw-r--r--@  498 zhouhanru 18 Nov 02:37 words.tsv
+```
+</details></tool-use>
+
+_**Agent - sidechain (claude-opus-5-5 2026-11-18 10:16:32Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Read unity.c header and includes
+
+`cat firmware/morse/.gitmodules; sed -n 1,60p third_party/fm1-base/device/unity.c; grep -n 'include "app\|#include' third_party/fm1-base/device/unity.c | head -60`
+
+```text
+[submodule "fm1-base"]
+	path = fm1-base
+	url = https://github.com/charlesvestal/fm1-base.git
+/* SPDX-License-Identifier: MPL-2.0
+ * Copyright (C) 2026 Charles Vestal */
+/* An fm1-base firmware for the M-VAVE FM-1: one compilation unit for the platform and the app
+ * (Felucca's layout: the chip and board layers are header-only, so everything that touches them is here).
+ * An app's heavy code (its DSP) may be separate units at -O2 (fm1.toml: o2); this one is -Os. Order matters.
+ *
+ * The app provides, on the include path:
+ *   app.h  its configuration (below) and the contract: app_init, app_render, app_panic, app_ui_init,
+ *          app_frame, app_input_only, app_say; its store objects (OBJ_PANEL among them, OBJ_NOBJ) and their
+ *          flash map APP_STORE_MAP
+ *   app.c  the app itself (its own unity build), compiled here after the platform
+ * Configuration, each with a default:
+ *   APP_NAME "TEMPLATE"     on the splash, crash and safe-mode screens and for the screen reader
+ *   APP_VERSION "DEV"       a release build passes its own (tools/build.py --release)
+ *   APP_BLOCK 256           frames per audio half (5.8 ms at 44.1 kHz), the render's block
+ *   FM1B_CDC 0              USB serial console (a second USB function; fm1.toml usb_console = true): the app's text over
+ *                           plat_console_* (console.c)
+ *   FM1B_UAC 1              USB audio input: the master output, recordable over the cable at 44.1 kHz (checked on an
+ *                           FM-1 2026-10-16: no lost frame); FM1B_UAC_48K 0 (48 kHz too: needs the resampler's filter)
+ *   FM1B_UAC_DEEP 0         1: the USB audio input keeps a half more in hand, for renders that take most of
+ *                           their time (its 4 KB ring in the app's pool; 5.8 ms more latency)
+ *   FM1B_UAC_RING_POOL 0    1: the USB audio input's 2 KB ring in the pool, its RAM left to the app
+ *   FM1B_UAC_OUT 1          USB audio output: the computer plays through the FM-1, mixed after the app and after the
+ *                           USB recording's tap, at MASTER and plat_usb_play_gain (device/uac_mix.h)
+ *   FM1B_TRS 1              MIDI in on the TRS jack
+ *   APP_TOUCH               velocity and pressure from the keys (lib/touch.h)
+ *   FM1B_BLE 0              Bluetooth MIDI (fm1.toml ble = true; tools/build.py --no-ble leaves it out)
+ *   FM1B_MIRROR 0           the screen and panel mirrored over USB (fm1.toml mirror = true: mirror.c)
+ *   FM1B_MSC 0              disk mode: the FM-1 as a USB drive of the app's blocks (fm1.toml msc = true: msc.c)
+ *   FM1B_BACKUP 0           backup and restore of the app's objects over USB (fm1.toml backup = true: backup.c)
+ *   FM1B_RES 0              the resource region (fm1.toml resources = FILE: res.c; with backup)
+ *   FM1B_CPU2 0             the second core (fm1.toml cpu2 = true: cpu2.c, felucca-bsp's fm1_cpu1.h)
+ *   FM1B_CACHE_RAM 0        data-cache ways as RAM, 2, 4 or 7 (fm1.toml cache_ram_ways: plat_cache_ram, felucca-bsp's
+ *                           fm1_cache_ram.h; set and tested in fm1_cstart, main_fm1.c) */
+#include <stdint.h>
+#include "plat.h"
+#include "app.h"                  /* first: the scan's hooks below may call the app */
+#ifdef APP_TOUCH
+#include "touch.h"                /* velocity and pressure from the keys (lib/touch.c) */
+#endif
+#ifdef APP_KEY_SENSE              /* the keys' readings (plat_sense) to the app, by key: 0..26 */
+#define FM1_KEY_OF(col, rowbit) ((uint32_t)FM1_KEYMAP[rowbit][col] - 14u)
+#define FM1_INPUT_ANALOG(col, rowbit, v, driven) \
+    (FM1_KEYMAP[rowbit][col] >= 14 ? app_key_sample(FM1_KEY_OF(col, rowbit), (v), fm1_ticks(), (int)(driven)) : (void)0)
+#define FM1_INPUT_DRIVE(col, rowbit) (FM1_KEYMAP[rowbit][col] >= 14 && app_key_drive(FM1_KEY_OF(col, rowbit)))
+#define FM1_INPUT_PROBE(col, rowbit, v, pressed) \
+    (FM1_KEYMAP[rowbit][col] >= 14 ? app_key_probe(FM1_KEY_OF(col, rowbit), (v), (pressed)) : (void)0)
+#define FM1_INPUT_LED_OK(col, rowbit) (FM1_KEYMAP[rowbit][col] < 14 || app_key_led_ok(FM1_KEY_OF(col, rowbit)))
+#endif
+#include "fm1_time.h"
+#include "fm1_sys.h"
+#include "fm1_irq.h"
+#include "fm1_guard.h"
+/* The input scan's rate (fm1.toml input_hz: FM1B_INPUT_HZ, felucca-bsp's FM1_INPUT_HZ: keys, knobs and LEDs, one column
+ * a tick) and TIMER5's (FM1B_T5_HZ), which also polls USB and runs the app's tick. TIMER5 never runs slower than
+ * 2 kHz, so USB is polled at 2 kHz or more at every input rate (MIDI as before, USB audio's one packet per 1 ms frame
+ * with a poll to spare); with usb_audio_channels it stays at 10 kHz (the stream serviced every 0.1 ms). The scan then
+ * runs on 1 tick in FM1B_T5_SCAN_DIV (input_hz 1000: every other 2 kHz tick).
+ *   input_hz  TIMER5  scan       USB poll        app tick
+ *   10000     10 kHz  each tick  each 5th: 2 kHz each 10th
+35:#include <stdint.h>
+36:#include "plat.h"
+37:#include "app.h"                  /* first: the scan's hooks below may call the app */
+39:#include "touch.h"                /* velocity and pressure from the keys (lib/touch.c) */
+50:#include "fm1_time.h"
+51:#include "fm1_sys.h"
+52:#include "fm1_irq.h"
+53:#include "fm1_guard.h"
+85:#include "fm1_input.h"
+86:#include "fm1_timer.h"
+87:#include "fm1_audio.h"
+88:#include "fm1_adc.h"
+89:#include "fm1_jack.h"               /* the headphone jack's switch (PB5): plat_headphones */
+90:#include "fm1_lcd_hw.h"
+94:#include "fm1_flash.h"
+95:#include "fm1_xip.h"
+96:#include "fm1_perf.h"
+97:#include "fm1_clock.h"
+102:#include "fm1_cache_ram.h"        /* data-cache ways as RAM (fm1.toml cache_ram_ways): plat_cache_ram */
+105:#include "libc.c"
+106:#include "lcd.c"
+107:#include "gfx.c"
+112:#include "fm1b_config.h"          /* APP_NAME, APP_VERSION, APP_BLOCK ...: the app's, or the defaults */
+113:#include "sys_text.c"             /* the faces of the platform's own screens: fm1-base's, or the app's (APP_SYS_TEXT) */
+200:#include "usb.c"
+201:#include "console.c"              /* the USB serial console's bytes for the app (plat_console_*, FM1B_CDC) */
+206:#include "midi_uart.c"
+243:#include "storage.c"
+249:#include "ota.c"
+293:#include "ann_words.h"            /* the link to the app's words file (tools/gen_words.py, from the app's words.tsv) */
+294:#include "announce.c"             /* the screen as text for a screen reader (fm1-reader) */
+307:#include "panel.c"
+309:#include "radio.c"                /* the shim's platform, a radio's start; Bluetooth MIDI (FM1B_BLE, ble/: the shim, the
+312:#include "radio_none.c"           /* the build with no radio: nothing of JieLi's linked */
+315:#include "wifi.c"                 /* WiFi (ble/wifi/, the SDK's lwIP) */
+318:#include "mirror.c"               /* the screen and the panel mirrored over USB (web/mirror/, tools/fm1_mirror.py) */
+362:#include "plat_fm1.c"
+364:#include "cpu2.c"                 /* the second core: plat_cpu2_* */
+367:#include "msc.c"                  /* disk mode: the FM-1 as a USB drive (plat_disk_*) */
+370:#include "backup.c"               /* backup and restore of the app's objects over USB (tools/fm1_backup.py) */
+395:#include "fm1_res.h"              /* FM1B_RES_LEN, FM1B_RES_CRC: the build's resources (build.py, from the file) */
+396:#include "res.c"                  /* the resource region (tools/fm1_resources.py) */
+450:#include "touch.c"
+453:#include "btdev.c"                /* Bluetooth MIDI devices for an app's page (lib/btdev.h) */
+455:#include "app.c"
+456:#include "main_fm1.c"
+```
+</details></tool-use>
+
+_**Agent - sidechain (claude-opus-5-5 2026-11-18 10:16:32Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Grep DESIGN.md for audio contract
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/third_party/fm1-base && wc -l DESIGN.md && grep -n -i -E "render|double|float|fp-contract|Wdouble|single-precision|24-bit|1 << 2|headroom|clip|RAM_CODE|ram_text|cpu2|second core|cpu_pct|xrun|overload|block|44\.1|44100|stack" DESIGN.md | head -80`
+
+```text
+      98 DESIGN.md
+47:| core | `plat_ms`, `plat_buttons`, `plat_keys`, `plat_enc`, `plat_master`, `plat_leds`, `plat_glow`, `plat_play_red`, `plat_keys_dim`, `plat_store_load/save`, `plat_cpu_pct`, `plat_xruns` | all |
+50:| second core | `plat_cpu2_*`, `plat_core` (fm1.toml `cpu2 = true`; how to use it: [docs/SECOND-CORE.md](docs/SECOND-CORE.md)) | LOOM-8; X0X, NuSaw and SPH-16 on their own copies |
+52:| profiling | `plat_cycles*`, `plat_stalls*`, `plat_cpu_peak_pct`, `plat_irq_stack_*`, `plat_ticks24` | X0X, SPH-16, XY-1 |
+61:The app provides the other side: `app_init`, `app_frame` (the UI, about 60 a second), `app_render` (the audio,
+63:`app_config`: the block size, the second core, the USB names, the store's objects.
+69:sources, the optional groups, the fonts. It builds the app and the update loader, checks the rules (no `double`, no
+86:  storage, the second core, and later Bluetooth MIDI.
+94:   also the device test of felucca-bsp's latest changes (the supplies, the second core held on reset, the USB names).
+```
+</details></tool-use>
+
+_**Agent - sidechain (claude-opus-5-5 2026-11-18 10:16:36Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Read DESIGN.md app contract and list docs
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/third_party/fm1-base && sed -n 55,80p DESIGN.md; ls docs bsp/docs 2>/dev/null | head -60`
+
+```text
+| Bluetooth | `plat_ble_*` | CTL-1 |
+| concurrency | `plat_lock`, `plat_unlock`, `plat_yield`, `plat_idle` | CTL-1, Mocky |
+
+The names stay as they are, so moving a firmware is a change of include paths, not of code. A firmware's own oddities
+(X0X's sample slots) stay in that firmware.
+
+The app provides the other side: `app_init`, `app_frame` (the UI, about 60 a second), `app_render` (the audio,
+called by the platform's audio interrupt), `app_tick` (1 kHz, optional), `app_say` (the screen reader), and
+`app_config`: the block size, the second core, the USB names, the store's objects.
+
+## Build
+
+One `tools/build.py` for every firmware, driven by the firmware's `fm1.toml`: the name, the package identity
+(`FM-1_` + digits), the USB names (felucca-bsp's `FELUCCA_USB_MANUFACTURER` / `FELUCCA_USB_PRODUCT`), the app's
+sources, the optional groups, the fonts. It builds the app and the update loader, checks the rules (no `double`, no
+hardware access outside the BSP and fm1-base's device files), and packs the `.fwsc` with felucca-bsp's `fm1pkg.py`.
+`tools/run_tests.sh` builds the host simulator and runs the app's scripted tests. The web pages (installer, emulator,
+backup) are generated from templates with the firmware's name and words file.
+
+The FM-1 tells its identity to the update handshake (felucca-bsp `chip/ota.c`, cmd 0x11). M-VAVE's M-UPGRADE 3.11
+takes `NAME_` and one to three digits only, so the plain handshake gets the name, `_` and the first three digits
+(`FM-1_11000100` -> `FM-1_110`); the handshake with the one-byte body 01 gets the whole identity. The installers
+(`tools/fm1_install.py`, `web/fm1ota.js`, the backup page) ask that way when the plain answer is `NAME_` and three
+digits, and keep the plain answer when nothing answers (M-VAVE's firmware, the loaders, older builds). The scheme is
+PERF-1's (deamonSLINKY/PERF-1), so its tools and ours read each other's firmwares.
+
+docs:
+bt
+FIRMWARE-JSON.md
+firmware.schema.json
+SECOND-CORE.md
+
+bsp/docs:
+BOARD_IO.md
+CPU.md
+EXPERIMENTAL.md
+FLASH.md
+USB_HOST.md
+```
+</details></tool-use>
+
+_**Agent - sidechain (claude-opus-5-5 2026-11-18 10:16:37Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Read fm1b_config.h and compare hello to template
+
+`cat -n third_party/fm1-base/include/fm1b_config.h | head -80; echo; diff -rq firmware/hello third_party/fm1-base/template 2>&1 | head; diff firmware/hello/app.c third_party/fm1-base/template/app.c | head -20`
+
+```text
+     1	/* SPDX-License-Identifier: MPL-2.0
+     2	 * Copyright (C) 2026 Charles Vestal */
+     3	/* The app's configuration (app.h) with fm1-base's defaults; shared by the device (device/unity.c) and the host
+     4	 * simulator (host/plat_host.c). Included after app.h and gfx.c (RGB). */
+     5	#pragma once
+     6	#ifndef APP_NAME
+     7	#define APP_NAME "TEMPLATE"              /* on the splash, crash and safe-mode screens and for the screen reader */
+     8	#endif
+     9	#ifndef APP_BIG_FONT
+    10	#define APP_BIG_FONT FONT_L              /* the splash's name and the panel's screens (capitals): FONT_M saves 20 KB */
+    11	#endif
+    12	#ifndef APP_SPLASH_RGB
+    13	#define APP_SPLASH_RGB RGB(242, 120, 72) /* the name on the splash screen */
+    14	#endif
+    15	#ifndef APP_PALETTE
+    16	#define APP_PALETTE 1u                   /* gfx.c PALETTES: the screen's colours (1 amber) */
+    17	#endif
+    18	#ifndef APP_TAGLINE
+    19	#define APP_TAGLINE ""                   /* under the name on the splash screen */
+    20	#endif
+    21	#ifndef APP_GAIN
+    22	#define APP_GAIN(m) ((m) * (m) >> 12)    /* the render's gain from MASTER's position: the square, 0..~4096 */
+    23	#endif
+    24	#ifndef APP_VERSION
+    25	#define APP_VERSION "DEV"                /* a release build passes its own (tools/build.py --release) */
+    26	#endif
+    27	#ifndef APP_BLE_AT_BOOT
+    28	#define APP_BLE_AT_BOOT 1                /* Bluetooth starts at power-on (an app's setting may say no) */
+    29	#endif
+    30	#ifndef APP_BLOCK
+    31	#define APP_BLOCK 256u                   /* frames per audio half and render: 5.8 ms at 44.1 kHz */
+    32	#endif
+
+Only in third_party/fm1-base/template: .github
+Only in firmware/hello: build
+Only in firmware/hello: web
+```
+</details></tool-use>
+
+_**Agent - sidechain (claude-opus-5-5 2026-11-18 10:16:38Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Inspect existing theory app files
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/firmware && ls -la theory theory/tests && head -60 theory/theory.h && wc -l theory/* theory/tests/* 2>/dev/null && cat theory/README.md | head -80`
+
+```text
+Exit code 1
+theory:
+drwxr-xr-x@    - zhouhanru 18 Nov 17:49 tests
+.rw-r--r--@ 1.8k zhouhanru 18 Nov 17:55 README.md
+.rw-r--r--@  21k zhouhanru 18 Nov 17:51 theory.c
+.rw-r--r--@ 8.1k zhouhanru 18 Nov 17:43 theory.h
+
+theory/tests:
+.rw-r--r--@ 31k zhouhanru 18 Nov 17:51 theory_test.c
+.rw-r--r--@ 41k zhouhanru 18 Nov 17:51 vectors.h
+/* SPDX-License-Identifier: GPL-3.0-or-later */
+/* theory: the music theory a pocket trainer needs, worked out instead of stored. Scales, chords, key signatures,
+ * the circle of fifths, Roman numerals and naming a chord someone plays, in every key, spelled the way a score
+ * spells them (F# in D major, Gb in Db major, E# in C# major).
+ *
+ * Every spelled note is a position f on the line of fifths: C = 0, G = 1, D = 2, F = -1, Bb = -2, F# = 6, Gb = -6.
+ * A step of +7 is a sharp, -7 a flat, +12 the next enharmonic spelling (B# = 12 sounds as C). From f:
+ *   pitch class   7f mod 12
+ *   letter        "FCGDAEB"[(f + 1) mod 7]
+ *   accidental    floor((f + 1) / 7)   (+1 a sharp, -1 a flat)
+ * Scales and chords are lists of offsets on that line from their root (a major third is +4, a minor third -3,
+ * a fifth +1), so transposing is adding, and one letter per scale step comes out by itself.
+ *
+ * Roman numerals: the case says the quality (V major, vi minor), the accidental is measured against the major
+ * scale on the same tonic, in minor keys too (pop and Wikipedia's habit: in A minor, G is bVII, C is bIII, G#dim
+ * is viio). ASCII by default (o diminished, /o half-diminished, as music21 writes them); an app with its own
+ * glyphs defines TH_GLYPH_SHARP, _FLAT, _DIM, _HDIM before including this file.
+ *
+ * No platform calls, no libc, no floating point (tests/theory_test.c runs it on a computer: just theory-unit). */
+#pragma once
+#include <stdint.h>
+
+#ifndef TH_GLYPH_SHARP
+#define TH_GLYPH_SHARP "#"
+#endif
+#ifndef TH_GLYPH_FLAT
+#define TH_GLYPH_FLAT "b"
+#endif
+#ifndef TH_GLYPH_DIM
+#define TH_GLYPH_DIM "o"
+#endif
+#ifndef TH_GLYPH_HDIM
+#define TH_GLYPH_HDIM "/o"
+#endif
+
+#define TH_NAME_MAX 16                   /* a note name, with room for multi-byte accidental glyphs */
+#define TH_CHORD_MAX 40                  /* a chord name: root, symbol, slash bass */
+#define TH_ROMAN_MAX 40                  /* a Roman numeral with a secondary target */
+#define TH_TONES_MAX 5                   /* notes in a chord at most */
+
+enum {                                   /* th_scales[] */
+    TH_MAJOR, TH_DORIAN, TH_PHRYGIAN, TH_LYDIAN, TH_MIXOLYDIAN, TH_MINOR, TH_LOCRIAN,
+    TH_HARMONIC,                         /* harmonic minor */
+    TH_MELODIC,                          /* melodic minor, ascending (jazz minor) */
+    TH_PENTA,                            /* major pentatonic */
+    TH_MPENTA,                           /* minor pentatonic */
+    TH_BLUES,                            /* minor pentatonic with the flat fifth */
+    TH_NSCALES
+};
+
+enum {                                   /* th_quals[]; the order is the order of preference when naming */
+    TH_MAJ, TH_MIN, TH_DIM, TH_AUG, TH_SUS4, TH_SUS2,
+    TH_7, TH_MAJ7, TH_M7, TH_M7B5, TH_DIM7, TH_MMAJ7, TH_6, TH_M6, TH_7SUS4, TH_ADD9, TH_MADD9,
+    TH_9, TH_MAJ9, TH_M9, TH_AUG7, TH_AUGMAJ7,
+    TH_5,                                /* power chord: root and fifth */
+    TH_NQUAL
+};
+
+typedef struct {
+    const char *name;
+      29 theory/README.md
+     564 theory/theory.c
+     131 theory/theory.h
+     603 theory/tests/theory_test.c
+    1177 theory/tests/vectors.h
+    2504 total
+```
+</details></tool-use>
+
+_**Agent - sidechain (claude-opus-5-5 2026-11-18 10:16:40Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Grep build.py no-double rule and BOARD_IO audio
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/third_party/fm1-base && grep -n -i -E "double|fp-contract|Wdouble|fsingle|float-only|fprev|libm" tools/build.py | head -30; grep -n -i -E "audio|i2s|alnk|dac|24-bit|sample|speaker|44\.1|44100|headroom|clip" bsp/docs/BOARD_IO.md | head -40`
+
+```text
+304:# build (-ffp-contract=off) computes the same samples
+306:FPU = [f"-mcpu={CPU}", "-mfprev1", "-ffp-contract=off"]
+660:        tc("cc", "-mcpu=r3", "-mfprev1", "-Oz", "-flto", "-c", w / "stub.c", "-o", w / "stub.bc")
+685:BLE_CF = ["-integrated-as", f"-mcpu={CPU}", "-mfprev1", "-fno-common", "-Oz", "-flto", "-fallow-pointer-null",
+1189:    # the FPU is single precision; a soft-double routine in the image means a double crept in
+1192:        notes.append(f"soft-double routines linked (JieLi's radio setup): {soft[:6]}")
+1194:        errors.append(f"soft-double routines linked: {soft[:6]} (a double in the code)")
+1196:        notes.append("no soft-double routines (single-precision FPU only)")
+1406:    """the app against a simulated FM-1 (host/plat_host.c), with this machine's compiler; -ffp-contract=off like the
+1412:    o2_objs = o2_objects(os.environ.get("CC", "cc"), ["-O2", "-ffp-contract=off", "-std=c99", "-w", "-DPLAT_HOST", *opt_flags(), *inc_dirs],
+1414:    cmd = [os.environ.get("CC", "cc"), "-O2", "-ffp-contract=off", "-std=c99", "-Wall", "-Wextra",
+1538:    o2_objs = o2_objects("emcc", ["-O2", "-ffp-contract=off", "-std=gnu99", "-w", "-DPLAT_HOST", "-DPLAT_WEB", *wf, *opt_flags(), *web_inc],
+1540:    o2_objs += web_objects(["-O2", "-ffp-contract=off", "-std=gnu99", "-w", "-DPLAT_HOST", "-DPLAT_WEB", *wf, *opt_flags(), *web_inc],
+1543:    cmd = ["emcc", "-O2", "-ffp-contract=off", "-std=gnu99", "-Wall", "-Wno-unused-function", "-Wno-unused-parameter",
+1656:    o2_objs = o2_objects("emcc", [*feats, "-O2", "-ffp-contract=off", "-std=gnu99", "-w", *defs, *inc], out / "o2")
+1658:    cmd = ["emcc", *feats, "-O2", "-ffp-contract=off", "-std=gnu99", "-Wall", "-Wno-unused-function",
+1:# FM-1 panel and audio contracts
+20:  at least `w * h`. No stride, clipping, scaling or colour conversion is implicit.
+44:## Audio: `boards/fm1/fm1_audio.h`
+46:### Fixed sample format and clock
+48:Every frame is two `int32_t` words in left, right order. Samples are signed Q23:
+52:A signed PCM16 sample becomes this format by multiplying by 256. Clip before
+53:storing; the driver does not saturate, convert float/PCM16, or resample.
+55:The supported request is `FM1_AUDIO_RATE` (44100), the **nominal** 44.1 kHz family.
+56:On the recognized stock audio PLL configuration, the hardware frame period is
+57:544 ticks of the 24 MHz reference: `FM1_AUDIO_RATE_NUM / FM1_AUDIO_RATE_DEN`, or
+60:Use this physical ratio for deadline calculations; nominal 44100 is appropriate
+65:this change. The driver's fixed ALNK settings are preserved. Startup now rejects
+66:unrecognized audio PLL register values (`0x119A0 != 0x45400203`, or
+70:It configures the 44.1-family selector/dividers without retuning the shared PLL
+71:or changing the CPU clock. Keep those PLL and ALNK clock settings unchanged
+74:[official IIS/ALNK documentation](https://doc.zh-jieli.com/AC79/zh-cn/release_v1.2.0/module_example/audio/iis.html).
+81:#define HALF_WORDS (256u * FM1_AUDIO_CHANNELS)
+82:static int32_t audio[2u * HALF_WORDS] __attribute__((aligned(4)));
+83:extern void isr_alnk0(void); /* chip/fm1_isr.S -> application fm1_alnk0_irq */
+86:int rc = fm1_audio_init_checked(audio, sizeof audio / sizeof audio[0],
+87:                                HALF_WORDS, FM1_AUDIO_RATE, isr_alnk0, 3);
+88:/* Check rc before enabling global interrupts or assuming that audio runs. */
+91:`half_words` counts 32-bit sample words, **not bytes or stereo frames**. Each half
+107:Validation failures return `FM1_AUDIO_ERR_BUFFER`, `FM1_AUDIO_ERR_RATE`, or
+108:`FM1_AUDIO_ERR_IRQ` before MMIO. A running DMA returns `FM1_AUDIO_ERR_BUSY`;
+109:an unknown PLL returns `FM1_AUDIO_ERR_CLOCK`. Failures leave the registers,
+110:interrupt configuration and sample data unchanged (register reads may occur).
+112:resets ALNK, sets the address/length/format/clock, clears stale pending events,
+114:disabled, outside the audio ISR, and enable interrupts promptly afterward.
+116:prefilled samples. Very small halves may already have pending events on return.
+118:The four-argument `fm1_audio_init(buf, half_words, isr, prio)` remains available
+120:and uses `FM1_AUDIO_RATE`; it cannot detect a short allocation. Migrate to the
+123:logged. `fm1_audio_init_checked` is declared `warn_unused_result`, so a caller
+130:In `fm1_alnk0_irq`, read `fm1_audio_pending()`, acknowledge auxiliary pending
+131:bits with `fm1_audio_ack_aux(p)`, and service `FM1_AUDIO_HALF`:
+134:uint8_t p = fm1_audio_pending();
+135:fm1_audio_ack_aux(p);
+136:if (p & FM1_AUDIO_HALF) {
+137:    uint32_t half = fm1_audio_free_half();
+138:    /* Fill audio + half * HALF_WORDS, exactly HALF_WORDS words. */
+```
+</details></tool-use>
+
+_**Agent - sidechain (claude-opus-5-5 2026-11-18 10:16:44Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Read theory README and rest of header
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/firmware && cat -n theory/README.md && sed -n 60,131p theory/theory.h`
+
+````text
+     1	# firmware/theory
+     2	
+     3	The start of a pocket music theory trainer for the M-VAVE FM-1: so far only its platform-free core. There is no
+     4	`app.c` or `fm1.toml` yet, so `just fw-test theory` does not apply. Design (Traditional Chinese):
+     5	[docs/dev/theory.md](../../docs/dev/theory.md).
+     6	
+     7	Licence: GPL-3.0-or-later.
+     8	
+     9	| File | What it is |
+    10	|---|---|
+    11	| `theory.h`, `theory.c` | Spelling on the line of fifths, 12 scales, key signatures, the circle of fifths, 23 chord qualities, Roman numerals and Nashville numbers (naming and reading, secondary dominants), naming a chord from MIDI notes, the nearest close voicing. C99, no platform calls, no libc, no floating point. |
+    12	| `tests/theory_test.c` | Unit tests: hand-written answers, round trips, every diatonic chord in every key and inversion, random voicings. |
+    13	| `tests/vectors.h` | Generated from music21 by `host/theory/make_vectors.py`; do not edit. |
+    14	
+    15	```sh
+    16	just theory-unit      # build and run the tests on this computer
+    17	just theory-vectors   # regenerate tests/vectors.h (uv fetches music21 10.5.2)
+    18	```
+    19	
+    20	Conventions worth knowing before using it:
+    21	
+    22	- A spelled note is an `int` f on the line of fifths: C = 0, G = 1, F = -1, F# = 6, Gb = -6. Pitch class is
+    23	  `7f mod 12`; `+7` adds a sharp; `+12` is the next enharmonic spelling.
+    24	- Roman numerals measure accidentals against the major scale on the same tonic, minor keys included: in A minor,
+    25	  G is `bVII` and G#dim is `viio`.
+    26	- Output is ASCII (`#`, `b`, `o`, `/o`). An app with glyphs for sharp, flat, diminished and half-diminished
+    27	  defines `TH_GLYPH_SHARP`, `TH_GLYPH_FLAT`, `TH_GLYPH_DIM` and `TH_GLYPH_HDIM` before including `theory.c`.
+    28	- Static helpers and tables are prefixed `th_` / `TH_` so the file can be `#include`d into fm1-base's unity build
+    29	  beside an app's own code.
+    const char *name;
+    uint8_t n;                           /* notes: 7, 6 or 5 */
+    int8_t sig;                          /* key signature relative to the tonic: dorian -2 (D dorian has none) */
+    int8_t f[7];                         /* fifths from the tonic, by scale step */
+} th_scale_t;
+
+typedef struct {
+    const char *sym;                     /* chord symbol after the root: "m7", "maj7", "dim" */
+    const char *rn;                      /* after a Roman numeral: "7", "M7", TH_GLYPH_DIM */
+    uint8_t lower;                       /* the numeral is lower case (minor, diminished) */
+    uint8_t n;
+    int8_t f[TH_TONES_MAX];              /* fifths from the root: root, third, fifth, seventh, ninth */
+} th_qual_t;
+
+typedef struct { int8_t tonic; uint8_t scale; } th_key_t;
+typedef struct { int8_t root; uint8_t q; int8_t bass; } th_chord_t;   /* bass == root in root position */
+
+typedef struct {
+    th_chord_t c;
+    uint8_t inv;                         /* which chord tone is in the bass: 0 root, 1 third, 2 fifth, 3 seventh */
+    uint8_t no5;                         /* a seventh or ninth chord played without its fifth */
+    uint8_t inkey;                       /* every note belongs to the key (minor keys: the raised 7th too) */
+} th_ident_t;
+
+extern const th_scale_t th_scales[TH_NSCALES];
+extern const th_qual_t th_quals[TH_NQUAL];
+
+int th_mod(int a, int m);                /* 0..m-1 for negative a too */
+int th_fdiv(int a, int m);               /* floor division */
+
+/* ---------------------------------------------------------------- notes --- */
+int th_pc(int f);                        /* pitch class 0..11, C = 0 */
+int th_letter(int f);                    /* 0..6 = C D E F G A B */
+int th_acc(int f);                       /* sharps (+) or flats (-) */
+int th_from(int letter, int acc);        /* the f of a letter and accidental */
+int th_name(int f, char *buf);           /* "F#", "Bb", "F##"; returns the length */
+int th_parse_name(const char *s, int *f);    /* "Eb", "f#", "Bbb", "Cx": characters read, 0 if none */
+int th_spell_pc(int pc, int tonic);      /* a pitch class spelled for a key: Db Eb F# Ab Bb around C */
+int th_midi(int f, int octave);          /* C4 = 60; B#3 = 60, Cb4 = 59 */
+int th_octave(int f, int midi);          /* the octave number of that spelling of that note */
+int th_note_name(int midi, int tonic, char *buf);    /* "C#4", spelled for the key */
+int th_interval_name(int d, char *buf);  /* "M3", "d5", "A4", "P1" for d fifths apart (simple intervals) */
+
+/* ---------------------------------------------------------- scales, keys --- */
+int th_scale(int tonic, int scale, int8_t *out);     /* the spelled notes; returns how many */
+int th_keysig(int tonic, int scale, int8_t *out);    /* +sharps / -flats; out: the accidentals in order (at most 7) */
+int th_key_acc(th_key_t key, int letter);            /* that letter's accidental in the key signature */
+int th_key_mask(th_key_t key);                       /* pitch classes of the key, bit 0 = C (minor: + raised 7th) */
+int th_minorish(th_key_t key);                       /* the key's third is minor */
+int th_circle_pos(int f);                            /* 0..11 clockwise from C at the top */
+int th_circle_tonic(int pos, int minor);             /* the key at a circle position: F# major, D# minor at 6 */
+int th_key_for_pc(int pc, int scale);                /* the usual tonic for a pitch class: Db, F#; Eb minor, G# minor */
+
+/* ---------------------------------------------------------------- chords --- */
+int th_chord(int root, int q, int8_t *out);          /* the spelled notes, root first; returns how many */
+int th_chord_name(th_chord_t c, char *buf);          /* "Am7", "C/E", "F#m7b5" */
+int th_qual_find(const char *sym);                   /* TH_* for a chord symbol ("m7"), -1 if unknown */
+int th_diatonic(th_key_t key, int degree, int sevenths, th_chord_t *out);    /* degree 0..6; 0 if not one */
+int th_degree_name(th_key_t key, int f, char *buf);  /* "3", "b7", "#4": a note as a degree of the major scale */
+int th_roman_name(th_key_t key, th_chord_t c, char *buf);    /* "IVM7", "viio", "bVII", "V7/V" (ignores the bass) */
+int th_nashville_name(th_key_t key, th_chord_t c, char *buf);    /* "4", "6m", "b7", "2m7" */
+int th_roman_parse(const char *s, th_key_t key, th_chord_t *out);    /* one numeral; characters read, 0 on error */
+int th_prog_parse(const char *s, th_key_t key, th_chord_t *out, int max);    /* chords read, -1 on error */
+
+/* What chord is this? Notes as MIDI numbers in any order. 1 and *out when one is found, 0 when not (one note,
+ * a lone third). Prefers, in order: every note fits without leaving the fifth out, the root in the bass, a root
+ * in the key, the simpler chord. So C E G A is C6 over C and Am7 over A. */
+int th_identify(const uint8_t *midi, int n, th_key_t key, th_ident_t *out);
+
+/* A close voicing of c between lo and hi (MIDI) that moves least from prev (np notes, any order); np = 0 picks
+ * the one nearest the middle. Returns how many notes, 0 if none fits. */
+int th_voice_near(const uint8_t *prev, int np, th_chord_t c, int lo, int hi, uint8_t *out);
+````
+</details></tool-use>
+
+_**Agent - sidechain (claude-opus-5-5 2026-11-18 10:16:44Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Read BOARD_IO sample format and build.py checks
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/third_party/fm1-base && sed -n 44,62p bsp/docs/BOARD_IO.md; sed -n 1180,1200p tools/build.py; sed -n 298,310p tools/build.py`
+
+```text
+## Audio: `boards/fm1/fm1_audio.h`
+
+### Fixed sample format and clock
+
+Every frame is two `int32_t` words in left, right order. Samples are signed Q23:
+`-8388608` through `8388607`, sign-extended into the 32-bit container, with zero
+for silence. The significant bits occupy bits 23:0, **not** bits 31:8. For
+example, positive full scale is `0x007FFFFF`, negative full scale is `0xFF800000`.
+A signed PCM16 sample becomes this format by multiplying by 256. Clip before
+storing; the driver does not saturate, convert float/PCM16, or resample.
+
+The supported request is `FM1_AUDIO_RATE` (44100), the **nominal** 44.1 kHz family.
+On the recognized stock audio PLL configuration, the hardware frame period is
+544 ticks of the 24 MHz reference: `FM1_AUDIO_RATE_NUM / FM1_AUDIO_RATE_DEN`, or
+about **44,117.647 Hz**, roughly +400 ppm relative to exact 44,100. Reference
+oscillator tolerance applies too. A 256-frame half lasts about 5.803 ms.
+Use this physical ratio for deadline calculations; nominal 44100 is appropriate
+only when a protocol explicitly requires that advertised rate.
+
+        else:
+            notes.append("own Bluetooth stack: nothing of JieLi's linked, the radio's ramp in RAM")
+    if CONF.get("ble") and not BLE:
+        if bt:
+            errors.append(f"--no-ble build links Bluetooth code: {bt}")
+        else:
+            notes.append("--no-ble: no Bluetooth code linked")
+    if len(img) > APP_SLOT:
+        errors.append(f"image {len(img)} B exceeds the app slot")
+    # the FPU is single precision; a soft-double routine in the image means a double crept in
+    soft = sorted(set(re.findall(r"\s(__(?:add|sub|mul|div|neg|cmp|eq|ne|lt|le|gt|ge|un|extendsf|truncdf|fixdf|fixunsdf|floatsidf|floatunsidf|floatdidf)\w*df\w*)$", syms, re.M)))
+    if soft and jieli:
+        notes.append(f"soft-double routines linked (JieLi's radio setup): {soft[:6]}")
+    elif soft:
+        errors.append(f"soft-double routines linked: {soft[:6]} (a double in the code)")
+    else:
+        notes.append("no soft-double routines (single-precision FPU only)")
+
+    def sym(name):
+        mm = re.search(r"^([0-9a-f]+) .*\s" + name + r"$", syms, re.M)
+        return int(mm.group(1), 16) if mm else 0
+APP_SLOT = fm1pkg_make.APP_SLOT
+LOADER_LOAD = 0x01C0A800
+LOADER_NAME = b"usb_hid_ota.bin"    # the file name the SPL looks for
+DOCKER_IMAGE = os.environ.get("JIELI_DOCKER_IMAGE", "debian:bookworm-slim")
+CFLAGS = ["-Os", "-ffunction-sections", "-fno-builtin", "-Wall", "-Wno-unused-function"]
+# the AC79's single-precision FPU (the SDK's own flags); no fused multiply-add, so the host
+# build (-ffp-contract=off) computes the same samples
+CPU = "r3"                          # the core: the compiler, the LTO plugin and objdump (to decode its FPU instructions)
+FPU = [f"-mcpu={CPU}", "-mfprev1", "-ffp-contract=off"]
+LINE = re.compile(r"^\s*([0-9a-f]+):\s+((?:[0-9a-f]{2} )+)\s*\t(.*)$")
+
+# SDK files of AC79NN_SDK_V1.2.1_2023-12-13 (the tested version)
+SDK_SHA256 = {
+```
+</details></tool-use>
+
+_**Agent - sidechain (claude-opus-5-5 2026-11-18 10:16:48Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Find redraw flags in Morse app.c
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/firmware/morse && grep -n 'R_[A-Z]\+\b' app.c | head -80`
+
+```text
+178:#define TR_N 4u
+179:#define TR_EL 7u
+183:    uint16_t mark[TR_EL], gap[TR_EL];    /* ms; gap[i] the one before element i (gap[0] 0) */
+186:    trow_t row[TR_N], live;
+206:enum { R_HEAD = 1, R_MAIN = 2, R_LAMP = 4, R_FOOT = 8, R_ALL = 15 };
+333:    ui.redraw |= R_HEAD;
+382:    ui.redraw |= R_ALL;
+388:    ui.redraw |= R_ALL;
+463:        int32_t ago = (int32_t)(plat_ticks24() - plat_midi_in_t24()) / (int32_t)(PLAT_TICKS_PER_US * 1000u);
+600:    tim.head = (uint8_t)((tim.head + 1u) % TR_N);
+601:    if (tim.count < TR_N)
+617:            ui.redraw |= R_MAIN;
+629:        ui.redraw |= R_MAIN;
+667:                if (tim.live.n < TR_EL) {
+686:            ui.redraw |= R_MAIN;         /* the code so far is drawn */
+709:        ui.redraw |= R_HEAD;
+812:    ui.redraw |= R_ALL;
+816:static int card_key(const ln_card_t *c) { return c->type == CARD_HEAR_KEY || c->type == CARD_SEE_KEY; }
+819:    return c->type == CARD_NEW || c->type == CARD_HEAR_CHOOSE || c->type == CARD_HEAR_KEY
+895:        ui.redraw |= R_ALL;
+906:    ui.redraw |= R_ALL;
+954:    ui.redraw |= R_ALL;
+1015:        ui.redraw |= R_FOOT | R_MAIN;
+1046:    ui.redraw |= R_ALL;
+1056:    ui.redraw |= R_ALL;
+1063:    ui.redraw |= R_MAIN | R_FOOT;
+1098:    ui.redraw |= R_ALL;
+1138:    ui.redraw |= R_ALL;
+1154:    ui.redraw |= R_ALL;
+1259:    ui.redraw |= R_ALL;
+1304:    ui.redraw |= R_MAIN | R_FOOT;
+1319:    ui.redraw |= R_MAIN | R_FOOT;
+1363:        ui.redraw |= R_MAIN;
+1493:    ui.redraw |= R_MAIN;
+1580:    ui.redraw |= R_MAIN;
+1643:        ui.redraw |= R_MAIN;
+1706:            ui.redraw |= R_ALL;
+1729:    ui.redraw |= R_MAIN | R_FOOT;
+1906:            ui.redraw |= R_FOOT;
+1954:                    ui.redraw |= R_MAIN;
+1973:                ui.redraw |= R_MAIN;
+1976:                ui.redraw |= R_MAIN | R_FOOT;
+1989:            ui.redraw |= R_MAIN;
+1996:            ui.redraw |= R_MAIN;
+2037:        ui.redraw |= R_FOOT;
+2311:        const trow_t *r = &tim.row[(tim.head + TR_N - tim.count + i) % TR_N];
+2653:        case CARD_HEAR_CHOOSE:
+2662:        case CARD_HEAR_KEY:
+3052:    if (r & R_HEAD)
+3054:    if (r & R_MAIN)
+3056:    if ((r & (R_MAIN | R_LAMP)) && lamp_y() && (lamp_y() == 196 || !(r & R_MAIN)))
+3058:    if (r & R_FOOT)
+3126:    ui.redraw = R_ALL;
+3149:        ui.redraw |= R_HEAD | (ui.page == PG_SET ? R_MAIN : 0u);
+3154:        ui.redraw |= R_HEAD | (ui.page == PG_SET ? R_MAIN : 0u);
+3159:        ui.redraw |= R_HEAD;
+3164:        ui.redraw |= R_LAMP;
+3169:        ui.redraw |= R_MAIN;
+3383:        k->type = !strcmp(a, "see_key") ? CARD_SEE_KEY : CARD_HEAR_KEY;
+```
+</details></tool-use>
+
+_**Agent - sidechain (claude-opus-5-5 2026-11-18 10:16:49Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Grep build.py for double and ramcode checks
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/third_party/fm1-base && grep -n -i "double" tools/build.py | head; grep -n -i -E "ramcode|ram_code" tools/build.py | head -10; grep -rn -i "Wdouble-promotion\|fsingle-precision" tools/ | head`
+
+```text
+1189:    # the FPU is single precision; a soft-double routine in the image means a double crept in
+1192:        notes.append(f"soft-double routines linked (JieLi's radio setup): {soft[:6]}")
+1194:        errors.append(f"soft-double routines linked: {soft[:6]} (a double in the code)")
+1196:        notes.append("no soft-double routines (single-precision FPU only)")
+238:PLAT_RAM_CODE): copied at boot with .ram_text, inside the guard's RAM code window (between _ar_start and _ar_end). It
+239:may call only RAM code, to any depth, and nothing through a pointer (tools/ramcode.py, over the disassembly). XIP code
+242:  ram_code_allow = ["fn"]    the app's RAM functions whose calls out of RAM or through a pointer it vouches for (a cold
+1133:    import ramcode                                # (tools/, on the path above)
+1144:    ar = [symv for n in ("_ar_start", "_ar_end") for symv in [ramcode.symbol(syms, n)] if symv is not None]
+1146:        if len(ar) == 2 else (lambda ln: False)   # (the app's RAM code: checked apart, tools/ramcode.py)
+1149:    if rt_calls and jieli:          # JieLi's .volatile_ram_code calls out; it runs with the flash on
+1150:        notes.append(f"the radio: .ram_text contains calls (JieLi's .volatile_ram_code): {rt_calls[:3]}")
+1160:    ar_errors, ar_notes = ramcode.check(syms, dis, CONF.get("ram_code_allow", []))
+```
+</details></tool-use>
+
+_**Agent - sidechain (claude-opus-5-5 2026-11-18 10:16:50Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Find drawing, storage and input calls in Morse
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/firmware/morse && grep -n 'cv_begin\|cv_blit\|cv_band\|lcd_fill\|cv_line\|cv_pset\|APP_CANVAS\|^static void draw\|^static void \(header\|footer\|lamp\|bars\)\|^void app_\|^int app_\|plat_store\|plat_lights\|plat_leds\|plat_enc\|plat_keys\|plat_buttons\|touch_' app.c | head -120`
+
+```text
+120:    if (plat_store_save(OBJ_MORSE, &rec, sizeof rec) == 0)
+322:void app_say(const char *a, const char *b)
+472:void app_tick(void)
+474:    uint32_t now = plat_ms(), keys = plat_keys(), pkt;
+736:int app_sysex(const uint8_t *p, uint32_t n) { return host_frame(p, n, HL_USB); }
+755:int app_ble_load(struct plat_ble_rec *r)
+760:int app_ble_save(const struct plat_ble_rec *r)
+771:    if (plat_store_load(OBJ_MORSE, &r, sizeof r) != (int)sizeof r || r.magic != REC_MAGIC || r.ver != REC_VER
+1893:    uint32_t keys = plat_keys(), btn = plat_buttons(), k;
+1904:            (void)plat_enc(k);
+2011:    if ((e = plat_enc(EN_SELECT)) != 0)
+2013:    if ((e = plat_enc(EN_ALGO)) != 0) {
+2020:        if ((e = plat_enc(EN_K1)) != 0)
+2022:        if ((e = plat_enc(EN_K2)) != 0)
+2024:        (void)plat_enc(EN_K3);
+2025:        (void)plat_enc(EN_K4);
+2027:    if ((e = plat_enc(EN_K1)) != 0)
+2029:    if ((e = plat_enc(EN_K2)) != 0)
+2031:    if ((e = plat_enc(EN_K3)) != 0)
+2033:    if ((e = plat_enc(EN_K4)) != 0)
+2035:    (void)plat_enc(EN_PRESET);
+2042:void app_input_only(void)
+2090:static void draw_code(uint8_t code, int32_t cx, int32_t y, int32_t u, uint16_t c)   /* centred on cx */
+2101:static void draw_code_v(uint8_t code, int32_t cx, int32_t y, int32_t u, uint16_t c)   /* top down, on a key */
+2116:static void draw_header(uint32_t now)
+2121:    cv_begin(240, 32, C_BLACK);
+2156:    cv_blit(0, 0);
+2159:static void draw_lamp(int32_t y)         /* the keying as a light: white sending, amber receiving */
+2162:    cv_begin(240, 10, C_BLACK);
+2164:    cv_blit(0, y);
+2173:    cv_begin(240, 56, C_BLACK);
+2196:    cv_blit(0, 32);
+2203:    cv_begin(240, 110, C_BLACK);
+2215:    cv_blit(0, 98);
+2245:    cv_begin(240, 110, C_BLACK);
+2265:    cv_blit(0, 98);
+2300:    cv_begin(240, 110, C_BLACK);
+2319:    cv_blit(0, 98);
+2347:    cv_begin(240, top_h, C_BLACK);
+2366:    cv_blit(0, 32);
+2368:    cv_begin(240, kb_h, C_BLACK);
+2414:    cv_blit(0, type_lamp_y() + 10);
+2446:static void bars(const uint16_t *mark, const uint16_t *gap, uint32_t n, uint8_t want, uint32_t dit, int32_t y,
+2904:    cv_begin(240, MAIN_H / 2, C_BLACK);
+2906:    cv_blit(0, 32);
+2907:    cv_begin(240, MAIN_H / 2, C_BLACK);
+2909:    cv_blit(0, 32 + MAIN_H / 2);
+2950:static void draw_main(void)
+2968:static void draw_footer(void)
+2975:    cv_begin(240, 32, C_BLACK);
+3033:    cv_blit(0, 208);
+3048:static void draw(uint32_t now)
+3065:void app_render(int32_t *lr, uint32_t n, uint32_t master_q12)
+3075:void app_panic(void) { tone_stop(); }
+3078:void app_init(void)
+3100:    if (plat_store_load(OBJ_MORSE, &rec, sizeof rec) == (int)sizeof rec && rec.set.send == 0u)
+3123:void app_ui_init(void)
+3125:    lcd_fill(0, 0, 240, 240, C_BLACK);
+3129:void app_frame(void)
+3183:int app_expect(const char *what, int *got)
+3322:int app_host_cmd(const char *cmd, const char *a, const char *b, const char *c, const char *d)
+3445:int app_host_fails(void) { return host_fails; }
+```
+</details></tool-use>
+
+_**Agent - sidechain (claude-opus-5-5 2026-11-18 10:16:52Z)**_
+
+Now morse app: how it uses tone/chime in app_render, locking, and CPU pct.
+
+_**Agent - sidechain (claude-opus-5-5 2026-11-18 10:16:53Z)**_
+
+<tool-use data-tool-type="read" data-tool-name="Read"><details>
+<summary>Tool use: **Read**</summary>
+ `./firmware/morse/app.c`
+
+```text
+2080	#define C_BLUE RGB(70, 140, 255)
+2081	#define C_BOX RGB(60, 60, 70)
+2082	
+2083	static uint16_t level_rgb(uint32_t lv)   /* the chart's colours, box 0 .. 5 */
+2084	{
+2085	    static const uint16_t L[6] = {RGB(70, 40, 40), RGB(140, 60, 40), RGB(190, 120, 30), RGB(170, 170, 40),
+2086	                                  RGB(90, 180, 70), RGB(60, 210, 120)};
+2087	    return L[lv > 5u ? 5u : lv];
+2088	}
+2089	
+2090	static void draw_code(uint8_t code, int32_t cx, int32_t y, int32_t u, uint16_t c)   /* centred on cx */
+2091	{
+2092	    uint32_t n = mo_len(code), i;
+2093	    int32_t x = cx - (int32_t)mo_units(code) * u / 2;
+2094	    for (i = 0; i < n; i++) {
+2095	        int32_t w = mo_elem(code, i) ? 3 * u : u;
+2096	        cv_rect(x, y, w, u, c);
+2097	        x += w + u;
+2098	    }
+2099	}
+2100	
+2101	static void draw_code_v(uint8_t code, int32_t cx, int32_t y, int32_t u, uint16_t c)   /* top down, on a key */
+2102	{
+2103	    uint32_t n = mo_len(code), i;
+2104	    for (i = 0; i < n; i++) {
+2105	        int32_t h = mo_elem(code, i) ? 3 * u : u;
+2106	        cv_rect(cx - u / 2 - 1, y, u + 1, h, c);
+2107	        y += h + u;
+2108	    }
+2109	}
+2110	
+2111	static void text_c(int32_t cx, int32_t y, const felucca_font_t *f, const char *s, uint16_t c)   /* centred */
+2112	{
+2113	    cv_text(cx - text_w(f, s) / 2, y, f, s, c);
+2114	}
+2115	
+2116	static void draw_header(uint32_t now)
+2117	{
+2118	    static const char *const PAGE[PG_N] = {"MENU", "PRACTICE", "LISTEN", "KEY", "RHYTHM", "TYPE", "CHART", "SETTINGS"};
+2119	    char t[24];
+2120	    int32_t x;
+2121	    cv_begin(240, 32, C_BLACK);
+2122	    if (now < ui.msg_until) {
+2123	        x = cv_text(8, 7, &FONT_B, ui.msg[0], C_WHITE);
+2124	        cv_text(x + 8, 9, &FONT_XS, ui.msg[1], C_RX);
+2125	    } else {
+2126	        cv_text(8, 7, &FONT_B, ui.page == PG_CHART && pg.edit ? (pg.dirty ? "EDIT *" : "EDIT") : PAGE[ui.page],
+2127	                ui.page == PG_CHART && pg.edit ? C_MEH : C_WHITE);
+2128	        t[0] = 0;
+2129	        if (ui.page == PG_KEY || ui.page == PG_RHYTHM) {   /* the speed this page goes by */
+2130	            text_cat(t, "SEND ");
+2131	            int_cat(t, SET.send);
+2132	        } else {
+2133	            int_cat(t, SET.wpm);
+2134	            if (SET.eff < SET.wpm) {
+2135	                text_cat(t, "/");
+2136	                int_cat(t, SET.eff);
+2137	            }
+2138	        }
+2139	        text_cat(t, " WPM");
+2140	        x = 232 - text_w(&FONT_XS, t);
+2141	        cv_text(x, 10, &FONT_XS, t, C_GRAY);
+2142	        if (muted()) {
+2143	            x -= 8 + text_w(&FONT_XS, "MUTE");
+2144	            cv_text(x, 10, &FONT_XS, "MUTE", C_RX);
+2145	        }
+2146	        if (hl_host(&link, now)) {
+2147	            x -= 8 + text_w(&FONT_XS, "PC");
+2148	            cv_text(x, 10, &FONT_XS, "PC", C_BLUE);
+2149	        }
+2150	        if (FM1B_BLE && !bt_off()) {    /* grey while it waits for a computer, blue once one is connected */
+2151	            x -= 8 + text_w(&FONT_XS, "BT");
+2152	            cv_text(x, 10, &FONT_XS, "BT", plat_ble_connected() ? C_BLUE : C_DIM);
+2153	        }
+2154	    }
+2155	    cv_rect(0, 31, 240, 1, C_LINE);
+2156	    cv_blit(0, 0);
+2157	}
+2158	
+2159	static void draw_lamp(int32_t y)         /* the keying as a light: white sending, amber receiving */
+2160	{
+2161	    int tx = tone_gated(TONE_TX), rx = tone_gated(TONE_RX);
+2162	    cv_begin(240, 10, C_BLACK);
+2163	    cv_rect(20, 2, 200, 6, tx ? C_OWN : rx ? C_RX : C_LINE);
+2164	    cv_blit(0, y);
+2165	}
+2166	
+2167	/* KEY: the top strip (the letter so far, the last one read, how it is going), then one of three views */
+2168	static void key_top(void)
+2169	{
+2170	    char t[40];
+2171	    uint8_t pend = mo_dec_pending(&dsrc[SRC_OWN].dec);
+2172	    const mo_dec_t *d = &dsrc[SRC_OWN].dec;
+2173	    cv_begin(240, 56, C_BLACK);
+2174	    if ((visual() || kview() != KV_TEXT) && pend > 1u)
+2175	        draw_code(pend, 90, 22, 8, C_OWN);
+2176	    if (ui.last) {
+2177	        t[0] = ui.last, t[1] = 0;
+2178	        text_c(200, 6, &FONT_L, t, C_OWN);
+2179	    }
+2180	    if (d->marks >= 4u) {                /* how it is going: speed, dah:dit (3.0 the book), gaps inside (1.0) */
+2181	        uint32_t q = mo_dec_ratio10(d), g = mo_dec_gap10(d);
+2182	        t[0] = 0;
+2183	        text_cat(t, "YOU ");
+2184	        int_cat(t, (int32_t)mo_dec_wpm(d));
+2185	        text_cat(t, " WPM");
+2186	        if (q) {
+2187	            text_cat(t, "  DAH:DIT ");
+2188	            tenths_cat(t, q);
+2189	        }
+2190	        if (g) {
+2191	            text_cat(t, "  GAP ");
+2192	            tenths_cat(t, g);
+2193	        }
+2194	        cv_text(8, 40, &FONT_XS, t, g > 18u || (q && (q < 22u || q > 42u)) ? C_RX : C_GRAY);
+2195	    }
+2196	    cv_blit(0, 32);
+2197	}
+2198	
+2199	static void key_text(void)
+2200	{
+2201	    char t[2] = {0, 0};
+2202	    uint32_t r, i;
+2203	    cv_begin(240, 110, C_BLACK);
+2204	    for (r = 0; r < TG_ROWS; r++)
+2205	        for (i = 0; i < TG_COLS; i++) {
+2206	            uint32_t k = r * TG_COLS + i;
+2207	            if (k < grid.n) {
+2208	                t[0] = grid.c[k];
+2209	                cv_text(4 + (int32_t)i * 10, 2 + (int32_t)r * 22, &FONT_S, t, grid.who[k] == SRC_RX ? C_RX : C_OWN);
+```
+</details></tool-use>
+
+_**Agent - sidechain (claude-opus-5-5 2026-11-18 10:16:54Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Grep morse app for render and locking
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/firmware/morse && grep -n -E "app_render|tone_|chime_|plat_lock|plat_unlock|app_tick|PLAT_RAM_CODE|master_q12|gain|cpu_pct|xrun|lr\[|APP_BLOCK|APP_TICK|APP_OVERLOAD|8300000|clip|clamp" app.c app.h | head -80; cat fm1.toml`
+
+```text
+app.h:14:#define APP_BLOCK 256u                   /* frames per audio block: 5.8 ms at 44.1 kHz (the sidetone's jitter) */
+app.h:15:#define APP_TICK                         /* 1 kHz: the key, the keyer, the players, MIDI in and out */
+app.h:29:void app_render(int32_t *lr, uint32_t n, uint32_t master_q12);
+app.h:35:void app_tick(void);
+app.c:358:    uint32_t f = plat_lock();
+app.c:367:    plat_unlock(f);
+app.c:373:    tone_pitch(TONE_TX, (float)SET.pitch);
+app.c:374:    tone_pitch(TONE_RX, (float)SET.pitch * 1.26f);   /* received a major third up */
+app.c:375:    tone_mute((int)muted());
+app.c:393:    uint32_t f = plat_lock();
+app.c:396:    plat_unlock(f);
+app.c:407:    uint32_t f = plat_lock();
+app.c:409:    plat_unlock(f);
+app.c:414:    uint32_t f = plat_lock();
+app.c:416:    plat_unlock(f);
+app.c:422:    uint32_t f = plat_lock(), n = (p->head + MO_PLAY_Q - p->tail) % MO_PLAY_Q;
+app.c:423:    plat_unlock(f);
+app.c:429:    uint32_t f = plat_lock();
+app.c:432:    plat_unlock(f);
+app.c:472:void app_tick(void)
+app.c:497:    tone_gate(TONE_TX, own || t);
+app.c:532:    tone_gate(TONE_RX, rx);
+app.c:597:    for (i = 0; i < r->n; i++)           /* as the decoder read them in the end (it may have read one again) */
+app.c:641:        f = plat_lock();
+app.c:643:            plat_unlock(f);
+app.c:648:        plat_unlock(f);
+app.c:1035:/* CHART's edit works on a copy; PLAY asks, and only PLAY again writes it. A placement test's finds and a backup
+app.c:1072:    lv = clamp(lv, 0, (int32_t)LN_TOP);
+app.c:1083:    ln_open_to(&pg.draft, (uint32_t)clamp((int32_t)pg.draft.open + d * (int32_t)LN_GROUP, (int32_t)LN_GROUP,
+app.c:1232:    if (d[0] != prog.rx_next) {          /* one missed: start again */
+app.c:1368:/* drills of short and long presses, each measured against the send speed's dit: the box is the target, the bar what
+app.c:1426:        rh.sugg = (uint8_t)clamp((int32_t)(1200u * 10u / (dq * dit)), 5, 40);
+app.c:1437:        rh.sugg = (uint8_t)clamp((int32_t)(1200u * 10u / ((dq ? dq : 1u) * dit)), 5, 40);
+app.c:1614:static void page_play(void)              /* PLAY: start, again, stop */
+app.c:1624:                pr.answer_ok = 0;        /* taken again once it has played */
+app.c:1751:    int32_t w = clamp((int32_t)SET.wpm + d, 5, 40);
+app.c:1764:    int32_t e = clamp((int32_t)SET.eff + d, 5, SET.wpm);
+app.c:1782:    int32_t w = clamp((int32_t)SET.send + d, 5, 40);
+app.c:1793:    int32_t p = clamp((int32_t)SET.pitch + d * 10, 300, 1200);
+app.c:1867:        SET.cards = (uint8_t)clamp((int32_t)SET.cards + d * 5, 10, 30);
+app.c:2056:    int tx = tone_gated(TONE_TX), rx = tone_gated(TONE_RX);
+app.c:2161:    int tx = tone_gated(TONE_TX), rx = tone_gated(TONE_RX);
+app.c:2510:        cv_text(8, 146 - oy, &FONT_XS, "close: no box moved, asked again", C_DIM);
+app.c:2620:        if (pr.has_j) {                  /* a keyed answer: how it went, against how it goes */
+app.c:2986:    case PG_RHYTHM: s = "SELECT drill  K4 send speed  PLAY again"; break;
+app.c:3011:                : card_key(c)      ? "PLAY again  SEL don't know"
+app.c:3012:                : visual()         ? "PLAY again  a key: next"
+app.c:3013:                                   : "PLAY again  SEQ the code  a key: next";
+app.c:3063:static float gain_now;
+app.c:3065:void app_render(int32_t *lr, uint32_t n, uint32_t master_q12)
+app.c:3068:    float gain = (float)master_q12 / 4096.0f * 8300000.0f;
+app.c:3069:    gain_now += (gain - gain_now) * 0.5f;
+app.c:3071:        lr[i] = 0;
+app.c:3072:    tone_render(lr, n, gain_now);
+app.c:3075:void app_panic(void) { tone_stop(); }
+app.c:3080:    /* everything from nothing: the host simulator's reboot runs this again over the old RAM */
+app.c:3114:    tone_stop();
+app.c:3161:    lamp = (uint8_t)(tone_gated(TONE_TX) | tone_gated(TONE_RX) << 1);
+app.c:3248:        *got = tone_gated(TONE_TX);
+app.c:3250:        *got = tone_gated(TONE_RX);
+# Morse's build settings (fm1-base tools/build.py)
+name = "MORSE"
+title = "MORSE"
+id_prefix = "FM-1_41"          # package identity: dev FM-1_4100, release 0.3 FM-1_41000300
+usb_manufacturer = "fm1-base"
+usb_product = "MORSE FM-1"     # host/morse finds the MIDI port by "MORSE"
+o2 = []
+include = ["common"]           # hostlink, ledfx (from M-VAVE_FM-1 firmware/common, MIT)
+ble = true                     # Bluetooth MIDI beside USB (SETTINGS > BLUETOOTH, kept)
+ble_stack = "own"              # fm1-base's own stack: incoming SysEx reaches the app, real BLE-MIDI timestamps out
+ble_diag = false               # no link-layer diagnostics: 2.4 KB of RAM back
+ble_midi_time = true           # keying in by the sender's time (plat_midi_in_t24), not bunched by the connection
+tagline = "a pocket Morse code machine"
+repo = "https://github.com/daviddwlee84/fm1-morse"
+site = "https://daviddwlee84.github.io/M-VAVE_FM-1/dev/morse/"
+install = "https://github.com/daviddwlee84/fm1-morse#install"
+screenshot = "docs/screen.png"
+licence = "GPL-3.0-or-later"
+credits = "Built on fm1-base by Charles Vestal. Koch order from LCWO; MIDI keying in the Vail adapter's format."
+author = "daviddwlee84"
+description = "Learn and use Morse code. Key on the piano keys (straight key or iambic paddles) and see what you sent, drill short and long presses, learn by sound with flash cards, listen to endless practice, type letters and CW phrases on the keys. Keying goes out over USB-MIDI in the Vail format. Settings and progress are kept; Koch order, Farnsworth spacing, a decoder that follows a beginner's hand."
+tags = ["utility"]
+```
+</details></tool-use>
+
+_**Agent - sidechain (claude-opus-5-5 2026-11-18 10:16:54Z)**_
+
+<tool-use data-tool-type="read" data-tool-name="Read"><details>
+<summary>Tool use: **Read**</summary>
+ `./firmware/morse/app.c`
+
+```text
+2880	        }
+2881	        cv_text(96, y, &FONT_XS, t, i == ui.sel ? C_WHITE : C_RX);
+2882	    }
+2883	}
+2884	
+2885	static void menu_at(int32_t oy)
+2886	{
+2887	    static const char *const NAME[PG_N - 1] = {"PRACTICE", "LISTEN", "KEY", "RHYTHM", "TYPE", "CHART", "SETTINGS"};
+2888	    static const char *const WHAT[PG_N - 1] = {"flash cards",    "play on and on",   "send, it reads you",
+2889	                                               "short and long", "keys are letters", "how far you are",
+2890	                                               "speeds, keyer, ..."};
+2891	    uint32_t i;
+2892	    for (i = 0; i < PG_N - 1u; i++) {
+2893	        int32_t y = 4 + (int32_t)i * 24 - oy;
+2894	        if (i == ui.sel)
+2895	            cv_rect(0, y - 3, 240, 23, C_LINE);
+2896	        cv_text(12, y, &FONT_B, NAME[i], i == ui.sel ? C_WHITE : C_GRAY);
+2897	        cv_text(112, y + 2, &FONT_XS, WHAT[i], C_DIM);
+2898	    }
+2899	}
+2900	
+2901	#define MAIN_H 176
+2902	static void main_area(void (*fn)(int32_t oy))
+2903	{
+2904	    cv_begin(240, MAIN_H / 2, C_BLACK);
+2905	    fn(0);
+2906	    cv_blit(0, 32);
+2907	    cv_begin(240, MAIN_H / 2, C_BLACK);
+2908	    fn(MAIN_H / 2);
+2909	    cv_blit(0, 32 + MAIN_H / 2);
+2910	}
+2911	
+2912	static void ask_at(int32_t oy)           /* a question about the progress */
+2913	{
+2914	    static const char *const Q[4] = {"", "SAVE CHANGES?", "LOAD THIS BACKUP?", "MARK THESE KNOWN?"};
+2915	    const ln_state_t *s = pg.ask == ASK_PLACE ? &rec.ln : &pg.draft;
+2916	    char t[48];
+2917	    uint32_t i, k = 0;
+2918	    cv_rect(8, 8 - oy, 224, 150, RGB(24, 24, 30));
+2919	    text_c(120, 18 - oy, &FONT_B, Q[pg.ask], C_WHITE);
+2920	    t[0] = 0;
+2921	    if (pg.ask == ASK_PLACE) {
+2922	        for (i = 0; i < LN_N && k < 12u; i++)
+2923	            if (pr.r.known[i / 32u] >> (i % 32u) & 1u) {
+2924	                char c2[3] = {ln_char(i), ' ', 0};
+2925	                text_cat(t, c2);
+2926	                k++;
+2927	            }
+2928	        text_c(120, 48 - oy, &FONT_B, t, C_OK);
+2929	        text_c(120, 74 - oy, &FONT_XS, "whole groups right open", C_GRAY);
+2930	    } else {
+2931	        text_cat(t, "ROUND ");
+2932	        int_cat(t, s->round);
+2933	        text_cat(t, "  ");
+2934	        int_cat(t, s->open);
+2935	        text_cat(t, " OPEN");
+2936	        text_c(120, 48 - oy, &FONT_XS, t, C_GRAY);
+2937	        t[0] = 0;
+2938	        int_cat(t, (int32_t)s->answered);
+2939	        text_cat(t, " ANSWERED, ");
+2940	        int_cat(t, (int32_t)s->right);
+2941	        text_cat(t, " RIGHT");
+2942	        text_c(120, 66 - oy, &FONT_XS, t, C_GRAY);
+2943	        text_c(120, 84 - oy, &FONT_XS, pg.ask == ASK_LOAD ? "replaces the progress here" : "the progress as edited",
+2944	               C_DIM);
+2945	    }
+2946	    text_c(70, 116 - oy, &FONT_B, "PLAY: YES", C_OK);
+2947	    text_c(176, 116 - oy, &FONT_B, "HOME: NO", C_BAD);
+2948	}
+2949	
+2950	static void draw_main(void)
+2951	{
+2952	    if (pg.ask) {
+2953	        main_area(ask_at);
+2954	        return;
+2955	    }
+2956	    switch (ui.page) {
+2957	    case PG_KEY: key_page(); break;
+2958	    case PG_TYPE: type_page(); break;
+2959	    case PG_PRACTICE: main_area(practice_at); break;
+2960	    case PG_LISTEN: main_area(listen_at); break;
+2961	    case PG_RHYTHM: main_area(rhythm_at); break;
+2962	    case PG_CHART: main_area(chart_at); break;
+2963	    case PG_SET: main_area(set_at); break;
+2964	    default: main_area(menu_at); break;
+2965	    }
+2966	}
+2967	
+2968	static void draw_footer(void)
+2969	{
+2970	    static const char *const KV_NAME[KV_N] = {"SEQ: TEXT", "SEQ: CODE", "SEQ: TIMING"};
+2971	    const char *s = "";
+2972	    char t[64];
+2973	    const ln_card_t *c = ln_card(&pr.r);
+2974	    uint32_t i;
+2975	    cv_begin(240, 32, C_BLACK);
+2976	    cv_rect(0, 0, 240, 1, C_LINE);
+2977	    switch (pg.ask ? PG_N : ui.page) {
+2978	    case PG_N: s = "PLAY yes   HOME no"; break;
+2979	    case PG_MENU: s = "SELECT move  SEL open  HOME back"; break;
+2980	    case PG_KEY:
+2981	        t[0] = 0;
+2982	        text_cat(t, KV_NAME[kview()]);
+2983	        text_cat(t, "  K4 send speed  OCT- clear");
+2984	        s = t;
+2985	        break;
+2986	    case PG_RHYTHM: s = "SELECT drill  K4 send speed  PLAY again"; break;
+2987	    case PG_LISTEN:
+2988	        s = lhide() ? "PLAY start/stop  SEL peek  SEQ show" : "PLAY start/stop  SELECT program  SEQ hide";
+2989	        break;
+2990	    case PG_TYPE: s = "OCT-/+ page   REC del, hold: clear\nPLAY play/stop  SEL live/compose  SEQ code"; break;
+2991	    case PG_SET: s = "SELECT item  OCT- / OCT+ change"; break;
+2992	    case PG_CHART:
+2993	        if (pg.edit) {
+2994	            s = "OCT-/+ K1 level  K2 groups  FX all back\nPLAY/REC save  SEL hear, hold: reset all";
+2995	            break;
+2996	        }
+2997	        t[0] = 0;
+2998	        text_cat(t, "REC edit  PLAY hear ");
+2999	        t[20] = ln_char(ui.csel), t[21] = 0;
+3000	        if (visual()) {
+3001	            char p[8];
+3002	            mo_pattern(mo_code(ln_char(ui.csel)), p);
+3003	            text_cat(t, "  ");
+3004	            text_cat(t, p);
+3005	        }
+3006	        s = t;
+3007	        break;
+3008	    case PG_PRACTICE:
+3009	        if (pr.ps == PS_CARD && c)
+3010	            s = ln_choose(c->type) ? "keys E4-A4, or SELECT + SEL"
+3011	                : card_key(c)      ? "PLAY again  SEL don't know"
+3012	                : visual()         ? "PLAY again  a key: next"
+3013	                                   : "PLAY again  SEQ the code  a key: next";
+3014	        else if (pr.ps == PS_RESULT)
+3015	            s = visual() || pr.has_j ? "a key: next" : "a key: next  SEQ the code";
+3016	        else
+3017	            s = "PLAY start  SELECT round/test  FX mute";
+3018	        break;
+3019	    default: break;
+3020	    }
+3021	    for (i = 0; s[i] && s[i] != '\n'; i++)
+3022	        ;
+3023	    if (s[i]) {                          /* two lines */
+3024	        char a[48];
+3025	        uint32_t j;
+3026	        for (j = 0; j < i && j < sizeof a - 1u; j++)
+3027	            a[j] = s[j];
+3028	        a[j] = 0;
+3029	        cv_text(8, 3, &FONT_T, a, C_DIM);
+3030	        cv_text(8, 17, &FONT_T, s + i + 1, C_DIM);
+3031	    } else
+3032	        cv_text(8, 9, &FONT_XS, s, C_DIM);
+3033	    cv_blit(0, 208);
+3034	}
+3035	
+3036	static int32_t lamp_y(void)              /* where this page shows the lamp, 0 none */
+3037	{
+3038	    if (ui.page == PG_KEY)
+3039	        return 88;
+3040	    if (ui.page == PG_TYPE)
+3041	        return type_lamp_y();
+3042	    if ((ui.page == PG_PRACTICE && (pr.ps == PS_CARD || pr.ps == PS_RESULT)) || ui.page == PG_RHYTHM
+3043	        || (ui.page == PG_LISTEN && ls.on))
+3044	        return 196;                      /* under the page (practice_at, rhythm_at, listen_at keep above 196) */
+3045	    return 0;
+3046	}
+3047	
+3048	static void draw(uint32_t now)
+3049	{
+3050	    uint8_t r = ui.redraw;
+3051	    ui.redraw = 0;
+3052	    if (r & R_HEAD)
+3053	        draw_header(now);
+3054	    if (r & R_MAIN)
+3055	        draw_main();
+3056	    if ((r & (R_MAIN | R_LAMP)) && lamp_y() && (lamp_y() == 196 || !(r & R_MAIN)))
+3057	        draw_lamp(lamp_y());
+3058	    if (r & R_FOOT)
+3059	        draw_footer();
+3060	}
+3061	
+3062	/* ------------------------------------------------------------------ audio --- */
+3063	static float gain_now;
+3064	
+3065	void app_render(int32_t *lr, uint32_t n, uint32_t master_q12)
+3066	{
+3067	    uint32_t i;
+3068	    float gain = (float)master_q12 / 4096.0f * 8300000.0f;
+3069	    gain_now += (gain - gain_now) * 0.5f;
+3070	    for (i = 0; i < 2u * n; i++)
+3071	        lr[i] = 0;
+3072	    tone_render(lr, n, gain_now);
+3073	}
+3074	
+3075	void app_panic(void) { tone_stop(); }
+3076	
+3077	/* ------------------------------------------------------------ the contract --- */
+3078	void app_init(void)
+3079	{
+3080	    /* everything from nothing: the host simulator's reboot runs this again over the old RAM */
+3081	    zero(&ui, sizeof ui);
+3082	    zero(&pr, sizeof pr);
+3083	    zero(&grid, sizeof grid);
+3084	    zero(&tim, sizeof tim);
+3085	    zero(&ls, sizeof ls);
+3086	    zero(&rh, sizeof rh);
+3087	    zero(txt, sizeof txt);
+3088	    zero(dsrc, sizeof dsrc);
+3089	    zero(&applied, sizeof applied);
+3090	    ev_w = ev_r = 0;
+3091	    rx_t = plat_ms();
+3092	#if FM1B_BLE
+3093	    bx_w = bx_r = 0;
+3094	    zero(&ble_rx, sizeof ble_rx);
+3095	#endif
+3096	    own_down = ptx_down = prx_down = rx_midi = rx_down = midi_down = 0;
+3097	    key_input = own_midi = ptx_midi = 0;
+3098	    saves = 0;
+3099	    dirty_at = 0;
+3100	    if (plat_store_load(OBJ_MORSE, &rec, sizeof rec) == (int)sizeof rec && rec.set.send == 0u)
+3101	        rec.set.send = SEND_DEFAULT;     /* a 0.1 record: it had no send speed */
+3102	    if (rec.magic != REC_MAGIC || rec.ver != REC_VER || rec.size != sizeof rec || !set_valid(&rec.set)
+3103	        || !ln_valid(&rec.ln)) {
+3104	        zero(&rec, sizeof rec);
+3105	        set_defaults();
+3106	        ln_init(&rec.ln);
+3107	    }
+3108	    mo_keyer_init(&keyer, SET.keyer, mo_dit_ms(SET.send));
+3109	    mo_player_init(&ptx, mo_dit_ms(SET.wpm), mo_gap_ms(SET.wpm, SET.eff));
+3110	    mo_player_init(&prx, mo_dit_ms(SET.wpm), mo_gap_ms(SET.wpm, SET.eff));
+3111	#ifdef PLAT_HOST
+3112	    mo_player_init(&host_hand, mo_dit_ms(SET.send), mo_dit_ms(SET.send));
+3113	#endif
+3114	    tone_stop();
+3115	    timing_apply();
+3116	    hl_init(&link, 0x4D, 0x4F, MO_VER);
+3117	    ui.page = PG_PRACTICE;               /* straight into today's practice */
+3118	    ui.back = PG_PRACTICE;
+3119	    pr.ps = PS_START;
+3120	    rhythm_hint();
+3121	}
+3122	
+3123	void app_ui_init(void)
+3124	{
+3125	    lcd_fill(0, 0, 240, 240, C_BLACK);
+3126	    ui.redraw = R_ALL;
+3127	}
+3128	
+3129	void app_frame(void)
+3130	{
+3131	    static const uint8_t HELLO[3] = {MO_VER, FW_MAJOR, FW_MINOR};
+3132	    static uint32_t last_msg;
+3133	    uint32_t now = plat_ms();
+3134	    uint8_t host, lamp, pat;
+3135	    input();
+3136	#if FM1B_BLE
+3137	    ble_in();
+3138	#endif
+3139	    read_events();
+3140	    if (ui.page == PG_PRACTICE)
+3141	        practice_step(now);
+3142	    if (ui.page == PG_LISTEN)
+3143	        listen_step();
+3144	    hl_tick(&link, now, T_HELLO, T_HEARTBEAT, HELLO, 3);
+3145	    prog_pump();
+3146	    host = (uint8_t)hl_host(&link, now);
+3147	    if (host != ui.host_was) {
+3148	        ui.host_was = host;
+3149	        ui.redraw |= R_HEAD | (ui.page == PG_SET ? R_MAIN : 0u);
+3150	    }
+3151	#if FM1B_BLE
+3152	    if ((uint8_t)plat_ble_connected() != ui.ble_was) {   /* BT grey or blue, and SETTINGS says so */
+3153	        ui.ble_was = (uint8_t)plat_ble_connected();
+3154	        ui.redraw |= R_HEAD | (ui.page == PG_SET ? R_MAIN : 0u);
+3155	    }
+3156	#endif
+3157	    if ((ui.msg_until && now >= ui.msg_until) != last_msg) {
+3158	        last_msg = ui.msg_until && now >= ui.msg_until;
+3159	        ui.redraw |= R_HEAD;
+3160	    }
+3161	    lamp = (uint8_t)(tone_gated(TONE_TX) | tone_gated(TONE_RX) << 1);
+3162	    if (lamp != ui.lamp_was) {
+3163	        ui.lamp_was = lamp;
+3164	        ui.redraw |= R_LAMP;
+3165	    }
+3166	    pat = (uint8_t)ptx.cur;
+3167	    if (ui.page == PG_TYPE && pat != ui.pat_was) {
+3168	        ui.pat_was = pat;
+3169	        ui.redraw |= R_MAIN;
+3170	    }
+3171	    if (dirty_at && (int32_t)(now - dirty_at) > 3000)   /* settings saved once the knobs rest */
+3172	        rec_save();
+3173	    lights(now);
+3174	    ann_tick(now);
+3175	    if (ui.redraw)
+3176	        draw(now);
+3177	}
+3178	
+3179	/* --------------------------------------------------------- host simulator --- */
+3180	#ifdef PLAT_HOST
+3181	static int host_fails;
+3182	
+3183	int app_expect(const char *what, int *got)
+3184	{
+3185	    if (!strcmp(what, "page"))
+3186	        *got = ui.page;
+3187	    else if (!strcmp(what, "mute"))
+3188	        *got = (int)muted();
+3189	    else if (!strcmp(what, "ble_off"))
+```
+</details></tool-use>
+
+_**Agent - sidechain (claude-opus-5-5 2026-11-18 10:16:57Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Read morse app_render and tick
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/firmware/morse && sed -n 3060,3076p app.c; sed -n 470,500p app.c; sed -n 350,380p app.c`
+
+```text
+}
+
+/* ------------------------------------------------------------------ audio --- */
+static float gain_now;
+
+void app_render(int32_t *lr, uint32_t n, uint32_t master_q12)
+{
+    uint32_t i;
+    float gain = (float)master_q12 / 4096.0f * 8300000.0f;
+    gain_now += (gain - gain_now) * 0.5f;
+    for (i = 0; i < 2u * n; i++)
+        lr[i] = 0;
+    tone_render(lr, n, gain_now);
+}
+
+void app_panic(void) { tone_stop(); }
+
+}
+
+void app_tick(void)
+{
+    uint32_t now = plat_ms(), keys = plat_keys(), pkt;
+    int dit = 0, dah = 0, own, t, rx, port;
+    if (key_input && keys) {
+        if (keyer.mode == MO_STRAIGHT)
+            dit = 1;
+        else {
+            int lo = (keys & LEFT_KEYS) != 0, hi = (keys & ~LEFT_KEYS) != 0;
+            dit = SET.swap ? hi : lo;
+            dah = SET.swap ? lo : hi;
+        }
+    }
+    own = mo_keyer_tick(&keyer, dit, dah);
+#ifdef PLAT_HOST
+    if (mo_player_busy(&host_hand))
+        own = mo_player_tick(&host_hand);
+#endif
+    if (own != own_down) {
+        own_down = (uint8_t)own;
+        ev_push(SRC_OWN, own, now);
+    }
+    t = mo_player_tick(&ptx);
+    ptx_down = (uint8_t)t;
+    midi_key();
+    tone_gate(TONE_TX, own || t);
+    /* MIDI in: a key-down on channel 1, any note (Vail sends 0, a DAW whatever it plays); velocity 0 is a release */
+    while (plat_midi_in(&pkt, &port)) {
+        uint32_t st = pkt >> 8 & 0xFFu, vel = pkt >> 24 & 0x7Fu, cin = pkt & 0x0Fu;
+ * slow */
+static struct {
+    uint8_t wpm, eff, send;
+} applied;                               /* the speeds the decoders were started at */
+
+static void timing_apply(void)
+{
+    uint32_t dit = mo_dit_ms(SET.wpm), gap = mo_gap_ms(SET.wpm, SET.eff), sdit = mo_dit_ms(SET.send);
+    uint32_t f = plat_lock();
+    keyer.mode = SET.keyer;
+    keyer.dit = sdit;
+    ptx.dit = prx.dit = dit;
+    ptx.gap = prx.gap = gap;
+#ifdef PLAT_HOST
+    host_hand.dit = sdit;
+    host_hand.gap = sdit;                /* a hand keys without Farnsworth */
+#endif
+    plat_unlock(f);
+    if (applied.send != SET.send)        /* a new speed starts the decoder there; muting or a pitch keeps its state */
+        mo_dec_init(&dsrc[SRC_OWN].dec, sdit, sdit);
+    if (applied.wpm != SET.wpm || applied.eff != SET.eff)
+        mo_dec_init(&dsrc[SRC_RX].dec, dit, gap);
+    applied.wpm = SET.wpm, applied.eff = SET.eff, applied.send = SET.send;
+    tone_pitch(TONE_TX, (float)SET.pitch);
+    tone_pitch(TONE_RX, (float)SET.pitch * 1.26f);   /* received a major third up */
+    tone_mute((int)muted());
+}
+
+static void set_changed(void)
+{
+    timing_apply();
+```
+</details></tool-use>
+
+_**Agent - sidechain (claude-opus-5-5 2026-11-18 10:17:01Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Read Morse bars() and lights code
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/firmware/morse && sed -n 2440,2480p app.c; grep -n '^static void lights\|plat_lights\|plat_leds\|plat_lights_mid\|plat_glow\|lfx_\|ledfx' app.c | head -30`
+
+```text
+    "a mark missing, or the letter split",
+    "gaps inside long: run it together",
+    "keep marks of a kind the same length",
+    "dahs long: 3 dits is enough",
+};
+
+static void bars(const uint16_t *mark, const uint16_t *gap, uint32_t n, uint8_t want, uint32_t dit, int32_t y,
+                 uint32_t den, int you)
+{
+    int32_t x = 52;
+    uint32_t i;
+    for (i = 0; i < n; i++) {
+        int32_t w;
+        int dah = want && mo_len(want) == n ? mo_elem(want, i) : mark[i] >= 2u * dit;
+        uint16_t c = dah ? C_RX : C_OWN;
+        if (i) {
+            int32_t g = (int32_t)(gap[i] * 180u / den);
+            if (you && gap[i] * 10u >= dit * 25u)
+                cv_rect(x, y + 10, g, 2, C_BAD);   /* a gap a listener takes for a letter's end */
+            x += g;
+        }
+        w = (int32_t)(mark[i] * 180u / den);
+        if (w < 2)
+            w = 2;
+        if (x + w > 236)
+            w = 236 - x > 2 ? 236 - x : 2;
+        if (you && want && mo_len(want) == n && pr.res != LN_RIGHT) {
+            /* the marks on the wrong side of the line between this answer's dits and dahs */
+            int looks_dah = mark[i] * 10u >= dit * 20u;
+            if (looks_dah != dah)
+                c = C_BAD;
+        }
+        cv_rect(x, y + 2, w, 8, c);
+        x += w;
+    }
+}
+
+static void result_keyed(const ln_card_t *a, int32_t oy)
+{
+    char t[48];
+    uint8_t want = mo_code(ln_char(a->ch));
+9:#include "ledfx.c"
+2052:static void lights(uint32_t now)
+2054:    ledfx_t kb = {0, 0, 0}, bb = {0, 0, 0};
+2060:            ledfx_set(&bb, k, FX_GLOW, now);
+2062:        ledfx_set(&bb, B_FX, FX_LIT, now);
+2065:            ledfx_set(&kb, CHOICE_KEY[i], i == pr.pick ? FX_BLINK : FX_LIT, now);
+2068:            ledfx_set(&kb, k, tx ? FX_LIT : rx ? FX_MID : FX_GLOW, now);
+2071:    ledfx_show(&bb, &kb);
+```
+</details></tool-use>
+
+_**Agent - sidechain (claude-opus-5-5 2026-11-18 10:17:04Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Read Morse lights() and ledfx helper
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/firmware && sed -n 2042,2078p morse/app.c; cat -n common/ledfx.h; cat -n common/ledfx.c`
+
+```text
+void app_input_only(void)
+{
+    input();
+#if FM1B_BLE
+    ble_in();
+#endif
+    read_events();
+}
+
+/* ----------------------------------------------------------------- lights --- */
+static void lights(uint32_t now)
+{
+    ledfx_t kb = {0, 0, 0}, bb = {0, 0, 0};
+    uint32_t k, i;
+    int tx = tone_gated(TONE_TX), rx = tone_gated(TONE_RX);
+    const ln_card_t *c = ln_card(&pr.r);
+    for (k = 0; k < NB; k++)
+        if (k != B_PLAY)
+            ledfx_set(&bb, k, FX_GLOW, now);
+    if (muted())
+        ledfx_set(&bb, B_FX, FX_LIT, now);
+    if (ui.page == PG_PRACTICE && pr.ps == PS_CARD && c && ln_choose(c->type)) {
+        for (i = 0; i < 4u; i++)
+            ledfx_set(&kb, CHOICE_KEY[i], i == pr.pick ? FX_BLINK : FX_LIT, now);
+    } else
+        for (k = 0; k < NKEYS; k++)      /* the lamp: every key lights with the keying (the way to read it muted) */
+            ledfx_set(&kb, k, tx ? FX_LIT : rx ? FX_MID : FX_GLOW, now);
+    if (hl_host(&link, now))
+        bb.lit |= LED_PLAY_GREEN;
+    ledfx_show(&bb, &kb);
+}
+
+/* ----------------------------------------------------------------- screen --- */
+#define C_OWN C_WHITE
+#define C_RX RGB(255, 176, 0)
+#define C_OK RGB(80, 220, 120)
+#define C_BAD RGB(240, 70, 60)
+     1	/* SPDX-License-Identifier: MIT */
+     2	/* ledfx: per-LED patterns on the FM-1's single-colour LEDs (fm1-base's off / glow / mid / lit), timed in
+     3	 * software, so a key can say how urgent it is without colour.
+     4	 *
+     5	 *   ledfx_t k = {0}, b = {0};
+     6	 *   ledfx_set(&k, key, FX_BLINK, now);   ...
+     7	 *   ledfx_show(&b, &k, extra_lit_buttons);   (once a frame: plat_lights + plat_lights_mid)
+     8	 *
+     9	 * PLAY has two LEDs: its bit B_PLAY is the red one, LED_PLAY_GREEN (bit NB) the green one. */
+    10	#pragma once
+    11	#include <stdint.h>
+    12	
+    13	enum {
+    14	    FX_OFF,
+    15	    FX_GLOW,                             /* dim, steady */
+    16	    FX_MID,                              /* between glow and lit, steady */
+    17	    FX_LIT,                              /* full, steady */
+    18	    FX_PULSE,                            /* glow - mid - lit - mid, 1.6 s round: alive, busy */
+    19	    FX_BLINK,                            /* on / off at 2 Hz: needs you */
+    20	    FX_DBLINK,                           /* two short flashes every 1.2 s: something broke */
+    21	    FX_FAST,                             /* on / off at 6 Hz */
+    22	    FX_N
+    23	};
+    24	
+    25	typedef struct {
+    26	    uint32_t lit, mid, dim;              /* the bits at each level, built by ledfx_set */
+    27	} ledfx_t;
+    28	
+    29	int ledfx_level(int fx, uint32_t now);   /* 0 off, 1 glow, 2 mid, 3 lit */
+    30	void ledfx_set(ledfx_t *o, uint32_t bit_index, int fx, uint32_t now);
+    31	void ledfx_show(const ledfx_t *buttons, const ledfx_t *keys);
+     1	/* SPDX-License-Identifier: MIT */
+     2	/* ledfx: see ledfx.h */
+     3	#include "ledfx.h"
+     4	
+     5	int ledfx_level(int fx, uint32_t now)
+     6	{
+     7	    switch (fx) {
+     8	    case FX_GLOW:
+     9	        return 1;
+    10	    case FX_MID:
+    11	        return 2;
+    12	    case FX_LIT:
+    13	        return 3;
+    14	    case FX_PULSE: {
+    15	        static const uint8_t STEP[4] = {1, 2, 3, 2};
+    16	        return STEP[(now / 400u) % 4u];
+    17	    }
+    18	    case FX_BLINK:
+    19	        return now % 500u < 250u ? 3 : 0;
+    20	    case FX_DBLINK: {
+    21	        uint32_t t = now % 1200u;
+    22	        return (t < 120u || (t >= 240u && t < 360u)) ? 3 : 0;
+    23	    }
+    24	    case FX_FAST:
+    25	        return now % 166u < 83u ? 3 : 0;
+    26	    default:
+    27	        return 0;
+    28	    }
+    29	}
+    30	
+    31	void ledfx_set(ledfx_t *o, uint32_t i, int fx, uint32_t now)
+    32	{
+    33	    uint32_t bit = 1u << i;
+    34	    o->lit &= ~bit;
+    35	    o->mid &= ~bit;
+    36	    o->dim &= ~bit;
+    37	    switch (ledfx_level(fx, now)) {
+    38	    case 1:
+    39	        o->dim |= bit;
+    40	        break;
+    41	    case 2:
+    42	        o->mid |= bit;
+    43	        break;
+    44	    case 3:
+    45	        o->lit |= bit;
+    46	        break;
+    47	    default:
+    48	        break;
+    49	    }
+    50	}
+    51	
+    52	void ledfx_show(const ledfx_t *b, const ledfx_t *k)
+    53	{
+    54	    plat_lights(b->lit, k->lit, b->dim, k->dim, 2);
+    55	    plat_lights_mid(b->mid, k->mid);
+    56	}
+```
+</details></tool-use>
+
+_**Agent - sidechain (claude-opus-5-5 2026-11-18 10:17:04Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+List other firmware dirs and RAM code uses
+
+`ls -la firmware/theory firmware/conductor firmware/voicelab firmware/hello 2>&1 | head -60; grep -rn "PLAT_RAM_CODE" firmware --include='*.c' --include='*.h' | grep -v "/fm1-base/" | head`
+
+```text
+firmware/theory:
+drwxr-xr-x@    - zhouhanru 18 Nov 17:49 tests
+.rw-r--r--@ 1.8k zhouhanru 18 Nov 17:55 README.md
+.rw-r--r--@  21k zhouhanru 18 Nov 17:51 theory.c
+.rw-r--r--@ 8.1k zhouhanru 18 Nov 17:43 theory.h
+
+firmware/conductor:
+drwxr-xr-x@    - zhouhanru 17 Nov 20:10 build
+drwxr-xr-x@    - zhouhanru 17 Nov 17:47 tests
+drwxr-xr-x@    - zhouhanru 17 Nov 17:47 web
+.rw-r--r--@   18 zhouhanru 17 Nov 17:47 .gitignore
+.rw-r--r--@  25k zhouhanru 17 Nov 20:07 app.c
+.rw-r--r--@ 1.5k zhouhanru 17 Nov 20:07 app.h
+.rw-r--r--@ 1.1k zhouhanru 17 Nov 20:07 fm1.toml
+.rw-r--r--@  828 zhouhanru 17 Nov 17:50 README.md
+.rw-r--r--@  276 zhouhanru 17 Nov 17:47 words.tsv
+
+firmware/voicelab:
+drwxr-xr-x@    - zhouhanru 18 Nov 03:58 build
+drwxr-xr-x@    - zhouhanru 18 Nov 03:56 gen
+drwxr-xr-x@    - zhouhanru 18 Nov 03:56 tests
+drwxr-xr-x@    - zhouhanru 18 Nov 03:56 web
+.rw-r--r--@   18 zhouhanru 18 Nov 04:01 .gitignore
+.rw-r--r--@ 8.2k zhouhanru 18 Nov 03:56 app.c
+.rw-r--r--@ 1.2k zhouhanru 18 Nov 03:55 app.h
+.rw-r--r--@  809 zhouhanru 18 Nov 03:56 fm1.toml
+.rw-r--r--@  275 zhouhanru 18 Nov 03:56 words.tsv
+
+firmware/hello:
+drwxr-xr-x@    - zhouhanru 17 Nov 02:16 build
+drwxr-xr-x@    - zhouhanru 17 Nov 02:07 docs
+drwxr-xr-x@    - zhouhanru 17 Nov 02:07 site
+drwxr-xr-x@    - zhouhanru 17 Nov 02:07 tests
+drwxr-xr-x@    - zhouhanru 17 Nov 02:09 web
+.rw-r--r--@   18 zhouhanru 17 Nov 02:07 .gitignore
+.rw-r--r--@  20k zhouhanru 17 Nov 02:07 app.c
+.rw-r--r--@ 2.0k zhouhanru 17 Nov 02:07 app.h
+.rw-r--r--@ 1.6k zhouhanru 17 Nov 02:07 fm1.toml
+.rw-r--r--@ 4.9k zhouhanru 17 Nov 02:07 README.md
+.rw-r--r--@  253 zhouhanru 17 Nov 02:07 words.tsv
+```
+</details></tool-use>
+
+_**Agent - sidechain (claude-opus-5-5 2026-11-18 10:17:05Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Grep host simulator for wav and expect
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/third_party/fm1-base && grep -n -i -E "wav|\"expect|rms|silen|peak|audio" host/plat_host.c | head -80`
+
+```text
+4: * Audio goes to a WAV, the screen to PNGs, the lights to text, MIDI out to a log. The device-only
+24: *   bta add NAME | bta drop NAME a Bluetooth audio device around, or gone (FM1B_BT_AUDIO: a link to it is lost)
+26: *   wav FILE | wavstop           start / stop recording the output
+27: *   usbwav FILE | usbwavstop     start / stop recording the USB audio input as a computer gets it: usb_audio_channels
+29: *   peakreset                    restart the output peak (expect peak_db_min / peak_db_max)
+36: *                                store_tries, clocks_out, midi_out, usb_play_gain, usb_audio_full, ... below; data.ADDR: the
+111: *   speakdump                    every page, value and message as the reader gets them (the app's app_speak_dump)
+112: * The app may add its own checks for expect (app_expect), the speakdump (app_speak_dump), what a reboot forgets
+113: * (app_host_reboot) and commands (app_host_cmd: 1 = handled; the whole line in plat_host_line): app.h defines APP_HOST_EXPECT / APP_HOST_SPEAKDUMP /
+653:#if FM1B_BT_AUDIO
+654:/* Bluetooth audio (FM1B_BT_AUDIO): a stand-in for the A2DP source. The devices around are the script's ("bta add NAME",
+671:static int bth_rest(void)                         /* the state with no link and nothing under way (bt_audio.c's MAN) */
+729:/* fm1.toml bt_audio_mem = "app" (FM1B_BTA_MEM): the block as the device's stack takes it (the same size: bt_page.c
+1059: * ("sysex_out", "expect_sysex") and written to the "sysex_log" file */
+1317:static int uac_full;                            /* plat_usb_audio_full: the render at full level, MASTER after it */
+1318:void plat_usb_audio_full(int on) { uac_full = on != 0; }
+1319:static uint32_t usb_play_q12 = 4096u;            /* plat_usb_play_gain: no USB audio on the host; kept for a test */
+1513:uint32_t plat_cpu_khz(void) { return 0; }        /* (no clock to speak of: the host's) */
+1889:static FILE *wav;
+1890:static uint32_t wav_frames;
+1891:static float peak_out;
+1892:static FILE *uwav;                                  /* usbwav: the USB audio input's channels */
+1893:static uint32_t uwav_frames;
+1894:static FILE *wav_start(const char *path)
+1902:static void wav_open(const char *path)
+1904:    wav = wav_start(path);
+1905:    wav_frames = 0;
+1907:static void wav_end(FILE *f, uint32_t frames, uint16_t ch)   /* the header, now the length is known */
+1914:    fwrite("WAVEfmt ", 1, 8, f);
+1929:static void wav_close(void)
+1931:    uint32_t bytes = wav_frames * 4, v;
+1932:    if (!wav)
+1934:    fseek(wav, 0, SEEK_SET);
+1935:    fwrite("RIFF", 1, 4, wav);
+1937:    fwrite(&v, 4, 1, wav);
+1938:    fwrite("WAVEfmt ", 1, 8, wav);
+1940:    fwrite(&v, 4, 1, wav);
+1945:        fwrite(fmt, 2, 2, wav);
+1946:        fwrite(r, 4, 2, wav);
+1947:        fwrite(al, 2, 2, wav);
+1949:    fwrite("data", 1, 4, wav);
+1950:    fwrite(&bytes, 4, 1, wav);
+1951:    fclose(wav);
+1952:    wav = 0;
+1956:static double audio_due_ms, render_ns_total, render_budget_ns_total;
+1975:#if FM1B_BT_AUDIO
+1991:                                                     * the sound is silence (the page's part "reboot", web/emu/parts) */
+2001:#if FM1B_BT_AUDIO
+2029:    if (uwav) {
+2030:        fwrite(usb_ch, sizeof usb_ch, 1, uwav);
+2031:        uwav_frames += APP_BLOCK;
+2034:    if (uwav) {                                 /* (two channels: the master, as the tap takes it) */
+2039:                fwrite(&x, 2, 1, uwav);
+2041:        uwav_frames += APP_BLOCK;
+2044:    if (uac_full) {                             /* (the USB audio input took it at full level) the speaker: MASTER */
+2082:        if (web_down) {                             /* (the clock runs and the blocks are silence, as a stopped FM-1) */
+2084:            while (audio_due_ms <= (double)now_ms) {
+2086:                web_audio(blk, APP_BLOCK);
+2087:                audio_due_ms += APP_BLOCK * 1000.0 / 44100.0;
+2093:        while (audio_due_ms <= (double)now_ms) {      /* APP_BLOCK-frame blocks, as the device renders them */
+2096:            web_audio(blk, APP_BLOCK);
+2101:                if (fabsf(l) > peak_out)
+2102:                    peak_out = fabsf(l);
+2103:                if (fabsf(r) > peak_out)
+2104:                    peak_out = fabsf(r);
+2107:                if (wav) {
+2108:                    fwrite(s, 2, 2, wav);
+2109:                    wav_frames++;
+2112:            audio_due_ms += APP_BLOCK * 1000.0 / 44100.0;
+2183:    printf("FAIL %s %s %02X %02X %02X: %s\n", sent ? "expect_out" : "expect_no_out", port, (pkt >> 8) & 0xFF,
+2251:    else if (!strcmp(what, "usb_audio_full"))       /* plat_usb_audio_full: 1 full, 0 at MASTER */
+2267:#if FM1B_BT_AUDIO
+2268:    else if (!strcmp(what, "bta"))                  /* Bluetooth audio: PLAT_BTA_* (7 streaming) */
+2277:    else if (!strcmp(what, "peak_db_max") || !strcmp(what, "peak_db_min")) {
+2278:        double db = 20.0 * log10(peak_out > 1e-9f ? peak_out : 1e-9f);
+2280:        printf("%s peak %.1f dBFS (%s %s)\n", bad ? "FAIL" : "  ok", db, what + 8, val);
+2345:        if (!strcmp(cmd, "expect") && app_host_cmd(cmd, a, b, "", ""))
+2406:        } else if (!strcmp(cmd, "expect"))
+2659:#if FM1B_BT_AUDIO
+2672:        } else if (!strcmp(cmd, "expect_out") || !strcmp(cmd, "expect_no_out")) {
+```
+</details></tool-use>
+
+_**Agent - sidechain (claude-opus-5-5 2026-11-18 10:17:08Z)**_
+
+<tool-use data-tool-type="read" data-tool-name="Read"><details>
+<summary>Tool use: **Read**</summary>
+ `./firmware/morse/app.c`
+
+```text
+1888	    }
+1889	}
+1890	
+1891	static void input(void)
+1892	{
+1893	    uint32_t keys = plat_keys(), btn = plat_buttons(), k;
+1894	    int32_t e;
+1895	    if (pg.ask) {                        /* a question: PLAY yes, HOME no, nothing else */
+1896	        for (k = 0; k < NB; k++)
+1897	            if ((btn >> k & 1u) && !(ui.btn >> k & 1u)) {
+1898	                if (k == B_PLAY)
+1899	                    ask_yes();
+1900	                else if (k == B_HOME)
+1901	                    ask_no();
+1902	            }
+1903	        for (k = 0; k < NE; k++)
+1904	            (void)plat_enc(k);
+1905	        if (btn != ui.btn)
+1906	            ui.redraw |= R_FOOT;
+1907	        ui.keys = keys;
+1908	        ui.btn = btn;
+1909	        return;
+1910	    }
+1911	    for (k = 0; k < NKEYS; k++)
+1912	        if ((keys >> k & 1u) && !(ui.keys >> k & 1u))
+1913	            page_key(k);
+1914	    for (k = 0; k < NB; k++) {
+1915	        if (!(btn >> k & 1u) || (ui.btn >> k & 1u))
+1916	            continue;
+1917	        if (pg.edit && ui.page == PG_CHART) {   /* CHART's edit takes these */
+1918	            if (k == B_HOME || k == B_REC || k == B_PLAY) {
+1919	                chart_save_or_leave();
+1920	                continue;
+1921	            }
+1922	            if (k == B_FX) {
+1923	                ln_step_back(&pg.draft);
+1924	                chart_changed("ONE BOX BACK", "ALL COME SOONER");
+1925	                continue;
+1926	            }
+1927	            if (k == B_SEL) {
+1928	                pg.sel_t = plat_ms() | 1u;
+1929	                continue;
+1930	            }
+1931	            if (k == B_OCTDN || k == B_OCTUP) {
+1932	                chart_level(k == B_OCTUP ? 1 : -1);
+1933	                continue;
+1934	            }
+1935	        }
+1936	        switch (k) {
+1937	        case B_HOME: set_page(ui.page == PG_MENU ? ui.back : PG_MENU); break;
+1938	        case B_FX: mute_toggle(); break;
+1939	        case B_PLAY: page_play(); break;
+1940	        case B_SEL: page_sel(); break;
+1941	        case B_SEQ:                      /* a page's view */
+1942	            if (ui.page == PG_KEY)
+1943	                look_set(0, 3u, wrap(kview(), 1, KV_N));
+1944	            else if (ui.page == PG_TYPE)
+1945	                look_set(2, 1u, !tlabel());
+1946	            else if (ui.page == PG_LISTEN)
+1947	                look_set(5, 1u, !lhide());
+1948	            else if (ui.page == PG_PRACTICE && !visual()) {   /* a peek at the code: a new letter, an answer */
+1949	                const ln_card_t *pc = ln_card(&pr.r);
+1950	                if ((pr.ps == PS_CARD && pc && pc->type == CARD_NEW) || (pr.ps == PS_RESULT && !pr.has_j)) {
+1951	                    pr.peek = (uint8_t)!pr.peek;
+1952	                    if (pr.ps == PS_RESULT)
+1953	                        pr.until = plat_ms() + 2500u;   /* time to look */
+1954	                    ui.redraw |= R_MAIN;
+1955	                }
+1956	                break;
+1957	            } else
+1958	                break;
+1959	            look_changed();
+1960	            break;
+1961	        case B_REC:                      /* TYPE: the last character off the line (on release; held: all of it) */
+1962	            if (ui.page == PG_TYPE)
+1963	                ui.rec_t = plat_ms() | 1u;
+1964	            else if (ui.page == PG_CHART)   /* CHART: edit the progress */
+1965	                chart_edit_on();
+1966	            break;
+1967	        case B_OCTDN:
+1968	        case B_OCTUP:
+1969	            if (ui.page == PG_KEY && k == B_OCTDN) {
+1970	                grid.n = 0;
+1971	                tim.count = 0;
+1972	                ui.last = 0;
+1973	                ui.redraw |= R_MAIN;
+1974	            } else if (ui.page == PG_TYPE) {   /* the next page of keys: letters, signs, phrases */
+1975	                ui.tpage = (uint8_t)wrap(ui.tpage, k == B_OCTUP ? 1 : -1, 3u);
+1976	                ui.redraw |= R_MAIN | R_FOOT;
+1977	            } else if (ui.page == PG_SET)
+1978	                settings_step(k == B_OCTUP ? 1 : -1);
+1979	            break;
+1980	        default: break;
+1981	        }
+1982	    }
+1983	    if (ui.rec_t && ui.page == PG_TYPE) {
+1984	        if (!(btn >> B_REC & 1u)) {      /* let go soon: one character */
+1985	            uint32_t n = slen(ui.line);
+1986	            if (n)
+1987	                ui.line[n - 1u] = 0;
+1988	            ui.rec_t = 0;
+1989	            ui.redraw |= R_MAIN;
+1990	        } else if ((int32_t)(plat_ms() - ui.rec_t) >= 600) {   /* held: the whole line */
+1991	            ui.line[0] = 0;
+1992	            ui.gloss = 0;
+1993	            ui.rec_t = 0;
+1994	            play_stop(&ptx);
+1995	            app_say("LINE CLEARED", "");
+1996	            ui.redraw |= R_MAIN;
+1997	        }
+1998	    } else if (!(btn >> B_REC & 1u))
+1999	        ui.rec_t = 0;
+2000	    if (pg.sel_t && pg.edit && ui.page == PG_CHART) {   /* SEL in the edit: hear it; held 2 s: all back to new */
+2001	        if (!(btn >> B_SEL & 1u)) {
+2002	            play_char(&ptx, ln_char(ui.csel));
+2003	            pg.sel_t = 0;
+2004	        } else if ((int32_t)(plat_ms() - pg.sel_t) >= 2000) {
+2005	            ln_init(&pg.draft);
+2006	            pg.sel_t = 0;
+2007	            chart_changed("ALL RESET", "TILL SAVED");
+2008	        }
+2009	    } else if (!(btn >> B_SEL & 1u))
+2010	        pg.sel_t = 0;
+2011	    if ((e = plat_enc(EN_SELECT)) != 0)
+2012	        page_select(e);
+2013	    if ((e = plat_enc(EN_ALGO)) != 0) {
+2014	        if (pg.edit && ui.page == PG_CHART)
+2015	            app_say("EDITING", "REC: SAVE OR LEAVE");
+2016	        else
+2017	            set_page(wrap(ui.page, e > 0 ? 1 : -1, PG_N));
+2018	    }
+2019	    if (pg.edit && ui.page == PG_CHART) {   /* the edit's knobs: K1 the letter's level, K2 the groups open */
+2020	        if ((e = plat_enc(EN_K1)) != 0)
+2021	            chart_level(e > 0 ? 1 : -1);
+2022	        if ((e = plat_enc(EN_K2)) != 0)
+2023	            chart_groups(e > 0 ? 1 : -1);
+2024	        (void)plat_enc(EN_K3);
+2025	        (void)plat_enc(EN_K4);
+2026	    }
+2027	    if ((e = plat_enc(EN_K1)) != 0)
+2028	        speed(e > 0 ? 1 : -1);
+2029	    if ((e = plat_enc(EN_K2)) != 0)
+2030	        spacing(e > 0 ? 1 : -1);
+2031	    if ((e = plat_enc(EN_K3)) != 0)
+2032	        pitch(e > 0 ? 1 : -1);
+2033	    if ((e = plat_enc(EN_K4)) != 0)
+2034	        send_speed(e > 0 ? 1 : -1);
+2035	    (void)plat_enc(EN_PRESET);
+2036	    if (btn != ui.btn)
+2037	        ui.redraw |= R_FOOT;
+2038	    ui.keys = keys;
+2039	    ui.btn = btn;
+```
+</details></tool-use>
+
+_**Agent - sidechain (claude-opus-5-5 2026-11-18 10:17:11Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Read host render, wav, peak expect
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/third_party/fm1-base && sed -n 20,40p host/plat_host.c; sed -n 2010,2060p host/plat_host.c; sed -n 2090,2115p host/plat_host.c; sed -n 2270,2290p host/plat_host.c; grep -n -E "cpu_pct|xruns|render_ns|budget" host/plat_host.c | head -20`
+
+```text
+ *   midi [PORT] B0 B1 B2         incoming MIDI message (PORT: USB, the default, BLE, BLE-DEV or TRS; hex bytes;
+ *                                BLE is the computer's link, BLE-DEV the device's: both PORT_BLE, FM1B_BLE_CENTRAL)
+ *   ble connect | ble link | ble disconnect   a central listening, or linked and not yet listening (FM1B_BLE: the
+ *                                stand-in stack is ready a second after the start)
+ *   bta add NAME | bta drop NAME a Bluetooth audio device around, or gone (FM1B_BT_AUDIO: a link to it is lost)
+ *   jack in | jack out           headphones into the jack, or out (plat_headphones; nothing plugged at the start)
+ *   wav FILE | wavstop           start / stop recording the output
+ *   usbwav FILE | usbwavstop     start / stop recording the USB audio input as a computer gets it: usb_audio_channels
+ *                                (FM1B_UAC_CH) of 16 bits, the master on 1 and 2, the app's own after it (plat_usb_ch)
+ *   peakreset                    restart the output peak (expect peak_db_min / peak_db_max)
+ *   shot FILE.png                save the screen
+ *   leds                         print the lit buttons and keys (keys: # bright, + dim)
+ *   out                          print the MIDI sent since the last "out" (and forget it; clocks not shown)
+ *   expect_out PORT B0 B1 B2     check that this message went out to PORT since the last "out" (USB, BLE, BLE-DEV, USBH)
+ *   expect_no_out PORT B0 B1 B2  check that it did not
+ *   expect WHAT VALUE            check state: exit 1 on mismatch; VALUE "<N" / ">N" is a bound (WHAT: store_writes,
+ *                                store_tries, clocks_out, midi_out, usb_play_gain, usb_audio_full, ... below; data.ADDR: the
+ *                                flash's byte at ADDR, as plat_data reads it; -1 outside its windows)
+ *   reboot                       re-run boot from the simulated flash (persistence test)
+ *                                (the app's plat_restart does the same, at the end of its millisecond; expect restarts)
+ *   crash [PC [VEC]]             a CPU fault (hex; 02012344, 3): the .noinit crash record as felucca-bsp's fm1_fault_c
+#endif
+#ifdef APP_TICK
+    app_tick();                                 /* 1 kHz, as the device's timer runs it */
+#endif
+#ifdef APP_LOOP
+    app_loop();
+#endif
+}
+
+static void sim_render(int32_t *blk)            /* one APP_BLOCK-frame block, as the device renders it */
+{
+    double t0 = now_ns(), dt;
+    uint32_t k;
+#if FM1B_UAC_CH > 2
+    memset(usb_ch, 0, sizeof usb_ch);
+#endif
+    app_render(blk, APP_BLOCK, uac_full ? 4096u : APP_GAIN(master));
+#if FM1B_UAC_CH > 2
+    usb_ch_master(blk);
+    if (uwav) {
+        fwrite(usb_ch, sizeof usb_ch, 1, uwav);
+        uwav_frames += APP_BLOCK;
+    }
+#else
+    if (uwav) {                                 /* (two channels: the master, as the tap takes it) */
+        for (k = 0; k < APP_BLOCK; k++)
+            for (uint32_t c = 0; c < 2u; c++) {
+                int32_t v = (blk[2u * k + c] + 128) >> 8;
+                int16_t x = (int16_t)(v > 32767 ? 32767 : v < -32768 ? -32768 : v);
+                fwrite(&x, 2, 1, uwav);
+            }
+        uwav_frames += APP_BLOCK;
+    }
+#endif
+    if (uac_full) {                             /* (the USB audio input took it at full level) the speaker: MASTER */
+        const float g = (float)APP_GAIN(master) * (1.0f / 4096.0f);
+        for (k = 0; k < 2u * APP_BLOCK; k++)
+            blk[k] = (int32_t)((float)blk[k] * g);
+    }
+    dt = now_ns() - t0;
+    render_ns_total += dt;
+    render_budget_ns_total += APP_BLOCK * 1e9 / 44100.0;
+    cpu_pct = (uint32_t)(100.0 * dt / (APP_BLOCK * 1e9 / 44100.0));
+}
+
+static void sim_ms_end(int frame)
+{
+    ds_poll(now_ms - hcr_boot_ms, 0u, 0u);       /* (the debug stats: main_fm1.c's pass, once a millisecond) */
+    if (sim_listen && now_ms % 2000u == 0) {        /* the reader's HELLO, as it sends it */
+        static const uint8_t HELLO[] = {ANN_H0, ANN_H1, ANN_H2, ANN_HELLO, ANN_VER};
+        ann_frame(HELLO, sizeof HELLO, now_ms);
+        }
+#endif
+        sim_ms_begin(now_ms + 1u);
+        while (audio_due_ms <= (double)now_ms) {      /* APP_BLOCK-frame blocks, as the device renders them */
+            sim_render(blk);
+#ifdef PLAT_WEB
+            web_audio(blk, APP_BLOCK);
+#endif
+            for (k = 0; k < APP_BLOCK; k++) {
+                float l = (float)blk[2 * k] / 8388608.0f, r = (float)blk[2 * k + 1] / 8388608.0f;
+                int16_t s[2];
+                if (fabsf(l) > peak_out)
+                    peak_out = fabsf(l);
+                if (fabsf(r) > peak_out)
+                    peak_out = fabsf(r);
+                s[0] = (int16_t)(l * 32767.0f);
+                s[1] = (int16_t)(r * 32767.0f);
+                if (wav) {
+                    fwrite(s, 2, 2, wav);
+                    wav_frames++;
+                }
+            }
+            audio_due_ms += APP_BLOCK * 1000.0 / 44100.0;
+            hds_halves++;
+        }
+        if (now_ms >= ui_due) {
+    else if (!strcmp(what, "bta_known"))            /* its remembered devices */
+        got = (int)bth_nmem;
+#endif
+    else if (!strcmp(what, "midi_in_usb"))          /* plat_midi_count: messages in from USB */
+        got = (int)plat_midi_count(PORT_USB, 0);
+    else if (!strcmp(what, "headphones"))           /* plat_headphones: the script's jack (1 in, 0 out) */
+        got = plat_headphones();
+    else if (!strcmp(what, "peak_db_max") || !strcmp(what, "peak_db_min")) {
+        double db = 20.0 * log10(peak_out > 1e-9f ? peak_out : 1e-9f);
+        int bad = what[8] == 'm' && what[9] == 'a' ? db > atof(val) : db < atof(val);
+        printf("%s peak %.1f dBFS (%s %s)\n", bad ? "FAIL" : "  ok", db, what + 8, val);
+        return bad;
+    } else {
+        printf("FAIL unknown expect %s\n", what);
+        return 1;
+    }
+    if (val[0] == '<' || val[0] == '>') {
+        int lim = (int)strtol(val + 1, 0, 0);
+        if (val[0] == '<' ? got >= lim : got <= lim) {
+            printf("FAIL expect %s %s, got %d\n", what, val, got);
+            return 1;
+1510:static uint32_t cpu_pct;
+1511:uint32_t plat_cpu_pct(void) { return cpu_pct; }
+1524:uint32_t plat_xruns(void) { return 0; }
+1684:    uint32_t budget = mr_rate;
+1694:            budget = budget > hctl_n ? budget - hctl_n : 0;
+1697:        if (hmr_r == hmr_w || !budget)
+1703:            budget--;
+1956:static double audio_due_ms, render_ns_total, render_budget_ns_total;
+2050:    render_ns_total += dt;
+2051:    render_budget_ns_total += APP_BLOCK * 1e9 / 44100.0;
+2052:    cpu_pct = (uint32_t)(100.0 * dt / (APP_BLOCK * 1e9 / 44100.0));
+2972:           render_budget_ns_total > 0 ? 100.0 * render_ns_total / render_budget_ns_total : 0.0,
+```
+</details></tool-use>
+
+_**Agent - sidechain (claude-opus-5-5 2026-11-18 10:17:13Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Read Morse rec save and host cmd code
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/firmware/morse && sed -n 85,130p app.c; sed -n 3300,3446p app.c`
+
+```text
+{
+    SET.look = (uint8_t)((SET.look & ~(mask << shift)) | (v & mask) << shift);
+}
+
+static void set_defaults(void)          /* the START preset: Koch's characters at 20, gaps stretched to 8 (Farnsworth) */
+{
+    SET.wpm = 20;
+    SET.eff = 8;
+    SET.keyer = MO_STRAIGHT;
+    SET.swap = 0;
+    SET.mute = 0;
+    SET.cards = 20;
+    SET.learn = LM_SOUND;
+    SET.look = 0;
+    SET.pitch = 600;
+    SET.send = SEND_DEFAULT;
+    SET.prog = LP_KOCH;
+}
+
+static int set_valid(const set_t *s)
+{
+    return s->wpm >= 5u && s->wpm <= 40u && s->eff >= 5u && s->eff <= s->wpm && s->keyer < MO_NKEYER && s->swap <= 1u
+           && s->mute <= 3u && s->cards >= 10u && s->cards <= 30u && s->learn <= LM_VISUAL && s->pitch >= 300u
+           && s->pitch <= 1200u && (s->look & 3u) < KV_N && (s->look >> 3 & 3u) < TL_N
+           && s->send >= 5u && s->send <= 40u && s->prog < LP_N;
+}
+
+static uint32_t saves;                   /* records written since boot */
+static uint32_t dirty_at;                /* a setting changed at (0: saved) */
+
+static void rec_save(void)
+{
+    rec.magic = REC_MAGIC;
+    rec.ver = REC_VER;
+    rec.size = (uint16_t)sizeof rec;
+    if (plat_store_save(OBJ_MORSE, &rec, sizeof rec) == 0)
+        saves++;
+    dirty_at = 0;
+}
+
+/* ------------------------------------------------------------------- state --- */
+enum { SRC_OWN, SRC_RX, SRC_N };         /* what this FM-1 sends; what it receives (MIDI in, the host's text) */
+enum { PG_MENU, PG_PRACTICE, PG_LISTEN, PG_KEY, PG_RHYTHM, PG_TYPE, PG_CHART, PG_SET, PG_N };
+enum { PS_START, PS_CARD, PS_RESULT, PS_DONE };
+
+/* the tick's: the key, the keyer, two players (ptx: this FM-1's own playing, prompts, typed letters and listening;
+        *got = pr.peek;
+    else if (!strcmp(what, "near"))
+        *got = pr.r.near;
+    else
+        return 0;
+    return 1;
+}
+
+static void host_text(const char *a, char *out, uint32_t max)   /* a script word: _ is a space */
+{
+    uint32_t i;
+    for (i = 0; a[i] && i < max - 1u; i++)
+        out[i] = a[i] == '_' ? ' ' : a[i];
+    out[i] = 0;
+}
+
+static void host_send(const char *s)     /* a hand on a straight key keys s */
+{
+    while (*s)
+        mo_player_push(&host_hand, *s++);
+}
+
+int app_host_cmd(const char *cmd, const char *a, const char *b, const char *c, const char *d)
+{
+    char t[128];
+    (void)c, (void)d;
+    if (!strcmp(cmd, "expect_text")) {   /* expect_text own|rx|typed TEXT (_ a space; trailing spaces ignored) */
+        int w = !strcmp(a, "rx") ? 1 : !strcmp(a, "typed") ? 2 : 0;
+        char g[TXT_N + 1];
+        uint32_t n;
+        host_text(b, t, sizeof t);
+        for (n = 0; txt[w][n]; n++)
+            g[n] = txt[w][n];
+        while (n && g[n - 1u] == ' ')
+            n--;
+        g[n] = 0;
+        if (strcmp(g, t)) {
+            printf("  FAIL expect_text %s: \"%s\", got \"%s\"\n", a, t, g);
+            host_fails++;
+        } else
+            printf("  ok text %s \"%s\"\n", a, t);
+        return 1;
+    }
+#if FM1B_BLE
+    if (!strcmp(cmd, "ble_frame")) {     /* ble_frame hello_ack|prog_req|text WORD: one of the host's frames over
+                                          * Bluetooth, as the own stack hands it over (SysEx packets, CIN 4..7) */
+        uint8_t f[48];
+        uint32_t n = 0, i, k;
+        f[n++] = 0xF0, f[n++] = 0x7D, f[n++] = 0x4D, f[n++] = 0x4F, f[n++] = MO_VER;
+        if (!strcmp(a, "hello_ack"))
+            f[n++] = T_HELLO_ACK, f[n++] = 1;
+        else if (!strcmp(a, "prog_req"))
+            f[n++] = T_PROG_REQ;
+        else {
+            f[n++] = T_TEXT;
+            for (i = 0; b[i] && n < sizeof f - 1u; i++)
+                f[n++] = (uint8_t)b[i];
+        }
+        f[n++] = 0xF7;
+        for (i = 0; i < n; i += 3) {
+            uint32_t left = n - i, pkt;
+            k = left > 3u ? 3u : left;
+            pkt = left > 3u ? 4u : 4u + k;
+            pkt |= (uint32_t)f[i] << 8;
+            if (k > 1u)
+                pkt |= (uint32_t)f[i + 1u] << 16;
+            if (k > 2u)
+                pkt |= (uint32_t)f[i + 2u] << 24;
+            bx[bx_w] = pkt;
+            bx_w = (bx_w + 1u) % BX_N;
+        }
+        return 1;
+    }
+#endif
+    if (!strcmp(cmd, "setcard")) {       /* setcard hear_key|see_key CHAR: the card asked now becomes this one */
+        ln_card_t *k = pr.ps == PS_CARD && pr.r.at < pr.r.n ? &pr.r.card[pr.r.at] : 0;
+        int i = ln_index(b[0]);
+        if (!k || i < 0) {
+            printf("  FAIL setcard: no card, or not a letter of the course\n");
+            host_fails++;
+            return 1;
+        }
+        k->ch = (uint8_t)i;
+        k->type = !strcmp(a, "see_key") ? CARD_SEE_KEY : CARD_HEAR_KEY;
+        k->dir = k->type == CARD_SEE_KEY ? LN_SEND : LN_REC;
+        k->ch = (uint8_t)ln_index(b[0]);
+        play_stop(&ptx);
+        card_present();
+        return 1;
+    }
+    if (!strcmp(cmd, "setstrict")) {     /* setstrict 0|1: JUDGING */
+        look_set(7, 1u, a[0] == '1');
+        return 1;
+    }
+    if (!strcmp(cmd, "clear_text")) {
+        zero(txt, sizeof txt);
+        return 1;
+    }
+    if (!strcmp(cmd, "sendkeys")) {      /* sendkeys TEXT: keyed by hand at the send speed (_ a space) */
+        host_text(a, t, sizeof t);
+        host_send(t);
+        return 1;
+    }
+    if (!strcmp(cmd, "answer_all")) {    /* answer_all right: the rest of the round at once (keyed cards answered
+                                          * without the keying; "answer" keys them for real) */
+        const ln_card_t *k;
+        int right = !strcmp(a, "right");
+        while (pr.ps == PS_CARD && (k = ln_card(&pr.r)) != 0) {
+            if (k->type == CARD_NEW)
+                practice_answer(1);
+            else {
+                if (ln_choose(k->type))
+                    practice_choose(right ? k->right : (k->right + 1u) % 4u);
+                else
+                    practice_answer(right);
+                play_stop(&ptx);
+                card_present();
+            }
+        }
+        return 1;
+    }
+    if (!strcmp(cmd, "answer")) {        /* answer right|wrong: the card asked now, as a player would */
+        const ln_card_t *k = ln_card(&pr.r);
+        int right = !strcmp(a, "right");
+        if (pr.ps == PS_DONE)
+            printf("  (answer: the round is over)\n");
+        else if (pr.ps != PS_CARD || !k) {
+            printf("  FAIL answer: no card asked\n");
+            host_fails++;
+        } else if (k->type == CARD_NEW)
+            practice_answer(1);
+        else if (ln_choose(k->type))
+            practice_choose(right ? k->right : (k->right + 1u) % 4u);
+        else if (!pr.answer_ok) {
+            printf("  FAIL answer: the prompt is still playing\n");
+            host_fails++;
+        } else {
+            char s[3] = {right ? ln_char(k->ch) : (ln_char(k->ch) == 'E' ? 'T' : 'E'), ' ', 0};
+            host_send(s);
+        }
+        return 1;
+    }
+    return 0;
+}
+
+int app_host_fails(void) { return host_fails; }
+#endif
+```
+</details></tool-use>
+
+_**Agent - sidechain (claude-opus-5-5 2026-11-18 10:17:15Z)**_
+
+Now the host simulator's top comment and how it dispatches app hooks.
+
+_**Agent - sidechain (claude-opus-5-5 2026-11-18 10:17:17Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Locate top comment bounds in plat_host.c
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/third_party/fm1-base/host && grep -n '^ \*/\|^/\*' plat_host.c | head -10`
+
+```text
+1:/* SPDX-License-Identifier: MPL-2.0
+3:/* fm1-base on the host: the whole app (UI, engine, saved state) against a simulated FM-1 driven by a script.
+119: */
+145:/* ------------------------------------------------------------ screen --- */
+154:/* screen mirroring over USB (device/mirror.c), as lcd.c copies each blit and fill to it */
+192:/* ---------------------------------------------------------- platform --- */
+198:/* "spin": encoder steps exactly as given; an app that accelerates its knobs reads this (#ifdef PLAT_HOST) */
+254:/* the pulse the dim ones have now (ns): the app's, else the glow's (1,600 or 3,200), 0 with no glow */
+259:/* the lights ("leds"): bright, and dim (glow 0: none); PLAY's green counts as PLAY */
+325:/* the host's MIDI out is logged at once and never fills: the device's whole ring free, for whoever listens */
+```
+</details></tool-use>
+
+_**Agent - sidechain (claude-opus-5-5 2026-11-18 10:17:17Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Find host master default and peak tests
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/third_party/fm1-base && grep -n -E "^static .*master|master = |\"master\"|  master " host/plat_host.c | head; sed -n 2965,2978p host/plat_host.c; grep -rn "peak_db" --include='*.txt' --include='*.sh' --include='*.fm1' -l . ../../firmware 2>/dev/null | head; `
+
+```text
+19: *   master N                     MASTER pot 0..4096 (then 40 ms, as the device's smoothing settles)
+213:static uint32_t mirror_in_master(uint32_t pot) { return pot; }
+218:static uint32_t now_ms, held_btn, held_keys, master = 2048;
+1322:static int16_t usb_ch[APP_BLOCK][FM1B_UAC_CH];      /* plat_usb_ch: the block's frames (1 and 2 the master, after it) */
+1332:static void usb_ch_master(const int32_t *blk)       /* the master into 1 and 2, as the device's tap takes it */
+2623:        } else if (!strcmp(cmd, "master")) {
+2624:            master = (uint32_t)atoi(a);
+        printf("mirror: %u frames, %u bytes (%u rects, %u rows sent, %u rows skipped, %u drops, %u redraws, %u inputs; "
+               "%u pixels blitted)\n", mr.frames, mr.bytes, mr.rects, mr.rows, mr.skipped, mr.drops, mr.redraws,
+               mr.inputs, mr.px);
+    if (mr_out)
+        fclose(mr_out);
+#endif
+    printf("host: %u ms simulated, %u blits, render %.1f%% of real time (host CPU)%s\n", now_ms, blits,
+           render_budget_ns_total > 0 ? 100.0 * render_ns_total / render_budget_ns_total : 0.0,
+           fails ? ", EXPECTATIONS FAILED" : "");
+    return fails ? 1 : 0;
+}
+#endif /* PLAT_WEB */
+template/tests/basic.txt
+examples/ble_own/tests/basic.txt
+../../firmware/voicelab/tests/basic.txt
+../../firmware/hello/tests/basic.txt
+../../firmware/morse/tests/basic.txt
+```
+</details></tool-use>
+
+_**Agent - sidechain (claude-opus-5-5 2026-11-18 10:17:21Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Show peak expectations in tests
+
+`grep -n -B3 -A3 "peak" third_party/fm1-base/template/tests/basic.txt firmware/morse/tests/basic.txt firmware/voicelab/tests/basic.txt | head -60`
+
+```text
+firmware/voicelab/tests/basic.txt-11-wait 900
+firmware/voicelab/tests/basic.txt-12-wavstop
+firmware/voicelab/tests/basic.txt-13-expect playing 0
+firmware/voicelab/tests/basic.txt:14:expect peak_db_min -30
+firmware/voicelab/tests/basic.txt-15-shot lpc.png
+firmware/voicelab/tests/basic.txt-16-turn PRESET 1
+firmware/voicelab/tests/basic.txt-17-wait 30
+--
+firmware/voicelab/tests/basic.txt-24-wait 1100
+firmware/voicelab/tests/basic.txt-25-wavstop
+firmware/voicelab/tests/basic.txt-26-expect playing 0
+firmware/voicelab/tests/basic.txt:27:expect peak_db_min -30
+firmware/voicelab/tests/basic.txt-28-shot adpcm.png
+firmware/voicelab/tests/basic.txt-29-tap PLAY
+firmware/voicelab/tests/basic.txt-30-wait 20
+third_party/fm1-base/template/tests/basic.txt-38-wav note.wav
+third_party/fm1-base/template/tests/basic.txt-39-wait 200
+third_party/fm1-base/template/tests/basic.txt-40-wavstop
+third_party/fm1-base/template/tests/basic.txt:41:expect peak_db_min -30
+third_party/fm1-base/template/tests/basic.txt-42-midi 80 3C 00
+third_party/fm1-base/template/tests/basic.txt-43-listen
+third_party/fm1-base/template/tests/basic.txt-44-wait 100
+firmware/morse/tests/basic.txt-119-clear_text
+firmware/morse/tests/basic.txt-120-
+firmware/morse/tests/basic.txt-121-# ---- sound and silence
+firmware/morse/tests/basic.txt:122:peakreset
+firmware/morse/tests/basic.txt-123-sendkeys EE
+firmware/morse/tests/basic.txt-124-wait 1500
+firmware/morse/tests/basic.txt:125:expect peak_db_min -30
+firmware/morse/tests/basic.txt-126-tap FX
+firmware/morse/tests/basic.txt-127-wait 30
+firmware/morse/tests/basic.txt-128-expect mute 1
+firmware/morse/tests/basic.txt:129:peakreset
+firmware/morse/tests/basic.txt-130-sendkeys EE
+firmware/morse/tests/basic.txt-131-wait 1500
+firmware/morse/tests/basic.txt:132:expect peak_db_max -90
+firmware/morse/tests/basic.txt-133-expect_text own EE_EE
+firmware/morse/tests/basic.txt-134-shot key_muted.png
+firmware/morse/tests/basic.txt-135-tap FX
+```
+</details></tool-use>
+
+_**Agent - sidechain (claude-opus-5-5 2026-11-18 10:17:21Z)**_
+
+<tool-use data-tool-type="read" data-tool-name="Read"><details>
+<summary>Tool use: **Read**</summary>
+ `./third_party/fm1-base/host/plat_host.c`
+
+```text
+1	/* SPDX-License-Identifier: MPL-2.0
+2	 * Copyright (C) 2026 Charles Vestal */
+3	/* fm1-base on the host: the whole app (UI, engine, saved state) against a simulated FM-1 driven by a script.
+4	 * Audio goes to a WAV, the screen to PNGs, the lights to text, MIDI out to a log. The device-only
+5	 * parts (the BSP, USB, update, flash driver) are replaced by plat.h implemented here. (From X0X's x0x_host, by way
+6	 * of FoMni-1's.) Built by tools/build.py APP_DIR --host into APP_DIR/build/host/NAME_host.
+7	 *
+8	 *   NAME_host SCRIPT [OUTDIR]
+9	 *
+10	 * Script, one command per line (# comments):
+11	 *   wait MS                      run the device for MS milliseconds
+12	 *   press BTN | release BTN | tap BTN     (BTN: FX SEL ENV LFO EDIT GLO HOME SAVE ARP SEQ PLAY REC OCT- OCT+)
+13	 *   key K down|up [VEL [PRESS]] | tapkey K [VEL]   (K: 0..26 = F3..G5, or w0..w15 white keys, b0..b10 black keys;
+14	 *                                with APP_KEY_SENSE, the key lands at VEL 1..127, default 100, and is pressed PRESS
+15	 *                                0..100 % more: the app's app_host_key makes the readings)
+16	 *   strum A B [MS]               white keys A..B pressed in turn (down then up), MS apart (default 25)
+17	 *   turn ENC N [MS]              (ENC: SELECT ALGO PRESET K1 K2 K3 K4; N detents, MS apart, default 80)
+18	 *   spin ENC N                   N detents at once, exactly N (no acceleration)
+19	 *   master N                     MASTER pot 0..4096 (then 40 ms, as the device's smoothing settles)
+20	 *   midi [PORT] B0 B1 B2         incoming MIDI message (PORT: USB, the default, BLE, BLE-DEV or TRS; hex bytes;
+21	 *                                BLE is the computer's link, BLE-DEV the device's: both PORT_BLE, FM1B_BLE_CENTRAL)
+22	 *   ble connect | ble link | ble disconnect   a central listening, or linked and not yet listening (FM1B_BLE: the
+23	 *                                stand-in stack is ready a second after the start)
+24	 *   bta add NAME | bta drop NAME a Bluetooth audio device around, or gone (FM1B_BT_AUDIO: a link to it is lost)
+25	 *   jack in | jack out           headphones into the jack, or out (plat_headphones; nothing plugged at the start)
+26	 *   wav FILE | wavstop           start / stop recording the output
+27	 *   usbwav FILE | usbwavstop     start / stop recording the USB audio input as a computer gets it: usb_audio_channels
+28	 *                                (FM1B_UAC_CH) of 16 bits, the master on 1 and 2, the app's own after it (plat_usb_ch)
+29	 *   peakreset                    restart the output peak (expect peak_db_min / peak_db_max)
+30	 *   shot FILE.png                save the screen
+31	 *   leds                         print the lit buttons and keys (keys: # bright, + dim)
+32	 *   out                          print the MIDI sent since the last "out" (and forget it; clocks not shown)
+33	 *   expect_out PORT B0 B1 B2     check that this message went out to PORT since the last "out" (USB, BLE, BLE-DEV, USBH)
+34	 *   expect_no_out PORT B0 B1 B2  check that it did not
+35	 *   expect WHAT VALUE            check state: exit 1 on mismatch; VALUE "<N" / ">N" is a bound (WHAT: store_writes,
+36	 *                                store_tries, clocks_out, midi_out, usb_play_gain, usb_audio_full, ... below; data.ADDR: the
+37	 *                                flash's byte at ADDR, as plat_data reads it; -1 outside its windows)
+38	 *   reboot                       re-run boot from the simulated flash (persistence test)
+39	 *                                (the app's plat_restart does the same, at the end of its millisecond; expect restarts)
+40	 *   crash [PC [VEC]]             a CPU fault (hex; 02012344, 3): the .noinit crash record as felucca-bsp's fm1_fault_c
+41	 *                                writes it (its count one up, the registers a pattern), then the restart; the boot keeps
+42	 *                                it in the flash history (device/crashlog.c) as the device's does
+43	 *   crash_in_save [PC [VEC]]     the same, struck while the boot's save was under way (that boot keeps nothing)
+44	 *   power                        a power-off and on: .noinit lost (the crash record), the flash kept, then the boot
+45	 *                                (expect crashes: the history's records, crash_count: .noinit's count, crash_boot_rc:
+46	 *                                the last boot's save, 1 kept, 0 nothing new, < 0 not kept; the history over "sysex
+47	 *                                F0 7D 4C 48 F7", cleared with "sysex F0 7D 4C 48 43 4C 52 F7"); the debug stats' queue
+48	 *                                lost too (device/dbgstats.c: "crash" and "reboot" keep it)
+49	 *   stack MAIN IRQ C1            the stacks' marks used down to these bytes left in this run (device/stacks.c; -1 not
+50	 *                                measured; every boot starts from -1): a "crash" keeps them in its record ("stk" line),
+51	 *                                the stats' least ever goes down with them (expect stk_ever_main / _irq / _c1)
+52	 *   stack_guard 1                the next "crash" ran a stack into its guard (EMU_MSG bit 3: "guard 1")
+53	 *   stats_switch 1|0             the debug stats on / off (plat_stats_enable, as an app's setting does; expect stats:
+54	 *                                the records in the flash, stats_pending: queued, stats_on, stats_rc: the last write's;
+55	 *                                read over "sysex F0 7D 4C 53 F7", cleared with "sysex F0 7D 4C 53 43 4C 52 F7")
+56	 *   ota_stage / ota_unstage      an update staged as ota.c leaves it (a word at 0xE0000: the stats write nothing), and
+57	 *                                the staging erased whole (0xE0000..0xE4FFF: the stats and the crash history with it)
+58	 *   data FILE OFFSET             a file into the simulated data area (plat_data) at OFFSET, in any of its windows
+59	 *                                (plat.h), up to that window's end
+60	 *   res 0|1                      (FM1B_RES) the resource region there (1, at start) or not (0: an FM-1 updated
+61	 *                                without it; plat_res 0)
+62	 *   data_erase OFFSET            plat_data_erase(OFFSET), as an app calls it (expect data_rc: what it returned)
+63	 *   data_write OFFSET HEX        plat_data_write of HEX's bytes (up to 31, e.g. F00F) at OFFSET: as the flash, each
+64	 *                                byte becomes the old AND the new (expect data_rc; -2: no bytes)
+65	 *   flash_dump FILE              the whole flash into FILE, a 1 MiB image at the FM-1's offsets: the data windows and
+66	 *                                the store's objects as device/storage.c keeps them (the rest erased)
+67	 *   flash_load FILE              such an image in (a reference FM-1's flash read whole, say): the data windows and the
+68	 *                                store's objects from it (then "reboot": a power-on with it). FM1B_FLASH=FILE in the
+69	 *                                environment: the simulator starts with that flash
+70	 *   fbdump FILE                  the screen's pixels raw (240 x 240 RGB565, high byte first) into FILE
+71	 *   flash_fail 0|1               every store save fails (1) or works (0); expect store_tries counts the attempts
+72	 *   clock N [MS]                 N MIDI clocks in (F8) over USB, MS apart (default 21: 119 bpm)
+73	 *   usbh plug NAME [in|out|nomidi] | usbh unplug   (usb_host) a USB-MIDI device on the port while it is a host
+74	 *                                (plat_usb_host): both ways, input or output only, or none; _ in NAME is a space (its
+75	 *                                product string, plat_usb_host_name); connected 150 ms after it is plugged in
+76	 *   usbh midi B0 B1 B2 | usbh clock N [MS]   its MIDI in (PORT_USB), its clocks. While the port is a host there is no
+77	 *                                computer: "midi USB" and "clock" are dropped, nothing goes out to it; what goes to
+78	 *                                the device: expect_out USBH ..., expect usbh_out, usbh_clocks (expect usbh: USBH_*)
+79	 *   said_none                    nothing was said since the last "said" (or "listen"): else a failure
+80	 *   mirror FILE|off|refresh|nokeep|unplug   (FM1B_MIRROR) the screen and panel mirrored over USB (device/mirror.c)
+81	 *                                as a viewer asks for it, the device's SysEx into FILE at USB's pace; nokeep: the
+82	 *                                viewer's keep-alive stops; unplug: the cable out
+83	 *   mirror_rate N                (FM1B_MIRROR) that pace, bytes a millisecond (48: a 64-byte USB-MIDI packet a 1 ms frame)
+84	 *   backup FILE                  (FM1B_BACKUP) a backup over USB written to FILE (device/backup.c's image, as
+85	 *                                tools/fm1_backup.py writes it; stopped: the unsaved saved first)
+86	 *   restore FILE                 (FM1B_BACKUP) a backup put back as the device does once SEL answers its question:
+87	 *                                checked whole, every object replaced, everything reloaded; refused while playing
+88	 *                                (STOP FIRST) or when damaged: nothing changes (expect restore_rc: 0, 10 playing)
+89	 *   backup_damage FILE           (FM1B_BACKUP) a byte of a backup file changed (at its middle)
+90	 *   sysex HEX..                  a SysEx frame from the computer (F0 .. F7, hex, spaces allowed), as the device takes
+91	 *                                it: to the app (APP_SYSEX: app_sysex gets the bytes between F0 and F7), or dropped (no
+92	 *                                app hook, the app's 0, a status byte inside, longer than the device's 640-byte buffer)
+93	 *                                (8 KiB at most); with APP_SYSEX_BYTE each byte to app_sysex_byte first, any length
+94	 *   sysex_out                    print the app's SysEx frames (plat_sysex_send) since the last "sysex_out" (and forget them)
+95	 *   expect_sysex HEX..           check that this frame went out since the last "sysex_out" (F0 .. F7, hex)
+96	 *   sysex_log FILE|off           every frame the app sends from now on, appended to FILE as it went out (raw)
+97	 *   usb unplug|plug|stall|read   the computer: the cable out, in again (a new plat_usb_session), the computer stops
+98	 *                                reading the device's SysEx, reads again
+99	 * FILE "out:NAME" for backup, restore, backup_damage and mirror: NAME in OUTDIR (fbdump: always there).
+100	 * NAME_host --serve [OUTDIR] (FM1B_MIRROR): driven over stdin by a tool, as an FM-1 over USB:
+101	 *   sx HEX      one SysEx message from the host (F0 .. F7, hex): the mirror's requests (cmd 0x50, 0x54)
+102	 *   run MS      MS milliseconds of the device; then what it sent meanwhile, a line "sx HEX" a message, and "ok NOW"
+103	 *   shot FILE, fbdump FILE   the screen as a PNG, as raw pixels
+104	 *   expect WHAT VALUE   as in a script: its line, "  ok ..." or "FAIL ..."
+105	 *   quit
+106	 *   listen                       a screen reader starts listening (HELLO, again every 2 s): each SAY is printed
+107	 *                                ("said: ..."; "said!:" cuts off what was being said)
+108	 *   where                        the reader asks for everything on the screen
+109	 *   said TEXT                    some SAY since the last "said" (or "listen") has TEXT in it: else a failure
+110	 *   unsaid TEXT                  no SAY since the last "said" has TEXT in it: else a failure
+111	 *   speakdump                    every page, value and message as the reader gets them (the app's app_speak_dump)
+112	 * The app may add its own checks for expect (app_expect), the speakdump (app_speak_dump), what a reboot forgets
+113	 * (app_host_reboot) and commands (app_host_cmd: 1 = handled; the whole line in plat_host_line): app.h defines APP_HOST_EXPECT / APP_HOST_SPEAKDUMP /
+114	 * APP_HOST_REBOOT / APP_HOST_CMD when it has them. With APP_KEY_SENSE, app_host_key(k, vel, press) (vel 0 = up)
+115	 * makes the readings a key gives, from app_host_tick (every millisecond) while plat_sense is on. APP_HOST_FAILS:
+116	 * app_host_fails() is added to the run's failures at its end (the app's own checks made along the way).
+117	 * APP_HOST_MS: app_host_ms() every simulated millisecond, after the platform's (an app's own counters).
+118	 * FM1B_SAID_LOG=FILE: a reader listens from boot, quietly, and every SAY is appended to FILE (the audit).
+119	 */
+120	#define PLAT_HOST 1
+121	#ifndef FM1B_MIRROR
+122	#define FM1B_MIRROR 0                           /* fm1.toml mirror = true (tools/build.py) */
+123	#endif
+124	#ifndef FM1B_RES
+125	#define FM1B_RES 0                              /* fm1.toml resources = FILE */
+126	#endif
+127	#ifndef FM1B_BACKUP
+128	#define FM1B_BACKUP 0                           /* fm1.toml backup = true */
+129	#endif
+130	#ifndef FM1B_CPU2
+131	#define FM1B_CPU2 0                             /* fm1.toml cpu2 = true */
+132	#endif
+133	#ifdef __linux__
+134	#define _GNU_SOURCE                             /* (open_memstream: --serve) */
+135	#endif
+136	#include <ctype.h>
+137	#include <stdio.h>
+138	#include <stdlib.h>
+139	#include <string.h>
+140	#include <stdint.h>
+141	#include <math.h>
+142	#include <time.h>
+143	#define __attribute__(x)
+144	
+145	/* ------------------------------------------------------------ screen --- */
+146	#ifdef PLAT_FB
+147	static uint16_t *const fb = PLAT_FB;    /* the embedder's own (host/rfm1.c: the panel's LCD) */
+148	#else
+149	static uint16_t fb[240 * 240];          /* RGB565, byte-swapped as the panel takes it (gfx.c) */
+150	#endif
+151	static uint32_t lcd_changes;            /* every fill and blit (host/rfm1.c: the panel's lcd_writes) */
+152	static void lcd_sync(void) {}
+153	#if FM1B_MIRROR
+154	/* screen mirroring over USB (device/mirror.c), as lcd.c copies each blit and fill to it */
+155	static uint8_t mirror_on;
+156	static void mirror_blit(uint32_t x, uint32_t y, uint32_t w, uint32_t h, const uint16_t *px);
+157	static void mirror_fill(uint32_t x, uint32_t y, uint32_t w, uint32_t h, uint16_t c);
+158	#endif
+159	static void lcd_fill(uint32_t x, uint32_t y, uint32_t w, uint32_t h, uint16_t c)
+160	{
+161	    uint32_t i, j;
+162	    uint16_t sc = (uint16_t)(((c >> 8) & 0xFFu) | ((c & 0xFFu) << 8));
+163	#if FM1B_MIRROR
+164	    if (mirror_on && w && h && x < 240u && y < 240u)
+165	        mirror_fill(x, y, x + w > 240u ? 240u - x : w, y + h > 240u ? 240u - y : h, c);
+166	#endif
+167	    lcd_changes++;
+168	    for (j = y; j < y + h && j < 240u; j++)
+169	        for (i = x; i < x + w && i < 240u; i++)
+170	            fb[j * 240u + i] = sc;
+171	}
+172	static uint32_t blits;
+173	static void lcd_blit(uint32_t x, uint32_t y, uint32_t w, uint32_t h, const uint16_t *px)
+174	{
+175	    uint32_t i, j;
+176	    blits++;
+177	    lcd_changes++;
+178	    for (j = 0; j < h; j++)
+179	        for (i = 0; i < w; i++)
+180	            if (x + i < 240u && y + j < 240u)
+181	                fb[(y + j) * 240u + x + i] = px[j * w + i];
+182	#if FM1B_MIRROR
+183	    if (mirror_on)
+184	        mirror_blit(x, y, w, h, px);
+185	#endif
+186	}
+187	#include "plat.h"
+188	#include "app.h"                       /* before gfx.c: the app may size the canvas (APP_CANVAS_PX), as on the device */
+189	#include "gfx.c"
+190	
+191	
+192	/* ---------------------------------------------------------- platform --- */
+193	#ifdef APP_TOUCH
+194	#include "touch.h"                     /* velocity and pressure from the keys (lib/touch.c) */
+195	#endif
+196	#include "fm1b_config.h"
+197	static const uint8_t HOST_WHITE_K[16] = PLAT_WHITE_KEYS, HOST_BLACK_K[11] = PLAT_BLACK_KEYS;
+198	/* "spin": encoder steps exactly as given; an app that accelerates its knobs reads this (#ifdef PLAT_HOST) */
+199	static uint8_t plat_host_exact;
+200	static const char *plat_host_dir = ".";        /* the run's output directory (an app's commands: "out:NAME") */
+201	static const char *plat_host_line = "";        /* the script's line being run (an app's command with more words) */
+202	
+203	uint32_t plat_ms(void);
+204	uint32_t plat_buttons(void);
+205	uint32_t plat_keys(void);
+206	#if FM1B_MIRROR
+207	#define MRQ 4096u                               /* (felucca-bsp usb.c's mirror ring) */
+208	#include "mirror.c"
+209	#else
+210	static uint32_t mirror_in_buttons(void) { return 0; }
+211	static uint32_t mirror_in_keys(void) { return 0; }
+212	static int32_t mirror_in_enc(int role) { (void)role; return 0; }
+213	static uint32_t mirror_in_master(uint32_t pot) { return pot; }
+214	static void mirror_enc(int role, int32_t n) { (void)role, (void)n; }
+215	static void mirror_leds(uint32_t buttons, uint32_t keys, uint32_t db, uint32_t dk) { (void)buttons, (void)keys, (void)db, (void)dk; }
+216	static void mirror_mid(uint32_t buttons, uint32_t keys) { (void)buttons, (void)keys; }
+217	#endif
+218	static uint32_t now_ms, held_btn, held_keys, master = 2048;
+219	static int32_t enc_acc[NE];
+220	static uint32_t lit_btn, lit_keys, dim_btn, dim_keys;
+221	static uint32_t lights_b, lights_db;    /* plat_lights' buttons as given (PLAY's green apart), and its glow */
+222	static int lights_glow;
+223	
+224	uint32_t plat_ms(void) { return now_ms; }
+225	uint32_t plat_buttons(void) { return held_btn | mirror_in_buttons(); }   /* (+ the host's: the mirror's remote) */
+226	uint32_t plat_keys(void) { return held_keys | mirror_in_keys(); }
+227	static uint32_t plat_remote_keys(void) { return 0; }   /* (the device's remote control: the script is this one's) */
+228	int32_t plat_enc(int role)
+229	{
+230	    int32_t v = enc_acc[role] + mirror_in_enc(role);
+231	    enc_acc[role] = 0;
+232	    if (v)
+233	        mirror_enc(role, v);
+234	    return v;
+235	}
+236	uint32_t plat_master(void) { return mirror_in_master(master); }
+237	#ifdef __EMSCRIPTEN__
+238	int plat_battery(void) { return -1; }  /* the browser emulator has no battery: not read, so none is shown */
+239	#ifdef APP_BATTERY_RAW
+240	int32_t plat_battery_raw(void) { return 0; }     /* (not read, as a device's before its first reading) */
+241	#endif
+242	#else
+243	int plat_battery(void) { return 3; }   /* (the host simulator: full) */
+244	#ifdef APP_BATTERY_RAW
+245	int32_t plat_battery_raw(void) { return 620; }   /* (full: over the third bar's 591, as plat_battery's 3) */
+246	#endif
+247	#endif
+248	#ifdef APP_DIM_LEVELS
+249	static uint32_t dim_ns_app, dim_glow;   /* plat_dim_ns's pulse (0: the glow's); the glow plat_lights last got */
+250	void plat_dim_ns(uint32_t ns)           /* clamped as the FM-1's scan takes it: 500 .. 4,000 */
+251	{
+252	    dim_ns_app = !ns ? 0u : ns < 500u ? 500u : ns > 4000u ? 4000u : ns;
+253	}
+254	/* the pulse the dim ones have now (ns): the app's, else the glow's (1,600 or 3,200), 0 with no glow */
+255	static uint32_t dim_pulse(void) { return dim_ns_app ? dim_ns_app : dim_glow == 1 ? 1600u : dim_glow ? 3200u : 0u; }
+256	#endif
+257	static int host_hp;                                /* the headphone jack: a script's "jack in" / "jack out" (0: none) */
+258	int plat_headphones(void) { return host_hp; }   /* (debounced on the device: here the script's state at once) */
+259	/* the lights ("leds"): bright, and dim (glow 0: none); PLAY's green counts as PLAY */
+260	void plat_lights(uint32_t b, uint32_t k, uint32_t db, uint32_t dk, int glow)
+```
+</details></tool-use>
+
+_**Agent - sidechain (claude-opus-5-5 2026-11-18 10:17:26Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+List fm1-base examples/lib and synth candidates
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/third_party/fm1-base && ls examples lib tests | head -80; grep -rln -i -E "voice|osc|poly|steal" lib examples --include='*.c' --include='*.h' | head -30`
+
+```text
+examples:
+ble_own
+wifi
+
+lib:
+btdev.c
+btdev.h
+sense.c
+touch.c
+touch.h
+
+tests:
+backup_app
+battery_app
+bt
+bta_app
+bta_mem_app
+core_app
+cpukhz_app
+dim_app
+peers_app
+reboot_app
+stack_c1
+sysex_app
+usbh_app
+announce_test.c
+audio_commit_test.c
+backup_page_test.mjs
+backup_record.py
+backup_test.c
+backup_tool_test.py
+boot_pack_test.c
+boot_pack_test.sh
+checkufw_test.mjs
+console_test.c
+cpu2_stack_test.py
+crashlog.txt
+crashlog_host_test.py
+crashlog_test.c
+data.txt
+data_bits.txt
+data_xdata2.txt
+dbgstats.txt
+dbgstats_host_test.py
+dbgstats_test.c
+emu_backup_test.mjs
+emu_data_test.mjs
+emu_dim_test.mjs
+emu_harness.mjs
+emu_image_test.mjs
+emu_midi_test.mjs
+emu_parts_test.py
+emu_partsenv_test.mjs
+emu_port_test.mjs
+emu_reboot_test.mjs
+emu_resample_test.mjs
+emu_test.mjs
+emu_wasm_test.mjs
+encoder_test.c
+fastmath_test.c
+firmware_json_test.py
+flash_boot.txt
+flash_dump.txt
+flash_image_test.c
+flash_load.txt
+flash_ok_test.c
+font_trim_test.c
+gen_words_test.py
+hp.txt
+hp_test.c
+install_test.py
+installer_bluetooth_test.mjs
+installer_boot_test.mjs
+installer_family_ports_test.mjs
+installer_fast_test.mjs
+installer_foreign_loader_test.mjs
+installer_hs_test.mjs
+installer_ports_test.mjs
+installer_res_test.mjs
+installer_stock_test.mjs
+lib/sense.c
+examples/ble_own/app.c
+```
+</details></tool-use>
+
+_**Agent - sidechain (claude-opus-5-5 2026-11-18 10:17:26Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+List built-in expect keys and app hook calls
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/third_party/fm1-base/host && grep -n 'strcmp(what, "' plat_host.c | head -80; grep -n 'app_expect\|app_host_cmd\|APP_HOST_' plat_host.c | head -30`
+
+```text
+459:    if (!strcmp(what, "usbh"))
+461:    else if (!strcmp(what, "usbh_in"))         /* messages in from the device (real-time too) */
+463:    else if (!strcmp(what, "usbh_out"))        /* messages out to it, clocks left out */
+465:    else if (!strcmp(what, "usbh_clocks"))     /* F8s out to it */
+870:    if (!strcmp(what, "add") && bth_nnear < BTH_N && !bth_is_near(name)) {
+874:    if (!strcmp(what, "drop")) {
+2199:    if (!strcmp(what, "store_writes"))
+2201:    else if (!strcmp(what, "restarts"))            /* plat_restart's since the start */
+2203:    else if (!strcmp(what, "store_tries"))
+2205:    else if (!strcmp(what, "stats")) {             /* the debug stats' records in the flash (at most 60) */
+2208:    } else if (!strcmp(what, "stats_pending")) {   /* their queue's not in the flash yet */
+2212:    } else if (!strcmp(what, "stats_on"))          /* the switch (plat_stats_enable) */
+2214:    else if (!strcmp(what, "stk_ever_main"))       /* plat_stack_least_ever: the least room ever, bytes (-1 not known) */
+2216:    else if (!strcmp(what, "stk_ever_irq"))
+2218:    else if (!strcmp(what, "stk_ever_c1"))
+2220:    else if (!strcmp(what, "stats_rc"))            /* the last write's: 0 kept, < 0 not (-7: an update staged) */
+2222:    else if (!strcmp(what, "crashes")) {           /* the flash history's records, as a readout lists them (at most 8) */
+2225:    } else if (!strcmp(what, "crash_count"))       /* the simulated .noinit record's count (0: none, a power-on) */
+2227:    else if (!strcmp(what, "crash_boot_rc"))       /* the last boot's cl_boot: 1 kept, 0 nothing new, < 0 not kept */
+2230:    else if (!strcmp(what, "restore_rc"))
+2237:    } else if (!strcmp(what, "data_rc"))           /* the last data_erase / data_write: 0 done, -1 refused, -2 no bytes */
+2240:    else if (!strcmp(what, "battery_raw"))          /* plat_battery_raw: the battery's reading (the host's: full) */
+2244:    else if (!strcmp(what, "dim_ns"))               /* the dim pulse (plat_dim_ns, else the glow's), ns */
+2247:    else if (!strcmp(what, "clocks_out"))
+2249:    else if (!strcmp(what, "usb_play_gain"))        /* plat_usb_play_gain's level, 0..4096 */
+2251:    else if (!strcmp(what, "usb_audio_full"))       /* plat_usb_audio_full: 1 full, 0 at MASTER */
+2253:    else if (!strcmp(what, "midi_out"))
+2255:    else if (!strcmp(what, "midi_in_from"))         /* plat_midi_in_from: 1 USB, 2 BLE, 8 BLE-DEV, 0 TRS */
+2257:    else if (!strcmp(what, "room_ble") || !strcmp(what, "room_ble_dev"))   /* plat_midi_out_room of one link */
+2259:    else if (!strcmp(what, "ble"))
+2261:    else if (!strcmp(what, "ble_dev"))              /* the Bluetooth MIDI device: BLE_DEV_* (4 connected) */
+2264:    else if (!strcmp(what, "cpu_khz"))              /* plat_cpu_khz: the CPU's clock (the host's: 0, none) */
+2268:    else if (!strcmp(what, "bta"))                  /* Bluetooth audio: PLAT_BTA_* (7 streaming) */
+2270:    else if (!strcmp(what, "bta_known"))            /* its remembered devices */
+2273:    else if (!strcmp(what, "midi_in_usb"))          /* plat_midi_count: messages in from USB */
+2275:    else if (!strcmp(what, "headphones"))           /* plat_headphones: the script's jack (1 in, 0 out) */
+2277:    else if (!strcmp(what, "peak_db_max") || !strcmp(what, "peak_db_min")) {
+112: * The app may add its own checks for expect (app_expect), the speakdump (app_speak_dump), what a reboot forgets
+113: * (app_host_reboot) and commands (app_host_cmd: 1 = handled; the whole line in plat_host_line): app.h defines APP_HOST_EXPECT / APP_HOST_SPEAKDUMP /
+114: * APP_HOST_REBOOT / APP_HOST_CMD when it has them. With APP_KEY_SENSE, app_host_key(k, vel, press) (vel 0 = up)
+115: * makes the readings a key gives, from app_host_tick (every millisecond) while plat_sense is on. APP_HOST_FAILS:
+117: * APP_HOST_MS: app_host_ms() every simulated millisecond, after the platform's (an app's own counters).
+1544:#if FM1B_CPU2 && !defined(APP_HOST_CPU2)
+1566:#elif !defined(APP_HOST_CPU2)
+2071:#ifdef APP_HOST_MS
+2129:#ifdef APP_HOST_REBOOT
+2191:#ifdef APP_HOST_EXPECT
+2192:    if (app_expect(what, &got))                   /* the app's own state (app.h), first: it may count its own way */
+2344:#ifdef APP_HOST_CMD
+2345:        if (!strcmp(cmd, "expect") && app_host_cmd(cmd, a, b, "", ""))
+2547:#ifdef APP_HOST_CMD
+2548:        if (app_host_cmd(cmd, a, b, c, d))          /* the app's own commands (app.h; more words: plat_host_line) */
+2753:#ifdef APP_HOST_REBOOT
+2766:#ifdef APP_HOST_REBOOT
+2795:#ifdef APP_HOST_SPEAKDUMP
+2960:#ifdef APP_HOST_FAILS
+```
+</details></tool-use>
+
+_**Agent - sidechain (claude-opus-5-5 2026-11-18 10:17:29Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Search whole repo for polyphonic synth code
+
+`grep -rln -i -E "voice_steal|steal|polyphon|NVOICE|N_VOICES|MAX_VOICES|wavetable" --include='*.c' --include='*.h' . 2>/dev/null | grep -v node_modules | head -30`
+
+```text
+firmware/common/lpc.h
+firmware/common/tests/lpc_test.c
+third_party/fm1-base/tests/bt/ble_midi_in_test.c
+third_party/fm1-base/lib/sense.c
+```
+</details></tool-use>
+
+_**Agent - sidechain (claude-opus-5-5 2026-11-18 10:17:32Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Inspect expect dispatch and leds output in host
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/third_party/fm1-base/host && sed -n 2180,2200p plat_host.c; sed -n 2277,2300p plat_host.c; grep -n '"leds"\|"shot"\|"key"\|"tapkey"\|"turn"\|"reboot"\|"wait"' plat_host.c | head; sed -n 260,300p plat_host.c`
+
+```text
+               pkt >> 24, port);
+        return 0;
+    }
+    printf("FAIL %s %s %02X %02X %02X: %s\n", sent ? "expect_out" : "expect_no_out", port, (pkt >> 8) & 0xFF,
+           (pkt >> 16) & 0xFF, pkt >> 24, !to ? "no such port" : sent ? "not sent" : "sent");
+    return 1;
+}
+
+static int expect(const char *what, const char *val)
+{
+    int got;
+#ifdef APP_HOST_EXPECT
+    if (app_expect(what, &got))                   /* the app's own state (app.h), first: it may count its own way */
+        ;
+    else
+#endif
+    if (usbh_expect(what, &got))                /* the USB host's device (usbh, usbh_in, usbh_out, usbh_clocks) */
+        ;
+    else
+    if (!strcmp(what, "store_writes"))
+        got = (int)store_writes;
+    else if (!strcmp(what, "peak_db_max") || !strcmp(what, "peak_db_min")) {
+        double db = 20.0 * log10(peak_out > 1e-9f ? peak_out : 1e-9f);
+        int bad = what[8] == 'm' && what[9] == 'a' ? db > atof(val) : db < atof(val);
+        printf("%s peak %.1f dBFS (%s %s)\n", bad ? "FAIL" : "  ok", db, what + 8, val);
+        return bad;
+    } else {
+        printf("FAIL unknown expect %s\n", what);
+        return 1;
+    }
+    if (val[0] == '<' || val[0] == '>') {
+        int lim = (int)strtol(val + 1, 0, 0);
+        if (val[0] == '<' ? got >= lim : got <= lim) {
+            printf("FAIL expect %s %s, got %d\n", what, val, got);
+            return 1;
+        }
+        printf("  ok %s == %d (%s)\n", what, got, val);
+        return 0;
+    }
+    if (got != (int)strtol(val, 0, 0)) {
+        printf("FAIL expect %s == %s, got %d\n", what, val, got);
+        return 1;
+    }
+    printf("  ok %s == %d\n", what, got);
+    return 0;
+48: *                                lost too (device/dbgstats.c: "crash" and "reboot" keep it)
+68: *                                store's objects from it (then "reboot": a power-on with it). FM1B_FLASH=FILE in the
+259:/* the lights ("leds"): bright, and dim (glow 0: none); PLAY's green counts as PLAY */
+277:static uint32_t mid_keys;               /* plat_lights_mid's keys: "leds" (and the browser's web_dim_keys) shows them as
+1244: * queue (.noinit on the device) kept by "crash" and "reboot", lost by "power"; a snapshot every 5 minutes of the
+1349:static void store_ready(void)             /* the flash starts empty: once, on first use (a "reboot" keeps it) */
+1991:                                                     * the sound is silence (the page's part "reboot", web/emu/parts) */
+2121:        if (restart_req) {                          /* (as "reboot": the flash kept, the app's RAM forgotten) */
+2393:        } else if (!strcmp(cmd, "shot") || !strcmp(cmd, "fbdump")) {
+2551:        if (!strcmp(cmd, "wait"))
+void plat_lights(uint32_t b, uint32_t k, uint32_t db, uint32_t dk, int glow)
+{
+    lights_b = b, lights_db = db, lights_glow = glow;
+#ifdef APP_DIM_LEVELS
+    dim_glow = glow > 0 ? (uint32_t)glow : 0u;
+#endif
+    lit_btn = (b & ((1u << NB) - 1u)) | (b & LED_PLAY_GREEN ? 1u << B_PLAY : 0u);
+    lit_keys = k;
+    db = (db & ((1u << NB) - 1u)) | (db & LED_PLAY_GREEN ? 1u << B_PLAY : 0u);
+    dim_btn = glow ? db & ~lit_btn : 0u;
+    dim_keys = glow ? dk & ~k : 0u;
+    {   /* the mirror's view: PLAY lit (either LED), and bit 15 PLAY lit red */
+        uint32_t play = 1u << B_PLAY;
+        mirror_leds((b & ((1u << NB) - 1u) & ~play) | (b & (play | LED_PLAY_GREEN) ? play : 0u) |
+                    (b & play ? 1u << 15 : 0u), k, dim_btn, dim_keys);
+    }
+}
+static uint32_t mid_keys;               /* plat_lights_mid's keys: "leds" (and the browser's web_dim_keys) shows them as
+                                         * the glow */
+void plat_lights_mid(uint32_t b, uint32_t k)
+{
+    mid_keys = k & ~lit_keys;
+    mirror_mid(b & ((1u << NB) - 1u), k);
+}
+static int glow_on = 1;                 /* the device's button glow (plat_glow) */
+void plat_glow(int on) { glow_on = on; }
+void plat_play_red(int red) { (void)red; }      /* the device's PLAY colour: green, red while recording */
+void plat_leds(uint32_t b, uint32_t k) { plat_lights(b, k, glow_on ? ~b : 0u, 0, glow_on ? 2 : 0); }
+uint32_t plat_lock(void) { return 0; }  /* one thread: the tick runs between the main loop's steps (run_ms) */
+void plat_unlock(uint32_t f) { (void)f; }
+static void hsx_ms(void);
+void plat_yield(void)
+{
+    hsx_ms();                                   /* (a wait inside the app: the computer reads meanwhile) */
+#ifdef APP_YIELD
+    app_yield();
+#endif
+}
+static int sense_on;                    /* the keys' readings: the simulator has none to give (sense_on only) */
+void plat_sense(int on) { sense_on = on; }
+uint32_t plat_analog_mask(void) { return 0xFFFFFu; }    /* the keys on rows PA7 / PA8: keys 0..19 (the top row: 20..26) */
+```
+</details></tool-use>
+
+_**Agent - sidechain (claude-opus-5-5 2026-11-18 10:17:34Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Check lpc/sense hits and submodules
+
+`grep -n -i -E "steal|polyphon|voice" firmware/common/lpc.h third_party/fm1-base/lib/sense.c | head -10; ls third_party; git submodule status 2>/dev/null | head; cat .gitmodules 2>/dev/null`
+
+```text
+firmware/common/lpc.h:4: * same file builds on the computer (host/voicelab, tests/) and in an fm1-base app.
+firmware/common/lpc.h:11: * The stream: per frame energy (4 bits; 0 silence, 15 stop), repeat (1), pitch (6; 0 unvoiced), then K1..K10
+firmware/common/lpc.h:12: * (5 5 4 4 4 4 4 3 3 3 bits) unless repeated, only K1..K4 when unvoiced. Bits are taken from each byte's lowest
+third_party/fm1-base/lib/sense.c:23: * above it, polyphonic, the reading's noise being a count or two. A key relaxing moves the
+fm1-base
+ a7a90a38043607cbc34055ad9b9743389699d499 firmware/morse (v0.6-2-ga7a90a3)
+ c8e05997ce970875038156d2bbd69e712eac1543 third_party/fm1-base (heads/main)
+[submodule "third_party/fm1-base"]
+	path = third_party/fm1-base
+	url = https://github.com/charlesvestal/fm1-base.git
+[submodule "firmware/morse"]
+	path = firmware/morse
+	url = https://github.com/daviddwlee84/fm1-morse.git
+```
+</details></tool-use>
+
+_**Agent - sidechain (claude-opus-5-5 2026-11-18 10:17:37Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Read host script dispatch for key/shot
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/third_party/fm1-base/host && sed -n 2300,2420p plat_host.c`
+
+```text
+    return 0;
+}
+
+#ifndef PLAT_WEB
+/* a file name of a script's: "out:NAME" is NAME in the output directory */
+static void out_path(char *out, size_t n, const char *dir, const char *a)
+{
+    if (!strncmp(a, "out:", 4))
+        snprintf(out, n, "%s/%s", dir, a + 4);
+    else
+        snprintf(out, n, "%s", a);
+}
+#if FM1B_MIRROR
+/* --serve: the simulator driven over stdin (see the top) */
+static uint32_t sv_unpack7(const uint8_t *in, uint32_t n, uint8_t *out)
+{
+    uint32_t acc = 0, nb = 0, o = 0;
+    while (n--) {
+        acc |= (uint32_t)(*in++ & 0x7Fu) << nb;
+        nb += 7u;
+        if (nb >= 8u) {
+            out[o++] = (uint8_t)acc;
+            acc >>= 8;
+            nb -= 8u;
+        }
+    }
+    return o;
+}
+static int serve(const char *dir)
+{
+    static char line[8192];
+    static uint8_t raw[4096], dec[4096];
+    char *buf = 0;
+    size_t blen = 0;
+    FILE *ms = open_memstream(&buf, &blen);
+    mr_out = ms;
+    mr_keep = 0;
+    setvbuf(stdout, 0, _IOLBF, 0);
+    while (fgets(line, sizeof line, stdin)) {
+        char cmd[16] = {0}, a[4096] = {0}, b[64] = {0};
+        if (sscanf(line, "%15s %4095s %63s", cmd, a, b) < 1)
+            continue;
+        if (!strcmp(cmd, "quit"))
+            break;
+#ifdef APP_HOST_CMD
+        if (!strcmp(cmd, "expect") && app_host_cmd(cmd, a, b, "", ""))
+            continue;                                /* (an app's own check with a value of its own: its line) */
+#endif
+        if (!strcmp(cmd, "sx")) {
+            uint32_t n = 0, d;
+            for (const char *h = a; h[0] && h[1] && n < sizeof raw; h += 2) {
+                unsigned v;
+                sscanf(h, "%2x", &v);
+                raw[n++] = (uint8_t)v;
+            }
+            if (n < 3 || raw[0] != 0xF0 || raw[n - 1] != 0xF7)
+                continue;
+            if (cl_request(raw + 1, n - 2u) || ds_request(raw + 1, n - 2u))
+                continue;                            /* (the crash history, the stats: the platform's, before the app's) */
+            d = sv_unpack7(raw + 1, n - 2, dec);
+            if (d >= 7 && dec[0] == 0 && dec[1] == 0x59 && (uint32_t)(dec[3] | dec[4] << 8 | dec[5] << 16) + 7u == d) {
+                uint32_t sum = 0;
+                for (uint32_t i = 6; i + 1 < d; i++)
+                    sum += dec[i];
+                if ((uint8_t)~sum != dec[d - 1])
+                    continue;
+                if (d == 8 && dec[2] == MR_REQ)
+                    mirror_cmd(dec[6]);
+                else if (d == 12 && dec[2] == MR_REMOTE)
+                    mirror_remote(dec + 6);
+            }
+        } else if (!strcmp(cmd, "run")) {
+            static uint8_t part[1 << 16];             /* a message cut at the end of a run: its start */
+            static size_t pn;
+            run_ms((uint32_t)atoi(a));
+            fflush(ms);
+            for (size_t i = 0; i < blen; i++) {
+                uint8_t v = (uint8_t)buf[i];
+                if (v == 0xF0)
+                    pn = 0;
+                if (pn < sizeof part)
+                    part[pn++] = v;
+                if (v == 0xF7 && part[0] == 0xF0) {
+                    fputs("sx ", stdout);
+                    for (size_t k = 0; k < pn; k++)
+                        printf("%02X", part[k]);
+                    putchar('\n');
+                    pn = 0;
+                }
+            }
+            rewind(ms);
+            blen = 0;
+            printf("ok %u\n", now_ms);
+        } else if (!strcmp(cmd, "shot") || !strcmp(cmd, "fbdump")) {
+            char out[4200];
+            snprintf(out, sizeof out, "%s%s%s", a[0] == '/' ? "" : dir, a[0] == '/' ? "" : "/", a);
+            if (cmd[0] == 's')
+                png_write(out);
+            else {
+                FILE *f = fopen(out, "wb");
+                if (f) {
+                    fwrite(fb, 2, 240 * 240, f);
+                    fclose(f);
+                }
+            }
+            printf("ok\n");
+        } else if (!strcmp(cmd, "expect"))
+            expect(a, b);                            /* (its line: "  ok ..." or "FAIL ...", notes before it) */
+        else
+            printf("fail ?\n");
+    }
+    return 0;
+}
+#endif
+
+/* a frame's hex (spaces allowed between the bytes) into raw: its length, 0 = not hex */
+static uint32_t hsx_hex(const char *h, uint8_t *raw, uint32_t max)
+{
+    uint32_t n = 0;
+    unsigned v;
+    while (*h) {
+```
+</details></tool-use>
+
+_**Agent - sidechain (claude-opus-5-5 2026-11-18 10:17:39Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Search docs for voices and CPU load
+
+`grep -rn -i -E "voices|polyphon|cpu_pct|cpu %|% cpu|cpu load|render.*%|[0-9]+ ?% of" docs/dev docs/firmware docs/hardware docs/notes 2>/dev/null | head -60`
+
+```text
+docs/dev/theory.md:341:2. **v0.1 WHEEL**：fm1-base app、polyphonic synth、畫五度圈、♯♭ glyph、和弦辨識。
+docs/firmware/sloop/index.md:11:| Tracks | 3 synth（共用 8 voices）+ drums（16 個聲音、6 voices） |
+docs/hardware/flash-map.md:13:| `0xEA000`–`0xFBFFF` | 原廠音色（factory voices） | `[上游]` |
+docs/firmware/sloop/sloop3.md:24:| Polyphony | 8 個共用 synth voices | 32 個共用 voices |
+```
+</details></tool-use>
+
+_**Agent - sidechain (claude-opus-5-5 2026-11-18 10:17:41Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Read main script loop commands in host
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/third_party/fm1-base/host && sed -n 2530,2640p plat_host.c`
+
+```text
+    midi_log = fopen(out, "w");
+    if (getenv("FM1B_SAID_LOG")) {                       /* a reader listens from the start, quietly: the log only */
+        said_log_f = fopen(getenv("FM1B_SAID_LOG"), "a");
+        sim_listen = 1;
+        said_print = 0;
+    }
+    boot();
+    if (sim_listen) {
+        static const uint8_t HELLO[] = {ANN_H0, ANN_H1, ANN_H2, ANN_HELLO, ANN_VER};
+        ann_frame(HELLO, sizeof HELLO, now_ms);
+    }
+    while (fgets(line, sizeof line, sc)) {
+        char cmd[32] = {0}, a[256] = {0}, b[64] = {0}, c[64] = {0}, d[64] = {0};
+        lineno++;
+        if (line[0] == '#' || sscanf(line, "%31s %255s %63s %63s %63s", cmd, a, b, c, d) < 1)
+            continue;
+        plat_host_line = line;
+#ifdef APP_HOST_CMD
+        if (app_host_cmd(cmd, a, b, c, d))          /* the app's own commands (app.h; more words: plat_host_line) */
+            continue;
+#endif
+        if (!strcmp(cmd, "wait"))
+            run_ms((uint32_t)atoi(a));
+        else if (!strcmp(cmd, "press") || !strcmp(cmd, "release") || !strcmp(cmd, "tap")) {
+            int i = find_name(BTN_N, NB, a);
+            if (i < 0) {
+                printf("line %d: no button %s\n", lineno, a);
+                return 2;
+            }
+            if (cmd[0] != 'r')
+                held_btn |= 1u << i;
+            if (cmd[0] == 't')
+                run_ms(40);
+            if (cmd[0] != 'p')
+                held_btn &= ~(1u << i);
+            run_ms(cmd[0] == 't' ? 40 : 2);
+        } else if (!strcmp(cmd, "key") || !strcmp(cmd, "tapkey")) {
+            int k = key_of(a);
+            int down = cmd[0] == 't' || !strcmp(b, "down");
+            uint32_t vel = (uint32_t)atoi(cmd[0] == 't' ? b : c), press = (uint32_t)atoi(cmd[0] == 't' ? "" : d);
+            (void)vel;
+            (void)press;
+#ifdef APP_KEY_SENSE
+            app_host_key((uint32_t)k, down ? (vel ? vel : 100u) : 0u, press);   /* the readings it gives (app.h) */
+#endif
+            if (down)
+                held_keys |= 1u << k;
+            else
+                held_keys &= ~(1u << k);
+            if (cmd[0] == 't') {
+                run_ms(60);
+#ifdef APP_KEY_SENSE
+                app_host_key((uint32_t)k, 0, 0);
+#endif
+                held_keys &= ~(1u << k);
+                run_ms(30);
+            } else {
+                run_ms(2);
+            }
+        } else if (!strcmp(cmd, "strum")) {          /* strum A B [MS]: a finger across the white keys */
+            int x = atoi(a), y = atoi(b), gap = c[0] ? atoi(c) : 25, s = y >= x ? 1 : -1;
+            for (;; x += s) {
+                held_keys |= 1u << HOST_WHITE_K[x & 15];
+                run_ms((uint32_t)gap);
+                held_keys &= ~(1u << HOST_WHITE_K[x & 15]);
+                if (x == y)
+                    break;
+            }
+            run_ms(2);
+        } else if (!strcmp(cmd, "turn")) {
+            int e = find_name(ENC_N, NE, a), n = atoi(b), s = n > 0 ? 1 : -1;
+            uint32_t gap = c[0] ? (uint32_t)atoi(c) : 80u;
+            if (e < 0) {
+                printf("line %d: no encoder %s\n", lineno, a);
+                return 2;
+            }
+            for (; n; n -= s) {
+                enc_acc[e] += s;
+                run_ms(gap);
+            }
+        } else if (!strcmp(cmd, "spin")) {
+            int e = find_name(ENC_N, NE, a);
+            if (e < 0) {
+                printf("line %d: no encoder %s\n", lineno, a);
+                return 2;
+            }
+            enc_acc[e] += atoi(b);
+            plat_host_exact = 1;
+            run_ms(1);
+            plat_host_exact = 0;
+        } else if (!strcmp(cmd, "jack")) {          /* jack in | jack out: the headphone jack (plat_headphones) */
+            host_hp = !strcmp(a, "in");
+            run_ms(2);
+        } else if (!strcmp(cmd, "master")) {
+            master = (uint32_t)atoi(a);
+            run_ms(40);                         /* as the device's smoothing settles */
+        } else if (!strcmp(cmd, "midi")) {
+            int dev = !strcmp(a, "BLE-DEV"), p = dev ? PORT_BLE : find_name(PORT_N, NPORTS, a);
+            if ((p < 0 || p == PORT_USB) && !dev && usbh_port()) {   /* (the port is a host: no computer to send it) */
+                printf("  midi USB: the port is a USB host, no computer: dropped\n");
+            } else {
+                min_q[mi_w % MQ] = p < 0 ? mk_pkt(a, b, c) : mk_pkt(b, c, d) | (dev ? 0x10u : 0u);   /* cable 1 */
+                min_port[mi_w++ % MQ] = p < 0 ? PORT_USB : (uint32_t)p;
+            }
+            run_ms(2);
+        } else if (!strcmp(cmd, "usbh") && !strcmp(a, "clock")) {   /* usbh clock N [MS]: N clocks from the device */
+            int n = atoi(b), gap = c[0] ? atoi(c) : 21;
+            for (; n > 0; n--) {
+                fails += usbh_cmd("midi", "F8", "", "");
+                run_ms((uint32_t)gap);
+            }
+```
+</details></tool-use>
+
+_**Agent - sidechain (claude-opus-5-5 2026-11-18 10:17:42Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Read SLOOP docs voice counts
+
+`sed -n 1,40p docs/firmware/sloop/sloop3.md; sed -n 1,30p docs/firmware/sloop/index.md; ls docs/firmware/ctl-1 docs/firmware/sloop`
+
+```text
+# SLOOP 3
+
+[SLOOP 3](https://github.com/isod89/sloop3-fm1) 不是小改版。玩起來像 SLOOP 2.8，但幾乎每一行都是新寫的：音訊引擎、sequencer、介面。目前是 **public beta**，還沒刷，這頁是之後的準備。
+
+兩者是分開的 repo、installer 與 release。SLOOP 3 不會寫入 SLOOP 2.8 的資料。
+
+## 差異
+
+| | SLOOP 2.8 | SLOOP 3 |
+|---|---|---|
+| 狀態 | stable | public beta |
+| Tracks | 3 synth + 1 drum | 4 synth + 1 drum |
+| 2.8 的作品 | — | 第一次啟動時會開啟 2.8 的 projects、user presets |
+| 安裝 | 瀏覽器 installer 或 M-Flasher | **只能透過 m-bootloader 的 MIDI MODE** |
+
+以下數字來自調研，還沒對過上游：`[調研]`
+
+| | SLOOP 2.8 | SLOOP 3 |
+|---|---|---|
+| Engines | 12 | 13 |
+| 最大 pattern 長度 | 64 steps | 128 steps |
+| 音訊運算 | fixed-point | 32-bit float |
+| Audio block | 256 samples | 64 samples |
+| Polyphony | 8 個共用 synth voices | 32 個共用 voices |
+| Sample slicing | sample / GRAIN | 獨立的 SLICE engine |
+
+## 安裝前置條件
+
+SLOOP 3 的 installer 是一個導引精靈，步驟大致是：
+
+1. 確認需求：FM-1、USB 資料線、Chrome 或 Edge。
+2. **裝 m-bootloader（一次）。** 檢查方式：按住 `PLAY` 開機看有沒有 recovery menu。沒有的話用 M-Flasher 進 download mode、**完整備份**、再安裝 m-bootloader。
+3. 連線：按住 `PLAY` 開機，選 MIDI MODE，接上 USB。
+4. 安裝，約一分鐘。
+
+**回到 SLOOP 2.8：** 用 M-Flasher 還原裝 SLOOP 3 之前的備份。
+
+## 我為什麼還沒刷
+
+- 它必須先裝 m-bootloader，而 m-bootloader 在新款 UC25HQ80 晶片上的實機驗證很少（見[注意事項](../../getting-started/cautions.md)）。SLOOP 3 的精靈推薦它，不代表可以跳過相容性確認。
+# SLOOP 概觀
+
+[SLOOP](https://github.com/isod89/sloop-fm1) 把 FM-1 變成一台用雙手即興演奏的四軌 groovebox：三軌 synth 加一軌 drum。沒有內建 pattern，沒有東西要載入，聽到的都是自己彈出來的。
+
+安裝見[刷 SLOOP 2.8.5](../../getting-started/flash-sloop.md)。這頁是規格與概念，實際操作見[操作速查](usage.md)。
+
+## 規格（2.8）
+
+| | |
+|---|---|
+| Tracks | 3 synth（共用 8 voices）+ drums（16 個聲音、6 voices） |
+| Engines | 12 種：analog、4-op FM、6-op FM（FM6，可匯入 DX7 patch）、phase distortion、三振盪器、tonewheel organ、formant voice、granular、lo-fi chip、sampler、physical models（PHYS）、noise |
+| 音色 | 153 個 preset、32 個 user preset、27 格 FM6 patch bank |
+| Drum kits | 37 組（5 組取樣、32 組合成），外加自製的 USR1–USR4 與 SYN1–SYN4 |
+| Sequencer | 每軌 64 steps，各自的長度與 division；parameter locks、micro timing、fills、swing |
+| 錄音 | 即時錄音、overdub；free take（速度跟著你）或固定 tempo |
+| 效果 | 27 個 punch-in effect；master DUST、DUCK、DJ filter、limiter；每軌 drive、slicer、chorus / delay / reverb send |
+| 記憶 | autosave、undo / redo、一首歌 4 個 section（A–D） |
+| Samples | 4 個 slot，每個約 7.4 秒 |
+| Audio | 44.1 kHz fixed-point DSP；USB audio 輸入（master 輸出，16-bit stereo） |
+| MIDI | USB in/out、TRS MIDI IN、MIDI clock in |
+| 不支援 | Bluetooth MIDI；USB 鍵盤直插 |
+
+## 核心概念
+
+**每個功能鍵都是一個 layer。** 按住它，16 個白鍵與四個旋鈕的工作就換了，螢幕會顯示現在是什麼。輕點則是開它的頁面。按住 layer 鍵再點 `HOME` 可以把它鎖住，空出雙手。
+
+**顏色對應 track。** 藍色是 track 1 與 KNOB 1，綠色 2，黃色 3，橘色 4（drums）。白色是你正在碰的東西，紅色是錄音中。
+
+**Autosave。** 停止後放 2.5 秒，內容就存下來；開機時會回到上次離開的狀態。
+docs/firmware/ctl-1:
+index.md
+
+docs/firmware/sloop:
+editor.md
+index.md
+sloop3.md
+usage.md
+web-editor.md
+```
+</details></tool-use>
+
+_**Agent - sidechain (claude-opus-5-5 2026-11-18 10:17:47Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+CTL-1 doc and Morse CPU measurements
+
+`grep -n -i -E "GM|synth|voice|poly|cpu|SF2|sound" docs/firmware/ctl-1/index.md | head -20; grep -rn -i -E "cpu_pct|plat_cpu|cpu %|xrun" docs firmware/morse/docs firmware/morse/README.md firmware/morse/LEARNING.md 2>/dev/null | head -20`
+
+```text
+17:| `HOME` `SEL` `ARP` `SEQ` `EDIT` `GLO` | 六個頁面：Play、Keys、Arp、Sequencer、Sound、Setup |
+35:1. 按 **`EDIT`** 開 Sound 頁。
+36:2. **KNOB 1（Sound）** 轉到 **Off**。
+46:| 聲音就從 FM-1 出（接耳機到 FM-1） | 維持現狀，只把上面的 Sound 關掉。這其實是最簡單的單線配置 |
+52:**MASTER 旋鈕**：設成 Volume（預設）時控制 FM-1 發出的音量，包含 iPad 經 USB 送過來的聲音。也可以在 Sound 頁用 KNOB 3 把它改成送某個 CC。
+```
+</details></tool-use>
+
+_**Agent - sidechain (claude-opus-5-5 2026-11-18 10:17:47Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Read shot and leds command implementations
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/third_party/fm1-base/host && grep -n 'cmd, "shot"\|cmd, "leds"\|cmd, "reboot"\|cmd, "wav"\|cmd, "expect"' plat_host.c; sed -n "$(grep -n 'cmd, "shot")' plat_host.c | tail -1 | cut -d: -f1),+12p" plat_host.c; sed -n "$(grep -n 'cmd, "leds")' plat_host.c | tail -1 | cut -d: -f1),+20p" plat_host.c`
+
+```text
+2345:        if (!strcmp(cmd, "expect") && app_host_cmd(cmd, a, b, "", ""))
+2393:        } else if (!strcmp(cmd, "shot") || !strcmp(cmd, "fbdump")) {
+2406:        } else if (!strcmp(cmd, "expect"))
+2674:        } else if (!strcmp(cmd, "wav")) {
+2692:        else if (!strcmp(cmd, "shot")) {
+2695:        } else if (!strcmp(cmd, "leds")) {
+2711:        } else if (!strcmp(cmd, "expect"))
+2752:        } else if (!strcmp(cmd, "reboot")) {
+        else if (!strcmp(cmd, "shot")) {
+            snprintf(out, sizeof out, "%s/%s", dir, a);
+            png_write(out);
+        } else if (!strcmp(cmd, "leds")) {
+            int i;
+            printf("  leds: buttons");
+            for (i = 0; i < NB; i++)
+                if (lit_btn >> i & 1u)
+                    printf(" %s", BTN_N[i]);
+            printf(" | white ");
+            for (i = 0; i < 16; i++)
+                printf("%c", (lit_keys >> HOST_WHITE_K[i] & 1u) ? '#' : ((dim_keys | mid_keys) >> HOST_WHITE_K[i] & 1u) ? '+' : '.');
+            printf(" black ");
+        } else if (!strcmp(cmd, "leds")) {
+            int i;
+            printf("  leds: buttons");
+            for (i = 0; i < NB; i++)
+                if (lit_btn >> i & 1u)
+                    printf(" %s", BTN_N[i]);
+            printf(" | white ");
+            for (i = 0; i < 16; i++)
+                printf("%c", (lit_keys >> HOST_WHITE_K[i] & 1u) ? '#' : ((dim_keys | mid_keys) >> HOST_WHITE_K[i] & 1u) ? '+' : '.');
+            printf(" black ");
+            for (i = 0; i < 11; i++)
+                printf("%c", (lit_keys >> HOST_BLACK_K[i] & 1u) ? '#' : ((dim_keys | mid_keys) >> HOST_BLACK_K[i] & 1u) ? '+' : '.');
+#ifdef APP_DIM_LEVELS
+            printf(" dim %u ns", (unsigned)dim_pulse());
+#endif
+            printf("\n");
+        } else if (!strcmp(cmd, "expect"))
+            fails += expect(a, b);
+#if FM1B_RES
+        else if (!strcmp(cmd, "res"))             /* res 0|1: the resource region there or not */
+            res_there = atoi(a) != 0;
+```
+</details></tool-use>
+
+_**Agent - sidechain (claude-opus-5-5 2026-11-18 10:17:48Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Read theory README and theory.md audio plan
+
+`cat -n firmware/theory/README.md; grep -n -i -E "synth|voice|audio|render|chord|sound|metronome|click|cpu|poly|FM|electric|piano|v0\.1|plan" docs/dev/theory.md | head -60`
+
+````text
+     1	# firmware/theory
+     2	
+     3	The start of a pocket music theory trainer for the M-VAVE FM-1: so far only its platform-free core. There is no
+     4	`app.c` or `fm1.toml` yet, so `just fw-test theory` does not apply. Design (Traditional Chinese):
+     5	[docs/dev/theory.md](../../docs/dev/theory.md).
+     6	
+     7	Licence: GPL-3.0-or-later.
+     8	
+     9	| File | What it is |
+    10	|---|---|
+    11	| `theory.h`, `theory.c` | Spelling on the line of fifths, 12 scales, key signatures, the circle of fifths, 23 chord qualities, Roman numerals and Nashville numbers (naming and reading, secondary dominants), naming a chord from MIDI notes, the nearest close voicing. C99, no platform calls, no libc, no floating point. |
+    12	| `tests/theory_test.c` | Unit tests: hand-written answers, round trips, every diatonic chord in every key and inversion, random voicings. |
+    13	| `tests/vectors.h` | Generated from music21 by `host/theory/make_vectors.py`; do not edit. |
+    14	
+    15	```sh
+    16	just theory-unit      # build and run the tests on this computer
+    17	just theory-vectors   # regenerate tests/vectors.h (uv fetches music21 10.5.2)
+    18	```
+    19	
+    20	Conventions worth knowing before using it:
+    21	
+    22	- A spelled note is an `int` f on the line of fifths: C = 0, G = 1, F = -1, F# = 6, Gb = -6. Pitch class is
+    23	  `7f mod 12`; `+7` adds a sharp; `+12` is the next enharmonic spelling.
+    24	- Roman numerals measure accidentals against the major scale on the same tonic, minor keys included: in A minor,
+    25	  G is `bVII` and G#dim is `viio`.
+    26	- Output is ASCII (`#`, `b`, `o`, `/o`). An app with glyphs for sharp, flat, diminished and half-diminished
+    27	  defines `TH_GLYPH_SHARP`, `TH_GLYPH_FLAT`, `TH_GLYPH_DIM` and `TH_GLYPH_HDIM` before including `theory.c`.
+    28	- Static helpers and tables are prefixed `th_` / `TH_` so the file can be `#include`d into fm1-base's unity build
+    29	  beside an app's own code.
+3:把 FM-1 變成隨身的樂理、鍵盤與聽力練習機：五度圈、和弦進行、各調的音階與琶音、相對音感、節奏聽寫。內容偏向流行編曲，但古典的基本功也要涵蓋。延續[摩斯電碼機](morse.md)的閃卡與回合，以及[背單字 app](vocab.md) 的 spaced repetition 構想。
+19:- [awesome-fm-1](https://github.com/cicloid/awesome-fm-1)
+20:- [aroum/fm1-custom-fw](https://github.com/aroum/fm1-custom-fw)
+23:**FM-1 上已經有兩個教學韌體**，但都還沒上 Hub：
+27:| [Shed](https://github.com/Luisnvb/fm1-shed) | Jazz 聽力訓練，9 種 drill：級數、和弦性質、旋律與和聲音程、tension、琶音、調式、bass、旋律聽寫。每題先放 cadence（ii–V–I，初學者用 I–IV–V–I）再出題。用琴鍵作答，或用 `PRESET` 從清單選。一回合 20 題，難度隨連對調整，60% 的題目從最弱的項目出。另有 Vamp 模式，用 LED 帶彈。規格見 [SHED_SPEC](https://github.com/Luisnvb/fm1-shed/blob/main/SHED_SPEC.md)，網頁版是 [shed-web](https://github.com/Luisnvb/shed-web) | 建在 FM1 Open SDK 上，GPL-3.0 加 SDK linking exception。**沒有 release**，2026-10-23 之後沒有更新。音名拼法沒有定義 |
+28:| [FM1 Keyboard Academy](https://github.com/chmess/fm1-keyboard-academy) | 初學者課程，8 章。每課的流程是 listen → watch → play → review，LED 亮出下一個鍵。彈錯就停住，正確率 80% 解鎖下一課。附 30 首旋律，以及一個 Node 寫的 MIDI 匯入工具 | 有 release v0.1.2（2026-10-24），GPL-3.0 加 SDK exception。在 fm1-emu 的兩種晶片上都能開機，畫面是第一課「FIND MIDDLE C」，開機 8 秒內寫 flash 21 次 `[模擬]`（2026-11-18）。會寫到哪些 sector 還沒用 `emu-rehearse` 查過 |
+30:**其他相關的 FM-1 作品**：
+33:- [FM-1 Midi-Mania](https://github.com/shan-sherif/fm-1-midi-mania)：音符往下掉的節奏遊戲。
+35:- 和弦樂器類：ChoralRoot、fm1-chord、CTL-1、FoMni。它們可以用一指彈和弦、彈調內和弦、用 LED 顯示調，但目的是彈奏，不是教學。
+44:| 接 MIDI 鍵盤的課程 | Melodics、Simply Piano、Flowkey、Synthesia、Piano Marvel | wait mode（等你彈對才往下）、逐音評時間 |
+46:| 控制器的 scale / chord mode | Novation Launchkey、OP-XY、Telepathic Orchid | 把調和和弦排到琴鍵上 |
+47:| 開源 | [OpenEar](https://github.com/ShacharHarshuv/open-ear)（MIT）、GNU Solfege（GPL-3）、[LenMus](https://github.com/lenmus/lenmus)（GPL-3）、[Piano Booster](https://github.com/pianobooster/PianoBooster)（GPL-3） | 題型的分類 |
+62:| 原則 | 根據 | 在 FM-1 上的做法 |
+85:| 2 順級三和弦 | I–vii°，Roman 與 Nashville | I–IV–V–I，就近轉位（nearest voice），左手根音 | 大三和弦和小三和弦 | ta-a（二分）、附點四分 | I–V–vi–IV、vi–IV–I–V、I–vi–IV–V |
+89:| 6 色彩 | 副屬和弦（V/V、V/vi）、借用和弦（iv、bVI、bVII）、調式 | 五聲與藍調音階、slash chord 的 bass 線 | 半音級數、借用和弦 | 十六分的切分 | 小室進行（vi–IV–V–I） |
+100:| **WHEEL** | 五度圈探索加上和弦辨識：隨身的樂理參考，不打分數 | v0.1 |
+104:| **GROOVE** | 流行和弦進行伴奏：FM-1 彈 bass 和鼓，你彈和弦 | v0.5 |
+107:| **SETTINGS** | 音色、音量、每回合張數、絕對音感路線開關 | v0.1 |
+109:### WHEEL（v0.1） { #wheel }
+223:| 240×240 彩色 LCD，沒有畫圓的 primitive | 用 `fm_sinf` / `fm_cosf` 算出 12 個位置，再用 `cv_line` / `cv_pset` 畫，分段畫進 strip canvas |
+225:| fm1-base 沒有 synth | 自己寫：8 voice 的 2-op FM 電鋼琴（從 `common/chime` 改）、一個 bass voice、節拍器的 click。音符在 `app_render` 裡依 sample 數排程，因為 `app_tick` 的旗標會有最多一個 block（5.8 ms）的抖動 |
+234:2. **和弦進行目錄**：用羅馬數字寫成 TSV（欄位之間是 tab，下面為了好讀改用空白對齊），build 時經 fm1-base 的 `gen = [...]` 轉成 C 表：
+250:    - **網頁編輯器即時顯示解析結果**：做法比照 [Morse 的網頁](https://daviddwlee84.github.io/fm1-morse/web/)。打 `i bVI bIII bVII` 時，旁邊立刻列出 `Am F C G`，並且可以試聽。
+280:- **備份與還原進度**：格式比照 Morse 的 `fm1-morse-progress` JSON。
+283:    2. 用 SysEx 把解析好的和弦送到 FM-1，送的是 fifths 位移加性質，不是字串。
+284:    3. FM-1 在螢幕上問一次，按 `PLAY` 確認。
+293:- **FM-1 不知道今天幾號。** 它沒有關機後還會走的時鐘，開機時的計時器大約 3 分鐘就歸零一次（[背單字頁](vocab.md)也提過）。所以「隔 1、7、15、30 天再複習」這種以天計算的遺忘曲線，必須有人告訴它日期。這個 app 的取捨是**以回合計算，日期只是選配**：
+302:`firmware/theory/`，GPL-3.0-or-later。寫法比照 Morse 的 `learn.c`：C99，不呼叫平台、不用 libc、不用浮點，所以可以直接放進 fm1-base 的 unity build（fm1-base 不接受 `double`）。
+308:| 和弦 | 23 種性質（三和弦、sus、七和弦、6、add9、九和弦、power chord）、`th_chord`、`th_chord_name`（`F#m7b5`、`C/E`）、`th_diatonic` |
+311:| 就近轉位 | `th_voice_near`：在範圍內選出和前一個和弦相比移動最少的 close voicing |
+335:| Shed、Keyboard Academy | GPL-3.0 加 SDK exception | 只參考做法。它們建在 FM1 Open 上，程式碼本來就不能直接拿來用 |
+339:0. 在 fm1-emu 兩種晶片上試用 Keyboard Academy v0.1.2，讀 Shed 的 SHED_SPEC，把心得寫進這頁。
+341:2. **v0.1 WHEEL**：fm1-base app、polyphonic synth、畫五度圈、♯♭ glyph、和弦辨識。
+````
+</details></tool-use>
+
+_**Agent - sidechain (claude-opus-5-5 2026-11-18 10:17:51Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+List justfile recipes
+
+`ls; ls justfile Justfile .justfile 2>/dev/null; grep -n '^[a-zA-Z_-]\+.*:' justfile | head -100`
+
+```text
+justfile
+Justfile
+10:m_flasher := env("M_FLASHER", "/Applications/M-Flasher.app/Contents/MacOS/M-Flasher")
+11:m_flasher_version := "0.12.1"
+12:sloop_version := "2.8.5"
+13:fm1_emu_version := "0.5.1"
+14:agtdeck_version := "0.7"
+15:ctl_version := "1.0.3"
+16:choralroot_tag := "v0.41"
+17:choralroot_pkg := "choralroot-0.41.fwsc"
+18:remote_version := "0.3.6"
+20:speak37_version := "1.0"
+21:spellbox_version := "0.3"
+22:dx386_version := "2.0"
+23:chimera_version := "0.8.0"
+24:evilgenius_version := "0.1.4"
+26:default:
+32:docs-build:
+36:docs-check: docs-build
+40:docs-serve port="8000" host="127.0.0.1":
+46:fm1-fetch:
+61:fm1-fetch-more:
+77:voice-fetch:
+94:fm1-install-flasher: fm1-fetch
+98:fm1-gui:
+102:sloop-editor:
+108:emu-fetch:
+122:agtdeck-fetch:
+136:emu-run package chip="uc25hq80" *args:
+144:emu-shot package chip="uc25hq80" ms="6000":
+157:emu-rehearse package backup chip="uc25hq80" *args:
+175:agtdeck-clone:
+179:agtdeck-doctor backend="herdr": agtdeck-clone
+183:agtdeck-sim backend="herdr": agtdeck-clone
+188:fm1_base := "third_party/fm1-base"
+191:fw-setup:
+197:fw-test app="hello": fw-setup
+206:fw-toolchain:
+215:fw-build app="hello": fw-setup fw-toolchain
+222:cond-test:
+226:cond-sim backend="fake" *args:
+231:cond-run backend="auto" *args:
+235:cond-ble:
+239:cond-emu chip="uc25hq80":
+243:fw-common-test:
+255:cond-it:
+259:agtdeck-emu chip="uc25hq80": agtdeck-fetch
+264:agtdeck-run backend="herdr" *args: agtdeck-clone
+272:morse-release version: fw-setup fw-toolchain
+277:morse-unit:
+285:morse-test:
+289:morse-emu chip="uc25hq80":
+293:morse-type *args:
+297:morse-send +text:
+301:morse-sim:
+305:morse-backup file:
+309:morse-restore file:
+313:morse-shots: (fw-test "morse")
+334:theory-unit:
+343:theory-vectors:
+350:voice-vendor:
+375:voice-lab *engines:
+379:voice-score:
+383:voice-open:
+388:voice-fw:
+395:fm1-versions:
+406:fm1-find:
+410:fm1-info:
+414:fm1-backup label="backup":
+424:fm1-verify-backups:
+439:fm1-download-mode:
+443:fm1-restart:
+450:fm1-flash package:
+455:fm1-switch target="":
+507:fm1-backup-release dir:
+```
+</details></tool-use>
+
+_**Agent - sidechain (claude-opus-5-5 2026-11-18 10:17:53Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Search Morse docs and app for CPU figures
+
+`grep -rn -i -E "cpu|load|xrun|render" docs/dev/morse.md firmware/morse/docs firmware/morse/README.md docs/device-log.md 2>/dev/null | head -20; grep -n -E "plat_cpu_pct|plat_xruns|cpu" firmware/morse/app.c | head`
+
+```text
+docs/dev/morse.md:123:**手動修改都要確認才寫入**：螢幕會問「SAVE CHANGES?」「MARK THESE KNOWN?」「LOAD THIS BACKUP?」，只有按 `PLAY` 才寫入，按 `HOME` 就放棄。問的時候其他鍵和旋鈕都沒作用，也不會把琴鍵當成電鍵。
+docs/dev/morse.md:140:| 網頁（Chrome、Edge） | [MORSE on the web](https://daviddwlee84.github.io/fm1-morse/web/)（fm1-morse 的 `web/index.html`，舊網址 `web/progress.html` 會轉過去）：Connect、Download the progress；還原時選檔案、Send it to the FM-1 |
+docs/dev/morse.md:277:2. **`APP_BLE_STORE`**：`app_ble_load`／`app_ble_save` 什麼都不存。own stack 用 flash 晶片的 unique ID 產生位址，Mac 和 iOS 不配對也能連，所以**藍牙不寫 flash**（fm1-emu 兩種晶片都驗證過）。
+docs/dev/morse.md:462:4. 送審：2026-11-18 本人用 Hub 的送審表單送出（Hub 的紀錄是 UTC 2026-11-17 19:03）。自動檢查 8 項全過（原始碼、`LICENSE`、`fmhub.json`、sounds、release、identity、update loader、兩種晶片），狀態是 waiting for Sven，等維護者審核。
+firmware/morse/README.md:56:Any question on the screen about your progress (save an edit, mark what a test found, load a
+firmware/morse/README.md:108:  (or `web/index.html` from this repository, opened from your disk): *Download the progress*,
+firmware/morse/README.md:115:shows what it received and loads it only after `PLAY`.
+firmware/morse/README.md:132:| ![chart edit](docs/screens/chart_edit.png) CHART: edit | ![save](docs/screens/chart_save.png) save? | ![load](docs/screens/load_ask.png) a backup to load |
+firmware/morse/README.md:139:- From a release: download `morse-X.Y.fwsc` from
+firmware/morse/README.md:142:- The package carries fm1-base's update loader, so another firmware can be installed from MORSE
+firmware/morse/README.md:154:another firmware, as with every fm1-base firmware, stages its loader at `0xE0000`.)
+docs/device-log.md:11:| Bootloader | stock (M-VAVE) |
+docs/device-log.md:15:| m-bootloader | 未安裝 |
+docs/device-log.md:21:- m-bootloader 在這顆晶片上測試很少，暫不安裝。這也表示 SLOOP 3 暫時不刷。
+docs/device-log.md:30:| 2026-11-17 | 原廠完整 flash（015，stock bootloader） | `backups/2026-11-17-stock/fm1-20261117-011632.bin` + `.json` | `c6a4790266bdb9e97500c20f50a98b80f0d334d8a219e1744bfc8e656a44fd38` | [GitHub Release](https://github.com/daviddwlee84/M-VAVE_FM-1/releases/tag/backup-2026-11-17-stock)（2026-11-17，digest 相符） |
+docs/device-log.md:54:放在本機的 `downloads/`（gitignore）。SHA-256 已與 GitHub release asset 的 digest 比對一致。
+docs/device-log.md:69:| 2026-11-17 | 安裝 M-Flasher，GUI 按 DOWNLOAD MODE | 成功。原廠 015 可由 USB MIDI 切進 download mode；整顆讀取 1.3 s（813 KB/s），晶片 CRC32 檢查通過 |
+docs/device-log.md:70:| 2026-11-17 | M-Flasher 詢問是否安裝 m-bootloader | 選 No（新晶片，暫不安裝） |
+docs/device-log.md:74:| 2026-11-17 | `just fm1-find`（SLOOP 執行中） | 回報 `midi Felucca (running; download-mode switches it)`：SLOOP 在 USB MIDI 上的名稱是 Felucca，M-Flasher 認得它 |
+docs/device-log.md:76:| 2026-11-17 | SLOOP 執行中進 download mode，`just fm1-backup sloop-2.8.5` | 成功。讀取 1.3 s（801 KB/s），CRC32 相符；M-Flasher 回報 firmware `SLOOP 2.8.5`、app OK、bootloader stock |
+```
+</details></tool-use>
+
+_**Agent - sidechain (claude-opus-5-5 2026-11-18 10:17:55Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Read emu and fw recipes in justfile
+
+`sed -n 100,345p justfile`
+
+```text
+# Open the offline SLOOP web editor in Chrome.
+sloop-editor:
+    open -a "Google Chrome" "downloads/sloop-editor-{{sloop_version}}.html"
+
+# ---- emulator (never touches the unit) ---------------------------------------
+
+# Download fm1-emu (macOS arm64) into tools/fm1-emu/ and verify it against the release digest.
+emu-fetch:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    a="fm1-emu-{{fm1_emu_version}}-macos-arm64.tar.gz"
+    mkdir -p downloads tools/fm1-emu
+    gh release download "v{{fm1_emu_version}}" -R joakimeriksson/fm1-emu -p "$a" -D downloads --clobber
+    want=$(gh api "repos/joakimeriksson/fm1-emu/releases/tags/v{{fm1_emu_version}}" --jq ".assets[] | select(.name==\"$a\") | .digest" | sed 's/^sha256://')
+    got=$(shasum -a 256 "downloads/$a" | cut -d' ' -f1)
+    [ -n "$want" ] && [ "$want" = "$got" ] || { echo "FAIL $a: got $got, release says ${want:-<no digest>}" >&2; exit 1; }
+    tar -xzf "downloads/$a" -C tools/fm1-emu --strip-components=1
+    xattr -d com.apple.quarantine tools/fm1-emu/fm1-live tools/fm1-emu/fm1-emu 2>/dev/null || true
+    tools/fm1-emu/fm1-live --version
+
+# Download Agent Deck's package and verify its digest and build attestation.
+agtdeck-fetch:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    a="agtdeck-{{agtdeck_version}}.fwsc"
+    mkdir -p downloads
+    gh release download "v{{agtdeck_version}}" -R kevinelliott/fm-1-agent-deck -p "$a" -D downloads --clobber
+    want=$(gh api "repos/kevinelliott/fm-1-agent-deck/releases/tags/v{{agtdeck_version}}" --jq ".assets[] | select(.name==\"$a\") | .digest" | sed 's/^sha256://')
+    got=$(shasum -a 256 "downloads/$a" | cut -d' ' -f1)
+    [ -n "$want" ] && [ "$want" = "$got" ] || { echo "FAIL $a: got $got, release says ${want:-<no digest>}" >&2; exit 1; }
+    gh attestation verify "downloads/$a" --repo kevinelliott/fm-1-agent-deck \
+      --signer-workflow zvenson/fm1-build/.github/workflows/build.yml >/dev/null
+    echo "ok   $a  $got  (attestation verified)"
+
+# Play a .fwsc in a window. chip: uc25hq80 (this unit, default) or p25q80. Saves persist per package+chip.
+emu-run package chip="uc25hq80" *args:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    mkdir -p tools/emu-state
+    state="tools/emu-state/$(basename "{{package}}" .fwsc)-{{chip}}.flash"
+    exec tools/fm1-emu/fm1-live --fwsc "{{package}}" --flash-chip "{{chip}}" --flash "$state" {{args}}
+
+# Headless boot for `ms` emulated ms; writes the LCD to tools/emu-state/<name>-<chip>.ppm and reports flash writes.
+emu-shot package chip="uc25hq80" ms="6000":
+    #!/usr/bin/env bash
+    set -euo pipefail
+    mkdir -p tools/emu-state/work
+    name="$(basename "{{package}}" .fwsc)-{{chip}}"
+    pkg="$(cd "$(dirname "{{package}}")" && pwd)/$(basename "{{package}}")"
+    cd tools/emu-state
+    ../fm1-emu/fm1-live --fwsc "$pkg" --flash-chip "{{chip}}" --flash "$name.flash" --midi none \
+      --shot "{{ms}}" --lcd-only 2>&1 | grep -i -E "^flash:|fault|error" || true
+    mv work/lcd.ppm "$name.ppm" && echo "LCD: tools/emu-state/$name.ppm"
+
+# Rehearse a switch in the emulator: lay PACKAGE over a real BACKUP (.bin) as M-Flasher would, then boot it.
+# Shows how the new firmware copes with the data the old one left behind. Extra args go to fm1-live.
+emu-rehearse package backup chip="uc25hq80" *args:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    mkdir -p tools/emu-state/work
+    name="$(basename "{{package}}" .fwsc)"
+    pkg="$(cd "$(dirname "{{package}}")" && pwd)/$(basename "{{package}}")"
+    bak="$(cd "$(dirname "{{backup}}")" && pwd)/$(basename "{{backup}}")"
+    cd tools/emu-state
+    rm -f "pristine-$name.flash"
+    ../fm1-emu/fm1-live --fwsc "$pkg" --flash-chip "{{chip}}" --flash "pristine-$name.flash" --midi none --shot 1 --lcd-only >/dev/null 2>&1
+    python3 ../../scripts/emu_rehearse.py "pristine-$name.flash" "$bak" "rehearse-$name.flash"
+    cp "rehearse-$name.flash" "rehearse-$name.before"
+    echo "booting $name over $(basename "$bak") (window; Esc quits). State: tools/emu-state/rehearse-$name.flash"
+    ../fm1-emu/fm1-live --fwsc "$pkg" --flash-chip "{{chip}}" --flash "rehearse-$name.flash" {{args}}
+
+# ---- Agent Deck host daemon (no flashing) ------------------------------------
+
+# Clone Agent Deck at the pinned tag into vendor/ (git-ignored).
+agtdeck-clone:
+    test -d vendor/fm-1-agent-deck || git clone -q --depth 1 --branch "v{{agtdeck_version}}" https://github.com/kevinelliott/fm-1-agent-deck.git vendor/fm-1-agent-deck
+
+# Check the daemon's view of this machine: Python, MIDI, config, agent CLIs, Herdr.
+agtdeck-doctor backend="herdr": agtdeck-clone
+    python3 vendor/fm-1-agent-deck/host/agtdeck.py --backend "{{backend}}" --doctor --no-wait
+
+# Run the daemon without an FM-1: prints frames, reads commands from stdin (`quit` to leave).
+agtdeck-sim backend="herdr": agtdeck-clone
+    python3 vendor/fm-1-agent-deck/host/agtdeck.py --backend "{{backend}}" --simulate
+
+# ---- own firmware (firmware/<app>, on third_party/fm1-base) -------------------
+
+fm1_base := "third_party/fm1-base"
+
+# One-time: submodules and the Python tools. Needs `brew install libraqm` (Pillow is built against it).
+fw-setup:
+    git submodule update --init --recursive third_party/fm1-base
+    git submodule update --init firmware/morse
+    uv sync --locked --all-groups
+
+# Build an app's host simulator (no toolchain needed) and run its test script.
+fw-test app="hello": fw-setup
+    #!/usr/bin/env bash
+    set -euo pipefail
+    uv run --locked --all-groups python "{{fm1_base}}/tools/build.py" "firmware/{{app}}" --host
+    bin=$(ls firmware/{{app}}/build/host/*_host)
+    cd "firmware/{{app}}" && "build/host/$(basename "$bin")" tests/basic.txt build/host
+    echo "screenshots and audio: firmware/{{app}}/build/host/"
+
+# One-time for device builds: JieLi toolchain and the pinned AC79 SDK into tools/ (about 1.2 GB).
+fw-toolchain:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    mkdir -p tools/jieli
+    test -e tools/jieli/toolchain || sh "{{fm1_base}}/tools/get_toolchain.sh" "$PWD/tools/jieli"
+    test -d tools/fw-AC79_AIoT_SDK || git clone --depth 1 --branch AC79NN_SDK_V1.2.1_2023-12-13 \
+      https://gitee.com/Jieli-Tech/fw-AC79_AIoT_SDK.git tools/fw-AC79_AIoT_SDK
+
+# Build an app's device package (firmware/<app>/build/*.fwsc). On macOS the tools run in a linux/amd64 container.
+fw-build app="hello": fw-setup fw-toolchain
+    JIELI_TOOLCHAIN="$PWD/tools/jieli/toolchain" AC79_SDK="$PWD/tools/fw-AC79_AIoT_SDK" \
+      uv run --locked --all-groups python "{{fm1_base}}/tools/build.py" "firmware/{{app}}"
+
+# ---- Conductor: own agent console (firmware/conductor + host/conductor) ------
+
+# Host daemon unit tests (protocol, slot memory, action checks; no hardware, no backend).
+cond-test:
+    uv run --locked --all-groups pytest -q
+
+# The daemon against a text stand-in for the FM-1 (backend: fake, auto, hc or herdr).
+cond-sim backend="fake" *args:
+    PYTHONPATH=host uv run --locked --all-groups python -m conductor --backend "{{backend}}" --simulate {{args}}
+
+# The daemon against a MIDI device named CONDUCTOR: the real unit, or `just cond-emu`.
+# auto (default): hc and classic Herdr together.
+cond-run backend="auto" *args:
+    PYTHONPATH=host uv run --locked --all-groups python -m conductor --backend "{{backend}}" {{args}}
+
+# macOS's Bluetooth MIDI window, opened by itself (click Connect next to FM-1 XXXX); waits for the port.
+cond-ble:
+    PYTHONPATH=host uv run --locked --all-groups python -m conductor.blelink
+
+# The firmware in the emulator with the virtual USB cable plugged in (pair with `just cond-run`).
+cond-emu chip="uc25hq80":
+    just emu-run firmware/conductor/build/conductor.fwsc "{{chip}}" --usb
+
+# firmware/common's own tests on this computer (hostlink's Bluetooth SysEx packets, the LPC and ADPCM speech decoders).
+fw-common-test:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    mkdir -p build
+    cc -Wall -Wextra -I firmware/common -o build/hostlink_test firmware/common/tests/hostlink_test.c
+    build/hostlink_test
+    cc -Wall -Wextra -I firmware/common -o build/lpc_test firmware/common/tests/lpc_test.c
+    build/lpc_test
+    cc -Wall -Wextra -I firmware/common -o build/adpcm_test firmware/common/tests/adpcm_test.c
+    build/adpcm_test
+
+# hc end to end: two fake agents (label conductor-test=1), approve / deny / continue, then kill them.
+cond-it:
+    uv run --locked --all-groups python host/tests/integration_hc.py
+
+# Agent Deck in the emulator with the virtual USB cable plugged in (pair with `just agtdeck-run`).
+agtdeck-emu chip="uc25hq80": agtdeck-fetch
+    just emu-run "downloads/agtdeck-{{agtdeck_version}}.fwsc" "{{chip}}" --usb
+
+# Run the daemon against a MIDI device: a real FM-1 with Agent Deck, or the emulator
+# started with `just emu-run downloads/agtdeck-{{agtdeck_version}}.fwsc uc25hq80 --usb`.
+agtdeck-run backend="herdr" *args: agtdeck-clone
+    uv run --locked --all-groups python vendor/fm-1-agent-deck/host/agtdeck.py --backend "{{backend}}" {{args}}
+
+# ---- Morse: pocket Morse code machine (firmware/morse + host/morse) ----------
+
+# Morse's firmware is its own repo (github.com/daviddwlee84/fm1-morse), a submodule at firmware/morse; it is built
+# here with third_party/fm1-base (its own fm1-base submodule is for building it alone, and is not fetched here).
+# Release package (identity FM-1_41 + XXYYZZ): just morse-release 0.3
+morse-release version: fw-setup fw-toolchain
+    JIELI_TOOLCHAIN="$PWD/tools/jieli/toolchain" AC79_SDK="$PWD/tools/fw-AC79_AIoT_SDK" \
+      uv run --locked --all-groups python "{{fm1_base}}/tools/build.py" firmware/morse --release "{{version}}"
+
+# morse.c, learn.c and content.c on this computer: code table, timing, player, keyer, decoder, flash cards, content.
+morse-unit:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    mkdir -p build
+    cc -Wall -Wextra -o build/morse_test firmware/morse/tests/morse_test.c
+    build/morse_test
+
+# Host unit tests (protocol vectors shared with firmware/morse/tests/basic.txt, the host's answers).
+morse-test:
+    uv run --locked --all-groups pytest -q host/tests/test_morse.py
+
+# The firmware in the emulator with the virtual USB cable plugged in (pair with `just morse-type` / `morse-send`).
+morse-emu chip="uc25hq80":
+    just emu-run firmware/morse/build/morse.fwsc "{{chip}}" --usb
+
+# What you key or type on the FM-1, typed into the focused app (macOS, Accessibility). --dry-run prints it.
+morse-type *args:
+    PYTHONPATH=host uv run --locked --all-groups python -m morse type {{args}}
+
+# The FM-1 plays TEXT as received ("-": lines from stdin).
+morse-send +text:
+    PYTHONPATH=host uv run --locked --all-groups python -m morse send {{text}}
+
+# The host against a text stand-in for the FM-1 (lines you type are what it "read").
+morse-sim:
+    PYTHONPATH=host uv run --locked --all-groups python -m morse --simulate type --dry-run
+
+# The learning progress into a JSON file (firmware 0.4+; read-only on the FM-1).
+morse-backup file:
+    PYTHONPATH=host uv run --locked --all-groups python -m morse backup "{{file}}"
+
+# A progress JSON file back onto the FM-1: it asks on its screen first (PLAY yes, HOME no).
+morse-restore file:
+    PYTHONPATH=host uv run --locked --all-groups python -m morse restore "{{file}}"
+
+# The simulator's screenshots, doubled (nearest neighbour), into fm1-morse's docs/screens/ for its README.
+morse-shots: (fw-test "morse")
+    #!/usr/bin/env bash
+    set -euo pipefail
+    uv run --locked --all-groups python - <<'PY'
+    from pathlib import Path
+    from PIL import Image
+    src, dst = Path("firmware/morse/build/host"), Path("firmware/morse/docs/screens")
+    dst.mkdir(parents=True, exist_ok=True)
+    names = """menu boot card_new card_new_peek card_hear card_see_key card_hear_key result_right result_keyed result_keyed_wrong
+    result_almost done practice_test placement_ask listen listen_hidden key key_code key_timing rhythm rhythm_good
+    rhythm_dahs type type_code type_phrases chart chart_edit chart_save load_ask settings settings_bt""".split()
+    for n in names:
+        im = Image.open(src / f"{n}.png").convert("RGB")
+        im.resize((im.width * 2, im.height * 2), Image.NEAREST).save(dst / f"{n}.png", optimize=True)
+    print(f"{len(names)} screens in {dst}")
+    PY
+
+# ---- theory: a music theory trainer, so far its platform-free core (firmware/theory, docs/dev/theory.md) ----
+
+# theory.c on this computer: spelling, scales, keys, chords, Roman numerals, naming a chord, voicing, and
+# music21's spellings (tests/vectors.h). Strict flags: the core must build in fm1-base (no double, no libc).
+theory-unit:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    mkdir -p build
+    cc -std=c99 -Wall -Wextra -pedantic -Wdouble-promotion -Wfloat-equal -Wshadow -o build/theory_test \
+      firmware/theory/tests/theory_test.c
+    build/theory_test
+
+# Regenerate firmware/theory/tests/vectors.h from music21 (BSD-3-Clause; pinned, fetched by uv, not a project dependency).
+theory-vectors:
+    uv run --quiet --no-project --with music21==10.5.2 python -I host/theory/make_vectors.py
+```
+</details></tool-use>
+
+_**Agent - sidechain (claude-opus-5-5 2026-11-18 10:17:58Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Search fm1-base docs for CPU cost evidence
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/third_party/fm1-base && grep -rn -i -E "voices|cycles per|ns per|per sample|[0-9]+ ?MHz|% of the (render|budget)|fm_sinf.*(cycle|cost|ns)" bsp/docs/CPU.md docs/SECOND-CORE.md README.md DESIGN.md skill 2>/dev/null | head -40`
+
+```text
+bsp/docs/CPU.md:5:On the FM-1 (AC79, pi32v2 at the boot loader's 360 MHz), code that inlines 32x32->64-bit multiplies
+bsp/docs/CPU.md:31:Not known yet: which exact instruction pairs fail, whether the SDK's 320 MHz is clear of it, and how much other code
+docs/SECOND-CORE.md:5:renders half its voices and its effects this way. The second core comes from felucca-bsp's `chip/fm1_cpu1.h`
+docs/SECOND-CORE.md:41:Split your render into two parts that don't write to the same memory, such as two halves of the voices, each into
+docs/SECOND-CORE.md:47:    render_voices(4, 8, buf2);          /* voices 4..7 into its own buffer */
+docs/SECOND-CORE.md:53:    render_voices(0, 4, buf1);          /* voices 0..3, here */
+docs/SECOND-CORE.md:76:- When a job and the first core pass flags or counters while both run (a queue of voices that each core takes from,
+docs/SECOND-CORE.md:135:`cpu_clock = 396` in `fm1.toml` runs the CPU at 396 MHz instead of the stock 360. It's off by default and past
+```
+</details></tool-use>
+
+_**Agent - sidechain (claude-opus-5-5 2026-11-18 10:18:01Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+List docs and sizes of key docs
+
+`ls docs docs/hardware docs/firmware docs/dev 2>&1; wc -l docs/hardware/flash-map.md docs/firmware/switching.md AGENTS.md CLAUDE.md 2>&1`
+
+```text
+docs:
+agentic
+assets
+dev
+firmware
+getting-started
+hardware
+notes
+device-log.md
+ecosystem.md
+index.md
+official.md
+playground.md
+resources.md
+watch.md
+
+docs/hardware:
+flash-chips.md
+flash-map.md
+io.md
+ios-apps.md
+mobile.md
+related.md
+
+docs/firmware:
+agent-deck
+choralroot
+ctl-1
+remotefm1
+sloop
+hub.md
+index.md
+switching.md
+
+docs/dev:
+index.md
+morse-cheatsheet.md
+morse-learn.md
+morse.md
+theory.md
+tts.md
+vocab.md
+      80 docs/hardware/flash-map.md
+     172 docs/firmware/switching.md
+     258 AGENTS.md
+       1 CLAUDE.md
+     511 total
+```
+</details></tool-use>
+
+_**Agent - sidechain (claude-opus-5-5 2026-11-18 10:18:01Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Read SECOND-CORE.md and CPU.md
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/third_party/fm1-base && sed -n 1,80p docs/SECOND-CORE.md; sed -n 1,35p bsp/docs/CPU.md`
+
+````text
+# Using both cores
+
+The FM-1's chip has two cores. Your app runs on the first. The second core, when you turn it on, is a worker for
+the render: in each audio block you hand it one job, do your own share on the first core, and wait for it. LOOM-8
+renders half its voices and its effects this way. The second core comes from felucca-bsp's `chip/fm1_cpu1.h`
+(Melodee's, by keremimo, under MPL-2.0 by agreement on felucca-bsp#5); fm1-base adds when it may start and the
+calls in `include/plat.h`.
+
+## Turn it on
+
+Add this to your app's `fm1.toml`:
+
+```toml
+cpu2 = true
+```
+
+Two more keys change how it behaves. `tools/build.py` describes every key.
+
+- `cpu2_fallback = true` keeps the FM-1 running on one core after the second core fails, until it is switched off.
+  Without it, a failure restarts the FM-1 (see "When it fails").
+- `cpu2_stack = 4096` gives the second core's jobs a bigger stack, in bytes (a multiple of 8, 1024 to 16384). The
+  default is 2816. Use `plat_cpu2_stack()` to see how deep your jobs went.
+
+Then start it in `app_init`. It can only start at power-on, before the audio and the timers, and `app_init` is that
+moment:
+
+```c
+void app_init(void)
+{
+    /* ... */
+    if (plat_cpu2_set(1) == 0)
+        two_cores = 1;              /* else one core: do all the work yourself */
+}
+```
+
+`plat_cpu2_set(1)` returns 0 when the second core runs, and -1 when it doesn't: it didn't answer, it was barred
+after an earlier failure, or it's too late to start it. Your render has to work either way.
+
+## Hand it a job
+
+Split your render into two parts that don't write to the same memory, such as two halves of the voices, each into
+its own buffer. In the render, hand one part to the second core, do the other, wait, and then mix:
+
+```c
+static void half_job(uint32_t arg)       /* runs on the second core */
+{
+    render_voices(4, 8, buf2);          /* voices 4..7 into its own buffer */
+}
+
+void app_render(int32_t *lr, uint32_t n, uint32_t master_q12)
+{
+    int on2 = plat_cpu2_on() && plat_cpu2_run(half_job, 0);
+    render_voices(0, 4, buf1);          /* voices 0..3, here */
+    if (!on2 || plat_cpu2_wait() != 0)
+        half_job(0);                    /* it didn't take the job, or it dropped it: do it here */
+    mix(buf1, buf2, lr, n, master_q12);
+}
+```
+
+These calls do the work:
+
+- `plat_cpu2_run(fn, arg)` hands it `fn(arg)` and returns 1, or returns 0 when it can't take the job. Then do the
+  work yourself.
+- `plat_cpu2_wait()` waits for the job and returns 0. It returns -1 only with `cpu2_fallback`, when the second core
+  was given up and the job dropped. Then do the work yourself.
+- `plat_cpu2_busy()` tells you whether the job is still running, without waiting.
+
+It takes one job at a time, and every job must be back within 8 ms. A job that takes longer counts as a failure.
+Keep each job well inside one audio block.
+
+## Share data safely
+
+The two cores run at once, so treat anything both of them touch as shared:
+
+- Give each core its own output buffer, and combine them only after `plat_cpu2_wait()`.
+- When a job and the first core pass flags or counters while both run (a queue of voices that each core takes from,
+  as LOOM-8's `engine.c` does), make them `volatile`, and call `plat_cpu2_sync()` between a write and the read that
+  depends on it on the other core.
+- Use `plat_core()` when one function runs on either core and needs a scratch buffer per core. It returns 0 on the
+  first core and 1 on the second.
+# The CPU: what we have seen it do
+
+## 64-bit multiplies among 16-bit loads
+
+On the FM-1 (AC79, pi32v2 at the boot loader's 360 MHz), code that inlines 32x32->64-bit multiplies
+(`r9_r8 = r3 * r15 (s)`) among 16-bit loads (`r4 = h[r5+-380] (u)`) now and then leaves a register one bit off,
+and the firmware crashes. The crash records show it plainly: a loop index of 0x12 read as 0x00800012, a counter of 0
+as 0x00800000, `sp` a word off so that a return pops a neighbouring value. The memory the value came from is
+intact.
+
+fm1-radio found it in PacketVideo's AAC decoder, which crashed every few minutes (October 2026). On the device:
+
+| Test (WiFi off) | Result |
+| --- | --- |
+| SBR's analysis filterbank alone, on fixed input, built at `-O2` | crashed within a minute, every time |
+| the same, each run with interrupts off | crashed |
+| the same without instruction pairing (`-mllvm -pi32v2-parallel-pack=false`) | crashed |
+| the same with a `nop` after each multiply | crashed |
+| the same with the multiplies in functions of their own (`noinline`) | 8 minutes clean |
+| 1.2 billion 64-bit multiplies, each checked | no error |
+| 2 billion 16-bit loads, each checked | no error |
+| 16-bit loads beside 64-bit multiplies | crashed within a minute |
+| 32-bit loads beside 64-bit multiplies | 2 errors in 4 billion |
+| SYSVDD 13 (1.32 V) instead of 15 | crashed as fast |
+
+So keep 64-bit multiplies out of line in hot fixed-point loops: a helper marked `noinline`, as in
+`int32_t mul_q31(int32_t a, int32_t b) { return (int32_t)(((int64_t)a * b) >> 31); }`. The helper uses the product
+at once, so the multiply completes before any load that follows. In fm1-radio this cost the decoder about 50% of
+its speed (7.8 ms a frame, was 5.1) and made it crash-free.
+
+Not known yet: which exact instruction pairs fail, whether the SDK's 320 MHz is clear of it, and how much other code
+is exposed. Floating-point code (minimp3) has no 64-bit multiplies and never showed it. To look for it, list the
+functions whose disassembly has `rN_rM = rA * rB` beside `h[...]` loads.
+````
+</details></tool-use>
+
+_**Agent - sidechain (claude-opus-5-5 2026-11-18 10:18:04Z)**_
+
+<tool-use data-tool-type="read" data-tool-name="Read"><details>
+<summary>Tool use: **Read**</summary>
+ `./docs/hardware/flash-map.md`
+
+````text
+1	# Flash 配置圖
+2	
+3	FM-1 的 flash 是 1 MiB，分成 256 個 4 KiB 的 sector。誰把什麼放在哪裡，決定了換韌體時什麼會留下、什麼會被蓋掉。這頁把各個來源的說法和我自己備份的比對放在一起。
+4	
+5	## 總覽
+6	
+7	| 位址 | 內容 | 來源 |
+8	|---|---|---|
+9	| `0x00000`–`0x03FFF` | **boot head**：bootloader 與 boot 設定（16 KiB）。壞了就開不了機 | `[上游]` M-Flasher、Unbricker |
+10	| `0x04000`–`0x92FFF` | **韌體區**。多數韌體（原廠 V15、SLOOP、Agent Deck、CTL-1）佔這段 | `[實機]` M-Flasher 的寫入計畫 |
+11	| `0x93000`–`0xE8FFF` | 原廠 V15 的**設定區**。社群韌體也把資料放在這裡面 | `[上游]` |
+12	| `0xE9000` | Bluetooth 資料（配對） | `[上游]` |
+13	| `0xEA000`–`0xFBFFF` | 原廠音色（factory voices） | `[上游]` |
+14	| `0xFC000`–`0xFEFFF` | M-Flasher 的圖上標為 free；Felucca 系拿來放全域設定 | `[實機]` |
+15	| `0xFF000`–`0xFFFFF` | key / MAC，裝置自己的資料 | `[上游]` |
+16	
+17	M-Flasher 的 flash map 用顏色標的就是這些：BOOT `00–03`、FIRMWARE `04–92`、SETTINGS `93–E8`、PAIRINGS `E9`、SOUNDS `EA–FB`、free `FC–FE`、MAC `FF`。
+18	
+19	## 韌體區不一定只到 `0x92FFF`
+20	
+21	| 韌體 | 佔用範圍 | 來源 |
+22	|---|---|---|
+23	| SLOOP 2.8.5、Agent Deck 0.7、CTL-1 1.0.3 | `0x04000`–`0x92FFF`（實際寫入到 `0x8FFFF`） | `[實機]` |
+24	| Conductor 0.1（自製，fm1-base） | `0x04000`–`0x92FFF`（實際寫入 `0x04000`–`0x8EFFF`、`0x91000`–`0x91FFF`） | `[實機]` M-Flasher 的計畫：140 sectors |
+25	| Morse 0.1 / 0.2（自製，fm1-base） | `0x04000`–`0x92FFF`（實際寫入：Conductor 0.3 → 0.1 是 `0x04000`–`0x21FFF`，0.1 → 0.2 是 `0x04000`–`0x23FFF`） | `[實機]` M-Flasher 的計畫：30、32 sectors |
+26	| **ChoralRoot 0.41** | `0x04000`–**`0x9EFFF`** | `[實機]` M-Flasher 的計畫：152 sectors |
+27	| **原廠 V16** | 到 **`0xA8FFF`** | `[上游]` Unbricker |
+28	
+29	超出 `0x92FFF` 的韌體會直接蓋掉別人放在 `0x93000` 之後的資料。
+30	
+31	## Felucca 系韌體的資料位置
+32	
+33	Felucca、SLOOP、ChoralRoot 以及 Dinghy、fm1-base 系的韌體大多沿用同一套位址 `[上游]`：
+34	
+35	| 位址 | 內容 |
+36	|---|---|
+37	| `0x97000` 起 | project（曲子） |
+38	| `0x9F000` | SLOOP 的 autosave（和 ChoralRoot 的 FM6 bank 是同一個物件編號） |
+39	| `0xA0000` 起 | samples |
+40	| `0xDA000`–`0xDBFFF` | 自製 [Morse](../dev/morse.md#flash) 的設定與學習進度（這台機器的備份裡這兩個 sector 都是空的） |
+41	| `0xDC000` 起 | user preset bank；CTL-1 與 fm1-base 的 app（含 Conductor）用來放面板校正 |
+42	| `0xDE000` | CTL-1 的 Bluetooth 設定 |
+43	| `0xE0000` | 更新時暫存 update loader |
+44	| `0xF2000`–`0xF3FFF` | RemoteFM1 第一次開 Bluetooth 時寫入 |
+45	| `0xFC000` | 全域設定。**SLOOP、Agent Deck、CTL-1 都寫這裡** |
+46	| `0xFE000` | SLOOP autosave 的另一份 |
+47	
+48	因為位址共用，韌體之間會互相踩到對方的資料，也會讀到對方留下的東西。
+49	
+50	## 我的機器上實際發生的 `[實機]`
+51	
+52	用各階段的完整備份逐 sector 比對：
+53	
+54	| 動作 | 改變的 sector |
+55	|---|---|
+56	| 原廠 015 → 裝 SLOOP 並玩過 | 韌體區，加上 `0x97000`、`0x9F000`、`0xFC000`、`0xFD000`、`0xFE000` |
+57	| → Agent Deck | 韌體區，加上 `0xFC000`（蓋掉 SLOOP 的設定） |
+58	| → 回 SLOOP | 韌體區，加上 `0xFE000`。曲子還在 |
+59	| → CTL-1 | 韌體區，加上 `0xDE000`、`0xDF000`、`0xFC000`、`0xFD000` |
+60	| → ChoralRoot | `0x04000`–`0x9EFFF`，蓋掉了 `0x97000` 的 SLOOP project（已執行，尚未用備份比對確認其他 sector） |
+61	| → Conductor | 韌體區 140 個 sector（`0x04000`–`0x8EFFF`、`0x91000`–`0x91FFF`）。開機後不寫任何資料（預演 `[模擬]`；實機尚未用備份比對） |
+62	
+63	原廠出廠時 `0x93000`、`0xE9000`–`0xF2000`、`0xFA000`、`0xFB000` 有資料，`0xFC000`–`0xFE000` 是空的。
+64	
+65	## 自己比對兩份備份
+66	
+67	```python
+68	S = 4096
+69	a = open("backups/A/x.bin", "rb").read()
+70	b = open("backups/B/y.bin", "rb").read()
+71	print([hex(i * S) for i in range(256) if a[i * S:(i + 1) * S] != b[i * S:(i + 1) * S]])
+72	```
+73	
+74	## 這對操作的意義
+75	
+76	- **只重裝韌體會保留資料區**，所以 SLOOP ↔ Agent Deck 來回曲子還在。
+77	- **韌體比較大的（ChoralRoot、V16）會吃掉資料區**，回去時要還原備份。
+78	- **共用的 `0xFC000` 每換一次就被蓋一次**，各韌體的全域設定不會跨韌體保留。
+79	- **原廠音色在 `0xEA000`–`0xFBFFF`**，有些韌體會寫這一段。只有原廠備份救得回來。
+80	- 更完整的後果見[變磚的原理與分級](../getting-started/bricking.md)與[多韌體切換](../firmware/switching.md)。
+81
+````
+</details></tool-use>
+
+_**Agent - sidechain (claude-opus-5-5 2026-11-18 10:18:05Z)**_
+
+<tool-use data-tool-type="read" data-tool-name="Read"><details>
+<summary>Tool use: **Read**</summary>
+ `./docs/firmware/switching.md`
+
+````text
+1	# 多韌體切換
+2	
+3	FM-1 沒有像 GRUB 那樣的開機選單可以選 SLOOP、Melodee 或 Agent Deck。目前有幾條路：
+4	
+5	| 方案 | 怎麼切換 | 要改硬體嗎 | 評價 |
+6	|---|---|---|---|
+7	| **M-Flasher 輪刷** | 接電腦，重刷另一套韌體或還原備份 | 否 | **現在最實際** |
+8	| **m-bootloader** | recovery menu、重裝韌體、啟動 RAM app | 否 | 是救援與開發工具，不是多系統選單 |
+9	| **RemoteFM1** | 刷一次 RemoteFM1，之後韌體在電腦或手機上跑，FM-1 當面板，點一下就換 | 否 | 另一種思路，見[搭配手機與平板](../hardware/mobile.md)。我還沒試 |
+10	| **m-apps `slots` + m-card** | SD 卡上存多個完整映像，選一個寫回內部 flash 再重開 | **要**（microSD 擴充板） | 進階實驗，尚未成熟 |
+11	
+12	## 把電腦當 firmware manager
+13	
+14	每套韌體各留一份「裝好並設定好之後」的完整 flash 備份。切換時還原那份備份，回來的不只是韌體，還有它的設定、音色與 project。
+15	
+16	建議的本機目錄（都在 gitignore 裡）：
+17	
+18	```text
+19	backups/
+20	  2026-11-17-stock/          原廠，最重要的一份
+21	  2026-11-17-sloop-2.8.5/    SLOOP 裝好、設定好之後
+22	downloads/
+23	  sloop-2.8.5.fwsc
+24	```
+25	
+26	這個目錄結構是我自己的安排，不是上游工具的要求。
+27	
+28	注意：
+29	
+30	- 完整還原會連 boot 區與裝置資料一起寫。只用**這台機器自己**的備份。
+31	- 之後若裝了 m-bootloader 又想還原較舊的備份，要用 **Keep this unit's bootloader**（CLI：`--keep-bootloader`），否則 bootloader 會被舊備份蓋回去。
+32	- 還原屬於高風險操作，由本人執行，不交給 agent。見[工作流與權限](../agentic/index.md)。
+33	
+34	只是想換一套韌體、不在乎保留前一套的狀態時，直接 `m-flasher firmware` 安裝新的 `.fwsc` 就好。M-Flasher 在資料配置不同的韌體之間切換時會警告。
+35	
+36	## 實機紀錄
+37	
+38	| 日期 | 從 → 到 | 做法 | 結果 |
+39	|---|---|---|---|
+40	| 2026-11-17 | 原廠 015 → SLOOP 2.8.5 | M-Flasher GUI 安裝 `.fwsc` | 成功，存檔正常 |
+41	| 2026-11-17 | SLOOP 2.8.5 → Agent Deck 0.7 | `fm1-download-mode` → `fm1-backup` → `fm1-flash` → `fm1-restart`，全程不需要按機器上的鍵 | 成功 |
+42	| 2026-11-17 | CTL-1 1.0.3 → ChoralRoot 0.41 | `just fm1-switch <檔案>` | 成功。寫入 152 個 sector 到 `0x9EFFF`，**蓋掉了 SLOOP 的 project sector** |
+43	| 2026-11-18 | 原廠 015 → Morse 0.3 release | `fm1_install.py`（USB-MIDI，Hub 測試 3）；原廠是本人用 M-Flasher GUI 還原的 | 成功，fast install |
+44	| 2026-11-18 | Morse 0.3 → SLOOP 2.8.5 | `fm1_install.py`（USB-MIDI，Hub 測試 1） | 成功，classic install；SLOOP 的曲子還在 |
+45	| 2026-11-18 | SLOOP 2.8.5 → Morse 0.3 release（`FM-1_41000300`） | `fm1_install.py`（USB-MIDI，Hub 測試 2） | 成功，fast install；Morse 的紀錄在 SLOOP 期間沒被動到 |
+46	| 2026-11-18 | Morse 0.2 → 0.3（自製） | `just fm1-switch firmware/morse/build/morse.fwsc` | 成功。寫入 32 個 sector（`0x04000`–`0x23FFF`），和預演一致 |
+47	| 2026-11-18 | Morse 0.1 → 0.2（自製） | `just fm1-switch firmware/morse/build/morse.fwsc` | 成功。寫入 32 個 sector（`0x04000`–`0x23FFF`），學習紀錄 `0xDA000` 沒被寫，和預演一致 |
+48	| 2026-11-17 | Conductor 0.3 → Morse 0.1（自製） | `just fm1-switch firmware/morse/build/morse.fwsc` | 成功。寫入 30 個 sector（`0x04000`–`0x21FFF`），和模擬器預演一致 |
+49	| 2026-11-17 | ChoralRoot 0.41 → Conductor 0.1（自製） | `just fm1-switch firmware/conductor/build/conductor.fwsc` | 成功。寫入 140 個 sector（`0x04000`–`0x8EFFF`、`0x91000`–`0x91FFF`）。ChoralRoot 在 `0x93000`–`0x9EFFF` 的映像殘留還在，Conductor 不讀它 |
+50	| 2026-11-17 | SLOOP 2.8.5 → CTL-1 1.0.3 | `just fm1-switch ctl` | 成功 |
+51	| 2026-11-17 | Agent Deck 0.7 → SLOOP 2.8.5 | 同上，只裝韌體、不還原備份 | 寫入成功、能開機，**SLOOP 的曲子都還在** |
+52	
+53	### SLOOP ↔ Agent Deck 互切不會丟曲子，但設定 sector 是共用的
+54	
+55	比對刷 Agent Deck 前後的兩份完整映像，只有這些 sector 不同：
+56	
+57	| 區域 | 位址 | 數量 | 內容 |
+58	|---|---|---|---|
+59	| 韌體區 | `0x04000`–`0x8FFFF` | 140 | 韌體本身 |
+60	| 設定 sector | `0xFC000` | 1 | Agent Deck 把自己的設定寫在這裡，**蓋掉了 SLOOP 原本存在這裡的設定** |
+61	
+62	!!! warning "更正（2026-11-17）"
+63	    我原本寫 `0xFC000` 是「原本空著的區域」，那是錯的。M-Flasher 的 flash map 把它標為 free，但比對備份後發現 SLOOP 把設定存在那裡（開頭是 `FELU`），Agent Deck 寫入後變成自己的資料（`KDGA`），刷回 SLOOP 之後那個 sector 仍是 Agent Deck 的內容。
+64	
+65	SLOOP 在我的機器上實際寫過的 sector（和原廠備份比對）：
+66	
+67	| 位址 | 內容 | Agent Deck 來回之後 |
+68	|---|---|---|
+69	| `0x97000` | project | 沒變 |
+70	| `0x9F000` | autosave | 沒變 |
+71	| `0xFC000` | 設定 | **被 Agent Deck 蓋掉，尚未被 SLOOP 寫回** |
+72	| `0xFD000` | 另一份設定（內容與 `0xFC000` 大小相同） | 沒變 |
+73	| `0xFE000` | autosave 的另一份 | SLOOP 回來後有更新 |
+74	
+75	曲子在 `0x97000` 與 `0x9F000`，所以都還在。設定有兩份，我推測 SLOOP 是讀到 `0xFD000` 那份才沒有明顯異狀，但這是推測。如果發現 SLOOP 的某些全域設定（燈光、SYNC、MIDI channel）跑掉了，原因就在這裡。
+76	
+77	結論不變：SLOOP ↔ Agent Deck 來回只需要重裝 `.fwsc`，曲子不會丟。但「一個 byte 都沒碰」不成立，設定 sector 是共用的。
+78	
+79	這個結論只對這兩個韌體、這兩個版本成立。`[實機]`
+80	
+81	### 其他韌體會動到哪裡
+82	
+83	Felucca 系的韌體（SLOOP、ChoralRoot、Dinghy 系的 Agent Deck）與 fm1-base 系的（CTL-1）大多沿用同一套儲存位址，所以會互相踩到。以下是把韌體蓋在我真實的 SLOOP 備份上、在模擬器裡第一次開機後改寫的 sector `[模擬]`：
+84	
+85	| 韌體 | 第一次開機改寫 | 對我的影響 |
+86	|---|---|---|
+87	| CTL-1 1.0.3 | `0xDE000`–`0xDFFFF` | 在我的映像裡原本是空的。存設定時還會寫 `0xFC000` |
+88	| RemoteFM1 0.3.6 | `0xF2000`–`0xF3FFF` | `0xF2000` 有原廠留下的資料，會被蓋掉 |
+89	| ChoralRoot 0.41 | 沒有改寫；正常開機 | **韌體映像本身較大（到 `0x9EFFF`），安裝時就會蓋掉 SLOOP 在 `0x97000` 的 project。** 上游另記載過舊版在 SLOOP 資料上掉進 ROM boot mode，見 [ChoralRoot](choralroot/index.md) |
+90	| Morse 0.1（自製） | 開機不寫；改設定或玩完一回合才寫 `0xDA000`–`0xDBFFF` `[模擬]`；2026-11-17 已刷進實機 | 韌體映像 `0x04000`–`0x92FFF`。和目前機上的 Conductor 只差 27 個 sector（`0x04000`–`0x1EFFF`）。預演疊在 `2026-11-17-2052-pre-conductor` 備份上，見 [Morse](../dev/morse.md#flash) |
+91	| Conductor 0.1（自製） | 沒有改寫，重開再讀回也是 0 次寫入 `[模擬]`；2026-11-17 已刷進實機 | 韌體映像 `0x04000`–`0x92FFF`，不到 `0x97000`。只讀 panel calibration（`0xDC000`），不碰 `0xFC000`。預演是疊在 `2026-11-17-0413-pre-choralroot-0.41` 備份上做的，見 [Conductor](../agentic/conductor.md#flash) |
+92	
+93	### 先在模擬器預演
+94	
+95	```sh
+96	just emu-rehearse downloads/ctl-1.0.3.fwsc backups/<目錄>/<檔名>.bin
+97	```
+98	
+99	它把套件的韌體區蓋在一份真實備份上（和 M-Flasher 對 SLOOP、Agent Deck 做的事一樣），在模擬器裡開機。可以看新韌體遇到舊資料時會不會正常啟動；結束後比對 `tools/emu-state/rehearse-<名稱>.before` 與 `.flash` 就知道它改寫了哪些 sector。
+100	
+101	它會印出套件映像的範圍，以及這個範圍蓋到了目前韌體的哪些資料 sector。大多數韌體是 `0x04000`–`0x92FFF`，ChoralRoot 到 `0x9EFFF`。
+102	
+103	限制：套件映像的範圍取自模擬器鋪出來的內容；M-Flasher 對某個套件實際寫多大，要看它自己列的計畫。模擬器也不是實機。
+104	
+105	順帶一提：模擬器直接吃實機備份的格式。把備份複製成 `--flash` 檔再開，跑的就是那份備份裡的韌體與資料，我的 SLOOP 曲子在模擬器裡照樣出現。`[模擬]`
+106	
+107	SLOOP 與 Agent Deck 執行中都能由 M-Flasher 透過 USB MIDI 切進 download mode（兩者在 `fm1-find` 都顯示為 `Felucca … download-mode switches it`）。`[實機]`
+108	
+109	## m-apps slots 與 m-card
+110	
+111	[m-card](https://github.com/jvitkauskas/m-card) 是一塊接在螢幕 FFC 排線上的 microSD 擴充板，不需要焊接主板，但擴充板本身要自己組。[m-apps](https://github.com/jvitkauskas/m-apps) 是從 RAM 執行的程式集合，其中的 `slots` 提供 firmware slots。
+112	
+113	概念流程：開機 → m-bootloader 選單 → SD CARD → launcher → SLOTS → 選一個映像 → 寫回內部 flash → 重開。文件描述切換約 30 秒，不是即時的。`[調研]`
+114	
+115	限制：`[調研]`
+116	
+117	- m-card 仍標示為未測試的 PCB prototype。
+118	- FM-1 上完整的 picker + slots 流程還沒有充分的實機驗證。
+119	
+120	結論：先觀望，不急著拆機。
+121	
+122	## `run-ram`
+123	
+124	`m-flasher run-ram` 可以把一個小程式上傳到晶片 RAM 執行，不寫 flash，關機再開就恢復原狀。適合開發者測試自己的小程式，**不能**用來把完整的 SLOOP 或 Agent Deck 當成第二套常駐系統。它會在晶片上執行任意程式碼，在這個 repo 的規則裡屬於 agent 不得自行執行的操作。
+125	
+126	## `just fm1-switch`
+127	
+128	兩個方向都實測過之後做成的捷徑：
+129	
+130	```sh
+131	just fm1-switch             # 不帶參數：列出可用的目標與目前連著的裝置
+132	just fm1-switch sloop       # 或 agtdeck，或任何 .fwsc 的路徑
+133	```
+134	
+135	具名目標：`sloop`、`agtdeck`、`ctl`、`choralroot`、`remote`，其他韌體把 `.fwsc` 的路徑傳進去。後三個用 `just fm1-fetch-more` 下載。清單也會列出 `downloads/` 與 `firmware/*/build/` 裡現有的套件。
+136	
+137	它依序做：確認沒有模擬器佔著 USB MIDI → 切 download mode → 備份到 `backups/<日期時間>-pre-<套件名>/` → 呼叫 M-Flasher 安裝（列出變更，等你輸入 `yes`）→ 重開機。屬於寫入等級，由本人執行。
+138	
+139	目標韌體已經裝著的時候，M-Flasher 會回報 `Nothing to write` 然後直接重開，不會問 `yes`。`[實機]`
+140	
+141	每次切換都會留一份刷前備份在本機，不會自動上傳。
+142	
+143	## 兩種寫入路徑：download mode 與 USB-MIDI 更新 { #paths }
+144	
+145	2026-11-18 為了 Hub 的上架測試，兩條路都在實機上走過 `[實機]`：
+146	
+147	| | `just fm1-switch`（M-Flasher，download mode） | `fm1_install.py`（USB-MIDI 更新，和 Hub 網頁安裝同一套） |
+148	|---|---|---|
+149	| 誰負責寫 | 晶片的 download mode（`WL82 UBOOT1.00`），M-Flasher 先把自己的 loader 載進 RAM | 正在跑的韌體讀取新套件的開頭，啟動套件附的 update loader（暫放在 `0xE0000`），由它寫入 |
+150	| 步驟 | 切 download mode → 讀整顆 flash 做備份 → 列出要寫的 sector → 輸入 `yes` → 寫 → 整顆 CRC32 驗證 → 重開 | 確認套件 → 輸入 `y` → 進更新模式 → 寫 → 重開 → 確認新的 identity |
+151	| 寫多少 | 只寫和現在不同的 sector | 看 loader：fm1-base 的 loader 只寫有變動的（fast install）；SLOOP 2.8.5 附的較舊，整包重寫（classic install） |
+152	| 自動備份 | 有 | 沒有，要先自己 `just fm1-backup` |
+153	| 現在的韌體壞了 | 照樣能用，只要 boot 區沒壞 | 不能用，現在的韌體要懂更新指令 |
+154	| 中斷後 | 重跑 | loader 停在更新模式，重跑就從中斷處繼續（fm1-base 的說明） |
+155	| 感覺 | 步驟多、比較慢 | 步驟少、比較順 |
+156	
+157	**怎麼選**：
+158	
+159	- **開發、或不確定新韌體能不能開機時**：用 `fm1-switch`。它會自動備份、整顆驗證，而且不依賴現在跑的韌體。
+160	- **兩個都正常的韌體之間切換**：用 USB-MIDI 就好，這也是一般使用者從 Hub 網頁安裝時走的路。
+161	
+162	兩條路在 AGENTS.md 都算韌體寫入，一樣要先核准、由本人執行。
+163	
+164	```sh
+165	uv run --locked --all-groups python third_party/fm1-base/tools/fm1_install.py --info        # 唯讀：現在的 identity
+166	uv run --locked --all-groups python third_party/fm1-base/tools/fm1_install.py PACKAGE.fwsc  # 寫入：本人執行
+167	```
+168	
+169	## 之後想做的
+170	
+171	- 切換後自動確認裝置回到 USB MIDI、並提示要不要啟動對應的 host 程式（Agent Deck 的 daemon、SLOOP 的 Web Editor）。
+172	- 備份累積多了之後的整理方式。
+173
+````
+</details></tool-use>
+
+_**Agent - sidechain (claude-opus-5-5 2026-11-18 10:18:05Z)**_
+
+<tool-use data-tool-type="read" data-tool-name="Read"><details>
+<summary>Tool use: **Read**</summary>
+ `./AGENTS.md`
+
+````text
+1	# AGENTS.md
+2	
+3	Canonical instructions for any coding agent working in this repository.
+4	`CLAUDE.md` only imports this file.
+5	
+6	## What this repo is
+7	
+8	A personal knowledge base for one **M-VAVE FM-1** pocket synth: resources,
+9	flashing procedures, firmware notes (SLOOP first), usage notes, and the context
+10	agents need to help operate the device safely. It also holds the owner's own
+11	experimental firmware apps under `firmware/`, built on the `fm1-base` submodule.
+12	
+13	## Layout
+14	
+15	| Path | Purpose |
+16	|---|---|
+17	| `docs/` | The notes site (Zensical, published to GitHub Pages). Source of truth for curated knowledge. |
+18	| `docs/device-log.md` | **Current state of the owner's physical unit**: flash chip, firmware, backups, flash history. Read it before any device operation; update it after. |
+19	| `docs/getting-started/` | Install M-Flasher, back up, flash SLOOP, recovery, cautions. |
+20	| `docs/firmware/` | Firmware map; one section per firmware worth using (`sloop/`). |
+21	| `docs/agentic/` | Automation boundaries, M-Flasher CLI, emulator, skills, agent-controller firmwares. |
+22	| `docs/resources.md` | Repo map and the **single version table** (with a "last checked" date). |
+23	| `docs/notes/` | Dated usage notes and impressions. |
+24	| `.specstory/references/` | Raw research exports (e.g. the ChatGPT conversation). **Unverified, lossy** — see below. |
+25	| `.specstory/history/` | Agent session transcripts. Never edit. |
+26	| `tools/`, `vendor/`, `build/` | Git-ignored. Emulator binaries and state, upstream checkouts, firmware build output. |
+27	| `firmware/<app>/` | Own firmware apps (fm1-base template layout: `app.c`, `app.h`, `fm1.toml`, `tests/`). `firmware/hello` is the unmodified template, kept as the toolchain smoke test. |
+28	| `firmware/conductor/` | Own agent-console firmware (MIT). Design: `docs/agentic/conductor.md`. |
+29	| `firmware/morse/` | Submodule: [fm1-morse](https://github.com/daviddwlee84/fm1-morse), own pocket Morse code machine (GPL-3.0-or-later since 2026-11-18, MIT before; `common/` in it stays MIT; its own repo for The Firmware Hub, with `LICENSE` and `fmhub.json`). Built here with `third_party/fm1-base`; commit inside it, then bump the pointer here. Design: `docs/dev/morse.md`. |
+30	| `firmware/common/` | Modules shared by own apps (`hostlink`, `ledfx`, `chime`, and the speech decoders `lpc`, `adpcm`; MIT). Apps add `include = ["../common"]`. |
+31	| `firmware/theory/` | Music theory trainer (GPL-3.0-or-later), so far only its platform-free core: spelling on the line of fifths, scales, keys, chords, Roman numerals, naming a played chord, voicing. Tests check it against music21 (`tests/vectors.h`, generated). No app yet. Design: `docs/dev/theory.md`. |
+32	| `firmware/voicelab/` | Spike app (MIT): each key says a test word with the `lpc` / `adpcm` decoders. Not for installing. Its data (`gen/`) is generated and git-ignored. Design: `docs/dev/tts.md`. |
+33	| `host/conductor/` | Conductor's host daemon (Python, MIT): backends `hc`, `herdr`, `fake`. Protocol spec in `PROTOCOL.md`; tests in `host/tests/`. |
+34	| `host/morse/` | Morse's host (Python, MIT): types what the FM-1 reads into the Mac, sends text for it to play. Protocol in `PROTOCOL.md` (keying is Vail-format MIDI note 0). |
+35	| `host/voicelab/` | Listening lab (Python, MIT): renders test words with every speech option (macOS `say`, Moonshine Klatt, 386DX, LPC, ADPCM, SPELLBOX in fm1-emu) into `build/voicelab/`, scores them with Whisper. GPL engines stay in `vendor/`; generated audio is never committed. |
+36	| `third_party/fm1-base` | Git submodule (MPL-2.0, beta). Do not edit; bump deliberately. |
+37	| `docs/dev/` | Firmware development environment and its current state. |
+38	| `docs/hardware/flash-map.md` | Who stores what where in the 1 MiB flash, with sector diffs from this unit's backups. Update it when a new firmware is tried. |
+39	| `docs/watch.md` | Ledger of upstream checks for things on hold (m-bootloader on the new chip, SLOOP 3). Append, do not rewrite. |
+40	| `backups/`, `downloads/` | Git-ignored. Flash backups and downloaded installers/firmware. Never commit. Off-machine copies of backups go to GitHub Release assets (`just fm1-backup-release`). |
+41	| `zensical.toml`, `scripts/check-docs-site.py`, `Justfile` | Site config, output checker, task runner. |
+42	| `.agents/skills/` | Agent skills, linked from `.claude/skills/`: `zensical-site-bootstrap` (installed) and `fm1-hub-listing` (repo-owned: listing an own firmware on The Firmware Hub and the community lists). |
+43	
+44	## Commands
+45	
+46	```sh
+47	just docs-build        # uv run zensical build --strict
+48	just docs-check        # build, then scripts/check-docs-site.py
+49	just docs-serve        # preview on 127.0.0.1:8000 (just docs-serve 8769 for another port)
+50	
+51	just emu-fetch         # fm1-emu into tools/fm1-emu/ (git-ignored), digest-verified
+52	just emu-run FILE [CHIP]   # play a .fwsc in a window; CHIP defaults to uc25hq80 (this unit)
+53	just emu-shot FILE [CHIP] [MS]  # headless boot: LCD image + flash write count
+54	just agtdeck-fetch     # Agent Deck package, digest + attestation verified
+55	just fm1-fetch-more    # CTL-1, ChoralRoot, RemoteFM1 packages, digest-verified
+56	just emu-rehearse PKG BACKUP.bin  # boot PKG's firmware over a real backup in the emulator
+57	just agtdeck-doctor    # Agent Deck host daemon self-check (clones upstream into vendor/)
+58	just agtdeck-sim       # Agent Deck daemon without an FM-1 (interactive; prints frames)
+59	just agtdeck-run       # daemon against a MIDI device: real unit, or `just emu-run … --usb`
+60	just fm1-versions      # latest upstream releases, to refresh docs/resources.md and docs/watch.md
+61	
+62	just cond-test         # Conductor daemon unit tests
+63	just cond-sim [BACKEND]    # daemon with a text stand-in for the FM-1 (fake, hc, herdr)
+64	just cond-it           # hc end to end with two fake agents (label conductor-test=1), cleaned up after
+65	just cond-emu [CHIP]   # Conductor firmware in fm1-emu with the virtual USB cable
+66	just cond-run [BACKEND]    # daemon against a CONDUCTOR MIDI device (emulator or real unit)
+67	just fw-common-test    # firmware/common unit tests on this computer (hostlink BLE packets)
+68	
+69	just morse-unit        # firmware/morse platform-free parts (morse.c, learn.c, content.c) on this computer
+70	just morse-release X.Y # Morse's release package (identity FM-1_41 + XXYYZZ)
+71	just morse-test        # Morse host unit tests (protocol vectors shared with tests/basic.txt)
+72	just morse-emu [CHIP]  # Morse firmware in fm1-emu with the virtual USB cable
+73	just morse-type [--dry-run]  # what the FM-1 reads, typed into the focused Mac app
+74	just morse-send TEXT   # the FM-1 plays TEXT as received
+75	just morse-backup FILE # Morse 0.4+: the learning progress into JSON (read-only on the unit)
+76	just morse-restore FILE  # back onto the unit; it asks on its screen (PLAY yes)
+77	just morse-shots       # simulator screenshots into fm1-morse docs/screens/
+78	
+79	just theory-unit       # firmware/theory core on this computer (strict C99, plus music21's spellings)
+80	just theory-vectors    # regenerate firmware/theory/tests/vectors.h from music21 (uv fetches it)
+81	
+82	just voice-vendor      # Moonshine Klatt, python_wizard, CMUdict, 386DX engine into vendor/ (pinned commits)
+83	just voice-fetch       # community firmwares that speak (Speak37, SPELLBOX, 386DX, ...), digest-verified, for the emulator
+84	just voice-lab [ENGINE...]  # render host/voicelab/words.txt with every speech option -> build/voicelab/
+85	just voice-score       # Whisper (base.en) as a stand-in listener, onto the page
+86	just voice-open        # the listening page, build/voicelab/index.html
+87	just voice-fw          # the test words into firmware/voicelab (gen/, git-ignored) + its host simulator test
+88	
+89	just fw-setup          # submodules + Python tools (needs `brew install libraqm`)
+90	just fw-test [APP]     # host simulator build + tests/basic.txt; no toolchain, no hardware
+91	just fw-build [APP]    # device package via JieLi toolchain in Docker (see docs/dev/ for current blockers)
+92	
+93	just fm1-fetch         # download M-Flasher + SLOOP into downloads/, verify against release digests
+94	just fm1-find          # read-only: units in download mode / on USB MIDI
+95	just fm1-info          # read-only: what is on the unit
+96	just fm1-backup LABEL  # read-only: full-flash backup into backups/<date>-LABEL/
+97	just fm1-verify-backups
+98	just fm1-download-mode # mode switch
+99	just fm1-restart       # mode switch
+100	just fm1-flash FILE    # WRITE: owner runs this, never an agent without approval
+101	just fm1-switch TARGET # WRITE: sloop | agtdeck | FILE; download mode, backup, install, restart
+102	just fm1-backup-release DIR  # PUBLISH a backup as a public release asset: only on request
+103	```
+104	
+105	Prefer these recipes over calling M-Flasher directly. There is deliberately no
+106	recipe for `bootloader`, `restore` or `run-ram`.
+107	
+108	Run `just docs-check` before committing any change under `docs/` or to
+109	`zensical.toml`. Pushing to `main` deploys the site.
+110	
+111	## Writing conventions
+112	
+113	- `docs/**` is written in **Traditional Chinese (Taiwan usage)**. Keep technical
+114	  terms, identifiers, CLI commands, button names (`REC`, `OCT-`), product and
+115	  repo names in English. Use 程式/檔案/設定/資料, not Mainland variants.
+116	- `AGENTS.md`, `README.md`, commit messages, code comments: English.
+117	- The site is single-language. Do not add locale-suffixed pages.
+118	- Every new page must be added to `nav` in `zensical.toml`.
+119	- Version numbers live in `docs/resources.md`. Other pages link there instead of
+120	  repeating them, except where a procedure pins a specific version.
+121	- Dated facts use absolute dates (`2026-11-17`), never "recently".
+122	
+123	## Capture what we learn
+124	
+125	When a question in the session produces an answer worth keeping — how to do
+126	something on the device, why something behaves a certain way, a pitfall, a
+127	working setup — add it to the relevant page under `docs/` in the same turn,
+128	without being asked. Put it where a reader would look for it (the firmware's
+129	own chapter, `hardware/`, `getting-started/`), tag it (`[實機]`, `[上游]`,
+130	`[模擬]`, `[調研]`), and mention in the reply which page changed. Do not record
+131	one-off chatter or things already written down.
+132	
+133	## Sources and evidence
+134	
+135	This ecosystem moves weekly. Trust, in order:
+136	
+137	1. Upstream repos, their docs and release pages (fetch them; do not rely on memory).
+138	2. [FM1 Developers' Wiki](https://sbegueria.github.io/fm1-dev-wiki/). For
+139	   "does firmware X know the new flash chip", the Firmware Hub's
+140	   `https://thefirmwarehub.com/catalog.json` has a per-package `chip` field
+141	   (`new` / `old` / `any`), read from the package, not hardware-tested.
+142	3. This repo's `docs/`.
+143	4. `.specstory/references/` — second-hand summaries. The ChatGPT export **lost
+144	   every code block and citation**, so it contains no commands at all. Never
+145	   reconstruct a command, key combination, path or address from its prose.
+146	
+147	Mark claims in `docs/` with one of these tags when the distinction matters:
+148	
+149	- `[實機]` — observed on the owner's unit (record the date in `device-log.md`).
+150	- `[上游]` — stated in upstream documentation, link it.
+151	- `[模擬]` — observed in fm1-emu. Never treat it as hardware evidence.
+152	- `[調研]` — from research notes, not yet checked against upstream.
+153	
+154	Do not upgrade a tag without doing the check. If something cannot be verified,
+155	say so on the page instead of writing a plausible guess.
+156	
+157	## Hardware safety rules
+158	
+159	Flashing can brick the device. These rules apply to every agent, in every
+160	session, regardless of how the request is phrased.
+161	
+162	| Tier | Operations | Rule |
+163	|---|---|---|
+164	| Read-only | `m-flasher find`, `info`, `backup`; downloading files; hashing; emulator runs | Allowed without asking. |
+165	| Mode switch | `m-flasher download-mode`, `restart` | Allowed; say so first. Not a flash write. |
+166	| Firmware write | `m-flasher firmware PACKAGE.fwsc`, `just fm1-switch`, browser installers | Only after the owner approves **that specific write in the current session**. Never pass `--yes`; the owner types M-Flasher's `yes`. |
+167	| Forbidden to initiate | `m-flasher bootloader …`, `restore …`, `run-ram …`, any erase, any flash address arithmetic | Do not run. Explain and let the owner do it, even if asked casually. |
+168	
+169	Preflight before proposing a firmware write — show all of it to the owner:
+170	
+171	1. A full-flash backup of this unit exists, with its SHA-256, and is recorded in
+172	   `docs/device-log.md`.
+173	2. Flash chip JEDEC ID is known (`0x856014` old Puya, `0xB36014` new UCUN) and
+174	   the target firmware documents support for it.
+175	3. The package was downloaded from the upstream release and its SHA-256 matches
+176	   the release asset digest.
+177	4. The currently installed firmware and bootloader, and what the write changes.
+178	
+179	Other rules:
+180	
+181	- Check the package is for the FM-1 before anything else. Several projects
+182	  publish SMK-37 builds under similar names and tags (ChoralRoot's newest
+183	  release is SMK-37 only). `just emu-shot` or the emulator's window title
+184	  shows the board it detected.
+185	- Firmwares share flash sectors (Felucca-family layout: settings at `0xFC000`,
+186	  projects from `0x97000`). Before proposing a switch to a firmware not yet in
+187	  the table in `docs/firmware/switching.md`, run `just emu-rehearse` against
+188	  the latest backup and report which sectors it rewrites. ChoralRoot over
+189	  SLOOP data has an upstream-documented failure; do not propose it without
+190	  restoring stock first.
+191	- Stop and report if the device reports anything unexpected (unknown chip ID,
+192	  uncertain model, CRC mismatch). Do not work around a tool's refusal.
+193	- Do not downgrade stock 016 to 015: 016 overwrites the preset area and only a
+194	  backup restores it.
+195	- m-bootloader is on hold (decided 2026-11-17): this unit has the new flash
+196	  chip and the owner has no USB_KEY (Pico) for recovery. A full backup does not
+197	  help if the boot area is bad. The conditions to revisit are in
+198	  `docs/firmware/sloop/sloop3.md`; do not propose installing it before then.
+199	  SLOOP 3 depends on it and is on hold too.
+200	- macOS: M-Flasher's first-run authorization is GUI-only and does not work over
+201	  SSH. The CLI is `/Applications/M-Flasher.app/Contents/MacOS/M-Flasher`.
+202	- Connect by USB **data** cable, directly, no hub.
+203	- After any device operation, update `docs/device-log.md` (date, what ran,
+204	  result, hashes).
+205	
+206	## Firmware development
+207	
+208	- Iterate in the host simulator: `just fw-test APP` must pass before anything
+209	  else. Add checks to `firmware/APP/tests/basic.txt` with each behaviour change.
+210	- Before proposing a hardware flash of an own build: run the `.fwsc` with
+211	  `just emu-run` on **both** `uc25hq80` and `p25q80`, including a save, a
+212	  restart and a reload. Report emulator results as `[模擬]`.
+213	- An own build is a firmware write like any other: owner approval per flash,
+214	  full preflight, `just fm1-flash`.
+215	- Persist data only through fm1-base's storage layer (`APP_STORE_MAP` in
+216	  `app.h`). Never compute flash addresses or call erase/program directly.
+217	- Build output (`firmware/*/build/`, `*.fwsc`) is not committed.
+218	- Licences: fm1-base is MPL-2.0 and lets an app choose its own licence. Code
+219	  copied from GPL-3.0 firmwares (Felucca, SLOOP, Dinghy, Agent Deck) makes the
+220	  app GPL-3.0; say so before copying.
+221	
+222	## Publishing and git
+223	
+224	- The repo is public. Never commit flash backups or credentials to git.
+225	  `.specstory/` is tracked by the owner's choice.
+226	- The owner publishes full-flash backups as **public** release assets, knowing
+227	  they hold device-unique data. That is a per-backup decision: run
+228	  `just fm1-backup-release` only when the owner asks for that specific backup,
+229	  never as an automatic step after `fm1-backup`.
+230	- Commit or push only when the owner asks.
+231	- CI builds on pull requests and deploys `main` to GitHub Pages
+232	  (`.github/workflows/docs.yml`).
+233	
+234	## Conductor and live agents
+235	
+236	Versions (`docs/agentic/conductor-changelog.md`): firmware X.Y (`FW_MINOR` in
+237	`firmware/conductor/app.c`), host X.Y.Z (`__version__` in
+238	`host/conductor/__init__.py`, plus `FIRMWARE_KNOWN`). A host-only change bumps Z;
+239	a firmware change bumps Y and resets the host to X.Y.0. The protocol byte changes
+240	only for an incompatible change; additions are gated on the firmware version.
+241	Every update adds a changelog row (version, date, reflash yes/no, what, commit),
+242	updates the version in the "Our own firmware + host" tables (`README.md`,
+243	`docs/index.md`), and starts its commit subject with the version.
+244	
+245	The daemon presses keys in real agent sessions. When testing, send keys only to
+246	terminals the test started itself (`just cond-it` labels them `conductor-test=1`
+247	and kills them after). Never approve, deny or interrupt the owner's own agents
+248	from a test. There is no auto-approve; do not add one without the owner asking.
+249	
+250	## Not set up yet
+251	
+252	A repo-owned skill for operating the unit and an `fm1` CLI wrapper (the `Justfile` covers it for now;
+253	`fm1-hub-listing` covers publishing only). `fm1-emu` is a downloaded binary, not a source checkout.
+254	A vocabulary app is at the idea stage (`docs/dev/vocab.md`). A deck written to the flash data area would need
+255	the firmware-development rule "never compute flash addresses or call erase/program directly" changed first,
+256	with the owner's approval; the proposed wording is in that page. A music theory trainer has its core and a design
+257	(`docs/dev/theory.md`) but no app; its imported content is meant to go through the store layer (`APP_STORE_MAP`),
+258	which needs no rule change.
+259
+````
+</details></tool-use>
+
+_**Agent - sidechain (claude-opus-5-5 2026-11-18 10:18:07Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Find chime users and read common README
+
+`grep -rn "chime" --include='*.c' --include='*.h' --include='*.toml' --include='*.md' . 2>/dev/null | grep -v "firmware/common/chime\.[ch]" | grep -v "/build/" | head -20; cat -n firmware/common/README.md | head -60`
+
+````text
+README.md:27:| **Conductor** | The FM-1 as a desk console for coding agents: one agent per key, urgency on the key LEDs, state and output on the screen (Chinese included), chimes, approve / deny / interrupt from the buttons, push-to-talk dictation, USB or Bluetooth | [`firmware/conductor/`](firmware/conductor/) | [`host/conductor/`](host/conductor/) (Python daemon for [herdr-core](https://github.com/herdrdev/herdr-core) `hc` and classic Herdr) | Firmware 0.3, host 0.3.2; ran on my unit 2026-11-17, now switched to Morse |
+README.md:30:| Shared modules | `hostlink` (SysEx link to a host over USB / BLE), `ledfx` (LED patterns), `chime` (FM notification voice) | [`firmware/common/`](firmware/common/) | — | Used by Conductor; Morse uses `hostlink` and `ledfx` |
+AGENTS.md:30:| `firmware/common/` | Modules shared by own apps (`hostlink`, `ledfx`, `chime`, and the speech decoders `lpc`, `adpcm`; MIT). Apps add `include = ["../common"]`. |
+firmware/common/README.md:10:| `chime` | A two-operator FM voice with a short note queue for notification sounds, mixed into the app's render. |
+firmware/common/README.md:22:`app.c`, after `#include "fastmath.h"` (chime needs `fm_sinf`, `fm_exp2f`):
+firmware/common/README.md:27:#include "chime.c"
+firmware/conductor/app.h:3: * each one is, the screen says what it is, a chime says it without looking. The host daemon
+firmware/conductor/app.h:30:/* host simulator checks: host, page, sel, total, stateN (slot N's state), chimes (figures played) */
+firmware/conductor/app.c:7:#include "chime.c"
+firmware/conductor/app.c:47:static uint32_t chimes;                  /* figures played since boot (the host simulator's "chimes") */
+firmware/conductor/app.c:173:    /* a chime when an agent we already knew changes: not for the table filling up at a (re)connect */
+firmware/conductor/app.c:176:        if (f >= 0 && !chime_busy()) {
+firmware/conductor/app.c:177:            chime_play(f);
+firmware/conductor/app.c:178:            chimes++;
+firmware/conductor/app.c:231:            chime_play(d[0]);
+firmware/conductor/app.c:689:    chime_render(lr, n, gain_now);
+firmware/conductor/app.c:692:void app_panic(void) { chime_stop(); }
+firmware/conductor/app.c:756:    } else if (!strcmp(what, "chimes"))
+firmware/conductor/app.c:757:        *got = (int)chimes;
+firmware/conductor/fm1.toml:7:include = ["../common"]        # hostlink, ledfx, chime: shared with later firmwares
+     1	# firmware/common
+     2	
+     3	Small modules shared by this repo's fm1-base apps. MIT. Each is a `.h` with the
+     4	API and usage, and a `.c` that the app includes into fm1-base's unity build.
+     5	
+     6	| Module | What it does |
+     7	|---|---|
+     8	| `hostlink` | An app's own SysEx conversation with a program on the computer, over USB or Bluetooth: framing under `F0 7D id0 id1 ver`, HELLO on every transport until the host answers, HEARTBEAT after on the transport it answered by, host presence with a timeout, a new HELLO after a new USB session or a lost Bluetooth link. Bluetooth needs `ble_stack = "own"` (JieLi's stack drops incoming SysEx); `hl_sx_packet` puts the SysEx packets back together. |
+     9	| `ledfx` | Per-LED patterns on the single-colour LEDs: off, glow, mid, lit, pulse, blink, double blink, fast. Turns them into `plat_lights` + `plat_lights_mid` once a frame. |
+    10	| `chime` | A two-operator FM voice with a short note queue for notification sounds, mixed into the app's render. |
+    11	| `lpc` | A TMS5220-style LPC speech decoder (the Speak & Spell's format, as python_wizard writes it): 8 kHz out, no platform calls. See `docs/dev/tts.md`. |
+    12	| `adpcm` | A streaming IMA ADPCM decoder (4 bits a sample) for recorded speech or samples in flash, in host/voicelab's block format. |
+    13	
+    14	## Using them in an app
+    15	
+    16	`fm1.toml`:
+    17	
+    18	```toml
+    19	include = ["../common"]
+    20	```
+    21	
+    22	`app.c`, after `#include "fastmath.h"` (chime needs `fm_sinf`, `fm_exp2f`):
+    23	
+    24	```c
+    25	#include "hostlink.c"
+    26	#include "ledfx.c"
+    27	#include "chime.c"
+    28	```
+    29	
+    30	They call fm1-base's `plat_*` functions, which are in scope in the unity build
+    31	(`lpc` and `adpcm` call none: `#include "lpc.c"` / `"adpcm.c"` anywhere, host tools too).
+    32	They keep no flash state.
+    33	
+    34	`just fw-common-test` builds and runs `tests/` on the computer (hostlink's packet
+    35	cutting and reassembly, the LPC and ADPCM decoders). `firmware/conductor` is the first user; its `tests/basic.txt` exercises all three
+    36	in the host simulator. `firmware/morse` (now its own repo, a submodule) carries a copy of `hostlink` and `ledfx` in its `common/`; change
+    37	them here and copy them there, or the other way round.
+````
+</details></tool-use>
+
+_**Agent - sidechain (claude-opus-5-5 2026-11-18 10:18:10Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Read conductor render and voicelab render
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/firmware && sed -n 675,695p conductor/app.c; grep -n -E "app_render|lr\[|gain" voicelab/app.c | head; ls common/tests; grep -n -i "chime\|peak\|wav" conductor/tests/*.txt | head`
+
+```text
+        draw_list();
+    draw_footer(now);
+}
+
+/* ------------------------------------------------------------------ audio --- */
+static float gain_now;
+
+void app_render(int32_t *lr, uint32_t n, uint32_t master_q12)
+{
+    uint32_t i;
+    float gain = (float)master_q12 / 4096.0f * 8300000.0f;
+    gain_now += (gain - gain_now) * 0.5f;
+    for (i = 0; i < 2u * n; i++)
+        lr[i] = 0;
+    chime_render(lr, n, gain_now);
+}
+
+void app_panic(void) { chime_stop(); }
+
+/* ------------------------------------------------------------ the contract --- */
+void app_init(void)
+38:static float pos, step, s0, s1, gain_now;
+52:void app_render(int32_t *lr, uint32_t n, uint32_t master_q12)
+55:    float gain = (float)master_q12 / 4096.0f * 180.0f;   /* int16 x 256 is the render's full scale; a little under */
+74:        gain_now += (gain - gain_now) * 0.004f;
+86:            s = (s0 + (s1 - s0) * pos) * gain_now;
+88:        lr[2 * i] = (int32_t)s;
+89:        lr[2 * i + 1] = (int32_t)s;
+adpcm_test.c
+hostlink_test.c
+lpc_test.c
+23:expect chimes 0
+44:# the agent on slot 3 finishes: a chime (not for the first fill above)
+47:expect chimes 1
+```
+</details></tool-use>
+
+_**Agent - sidechain (claude-opus-5-5 2026-11-18 10:18:11Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Search theory design doc for flash and identity
+
+`wc -l docs/dev/theory.md && grep -n -i 'flash\|0x[0-9A-F]\{5\}\|id_prefix\|FM-1_\|APP_STORE\|OBJ_\|WHEEL\|glyph\|♯\|♭\|font' docs/dev/theory.md | head -60`
+
+```text
+     354 docs/dev/theory.md
+9:- 第一個版本先做 **WHEEL**：五度圈探索加上和弦辨識。
+28:| [FM1 Keyboard Academy](https://github.com/chmess/fm1-keyboard-academy) | 初學者課程，8 章。每課的流程是 listen → watch → play → review，LED 亮出下一個鍵。彈錯就停住，正確率 80% 解鎖下一課。附 30 首旋律，以及一個 Node 寫的 MIDI 匯入工具 | 有 release v0.1.2（2026-10-24），GPL-3.0 加 SDK exception。在 fm1-emu 的兩種晶片上都能開機，畫面是第一課「FIND MIDDLE C」，開機 8 秒內寫 flash 21 次 `[模擬]`（2026-11-18）。會寫到哪些 sector 還沒用 `emu-rehearse` 查過 |
+100:| **WHEEL** | 五度圈探索加上和弦辨識：隨身的樂理參考，不打分數 | v0.1 |
+109:### WHEEL（v0.1） { #wheel }
+113:│ WHEEL           D major   2#   │
+224:| 字型只有 ASCII | ♯ ♭ ° ø 做成幾個小 bitmap。核心用 `TH_GLYPH_*` 巨集決定輸出的字元，預設是 ASCII 的 `#` `b` `o` `/o` |
+286:- **走 `APP_STORE_MAP`，不需要修改 AGENTS.md 的 flash 規則。** 一個 object 3,840 B，大約可以放 100 個進行或短旋律。真的需要更大的 deck，才走[背單字頁的資料區草案](vocab.md#delivery)。
+298:- store sector 要避開 Morse 的 `0xDA000` 和面板校正的 `0xDC000`。實作時用 `just emu-rehearse` 確認，並更新 [flash 配置圖](../hardware/flash-map.md)。
+341:2. **v0.1 WHEEL**：fm1-base app、polyphonic synth、畫五度圈、♯♭ glyph、和弦辨識。
+```
+</details></tool-use>
+
+_**Agent - sidechain (claude-opus-5-5 2026-11-18 10:18:12Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+List hub listing skill files
+
+`ls -R .agents/skills/fm1-hub-listing && wc -l .agents/skills/fm1-hub-listing/*.md .agents/skills/fm1-hub-listing/*/* 2>/dev/null`
+
+```text
+Exit code 1
+SKILL.md
+(eval):1: no matches found: .agents/skills/fm1-hub-listing/*/*
+```
+</details></tool-use>
+
+_**Agent - sidechain (claude-opus-5-5 2026-11-18 10:18:17Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Read WHEEL design and storage sections
+
+`sed -n 95,140p docs/dev/theory.md; sed -n 215,235p docs/dev/theory.md; sed -n 280,300p docs/dev/theory.md`
+
+````text
+用 `ALGO` 切換頁面，`HOME` 開選單，和 Morse 一樣。
+
+| 頁面 | 做什麼 | 版本 |
+|---|---|---|
+| **WHEEL** | 五度圈探索加上和弦辨識：隨身的樂理參考，不打分數 | v0.1 |
+| **TODAY** | 開機進來的頁面，一回合交錯的閃卡 | v0.2 |
+| **EAR** | 聽音與節奏的自由練習，可以只練某一種題型 | v0.3 |
+| **DRILL** | 音階與琶音：節拍器、LED 帶彈、速度階梯、時間均勻度 | v0.4 |
+| **GROOVE** | 流行和弦進行伴奏：FM-1 彈 bass 和鼓，你彈和弦 | v0.5 |
+| **LISTEN** | 被動聆聽：在隨機的調裡一直播進行，可以隱藏級數，適合通勤 | v0.5 |
+| **CHART** | 五度圈上的熟練度熱圖 | v0.2 |
+| **SETTINGS** | 音色、音量、每回合張數、絕對音感路線開關 | v0.1 |
+
+### WHEEL（v0.1） { #wheel }
+
+```text
+┌────────────────────────────────┐
+│ WHEEL           D major   2#   │
+│               C                │
+│          F         G           │
+│       Bb     (Bm)    [D]       │  外圈大調、內圈關係小調
+│       Eb               A       │  目前的調反白
+│          Ab         E          │
+│              Db  B             │
+│               F#               │
+├────────────────────────────────┤
+│  I   ii  iii  IV  V   vi  vii° │
+│  D   Em  F#m  G   A   Bm  C#°  │
+├────────────────────────────────┤
+│ F#m7/A    iii7   2nd inv       │  剛彈的和弦
+└────────────────────────────────┘
+```
+
+| 操作 | 作用 |
+|---|---|
+| 轉 `SELECT` | 沿五度圈換調，順時針多一個升記號 |
+| 按住 `SEL` 再按一個琴鍵 | 跳到以那個音為主音的調（Db、F#、Eb 小調這類常用拼法） |
+| `K1` | 調式：大調、小調、和聲小調、dorian… |
+| `K2` | 三和弦或七和弦 |
+| `K3` | 顯示和弦名稱、Roman 或 Nashville |
+| `PLAY` | 切換琴鍵模式：**彈奏**（彈什麼就辨認什麼）或**順級和弦**（從主音起算的 7 個白鍵分別是 I–vii，就近轉位） |
+| 彈和弦 | 畫面顯示和弦名、轉位和級數。調外的音換顏色；副屬和弦顯示成 `V7/V`，借用和弦顯示成 `bVII` |
+
+LED 用來顯示調：音階內的音是 glow，主音是 lit，正在彈的音閃爍。
+
+- 時值用每拍 12 tick 表示，可以表達三連音。
+
+## 機器限制怎麼處理 { #hardware }
+
+| 限制 | 做法 |
+|---|---|
+| 27 鍵，F3–G5（MIDI 53–79） | 判斷時不分八度。任何調的一個八度音階都放得下。左手用 F3–E4，右手用 F4–G5。`OCT±` 只改變發聲的八度 |
+| 每鍵一顆單色 LED | 音階內的音 glow，主音 lit。DRILL 帶彈時下一個音閃爍，可以關掉，改成憑記憶彈。答錯後亮出正確答案 |
+| 240×240 彩色 LCD，沒有畫圓的 primitive | 用 `fm_sinf` / `fm_cosf` 算出 12 個位置，再用 `cv_line` / `cv_pset` 畫，分段畫進 strip canvas |
+| 字型只有 ASCII | ♯ ♭ ° ø 做成幾個小 bitmap。核心用 `TH_GLYPH_*` 巨集決定輸出的字元，預設是 ASCII 的 `#` `b` `o` `/o` |
+| fm1-base 沒有 synth | 自己寫：8 voice 的 2-op FM 電鋼琴（從 `common/chime` 改）、一個 bass voice、節拍器的 click。音符在 `app_render` 裡依 sample 數排程，因為 `app_tick` 的旗標會有最多一個 block（5.8 ms）的抖動 |
+| 沒有關機後還會走的時鐘 | 用回合計算，同 Morse。接電腦時可以由網頁送日期 |
+| store object 最多 3,840 B | 進度每個項目約 3 B，1,000 個以內放得下一個 object |
+
+## 內容表示：程式產生、TSV、Alda { #content }
+
+**MIDI 還是 Alda？答案是大部分都用程式算出來**，分三層：
+
+1. **裝置上用程式產生**：音階、和弦、調號、五度圈、羅馬數字、和弦辨識、就近轉位。表格加起來不到 2 KB，整個核心在 Mac 上編出來約 13 KB 的程式碼，涵蓋大約九成的內容。
+2. **和弦進行目錄**：用羅馬數字寫成 TSV（欄位之間是 tab，下面為了好讀改用空白對齊），build 時經 fm1-base 的 `gen = [...]` 轉成 C 表：
+
+- **備份與還原進度**：格式比照 Morse 的 `fm1-morse-progress` JSON。
+- **匯入自己寫的進行或旋律**：
+    1. 在瀏覽器裡解析 TSV / Alda 子集。旁邊即時列出解析出的和弦，可以試聽，可疑的小調級數會出警告（見[內容表示](#content)）。
+    2. 用 SysEx 把解析好的和弦送到 FM-1，送的是 fifths 位移加性質，不是字串。
+    3. FM-1 在螢幕上問一次，按 `PLAY` 確認。
+    4. 存進 **store object**。
+- **走 `APP_STORE_MAP`，不需要修改 AGENTS.md 的 flash 規則。** 一個 object 3,840 B，大約可以放 100 個進行或短旋律。真的需要更大的 deck，才走[背單字頁的資料區草案](vocab.md#delivery)。
+- parser 會有兩份：Python 版給 build 用，JS 版給網頁用。兩份用共用的 test vectors 確保結果一致，Morse 的 protocol vectors 也是這樣做。
+
+## 排程與存檔 { #srs }
+
+- **項目是 (skill, key, variant)**，例如 (拼大調音階, D, 上行)，每個項目約 3 B：一個 box 加上最後一次出現的回合。
+- v1 沿用 Morse 的 Leitner rounds（box 0–5，box n 每 2^n 回合出一次）。等背單字 app 把 FSRS 移植成 C 之後，可以考慮放進 `firmware/common` 兩邊共用。
+- **FM-1 不知道今天幾號。** 它沒有關機後還會走的時鐘，開機時的計時器大約 3 分鐘就歸零一次（[背單字頁](vocab.md)也提過）。所以「隔 1、7、15、30 天再複習」這種以天計算的遺忘曲線，必須有人告訴它日期。這個 app 的取捨是**以回合計算，日期只是選配**：
+    - 一天練好幾回合，間隔會縮短，等於多複習幾次。對樂理知識來說，這只是多花一點時間，不會忘得更多。
+    - 好幾天沒練，回合數不會增加，所以**回來時不會堆一大疊到期的卡**。以天計算的排程休息一週後會堆積；隨手拿起來練的口袋機器比較適合用回合。
+    - FSRS 的遺忘模型 R(t) 以天為單位，所以只有在知道日期時才能用。背單字要和 Anki 同步，Anki 的排程本身就以天計算，那邊比較需要日期。
+    - 有日期的時候（接電腦開網頁，或之後透過 Bluetooth 用手機開網頁，見 Morse 0.5 的 Bluetooth 計畫），可以把「一天」當作另一個上限：同一天內多練的回合，不會讓高 box 的卡太早出現。這留到有網頁之後再做。
+- store sector 要避開 Morse 的 `0xDA000` 和面板校正的 `0xDC000`。實作時用 `just emu-rehearse` 確認，並更新 [flash 配置圖](../hardware/flash-map.md)。
+
+## 樂理核心 { #core }
+````
+</details></tool-use>
+
+_**Agent - sidechain (claude-opus-5-5 2026-11-18 10:18:17Z)**_
+
+<tool-use data-tool-type="read" data-tool-name="Read"><details>
+<summary>Tool use: **Read**</summary>
+ `./.agents/skills/fm1-hub-listing/SKILL.md`
+
+````text
+1	---
+2	name: fm1-hub-listing
+3	description: 'Get an own M-VAVE FM-1 firmware (fm1-base) listed on The Firmware Hub and the community lists: its own repository with LICENSE and fmhub.json, a free FM-1_ identity, a release with the .fwsc, the three hardware tests over the USB-MIDI update, the submission form, then awesome-fm-1 and aroum/fm1-custom-fw. Use when the owner wants to publish, release or list a firmware from this repo (firmware/<app>), or asks what the Hub needs. Every firmware write, restore and public step needs the owner, per AGENTS.md.'
+4	---
+5	
+6	# Listing an FM-1 firmware on The Firmware Hub
+7	
+8	Written from listing MORSE (github.com/daviddwlee84/fm1-morse) on 2026-11-18. The Hub's rules change: read
+9	https://thefirmwarehub.com/fmhub.md and https://thefirmwarehub.com/submit/ again before relying on this. The
+10	narrative, with the quotes and dates, is in `docs/firmware/hub.md#listing`, `docs/dev/morse.md#release` and
+11	`docs/firmware/switching.md#paths`; the hardware steps are in `docs/device-log.md`.
+12	
+13	## When to use
+14	
+15	- The owner wants a firmware from `firmware/<app>/` on The Firmware Hub, or released publicly.
+16	- The owner asks what the Hub needs, or why a submission's check fails.
+17	- Not for installing other people's firmwares (see `just fm1-switch`), and not for SMK-37 or VIBE FM builds.
+18	
+19	## Who does what
+20	
+21	AGENTS.md's tiers hold throughout. The agent may build, test, back up, switch modes (say so first), read, and draft.
+22	The owner approves each firmware write and runs it (they type M-Flasher's `yes` / fm1_install's `y`; never pass
+23	`--yes`); a restore is the owner's alone, in M-Flasher's window. Creating a public repo, pushing to it, publishing a
+24	release, opening PRs on other people's repositories and submitting to the Hub are public acts: do them only after
+25	the owner says so for that step.
+26	
+27	## The Hub's requirements (as of 2026-11-18)
+28	
+29	Six, all needed ("Untested firmwares are not listed"):
+30	
+31	1. Source public on GitHub, browsable at the tag, `LICENSE` in the repository root (GPL-3.0, MPL-2.0, MIT and other
+32	   open licences are accepted).
+33	2. A GitHub release with the `.fwsc` attached. The Hub follows the newest release with a `.fwsc` within three hours
+34	   once listed; a 0.x version gets a beta tag.
+35	3. An `FM-1_<number>` identity no other firmware uses ("Longer numbers with your own part are safer").
+36	4. The update loader in the package (fm1-base's packages have it: the check says "Felucca's").
+37	5. `fmhub.json` in the repository root, default branch. No file, no listing.
+38	6. Tested on a real FM-1: installed from stock V15, installed from another firmware, and another firmware installed
+39	   from it.
+40	
+41	The Hub reads `fmhub.json`, not fm1-base's `firmware.json` (attach the latter to releases anyway; RemoteFM1 and
+42	M-Flasher may use it). The `chip` field (new / old / any) is read from the package, not declared.
+43	
+44	## Steps
+45	
+46	### 1. Its own repository
+47	
+48	The Hub keys one card to one repository root, so an app living in `firmware/<app>/` moves out:
+49	
+50	```sh
+51	git subtree split --prefix=firmware/<app> -b <app>-split     # history kept
+52	git clone --branch <app>-split . /tmp/<repo> && cd /tmp/<repo> && git checkout -b main
+53	```
+54	
+55	- Copy in what it includes from `firmware/common/` (into `common/`, `include = ["common"]` in fm1.toml), add
+56	  fm1-base as a submodule pinned to the commit it was built with, and `LICENSE`.
+57	- `gh repo create <owner>/<repo> --public --source . --push` (owner's go-ahead), then in this repo `git rm -r
+58	  firmware/<app>` and `git submodule add <url> firmware/<app>`. Keep `fw-setup` from recursing into the app's own
+59	  fm1-base (init `third_party/fm1-base` recursively and the app non-recursively).
+60	- Device builds must run from inside this repo: the JieLi toolchain runs in Docker with the repo mounted, and an app
+61	  directory outside it (a scratch dir) fails with paths missing their leading slash. Build the submodule in place.
+62	
+63	### 2. Identity
+64	
+65	- fm1.toml `id_prefix` is `FM-1_` plus digits only (the update tools parse it). Dev builds are prefix + `00`,
+66	  releases prefix + XXYYZZ (0.3 of `FM-1_41` is `FM-1_41000300`); USB answers the short form, `FM-1_` and three digits.
+67	- Pick a prefix whose three-digit short forms nobody uses. Read `https://thefirmwarehub.com/catalog.json` at most
+68	  once a day (the Hub asks) and list the `FM-1_` numbers in it; `FM-1_13` was too close to Midi-Mania's `FM-1_137`.
+69	- Before submitting, the owner checks the full release identity at https://thefirmwarehub.com/submit/#check.
+70	- A new identity installs as a different firmware but keeps the storage (APP_STORE_MAP), so progress survives.
+71	
+72	### 3. fm1.toml and the release build
+73	
+74	- Add `title` (else firmware.json's name falls back to `usb_manufacturer`), `install` (a page that installs it; the
+75	  README's `#install` is enough), `screenshot` (a square PNG in the repo), `repo`, `licence`. `build.py --release`
+76	  refuses without `install` and `screenshot`.
+77	- If the app has screen-reader words, point `words.tsv`'s `# url:` at where `web/words/*.json` is served (e.g.
+78	  raw.githubusercontent.com of the new repo) and commit `web/words/`.
+79	- Build: `just morse-release X.Y` style recipe, i.e. `build.py firmware/<app> --release X.Y` → `<name>-X.Y.fwsc`.
+80	
+81	### 4. fmhub.json
+82	
+83	Only these fields: `what`, `author`, `kinds`, `play`, `editor`, `cheat`, `image`, `color`, `sounds` (and `smk37`).
+84	Any other field makes the whole file unused.
+85	
+86	- `what`: English, plain, 20-300 characters, no links, no `<>{}` or backticks.
+87	- `author` (2-60 characters): the name on the card's "By:". Keep it the same as the form's "Your name".
+88	- `kinds`: an array, first entry counts: synth, groove, drums, chords, tracker, other.
+89	- `image`: a repo path; square, 240-1024 px, PNG/WebP/JPEG, at most 300 KB (a 240 x 240 simulator `shot` works).
+90	- `sounds`: ask the owner; never guess. `"none"` only if every sound is generated in code and the repo holds no
+91	  `.wav`, `.syx`, `.sf2` or sample arrays.
+92	- `python3 -m json.tool fmhub.json`, then the owner runs the KB's "Check your file" (https://thefirmwarehub.com/kb/).
+93	
+94	### 5. README
+95	
+96	English: what it does, controls, install, licence, build. The Hub requires saying it if the firmware cannot read
+97	other firmwares' projects or samples; also say where it stores its data (for fm1-base apps: their APP_STORE_MAP
+98	offsets, and that an update stages its loader at `0xE0000`) and which flash chips it was tested on.
+99	
+100	### 6. The three hardware tests, over the USB-MIDI update
+101	
+102	The Hub's web installer does not use download mode: the running firmware reads the new package and starts its update
+103	loader, which writes. Test that path with fm1-base's tool (one write each, preflight first, the owner runs it):
+104	
+105	```sh
+106	uv run --locked --all-groups python third_party/fm1-base/tools/fm1_install.py --info          # read-only
+107	uv run --locked --all-groups python third_party/fm1-base/tools/fm1_install.py PACKAGE.fwsc   # owner runs it
+108	```
+109	
+110	`fm1_install.py` makes no backup: before each write, `just fm1-download-mode`, `just fm1-backup <label>`,
+111	`just fm1-restart` (it needs the firmware running), and record the backup in `docs/device-log.md`.
+112	
+113	1. **Leave it**: from the app, install another firmware (SLOOP 2.8.5 from `downloads/`, digest-verified).
+114	2. **From another firmware**: from that one, install the app's release package. Check the app's data survived.
+115	3. **From V15**: stock 015 is only in the owner's stock backup (m-vave.com offers 016, which overwrites the preset
+116	   area). The owner restores `backups/2026-11-17-stock/...` in M-Flasher's window; read a backup back and compare it
+117	   with the stock image (identical on 2026-11-18); then install the app's release from stock. The app's data is gone.
+118	
+119	Loaders differ: fm1-base's writes only changed sectors ("fast install"); SLOOP 2.8.5's rewrites all ("classic").
+120	Interrupting a write on purpose is in the KB's list but not the submit page's six; skip it on a unit without a
+121	USB_KEY recovery unless the Hub asks.
+122	
+123	### 7. Release
+124	
+125	```sh
+126	git -C firmware/<app> tag -a vX.Y -m "<NAME> X.Y" && git -C firmware/<app> push origin vX.Y
+127	gh release create vX.Y -R <owner>/<repo> --verify-tag --title "<NAME> X.Y" --notes-file NOTES.md \
+128	  firmware/<app>/build/<name>-X.Y.fwsc firmware/<app>/build/firmware.json
+129	gh api repos/<owner>/<repo>/releases/tags/vX.Y --jq '.assets[] | "\(.name) \(.digest)"'   # = local SHA-256
+130	```
+131	
+132	Release the exact file the hardware tests installed. The notes give the identity, SHA-256, chips, licence and how it
+133	was tested.
+134	
+135	### 8. Submit (the owner)
+136	
+137	The form at https://thefirmwarehub.com/submit/ (fmhub.md still mentions email; the form is the current path):
+138	
+139	- "For which device?" M-VAVE FM-1; leave "Which device?" empty (it is for another device).
+140	- The pink dashed box is the **VIBE Box Challenge** (VIBE FM SDK builds using something the FM-1 lacks, rules at
+141	  https://thefirmwarehub.com/lab/rules/). An FM-1 firmware does not enter: leave it unticked, its fields empty.
+142	- "How you tested it": from which firmware, back to which, and how (the tool, the chip).
+143	- "Anything Sven should know": built on, licence, kind and why (a tool that makes sound filed as `other`; the KB says
+144	  tools without sound are not listed), how the release was built (locally, so no built-from-source badge, which needs
+145	  zvenson/fm1-build's workflow), chips tested.
+146	
+147	The result page (its address is the owner's only; changes also come by mail) runs eight checks: source, LICENSE,
+148	fmhub.json, sounds, release, identity, update loader, flash chip. All green means "waiting for Sven": the maintainer
+149	reviews listings, but a fully green check with "tested" and "rights" ticked goes live by itself: MORSE was submitted
+150	2026-11-17 19:03 UTC, checked 19:06, and went live automatically at 23:00 ("no click of Sven's"), on the hub with the
+151	next sync. Fixes: push, then "Check again", or send the form again for the same repo (it updates).
+152	After listing: new versions are new releases; card changes are fmhub.json edits (live within three hours). MORSE v0.5,
+153	released 2026-11-18, was in `catalog.json` the same day (`beta: true` for 0.x). The catalog's `chip` said `new` while
+154	the check page said both chips: read from the package, not tested.
+155	
+156	### 9. Community lists (owner's go-ahead per PR)
+157	
+158	| List | Weight (2026-11-18) | How |
+159	|---|---|---|
+160	| [aroum/fm1-custom-fw](https://github.com/aroum/fm1-custom-fw) | 424 stars, most outside "Add ..." PRs merged | PR: a numbered table row, `**Name by Author**<br>[GitHub](url) \| ...<br>**License:** ...` and a Concept / Features cell; fm1-base tools (CTL-1, MIDIMON) sit in 1.1.4 |
+161	| [cicloid/awesome-fm-1](https://github.com/cicloid/awesome-fm-1) | 93 stars, outside PRs merged | PR per CONTRIBUTING.md: `- [Name](url) - Description.` one line, author and licence, one entry per PR; tools go under *Not a synth* |
+162	| fm1-editor.com firmware list | 75 stars (benny-sparra/fm1-dx7-patch-importer) | an issue there, if it does not pick the Hub up by itself |
+163	| fm1-emu, RemoteFM1 player, FMDB | — | follow the Hub or crawl GitHub: nothing to send |
+164	| FM-1 Firmware Atlas, the Developers' Wiki | 0 / 5 stars; the wiki is not a firmware list | skip |
+165	
+166	Announcements happen on r/MVaveFM1. Do not write `@name` in PR text.
+167	
+168	## Pitfalls met
+169	
+170	- `just fw-build` and `just morse-release` run `fw-setup` first, whose `git submodule update` checks the app
+171	  submodule out at the commit this repo records (detached HEAD): commit inside the app, then commit the new pointer
+172	  here, then build. Otherwise the package is built from the old commit while the host simulator (run on the working
+173	  tree) passes. Check a release in fm1-emu for the change itself before handing it to the owner.
+174	
+175	- The Hub's CONDUCTOR is another author's (MammothCheese); names and ids collide across projects: search the
+176	  catalog before naming.
+177	- A python patch that does `open(p, "w").write(open(p).read())` empties the file: the write-open truncates first.
+178	- An app's version bump means every shared vector with the firmware version (HELLO bytes) changes in both the
+179	  firmware test and the host's protocol.
+180	- Licence can change later (the owner is the only author), but versions already published keep theirs; say so in
+181	  the README (MORSE: MIT up to 57ea786, GPL-3.0-or-later after).
+182
+````
+</details></tool-use>
+
+_**Agent - sidechain (claude-opus-5-5 2026-11-18 10:18:18Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Check for sine tables and porting notes on render
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/third_party/fm1-base && grep -rn -i -E "sin_?tab|sine_?table|SINTAB|wavetable" --include='*.c' --include='*.h' . | head; grep -n -i -E "app_render|stack|8 KiB|irq stack" skill/felucca-to-fm1-base/PORTING.md | head -8; sed -n 80,95p skill/felucca-to-fm1-base/PORTING.md`
+
+```text
+64:| the main loop's calls into the app (its init, the saved data's load, the UI's frame, the render) | `app/app.c`: `app_init`, `app_ui_init`, `app_frame`, `app_input_only`, `app_render`, `app_panic`, `app_say` call the app's own functions (CTL-1's `app/app.c` is one) |
+86:| `app_render(int32_t *lr, uint32_t n, uint32_t master_q12)` | in the audio interrupt: n stereo frames, 24-bit; keep it short, it runs on an 8 KiB stack |
+| | |
+| --- | --- |
+| `APP_NAME`, `APP_SPLASH_RGB` | the splash |
+| `APP_BLOCK` | frames per audio block (256: 5.8 ms at 44.1 kHz) |
+| `APP_STORE_MAP`, the `OBJ_*` enum | the saved objects and their flash offsets |
+| `app_init()` | at boot: the engine, then the saved settings |
+| `app_render(int32_t *lr, uint32_t n, uint32_t master_q12)` | in the audio interrupt: n stereo frames, 24-bit; keep it short, it runs on an 8 KiB stack |
+| `app_ui_init()`, `app_frame()`, `app_input_only()` | the first screen; the UI about 60 times a second; input between frames |
+| `app_panic()` | silence now (an update is about to rewrite the flash) |
+| `app_say(a, b)` | a short message on the screen and to a screen reader |
+
+Optional, each turned on by a `#define` in `app.h`: `APP_TICK` (1 kHz, for a clock or a sequencer), `APP_LOOP`
+(every pass of the main loop), `APP_SYSEX` (the app's own SysEx), `APP_TOUCH` (velocity and pressure from the
+keys), `APP_BTDEV` (a page for Bluetooth MIDI devices), `APP_BOOT`, `APP_QUIET`, `APP_OVERLOAD`, `APP_SPLASH`. Grep
+`device/` for each to see what it does.
+```
+</details></tool-use>
+
+_**Agent - sidechain (claude-opus-5-5 2026-11-18 10:18:22Z)**_
+
+Now let me check the catalog for taken identities.
+
+_**Agent - sidechain (claude-opus-5-5 2026-11-18 10:18:23Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Find fm1.toml keys o2 and ram_code in build.py
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/third_party/fm1-base && sed -n 200,260p tools/build.py | grep -n -i -E "o2|ram_code|cpu2|audio_aside|block|cpu_clock" ; grep -n -E '^\s*"?o2' tools/build.py | head`
+
+```text
+34:                             the build compiles unity.c and each o2 unit to IR without the optimiser, runs
+35:                             `ir_pass IN.ll OUT.ll [UNIT]` (UNIT: an o2 unit's path relative to APP_DIR; none for
+39:PLAT_RAM_CODE): copied at boot with .ram_text, inside the guard's RAM code window (between _ar_start and _ar_end). It
+43:  ram_code_allow = ["fn"]    the app's RAM functions whose calls out of RAM or through a pointer it vouches for (a cold
+22:  o2 = ["dsp/engine.c"]      separate units compiled at -O2 (the app's DSP), relative to APP_DIR (globs too); each with
+26:  o2_cflags = ["-DX=1"]      more flags for those; o2_include = ["lib/prefix.h"]: a header included first in each
+900:    o2 = [f if f != "-Os" else "-O2" for f in flags]
+920:    o2_more = [*CONF.get("o2_cflags", []),
+922:    o2_units = []
+928:            o2_units.append((f, o))
+1412:    o2_objs = o2_objects(os.environ.get("CC", "cc"), ["-O2", "-ffp-contract=off", "-std=c99", "-w", "-DPLAT_HOST", *opt_flags(), *inc_dirs],
+1538:    o2_objs = o2_objects("emcc", ["-O2", "-ffp-contract=off", "-std=gnu99", "-w", "-DPLAT_HOST", "-DPLAT_WEB", *wf, *opt_flags(), *web_inc],
+1540:    o2_objs += web_objects(["-O2", "-ffp-contract=off", "-std=gnu99", "-w", "-DPLAT_HOST", "-DPLAT_WEB", *wf, *opt_flags(), *web_inc],
+1656:    o2_objs = o2_objects("emcc", [*feats, "-O2", "-ffp-contract=off", "-std=gnu99", "-w", *defs, *inc], out / "o2")
+```
+</details></tool-use>
+
+_**Agent - sidechain (claude-opus-5-5 2026-11-18 10:18:25Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Inspect hub catalog structure
+
+```bash
+cd /private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/7dcc67a0-a756-4514-85d7-b24e721b72ee/scratchpad/hub 2>/dev/null && ls -la && python3 -I -c "
+import json,re
+d=json.load(open('catalog.json'))
+items = d if isinstance(d,list) else (d.get('firmwares') or d.get('items') or d.get('packages') or d)
+print(type(d), (list(d.keys())[:10] if isinstance(d,dict) else len(d)))
+"
+```
+
+```text
+<class 'dict'> ['license', 'updated', 'firmwares', 'smk37', 'creators', 'stock']
+```
+</details></tool-use>
+
+_**Agent - sidechain (claude-opus-5-5 2026-11-18 10:18:26Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Read build.py fm1.toml key docs for o2 and RAM code
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/third_party/fm1-base && sed -n 215,250p tools/build.py`
+
+```text
+                             message's time sent, from its BLE-MIDI timestamp (bt/ble/ble_time.c), for plat_midi_in_t24;
+                             the transport then comes at once instead of held to the sender's time
+  ble = true                 Bluetooth MIDI (FM1B_BLE): ble/ on JieLi's BT libraries, from the AC79 SDK ($AC79_SDK);
+                             --no-ble builds without it (NAME-usb.fwsc), and the build checks nothing of JieLi's is in
+  wifi = true                WiFi (FM1B_WIFI): a station on JieLi's WiFi libraries and the SDK's lwIP (built from its
+                             sources), on the same shim (ble/shim, ble/wifi) with fm1-radio's RAM split (device/
+                             app_wifi.ld). Not with ble (yet)
+  net = ["net/stream.c"]     with wifi: the app's network code (lwIP's sockets), compiled as the SDK builds code that
+                             talks lwIP (its flags and headers), relative to APP_DIR (globs too: "tls/src/**/*.c"); it
+                             calls the platform through plat.h, runs in a task of its own (plat_net_task)
+  net_include = ["tls/inc"]  more include directories for those, relative to APP_DIR
+  net_cflags = ["-DX=0"]     more flags for those
+  gen = ["tools/places.py --out {gen}/places.h"]   the app's generators, run before the build (relative to APP_DIR;
+                             {gen} is the generated headers' directory, on the include path)
+  asm = ["cpu1/entry.S"]     the app's own assembly units (relative to APP_DIR), assembled as felucca-bsp's are; an
+                             app's hardware code outside the BSP (its own second core, say) is the app's to keep
+                             apart (vendored, so the register check leaves it)
+  ir_pass = "tools/size_fns.py"   a pass over the LLVM IR of each unit before its code is made (relative to APP_DIR):
+                             the build compiles unity.c and each o2 unit to IR without the optimiser, runs
+                             `ir_pass IN.ll OUT.ll [UNIT]` (UNIT: an o2 unit's path relative to APP_DIR; none for
+                             unity.c), then compiles OUT.ll at the unit's level (an app marking its cold code
+                             minsize: Melodee's idea). Without changes the round trip makes the same code
+The app's own code that runs from RAM (out of the XIP cache's way: an audio path) goes in section .app_ram (plat.h
+PLAT_RAM_CODE): copied at boot with .ram_text, inside the guard's RAM code window (between _ar_start and _ar_end). It
+may call only RAM code, to any depth, and nothing through a pointer (tools/ramcode.py, over the disassembly). XIP code
+calls it through a pointer (PLAT_FAR: a direct call does not reach); a call from it into XIP, direct or through a
+pointer, the check refuses, unless:
+  ram_code_allow = ["fn"]    the app's RAM functions whose calls out of RAM or through a pointer it vouches for (a cold
+                             path; a pointer that only holds RAM code); printed by every build
+The second core's code that runs from RAM goes in section .c1_text: in .ram_text (copied at boot, inside the guard's
+RAM code window), between _c1_start and _c1_end; the check that RAM code calls nothing in the flash leaves it out
+(core 1 runs only while core 0 waits for it in the audio interrupt, and core 0 turns the flash off only with
+interrupts off).
+The firmware described for firmware hubs (firmware.json, docs/FIRMWARE-JSON.md; tools/firmware_json.py): these keys, and
+the site's (tools/make_site.py). A key left out is left out of the file.
+  tagline = "..."            a line: what the firmware is ("A MIDI controller for the FM-1")
+```
+</details></tool-use>
+
+_**Agent - sidechain (claude-opus-5-5 2026-11-18 10:18:30Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Check HALF_FRAMES and xrun counting
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/third_party/fm1-base && grep -n -E "HALF_FRAMES|APP_BLOCK" device/unity.c | head; grep -n -E "audio_cpu_pct|xrun" device/plat_fm1.c device/main_fm1.c | head`
+
+```text
+15: *   APP_BLOCK 256           frames per audio half (5.8 ms at 44.1 kHz), the render's block
+112:#include "fm1b_config.h"          /* APP_NAME, APP_VERSION, APP_BLOCK ...: the app's, or the defaults */
+114:#define HALF_FRAMES APP_BLOCK     /* the audio half, as felucca-bsp's usb.c expects it */
+device/plat_fm1.c:468:static volatile uint32_t audio_cpu_pct, audio_xruns;
+device/plat_fm1.c:469:uint32_t plat_cpu_pct(void) { return audio_cpu_pct; }
+device/plat_fm1.c:473:uint32_t plat_xruns(void) { return audio_xruns; }
+device/main_fm1.c:113:    audio_cpu_pct = (fm1b_dbg.cpu_q12 * 100u + 2048u) >> 12;   /* whole percent, rounded to nearest */
+device/main_fm1.c:152:                audio_xruns++;
+device/main_fm1.c:171:            audio_xruns++;
+```
+</details></tool-use>
+
+_**Agent - sidechain (claude-opus-5-5 2026-11-18 10:18:33Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Extract FM-1 identities from hub catalog
+
+```bash
+cd /private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/7dcc67a0-a756-4514-85d7-b24e721b72ee/scratchpad/hub && python3 -I -c "
+import json,re
+d=json.load(open('catalog.json'))
+print('updated', d.get('updated'))
+fw=d['firmwares']
+print(len(fw), list(fw[0].keys()) if isinstance(fw,list) else type(fw))
+rows=[]
+def walk(o, path=''):
+    if isinstance(o, dict):
+        for k,v in o.items(): walk(v, path+'.'+k)
+    elif isinstance(o, list):
+        for i,v in enumerate(o): walk(v, path+'[%d]'%i)
+    elif isinstance(o,str) and re.search(r'FM-1_\d', o):
+        rows.append((path,o))
+walk(d)
+idents=sorted(set(re.findall(r'FM-1_\d+', ' '.join(v for _,v in rows))))
+print(idents)
+for f in fw:
+    print(f.get('ident'), '|', f.get('name') or f.get('title'), '|', f.get('repo','')[:60] if isinstance(f.get('repo'),str) else '')
+"
+```
+
+```text
+updated 2026-11-18 07:16 UTC
+258 ['id', 'kind', 'name', 'author', 'repo', 'ident', 'what', 'editor', 'play', 'added', 'loader', 'cheat', 'install', 'card', 'color', 'vintage', 'ambient', 'fmhub', 'stars', 'talk', 'lic', 'starsDay', 'site', 'version', 'date', 'published', 'pkg', 'product', 'size', 'sha256', 'release', 'tag', 'srcref', 'mirror', 'beta', 'hid', 'chip', 'relCheck', 'provCheck', 'base', 'dinghy', 'dinghyv', 'source', 'installs']
+['FM-1_003', 'FM-1_007', 'FM-1_015', 'FM-1_032', 'FM-1_04200', 'FM-1_042000800', 'FM-1_050', 'FM-1_058', 'FM-1_069', 'FM-1_1', 'FM-1_10001602', 'FM-1_104210', 'FM-1_104211', 'FM-1_10801', 'FM-1_108010000', 'FM-1_111', 'FM-1_112', 'FM-1_1120101', 'FM-1_123', 'FM-1_137090', 'FM-1_137092', 'FM-1_1492302', 'FM-1_1492410', 'FM-1_1500', 'FM-1_1612', 'FM-1_1612010100', 'FM-1_1812', 'FM-1_197', 'FM-1_197010002', 'FM-1_197100', 'FM-1_1981001100', 'FM-1_1981001200', 'FM-1_1990', 'FM-1_2000', 'FM-1_20001400', 'FM-1_21', 'FM-1_2123', 'FM-1_2124', 'FM-1_2200', 'FM-1_22000902', 'FM-1_222', 'FM-1_2224', 'FM-1_23', 'FM-1_23000501', 'FM-1_234', 'FM-1_234010000', 'FM-1_2345', 'FM-1_24356', 'FM-1_25000', 'FM-1_262302', 'FM-1_2623020968', 'FM-1_26730001', 'FM-1_26900', 'FM-1_269000100', 'FM-1_27020000', 'FM-1_28010000', 'FM-1_29000', 'FM-1_3', 'FM-1_3000604', 'FM-1_303', 'FM-1_312', 'FM-1_320', 'FM-1_32010007', 'FM-1_324', 'FM-1_3246', 'FM-1_330', 'FM-1_330010200', 'FM-1_333', 'FM-1_337', 'FM-1_353', 'FM-1_353010401', 'FM-1_359', 'FM-1_359010403', 'FM-1_3628', 'FM-1_378', 'FM-1_378011', 'FM-1_386', 'FM-1_386020000', 'FM-1_390', 'FM-1_39000800', 'FM-1_391010000', 'FM-1_391010100', 'FM-1_41000300', 'FM-1_42', 'FM-1_420', 'FM-1_42000300', 'FM-1_431', 'FM-1_4310100', 'FM-1_432010000', 'FM-1_44000100', 'FM-1_44010000', 'FM-1_44010600', 'FM-1_44011100', 'FM-1_4500', 'FM-1_45000104', 'FM-1_45001000', 'FM-1_46', 'FM-1_46001300', 'FM-1_46200', 'FM-1_462000400', 'FM-1_47', 'FM-1_47030301', 'FM-1_47625642', 'FM-1_47626820', 'FM-1_47727346', 'FM-1_47745500', 'FM-1_47886200', 'FM-1_48', 'FM-1_48010000', 'FM-1_481026', 'FM-1_5', 'FM-1_5000201', 'FM-1_50509', 'FM-1_5100', 'FM-1_51000402', 'FM-1_511', 'FM-1_5200', 'FM-1_52000306', 'FM-1_5268', 'FM-1_5268000203', 'FM-1_537', 'FM-1_537000997', 'FM-1_57', 'FM-1_57258001', 'FM-1_573', 'FM-1_5781', 'FM-1_57810002', 'FM-1_60', 'FM-1_600', 'FM-1_600600', 'FM-1_601', 'FM-1_6010', 'FM-1_6010003', 'FM-1_6010200', 'FM-1_606', 'FM-1_60600', 'FM-1_61000100', 'FM-1_615012', 'FM-1_615015', 'FM-1_62000100', 'FM-1_627010', 'FM-1_6279', 'FM-1_62790105', 'FM-1_6301', 'FM-1_63010004', 'FM-1_64', 'FM-1_64010501', 'FM-1_65001600', 'FM-1_65001800', 'FM-1_6601', 'FM-1_66010400', 'FM-1_666', 'FM-1_6673', 'FM-1_6673000401', 'FM-1_674102', 'FM-1_67686970', 'FM-1_7', 'FM-1_70', 'FM-1_700', 'FM-1_7001700', 'FM-1_701', 'FM-1_7010', 'FM-1_7010100', 'FM-1_7010201', 'FM-1_7010302', 'FM-1_7010570', 'FM-1_7011900', 'FM-1_703', 'FM-1_707', 'FM-1_71', 'FM-1_7100', 'FM-1_7100002', 'FM-1_71001', 'FM-1_710020300', 'FM-1_7101', 'FM-1_72', 'FM-1_722604', 'FM-1_727', 'FM-1_73', 'FM-1_73010800', 'FM-1_731', 'FM-1_731000601', 'FM-1_7400', 'FM-1_74000542', 'FM-1_7401', 'FM-1_74010200', 'FM-1_742', 'FM-1_74212', 'FM-1_745', 'FM-1_748', 'FM-1_748005', 'FM-1_7500', 'FM-1_75001500', 'FM-1_7666200', 'FM-1_77010600', 'FM-1_777', 'FM-1_780', 'FM-1_79', 'FM-1_79150', 'FM-1_797', 'FM-1_800', 'FM-1_8000', 'FM-1_8000013', 'FM-1_8000301', 'FM-1_8000401', 'FM-1_8000700', 'FM-1_8002', 'FM-1_80023', 'FM-1_8008', 'FM-1_8010', 'FM-1_8010403', 'FM-1_808', 'FM-1_8106', 'FM-1_8133700', 'FM-1_817', 'FM-1_817020101', 'FM-1_820', 'FM-1_82014200', 'FM-1_837', 'FM-1_8377', 'FM-1_86', 'FM-1_86010401', 'FM-1_870', 'FM-1_8747747', 'FM-1_878670101', 'FM-1_88', 'FM-1_88000500', 'FM-1_8837', 'FM-1_8837202', 'FM-1_88600', 'FM-1_8860001', 'FM-1_90', 'FM-1_900', 'FM-1_9000300', 'FM-1_901', 'FM-1_9010202', 'FM-1_903', 'FM-1_904', 'FM-1_905', 'FM-1_906', 'FM-1_907', 'FM-1_9080', 'FM-1_909', 'FM-1_91', 'FM-1_910', 'FM-1_91061', 'FM-1_911', 'FM-1_913', 'FM-1_915', 'FM-1_9168', 'FM-1_91680101', 'FM-1_9177', 'FM-1_918', 'FM-1_920', 'FM-1_921', 'FM-1_922', 'FM-1_92200231', 'FM-1_923', 'FM-1_924', 'FM-1_925', 'FM-1_926', 'FM-1_927', 'FM-1_928', 'FM-1_929', 'FM-1_93', 'FM-1_930', 'FM-1_937', 'FM-1_93800', 'FM-1_938000101', 'FM-1_94', 'FM-1_940', 'FM-1_9401', 'FM-1_94010100', 'FM-1_943', 'FM-1_95', 'FM-1_950', 'FM-1_953', 'FM-1_9535', 'FM-1_957', 'FM-1_958', 'FM-1_96', 'FM-1_960', 'FM-1_96010000', 'FM-1_96010001', 'FM-1_961', 'FM-1_9620', 'FM-1_963', 'FM-1_96300302', 'FM-1_9635', 'FM-1_964', 'FM-1_965', 'FM-1_966', 'FM-1_967', 'FM-1_968', 'FM-1_9680', 'FM-1_968086', 'FM-1_9681002', 'FM-1_9681003', 'FM-1_969', 'FM-1_97', 'FM-1_975', 'FM-1_977', 'FM-1_980', 'FM-1_98000500', 'FM-1_98000600', 'FM-1_981', 'FM-1_982', 'FM-1_983', 'FM-1_984', 'FM-1_98400', 'FM-1_984000402', 'FM-1_9844', 'FM-1_985', 'FM-1_986', 'FM-1_987', 'FM-1_987010100', 'FM-1_988', 'FM-1_989', 'FM-1_99', 'FM-1_995', 'FM-1_9980100', 'FM-1_999']
+FM-1_97[0-689] | zp12 | zvenson/zp12
+FM-1_\d{3,8} | Hortator | deadactive/hortator
+FM-1_\d{3,8} | Hortator (Bluetooth) | deadactive/hortator
+FM-1_91\d | Felucca | hugelton/Felucca
+FM-1_\d{3,8} | Felucca [Salt] | ChanceTheMaker/Felucca
+FM-1_\d{3,8} | Jangada | zednaked/jangada
+FM-1_\d{3,8} | GHOULBOX | jasonpersinger/ghoulbox-fm1-dungeon-synth
+FM-1_\d{3,8} | Melodee | keremimo/melodee
+FM-1_900 | SLOOP | isod89/sloop-fm1
+FM-1_900 | Clipper | isod89/clipper-fm1
+FM-1_003 | Bubba Machine | Erbubar23/bubba-machine
+FM-1_\d{3,8} | SLOOP Floyd FM | renebohne/sloop-fm1
+FM-1_\d{3,8} | SLOOP DX7 Banks | majnikool/sloop-fm1
+FM-1_93[0-689]|FM-1_940 | sloopDX | zvenson/dxsloop
+FM-1_90\d{5} | X0X | charlesvestal/fm1-x0x
+FM-1_90\d{5}|FM-1_987\d{6} | X0X-RMX | Mr-Roboto/fm1-x0x-rmx
+FM-1_800\d{4} | FoMni | charlesvestal/fm1-fomni
+FM-1_\d{3,8} | ChoralRoot | Quixotic7/ChoralRootFM1
+FM-1_\d{3,8} | WaveLoop FM-1 | ELI7VH/Felucca
+FM-1_95[3-9]\d | OberVave | zvenson/obervave
+FM-1_96[3-9]\d | Shine On | zvenson/shineon
+FM-1_99[0-8] | Dinghy | zvenson/dinghy
+FM-1_984\d | VIBE FM Link | zvenson/vibe-link
+FM-1_800\d{4} | FiMba-1 | jadamsowers/fm1-fimba
+FM-1_\d{3,8} | JIANT FM | juanjiant-bit/JIANT
+FM-1_\d{3,8} | fm1-chord | math0ne/fm1-chord
+FM-1_701\d{4} | FuMi-1 | cartesive/fumi-1
+FM-1_\d{3,8} | MAKU | okumurari2/maku
+FM-1_\d{3,8} | Rainbow Mode | joshbartlettband-web/felucca-rainbow
+FM-1_\d{3,8} | AMB-1 | charlesvestal/fm1-amb
+FM-1_60[01]0\d{3} | CTL-1 | charlesvestal/fm1-ctl
+FM-1_900 | winampFM Synth | hericdk/winampFM
+FM-1_900 | MYCELIUM | megagott/mycelium-fm1
+FM-1_3\d{6} | Polly | charlesvestal/fm1-polly
+FM-1_\d{3,8} | ETCH | SikkenWorks/ETCH
+FM-1_\d{3,8} | FM-106 | PatttF/fm-106
+FM-1_\d{3,8} | TRIBE | apiel/fm1-tribe
+FM-1_\d{3,8} | DUELL | oscillr/DUELL
+FM-1_7(1[0-4]|2\d) | Skiff | illuminus5/skiff
+FM-1_703 | Fart Machine One | adamcharleswilsonmusic-code/Fart-Machine-One
+FM-1_\d{3,8} | ORBIT | dspaudio/orbit
+FM-1_\d{3,8} | Felucca 8 Patterns | echoe/Felucca_8_patterns
+FM-1_900 | PIGEON | TheShrimpBlimp/pigeon
+FM-1_950 | CS-1 | twochannels/CS-1
+FM-1_701\d{4} | HYP-1 | RustyPawz/fm1-HYP1
+FM-1_700 | Tonitor | nzimas/tonitor
+FM-1_197100 | bocjuhn | IanP06/bocjuhn
+FM-1_353\d{6} | AISLING | stephencummins/fm1-aisling
+FM-1_969 | Demake | InigoHernandez/demake-synth
+(?:FM-1_808[08])|FM-1_8106 | Bigorna | nzimas/bigorna
+FM-1_900 | NOIZ DEMONS | SPIKE-the-Percussionist/noiz_demons
+FM-1_930 | CoralFlower | FicusFicusov/CoralFlower
+FM-1_\d{3,8} | Vector37 | genkigenki/Vector37
+FM-1_900 | MC-1 | dspaudio/mc-1
+FM-1_21\d\d | BEETLE | SikkenWorks/BEETLE
+FM-1_5000201 | MIN-1 | Reytian/fm1-min1
+FM-1_927 | PurpleMonkey | Quixotic7/PurpleMonkeyFM1
+FM-1_981 | Pocket GammaWave | fvalente/GammaWave-FM1
+(?:FM-1_900)|FM-1_47886200 | Tuna | delirioux/tuna
+FM-1_958 | Frodhes | leonardoMirabal/frodhes
+FM-1_961 | FOMAJAM | konsumer/fomajam
+FM-1_95[57] | KAWA | Guizmoh/Kawa-Tracker-Fm1
+FM-1_900 | No Man Sky FM | hericdk/nomanskyFM
+FM-1_900 | FM1 Quest | hericdk/fm1-quest
+FM-1_966 | GR!MM | GRiMMBIENT/grimm
+FM-1_7010\d{3} | Cut-A-Dor | kidbee85-beep/cut-a-dor-release
+(?:FM-1_71001\d{4})|FM-1_710020300 | Mutable Dreams | kidbee85-beep/mutable-dreams
+FM-1_600 | FM1-GM | jartificer/fm1-gm
+FM-1_386\d{6} | 386DX | seajaysec/386-DX-FM1-KaraokeBot
+FM-1_7100\d{3} | Bunker Evolved | kidbee85-beep/bunker-evolved
+FM-1_950 | OPN-1 | putchdev/opn-1
+FM-1_960 | SID-1 | putchdev/sid-1
+FM-1_900 | Mini-Tone | eldontyrellcorp/Mini-Tone
+FM-1_800\d{4} | MORPHEUS | benbadio/morpheus-fm1
+FM-1_900 | FMini-1 | ruppert/fmini-1
+FM-1_8010\d{3} | DUB-1 | sbegueria/fm1-dub
+FM-1_95[0-3] | FMEL-1 | AntonioAltea/fmel-1
+FM-1_6010\d{3} | ZEN-1 | aceyprime/zen-1
+FM-1_91\d | Golana | Gadlele/Golana
+FM-1_900 | Golana DZ Edition | dzwerg/Golana-DZ
+FM-1_42\d{6} | MODELAR | hirakos999/MODELAR
+FM-1_8000\d{3} | Niagara Drift | evanyerburgh/niagara-drift
+FM-1_8002\d | Unholy Union | actuallysparky/FM-1-Unholy-Union-generative-drone-firmware
+FM-1_777 | Evander's Music Box | MikeTsak/Evanders-Music-Box--FM-1-LARP-firmware
+FM-1_337 | Chipbox | pbarilla/chipbox
+FM-1_1\d{7} | LOOM-8 | charlesvestal/fm1-loom
+(?:FM-1_5(?!000201)\d{6})|FM-1_45001000 | MONK-1 | charlesvestal/fm1-monk
+FM-1_900 | Flyfish | delirioux/flyfish
+FM-1_94[1-9] | Bytemania | llozd/bytemania
+FM-1_431\d{4} | HERA | benbadio/hera-fm1
+FM-1_47[0-4]\d{5} | FRASIL | styvesgoupil/frasil
+(?:FM-1_8377\d{4})|FM-1_837 | Tessera | Rastapopolix/tessera
+FM-1_48\d{6} | Del Rio | jsopdebeeck/fm1-delrio
+FM-1_900 | Carnac OS | OwenKirby/carnac-os
+FM-1_983 | DRIFT | FBNFRTG/drift-fm1
+FM-1_964 | SIDOU | dsablic/sidou
+FM-1_980 | MONO2K | InigoHernandez/mono2k
+FM-1_999|FM-1_903 | Caravel | bonszaimusic/caravel
+FM-1_88\d{6} | MIDIMON | ignis32/midimonitor_fm1
+FM-1_(960|47625642) | Makohai | delirioux/makohai
+FM-1_378\d{3} | ESTAMPIE | ocean/estampie
+FM-1_46\d{6} | FIZZ | Quixotic7/FIZZ
+FM-1_71\d|FM-1_70\d{5} | Matryoshka | glvno/matryoshka
+FM-1_985 | Loom FM-1 | Co-oscillator/Loom-FM-1
+FM-1_937 | TastyWaves | marksweiss/tastywaves
+FM-1_977 | Arctic Scream | PolarPatch/Arctic-scream-FM-1
+FM-1_95[02] | S1Vave | AndrewGG88/S1Vave
+FM-1_906 | GATOR | npi3pak/fm1-gator
+FM-1_928 | Monohull | markterm/monohull
+FM-1_700\d{4} | PERF-1 | deamonSLINKY/PERF-1
+FM-1_6601\d{4} | J6 | JackieAlacrity2373/fm1-j6
+FM-1_982 | GuitChordi | stoogs/guitchordi
+FM-1_820\d{5} | Ravel | De-Pattern/Ravel_FM1
+FM-1_23\d{6} | Berlinan | jiripisa/fm1-berlinan
+FM-1_61000100 | MNM-1 | galfaroth/mnm1
+FM-1_6673\d{6} | MOPE-1 | slothpallas/mope-1
+FM-1_969 | Kitten Synths | BlackKittenDevices/Kitten-Synths
+FM-1_25000 | Nauclerus | Mr-Roboto/nauclerus
+FM-1_7101 | PT/FM | hitosu/ptfm
+(?:FM-1_(?:949|036))|FM-1_058 | SPAMPY | Spampy-Droid/SPAMPY-0.0-r949
+FM-1_57\d | SPELLBOX | pjac1810/spellbox
+FM-1_91[05] | Dungeon Tracker | BourbonWX/Dungeon-Tracker
+FM-1_197\d{6} | NACHTFAHRT | FartyPants/fm1-nachtfahrt
+FM-1_900 | Daurade | delirioux/daurade
+FM-1_870 | LUXR | orbitator/LUXR
+FM-1_900 | FMDj | DeadActive/FMDj
+FM-1_1990 | K-WASUB | Guizmoh/K-WASUB_Firmware_for_FM1
+(?:FM-1_900)|FM-1_47745500 | Sill | delirioux/sill
+FM-1_303 | Smileyface | pbarilla/smileyface
+FM-1_8837\d+ | VESPER | fatcatstudios-hub/vesper-fm1
+FM-1_73\d{6} | Penumbra | MadMooneyham/Penumbra
+FM-1_7666200 | Jam Playground | BunnyOrchard/jam-playground
+FM-1_666 | XMOD | KotMorderca/XMOD
+FM-1_64\d{6} | SiDJ | thomasj/fm1-sidj
+FM-1_007 | hawk-chua | Plieuw/hawk-chua
+FM-1_922\d{5} | BB1 | TexasRADIO/bb1-firmware
+FM-1_926 | KARMA | eatyourgreensstudio-dotcom/karma-fm1
+FM-1_537\d{6} | LSDJ Burrito | dreamsofbacon/lsdj-burrito-src
+FM-1_921 | fm1-dock | joakimeriksson/fm1-dock
+FM-1_963\d{5} | Scintilla | joakimeriksson/scintilla-fm1
+FM-1_900 | FM-1 SID | joakimeriksson/fm1-sid
+FM-1_320\d{5} | DARK-1 | sparky480v/Dark-1
+FM-1_601(\d{6})? | FM1-TRAX | jartificer/fm1-trax
+FM-1_929 | Wanderer | spinnicholas/lvm-wanderer-fm1
+FM-1_968 | RUPTURE | SikkenWorks/RUPTURE
+FM-1_91\d | PULHRA | 646timur-cell/pulhra_main
+FM-1_817\d{6} | Amenity | ejtb76/amenity
+FM-1_67686970 | Arcturus S6 | zeptosecond-dsp/Arcturus-S6
+FM-1_79\d{3} | Kitten Rack | BlackKittenDevices/kitten-rack
+FM-1_9401\d{4} | Blop | OSR-Experiment/OSR-1
+FM-1_2124|FM-1_2224 | BEETLE BLUE | SikkenWorks/BEETLE-BLUE
+FM-1_481026 | B1 | SikkenWorks/B1-Drawbar-Organ
+FM-1_8133700 | CLATTER Pocket | clickysteve/clatter-pocket
+FM-1_86\d{6} | CHOPPAH | profikid/fm1-break-choppah
+FM-1_62000100 | Veffbox | galfaroth/veffbox
+FM-1_953 | B3 ORGAN | R-Jeb/setBfree-fm1
+FM-1_359\d{6} | Elixir | dmajka/elixir
+FM-1_8747747 | DX747 | esbenvb/fm1-dx747
+FM-1_742[1-9]\d | Skiff Atlatl | LIkst4/skiff-atlatl
+FM-1_923 | COQUÍ | saulofilho/coqui-fm1
+FM-1_9620 | ARTIHIVE | KHAVld/ARTIHIVE
+FM-1_333 | CULTBOX | beatcult/CULTBOX
+FM-1_112\d{4} | Piterfly | piotrwozniak/piterfly
+FM-1_47727346 | Sardine | delirioux/sardine
+FM-1_330\d{6} | ATEK303 | animatek/FM1-Animatek
+FM-1_731\d{6} | FM1 Audio Router | maxravedj/fm1-audio-router
+FM-1_032 | Drumlab | pbarilla/drumlab
+FM-1_9680\d\d | M-Vance | bk40-home/M-vance
+FM-1_606\d* | Patchwerk | MattKuebrich/patchwerk
+FM-1_5200\d{4}|FM-1_72\d{6} | RemoteFM1 | Quixotic7/RemoteFM1
+FM-1_748\d{3} | Rhythmer | JazzyRhythmer/Rhythmer
+FM-1_390\d{5} | Miku-FM | MichaelAPerry/MIKU-FM1
+FM-1_3246\d{6}|FM-1_324 | ECHOFIELD | Philip-Bos/echofield-fm1
+FM-1_7401\d{4} | Ombak | MadMooneyham/Ombak
+FM-1_29000 | XENOLITH | CaptainChronosis/XENOLITH
+FM-1_797 | Hungry Travis | adamcharleswilsonmusic-code/Hungry-Travis
+FM-1_111 | FM-FAM | davidamomusic/fm-fam
+FM-1_5268\d{6} | JAMTRACK | Philip-Bos/jamtrack-fm1
+FM-1_988 | Quartet | MammothCheese/quartet
+FM-1_7400\d{4} | keySTEP ONE | dzwerg/keySTEP-ONE
+FM-1_745 | RAMBEAVER | adamcharleswilsonmusic-code/RAMBEAVER
+FM-1_123 | M-PYRE | HistoryOfSky/m-pyre
+FM-1_234010000 | ASS-ID | altessproduction/ASS-ID_FM1
+FM-1_234 | sloop-DUB | altessproduction/sloop-dub-fm1
+FM-1_26900\d{4} | fm1-amy | dpwe/fm1-amy
+FM-1_9980100 | SATIE-1 | OCKM-STUDIO/SATIE-1
+FM-1_600600 | Guru-600 | MarcGoudy/guru-600
+FM-1_780 | PLAYA | juan-ms2lab/playa
+FM-1_878670101 | Trumpagotchi | adamcharleswilsonmusic-code/Trumpagotchi
+FM-1_2000\d{4} | Kris Jangle | doohinkus/kris-jangle
+FM-1_26730001 | CORD | chasedeanda/cord-fm1
+FM-1_722604 | Pocket Band | elpabl0/pocketband
+FM-1_6279\d{4} | Mighty Arp | NickCulbertson/FM1-Mighty-Arp
+FM-1_2345 | DUB-BOX | altessproduction/DUB-BOX-FM1
+(?:FM-1_44010600)|FM-1_44011100 | DEEP FIELD | WisestWizard/deepfield
+FM-1_989 | SPLITMILK | MammothCheese/SPLITMILK
+FM-1_050 | Argo | echoe/argo_fm1
+FM-1_5781\d{4} | KRIECHSTROM | Xforsa/kriechstrom
+FM-1_1612\d{6} | PaperLagoon | hacha/paperlagoon
+FM-1_7500\d{4} | Tack | oikoaudio/tack
+FM-1_6301\d{4} | Manifold | stets43/Manifold
+FM-1_262302\d{4} | LOAF BREAKER | FLEXOR-R/loaf-breaker
+(?:FM-1_137090)|FM-1_137092 | FM-1 Midi-Mania | shan-sherif/fm-1-midi-mania
+FM-1_432010000 | FM1 YOGA | michamilz/fm1-yoga
+(?:FM-1_96010000)|FM-1_96010001 | HADAL-1 | sparky480v/hadal-1
+FM-1_24356 | AGTDECK | kevinelliott/fm-1-agent-deck
+FM-1_987 | Clavioline | MammothCheese/clavioline
+FM-1_924 | RHYTM-SEC-1 | hamperj/rhytm-sec-1
+FM-1_57258001 | RAKT | chasedeanda/rakt-fm1
+FM-1_9177 | L/RRY | oscillr/LRRY
+FM-1_47626820 | Manta | delirioux/manta
+FM-1_46200\d{4} | Adrift | romainguy/adrift
+(?:FM-1_391010000)|FM-1_391010100 | AISLING FX-1 | stephencummins/fx1-aisling
+FM-1_987 | Drumtonic | fc79/drumtonic
+FM-1_9080 | ARP WAV 09 | wav0902/wav-fm1
+FM-1_28010000 | Golf | barnierg76/golf-fm1
+FM-1_27020000 | Tekstuur | barnierg76/tekstuur-fm1
+FM-1_9168\d{4} | Kurzhaar, der Basshund | kurzhaar168/kurzhaar
+(?:FM-1_900)|FM-1_800 | Mini-Ju08 | eldontyrellcorp/Mini-Ju08
+FM-1_922 | Atl-Atl: The Atltuner | jasonbot/atl-atl
+FM-1_963 | Mini-Grain | eldontyrellcorp/Mini-Grain
+(?:FM-1_9681002)|FM-1_9681003 | M-Vsynth2 | bk40-home/M-Vsynth2
+FM-1_511 | TRAPSTATION OS | sog-maker/trapstation-os
+FM-1_44000100 | Astra | MichaelAPerry/ASTRA-FM-1
+FM-1_986 | glitch | saulofilho/glitch
+(?:FM-1_98000500)|FM-1_98000600 | QUARTZ | F0nski/quartz
+FM-1_3628 | FMav-1 | wootr0p/fmav1
+FM-1_88600\d{2} | Juicy | DanielGilbert/Juicy
+FM-1_98400\d{4} | FMLarynx | ejtb76/FMLarynx
+FM-1_1492410 | Fernbedienung | DPangerl/fernbedienung
+FM-1_1492302 | Beiwagen | DPangerl/beiwagen
+FM-1_04200\d{4} | FM-1 Chimera Vocal | shan-sherif/fm-1-chimera-vocal
+FM-1_674102 | OrGigs | orgelbobo/orgigs
+(?:FM-1_65001600)|FM-1_65001800 | DABKE | wissamsader/dabke
+FM-1_627010 | ObsSynth FM-1 | orianbsilva/obssynth-fm1
+FM-1_4500\d{4} | EVIL GENIUS | Quixotic7/evilgenius
+FM-1_707 | NCC – Novation Circuit Companion | fenderberg/fm1-nc-companion
+(?:FM-1_615012)|FM-1_615015 | Blues Box | provostprovost/blues
+FM-1_1812 | CONDUCTOR | MammothCheese/conductor
+FM-1_967 | AETHER FM1 | jeanlucmouton30-jpg/AETHER-FM1
+FM-1_965 | Quantum GammaWave | Guillel51/Quantum-GammaWave
+FM-1_069 | Yehnah | Mello-D/yehnah
+FM-1_420 | cursed os | cursedsound-music/CS_FM1
+(?:FM-1_104210)|FM-1_104211 | Stallion | EberonLtd/stallion-fm1
+FM-1_2200\d{4} | VNL-1 | pianomansam/fm1-vnl
+FM-1_44010000 | MOSS-1 | theowecker/fm1-moss
+FM-1_312 | Ruido | miguelhd/ruido
+FM-1_222 | FM-KICK | davidamomusic/fm-kick
+FM-1_8008 | amb-pond | superxor/amb-pond
+FM-1_41000300 | MORSE | daviddwlee84/fm1-morse
+FM-1_904 | Dark Funk Durcal Synt | drophlex/dark-funk-durcal-synt-fm1
+FM-1_905 | ANDROMEDA | drophlex/ANDROMEDAFM1
+FM-1_10801\d{4} | SAMSARA | tomorrowsman/fm1-samsara
+FM-1_77010600 | FM1 TONIC | luigirossi-music/fm1-tonic
+FM-1_50509 | DP3OYB | DP3OYB/DP3OYB
+(?:FM-1_1981001100)|FM-1_1981001200 | Plissken | dustekin/plissken
+FM-1_5100\d{4} | SY1 | fenderberg/fm1-sy1
+FM-1_93800\d{4} | DAYV-X | halfman73/dayv-x
+```
+</details></tool-use>
+
+_**Agent - sidechain (claude-opus-5-5 2026-11-18 10:18:40Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Check interrupt priorities and lock implementation
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/third_party/fm1-base && grep -n -i -E "prio|nest" device/main_fm1.c | head -15; sed -n 1,30p device/plat_lock.c`
+
+```text
+21:    uint32_t magic, halves, max_us, nested, in_audio, late, timer_irqs, ui_frames;
+225:        fm1b_dbg.nested++;
+230:    /* 2 kHz (2.5 at input_hz 5000): all USB SIE traffic lives here. This ISR now nests into the audio render (so the key
+232:     * falls inside the render waits for the first tick outside it, as it did before the nesting. */
+237:         * up to ~11.6 ms): it runs nested too. It touches only EP4 (INDEX is set on every access) and
+238:         * the consumer side of its ring, and usb_poll never runs nested, so the two never interleave */
+244:    /* usb_audio_channels: every tick (0.1 ms: TIMER5 stays at 10 kHz whatever input_hz), nested in the render or not
+437:    r->up_s = fm1_ms / 1000u, r->halves = fm1b_dbg.halves, r->nested = fm1b_dbg.nested;
+520: *   stat I/N seq DEC up DEC build HEX flags HEX boots DEC crashes DEC halves DEC nested DEC late DEC maxus DEC
+/* SPDX-License-Identifier: MPL-2.0
+ * Copyright (C) 2026 Charles Vestal
+ * Copyright (C) 2026 Henri David */
+/* plat_lock / plat_unlock (plat.h): interrupts off around what the main loop shares with the 1 kHz tick (app_tick, in
+ * the timer interrupt) or the audio render (app_render, in the ALNK0 interrupt). Part of plat_fm1.c; on its own for
+ * tests/lock_test.c, which gives it fm1_icfg, fm1_irq_off, fm1_irq_on and fm1_ticks over a simulated CPU.
+ *
+ * The lock nests. Each plat_lock returns whether interrupts were on when it was called (icfg bit 9, the global
+ * enable cli and sti clear and set), and the plat_unlock given that value switches them back on only if they were
+ * and only at the outermost unlock. So a lock taken where interrupts are already off (inside an interrupt, or inside
+ * the app's own section with them off) leaves them off: before, the outermost unlock always switched them on, inside
+ * an interrupt too. */
+#define LOCK_IE 0x200u                            /* icfg bit 9: the global interrupt enable */
+static uint32_t lock_depth;
+uint32_t lock_max, lock_from;                     /* the longest the app kept interrupts off (us), and from where */
+static uint32_t lock_t0, lock_ra;
+uint32_t plat_lock(void)
+{
+    uint32_t was_on = (fm1_icfg() & LOCK_IE) != 0u;
+    fm1_irq_off();
+    if (lock_depth++ == 0) {
+        lock_t0 = fm1_ticks();
+        lock_ra = (uint32_t)(uintptr_t)__builtin_return_address(0);
+    }
+    return was_on;
+}
+void plat_unlock(uint32_t f)                      /* f: what the matching plat_lock returned */
+{
+    if (lock_depth && --lock_depth == 0) {
+        uint32_t us = (fm1_ticks() - lock_t0) / FM1_TICKS_PER_US;
+```
+</details></tool-use>
+
+_**Agent - sidechain (claude-opus-5-5 2026-11-18 10:18:43Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Read timer ISR nesting comments
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/third_party/fm1-base && sed -n 215,250p device/main_fm1.c`
+
+```text
+            usb_midi_peek(t);
+#if FM1B_TRS
+            uart_midi_peek(t);
+#endif
+        }
+#endif
+        t5_prev = now;
+    }
+    fm1b_dbg.timer_irqs++;
+    if (fm1b_dbg.in_audio)
+        fm1b_dbg.nested++;
+#if FM1B_T5_SCAN_DIV > 1
+    if (sub % FM1B_T5_SCAN_DIV == FM1B_T5_SCAN_DIV - 1u)   /* (a slower input_hz: not on the app's tick) */
+#endif
+        fm1_input_tick();
+    /* 2 kHz (2.5 at input_hz 5000): all USB SIE traffic lives here. This ISR now nests into the audio render (so the key
+     * matrix keeps its rhythm, below); USB shares the MIDI queues with the audio ISR, so a poll that
+     * falls inside the render waits for the first tick outside it, as it did before the nesting. */
+    if (sub % FM1B_T5_USB_DIV == 0u) {
+        usb_due = 1;
+#if FELUCCA_UAC && FELUCCA_UAC_CH == 2
+        /* the USB audio stream cannot wait for the render (one packet per 1 ms frame, a render takes
+         * up to ~11.6 ms): it runs nested too. It touches only EP4 (INDEX is set on every access) and
+         * the consumer side of its ring, and usb_poll never runs nested, so the two never interleave */
+        if (fm1b_dbg.in_audio)
+            uac_service();
+#endif
+    }
+#if FELUCCA_UAC && FELUCCA_UAC_CH > 2
+    /* usb_audio_channels: every tick (0.1 ms: TIMER5 stays at 10 kHz whatever input_hz), nested in the render or not
+     * (outside it, but for the ticks usb_poll runs: it services the stream itself). A packet of 10 channels takes ~0.6 ms on the bus: polled at 2 kHz, the next
+     * was often queued after the next frame's IN, which then found none (on an FM-1: 38,400 frames/s instead of
+     * 44,100, the ring overflowing, halves dropped: crackles and a lower pitch). The stall count: FELUCCA_UAC_STALL_POLLS */
+    if (fm1b_dbg.in_audio || !usb_due)
+        uac_service();
+#endif
+```
+</details></tool-use>
+
+_**Agent - sidechain (claude-opus-5-5 2026-11-18 10:18:44Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Inspect package identity derivation
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/third_party/fm1-base && sed -n 1705,1730p tools/build.py; grep -n 'short\|FM-1_\|ident' tools/fm1pkg_make.py | head -30`
+
+```text
+    CPU2 = (bool(CONF.get("cpu2")) and os.environ.get("FM1B_CPU2") != "0") or os.environ.get("FM1B_CPU2") == "1"
+    if BLE and WIFI:
+        raise SystemExit("fm1.toml: ble and wifi together are not supported yet (one radio a build; --no-ble for WiFi)")
+    STEM = NAME + ("-usb" if CONF.get("ble") and not BLE else "")
+    OUT = APP / "build"
+    GEN, LDR = OUT / "gen", OUT / "loader"
+    ROOT = Path(os.path.commonpath([SRC, APP]))
+    prefix = CONF.get("id_prefix", "FM-1_0")
+    if not re.fullmatch(r"FM-1_\d+", prefix):
+        raise SystemExit(f"fm1.toml id_prefix {prefix!r}: FM-1_ and digits only (the update tools parse it)")
+    PRODUCT = prefix + "00"
+    name = STEM + ".fwsc"
+    if a.release:
+        # identity: the prefix + major, minor, patch as two digits each (0.1 -> FM-1_0000100): FM-1 is the
+        # model the update tools match on; the digits after the underscore are the firmware's.
+        m = re.fullmatch(r"(\d{1,2})\.(\d{1,2})(?:\.(\d{1,2}))?(-[A-Za-z0-9]+)?", a.release)
+        if not m:
+            raise SystemExit(f"--release {a.release}: use X.Y[.Z][-suffix], up to two digits each")
+        PRODUCT = prefix + "%02d%02d%02d" % (int(m[1]), int(m[2]), int(m[3] or 0))
+        VERSION = a.release.upper()
+        RELEASE = a.release
+        name = f"{STEM}-{a.release}.fwsc"
+    # a release package needs firmware.json's keys; the simulator, the emulator, the .rfm1 and dev builds only warn
+    firmware_json.require(CONF, bool(a.release) and not (a.host or a.web or a.rfm1), APP / "fm1.toml", APP)
+    touch = touch_app()
+    input_hz()                                     # (refuses another rate early, on every build)
+22:  fm1pkg_make.py APP.bin OTA.bin OUT.fwsc [--product FM-1_9XY] [--sdk DIR] [--res RES.bin --res-base ADDR]
+198:    # .fwsc: one marker byte after each of the first 20 0x2F-byte blocks (the identity)
+215:    ap.add_argument("--product", default="FM-1_900")
+228:    print(f"package {a.out}: {len(pkg)} B, identity {a.product}, chip key {a.key:#06x}")
+```
+</details></tool-use>
+
+_**Agent - sidechain (claude-opus-5-5 2026-11-18 10:18:48Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Find where app_tick is called on device
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/third_party/fm1-base && grep -n -B4 -A4 "app_tick()" device/main_fm1.c | head -30`
+
+```text
+261-#else
+262-    if (sub % FM1B_T5_APP_DIV == 0u) {
+263-#endif
+264-        in_tick = 1;
+265:        app_tick();
+266-        in_tick = 0;
+267-    }
+268-#endif
+269-    if (++sub == FM1B_T5_WRAP)
+```
+</details></tool-use>
+
+_**Agent - sidechain (claude-opus-5-5 2026-11-18 10:18:50Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Search docs for identity prefix discussions
+
+`grep -rn 'FM-1_13\|FM-1_1[0-9]\b\|short form\|三位\|FM-1_4[0-9]\b\|FM-1_15\|FM-1_16' docs/ firmware/*/README.md firmware/*/fm1.toml host 2>/dev/null | grep -v '^docs/.*catalog' | head -30`
+
+```text
+docs/device-log.md:47:| 2026-11-18 02:33 | Hub 測試 1（Morse → SLOOP，走 USB-MIDI）之前的 Morse 0.3 開發版（`FM-1_1300`） | `backups/2026-11-18-pre-hub-test-1/fm1-20261118-023344.bin` + `.json` | `c2b315877b9a7e0edc59c308c866c166db68c2005a8aa000c82789cd732dfc3c` | 尚未上傳 |
+docs/device-log.md:98:| 2026-11-17 22:54 | 本人執行 `just fm1-switch firmware/morse/build/morse.fwsc`（Morse 0.1，SHA-256 `dfb23a70…27c9a`，commit `c3b5cd6`） | 先自動備份 `backups/2026-11-17-2253-pre-morse/`（SHA-256 同 22:52 那份）。M-Flasher 的計畫：`Writes 30 sectors (120 KiB): 0x04000-0x21FFF`、`Installs FM-1_1300 (0x04000-0x92FFF)`，和預演一致；寫入後晶片 CRC32 相符，自動重開。重開後 `fm1-find` 顯示 `Felucca (running)`；`python -m morse send` 依協定找到 port，收到 Morse 的 HELLO（韌體 0.1）並送出文字 |
+docs/device-log.md:101:| 2026-11-18 00:14 | 本人執行 `just fm1-switch firmware/morse/build/morse.fwsc`（Morse 0.2，SHA-256 `fc3dd404…556b0`，commit `54ff440`） | 先自動備份 `backups/2026-11-18-0013-pre-morse/`（SHA-256 同 00:12 那份）。M-Flasher 的計畫：`Writes 32 sectors (128 KiB): 0x04000-0x23FFF`、`Installs FM-1_1300 (0x04000-0x92FFF)`，和預演一致；寫入後 CRC32 相符，自動重開，M-Flasher 另存 `fm1-20261118-001409.bin`。重開後 `python -m morse send` 收到 HELLO（韌體 0.2）並送出 `<SK>` |
+docs/device-log.md:104:| 2026-11-18 02:12 | 本人執行 `just fm1-switch firmware/morse/build/morse.fwsc`（Morse 0.3，SHA-256 `64bfa57d…f8d4ea`，commit `02b0ea2`） | 先自動備份 `backups/2026-11-18-0212-pre-morse/`（SHA-256 同 02:12 那份）。M-Flasher 的計畫：`Writes 32 sectors (128 KiB): 0x04000-0x23FFF`，和預演一致；寫入後 CRC32 相符，自動重開，M-Flasher 另存 `fm1-20261118-021254.bin`。重開後 HELLO 回報 0.3；`fm1_install.py --info`（USB-MIDI 唯讀詢問）回答 `FM-1_1300 [running]` |
+docs/device-log.md:106:| 2026-11-18 02:40 | Hub 測試 1：本人執行 `fm1_install.py downloads/sloop-2.8.5.fwsc`（USB-MIDI 更新路徑，和 Hub 網頁安裝同一套），機器上是 Morse 0.3（`FM-1_1300`） | 成功：`checking the package (18 reads)` → `switching to update mode` → `the loader reads and writes the whole package (classic install)` → `done: the FM-1 runs FM-1_900`。重開進 SLOOP，之前的曲子還在。證明可以從 Morse 換到別的韌體 |
+docs/dev/morse.md:443:| 韌體 0.3 release（`FM-1_41000300`） | 2026-11-18 | 是（Hub 測試時用 USB-MIDI 裝過三次） | fm1-morse 的第一個 release [v0.3](https://github.com/daviddwlee84/fm1-morse/releases/tag/v0.3)：identity 改成 `FM-1_41`，授權改成 GPL-3.0-or-later，程式和 0.3 相同 |
+docs/dev/morse.md:453:- **identity 前綴改成 `FM-1_41`**：原本的 `FM-1_13` 和 Hub 上 FM-1 Midi-Mania 的 `FM-1_137` 開頭相同。目錄裡沒有任何 `FM-1_41x`，但送審前仍要用 Hub 的 #check 確認。開發版是 `FM-1_4100`，release 版是 `FM-1_41` 加 XXYYZZ（0.3 是 `FM-1_41000300`）。存檔位置不變，進度會保留。
+firmware/conductor/fm1.toml:3:id_prefix = "FM-1_12"          # package identity: dev FM-1_1200
+firmware/voicelab/fm1.toml:3:id_prefix = "FM-1_14"          # package identity: dev FM-1_1400 (dev builds only; never released)
+firmware/morse/fm1.toml:4:id_prefix = "FM-1_41"          # package identity: dev FM-1_4100, release 0.3 FM-1_41000300
+firmware/hello/fm1.toml:3:id_prefix = "FM-1_11"          # package identity (each firmware its own): dev FM-1_1100, releases FM-1_11XXYYZZ
+```
+</details></tool-use>
+
+_**Agent - sidechain (claude-opus-5-5 2026-11-18 10:18:52Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Read context before app_tick call
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/third_party/fm1-base && sed -n 250,264p device/main_fm1.c`
+
+```text
+#endif
+    if (usb_due && !fm1b_dbg.in_audio) {
+        usb_due = 0;
+        usb_poll();
+#if FM1B_TRS
+        uart_midi_poll();                           /* the TRS jack: same context, same queue */
+#endif
+    }
+#ifdef APP_TICK
+#if FM1B_T5_APP_DIV == FM1B_T5_WRAP
+    if (sub == 0u) {                                /* 1 kHz: the app's tick (a clock, a sequencer) */
+#else
+    if (sub % FM1B_T5_APP_DIV == 0u) {
+#endif
+        in_tick = 1;
+```
+</details></tool-use>
+
+_**Agent - sidechain (claude-opus-5-5 2026-11-18 10:19:03Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Search for measured CPU figures in docs/tests
+
+`grep -rn -i -E "cpu[ _]?(pct|%|load)|plat_cpu|render.*(us|µs|ms)\b|max_us|maxus" firmware/morse docs firmware/conductor firmware/hello firmware/voicelab --include='*.md' --include='*.txt' --include='*.c' 2>/dev/null | grep -v "/build/" | head -15`
+
+```text
+docs/dev/theory.md:225:| fm1-base 沒有 synth | 自己寫：8 voice 的 2-op FM 電鋼琴（從 `common/chime` 改）、一個 bass voice、節拍器的 click。音符在 `app_render` 裡依 sample 數排程，因為 `app_tick` 的旗標會有最多一個 block（5.8 ms）的抖動 |
+```
+</details></tool-use>
+
+_**Agent - sidechain (claude-opus-5-5 2026-11-18 10:19:06Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Compute free two-digit id prefixes vs catalog
+
+```bash
+cd /private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/7dcc67a0-a756-4514-85d7-b24e721b72ee/scratchpad/hub && python3 -I -c "
+import json,re
+d=json.load(open('catalog.json'))
+pats=[]
+for f in d['firmwares']:
+    p=f.get('ident')
+    if not p or p in ('FM-1_\\\\d{3,8}',): continue
+    pats.append((p,f['name']))
+generic=[f['name'] for f in d['firmwares'] if f.get('ident')=='FM-1_\\\\d{3,8}']
+print('generic (wildcard) idents:', len(generic))
+def hits(s):
+    return [n for p,n in pats if p!=r'FM-1_\d{3,8}' and re.fullmatch(p,s)]
+own={'11','12','13','14','41'}
+free=[]
+for nn in range(10,100):
+    N=str(nn)
+    cands=['FM-1_'+N+'00']+['FM-1_'+N+str(k) for k in range(10)]+['FM-1_'+N+'%02d%02d%02d'%(a,b,0) for a in (0,1) for b in range(0,10)]
+    h=set()
+    for c in cands: h.update(hits(c))
+    # also prefix-only collision: any literal ident starting with FM-1_N
+    lit=[x for x in re.findall(r'FM-1_\d+', ' '.join(p for p,_ in pats)) if x.startswith('FM-1_'+N)]
+    if not h and not lit and N not in own: free.append(N)
+    elif N in ('15','16','17','18','19','31','34','35','36','37','38','39','40','43','49','51','53','54','55','56','58','59','63','66','67','68','69','74','75','76','78','81','82','83','84','85','87','89'):
+        print(N, sorted(h), lit[:4])
+print('FREE 2-digit prefixes:', free)
+"
+```
+
+```text
+generic (wildcard) idents: 22
+15 ['LOOM-8'] []
+16 ['LOOM-8'] ['FM-1_1612']
+17 ['LOOM-8'] []
+18 ['LOOM-8'] ['FM-1_1812']
+19 ['LOOM-8'] ['FM-1_197100', 'FM-1_197', 'FM-1_1990', 'FM-1_1981001100']
+31 ['Ruido'] ['FM-1_312']
+35 [] ['FM-1_353', 'FM-1_359']
+36 [] ['FM-1_3628']
+37 [] ['FM-1_378']
+38 [] ['FM-1_386']
+39 ['Miku-FM'] ['FM-1_390', 'FM-1_391010000', 'FM-1_391010100']
+43 [] ['FM-1_431', 'FM-1_432010000']
+51 ['SY1', 'TRAPSTATION OS'] ['FM-1_511', 'FM-1_5100']
+53 [] ['FM-1_537']
+63 ['Manifold'] ['FM-1_6301']
+66 ['J6', 'XMOD'] ['FM-1_6601', 'FM-1_6673', 'FM-1_666']
+67 [] ['FM-1_67686970', 'FM-1_674102']
+74 ['Ombak', 'RAMBEAVER', 'keySTEP ONE'] ['FM-1_742', 'FM-1_748', 'FM-1_7401', 'FM-1_7400']
+75 ['Tack'] ['FM-1_7500']
+76 [] ['FM-1_7666200']
+78 ['PLAYA'] ['FM-1_780']
+81 [] ['FM-1_8106', 'FM-1_817', 'FM-1_8133700']
+82 ['Ravel'] ['FM-1_820']
+83 ['Tessera'] ['FM-1_8377', 'FM-1_837']
+87 ['LUXR'] ['FM-1_870', 'FM-1_8747747', 'FM-1_878670101']
+FREE 2-digit prefixes: ['34', '40', '49', '54', '55', '56', '58', '59', '68', '69', '84', '85', '89']
+```
+</details></tool-use>
+
+_**Agent - sidechain (claude-opus-5-5 2026-11-18 10:19:08Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Search for CTL-1 synth info
+
+`grep -rn -i -E "GM|general midi|synth|voice|poly" docs/firmware/index.md docs/firmware/ctl-1/index.md docs/ecosystem.md 2>/dev/null | head -15`
+
+```text
+docs/firmware/index.md:11:| [SLOOP 2.8](https://github.com/isod89/sloop-fm1) | 四軌 groovebox：3 synth + 1 drum，12 種 engine | **首選**，支援新晶片。見 [SLOOP](sloop/index.md) |
+docs/firmware/index.md:12:| [SLOOP 3](https://github.com/isod89/sloop3-fm1) | 重寫的新一代 groovebox：4 synth + 1 drum | public beta，必須先裝 m-bootloader。見 [SLOOP 3](sloop/sloop3.md) |
+docs/firmware/index.md:13:| [Melodee](https://github.com/keremimo/melodee) | 多 engine synth + sequencer，和弦與 song mode | 有 Bluetooth MIDI `[調研]` |
+docs/firmware/index.md:42:| [CTL-1](https://github.com/charlesvestal/fm1-ctl) | MIDI controller，自帶 General MIDI 音色 | 控制 DAW、外部合成器、iPad app。見 [CTL-1](ctl-1/index.md) |
+docs/firmware/ctl-1/index.md:3:[CTL-1](https://github.com/charlesvestal/fm1-ctl)（Charles Vestal，MPL-2.0）把 FM-1 變成 MIDI controller：琴鍵送音符，旋鈕送 CC，另有 arpeggiator 與四軌 Euclidean 鼓 sequencer。USB 與 Bluetooth 都送，TRS 進來的 MIDI 會轉送出去，機器自己也用 General MIDI 音色發聲，所以什麼都不接也能彈。它建立在 [fm1-base](../../dev/index.md) 上。
+docs/firmware/ctl-1/index.md:33:**1. CTL-1 自己的音色和 iPad 的聲音疊在一起。** CTL-1 內建 128 個 General MIDI 音色，你彈什麼它就跟著發聲。關掉它：
+docs/ecosystem.md:60:- **聲音引擎借用既有的開源 DSP。** FM6 是 Dexed 的 msfa（Google 與 Pascal Gauthier，Apache-2.0）；PHASE 來自 CrispyZebra；VOICE 來自 klattsch；取樣來自 CC0 的 Versilian Studios 與 Sonic Pi。
+```
+</details></tool-use>
+
+_**Agent - sidechain (claude-opus-5-5 2026-11-18 10:19:18Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Read licensing notes and template audio test
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/third_party/fm1-base && grep -n -i -E "gpl|app's own|your app|template" LICENSING.md | head -12; sed -n 28,46p template/tests/basic.txt`
+
+```text
+13:| Leo Kuroshita's code (from Felucca, through the firmwares below) | [Felucca](https://github.com/hugelton/Felucca), GPL-3.0-only there | his permission to use the Felucca code he owns under MPL-2.0: [hugelton/felucca-bsp#4](https://github.com/hugelton/felucca-bsp/issues/4) |
+14:| Charles Vestal's code | the platform layer of [fm1-x0x](https://github.com/charlesvestal/fm1-x0x), [fm1-fomni](https://github.com/charlesvestal/fm1-fomni) and the other FM-1 firmwares, GPL-3.0-only there | his own |
+15:| Chris Farrell's code in `web/fm1ota.js` and `web/fm1pkg.js` (each file's header says which) | [fm-static](https://github.com/seajaysec/fm-static), GPL-3.0-only there | his permission to use it under MPL-2.0: [seajaysec/fm-static#1](https://github.com/seajaysec/fm-static/issues/1#issuecomment-6410795859) |
+16:| `device/boot_lzma.h`, `tools/boot_pack.py` and `boot_image` in `device/main_fm1.c` (the LZMA-packed load images, `boot_pack = true`). Copyright (C) 2026 Kerem Kilic (Ellic Studio) and Charles Vestal | [Melodee](https://github.com/keremimo/melodee) (`firmware/src/boot_lzma.h`, `tools/boot_audio.py`, `firmware/src/main.c`), GPL-3.0-only there | its author's permission to use Melodee's code in fm1-base under MPL-2.0 (stated by fm1-base's maintainer, 2026-10-31) |
+17:| `device/res.c`, `tools/fm1_resources.py` and the resource step of `tools/fm1_install.py` and the installer page (the resource region, `resources = FILE`); the pooled store in `device/storage.c` (APP_STORE_POOL). Copyright (C) 2026 Charles Vestal | written for fm1-base after [Melodee](https://github.com/keremimo/melodee)'s resource region (`firmware/src/res.c`, `tools/fm1_resources.py`, `web/fm1res.js`) and shared storage pool, by Kerem Kilic (Ellic Studio), GPL-3.0-only there | MPL-2.0, with its author's permission (as above) |
+20:| `bt/` (the own Bluetooth stack: `bt/ble` BLE MIDI, link layer, host, SMP, central; `bt/br` BR/EDR and the A2DP source: SSP, L2CAP, AVDTP, AVRCP, SDP, AFH), its docs `docs/bt/`, tools `tools/bt/` and tests `tests/bt/`, but the third-party parts below. Copyright (C) 2026 Henri David (hdavid) | [Optimist](https://github.com/w0ts/optimist) (`3274ce5`), where its files carry `GPL-3.0-only OR MPL-2.0` | offered under either licence ([w0ts/optimist#55](https://github.com/w0ts/optimist/issues/55)), taken here under MPL-2.0. The files keep their dual SPDX header; the MPL's Exhibit B does not apply |
+27:GPL) carry copies made before, which stay under their repositories' licences until fm1-reader's
+28:`tools/sync_announce.sh` copies them again. MPL-2.0 is compatible with the GPL (its section 3.3), so the new copies
+56:The GPL copies in Felucca and in those firmwares stay under the GPL; the copies here are MPL-2.0. No code by other
+70:| The browser emulator's voice: eSpeak NG, through fm1-reader | GPL-3.0-or-later | taken from an fm1-reader checkout when the emulator is built; a separate program the page loads |
+wait 30
+expect dirty 0
+expect store_writes 1
+reboot
+wait 600
+expect octave 1
+expect wave 1
+midi 90 3C 64
+wait 30
+expect note 60
+wav note.wav
+wait 200
+wavstop
+expect peak_db_min -30
+midi 80 3C 00
+listen
+wait 100
+said TEMPLATE. OCTAVE +1. WAVE TRIANGLE
+tap ARP
+```
+</details></tool-use>
+
+_**Agent - sidechain (claude-opus-5-5 2026-11-18 10:19:23Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Search docs for data-area sector usage
+
+`grep -n -i 'flash' docs/dev/morse.md | head -20; grep -rn '0xD[0-9A-F]000\|0xC[0-9A-F]000\|0xB[0-9A-F]000\|0xA[0-9A-F]000' docs --include=*.md | grep -v 'flash-map.md' | head -30`
+
+```text
+136:進度存在 FM-1 的 `0xDA000`（見[存檔](#flash)）。換韌體時不一定保得住：2026-11-18 實測從 SLOOP 2.8.5 切回來時還在，刷回原廠 V15 就沒了 `[實機]`。換韌體前先備份。0.4 起有兩種方式：
+277:2. **`APP_BLE_STORE`**：`app_ble_load`／`app_ble_save` 什麼都不存。own stack 用 flash 晶片的 unique ID 產生位址，Mac 和 iOS 不配對也能連，所以**藍牙不寫 flash**（fm1-emu 兩種晶片都驗證過）。
+334:- **模擬器沒有無線電**：fm1-emu 只能驗證開關、存檔、不寫 flash；連線本身要在實機上測。
+368:### 存檔 { #flash }
+(eval):1: no matches found: --include=*.md
+```
+</details></tool-use>
+
+_**Agent - sidechain (claude-opus-5-5 2026-11-18 10:19:27Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Read Morse flash section and sector mentions
+
+`sed -n 368,400p docs/dev/morse.md; grep -rn '0xD[0-9A-F]000\|0xC[0-9A-F]000\|0xB[0-9A-F]000\|0xA[0-9A-F]000\|0x9[0-9A-F]000' docs | grep -v 'flash-map.md' | head -30`
+
+```text
+### 存檔 { #flash }
+
+一筆紀錄（設定 + 學習進度，約 280 bytes）放在 `0xDA000`–`0xDBFFF`，透過 fm1-base 的 storage 層存（A/B 兩份、CRC）。在回合結束或離開、改設定 3 秒後才寫。不碰 SLOOP、Agent Deck、CTL-1 共用的 `0xFC000`。這台機器所有備份的 `0xDA000`–`0xDBFFF` 都是空的。
+
+0.2 沿用 0.1 的紀錄格式：0.1 留下的空位改放 KEY／TYPE／LISTEN 的顯示選項、發報速度、LISTEN 的節目。從 0.1 升級時設定和進度都保留，發報速度從 0 補成預設的 10（fm1-emu 兩種晶片驗證過 `[模擬]`）。
+
+預演 `[模擬]`：把 `firmware/morse/build/morse.fwsc` 疊在 `backups/2026-11-17-2052-pre-conductor/` 上開機、改一個設定、玩完一回合：
+
+| | sector |
+|---|---|
+| 安裝（和目前機上的 Conductor 不同的部分） | `0x04000`–`0x1EFFF`，27 個；套件映像範圍是 `0x04000`–`0x92FFF` |
+| 執行時寫入 | `0xDA000`–`0xDBFFF`，只有這 2 個 |
+
+### 大小 { #size }
+
+`just fw-build morse`（2026-11-17）：
+
+| 版本 | app | `.data+.bss` |
+|---|---|---|
+| 0.1 | 109,508 B | 27,180 / 98,304 B |
+| 0.2 | 127,712 B | 28,444 / 98,304 B |
+| 0.3 | 127,880 B | 28,444 / 98,304 B |
+| 0.4 | 138,076 B（release） | 29,084 / 98,304 B |
+| 0.5（藍牙，release） | 173,748 B | 38,572 / 98,304 B |
+| 0.6（release） | 173,844 B | 38,572 / 98,304 B |
+
+上限是 581,564 B；RAM code 5,576 / 32,768 B（0.5）；套件 616,003 B，開發版 identity `FM-1_4100`。0.5 開了 own BLE stack（peripheral），多 35.7 KB；之後加 central 大約再多 13–22 KB（fm1-base 的數字），仍然很寬裕。
+
+## 驗證
+
+| 項目 | 指令 | 結果 |
+|---|---|---|
+| 碼表、時序、解碼器、keyer、閃卡規則 | `just morse-unit` | 251 項全過 |
+docs/device-log.md:14:| SLOOP 的曲子 | **已不在機器上**（`0x97000` 被 ChoralRoot 的韌體蓋掉）。完整保存在 `2026-11-17-0341-pre-ctl-1.0.3` 備份裡；回 SLOOP 要在 M-Flasher GUI 還原那份備份 |
+docs/device-log.md:48:| 2026-11-18 02:39 | Hub 測試 2（SLOOP → Morse release，走 USB-MIDI）之前的 SLOOP 2.8.5（`0xDA000` 仍有 Morse 的紀錄） | `backups/2026-11-18-pre-hub-test-2/fm1-20261118-023901.bin` + `.json` | `deacf5153e17b52a6675a429bf063cb76e29ffff01d87de3214cd824d4151464` | 尚未上傳 |
+docs/device-log.md:86:| 2026-11-17 | 更正先前的紀錄 | `0xFC000` 不是空的：它是 SLOOP 的設定 sector，被 Agent Deck 覆寫，刷回 SLOOP 後尚未寫回。曲子所在的 `0x97000`、`0x9F000` 沒變。詳見[多韌體切換](firmware/switching.md) |
+docs/device-log.md:91:| 2026-11-17 | 本人執行 `just fm1-switch downloads/choralroot-0.41.fwsc` | M-Flasher 的計畫：`Writes 152 sectors (608 KiB): 0x04000-0x8EFFF, 0x91000-0x91FFF, 0x93000-0x9EFFF`。寫入後機器重開，USB 產品名 `ChoralRoot FM-1`。M-Flasher 自動備份 `fm1-20261117-041838.bin` |
+docs/device-log.md:94:| 2026-11-17 18:40 | 本人執行 `just fm1-switch firmware/conductor/build/conductor.fwsc`（SHA-256 `de182723…0502f3`，commit `d45ce67`） | 先自動備份 `backups/2026-11-17-1839-pre-conductor/fm1-20261117-184005.bin`（SHA-256 與 18:38 那份相同，`81f048bb…7ba1e1`）。M-Flasher 的計畫：`Writes 140 sectors (560 KiB): 0x04000-0x8EFFF, 0x91000-0x91FFF`，安裝範圍 `0x04000-0x92FFF`。寫入後全部驗證通過（晶片 CRC32 相符），M-Flasher 自動備份 `fm1-20261117-184013.bin`，機器重開 |
+docs/device-log.md:97:| 2026-11-17 22:51 | agent 執行 `just fm1-download-mode`、`fm1-info`、`fm1-backup pre-morse`（刷 Morse 0.1 前的 preflight） | 切換成功（`WL82 UBOOT1.00`）。`info`：model FM-1、bootloader stock (M-VAVE)、firmware `FM-1 120`（Conductor）、app OK、flash `0xB36014`，晶片 CRC32 與讀取相符。備份 SHA-256 `fbcb4790…250ca0ef`。用這份備份預演：Morse 和它不同的是 `0x04000`–`0x21FFF` 的 30 個 sector，全在韌體區；`0xDA000`–`0xDBFFF` 是空的。機器留在 download mode 等本人執行寫入 |
+docs/device-log.md:100:| 2026-11-18 00:10 | agent 執行 `just fm1-download-mode`、`fm1-info`、`fm1-backup pre-morse-0.2`（刷 Morse 0.2 前的 preflight） | 切換前機器送出 Morse 0.1 的 HELLO。第一次 `fm1-info` 卡住超過 2 分鐘、沒有輸出（中止）；重試時 M-Flasher 重新載入 loader，1.3 s 讀完：model FM-1、bootloader stock、firmware `FM-1 130`（Morse）、app OK、flash `0xB36014`，CRC32 相符。備份 SHA-256 `35457c78…338ada4`。用這份備份預演 0.2：不同的是 `0x04000`–`0x23FFF` 的 32 個 sector，全在韌體區；0.1 的紀錄（`0xDA000`–`0xDBFFF`）升級後保留（ROUND 4、聽 15/14、發報速度補成 10）`[模擬]` |
+docs/device-log.md:107:| 2026-11-18 02:39 | agent 執行 `just fm1-download-mode`（SLOOP 執行中）、`fm1-backup pre-hub-test-2`、`fm1-restart`，`fm1_install.py --info` | 備份 SHA-256 `deacf515…d4151464`，M-Flasher 回報 firmware `SLOOP 2.8.5`；重開回 SLOOP，`--info` 回答 `FM-1_900 [running]`。備份裡 `0xDA000`–`0xDBFFF` 的 Morse 紀錄沒被 SLOOP 動到 |
+docs/device-log.md:113:| 2026-11-18 04:47 | agent 執行 `fm1_install.py --info`、`just fm1-download-mode`、`fm1-backup pre-morse-0.4`、`fm1-restart`（刷 Morse 0.4 前的 preflight） | `--info` 回答 `FM-1_41000300 [running]`；flash `0xB36014`；備份 SHA-256 `73a530d2…2e9b556`，`0xDA000`–`0xDBFFF` 有 Morse 的紀錄；重開回 Morse 0.3。0.4 的紀錄格式沒變，[模擬] 疊在 0.2／0.3 紀錄上升級都保留 |
+docs/firmware/switching.md:47:| 2026-11-18 | Morse 0.1 → 0.2（自製） | `just fm1-switch firmware/morse/build/morse.fwsc` | 成功。寫入 32 個 sector（`0x04000`–`0x23FFF`），學習紀錄 `0xDA000` 沒被寫，和預演一致 |
+docs/firmware/switching.md:49:| 2026-11-17 | ChoralRoot 0.41 → Conductor 0.1（自製） | `just fm1-switch firmware/conductor/build/conductor.fwsc` | 成功。寫入 140 個 sector（`0x04000`–`0x8EFFF`、`0x91000`–`0x91FFF`）。ChoralRoot 在 `0x93000`–`0x9EFFF` 的映像殘留還在，Conductor 不讀它 |
+docs/firmware/switching.md:69:| `0x97000` | project | 沒變 |
+docs/firmware/switching.md:70:| `0x9F000` | autosave | 沒變 |
+docs/firmware/switching.md:75:曲子在 `0x97000` 與 `0x9F000`，所以都還在。設定有兩份，我推測 SLOOP 是讀到 `0xFD000` 那份才沒有明顯異狀，但這是推測。如果發現 SLOOP 的某些全域設定（燈光、SYNC、MIDI channel）跑掉了，原因就在這裡。
+docs/firmware/switching.md:87:| CTL-1 1.0.3 | `0xDE000`–`0xDFFFF` | 在我的映像裡原本是空的。存設定時還會寫 `0xFC000` |
+docs/firmware/switching.md:89:| ChoralRoot 0.41 | 沒有改寫；正常開機 | **韌體映像本身較大（到 `0x9EFFF`），安裝時就會蓋掉 SLOOP 在 `0x97000` 的 project。** 上游另記載過舊版在 SLOOP 資料上掉進 ROM boot mode，見 [ChoralRoot](choralroot/index.md) |
+docs/firmware/switching.md:90:| Morse 0.1（自製） | 開機不寫；改設定或玩完一回合才寫 `0xDA000`–`0xDBFFF` `[模擬]`；2026-11-17 已刷進實機 | 韌體映像 `0x04000`–`0x92FFF`。和目前機上的 Conductor 只差 27 個 sector（`0x04000`–`0x1EFFF`）。預演疊在 `2026-11-17-2052-pre-conductor` 備份上，見 [Morse](../dev/morse.md#flash) |
+docs/firmware/switching.md:91:| Conductor 0.1（自製） | 沒有改寫，重開再讀回也是 0 次寫入 `[模擬]`；2026-11-17 已刷進實機 | 韌體映像 `0x04000`–`0x92FFF`，不到 `0x97000`。只讀 panel calibration（`0xDC000`），不碰 `0xFC000`。預演是疊在 `2026-11-17-0413-pre-choralroot-0.41` 備份上做的，見 [Conductor](../agentic/conductor.md#flash) |
+docs/firmware/ctl-1/index.md:67:| `just emu-rehearse`，蓋在我真實的 SLOOP 備份上 | 開到 Play 頁。第一次開機只改寫 `0xDE000`–`0xDFFFF`，在我的映像裡原本是空的 `[模擬]` |
+docs/firmware/ctl-1/index.md:68:| 原始碼 `app.h` | 設定存在 `0xFC000`，面板校正 `0xDC000`，Bluetooth 設定 `0xDE000` `[上游]` |
+docs/firmware/ctl-1/index.md:71:`0xFC000` 是 SLOOP 也在用的設定 sector（見[多韌體切換](../switching.md)），CTL-1 存設定時會覆寫它。SLOOP 的曲子在 `0x97000` 與 `0x9F000`，不受影響。
+docs/firmware/choralroot/index.md:112:- **它會蓋掉 SLOOP 的曲子。** ChoralRoot 的韌體映像比其他韌體大：佔 `0x04000`–`0x9EFFF`，其他韌體只到 `0x92FFF`。模擬器先預測到這點，2026-11-17 M-Flasher 在實機上列出的寫入計畫證實了：`Writes 152 sectors (608 KiB): 0x04000-0x8EFFF, 0x91000-0x91FFF, 0x93000-0x9EFFF` `[實機]`。多出來的部分蓋到 `0x97000`，那正是我這台 SLOOP 存 project 的 sector（見[多韌體切換](../switching.md)）。裝了 ChoralRoot 再切回 SLOOP，曲子要從備份還原。`[模擬]`
+docs/firmware/choralroot/index.md:113:- 上游文件記載過一台跑過 Sloop 的 FM-1 裝 ChoralRoot 後掉進晶片的 ROM boot mode（黑畫面），把舊資料（`0x97000…`、`0xFC000…`）清掉才回來。它的 installer 因此**拒絕**在 Sloop 上安裝。兩者都源自 Felucca、共用儲存位址，ChoralRoot 開機時會讀到 SLOOP 留下的資料。`[上游]`
+docs/agentic/conductor.md:80:- **韌體不寫 flash。** 所有狀態都在 host；fm1-emu 裡兩種晶片都是 0 次 erase / program `[模擬]`。韌體只登記 fm1-base 必要的 panel calibration 物件（`0xDC000`），不用 SLOOP 的設定 sector `0xFC000`。
+docs/agentic/conductor.md:269:會被改的地方：韌體區 `0x04000`–`0x92FFF`。ChoralRoot 的映像到 `0x9EFFF`，`0x93000`–`0x9EFFF` 留著不動，Conductor 不讀它。Conductor 不寫設定 sector `0xFC000`，也不寫任何資料區。實際寫入範圍以 M-Flasher 刷之前印出的計畫為準。
+docs/dev/morse.md:136:進度存在 FM-1 的 `0xDA000`（見[存檔](#flash)）。換韌體時不一定保得住：2026-11-18 實測從 SLOOP 2.8.5 切回來時還在，刷回原廠 V15 就沒了 `[實機]`。換韌體前先備份。0.4 起有兩種方式：
+docs/dev/morse.md:370:一筆紀錄（設定 + 學習進度，約 280 bytes）放在 `0xDA000`–`0xDBFFF`，透過 fm1-base 的 storage 層存（A/B 兩份、CRC）。在回合結束或離開、改設定 3 秒後才寫。不碰 SLOOP、Agent Deck、CTL-1 共用的 `0xFC000`。這台機器所有備份的 `0xDA000`–`0xDBFFF` 都是空的。
+docs/dev/morse.md:379:| 執行時寫入 | `0xDA000`–`0xDBFFF`，只有這 2 個 |
+docs/dev/morse.md:419:| 0.2 升級後的進度 | 本人看 PRACTICE 頁 | 還是 ROUND 4：刷機只改寫韌體區，`0xDA000` 的紀錄留著 `[實機]` |
+docs/getting-started/bricking.md:44:Felucca 系的韌體（Felucca、SLOOP、ChoralRoot…）把曲子、音色、設定放在 `0x97000`–`0xDFFFF`，更新時把 loader 暫存在 `0xE0000`，全域設定放在 `0xFC000`。前兩塊落在**原廠 V15 自己的設定區**（`0x93000`–`0xE8FFF`）裡面，而 installer 只重寫韌體區。
+```
+</details></tool-use>
+
+_**Agent - sidechain (claude-opus-5-5 2026-11-18 10:19:30Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Check uac_mix scaling and clipping
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/third_party/fm1-base && grep -n -E "1 << 2[0-9]|1u << 2[0-9]|>> ?[0-9]+|clip|satur|8388607|0x7FFFFF|4194303" device/uac_mix.h | head -20`
+
+```text
+25:    uac_play(o, n, full ? play_q12 : (master * master >> 12) * play_q12 >> 12);   /* the computer's audio, at MASTER */
+```
+</details></tool-use>
+
+_**Agent - sidechain (claude-opus-5-5 2026-11-18 10:19:33Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+List store maps and available backups
+
+`grep -n 'APP_STORE_MAP\|enum { OBJ' firmware/*/app.h; ls backups 2>/dev/null | tail -12`
+
+```text
+firmware/conductor/app.h:17:enum { OBJ_PANEL, OBJ_NOBJ };
+firmware/conductor/app.h:18:#define APP_STORE_MAP {0xDC000u}
+firmware/voicelab/app.h:15:enum { OBJ_PANEL, OBJ_NOBJ };
+firmware/voicelab/app.h:16:#define APP_STORE_MAP {0xDC000u}
+firmware/hello/app.h:19:enum { OBJ_SETTINGS, OBJ_PANEL, OBJ_BLE, OBJ_NOBJ };
+firmware/hello/app.h:20:#define APP_STORE_MAP {0xFC000u, 0xDC000u, 0xDE000u}
+firmware/morse/app.h:20:enum { OBJ_PANEL, OBJ_MORSE, OBJ_NOBJ };
+firmware/morse/app.h:21:#define APP_STORE_MAP {0xDC000u, 0xDA000u}
+2026-11-17-stock
+2026-11-18-0013-pre-morse
+2026-11-18-0212-pre-morse
+2026-11-18-pre-hub-test-1
+2026-11-18-pre-hub-test-2
+2026-11-18-pre-hub-test-3
+2026-11-18-pre-hub-test-3-stock
+2026-11-18-pre-morse-0.2
+2026-11-18-pre-morse-0.3
+2026-11-18-pre-morse-0.4
+2026-11-18-pre-morse-0.5
+progress
+```
+</details></tool-use>
+
+_**Agent - sidechain (claude-opus-5-5 2026-11-18 10:19:34Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Read uac_mix.h
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/third_party/fm1-base && cat -n device/uac_mix.h | sed -n 1,40p; grep -rn -E "1 << 22|>> 7|>> 8" device/plat_fm1.c device/usb_ch*.c 2>/dev/null | head`
+
+```text
+     1	/* SPDX-License-Identifier: MPL-2.0
+     2	 * Copyright (C) 2026 Charles Vestal */
+     3	/* USB audio around one render block (main_fm1.c render_block; tests/uac_mix_test.c), in this order:
+     4	 *   1. the USB recording (usb_audio_in: uac_tap) takes the app's render alone, so recording the FM-1 never records
+     5	 *      the computer's own playback;
+     6	 *   2. the computer's audio (usb_audio_out: uac_play) is added for the speaker and headphones, at plat_usb_play_gain's
+     7	 *      level times MASTER's (the square of its position). uac_play runs at level 0 too: it still reads the ring, so its
+     8	 *      rate tracking stays locked and turning it up again starts in step;
+     9	 *   3. with USB AUDIO full (plat_usb_audio_full; the render came at 4096), MASTER for the speaker after the tap, over
+    10	 *      both: the computer's audio was added at plat_usb_play_gain's level alone, MASTER here.
+    11	 * The includer has uac_tap and uac_play (bsp/chip/usb.c) when FELUCCA_UAC / FELUCCA_UAC_OUT are on. */
+    12	#ifndef FM1B_UAC_MIX_H
+    13	#define FM1B_UAC_MIX_H
+    14	#include <stdint.h>
+    15	
+    16	/* o: n stereo frames of the render (24-bit, as the I2S takes them; at 4096 when full, else at gain); gain: MASTER's gain
+    17	 * (APP_GAIN), put on after the tap when full; master: MASTER's position 0..4096; play_q12: the computer's audio's level,
+    18	 * 0 muted .. 4096 as sent */
+    19	static inline void uac_mix(int32_t *o, uint32_t n, uint32_t gain, uint32_t master, int full, uint32_t play_q12)
+    20	{
+    21	#if FELUCCA_UAC
+    22	    uac_tap(o, n);                                  /* the USB audio input: the app's output, before the computer's */
+    23	#endif
+    24	#if FELUCCA_UAC_OUT
+    25	    uac_play(o, n, full ? play_q12 : (master * master >> 12) * play_q12 >> 12);   /* the computer's audio, at MASTER */
+    26	#else
+    27	    (void)master, (void)play_q12;
+    28	#endif
+    29	    if (full) {                                     /* the speaker and headphones: MASTER after the tap */
+    30	        const float g = (float)gain * (1.0f / 4096.0f);
+    31	        uint32_t i;
+    32	        for (i = 0; i < 2u * n; i++)
+    33	            o[i] = (int32_t)((float)o[i] * g);
+    34	    }
+    35	}
+    36	#endif
+(eval):1: no matches found: device/usb_ch*.c
+```
+</details></tool-use>
+
+_**Agent - sidechain (claude-opus-5-5 2026-11-18 10:19:38Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+List backup directories and files
+
+`ls -la backups/ backups/2026-11-18-pre-morse-0.5 backups/2026-11-17-stock 2>&1 | head -40; ls backups/*/ | head -60`
+
+```text
+backups/:
+drwxr-xr-x@   - zhouhanru 17 Nov 03:04 2026-11-17-0303-pre-sloop-2.8.5
+drwxr-xr-x@   - zhouhanru 17 Nov 03:41 2026-11-17-0341-pre-ctl-1.0.3
+drwxr-xr-x@   - zhouhanru 17 Nov 04:13 2026-11-17-0413-pre-choralroot-0.41
+drwxr-xr-x@   - zhouhanru 17 Nov 18:40 2026-11-17-1839-pre-conductor
+drwxr-xr-x@   - zhouhanru 17 Nov 18:59 2026-11-17-1859-pre-conductor
+drwxr-xr-x@   - zhouhanru 17 Nov 20:53 2026-11-17-2052-pre-conductor
+drwxr-xr-x@   - zhouhanru 17 Nov 22:54 2026-11-17-2253-pre-morse
+drwxr-xr-x@   - zhouhanru 17 Nov 02:38 2026-11-17-agtdeck-0.7
+drwxr-xr-x@   - zhouhanru 17 Nov 02:34 2026-11-17-pre-agtdeck
+drwxr-xr-x@   - zhouhanru 17 Nov 18:38 2026-11-17-pre-conductor
+drwxr-xr-x@   - zhouhanru 17 Nov 22:52 2026-11-17-pre-morse
+drwxr-xr-x@   - zhouhanru 17 Nov 01:41 2026-11-17-sloop-2.8.5
+drwxr-xr-x@   - zhouhanru 17 Nov 01:16 2026-11-17-stock
+drwxr-xr-x@   - zhouhanru 18 Nov 00:14 2026-11-18-0013-pre-morse
+drwxr-xr-x@   - zhouhanru 18 Nov 02:12 2026-11-18-0212-pre-morse
+drwxr-xr-x@   - zhouhanru 18 Nov 02:33 2026-11-18-pre-hub-test-1
+drwxr-xr-x@   - zhouhanru 18 Nov 02:39 2026-11-18-pre-hub-test-2
+drwxr-xr-x@   - zhouhanru 18 Nov 02:42 2026-11-18-pre-hub-test-3
+drwxr-xr-x@   - zhouhanru 18 Nov 02:46 2026-11-18-pre-hub-test-3-stock
+drwxr-xr-x@   - zhouhanru 18 Nov 00:12 2026-11-18-pre-morse-0.2
+drwxr-xr-x@   - zhouhanru 18 Nov 02:12 2026-11-18-pre-morse-0.3
+drwxr-xr-x@   - zhouhanru 18 Nov 04:47 2026-11-18-pre-morse-0.4
+drwxr-xr-x@   - zhouhanru 18 Nov 16:21 2026-11-18-pre-morse-0.5
+drwxr-xr-x@   - zhouhanru 18 Nov 16:24 progress
+.rw-r--r--@ 12k zhouhanru 18 Nov 02:44 .DS_Store
+
+backups/2026-11-18-pre-morse-0.5:
+.rw-r--r--@ 1.0M zhouhanru 18 Nov 16:12 fm1-20261118-161218.bin
+.rw-r--r--@  361 zhouhanru 18 Nov 16:12 fm1-20261118-161218.json
+.rw-r--r--@ 4.0k zhouhanru 18 Nov 16:12 morse-progress-2026-11-18-pre-0.5.json
+
+backups/2026-11-17-stock:
+.rw-r--r--@ 1.0M zhouhanru 17 Nov 01:16 fm1-20261117-011632.bin
+.rw-r--r--@  369 zhouhanru 17 Nov 01:16 fm1-20261117-011632.json
+backups/2026-11-17-0303-pre-sloop-2.8.5/:
+fm1-20261117-030406.bin
+fm1-20261117-030406.json
+
+backups/2026-11-17-0341-pre-ctl-1.0.3/:
+fm1-20261117-034125.bin
+fm1-20261117-034125.json
+
+backups/2026-11-17-0413-pre-choralroot-0.41/:
+fm1-20261117-041350.bin
+fm1-20261117-041350.json
+
+backups/2026-11-17-1839-pre-conductor/:
+fm1-20261117-184005.bin
+fm1-20261117-184005.json
+
+backups/2026-11-17-1859-pre-conductor/:
+fm1-20261117-185927.bin
+fm1-20261117-185927.json
+
+backups/2026-11-17-2052-pre-conductor/:
+fm1-20261117-205303.bin
+fm1-20261117-205303.json
+
+backups/2026-11-17-2253-pre-morse/:
+fm1-20261117-225404.bin
+fm1-20261117-225404.json
+
+backups/2026-11-17-agtdeck-0.7/:
+fm1-20261117-023846.bin
+fm1-20261117-023846.json
+
+backups/2026-11-17-pre-agtdeck/:
+fm1-20261117-023458.bin
+fm1-20261117-023458.json
+
+backups/2026-11-17-pre-conductor/:
+fm1-20261117-183840.bin
+fm1-20261117-183840.json
+
+backups/2026-11-17-pre-morse/:
+fm1-20261117-225206.bin
+fm1-20261117-225206.json
+
+backups/2026-11-17-sloop-2.8.5/:
+fm1-20261117-014153.bin
+fm1-20261117-014153.json
+
+backups/2026-11-17-stock/:
+fm1-20261117-011632.bin
+fm1-20261117-011632.json
+
+backups/2026-11-18-0013-pre-morse/:
+fm1-20261118-001403.bin
+fm1-20261118-001403.json
+
+backups/2026-11-18-0212-pre-morse/:
+fm1-20261118-021248.bin
+fm1-20261118-021248.json
+```
+</details></tool-use>
+
+_**Agent - sidechain (claude-opus-5-5 2026-11-18 10:19:47Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Scan backups for used data-area sectors
+
+```bash
+python3 -I -c "
+import glob,os
+S=4096
+files=sorted(glob.glob('backups/*/fm1-*.bin'))
+used=set()
+per={}
+for f in files:
+    b=open(f,'rb').read()
+    if len(b)!=1<<20: continue
+    nz=[i for i in range(0x97,0xE0) if b[i*S:(i+1)*S]!=b'\xff'*S]
+    nz2=[i for i in range(0xFC,0xFF) if b[i*S:(i+1)*S]!=b'\xff'*S]
+    per[f]=(nz,nz2)
+    used.update(nz)
+def rng(l):
+    out=[];
+    for i in l:
+        if out and out[-1][1]==i-1: out[-1][1]=i
+        else: out.append([i,i])
+    return ', '.join(('0x%05X'%(a*S) if a==b else '0x%05X-0x%05X'%(a*S,(b+1)*S-1)) for a,b in out)
+for f,(nz,nz2) in per.items():
+    print(os.path.basename(os.path.dirname(f))[:40].ljust(40), rng(nz), '| FC-FE:', rng(nz2))
+free=[i for i in range(0x97,0xE0) if i not in used]
+print('ever-used in 0x97000-0xDFFFF across all backups:', rng(sorted(used)))
+print('never used (erased in every backup):', rng(free))
+"
+```
+
+```text
+2026-11-17-0303-pre-sloop-2.8.5          0x97000, 0x9F000 | FC-FE: 0xFC000-0xFEFFF
+2026-11-17-0341-pre-ctl-1.0.3            0x97000, 0x9F000 | FC-FE: 0xFC000-0xFEFFF
+2026-11-17-0413-pre-choralroot-0.41      0x97000, 0x9F000, 0xDE000-0xDFFFF | FC-FE: 0xFC000-0xFEFFF
+2026-11-17-1839-pre-conductor            0x97000-0x9FFFF, 0xDE000-0xDFFFF | FC-FE: 0xFC000-0xFEFFF
+2026-11-17-1859-pre-conductor            0x97000-0x9FFFF, 0xDE000-0xDFFFF | FC-FE: 0xFC000-0xFEFFF
+2026-11-17-2052-pre-conductor            0x97000-0x9FFFF, 0xDE000-0xDFFFF | FC-FE: 0xFC000-0xFEFFF
+2026-11-17-2253-pre-morse                0x97000-0x9FFFF, 0xDE000-0xDFFFF | FC-FE: 0xFC000-0xFEFFF
+2026-11-17-agtdeck-0.7                   0x97000, 0x9F000 | FC-FE: 0xFC000-0xFEFFF
+2026-11-17-pre-agtdeck                   0x97000, 0x9F000 | FC-FE: 0xFC000-0xFEFFF
+2026-11-17-pre-conductor                 0x97000-0x9FFFF, 0xDE000-0xDFFFF | FC-FE: 0xFC000-0xFEFFF
+2026-11-17-pre-morse                     0x97000-0x9FFFF, 0xDE000-0xDFFFF | FC-FE: 0xFC000-0xFEFFF
+2026-11-17-sloop-2.8.5                   0x97000, 0x9F000 | FC-FE: 0xFC000-0xFEFFF
+2026-11-17-stock                          | FC-FE: 
+2026-11-18-0013-pre-morse                0x97000-0x9FFFF, 0xDA000-0xDBFFF, 0xDE000-0xDFFFF | FC-FE: 0xFC000-0xFEFFF
+2026-11-18-0212-pre-morse                0x97000-0x9FFFF, 0xDA000-0xDBFFF, 0xDE000-0xDFFFF | FC-FE: 0xFC000-0xFEFFF
+2026-11-18-pre-hub-test-1                0x97000-0x9FFFF, 0xDA000-0xDBFFF, 0xDE000-0xDFFFF | FC-FE: 0xFC000-0xFEFFF
+2026-11-18-pre-hub-test-2                0x97000-0x9FFFF, 0xDA000-0xDBFFF, 0xDE000-0xDFFFF | FC-FE: 0xFC000-0xFEFFF
+2026-11-18-pre-hub-test-3-stock           | FC-FE: 
+2026-11-18-pre-hub-test-3                0x97000-0x9FFFF, 0xDA000-0xDBFFF, 0xDE000-0xDFFFF | FC-FE: 0xFC000-0xFEFFF
+2026-11-18-pre-morse-0.2                 0x97000-0x9FFFF, 0xDA000-0xDBFFF, 0xDE000-0xDFFFF | FC-FE: 0xFC000-0xFEFFF
+2026-11-18-pre-morse-0.3                 0x97000-0x9FFFF, 0xDA000-0xDBFFF, 0xDE000-0xDFFFF | FC-FE: 0xFC000-0xFEFFF
+2026-11-18-pre-morse-0.4                 0xDA000-0xDBFFF | FC-FE: 
+2026-11-18-pre-morse-0.5                 0xDA000-0xDBFFF | FC-FE: 
+ever-used in 0x97000-0xDFFFF across all backups: 0x97000-0x9FFFF, 0xDA000-0xDBFFF, 0xDE000-0xDFFFF
+never used (erased in every backup): 0xA0000-0xD9FFF, 0xDC000-0xDDFFF
+```
+</details></tool-use>
+
+_**Agent - sidechain (claude-opus-5-5 2026-11-18 10:19:57Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Search fm1-base docs for flash layout notes
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/third_party/fm1-base && grep -rn '0xA0000\|0xD8000\|0xD6000\|0xDA000\|0xDC000\|0xDE000\|sample bank\|samples' docs/*.md DESIGN.md README.md 2>/dev/null | head -20; ls docs`
+
+```text
+bt
+FIRMWARE-JSON.md
+firmware.schema.json
+SECOND-CORE.md
+```
+</details></tool-use>
+
+_**Agent - sidechain (claude-opus-5-5 2026-11-18 10:20:02Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Inspect storage.c for store map semantics
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/third_party/fm1-base && grep -rln 'APP_STORE_MAP' --include=*.h --include=*.c --include=*.md . | head -20; grep -rn 'APP_STORE_MAP' device/storage.c | head; sed -n 1,40p device/storage.c`
+
+```text
+(eval):1: no matches found: --include=*.h
+device/storage.c:34:/* flash map: the app's (app.h APP_STORE_MAP, an offset per object, plat.h). Nothing between 0xE0000 and 0xFBFFF:
+device/storage.c:71:    static const uint32_t map[OBJ_NOBJ] = APP_STORE_MAP;
+/* SPDX-License-Identifier: MPL-2.0
+ * Copyright (C) 2026 Charles Vestal
+ * Copyright (C) 2026 Leo Kuroshita (@kurogedelic), Hügelton Instruments
+ * Changed for X0X and fm1-base: the object map is the app's (see below). */
+/* Persistent storage on the SPI NOR.
+ *
+ * Every object has an A/B sector pair. A save goes to the copy that is not
+ * the current one: erase the sector, program the payload (from offset 256),
+ * then the 32-byte header at offset 0 last. The header is the commit record;
+ * on load the valid copy with the highest seq wins, so a torn write leaves
+ * the previous copy in charge.
+ *
+ * Flash access goes through three hooks (also used by the host test):
+ *   st_read(off, dst, n)   st_erase(off)   st_prog(off, src, n)
+ *
+ * The pool (an app's APP_STORE_POOL, app.h): objects APP_STORE_POOL_OBJ0 .. + APP_STORE_POOL_OBJN share
+ * APP_STORE_POOL_N sectors from APP_STORE_POOL_BASE instead of a pair each. A sector holds one copy of one object, with
+ * the same header (its slot field: the sector's index); an object's current copy is its valid copy with the highest
+ * seq, wherever it is, its previous copy the next. A save takes a sector no current copy holds: an erased or broken
+ * one first, then a copy of the object's own older than its current, then other objects' copies with two newer, then
+ * other objects' previous copies (so a stream saved object by object keeps its previous copies while there is room).
+ * No room: -8, nothing written. An empty object (a restore's absent one) erases the object's copies. The pool's
+ * first APP_STORE_POOL_OLD sectors were the app's A/B pairs before it (the same headers, so they are pool copies as
+ * they are): st_pool_boot moves the current copies found past the pool's end into it, erasing what it moved, and
+ * until every one has moved a lookup scans them too (st_pool_scan: the pool's own sectors once they are gone). An
+ * object whose current copy the app calls empty (APP_STORE_POOL_EMPTY(obj, payload, len), its option: a placeholder
+ * the layout before needed and the pool does not) is dropped first instead, wherever its copies are.
+ */
+#define ST_MAGIC 0x30583058u                   /* "X0X0": never mistaken for a Felucca object */
+#define ST_SECTOR 4096u
+#define ST_PAYLOAD_OFF 256u
+#define ST_PAYLOAD_MAX (ST_SECTOR - ST_PAYLOAD_OFF)
+
+/* flash map: the app's (app.h APP_STORE_MAP, an offset per object, plat.h). Nothing between 0xE0000 and 0xFBFFF:
+ * that is the update loader's staging area. The magic is X0X's; an app tells its own objects apart by its own magic. */
+typedef struct {
+    uint32_t magic;
+    uint16_t type, slot;
+    uint32_t seq, len, crc, rsv[2];
+    uint32_t hcrc;
+```
+</details></tool-use>
+
+_**Agent - sidechain (claude-opus-5-5 2026-11-18 10:20:09Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Read storage.c load/save logic
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/third_party/fm1-base && sed -n 40,140p device/storage.c`
+
+```text
+    uint32_t hcrc;
+} st_hdr_t;
+
+static int st_read(uint32_t off, void *dst, uint32_t n);
+static int st_erase(uint32_t off);
+static int st_prog(uint32_t off, const void *src, uint32_t n);
+
+static uint32_t st_crc32(const void *p, uint32_t n)   /* zlib CRC-32, 4 bits per step */
+{
+    static const uint32_t T[16] = {
+        0x00000000u, 0x1DB71064u, 0x3B6E20C8u, 0x26D930ACu, 0x76DC4190u, 0x6B6B51F4u, 0x4DB26158u, 0x5005713Cu,
+        0xEDB88320u, 0xF00F9344u, 0xD6D6A3E8u, 0xCB61B38Cu, 0x9B64C2B0u, 0x86D3D2D4u, 0xA00AE278u, 0xBDBDF21Cu};
+    const uint8_t *b = p;
+    uint32_t c = 0xFFFFFFFFu;
+    while (n--) {
+        c ^= *b++;
+        c = (c >> 4) ^ T[c & 15u];
+        c = (c >> 4) ^ T[c & 15u];
+    }
+    return ~c;
+}
+
+#ifdef APP_STORE_POOL
+#define ST_POOL_LAST (APP_STORE_POOL_OBJ0 + APP_STORE_POOL_OBJN)
+static int st_pooled(uint32_t obj) { return obj >= APP_STORE_POOL_OBJ0 && obj < ST_POOL_LAST; }
+static uint32_t st_pool_scan = APP_STORE_POOL_OLD;    /* sectors a lookup reads: APP_STORE_POOL_N once boot moved all */
+#else
+static int st_pooled(uint32_t obj) { (void)obj; return 0; }
+#endif
+static uint32_t st_sector(uint32_t obj, uint32_t copy)  /* flash offset of copy A (0) / B (1); a pooled object's: sector */
+{
+    static const uint32_t map[OBJ_NOBJ] = APP_STORE_MAP;
+#ifdef APP_STORE_POOL
+    if (st_pooled(obj))
+        return APP_STORE_POOL_BASE + copy * ST_SECTOR;
+#endif
+    return map[obj] + copy * ST_SECTOR;
+}
+
+static uint8_t st_buf[ST_PAYLOAD_MAX] __attribute__((aligned(4)));
+
+static int st_head(uint32_t obj, uint32_t copy, st_hdr_t *h)   /* commit record valid: 0 */
+{
+    if (st_read(st_sector(obj, copy), h, sizeof *h))
+        return -1;
+    if (h->magic != ST_MAGIC || h->type != obj || h->len > ST_PAYLOAD_MAX ||
+        h->hcrc != st_crc32(h, sizeof *h - 4u))
+        return -1;
+    return 0;
+}
+
+static int st_body(uint32_t obj, uint32_t copy, const st_hdr_t *h)   /* payload -> st_buf, CRC ok: 0 */
+{
+    if (st_read(st_sector(obj, copy) + ST_PAYLOAD_OFF, st_buf, h->len) || st_crc32(st_buf, h->len) != h->crc)
+        return -1;
+    return 0;
+}
+
+/* the current copy: the valid one with the highest seq (A on a tie), -1 when
+ * neither is valid. Headers first, so only the winner's payload is read (it
+ * is left in st_buf); *h gets its header. */
+#ifdef APP_STORE_POOL
+/* a pooled object's valid copy with the highest seq below `below` (0: any) whose payload checks out (left in st_buf):
+ * its sector, -1 none */
+static int st_pool_find(uint32_t obj, st_hdr_t *h, uint32_t below)
+{
+    for (;;) {
+        st_hdr_t c;
+        int best = -1;
+        for (uint32_t i = 0; i < st_pool_scan; i++)
+            if (st_head(obj, i, &c) == 0 && (!below || c.seq < below) && (best < 0 || c.seq > h->seq)) {
+                *h = c;
+                best = (int)i;
+            }
+        if (best < 0)
+            return -1;
+        if (st_body(obj, (uint32_t)best, h) == 0)
+            return best;
+        below = h->seq;                               /* (a torn payload: the next older) */
+    }
+}
+#endif
+static int st_current(uint32_t obj, st_hdr_t *h)
+{
+    st_hdr_t a, b;
+#ifdef APP_STORE_POOL
+    if (st_pooled(obj))
+        return st_pool_find(obj, h, 0);
+#endif
+    int va = st_head(obj, 0, &a) == 0, vb = st_head(obj, 1, &b) == 0;
+    if (vb && (!va || b.seq > a.seq)) {
+        if (st_body(obj, 1, &b) == 0) {
+            *h = b;
+            return 1;
+        }
+        vb = 0;
+    }
+    if (va && st_body(obj, 0, &a) == 0) {
+        *h = a;
+        return 0;
+    }
+```
+</details></tool-use>
+
+_**Agent - sidechain (claude-opus-5-5 2026-11-18 10:20:17Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Find OBJ_PANEL usage in platform
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/third_party/fm1-base && grep -n 'OBJ_PANEL' -r device lib host | head -20; sed -n 1,30p device/panel.c`
+
+```text
+device/panel.c:6: * label in turn; the table is kept in flash (OBJ_PANEL) and in .noinit. */
+device/panel.c:41:    if (plat_store_load(OBJ_PANEL, &p, sizeof p) == (int)sizeof p && panel_valid(&p))
+device/panel.c:104:    plat_store_save(OBJ_PANEL, &panel, sizeof panel);
+device/unity.c:9: *          app_frame, app_input_only, app_say; its store objects (OBJ_PANEL among them, OBJ_NOBJ) and their
+/* SPDX-License-Identifier: MPL-2.0
+ * Copyright (C) 2026 Charles Vestal
+ * Adapted from Felucca's panel.c, Copyright (C) 2026 Leo Kuroshita (@kurogedelic), Hugelton Instruments. */
+/* Physical panel: which matrix button / encoder carries which printed label (plat.h's
+ * B_* / EN_*). HARDWARE CALIBRATION (hold OCT- and OCT+ while powering on) asks for each
+ * label in turn; the table is kept in flash (OBJ_PANEL) and in .noinit. */
+static const char *const B_NAME[NB] = {"FX", "SEL", "ENV", "LFO", "EDIT", "GLO", "HOME", "SAVE",
+                                        "ARP", "SEQ", "PLAY", "REC", "OCT-", "OCT+"};
+static const char *const E_NAME[NE] = {"SELECT", "ALGORITHM", "PRESETS", "KNOB 1", "KNOB 2",
+                                        "KNOB 3", "KNOB 4"};
+#define PANEL_MAGIC 0x50414E35u          /* "PAN5": Felucca's layout, so its calibration stays valid */
+
+typedef struct {
+    uint32_t magic;
+    uint8_t btn[NB];             /* matrix button id (0..13) per label */
+    uint8_t enc[NE];             /* matrix encoder (0..6) per role */
+    int8_t dir[NE];              /* +1 / -1 so that clockwise is + */
+} panel_t;
+panel_t panel __attribute__((section(".noinit")));
+
+static const panel_t PANEL_DEFAULT = {
+    PANEL_MAGIC,
+    {2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 0, 1},
+    {0, 1, 6, 2, 3, 4, 5},
+    {1, 1, 1, 1, 1, 1, 1},
+};
+
+static int panel_valid(const panel_t *p)
+{
+    uint32_t i, ok = p->magic == PANEL_MAGIC;
+```
+</details></tool-use>
+
+_**Agent - sidechain (claude-opus-5-5 2026-11-18 10:20:29Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Search SLOOP docs for sample flash region
+
+`grep -rn -i 'sample' docs/firmware/sloop/*.md docs/hardware/*.md docs/getting-started/bricking.md 2>/dev/null | grep -i '0x\|flash\|位址\|sector' | head -10; ls vendor 2>/dev/null`
+
+```text
+docs/hardware/flash-map.md:39:| `0xA0000` 起 | samples |
+386dx-engine
+ChoralRootFM1
+cmudict
+fm-1-agent-deck
+moonshine
+python_wizard
+```
+</details></tool-use>
+
+_**Agent - sidechain (claude-opus-5-5 2026-11-18 10:20:34Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Check vendored Felucca-family store layouts
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/vendor && grep -rn -i 'STORE_MAP\|0xA0000\|0xD8000\|0xD[0-9A-F]000u\|SAMPLE_BASE\|SMP_BASE\|0xA0000u' ChoralRootFM1 fm-1-agent-deck --include=*.h 2>/dev/null | head -20`
+
+```text
+(eval):1: no matches found: --include=*.h
+```
+</details></tool-use>
+
+_**Agent - sidechain (claude-opus-5-5 2026-11-18 10:20:40Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Search vendored firmware for flash offsets
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/vendor && grep -rn -i -E 'STORE_MAP|0xA0000|0xD8000|SAMPLE_BASE|SMP_BASE|0x(9F|A0|D[0-9A-F]|FC|FE)000u?' ChoralRootFM1 fm-1-agent-deck 2>/dev/null | grep -v -E '\.(bin|fwsc|png)' | head -25`
+
+```text
+ChoralRootFM1/SMK37.md:249:| 0xD2000-0xE5FFF | the ten loop slots | FL_SMP |
+ChoralRootFM1/SMK37.md:255:| 0xFE000-0xFEFFF | free | not written |
+ChoralRootFM1/firmware/hal/fm1_flash_map.h:46: *   0xFE000-0xFEFFF  free, unused
+ChoralRootFM1/firmware/loader/loader.c:33:#define FL_RANGE_OK(off, n) (FL_IN(off, n, 0x4000u, 0x93000u) || FL_IN(off, n, 0x93000u, 0xFC000u))
+ChoralRootFM1/firmware/loader/ldr_core.c:36: * LDR_RES2_TYPE, exactly LDR_RES2_HI - LDR_RES2_LO bytes) holds flash 0xDC000..0xDFFFF; its sectors are written in the
+ChoralRootFM1/firmware/loader/ldr_core.c:61:#define LDR_REC_HI 0xFC000u                     /* ... and below Felucca's globals */
+ChoralRootFM1/firmware/loader/ldr_core.c:66:#define LDR_RES_HI 0x9F000u                     /* hal/fm1_flash_map.h FL_RES_HI: the region, 0x93000 .. */
+ChoralRootFM1/firmware/loader/ldr_core.c:70:#define LDR_RES2_LO 0xDC000u                    /* hal/fm1_flash_map.h FL_RES2_LO .. FL_RES2_HI (3y296) */
+ChoralRootFM1/firmware/src/storage.c:31:/* flash map (FL_DATA 0x97000..0xDFFFF, FL_GLOB 0xFC000..): the FM6 patch bank (fm6_bank.c) copy A 0x9F000, the eight
+ChoralRootFM1/firmware/src/storage.c:36: * 0xFC000 / 0xFD000, the FM6 patch bank copy B 0xFE000. SMK-37 (BOARD_SMK37): none of these places; every object, the
+ChoralRootFM1/firmware/src/storage.c:39: * FREE (HISTORY 3y231): 0x97000..0x9EFFF, 0xA0000..0xA1FFF, 0xB2000..0xB3FFF and 0xDC000..0xDFFFF held 0.21's sound
+ChoralRootFM1/firmware/src/storage.c:46:       OBJ_BLE,                          /* 20, FM-1: Bluetooth's address, bond, trims (cr_ble.c, 3y236): 0xA0000 / 0xA1000,
+ChoralRootFM1/firmware/src/storage.c:137: *     0xC2000..0xD1FFF  OBJ_CZBANK0..+7      0xD2000..0xE5FFF the loop slots (cr_ui.c CRL_FL_BASE, 2 x CRL_SLOTS)
+ChoralRootFM1/firmware/src/storage.c:152:#define ST_SMK_LOOPS 0xD2000u                  /* the loop slots (cr_ui.c CRL_FL_BASE), in USRFLASH */
+ChoralRootFM1/firmware/src/storage.c:305:        return copy ? 0xFE000u : 0x9F000u;
+ChoralRootFM1/firmware/src/storage.c:311:        return 0xA0000u + copy * ST_SECTOR;
+ChoralRootFM1/firmware/src/storage.c:314:    return 0xFC000u + copy * ST_SECTOR;                  /* OBJ_SETTINGS */
+ChoralRootFM1/firmware/src/cr_res.h:30: * choralroot.c), flash FL_RES2_LO..FL_RES2_HI (0xDC000..0xDFFFF, 16 KB: 0.21's user banks, free since 3y231), XIP
+ChoralRootFM1/firmware/src/fm6_bank.c:5: * object (OBJ_FM6BANK, A/B: 0x9F000 / 0xFE000), mirrored in RAM (the pool) so a PTCH turn never reads flash. The
+ChoralRootFM1/firmware/src/cr_ble.c:26: *         (storage.c OBJ_BLE, 0xA0000 / 0xA1000): never in a backup (a unit's pairing is not a musical setting),
+ChoralRootFM1/firmware/src/upreset.c:5: * 0xDC000..0xDFFFF), 16 records each, mirrored in RAM so browsing never
+ChoralRootFM1/firmware/src/upool.c:14: * 0.21's 32 slots (the user banks and the VA / FM6 / CZ-1 / FM TONE stores at 0x97000..0x9EFFF, 0xA0000, 0xB2000,
+ChoralRootFM1/firmware/src/upool.c:15: * 0xDC000) were copied into slots 1..32 by the 0.22 .. 0.29 firmwares at their first power-on; this firmware never reads
+ChoralRootFM1/firmware/src/cr_ui.c:7797: * clears, its resource region left out; storage.c's map): FM6 bank copy A 0x9F000, the eight CZ-1 banks
+ChoralRootFM1/firmware/src/cr_ui.c:7802: * 0xFC000..0xFEFFF: 60 sectors. The sectors of 0.21's sound objects (0x97000..0x9EFFF, 0xA0000, 0xB2000, 0xDC000) are
+```
+</details></tool-use>
+
+_**Agent - sidechain (claude-opus-5-5 2026-11-18 10:20:46Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Read ChoralRoot FM-1 flash map
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/vendor/ChoralRootFM1/firmware && sed -n 28,48p src/storage.c; sed -n 125,160p src/storage.c; sed -n 20,60p hal/fm1_flash_map.h`
+
+```text
+#define ST_PAYLOAD_OFF 256u
+#define ST_PAYLOAD_MAX (ST_SECTOR - ST_PAYLOAD_OFF)
+
+/* flash map (FL_DATA 0x97000..0xDFFFF, FL_GLOB 0xFC000..): the FM6 patch bank (fm6_bank.c) copy A 0x9F000, the eight
+ * CZ-1 banks A..H 0xA2000..0xB1FFF (cz_bank.c, OBJ_CZBANK0 + k: an A/B pair each), the session 0xB4000 / 0xB5000
+ * (cr_settings.c, OBJ_SESSION: where the unit was left, 0.18), the favourites 0xB6000 / 0xB7000 (cr_favs.c, OBJ_FAVS:
+ * the marked sounds, 0.22), the sound pool 0xB8000..0xC7FFF (0.22: the sp_* section at the end, upool.c: 13 banks of 10
+ * user slots floating over these 16 sectors), the loop slots 0xC8000..0xDBFFF (cr_ui.c CRL_FL_BASE), the settings A / B
+ * 0xFC000 / 0xFD000, the FM6 patch bank copy B 0xFE000. SMK-37 (BOARD_SMK37): none of these places; every object, the
+ * favourites, the pool's sectors and the loop slots have their own there (the SMK section at st_sector below; SMK37.md
+ * "Storage").
+ * FREE (HISTORY 3y231): 0x97000..0x9EFFF, 0xA0000..0xA1FFF, 0xB2000..0xB3FFF and 0xDC000..0xDFFFF held 0.21's sound
+ * objects (the user banks, the VA / FM6 / CZ-1 tone / FM TONE stores; before them Felucca's projects and user presets).
+ * 0.22 .. 0.29 copied them into the pool once at their first power-on; this firmware neither reads nor writes them (a
+ * unit still on 0.21 goes through 0.29.2 first). Their object numbers stay reserved below: every record's header names
+ * its object (st_hdr_t.type), so the live objects keep their numbers. */
+enum { OBJ_SETTINGS, OBJ_X_PROJECT0, OBJ_X_UPRESET0 = OBJ_X_PROJECT0 + 4, OBJ_FM6BANK = OBJ_X_UPRESET0 + 2,
+       OBJ_X_CZSTORE1, OBJ_CZBANK0, OBJ_X_QUADSTORE = OBJ_CZBANK0 + 8, OBJ_SESSION, OBJ_FAVS,
+       OBJ_BLE,                          /* 20, FM-1: Bluetooth's address, bond, trims (cr_ble.c, 3y236): 0xA0000 / 0xA1000,
+                                          * 0.21's CZ-1 tones 17..32 until 3y231 (their records name 8: never this one) */
+       OBJ_COUNT };
+ * or key_mac (0xFF000..).
+ *   the stock VM, 30 sectors, 0x9D000..0xBAFFF
+ *     0x9D000..0xA8FFF  the resource region since HISTORY 3y295 (cr_res.h, FL_RES: the update loader writes it, never
+ *                       the store; 0.21's sound objects until 3y231, free since). Not in ST_SMK_REGIONS: an owner
+ *                       change or Flash Data leaves it
+ *   FL_DATA 0xA9000..0xBAFFF
+ *     0xA9000 / 0xAA000 OBJ_FM6BANK          0xAB000 / 0xAC000 OBJ_SETTINGS     0xAD000 / 0xAE000 OBJ_SESSION
+ *     0xAF000           the store owner tag (st_owner_check: the same place in every ported firmware)
+ *     0xB0000..0xB3FFF  free (the same)
+ *     0xB4000 / 0xB5000 OBJ_FAVS (0.24 on the SMK)
+ *     0xB6000..0xBAFFF  the sound pool's sectors 0..4 (sp_*, below)
+ *   FL_SMP 0xC2000..0xE9FFF (USRFLASH, the stock's user area, 40 sectors: ChoralRoot has no samples)
+ *     0xC2000..0xD1FFF  OBJ_CZBANK0..+7      0xD2000..0xE5FFF the loop slots (cr_ui.c CRL_FL_BASE, 2 x CRL_SLOTS)
+ *     0xE6000..0xE9FFF  the sound pool's sectors 5..8
+ *   0xEA000 (USRFLASH's last sector: the stock firmware's end marker, no data of ChoralRoot's)
+ *   FL_TAIL 0xEB000..0xF1FFF (the free tail after it, 7 of its 9 sectors)
+ *     0xEB000..0xF1FFF  the sound pool's sectors 9..15 (0xF2000..0xF3FFF stay free)
+ * The pool's 16 floating sectors are three runs (sp_addr): 5 in FL_DATA, 4 at FL_SMP's end, 7 in FL_TAIL. */
+#define ST_SMK_BASE 0x9D000u                   /* (the objects' numbering: pairs 0..5 were 0.21's, the region now) */
+#define ST_SMK_PAIRS 9u                        /* the pairs below the owner tag */
+#define ST_SMK_SECTORS (2u * ST_SMK_PAIRS)
+#define ST_SMK_LIVE (ST_SMK_BASE + 12u * ST_SECTOR)   /* pairs 6..8: OBJ_FM6BANK, OBJ_SETTINGS, OBJ_SESSION */
+#define ST_SMK_LIVE_SECTORS (ST_SMK_SECTORS - 12u)
+#define ST_SMK_HIGH 0xB0000u                   /* the pairs above it: CZ-1 store 2, QUAD store, the favourites */
+#define ST_SMK_HIGH_SECTORS 6u
+#define ST_SMK_CZB 0xC2000u                    /* the CZ-1 banks, in USRFLASH */
+#define ST_SMK_CZB_SECTORS 16u
+#define ST_SMK_LOOPS 0xD2000u                  /* the loop slots (cr_ui.c CRL_FL_BASE), in USRFLASH */
+#define ST_SMK_LOOP_SECTORS 20u
+#define ST_SMK_POOL0 0xB6000u                  /* the sound pool: sectors 0 .. ST_SMK_POOL0_N - 1 in FL_DATA */
+#define ST_SMK_POOL0_N 5u
+#define ST_SMK_POOL1 0xE6000u                  /* .. sectors 5..8 at the end of FL_SMP */
+#define ST_SMK_POOL1_N 4u
+#define ST_SMK_POOL2 0xEB000u                  /* .. sectors 9..15 in FL_TAIL */
+#define ST_SMK_POOL2_N 7u
+/* every place of ChoralRoot's data on the SMK (base, sectors): the owner check and Options > Flash Data clear these
+/* SMK-37: 0xEB6014, 1 MiB, read from a unit over the mask-ROM UBOOT. */
+#define FL_JEDEC_OK(id) ((id) == 0xEB6014u || (id) == 0x856014u || (id) == 0xB36014u)
+#else
+#define FL_JEDEC_OK(id) ((id) == 0x856014u || (id) == 0xB36014u)
+#endif
+
+#if BOARD_SMK37
+/* ---- SMK-37 flash map (see the fm1-to-smk37 guide) ----
+ *   0x00000-0x03FFF  head (SPL, isd_config)         NEVER
+ *   0x04000-0x9CFFF  app area (stock PRCT end)      update loader only (FL_APP): the boot stub, the app and the
+ *                    commit marker at the FM-1's places (0x4120, 0x5000, 0x91FE0: docs/BOOT-SAFETY.md)
+ *   0x9D000-0xA8FFF  VM: the resource region (cr_res.h, HISTORY 3y295): the update loader writes it with the body,
+ *                    the app reads it through the plain window and never writes it                FL_RES
+ *                    (0.21's sound objects until HISTORY 3y231, free since)
+ *   0xA9000-0xBAFFF  VM: ChoralRoot's store (settings, the FM6 bank, the session, the owner tag, the favourites,
+ *                    the sound pool's sectors 0..4; storage.c)                                     FL_DATA
+ *   0xBB000-0xBFFFF  VM: M-UPGRADE loader staging + update record (ota.c)          FL_OTA
+ *   0xC0000-0xC0FFF  BTIF (BT pairing)              NEVER
+ *   0xC1000-0xC1FFF  USRTRIM (key/pad/wheel calibration, "trimdat")   NEVER
+ *   0xC2000-0xE9FFF  USRFLASH: the CZ-1 banks, the loop slots, the sound pool's sectors 5..8 (storage.c, cr_ui.c)
+ *                    (the stock mapping until ChoralRoot first writes there)              FL_SMP
+ *   0xEA000-0xEAFFF  USRFLASH's last sector: the stock end marker "usrdata" at 0xEAFF8; erased once before the
+ *                    first write into FL_SMP, no data of ChoralRoot's                    FL_STOCKTAG (erase only)
+ *   0xEB000-0xF1FFF  the free tail (unlisted): the sound pool's sectors 9..15 (0.24)       FL_TAIL
+ *   0xF2000-0xF3FFF  free (unlisted), unused
+ *   0xF4000-0xFDFFF  USR (stock resources; kept for a rollback)   NEVER
+ *   0xFE000-0xFEFFF  free, unused
+ *   0xFF000-0xFFFFF  key_mac                        NEVER
+ * Everything below is an explicit allow-list; the asserts keep each allowed window out of the
+ * protected ranges at compile time. */
+#define FL_HEAD_HI      0x00004000u                /* protected: [0, FL_HEAD_HI) */
+#define FL_CAL_LO       0x000C0000u                /* protected: BTIF + USRTRIM */
+#define FL_CAL_HI       0x000C2000u
+#define FL_USRRES_LO    0x000F4000u                /* protected: stock USR resources */
+#define FL_USRRES_HI    0x000FE000u
+#define FL_KEYMAC_LO    0x000FF000u                /* protected: key_mac and above */
+#define FL_APP_LO       0x00004000u                /* the update loader: app area */
+#define FL_APP_HI       0x0009D000u
+#define FL_REC_LO       0x0009D000u                /* the update loader: where it may drop records (VM only) */
+#define FL_REC_HI       0x000C0000u
+#define FL_PLAIN_LO     0x0009D000u                /* plain XIP window from the VM start */
+```
+</details></tool-use>
+
+_**Agent - sidechain (claude-opus-5-5 2026-11-18 10:20:57Z)**_
+
+I found everything except two things: no Morse `plat_cpu_pct` figure is written down anywhere in the repo, and the repo has no polyphonic synth to borrow. `chime` is the right starting point, and `docs/dev/theory.md:225` already plans exactly that: an 8-voice 2-op FM EP adapted from `common/chime`, a bass voice and a click, with notes scheduled by sample count inside `app_render`.
+
+## 1. chime (`firmware/common/chime.c` / `chime.h`, MIT)
+- **Only one voice.** It is held in globals (`chime.c:9-13`) and fed by a queue of up to 6 notes (`:6`). A new figure is dropped while one is playing (`:26-27`).
+- **Phase.** Phase is a float in turns (0..1), for both the carrier and the modulator (`:70-75`). Pitch is computed once per note: `440*fm_exp2f((note-69)/12)/44100` (`:63`). Note length is `ms*44` samples (`:64`).
+- **FM.** The modulator runs at 2× the carrier. The index is 1.5 rad times the envelope (`m*0.159` turns radians into turns), so the tone gets darker as it decays, which suits an EP:
+  `m = fm_sinf(ch_pm*2π)*1.5f*ch_env; s = fm_sinf((ch_pc + m*0.159f)*2π)*ch_env*0.2f*gain;` (`:76-77`)
+- **Envelope.** It starts at 1.0 and multiplies by 0.99985 each sample (time constant about 150 ms) (`:65,69`). Each note ends with a 5 ms linear fade (`:78-79`).
+- **fastmath used:** only `fm_sinf` and `fm_exp2f`.
+- **Mixing.** It adds (`+=`) into interleaved `lr[2i]`/`lr[2i+1]`, which is Q23 (`:80-81`). `gain` is the app's full-scale gain; Conductor zeroes `lr` and passes `master_q12/4096*8300000` (`firmware/conductor/app.c:682-689`). Peak per voice is 0.2 FS.
+- **Cost.** About 2 `fm_sinf` plus roughly 10 multiply/adds per sample. It returns immediately when idle (`:59-61`), so silence costs almost nothing.
+- **Race.** `ch_left` is written by the main loop (`:36`) without being `volatile`.
+- **Click.** `CHIME_TICK` (note 84, 40 ms) is a ready-made click reference (`:19,21`).
+- **Can it go to N voices? Yes.** Turn the globals into a per-voice struct `{inc, pc, pm, env, stage, note, age}`. Note-on resets the phases and sets `env=1`. Note-off switches to a faster release multiplier, or reuses the 5 ms fade. Steal a free voice first, otherwise the oldest or quietest. The remaining work:
+  - Move pitch math out of the render (precomputed 128-entry `inc` table).
+  - Pass note-on/off events safely (see section 2).
+  - Mix every voice into one float bus with headroom (see section 3).
+
+## 2. Morse tone (`firmware/morse/tone.c` / `tone.h`, GPL)
+- **State.** Per voice: `volatile gate`, `volatile inc`, then `phase` and `ramp` (`tone.c:9-14`). Pitch is set from the main loop (`:16-20`; `app.c:373-374`).
+- **Ramp.** A linear ramp of 1/(5 ms) per sample, clamped to 0..1 (`:6,51-52`), then shaped with smoothstep `r*r*(3-2r)` (`:58`). Amplitude is 0.3 (`:7`). A voice is skipped when its gate is off and the ramp is at 0 (`:47-48`).
+- **Gate handoff has no lock.** `app_tick` writes `tone_gate(...)` (`app.c:497,532`). The render reads the gate once per voice per block (`tone.c:46`), so the timing jitter is one block (`tone.h:9`). `plat_lock` is used only for keyer and timing structs (`app.c:358-367, 393-432`).
+- **Render.** Zero `lr`, smooth the gain, then `tone_render` (`app.c:3065-3073`).
+- **Interrupt nesting matters.** The timer interrupt, which runs `app_tick` and USB, can interrupt the render in the middle of a block (`fm1-base/device/main_fm1.c:223-265`).
+  - The render should take a snapshot of shared state at the start of each block.
+  - With one writer, a ring of note events (`volatile` head/tail, render drains it at block start) needs no lock.
+  - If both the main loop and `app_tick` write, the main loop needs `plat_lock()`/`plat_unlock(f)`. The lock nests and is safe inside interrupts (`plat.h:332-337`, `device/plat_lock.c:4-12`).
+
+## 3. fm1-base audio contract
+- **Signature.** `void app_render(int32_t *lr, uint32_t n, uint32_t master_q12)` runs in the audio interrupt on an 8 KiB stack (`template/app.h:24`; `skill/felucca-to-fm1-base/PORTING.md:86`).
+- **Timing.**
+  - `n == APP_BLOCK` (default 256, 5.8 ms) (`fm1b_config.h:30-32`; `device/unity.c:114`; `main_fm1.c:16,83`).
+  - FS is 44100 (`main_fm1.c:15`); the hardware actually runs at about 44117.6 Hz (`bsp/docs/BOARD_IO.md:55-61`).
+- **Format.** Interleaved L/R `int32`, signed Q23 (±8388607). The driver does not saturate, so you must clip yourself (`BOARD_IO.md:48-53`).
+- **Every sample must be written.** By default the render writes straight into the DMA half (`main_fm1.c:121-130`), so zero `lr` or assign each sample.
+- **`master_q12`.** It is `APP_GAIN(master)`, by default `m*m>>12` (0..~4096) (`fm1b_config.h:21-23`), or 4096 when USB audio full is on (`main_fm1.c:66-83`).
+- **Headroom.** The apps use `gain = master_q12/4096*8300000`, which is about 0.99 FS. Eight voices at chime's 0.2 can reach 1.6 FS and overflow. Use about 0.1 per voice plus a clamp, or `fm_tanhf` on the bus.
+- **Code in RAM.** `PLAT_RAM_CODE` puts code in section `.app_ram`, copied with `.ram_text` (32 KiB, or 24 KiB with WiFi) (`plat.h:20-38`).
+  - That code may call only RAM code; the build checks this (`tools/ramcode.py`, `ram_code_allow`).
+  - `fm_exp2f` is often kept out of line at `-Os`, so it may not be called from RAM code (`plat.h:27-29`). Another reason for the pitch table.
+  - `fm1.toml o2 = [...]` compiles DSP units at `-O2` (`tools/build.py:221-226`).
+  - Morse and Conductor use neither.
+- **Second core.**
+  - Set `fm1.toml cpu2 = true` and call `plat_cpu2_set(1)` in `app_init`. In the render, use `plat_cpu2_run`/`plat_cpu2_wait`, with a separate buffer per core.
+  - Each job must finish within 8 ms, and the render must still work on one core (`plat.h:531-557`; `docs/SECOND-CORE.md:10-60`, which shows a split of voices 0..3 and 4..7).
+- **Load monitoring.**
+  - `plat_cpu_pct` is smoothed over about 16 blocks (`main_fm1.c:109-113`); `plat_xruns` is counted at `main_fm1.c:152,171`.
+  - With `APP_OVERLOAD` defined, `app_overload()` is called when one render takes over 90 % of its budget (`plat.h:612`; `main_fm1.c:105-108`). That is the hook for shedding voices.
+- **No-double rule.**
+  - The FPU is float-only: flags `-mfprev1 -ffp-contract=off` (`build.py:304-306`).
+  - The build fails if any soft-double routine (`__*df*`) is linked (`build.py:1189-1196`; `DESIGN.md:69`).
+  - So write `1.0f`, never `1.0`. The host build also uses `-ffp-contract=off` (`build.py:1412-1414`).
+- **fastmath (`include/fastmath.h`).** It is all polynomials. There is no sine table in fastmath or anywhere in fm1-base.
+  - Functions: `fm_fabsf`, `fm_minf`, `fm_maxf`, `fm_clampf`, `fm_floorf`, `fm_exp2f` (`:63`), `fm_expf`, `fm_log2f`, `fm_logf`, `fm_powf`, `fm_db2lin`, `fm_tanhf` (`:127`), `fm_sinf`/`fm_cosf` (`:164-171`, degree 13, abs error 1e-6), `fm_tanf`, `fm_sqrtf`, `fm_rsqrtf`, `fm_flush`.
+  - **`fm_sin_turns(ph)` (`:181-185`)** takes a phase in turns and skips the 3-part 2π reduction. It is cheaper than chime's `fm_sinf(p*2π)`.
+- **CPU caution.** `bsp/docs/CPU.md:5-33` reports 64-bit multiplies beside 16-bit loads corrupting registers. Float code never showed this, so stay with float.
+
+## 4. Template voice (`third_party/fm1-base/template/app.c`, MPL-2.0)
+- **Key to note.** Key `k` → MIDI `53 + k + 12*octave` (`:270-272`). There are 27 keys, F3..G5 (`plat.h:53`), and the octave is −2..+2.
+- **Velocity.**
+  - `APP_TOUCH` (`app.h:12`) and `touch_on(1)` (`:456`) turn it on; `touch_vel(k)` reads it (`:274`).
+  - It becomes `voice_vel = vel/127` (`:35`), and the level target is a linear `0.25*vel` (`:67`).
+- **Note priority.** One voice: note-on overwrites the current note (`:33-37`). Note-off clears it only if it is the same note (`:38-42`).
+  - There is no stack of held notes. Releasing the newest key goes silent even if an older key is still held.
+- **Other details.**
+  - MIDI in is drained inside the render (`:45-61,70`).
+  - Level is smoothed with a one-pole of 0.002 (~10 ms); the gain glide is 0.004 (`:73-74`).
+  - It assigns `lr` (`=`), not adds (`:80-81`). An octave change kills the voice (`:223`).
+
+## 5. Other synths you could reuse
+- **None in the repo.**
+  - Searches for steal, polyphony, voices or wavetable found nothing.
+  - fm1-base has only `examples/{ble_own,wifi}`, `lib/{btdev,touch,sense}` and the template.
+  - `voicelab` is LPC/ADPCM playback; Conductor uses chime.
+  - CTL-1, SLOOP and LOOM-8 are only described in docs, not vendored.
+- **Licences for a GPL app:**
+  - `chime` is MIT (`chime.c:1`).
+  - `tone` is GPL-3.0-or-later (`tone.c:1`).
+  - Template code is MPL-2.0. It is GPL-compatible under MPL §3.3 (`LICENSING.md:28`), but keep the MPL header on anything copied.
+
+## 6. Checking sound in the host simulator
+- **`wav FILE` / `wavstop`** (`host/plat_host.c:26`) records 16-bit stereo after the render (`:2093-2112`).
+  - It converts with `(int16_t)(l*32767)` and **no clamp**, so output over full scale gets mangled in the WAV.
+- **Only peak, no RMS.** `peakreset`, then `expect peak_db_min -30` or `expect peak_db_max -90` (`:29, 2277-2281`). It is the absolute peak of both channels since the last reset.
+  - Examples: `template/tests/basic.txt:38-41`, `firmware/morse/tests/basic.txt:122-132` (sound, then muted silence), `firmware/voicelab/tests/basic.txt:14,27`.
+- **Host MASTER defaults to 2048** (`:218`), so `master_q12` is 1024, a quarter of full gain. Use `master N` to change it (`:19, 2623`).
+- **App's own checks.** `APP_HOST_EXPECT` with `app_expect()` (`:112-113`; template `app.h:32-33`, `app.c:503-523`) lets the app add checks, such as an active-voice count or an RMS the app computes itself.
+- **Host load numbers mean nothing for the device.** Host `cpu_pct` is host wall-clock time (`:2046-2052`) and `plat_xruns` is always 0 (`:1524`).
+
+## 7. CPU budget evidence
+- **Clock and budget.** The CPU runs at 360 MHz (`CPU.md:5`; `plat.h` `plat_cpu_khz`). One 256-frame block is about 2.09 M cycles, roughly 8 k cycles per sample.
+- **My rough estimate (not measured).** 8 voices × 2 sines is 16 polynomial sines per sample, about 400 float operations, likely under 10 % before flash cache misses.
+- **Other firmwares (from docs).**
+  - SLOOP 2.8: 3 synth tracks sharing 8 voices, plus drums with 6 voices, fixed-point (`docs/firmware/sloop/index.md:11,24`).
+  - SLOOP 3: 32 shared voices, 32-bit float, 64-sample blocks (`sloop3.md:17,22-24`, marked [調研], i.e. unverified).
+  - CTL-1: 128 GM sounds, no voice count given (`docs/firmware/ctl-1/index.md:33`).
+  - LOOM-8: renders half its voices on the second core (`SECOND-CORE.md:4-5`).
+- **Morse `plat_cpu_pct`:** not recorded anywhere, in docs, tests, the device log or app stats. It would need measuring on the device.
+
+---
+
+_**User (2026-11-18 10:20:57Z)**_
+
+<task-notification>
+<task-id>a952794dd9f33090d</task-id>
+<tool-use-id>toolu_01TTwcfkRsbpRNazckBWzM72</tool-use-id>
+<output-file>/private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/7dcc67a0-a756-4514-85d7-b24e721b72ee/tasks/a952794dd9f33090d.output</output-file>
+<status>completed</status>
+<summary>Agent "Audio synth options for app" finished</summary>
+<note>A task-notification fires each time this agent stops with no live background children of its own. The user can send it another message and resume it, so the same task-id may notify more than once.</note>
+<result>I found everything except two things: no Morse `plat_cpu_pct` figure is written down anywhere in the repo, and the repo has no polyphonic synth to borrow. `chime` is the right starting point, and `docs/dev/theory.md:225` already plans exactly that: an 8-voice 2-op FM EP adapted from `common/chime`, a bass voice and a click, with notes scheduled by sample count inside `app_render`.
+
+## 1. chime (`firmware/common/chime.c` / `chime.h`, MIT)
+- **Only one voice.** It is held in globals (`chime.c:9-13`) and fed by a queue of up to 6 notes (`:6`). A new figure is dropped while one is playing (`:26-27`).
+- **Phase.** Phase is a float in turns (0..1), for both the carrier and the modulator (`:70-75`). Pitch is computed once per note: `440*fm_exp2f((note-69)/12)/44100` (`:63`). Note length is `ms*44` samples (`:64`).
+- **FM.** The modulator runs at 2× the carrier. The index is 1.5 rad times the envelope (`m*0.159` turns radians into turns), so the tone gets darker as it decays, which suits an EP:
+  `m = fm_sinf(ch_pm*2π)*1.5f*ch_env; s = fm_sinf((ch_pc + m*0.159f)*2π)*ch_env*0.2f*gain;` (`:76-77`)
+- **Envelope.** It starts at 1.0 and multiplies by 0.99985 each sample (time constant about 150 ms) (`:65,69`). Each note ends with a 5 ms linear fade (`:78-79`).
+- **fastmath used:** only `fm_sinf` and `fm_exp2f`.
+- **Mixing.** It adds (`+=`) into interleaved `lr[2i]`/`lr[2i+1]`, which is Q23 (`:80-81`). `gain` is the app's full-scale gain; Conductor zeroes `lr` and passes `master_q12/4096*8300000` (`firmware/conductor/app.c:682-689`). Peak per voice is 0.2 FS.
+- **Cost.** About 2 `fm_sinf` plus roughly 10 multiply/adds per sample. It returns immediately when idle (`:59-61`), so silence costs almost nothing.
+- **Race.** `ch_left` is written by the main loop (`:36`) without being `volatile`.
+- **Click.** `CHIME_TICK` (note 84, 40 ms) is a ready-made click reference (`:19,21`).
+- **Can it go to N voices? Yes.** Turn the globals into a per-voice struct `{inc, pc, pm, env, stage, note, age}`. Note-on resets the phases and sets `env=1`. Note-off switches to a faster release multiplier, or reuses the 5 ms fade. Steal a free voice first, otherwise the oldest or quietest. The remaining work:
+  - Move pitch math out of the render (precomputed 128-entry `inc` table).
+  - Pass note-on/off events safely (see section 2).
+  - Mix every voice into one float bus with headroom (see section 3).
+
+## 2. Morse tone (`firmware/morse/tone.c` / `tone.h`, GPL)
+- **State.** Per voice: `volatile gate`, `volatile inc`, then `phase` and `ramp` (`tone.c:9-14`). Pitch is set from the main loop (`:16-20`; `app.c:373-374`).
+- **Ramp.** A linear ramp of 1/(5 ms) per sample, clamped to 0..1 (`:6,51-52`), then shaped with smoothstep `r*r*(3-2r)` (`:58`). Amplitude is 0.3 (`:7`). A voice is skipped when its gate is off and the ramp is at 0 (`:47-48`).
+- **Gate handoff has no lock.** `app_tick` writes `tone_gate(...)` (`app.c:497,532`). The render reads the gate once per voice per block (`tone.c:46`), so the timing jitter is one block (`tone.h:9`). `plat_lock` is used only for keyer and timing structs (`app.c:358-367, 393-432`).
+- **Render.** Zero `lr`, smooth the gain, then `tone_render` (`app.c:3065-3073`).
+- **Interrupt nesting matters.** The timer interrupt, which runs `app_tick` and USB, can interrupt the render in the middle of a block (`fm1-base/device/main_fm1.c:223-265`).
+  - The render should take a snapshot of shared state at the start of each block.
+  - With one writer, a ring of note events (`volatile` head/tail, render drains it at block start) needs no lock.
+  - If both the main loop and `app_tick` write, the main loop needs `plat_lock()`/`plat_unlock(f)`. The lock nests and is safe inside interrupts (`plat.h:332-337`, `device/plat_lock.c:4-12`).
+
+## 3. fm1-base audio contract
+- **Signature.** `void app_render(int32_t *lr, uint32_t n, uint32_t master_q12)` runs in the audio interrupt on an 8 KiB stack (`template/app.h:24`; `skill/felucca-to-fm1-base/PORTING.md:86`).
+- **Timing.**
+  - `n == APP_BLOCK` (default 256, 5.8 ms) (`fm1b_config.h:30-32`; `device/unity.c:114`; `main_fm1.c:16,83`).
+  - FS is 44100 (`main_fm1.c:15`); the hardware actually runs at about 44117.6 Hz (`bsp/docs/BOARD_IO.md:55-61`).
+- **Format.** Interleaved L/R `int32`, signed Q23 (±8388607). The driver does not saturate, so you must clip yourself (`BOARD_IO.md:48-53`).
+- **Every sample must be written.** By default the render writes straight into the DMA half (`main_fm1.c:121-130`), so zero `lr` or assign each sample.
+- **`master_q12`.** It is `APP_GAIN(master)`, by default `m*m&gt;&gt;12` (0..~4096) (`fm1b_config.h:21-23`), or 4096 when USB audio full is on (`main_fm1.c:66-83`).
+- **Headroom.** The apps use `gain = master_q12/4096*8300000`, which is about 0.99 FS. Eight voices at chime's 0.2 can reach 1.6 FS and overflow. Use about 0.1 per voice plus a clamp, or `fm_tanhf` on the bus.
+- **Code in RAM.** `PLAT_RAM_CODE` puts code in section `.app_ram`, copied with `.ram_text` (32 KiB, or 24 KiB with WiFi) (`plat.h:20-38`).
+  - That code may call only RAM code; the build checks this (`tools/ramcode.py`, `ram_code_allow`).
+  - `fm_exp2f` is often kept out of line at `-Os`, so it may not be called from RAM code (`plat.h:27-29`). Another reason for the pitch table.
+  - `fm1.toml o2 = [...]` compiles DSP units at `-O2` (`tools/build.py:221-226`).
+  - Morse and Conductor use neither.
+- **Second core.**
+  - Set `fm1.toml cpu2 = true` and call `plat_cpu2_set(1)` in `app_init`. In the render, use `plat_cpu2_run`/`plat_cpu2_wait`, with a separate buffer per core.
+  - Each job must finish within 8 ms, and the render must still work on one core (`plat.h:531-557`; `docs/SECOND-CORE.md:10-60`, which shows a split of voices 0..3 and 4..7).
+- **Load monitoring.**
+  - `plat_cpu_pct` is smoothed over about 16 blocks (`main_fm1.c:109-113`); `plat_xruns` is counted at `main_fm1.c:152,171`.
+  - With `APP_OVERLOAD` defined, `app_overload()` is called when one render takes over 90 % of its budget (`plat.h:612`; `main_fm1.c:105-108`). That is the hook for shedding voices.
+- **No-double rule.**
+  - The FPU is float-only: flags `-mfprev1 -ffp-contract=off` (`build.py:304-306`).
+  - The build fails if any soft-double routine (`__*df*`) is linked (`build.py:1189-1196`; `DESIGN.md:69`).
+  - So write `1.0f`, never `1.0`. The host build also uses `-ffp-contract=off` (`build.py:1412-1414`).
+- **fastmath (`include/fastmath.h`).** It is all polynomials. There is no sine table in fastmath or anywhere in fm1-base.
+  - Functions: `fm_fabsf`, `fm_minf`, `fm_maxf`, `fm_clampf`, `fm_floorf`, `fm_exp2f` (`:63`), `fm_expf`, `fm_log2f`, `fm_logf`, `fm_powf`, `fm_db2lin`, `fm_tanhf` (`:127`), `fm_sinf`/`fm_cosf` (`:164-171`, degree 13, abs error 1e-6), `fm_tanf`, `fm_sqrtf`, `fm_rsqrtf`, `fm_flush`.
+  - **`fm_sin_turns(ph)` (`:181-185`)** takes a phase in turns and skips the 3-part 2π reduction. It is cheaper than chime's `fm_sinf(p*2π)`.
+- **CPU caution.** `bsp/docs/CPU.md:5-33` reports 64-bit multiplies beside 16-bit loads corrupting registers. Float code never showed this, so stay with float.
+
+## 4. Template voice (`third_party/fm1-base/template/app.c`, MPL-2.0)
+- **Key to note.** Key `k` → MIDI `53 + k + 12*octave` (`:270-272`). There are 27 keys, F3..G5 (`plat.h:53`), and the octave is −2..+2.
+- **Velocity.**
+  - `APP_TOUCH` (`app.h:12`) and `touch_on(1)` (`:456`) turn it on; `touch_vel(k)` reads it (`:274`).
+  - It becomes `voice_vel = vel/127` (`:35`), and the level target is a linear `0.25*vel` (`:67`).
+- **Note priority.** One voice: note-on overwrites the current note (`:33-37`). Note-off clears it only if it is the same note (`:38-42`).
+  - There is no stack of held notes. Releasing the newest key goes silent even if an older key is still held.
+- **Other details.**
+  - MIDI in is drained inside the render (`:45-61,70`).
+  - Level is smoothed with a one-pole of 0.002 (~10 ms); the gain glide is 0.004 (`:73-74`).
+  - It assigns `lr` (`=`), not adds (`:80-81`). An octave change kills the voice (`:223`).
+
+## 5. Other synths you could reuse
+- **None in the repo.**
+  - Searches for steal, polyphony, voices or wavetable found nothing.
+  - fm1-base has only `examples/{ble_own,wifi}`, `lib/{btdev,touch,sense}` and the template.
+  - `voicelab` is LPC/ADPCM playback; Conductor uses chime.
+  - CTL-1, SLOOP and LOOM-8 are only described in docs, not vendored.
+- **Licences for a GPL app:**
+  - `chime` is MIT (`chime.c:1`).
+  - `tone` is GPL-3.0-or-later (`tone.c:1`).
+  - Template code is MPL-2.0. It is GPL-compatible under MPL §3.3 (`LICENSING.md:28`), but keep the MPL header on anything copied.
+
+## 6. Checking sound in the host simulator
+- **`wav FILE` / `wavstop`** (`host/plat_host.c:26`) records 16-bit stereo after the render (`:2093-2112`).
+  - It converts with `(int16_t)(l*32767)` and **no clamp**, so output over full scale gets mangled in the WAV.
+- **Only peak, no RMS.** `peakreset`, then `expect peak_db_min -30` or `expect peak_db_max -90` (`:29, 2277-2281`). It is the absolute peak of both channels since the last reset.
+  - Examples: `template/tests/basic.txt:38-41`, `firmware/morse/tests/basic.txt:122-132` (sound, then muted silence), `firmware/voicelab/tests/basic.txt:14,27`.
+- **Host MASTER defaults to 2048** (`:218`), so `master_q12` is 1024, a quarter of full gain. Use `master N` to change it (`:19, 2623`).
+- **App's own checks.** `APP_HOST_EXPECT` with `app_expect()` (`:112-113`; template `app.h:32-33`, `app.c:503-523`) lets the app add checks, such as an active-voice count or an RMS the app computes itself.
+- **Host load numbers mean nothing for the device.** Host `cpu_pct` is host wall-clock time (`:2046-2052`) and `plat_xruns` is always 0 (`:1524`).
+
+## 7. CPU budget evidence
+- **Clock and budget.** The CPU runs at 360 MHz (`CPU.md:5`; `plat.h` `plat_cpu_khz`). One 256-frame block is about 2.09 M cycles, roughly 8 k cycles per sample.
+- **My rough estimate (not measured).** 8 voices × 2 sines is 16 polynomial sines per sample, about 400 float operations, likely under 10 % before flash cache misses.
+- **Other firmwares (from docs).**
+  - SLOOP 2.8: 3 synth tracks sharing 8 voices, plus drums with 6 voices, fixed-point (`docs/firmware/sloop/index.md:11,24`).
+  - SLOOP 3: 32 shared voices, 32-bit float, 64-sample blocks (`sloop3.md:17,22-24`, marked [調研], i.e. unverified).
+  - CTL-1: 128 GM sounds, no voice count given (`docs/firmware/ctl-1/index.md:33`).
+  - LOOM-8: renders half its voices on the second core (`SECOND-CORE.md:4-5`).
+- **Morse `plat_cpu_pct`:** not recorded anywhere, in docs, tests, the device log or app stats. It would need measuring on the device.</result>
+<usage><subagent_tokens>125690</subagent_tokens><tool_uses>50</tool_uses><duration_ms>318061</duration_ms></usage>
+</task-notification>
+
+---
+
+_**Agent - sidechain (claude-opus-5-5 2026-11-18 10:20:58Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Check vendored ChoralRoot version and loop base
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/vendor/ChoralRootFM1 && git describe --tags 2>/dev/null; git log -1 --format='%h %ad' --date=short 2>/dev/null; grep -n 'CRL_FL_BASE' firmware/src/cr_ui.c | head -3`
+
+```text
+v0.41
+1890b16 2026-11-12
+2437:#define CRL_FL_BASE ST_SMK_LOOPS                   /* (SMK-37: in USRFLASH, storage.c) */
+2440:#define CRL_FL_BASE 0xC8000u
+2464:static uint32_t crl_fl_sector(uint32_t k, uint32_t copy) { return CRL_FL_BASE + (2u * k + copy) * ST_SECTOR; }
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 10:21:01Z)**_
+
+The audio research is back. The synth plan: turn `chime` (MIT) into 8 voices, use a pitch table instead of calling `fm_exp2f` in the render, use `fm_sin_turns`, set the bus to about 0.1 per voice with a clamp, and pass note events through a single-writer ring. Tests can check whether a chord makes sound with `expect peak_db_min`. Still waiting on the agent researching the app skeleton, storage and test language.
+
+_**Agent - sidechain (claude-opus-5-5 2026-11-18 10:21:04Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Read device-log current state
+
+`sed -n 1,30p docs/device-log.md`
+
+```text
+# 我的機器
+
+這台 FM-1 目前的狀態與操作歷史。任何對實機的操作，做之前先讀這頁，做完更新這頁。這頁的內容都是 `[實機]`。
+
+## 現況
+
+| 項目 | 值 |
+|---|---|
+| 型號 | M-VAVE FM-1 |
+| Flash 晶片 / JEDEC ID | **`0xB36014` (new)**，UCUN UC25HQ80，1 MiB |
+| Bootloader | stock (M-VAVE) |
+| 出廠韌體版本 | FM-1 015 (stock)，firmware check OK |
+| 目前韌體 | **Morse 0.6 release build（`FM-1_41000600`，藍牙）**（2026-11-18 從 0.4 → 0.5（16:20）→ 0.6 用 USB-MIDI 更新，學習紀錄保留；macOS 上的 USB MIDI port 名稱仍是 `Felucca`）。0.3 release 是 Hub 測試 3 從原廠 015 裝的，進度當時從 ROUND 1 重新開始。之前依序是原廠 015 → SLOOP 2.8.5 → Agent Deck 0.7 → SLOOP 2.8.5 → CTL-1 1.0.3 → ChoralRoot 0.41 → Conductor 0.1 → 0.2 → 0.3 → Morse 0.1 → 0.2 → 0.3 → SLOOP 2.8.5 → Morse 0.3 release → 原廠 015（還原）→ Morse 0.3 release → Morse 0.4 → Morse 0.5 → Morse 0.6 |
+| SLOOP 的曲子 | **已不在機器上**（`0x97000` 被 ChoralRoot 的韌體蓋掉）。完整保存在 `2026-11-17-0341-pre-ctl-1.0.3` 備份裡；回 SLOOP 要在 M-Flasher GUI 還原那份備份 |
+| m-bootloader | 未安裝 |
+| 主機 | macOS，M-Flasher 0.12.1 |
+
+## 這代表什麼
+
+- 這台是**新晶片**機。裝任何自訂韌體前都要確認它寫明支援 UC25HQ80，見[兩種 Flash 晶片](hardware/flash-chips.md)。SLOOP 2.8.5 有支援。
+- m-bootloader 在這顆晶片上測試很少，暫不安裝。這也表示 SLOOP 3 暫時不刷。
+- 出廠是 015，不是 016，所以沒有 016 覆寫 preset 區的問題。不要用 M-UPGRADE 升到 016，除非確定要。
+
+## 備份
+
+備份檔放在本機的 `backups/`（gitignore，不進 git），異地副本用 `just fm1-backup-release <目錄>` 上傳成這個 repo 的 Release 附件。這個 repo 是 public，所以附件任何人都能下載；這是我自己的決定，映像只適用於這台機器。
+
+| 日期 | 內容 | 檔名 | SHA-256 | 異地副本 |
+|---|---|---|---|---|
+| 2026-11-17 | 原廠完整 flash（015，stock bootloader） | `backups/2026-11-17-stock/fm1-20261117-011632.bin` + `.json` | `c6a4790266bdb9e97500c20f50a98b80f0d334d8a219e1744bfc8e656a44fd38` | [GitHub Release](https://github.com/daviddwlee84/M-VAVE_FM-1/releases/tag/backup-2026-11-17-stock)（2026-11-17，digest 相符） |
+```
+</details></tool-use>
+
+_**Agent - sidechain (claude-opus-5-5 2026-11-18 10:21:10Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Check words.tsv requirement in gen_words
+
+`sed -n 1,30p third_party/fm1-base/tools/gen_words.py | head -40; grep -n 'exists\|is_file\|not found' third_party/fm1-base/tools/gen_words.py | head; cat firmware/morse/words.tsv | head -12`
+
+```text
+#!/usr/bin/env python3
+# SPDX-License-Identifier: MPL-2.0
+# Copyright (C) 2026 Charles Vestal
+"""A firmware's words file for the screen reader (fm1-reader). The one copy is fm1-base's tools/gen_words.py;
+fm1-reader's tools/sync_announce.sh copies it into the firmwares not on fm1-base. Change it here, not in a copy.
+
+    gen_words.py firmware/words.tsv web/words build/gen/ann_words.h
+
+words.tsv: the screen's text <TAB> what to say, one a line ("#" starts a comment, unless the line has a tab: then
+it is an entry, e.g. "# KB<TAB># kilobytes"). A "# url: https://.../words/" line
+says where the words files are published. Written:
+  web/words/<id>.json   the firmware's words, then the common ones below: everything the reader needs, frozen.
+                        <id> is a fingerprint of the content: the same words, the same file. Keep every one in
+                        the repo and publish them all; never change or delete one (a device in the wild points at
+                        its own).
+  ann_words.h           #define ANN_WORDS_URL "<url><id>.json": the link the device sends with its HELLO.
+A words file over the reader's limits (WORDS_MAX entries with the common ones, WORD_MAX characters a side) is refused:
+the reader's page (fm1-reader web/words.js) would not take it.
+"""
+import hashlib, json, sys
+from pathlib import Path
+
+# the reader's limits (fm1-reader web/words.js WORDS_MAX, WORD_MAX): entries in a words file, characters a side
+WORDS_MAX, WORD_MAX = 5000, 120
+
+# words most FM-1 firmwares use; a firmware's own list comes first and can say any of them differently
+COMMON = [
+    ("FX", "effects"), ("REV", "reverb"), ("DLY", "delay"), ("ENV", "envelope"), ("LFO", "L F O"),
+    ("GLO", "global"), ("OCT+", "octave up"), ("OCT-", "octave down"), ("OCT", "octave"), ("REC", "record"),
+    ("SEQ", "sequence"), ("ALGO", "algorithm"), ("ARP", "arp"), ("USB", "U S B"), ("MIDI CH #", "MIDI channel #"),
+67:    if not out.exists():
+72:    if not Path(header).exists() or Path(header).read_text() != h:
+# SPDX-License-Identifier: GPL-3.0-or-later
+# Morse's words for a screen reader (fm1-reader): the text on the screen <TAB> what to say.
+# url: https://raw.githubusercontent.com/daviddwlee84/fm1-morse/main/web/words/
+MORSE	morse
+WPM	words per minute
+DAH:DIT	dah to dit
+NEW LETTERS	new letters
+NEW LETTER	new letter
+WHICH ONE?	which one?
+KEY WHAT YOU HEAR	key what you hear
+KEY IT	key it
+SOUND FIRST IS FASTER LATER	learning by sound first is faster later
+```
+</details></tool-use>
+
+_**Agent - sidechain (claude-opus-5-5 2026-11-18 10:21:19Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Find cv_line/cv_pset usage and examples
+
+`grep -c 'cv_line\|cv_pset' firmware/morse/app.c firmware/conductor/app.c firmware/voicelab/app.c; ls third_party/fm1-base/examples third_party/fm1-base/lib; grep -rln 'cv_line\|cv_pset' third_party/fm1-base --include='*.c' 2>/dev/null; grep -rn 'cv_line\|cv_pset' third_party/fm1-base/examples third_party/fm1-base/lib third_party/fm1-base/device/sys_text.c third_party/fm1-base/device/announce.c 2>/dev/null | head`
+
+```text
+firmware/voicelab/app.c:0
+firmware/conductor/app.c:1
+firmware/morse/app.c:0
+third_party/fm1-base/examples:
+ble_own
+wifi
+
+third_party/fm1-base/lib:
+btdev.c
+btdev.h
+sense.c
+touch.c
+touch.h
+third_party/fm1-base/tests/mirror_test.c
+third_party/fm1-base/device/gfx.c
+```
+</details></tool-use>
+
+_**Agent - sidechain (claude-opus-5-5 2026-11-18 10:21:23Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Check conductor line drawing and bitmap icons
+
+`grep -n 'cv_line\|cv_pset' firmware/conductor/app.c; grep -rn 'static const uint8_t [A-Z_]*\(ICON\|GLYPH\|BMP\|BITMAP\)' firmware third_party/fm1-base/device third_party/fm1-base/lib 2>/dev/null | head`
+
+```text
+582:            cv_pset((int32_t)(i % BMP_W), y0 + (int32_t)(i / BMP_W), c);
+```
+</details></tool-use>
+
+_**Agent - sidechain (claude-opus-5-5 2026-11-18 10:21:28Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Read Conductor bitmap drawing via cv_pset
+
+`sed -n 560,595p firmware/conductor/app.c; grep -n 'BMP_W\|BMP_H' firmware/conductor/app.c | head`
+
+```text
+    for (r = 0; r < ROWS; r++)
+        draw_row(r, ui.top + r < n ? list[ui.top + r] : -1);
+}
+
+/* the main area, 240 x 176, is taller than fm1-base's canvas (240 x 144): drawn in two halves, each pass with the
+ * rows above it taken off (oy), so a line across the seam is cut in two and shown whole */
+#define MAIN_H (ROW_H * ROWS)
+static void main_area(void (*fn)(int32_t oy))
+{
+    cv_begin(240, MAIN_H / 2, C_BLACK);
+    fn(0);
+    cv_blit(0, 32);
+    cv_begin(240, MAIN_H / 2, C_BLACK);
+    fn(MAIN_H / 2);
+    cv_blit(0, 32 + MAIN_H / 2);
+}
+
+static void bmp_line(const uint8_t *b, int32_t y0, uint16_t c)
+{
+    uint32_t i;
+    for (i = 0; i < BMP_W * BMP_H; i++)
+        if (b[i / 7u] >> (6u - i % 7u) & 1u)
+            cv_pset((int32_t)(i % BMP_W), y0 + (int32_t)(i / BMP_W), c);
+}
+
+static void detail_at(int32_t oy)
+{
+    const slot_t *s = &slots[ui.sel];
+    char t[24];
+    uint32_t i;
+    note_name(ui.sel, t);
+    cv_text(8, 2 - oy, &FONT_XS, t, C_GRAY);
+    if (s->state == S_EMPTY) {
+        cv_text(40, 2 - oy, &FONT_XS, "EMPTY KEY", C_DIM);
+        return;
+    }
+25:#define BMP_W 240u
+26:#define BMP_H 16u
+27:#define BMP_BYTES ((BMP_W * BMP_H + 6u) / 7u)
+580:    for (i = 0; i < BMP_W * BMP_H; i++)
+582:            cv_pset((int32_t)(i % BMP_W), y0 + (int32_t)(i / BMP_W), c);
+```
+</details></tool-use>
+
+_**Agent - sidechain (claude-opus-5-5 2026-11-18 10:21:34Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+List fastmath helper functions
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/third_party/fm1-base && grep -n 'static inline.*fm_[a-z0-9]*(' include/fastmath.h | head -20`
+
+```text
+30:static inline float fm_fabsf(float x) { fm_bits_t b; b.f = x; b.u &= 0x7FFFFFFFu; return b.f; }
+31:static inline float fm_minf(float a, float b) { return a < b ? a : b; }
+32:static inline float fm_maxf(float a, float b) { return a > b ? a : b; }
+33:static inline float fm_clampf(float x, float lo, float hi) { return x < lo ? lo : x > hi ? hi : x; }
+36:static inline float fm_floorf(float x)
+63:static inline float fm_exp2f(float x)
+75:static inline float fm_expf(float x)
+88:static inline float fm_log2f(float x)
+114:static inline float fm_logf(float x) { return fm_log2f(x) * FM_LN2; }
+117:static inline float fm_powf(float x, float y)
+125:static inline float fm_db2lin(float db) { return fm_exp2f(db * 0.166096405f); }
+127:static inline float fm_tanhf(float x)
+164:static inline float fm_sinf(float x) { return fm_sin_pi(fm_wrap_pi(x)); }
+165:static inline float fm_cosf(float x)
+174:static inline float fm_tanf(float x)
+187:static inline float fm_sqrtf(float x)
+204:static inline float fm_rsqrtf(float x)
+216:static inline float fm_flush(float x) { return fm_fabsf(x) < 1e-20f ? 0.0f : x; }
+```
+</details></tool-use>
+
+_**Agent - sidechain (claude-opus-5-5 2026-11-18 10:21:39Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+List touch.h API signatures
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/third_party/fm1-base && grep -n '^[a-z].*(.*);\|^/\*' lib/touch.h | head -30`
+
+```text
+1:/* SPDX-License-Identifier: MPL-2.0
+3:/* Velocity and pressure from the FM-1's keys, with no change to the hardware (an app that defines APP_TOUCH in
+21:void app_key_sample(uint32_t key, uint32_t v, uint32_t ticks, int driven);
+22:int app_key_drive(uint32_t key);
+23:void app_key_probe(uint32_t key, uint32_t v, uint32_t pressed);
+24:int app_key_led_ok(uint32_t key);
+29:void touch_on(int on);                   /* the readings on or off; let every key go first (the keys change hands) */
+30:int touch_is_on(void);
+31:void touch_curve(int curve);             /* velocity: -5 .. +5, 0 as measured; + makes 127 harder to reach */
+32:void touch_sens(int sens);               /* pressure: -5 .. +5, 0 as measured; + full pressure with less lean */
+33:int touch_sensed(uint32_t key);          /* key is on an analog row: its presses come from here while on */
+34:int touch_take(touch_ev_t *e);           /* events: the next one, 0 when none (main loop) */
+35:void touch_update(void);                 /* events: the pressure, every frame (it moves every 5 ms) */
+36:void touch_poll(void);                   /* state: the events into touch_keys / touch_vel, and the pressure */
+37:uint32_t touch_keys(void);               /* state: every key held, bit k = key k */
+38:uint8_t touch_vel(uint32_t key);         /* state: the velocity of the key's last press, 1..127 */
+39:uint8_t touch_vel_contact(uint32_t key); /* a top-row key just pressed: its velocity, 0 when there is no reading */
+40:uint8_t touch_pressure(uint32_t key);    /* a held sensed key: how much harder it is pressed than it rests, 0..127 */
+41:int touch_down(uint32_t key);            /* a sensed key is seated (its pressure counts; lifting, it does not) */
+43:/* the host simulator: what a key's readings would be (host/plat_host.c "key K down VEL PRESS") */
+44:void app_host_key(uint32_t k, uint32_t vel, uint32_t press);
+45:void app_host_tick(void);
+```
+</details></tool-use>
+
+_**Agent - sidechain (claude-opus-5-5 2026-11-18 10:21:44Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Read touch.h header comment
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/third_party/fm1-base && sed -n 3,28p lib/touch.h`
+
+```text
+/* Velocity and pressure from the FM-1's keys, with no change to the hardware (an app that defines APP_TOUCH in
+ * app.h; lib/touch.c, on lib/sense.c). Off by default: touch_on(1) starts the scan's readings (plat_sense).
+ *
+ * While it is on, the 20 keys on the analog rows (F3 to C5) are sensed: their presses come from here (touch_take,
+ * or touch_poll and touch_keys), with the velocity they landed at, and a held one has a pressure. The seven keys
+ * of the top row (C#5 to G5) have no converter: plat_keys sees them as usual, and touch_vel_contact gives the
+ * velocity they were pressed at, from a probe through the LED line (no pressure).
+ *
+ * Two ways to read it, pick one:
+ *   events    touch_take: each press (TOUCH_PRESS, with its velocity) and release of a sensed key, in order; a key
+ *             that bounces open is pressed again without a release (a retrigger). Call touch_update every frame
+ *             for the pressure.
+ *   state     touch_poll every frame, then touch_keys (every key held, sensed or not: plat_keys for the top row)
+ *             and touch_vel (the velocity of a key's last press); touch_poll keeps the pressure too. */
+#pragma once
+#include <stdint.h>
+
+#define APP_KEY_SENSE                   /* the scan's readings come here (device/unity.c, host/plat_host.c) */
+void app_key_sample(uint32_t key, uint32_t v, uint32_t ticks, int driven);
+int app_key_drive(uint32_t key);
+void app_key_probe(uint32_t key, uint32_t v, uint32_t pressed);
+int app_key_led_ok(uint32_t key);
+
+enum { TOUCH_PRESS = 1, TOUCH_RELEASE = 2 };
+typedef struct { uint8_t type, key, vel; } touch_ev_t;
+```
+</details></tool-use>
+
+_**Agent - sidechain (claude-opus-5-5 2026-11-18 10:21:50Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Read firmware/common README and chime API
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/firmware/common && cat -n README.md | head -40; grep -n '^[a-z].*(.*);' chime.h`
+
+````text
+     1	# firmware/common
+     2	
+     3	Small modules shared by this repo's fm1-base apps. MIT. Each is a `.h` with the
+     4	API and usage, and a `.c` that the app includes into fm1-base's unity build.
+     5	
+     6	| Module | What it does |
+     7	|---|---|
+     8	| `hostlink` | An app's own SysEx conversation with a program on the computer, over USB or Bluetooth: framing under `F0 7D id0 id1 ver`, HELLO on every transport until the host answers, HEARTBEAT after on the transport it answered by, host presence with a timeout, a new HELLO after a new USB session or a lost Bluetooth link. Bluetooth needs `ble_stack = "own"` (JieLi's stack drops incoming SysEx); `hl_sx_packet` puts the SysEx packets back together. |
+     9	| `ledfx` | Per-LED patterns on the single-colour LEDs: off, glow, mid, lit, pulse, blink, double blink, fast. Turns them into `plat_lights` + `plat_lights_mid` once a frame. |
+    10	| `chime` | A two-operator FM voice with a short note queue for notification sounds, mixed into the app's render. |
+    11	| `lpc` | A TMS5220-style LPC speech decoder (the Speak & Spell's format, as python_wizard writes it): 8 kHz out, no platform calls. See `docs/dev/tts.md`. |
+    12	| `adpcm` | A streaming IMA ADPCM decoder (4 bits a sample) for recorded speech or samples in flash, in host/voicelab's block format. |
+    13	
+    14	## Using them in an app
+    15	
+    16	`fm1.toml`:
+    17	
+    18	```toml
+    19	include = ["../common"]
+    20	```
+    21	
+    22	`app.c`, after `#include "fastmath.h"` (chime needs `fm_sinf`, `fm_exp2f`):
+    23	
+    24	```c
+    25	#include "hostlink.c"
+    26	#include "ledfx.c"
+    27	#include "chime.c"
+    28	```
+    29	
+    30	They call fm1-base's `plat_*` functions, which are in scope in the unity build
+    31	(`lpc` and `adpcm` call none: `#include "lpc.c"` / `"adpcm.c"` anywhere, host tools too).
+    32	They keep no flash state.
+    33	
+    34	`just fw-common-test` builds and runs `tests/` on the computer (hostlink's packet
+    35	cutting and reassembly, the LPC and ADPCM decoders). `firmware/conductor` is the first user; its `tests/basic.txt` exercises all three
+    36	in the host simulator. `firmware/morse` (now its own repo, a submodule) carries a copy of `hostlink` and `ledfx` in its `common/`; change
+    37	them here and copy them there, or the other way round.
+13:void chime_play(int figure);
+14:void chime_notes(const uint8_t *notes, const uint16_t *ms, uint32_t n);
+15:void chime_render(int32_t *lr, uint32_t n, float gain);
+16:int chime_busy(void);
+17:void chime_stop(void);
+````
+</details></tool-use>
+
+_**Agent - sidechain (claude-opus-5-5 2026-11-18 10:21:57Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Check compile flags and include path in build
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/third_party/fm1-base && grep -n 'Werror' tools/build.py | head -5; sed -n 776,782p tools/build.py; sed -n 1414,1425p tools/build.py | cut -c1-260`
+
+```text
+                objs.append(o / ("lwip_" + f.stem + ".o"))
+        for f in (SRC / "ble" / "wifi").glob("*.c"):
+            units.append(("cc", *BLE_CF, *LWIP_CF, *lwip_inc, "-c", f, "-o", o / ("wifi_" + f.stem + ".o")))
+            objs.append(o / ("wifi_" + f.stem + ".o"))
+        app_inc = inc(APP, SRC / "include", GEN, *(APP / d for d in CONF.get("include", []) + CONF.get("device_include", [])
+                                                     + CONF.get("net_include", [])))
+        for u in CONF.get("net", []):            # the app's network code: as the SDK builds code that talks lwIP
+    cmd = [os.environ.get("CC", "cc"), "-O2", "-ffp-contract=off", "-std=c99", "-Wall", "-Wextra",
+           "-Wno-unused-function", "-Wno-unused-parameter", "-DPLAT_HOST", *opt_flags(), f"-DFM1B_BUILD={build_id():#010x}u", *["-DFM1B_BLE=1"] * BLE, *["-DFM1B_BLE_CENTRAL=1"] * (BLE and bool(CONF.get("ble_central"))), *["-DFM1B_BT_AUDIO=1"] * bta_sim(), *(bt
+           *(f"-I{d}" for d in (SRC / "device", SRC / "include", SRC / "lib", APP, GEN, *(APP / d for d in CONF.get("include", [])))),
+           "-o", str(exe), str(SRC / "host" / "plat_host.c"), *o2_objs, "-lm"]
+    r = subprocess.run(cmd, capture_output=True, text=True)
+    sys.stderr.write(r.stderr)
+    if r.returncode:
+        raise SystemExit("build: the host simulator did not compile")
+    print(f"host     {exe}")
+    return 0
+```
+</details></tool-use>
+
+_**Agent - sidechain (claude-opus-5-5 2026-11-18 10:22:03Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Find app.c inclusion and main loop calls
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/third_party/fm1-base && grep -n '#include "app.c"\|#include "touch.c"\|#include "announce.c"' host/plat_host.c; grep -n 'app_frame()\|app_input_only()\|app_init()\|app_ui_init()' device/main_fm1.c host/plat_host.c | head`
+
+```text
+1601:#include "announce.c"
+1636:#include "touch.c"
+1641:#include "app.c"
+device/main_fm1.c:1062:            app_ui_init();                          /* the screen again (restored: everything reloaded) */
+device/main_fm1.c:1080:            app_ui_init();
+device/main_fm1.c:1350:    app_init();                                     /* the app's engine and its saved state (or defaults) */
+device/main_fm1.c:1379:    app_ui_init();
+device/main_fm1.c:1479:            app_ui_init();
+device/main_fm1.c:1487:            app_frame();
+device/main_fm1.c:1490:            app_input_only();
+host/plat_host.c:1970:    app_init();
+host/plat_host.c:1983:    app_ui_init();
+host/plat_host.c:2063:        app_frame();
+```
+</details></tool-use>
+
+_**Agent - sidechain (claude-opus-5-5 2026-11-18 10:22:08Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Read frame pacing and reboot in host/device
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/third_party/fm1-base && sed -n 1475,1495p device/main_fm1.c; sed -n 2050,2070p host/plat_host.c; sed -n 2752,2775p host/plat_host.c`
+
+```text
+                fm1_clock_pll1(297u);
+                irq_restore(f);
+            }
+#endif
+            app_ui_init();
+        }
+        if (usb.uboot_req)
+            enter_uboot("UBOOT (USB)");
+        if (fm1_ms - last_frame >= 16u) {           /* ~60 frames/s at most; input in between */
+            last_frame = fm1_ms;
+            fm1b_dbg.ui_frames++;
+            fm1b_dbg.stage = 5;
+            app_frame();
+        } else {
+            fm1b_dbg.stage = 6;
+            app_input_only();
+        }
+    }
+}
+
+/* one boot-packed load image at rec (tools/boot_pack.py: magic, packed bytes, raw bytes, 0, the stream) into start .. end;
+    render_ns_total += dt;
+    render_budget_ns_total += APP_BLOCK * 1e9 / 44100.0;
+    cpu_pct = (uint32_t)(100.0 * dt / (APP_BLOCK * 1e9 / 44100.0));
+}
+
+static void sim_ms_end(int frame)
+{
+    ds_poll(now_ms - hcr_boot_ms, 0u, 0u);       /* (the debug stats: main_fm1.c's pass, once a millisecond) */
+    if (sim_listen && now_ms % 2000u == 0) {        /* the reader's HELLO, as it sends it */
+        static const uint8_t HELLO[] = {ANN_H0, ANN_H1, ANN_H2, ANN_HELLO, ANN_VER};
+        ann_frame(HELLO, sizeof HELLO, now_ms);
+    }
+    if (frame)
+        app_frame();
+    else
+        app_input_only();
+#if FM1B_MIRROR
+    mirror_step();
+    host_mirror_ms();
+#endif
+    hsx_ms();
+        } else if (!strcmp(cmd, "reboot")) {
+#ifdef APP_HOST_REBOOT
+            app_host_reboot();                  /* the app forgets what RAM would (app.h) */
+#endif
+            usbh_reboot();                      /* (every boot is a device: plat_usb_host) */
+            boot();
+        } else if (!strcmp(cmd, "crash") || !strcmp(cmd, "crash_in_save") || !strcmp(cmd, "power")) {
+            if (!strcmp(cmd, "power")) {
+                memset(&hcr, 0, sizeof hcr);    /* (.noinit lost; the flash kept) */
+                memset(&ds_ni, 0x5A, sizeof ds_ni);   /* (the stats' queue: what a power-on finds, not its own) */
+                hds_boots = 0;                  /* (fm1b_dbg.boots: from 0 after a power-on) */
+            } else                               /* crash [PC [VEC]] (hex): the fault, then the restart */
+                hcr_crash(a[0] ? (uint32_t)strtoul(a, 0, 16) : 0x02012344u, b[0] ? (uint32_t)strtoul(b, 0, 16) : 3u,
+                          cmd[5] != 0);
+#ifdef APP_HOST_REBOOT
+            app_host_reboot();
+#endif
+            boot();
+            printf("  %s at %u ms: restarted, crash count %u, history %d\n", cmd, now_ms,
+                   hcr.magic == HCR_MAGIC ? hcr.count : 0u, hcr_rc);
+        } else if (!strcmp(cmd, "stats_switch")) {   /* stats_switch 1|0: plat_stats_enable, as an app's setting */
+            plat_stats_enable(atoi(a));
+        } else if (!strcmp(cmd, "stack")) {         /* stack MAIN IRQ C1: the marks used down to these bytes left */
+            if (a[0] && b[0] && c[0])
+```
+</details></tool-use>
+
+_**Agent - sidechain (claude-opus-5-5 2026-11-18 10:22:14Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Read template README and screens test
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/third_party/fm1-base/template && cat -n README.md | sed -n 1,71p; cat -n tests/screens.txt`
+
+```text
+     1	# The template
+     2	
+     3	The smallest complete fm1-base firmware. Copy this directory to start your own: it builds, installs, updates, runs
+     4	in the host simulator and in the browser, speaks to a screen reader, and publishes a site with an installer and a
+     5	manual.
+     6	
+     7	| File | What |
+     8	| --- | --- |
+     9	| `app.h` | The app's settings (name, block size, the store's objects) and its half of the contract with the platform |
+    10	| `app.c` | The app: input, sound, screen, saving |
+    11	| `fm1.toml` | Build and site settings: name, package identity, USB names, tagline, source, licence, and firmware.json's |
+    12	| `words.tsv` | The screen reader's words (fm1-reader): the screen's text and how to say it |
+    13	| `tests/basic.txt` | Host simulator checks: keys, MIDI, settings across a reboot, the sound, the screen reader |
+    14	| `tests/screens.txt` | The manual's screenshots |
+    15	| `docs/MANUAL.md` | The manual (an example to rewrite) |
+    16	| `site/landing.md` | The site's front page |
+    17	| `.github/workflows/release.yml` | Signed releases built on GitHub (moved to the repository's root: Make it your own) |
+    18	
+    19	## Build, test, install
+    20	
+    21	From the fm1-base directory:
+    22	
+    23	    tools/build.py template                     # template/build/template.fwsc (JieLi toolchain, AC79 SDK)
+    24	    tools/build.py template --host              # the host simulator, then:
+    25	    template/build/host/template_host template/tests/basic.txt template/build/host
+    26	    tools/build.py template --web               # the browser emulator: template/build/emu/
+    27	    python3 tools/fm1_install.py template/build/template.fwsc
+    28	
+    29	For the toolchain, the SDK and the container the build runs in, see fm1-base's README.
+    30	
+    31	## Release and site
+    32	
+    33	    tools/build.py template --release 0.1       # template/build/template-0.1.fwsc, identity FM-1_11000100
+    34	    tools/publish_site.sh template 0.1          # builds the release, the emulator and the site; pushes gh-pages
+    35	
+    36	The site has the front page, the installer, the emulator, the manual and the screen reader's words. To build it
+    37	without publishing, run `tools/make_site.py template template/build/template-0.1.fwsc 0.1 OUT_DIR`.
+    38	
+    39	In a firmware's own repository, a release is built on GitHub from its tag by `.github/workflows/release.yml`, which
+    40	calls the shared FM-1 builder ([`zvenson/fm1-build` at `v1`](https://github.com/zvenson/fm1-build/tree/v1)). The
+    41	builder runs `./build.sh --release X.Y` and `tests/run_tests.sh` (a failing test stops the release) and signs build
+    42	provenance for `NAME-X.Y.fwsc` and `NAME-X.Y-app.bin`; the FM-1 Firmware Hub shows such packages as built from
+    43	source. It also builds `NAME-X.Y.rfm1` for host apps such as RemoteFM1, with Emscripten 6.0.10 from emsdk, and
+    44	releases and signs it with `firmware.json`. The workflow makes a draft release (or keeps the one you wrote, with its notes), checks the sums and the
+    45	signatures, then publishes it. A tag with a suffix (`v0.2-beta`) is a prerelease; a published release is never
+    46	rebuilt. For the site, download that package and give it to `publish_site.sh`, so the site has the attested one:
+    47	
+    48	    gh release download v0.1 --pattern '*.fwsc' --dir app/build
+    49	    base/tools/publish_site.sh app 0.1 app/build/NAME-0.1.fwsc
+    50	
+    51	## Make it your own
+    52	
+    53	1. Copy `template/` to your firmware's repository, with fm1-base beside it as a git submodule.
+    54	2. In `app.h`, set `APP_NAME`, and the store's objects and their flash offsets (`APP_STORE_MAP`).
+    55	3. In `fm1.toml`, set the name, an `id_prefix` of your own (`FM-1_` and digits; each firmware has its own), the USB
+    56	   names, the site's tagline, source and credits, and your name, a description, tags, your install page and a
+    57	   screenshot. The build writes them to `firmware.json` at your repository's root, which firmware hubs read
+    58	   (fm1-base's docs/FIRMWARE-JSON.md); commit it. A release build refuses until your name, the description, the
+    59	   tags, the install page, the tagline, the source, the licence and the screenshot are set. The screenshot is a
+    60	   square PNG of at least 240 × 240 in your repository, its path relative to the repository's root; one of the
+    61	   manual's screenshots (`tests/screens.txt`) fits as it is.
+    62	4. In `words.tsv`, set the `# url:` line to where your site publishes its words.
+    63	5. Write your app in `app.c`: `app_render` for the sound, `app_frame` for the screen and the controls, and the rest
+    64	   of the contract in `app.h`.
+    65	6. Rewrite `docs/MANUAL.md` and `site/landing.md`, and the tests.
+    66	7. For signed releases, move `.github/workflows/release.yml` to the repository's root (`.github/workflows/`) and
+    67	   change the lines marked `# <- yours`: the name in the release title and the concurrency group, `pkg=` (fm1.toml's
+    68	   name in lower case), any other assets, and what the tests need. Then a pushed tag `vX.Y` builds, tests, attests
+    69	   and publishes the release.
+    70	
+    71	fm1-base is MPL-2.0: changes to its files are published under MPL-2.0, and your own files may use any licence.
+     1	# The manual's screenshots (template/docs/img): tools/build.py template --host, then
+     2	#   template/build/host/template_host template/tests/screens.txt template/docs/img
+     3	wait 900
+     4	shot screen-ready.png
+     5	key 7 down 90 50
+     6	press FX
+     7	turn K3 3
+     8	wait 1400
+     9	shot screen-playing.png
+    10	release FX
+    11	key 7 up
+    12	tap OCT+
+    13	wait 30
+    14	turn PRESET 1
+    15	wait 30
+    16	shot screen-settings.png
+```
+</details></tool-use>
+
+_**Agent - sidechain (claude-opus-5-5 2026-11-18 10:22:45Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Read host exit code and key name parsing
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/third_party/fm1-base/host && sed -n 2955,2976p plat_host.c; grep -n 'static int key_of' -A 12 plat_host.c | head -16`
+
+```text
+        wav_end(uwav, uwav_frames, FM1B_UAC_CH);
+    if (hsx_log)
+        fclose(hsx_log);
+    if (midi_log)
+        fclose(midi_log);
+#ifdef APP_HOST_FAILS
+    fails += app_host_fails();                      /* the app's own checks along the way */
+#endif
+#if FM1B_MIRROR
+    if (mr.frames)
+        printf("mirror: %u frames, %u bytes (%u rects, %u rows sent, %u rows skipped, %u drops, %u redraws, %u inputs; "
+               "%u pixels blitted)\n", mr.frames, mr.bytes, mr.rects, mr.rows, mr.skipped, mr.drops, mr.redraws,
+               mr.inputs, mr.px);
+    if (mr_out)
+        fclose(mr_out);
+#endif
+    printf("host: %u ms simulated, %u blits, render %.1f%% of real time (host CPU)%s\n", now_ms, blits,
+           render_budget_ns_total > 0 ? 100.0 * render_ns_total / render_budget_ns_total : 0.0,
+           fails ? ", EXPECTATIONS FAILED" : "");
+    return fails ? 1 : 0;
+}
+#endif /* PLAT_WEB */
+2152:static int key_of(const char *s)
+2153-{
+2154-    if (s[0] == 'w')
+2155-        return HOST_WHITE_K[atoi(s + 1) & 15];
+2156-    if (s[0] == 'b')
+2157-        return HOST_BLACK_K[atoi(s + 1) % 11];
+2158-    return atoi(s);
+2159-}
+2160-
+2161-static uint32_t mk_pkt(const char *a, const char *b, const char *c)
+2162-{
+2163-    uint32_t st = (uint32_t)strtoul(a, 0, 16), d1 = b[0] ? (uint32_t)strtoul(b, 0, 16) : 0,
+2164-             d2 = c[0] ? (uint32_t)strtoul(c, 0, 16) : 0;
+```
+</details></tool-use>
+
+_**Agent - sidechain (claude-opus-5-5 2026-11-18 10:22:55Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Check gen_words handling of missing file
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/third_party/fm1-base && sed -n 36,66p tools/gen_words.py`
+
+```text
+    ("LVL", "level"), ("VOL", "volume"), ("DIST", "distortion"), ("SAT", "saturation"), ("COMP", "compressor"),
+    ("THRESH", "threshold"), ("PERF", "performance"), ("HP", "high-pass"), ("LP", "low-pass"), ("BP", "band-pass"),
+]
+
+
+def main(tsv, out_dir, header):
+    url, own = "", []
+    for n, line in enumerate(Path(tsv).read_text(encoding="utf-8").splitlines(), 1):
+        if line.startswith("# url:"):
+            url = line.split(":", 1)[1].strip()
+        if not line.strip() or (line.startswith("#") and "\t" not in line):   # (a line with a tab is an entry,
+            continue                                                         #  even one starting with "#")
+        parts = line.split("\t")
+        if len(parts) != 2 or not parts[0].strip():
+            raise SystemExit(f"{tsv}:{n}: want: screen<TAB>said")
+        own.append([parts[0].strip(), parts[1].strip()])
+        if not all(32 <= ord(c) < 127 for c in parts[0] + parts[1]):
+            raise SystemExit(f"{tsv}:{n}: ASCII only")
+        for side, what in zip(own[-1], ("the screen's text", "what is said")):
+            if len(side) > WORD_MAX:
+                raise SystemExit(f"{tsv}:{n}: {what} is {len(side)} characters; the screen reader takes {WORD_MAX} at most")
+    if len(own) + len(COMMON) > WORDS_MAX:
+        raise SystemExit(f"{tsv}: {len(own)} entries (and {len(COMMON)} common ones); the screen reader takes "
+                         f"{WORDS_MAX} at most, so {WORDS_MAX - len(COMMON)} of a firmware's own")
+    if not url.startswith("https://") or not url.endswith("/"):
+        raise SystemExit(f"{tsv}: needs a '# url: https://.../words/' line")
+    body = {"format": 1, "words": own + [list(w) for w in COMMON]}
+    text = json.dumps(body, separators=(",", ":"), ensure_ascii=True) + "\n"
+    wid = hashlib.sha256(text.encode()).hexdigest()[:10]
+    out = Path(out_dir) / f"{wid}.json"
+    out.parent.mkdir(parents=True, exist_ok=True)
+```
+</details></tool-use>
+
+_**Agent - sidechain (claude-opus-5-5 2026-11-18 10:23:09Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Check generated font symbol names
+
+`grep -n 'FONT_{\|"FONT_\|felucca_font_t FONT' third_party/fm1-base/tools/gen_font.py | head -5; ls firmware/morse/build/gen 2>/dev/null | head; grep -n 'felucca_font_t FONT_' firmware/morse/build/gen/felucca_font.h 2>/dev/null | head; grep -n '#define FONT_' firmware/morse/build/gen/felucca_font.h | head`
+
+```text
+300:        lines.append(f"static const uint8_t FONT_{name}_DATA[{len(data)}] = {{")
+304:        lines.append(f"static const uint16_t FONT_{name}_OFF[{len(offs)}] = {{" + ", ".join(map(str, offs)) + "};")
+305:        lines.append(f"static const uint8_t FONT_{name}_ADV[{len(glyphs)}] = {{" +
+307:        lines.append(f"static const uint8_t FONT_{name}_BW[{len(glyphs)}] = {{" +
+309:        lines.append(f"static const felucca_font_t FONT_{name} = {{ {h}, {PAD * scale}, {first}, {last}, "
+ann_words.h
+ble_rf_tables.h
+felucca_font.h
+161:static const felucca_font_t FONT_T = { 12, 2, 32, 95, FONT_T_ADV, FONT_T_BW, FONT_T_OFF, FONT_T_DATA };
+460:static const felucca_font_t FONT_XS = { 15, 2, 32, 126, FONT_XS_ADV, FONT_XS_BW, FONT_XS_OFF, FONT_XS_DATA };
+825:static const felucca_font_t FONT_S = { 16, 2, 32, 126, FONT_S_ADV, FONT_S_BW, FONT_S_OFF, FONT_S_DATA };
+1197:static const felucca_font_t FONT_B = { 16, 2, 32, 126, FONT_B_ADV, FONT_B_BW, FONT_B_OFF, FONT_B_DATA };
+1697:static const felucca_font_t FONT_M = { 24, 2, 32, 95, FONT_M_ADV, FONT_M_BW, FONT_M_OFF, FONT_M_DATA };
+2528:static const felucca_font_t FONT_L = { 32, 2, 32, 95, FONT_L_ADV, FONT_L_BW, FONT_L_OFF, FONT_L_DATA };
+4:#define FONT_PAD 2  /* x scale for L, see below */
+```
+</details></tool-use>
+
+_**Agent - sidechain (claude-opus-5-5 2026-11-18 10:23:21Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Check committed words files and gitignore
+
+`git ls-files firmware/conductor/web firmware/hello/web firmware/voicelab/web | head; grep -n 'build\|web' .gitignore | head; head -3 firmware/conductor/words.tsv`
+
+```text
+11:# Emulator binaries and state, upstream checkouts, firmware build output.
+14:/build/
+# SPDX-License-Identifier: MIT
+# Conductor's words for a screen reader (fm1-reader): the text on the screen <TAB> what to say.
+# url: https://daviddwlee84.github.io/M-VAVE_FM-1/agentic/conductor/
+```
+</details></tool-use>
+
+_**Agent - sidechain (claude-opus-5-5 2026-11-18 10:23:26Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Read gitignore for firmware outputs
+
+`sed -n 8,30p .gitignore; git check-ignore -v firmware/conductor/web/words/x.json firmware/conductor/build/x 2>&1`
+
+```text
+/backups/
+/downloads/
+
+# Emulator binaries and state, upstream checkouts, firmware build output.
+/tools/
+/vendor/
+/build/
+
+# Python caches (host/conductor)
+__pycache__/
+/.pytest_cache/
+
+# Generated app data (firmware/voicelab/gen: speech made from a voice that is not ours to share)
+/firmware/*/gen/
+firmware/conductor/.gitignore:2:web/words/	firmware/conductor/web/words/x.json
+firmware/conductor/.gitignore:1:build/	firmware/conductor/build/x
+```
+</details></tool-use>
+
+_**Agent - sidechain (claude-opus-5-5 2026-11-18 10:23:36Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Check canvas overrides and Morse ui struct
+
+`grep -rn 'define APP_CANVAS_PX\|define APP_PALETTE\|define APP_FONT_CACHE' firmware third_party/fm1-base --include=app.h 2>/dev/null; grep -rn 'APP_CANVAS_PX' third_party/fm1-base/examples 2>/dev/null | head -3; sed -n 200,215p firmware/morse/app.c; cat firmware/conductor/.gitignore`
+
+```text
+third_party/fm1-base/examples/wifi/app.h:13:#define APP_CANVAS_PX (240u * 48u)       /* a strip at a time: WiFi's buffers need the pool (gfx.c) */
+third_party/fm1-base/examples/wifi/app.h:13:#define APP_CANVAS_PX (240u * 48u)       /* a strip at a time: WiFi's buffers need the pool (gfx.c) */
+third_party/fm1-base/examples/wifi/app.c:100:/* a line of text in a strip of its own (the canvas holds 240 x 48: APP_CANVAS_PX), a second text right-aligned */
+    char line[TG_COLS * 2u + 1u];        /* TYPE: the line typed */
+    const char *gloss;                   /* TYPE: what the last phrase means */
+    uint32_t rec_t;                      /* TYPE: REC went down at (0: up, or its hold already cleared the line) */
+    char last;                           /* KEY: the last character read */
+    uint8_t host_was, ble_was, lamp_was, pat_was;
+} ui;
+enum { R_HEAD = 1, R_MAIN = 2, R_LAMP = 4, R_FOOT = 8, R_ALL = 15 };
+
+static struct {
+    ln_round_t r;
+    uint8_t ps;                          /* PS_* */
+    uint8_t pick;                        /* the choice under SELECT */
+    uint8_t right;                       /* the last answer */
+    uint8_t opened;                      /* the round opened a group */
+    uint8_t answer_ok;                   /* keying is taken as the answer (the prompt has played) */
+    char got;                            /* what was keyed */
+build/
+web/words/
+```
+</details></tool-use>
+
+_**Agent - sidechain (claude-opus-5-5 2026-11-18 10:25:37Z)**_
+
+I've checked all six areas. The main things to plan around:
+
+- The canvas holds at most 240×144 pixels, so the wheel has to be drawn in two passes.
+- No font has ♯ ♭ ° ø, and the M and L fonts have no lower case: `m`, `b` and `o` come out as capitals.
+- Every 1x prefix (FM-1_11 to FM-1_19) clashes with LOOM-8 once you make a release build.
+
+Unless marked otherwise, paths are relative to `/Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/`; fm1-base files are under `third_party/fm1-base/`.
+
+## 1. App skeleton
+
+**Hooks every app must define** (fm1-base `device/unity.c:8-10`, `template/app.h:22-29`):
+- `void app_init(void)`
+- `void app_render(int32_t *lr, uint32_t n, uint32_t master_q12)`
+- `void app_panic(void)`
+- `void app_ui_init(void)`
+- `void app_frame(void)` — called at most every 16 ms; `app_input_only()` runs in between (`device/main_fm1.c:1483-1491`)
+- `void app_input_only(void)`
+- `void app_say(const char *a, const char *b)`
+- An object enum that includes `OBJ_PANEL` and ends with `OBJ_NOBJ`, plus `APP_STORE_MAP`.
+
+**Settings macros** (defaults in `include/fm1b_config.h:6-32`): `APP_NAME`, `APP_SPLASH_RGB`, `APP_BLOCK`, `APP_PALETTE` (default 1, amber), `APP_TAGLINE`, `APP_BIG_FONT` (default `FONT_L`, used for the splash), `APP_GAIN`, `APP_BLE_AT_BOOT`. Also `APP_TOUCH` and `APP_BTDEV` (`template/app.h:12-13`), and `APP_CANVAS_PX` / `APP_FONT_CACHE` (`device/gfx.c:18-21`, `171-181`).
+
+**Optional hooks** (`include/plat.h:605-664`): define the macro and provide the function.
+- `APP_TICK` → `void app_tick(void)`, 1 kHz, in the timer interrupt
+- `APP_OVERLOAD` → `void app_overload(void)`
+- Also `APP_BOOT`, `APP_LOOP`, `APP_YIELD`, `APP_SPLASH`, `APP_QUIET`, `APP_SYSEX` (`int app_sysex(const uint8_t*, uint32_t)`), `APP_SYSEX_BYTE`, `APP_USB_CMD`, `APP_REDRAW`, `APP_LOG`, `APP_FAULT`, `APP_STATS`, `APP_BACKUP_*`
+- `APP_RESTART` (`plat.h:339-343`)
+- `APP_BLE_STORE` with `app_ble_load` / `app_ble_save` (`plat.h:236-255`)
+
+**Simulator-only hooks** (`host/plat_host.c:112-117`; wrap them in `#ifdef PLAT_HOST`):
+- `APP_HOST_EXPECT` → `int app_expect(const char *what, int *got)`
+- `APP_HOST_CMD` → `int app_host_cmd(const char *cmd, const char *a, const char *b, const char *c, const char *d)`
+- `APP_HOST_FAILS` → `int app_host_fails(void)`
+- Also `APP_HOST_REBOOT` (`app_host_reboot`), `APP_HOST_SPEAKDUMP`, `APP_HOST_MS`
+
+**`fm1.toml` keys this repo uses** (`firmware/*/fm1.toml`): `name`, `title`, `id_prefix`, `usb_manufacturer`, `usb_product`, `o2`, `include`, `words`, `ble`, `ble_central`, `ble_stack`, `ble_diag`, `ble_midi_time`, `tagline`, `repo`, `site`, `install`, `screenshot`, `licence`, `credits`, `author`, `description`, `tags`.
+- `build.py` also documents `gen`, `font_full`, `font_trim`, `font_pack`, `backup`, `resources`, `mirror`, `msc`, `unity_opt`, `o2_cflags` and many more (`tools/build.py:17-262`).
+- **There is no `font` key.** The typeface set comes from the environment variable `X0X_FONTSET` (default `barlow`, `tools/gen_font.py:63`).
+- `words.tsv` is effectively required. It must have a `# url: https://…/` line and be ASCII only (`tools/gen_words.py:41-61`). The build writes `web/words/*.json` into the app folder, so the app's `.gitignore` should list `build/` and `web/words/` (see `firmware/conductor/.gitignore`).
+
+**How includes work:** the whole app is one compilation unit. `unity.c:455` includes `app.c`, and the app folder plus each `include` entry are on the `-I` path (`build.py:780` for the device, `:1416` for the simulator). Morse simply does `#include "morse.c"`, `"learn.c"`, `"content.c"` and `"tone.c"` in `app.c` (`firmware/morse/app.c:7-13`).
+- `include = ["../common"]` makes `firmware/common` visible, so you then write `#include "ledfx.c"` (`firmware/common/README.md:16-31`).
+- Morse uses `["common"]` because it is a standalone repo with its own copy (`firmware/morse/fm1.toml:8`).
+- For theory: put `#define TH_GLYPH_*` lines before `#include "theory.c"` (`firmware/theory/theory.h:15-34`).
+- On `reboot`, the simulator runs `app_init` again over the old RAM, so zero your state there (`firmware/morse/app.c:3080`).
+
+## 2. Package identity
+
+| App | `id_prefix` | Reference |
+|---|---|---|
+| hello | FM-1_11 | `firmware/hello/fm1.toml:3` |
+| conductor | FM-1_12 | `firmware/conductor/fm1.toml:3` |
+| voicelab | FM-1_14 | `firmware/voicelab/fm1.toml:3` |
+| morse | FM-1_41 (was FM-1_13 in dev; dropped because Midi-Mania uses FM-1_137) | `firmware/morse/fm1.toml:4`, `docs/dev/morse.md:453` |
+
+Dev builds are the prefix + `00`; releases are the prefix + XXYYZZ (`build.py:1712-1724`).
+
+The skill's rule (`.agents/skills/fm1-hub-listing/SKILL.md:63-70`): `FM-1_` plus digits only, pick a prefix whose three-digit short forms nobody uses, read `catalog.json` at most once a day, and the owner runs the Hub's `#check` page before submitting.
+
+**Catalog check (snapshot dated 2026-11-18 07:16 UTC).** Each firmware's `ident` is a regex, and 22 of them are the wildcard `FM-1_\d{3,8}`, which I ignored.
+- LOOM-8's `FM-1_1\d{7}` matches every 1x release identity (for example `FM-1_11000100`), so avoid all 1x prefixes.
+- These two-digit prefixes are free for dev, short-form and 0.x/1.x release identities: **34, 40, 49, 54, 55, 56, 58, 59, 68, 69, 84, 85, 89**.
+- **Suggestion: `FM-1_49`** (dev `FM-1_4900`, release 0.1 `FM-1_49000100`). `FM-1_55` and `FM-1_56` are the backups.
+
+## 3. Input, LEDs and drawing
+
+**Keys** (`include/plat.h:53-62`): there are no events, only polling. `plat_keys()` returns a 27-bit held mask; key 0 is F3 (MIDI 53, `template/app.c:270-272`). The app finds presses and releases by comparing with last frame's mask (`firmware/morse/app.c:1911-1913`).
+- White and black key maps are `PLAT_WHITE_KEYS` / `PLAT_BLACK_KEYS`.
+- **Velocity** needs `APP_TOUCH` plus `touch_on(1)`, then each frame `touch_poll()`, `touch_keys()`, `touch_vel(k)` (`template/app.c:268-275, 456`).
+  - There is also an event mode, `touch_take` (`lib/touch.h:6-16, 29-41`).
+  - The 7 top keys (C#5–G5) have velocity only through `touch_vel_contact`, and no pressure.
+
+**Buttons and encoders:**
+- `plat_buttons()` returns a held mask of `B_*` bits (`plat.h:49, 61`). For SEL + key, test the SEL bit when the key goes down.
+- `plat_enc(EN_*)` returns detents since the last call, positive is clockwise (`plat.h:63`). Read the unused encoders every frame anyway to throw their turns away (`firmware/morse/app.c:2035`).
+
+**LEDs:**
+- `plat_lights(buttons, keys, dim_buttons, dim_keys, glow)` gives lit/dim, `plat_lights_mid()` adds a middle level, and `plat_leds` / `plat_glow` are the simple versions (`plat.h:77-94`). Bit k = key k; `LED_PLAY_GREEN` is bit `NB`.
+- `firmware/common/ledfx.h:13-31` adds `FX_GLOW`, `FX_MID`, `FX_LIT` and `FX_BLINK`. That covers "scale notes glow, tonic lit, played notes blink"; Morse's `lights()` is the model (`app.c:2052-2072`).
+
+**Drawing** (`device/gfx.c`):
+
+| Call | Line | Notes |
+|---|---|---|
+| `cv_begin(w,h,bg)` | 63 | **Silently shrinks h** if w×h exceeds the canvas (66-67) |
+| `cv_band` | 80 | |
+| `cv_blit(x,y)` / `cv_blit_from` | 86, 89 | |
+| `cv_pset` | 95 | Clipped |
+| `cv_rect` | 102 | Filled |
+| `cv_line` | 120 | 1-pixel line |
+| `cv_text(x,y,&FONT_*,s,c)` | 213 | Returns end x; anti-aliased |
+| `text_w` | 294 | |
+| `draw_text_box` | 303 | |
+
+- Colours are RGB565 via `RGB(r,g,b)`. `C_BLACK` and `C_WHITE` are fixed; the palette gives `C_LINE`, `C_DIM`, `C_GRAY`, `C_AMB`, `C_HI` (27-52).
+- `lcd_fill` / `lcd_blit` write straight to the screen (`host/plat_host.c:159-186`).
+- `APP_CANVAS_PX` defaults to 240×144 (gfx.c:18-21), so a full 240×240 canvas does not fit.
+
+**Font roles** (Barlow; from the generated `firmware/morse/build/gen/felucca_font.h`):
+
+| Role | Height (px) | Characters |
+|---|---|---|
+| T | 12 | 32..95 (no lower case) |
+| XS | 15 | 32..126 |
+| S | 16 | 32..126 |
+| B | 16 | 32..126 |
+| M | 24 | 32..95 (no lower case) |
+| L | 32 | 32..95 (no lower case) |
+
+Missing lower case is folded to capitals, and anything else unknown (including bytes below 32 and 127–159) draws as `?` (`gfx.c:143-150`). So "F#m7", "viio" and "Bb" in M or L would show as "F#M7", "VIIO", "BB" unless you add `font_full = ["M"]` (or `["L"]`) (`build.py:48`). `#` and `/` exist in every role.
+
+**No bitmap or blit call exists for small glyphs.** The only example is Conductor's 1-bit bitmap drawn pixel by pixel with `cv_pset` (`firmware/conductor/app.c:577-583`). For ♯ ♭ ° you would need your own text drawer that spots marker bytes and draws a small bitmap.
+
+**How Morse redraws:**
+- Redraw flags: `R_HEAD=1`, `R_MAIN=2`, `R_LAMP=4`, `R_FOOT=8` (`app.c:206`). `draw()` acts on them (3048-3060), and `app_frame` sets them when state changes (3146-3176).
+- `app_ui_init` clears the screen with `lcd_fill` and sets `R_ALL` (3123-3127).
+- Screen bands:
+
+| Band | Position | Code |
+|---|---|---|
+| Header | 240×32 at y=0, with a 1-pixel rule at y=31 | `app.c:2116-2157` |
+| Main | 240×176 at y=32, drawn in two 88-row halves; each callback subtracts its offset `oy` | `main_area`, `app.c:2901-2910`; Conductor does the same, `conductor/app.c:564-574` |
+| Lamp | 240×10 at y=88 or 196 | `app.c:3036-3046` |
+| Footer | 240×32 at y=208 | `app.c:2968-3034` |
+
+- Morse draws nothing non-text except with `cv_rect`: Morse code marks (`draw_code`, 2090-2109), the lamp (a 200×6 bar, 2159-2165), timing bars sized in proportion to milliseconds (`bars`, 2446-2475), and the menu highlight (2894). Morse never calls `cv_line` or `cv_pset`.
+- For the wheel: compute the 12 positions with `fm_sinf` / `fm_cosf` (`include/fastmath.h:164-165`), then draw with `cv_line` / `cv_pset` in both halves.
+
+## 4. Storage
+
+- `plat_store_load(obj, dst, max)` returns the byte count, or <0 for none/bad. `plat_store_save(obj, src, len)` returns 0 on success. One object holds at most 3840 B (`plat.h:471-490`).
+- `APP_STORE_MAP` gives each object's first offset; it uses an A/B pair of 4 KiB sectors from there. It must sit in `0x97000–0xDFFFF` or the `0xFC000` pair.
+- **Gotcha:** the record header's magic `X0X0` is the same for every fm1-base app, and the header stores the object's index (`device/storage.c:28-35, 80-85`). An app reading another app's sector would accept its record, so put your own magic in the payload, like the template's `SET_MAGIC` check (`template/app.c:10, 102-104`).
+- Morse: `enum {OBJ_PANEL, OBJ_MORSE}`, `APP_STORE_MAP {0xDC000u, 0xDA000u}` (`app.h:18-21`). It saves 3 s after a change (`app.c:113-121, 3100-3107, 3171-3172`).
+- **`OBJ_PANEL` at `0xDC000` is the panel calibration** (which matrix button carries which label) and is shared by every fm1-base app. It is only written after the hardware calibration (OCT- + OCT+ held at power-on) (`device/panel.c:4-6, 41, 104`). It is also Felucca's user-preset bank (`docs/hardware/flash-map.md:41`). Keep it at `0xDC000`.
+
+**Who uses what:**
+- SLOOP: `0x97000`, `0x9F000`, `0xFC000–0xFEFFF`
+- Felucca-family samples: from `0xA0000`
+- Morse: `0xDA000–0xDBFFF`
+- CTL-1 / the template's `OBJ_BLE`: `0xDE000`
+- Update loader staging: `0xE0000`
+- Shared global settings (SLOOP, Agent Deck, CTL-1, and the template's default `OBJ_SETTINGS`): `0xFC000`
+- Sources: `flash-map.md:37-46`, `docs/firmware/switching.md:65-91`.
+
+**This unit's backups.** I read all 23 full backups. Across them, the only sectors ever written in `0x97000–0xDFFFF` were `0x97000–0x9FFFF`, `0xDA000–0xDBFFF` and `0xDE000–0xDFFFF`. `0xA0000–0xD9FFF` and `0xDC000–0xDDFFF` are erased in every one.
+
+**Recommendation: `0xD8000` (the `0xD8000` / `0xD9000` pair), right below Morse.** No legal sector is safe from every Felucca-family firmware. ChoralRoot 0.41 keeps its FM-1 loop slots at `0xC8000–0xDBFFF` (`vendor/ChoralRootFM1/firmware/src/storage.c:31-36`, `cr_ui.c:2440`). That range already covers Morse's `0xDA000`, so `0xD8000` carries the same risk Morse accepted. Do not copy the template's `0xFC000` settings slot. For Bluetooth, use Morse's `APP_BLE_STORE` approach (`app.h:22-26`) rather than an object at `0xDE000`. The theory design doc already says to avoid `0xDA000` and `0xDC000`, check with `emu-rehearse`, and update the flash map (`docs/dev/theory.md:298`).
+
+**Before proposing a flash** (`AGENTS.md:206-216, 169-190`):
+1. `just fw-test theory` passes.
+2. Run the `.fwsc` with `just emu-run` on **both** `uc25hq80` and `p25q80`, including a save, a restart and a reload. Report the results as `[模擬]`.
+3. Theory is not yet in the switching table, so run `just emu-rehearse PKG <latest backup>` and report which sectors it rewrites. The latest backup is `backups/2026-11-18-pre-morse-0.5/fm1-20261118-161218.bin`.
+4. Show the 4-item preflight: backup with SHA-256 recorded in `device-log`, chip `0xB36014`, the package's SHA-256, and what is installed now (Morse 0.6) and what the write changes.
+5. The owner approves and runs that one write, then `docs/device-log.md` is updated.
+6. Persist only through `APP_STORE_MAP`.
+
+## 5. Simulator test language (`host/plat_host.c:10-118`)
+
+- `key K down|up [VEL [PRESS]]`: K is 0..26, `w0..w15` (white) or `b0..b10` (black) (`key_of`, 2152-2159). The key stays held until `up`.
+- `tapkey K [VEL]`: 60 ms down, then 30 ms released.
+- `turn ENC N [MS]`: SELECT, ALGO, PRESET, K1..K4; N detents, 80 ms apart by default (2604-2615). `spin ENC N` gives exactly N steps at once.
+- `press` / `release` / `tap BTN`: `tap` is 40 ms down plus 40 ms (2552-2565). `strum A B [MS]` runs across white keys.
+- `expect WHAT VALUE`: integers only; `<N` and `>N` are bounds. The app's `app_expect` is asked first (2188-2192). Built-ins include `store_writes`, `midi_out` and `peak_db_*` (2199-2277).
+- `shot F.png` saves to `OUTDIR/F.png` (2692). `wav F` / `wavstop` record audio.
+- `reboot` boots again from the simulated flash and calls `app_init` (2752-2757).
+- `leds` prints `#` for bright and `+` for dim/mid (2695-2710). **There is no built-in expect for key LEDs**, so expose something like `lit_keys` / `dim_keys` through `app_expect`.
+- `listen` / `said TEXT` / `unsaid TEXT` check screen-reader output.
+- `app_host_cmd` is tried **before** the built-in commands on every line (2546-2549); return 1 if you handled it. Morse's `expect_text` (`app.c:3322-3343`) shows how to compare strings, such as a chord name: print `ok` or `FAIL` and count failures that `APP_HOST_FAILS` adds at the end (`app.c:3445`, `plat_host.c:2960`).
+- The simulator exits with 1 if anything failed (2974).
+
+## 6. Justfile
+
+- `fw-test app="hello"` (`justfile:197-204`) works for any app name: `build.py firmware/<app> --host`, then it runs `build/host/*_host tests/basic.txt build/host` from inside the app folder. **Screenshots and audio go to `firmware/<app>/build/host/`.** It only runs `basic.txt`; `morse-shots` (313-332) shows how to make a screenshots recipe.
+- `fw-build app="hello"` (215-217) is also generic. Output is `firmware/<app>/build/<name>.fwsc`, with the name lower-cased from `fm1.toml` (`build.py:1699, 1708`).
+- `emu-run package chip *args` (136-142) takes a **.fwsc path**, not an app name. Flash state persists in `tools/emu-state/<pkg>-<chip>.flash`, so running it again is the reload.
+- `emu-shot package chip ms` (144-155) and `emu-rehearse package backup chip` (157-173) also take paths.
+- There is no generic release recipe; `morse-release` (272-275) is the model. Theory currently has only `theory-unit` and `theory-vectors` (334-348).
+
+---
+
+_**User (2026-11-18 10:25:37Z)**_
+
+<task-notification>
+<task-id>a9023facd4acc5fd8</task-id>
+<tool-use-id>toolu_01UbdFCccACEuLDRksVtqWWU</tool-use-id>
+<output-file>/private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/7dcc67a0-a756-4514-85d7-b24e721b72ee/tasks/a9023facd4acc5fd8.output</output-file>
+<status>completed</status>
+<summary>Agent "fm1-base app skeleton + UI" finished</summary>
+<note>A task-notification fires each time this agent stops with no live background children of its own. The user can send it another message and resume it, so the same task-id may notify more than once.</note>
+<result>I've checked all six areas. The main things to plan around:
+
+- The canvas holds at most 240×144 pixels, so the wheel has to be drawn in two passes.
+- No font has ♯ ♭ ° ø, and the M and L fonts have no lower case: `m`, `b` and `o` come out as capitals.
+- Every 1x prefix (FM-1_11 to FM-1_19) clashes with LOOM-8 once you make a release build.
+
+Unless marked otherwise, paths are relative to `/Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/`; fm1-base files are under `third_party/fm1-base/`.
+
+## 1. App skeleton
+
+**Hooks every app must define** (fm1-base `device/unity.c:8-10`, `template/app.h:22-29`):
+- `void app_init(void)`
+- `void app_render(int32_t *lr, uint32_t n, uint32_t master_q12)`
+- `void app_panic(void)`
+- `void app_ui_init(void)`
+- `void app_frame(void)` — called at most every 16 ms; `app_input_only()` runs in between (`device/main_fm1.c:1483-1491`)
+- `void app_input_only(void)`
+- `void app_say(const char *a, const char *b)`
+- An object enum that includes `OBJ_PANEL` and ends with `OBJ_NOBJ`, plus `APP_STORE_MAP`.
+
+**Settings macros** (defaults in `include/fm1b_config.h:6-32`): `APP_NAME`, `APP_SPLASH_RGB`, `APP_BLOCK`, `APP_PALETTE` (default 1, amber), `APP_TAGLINE`, `APP_BIG_FONT` (default `FONT_L`, used for the splash), `APP_GAIN`, `APP_BLE_AT_BOOT`. Also `APP_TOUCH` and `APP_BTDEV` (`template/app.h:12-13`), and `APP_CANVAS_PX` / `APP_FONT_CACHE` (`device/gfx.c:18-21`, `171-181`).
+
+**Optional hooks** (`include/plat.h:605-664`): define the macro and provide the function.
+- `APP_TICK` → `void app_tick(void)`, 1 kHz, in the timer interrupt
+- `APP_OVERLOAD` → `void app_overload(void)`
+- Also `APP_BOOT`, `APP_LOOP`, `APP_YIELD`, `APP_SPLASH`, `APP_QUIET`, `APP_SYSEX` (`int app_sysex(const uint8_t*, uint32_t)`), `APP_SYSEX_BYTE`, `APP_USB_CMD`, `APP_REDRAW`, `APP_LOG`, `APP_FAULT`, `APP_STATS`, `APP_BACKUP_*`
+- `APP_RESTART` (`plat.h:339-343`)
+- `APP_BLE_STORE` with `app_ble_load` / `app_ble_save` (`plat.h:236-255`)
+
+**Simulator-only hooks** (`host/plat_host.c:112-117`; wrap them in `#ifdef PLAT_HOST`):
+- `APP_HOST_EXPECT` → `int app_expect(const char *what, int *got)`
+- `APP_HOST_CMD` → `int app_host_cmd(const char *cmd, const char *a, const char *b, const char *c, const char *d)`
+- `APP_HOST_FAILS` → `int app_host_fails(void)`
+- Also `APP_HOST_REBOOT` (`app_host_reboot`), `APP_HOST_SPEAKDUMP`, `APP_HOST_MS`
+
+**`fm1.toml` keys this repo uses** (`firmware/*/fm1.toml`): `name`, `title`, `id_prefix`, `usb_manufacturer`, `usb_product`, `o2`, `include`, `words`, `ble`, `ble_central`, `ble_stack`, `ble_diag`, `ble_midi_time`, `tagline`, `repo`, `site`, `install`, `screenshot`, `licence`, `credits`, `author`, `description`, `tags`.
+- `build.py` also documents `gen`, `font_full`, `font_trim`, `font_pack`, `backup`, `resources`, `mirror`, `msc`, `unity_opt`, `o2_cflags` and many more (`tools/build.py:17-262`).
+- **There is no `font` key.** The typeface set comes from the environment variable `X0X_FONTSET` (default `barlow`, `tools/gen_font.py:63`).
+- `words.tsv` is effectively required. It must have a `# url: https://…/` line and be ASCII only (`tools/gen_words.py:41-61`). The build writes `web/words/*.json` into the app folder, so the app's `.gitignore` should list `build/` and `web/words/` (see `firmware/conductor/.gitignore`).
+
+**How includes work:** the whole app is one compilation unit. `unity.c:455` includes `app.c`, and the app folder plus each `include` entry are on the `-I` path (`build.py:780` for the device, `:1416` for the simulator). Morse simply does `#include "morse.c"`, `"learn.c"`, `"content.c"` and `"tone.c"` in `app.c` (`firmware/morse/app.c:7-13`).
+- `include = ["../common"]` makes `firmware/common` visible, so you then write `#include "ledfx.c"` (`firmware/common/README.md:16-31`).
+- Morse uses `["common"]` because it is a standalone repo with its own copy (`firmware/morse/fm1.toml:8`).
+- For theory: put `#define TH_GLYPH_*` lines before `#include "theory.c"` (`firmware/theory/theory.h:15-34`).
+- On `reboot`, the simulator runs `app_init` again over the old RAM, so zero your state there (`firmware/morse/app.c:3080`).
+
+## 2. Package identity
+
+| App | `id_prefix` | Reference |
+|---|---|---|
+| hello | FM-1_11 | `firmware/hello/fm1.toml:3` |
+| conductor | FM-1_12 | `firmware/conductor/fm1.toml:3` |
+| voicelab | FM-1_14 | `firmware/voicelab/fm1.toml:3` |
+| morse | FM-1_41 (was FM-1_13 in dev; dropped because Midi-Mania uses FM-1_137) | `firmware/morse/fm1.toml:4`, `docs/dev/morse.md:453` |
+
+Dev builds are the prefix + `00`; releases are the prefix + XXYYZZ (`build.py:1712-1724`).
+
+The skill's rule (`.agents/skills/fm1-hub-listing/SKILL.md:63-70`): `FM-1_` plus digits only, pick a prefix whose three-digit short forms nobody uses, read `catalog.json` at most once a day, and the owner runs the Hub's `#check` page before submitting.
+
+**Catalog check (snapshot dated 2026-11-18 07:16 UTC).** Each firmware's `ident` is a regex, and 22 of them are the wildcard `FM-1_\d{3,8}`, which I ignored.
+- LOOM-8's `FM-1_1\d{7}` matches every 1x release identity (for example `FM-1_11000100`), so avoid all 1x prefixes.
+- These two-digit prefixes are free for dev, short-form and 0.x/1.x release identities: **34, 40, 49, 54, 55, 56, 58, 59, 68, 69, 84, 85, 89**.
+- **Suggestion: `FM-1_49`** (dev `FM-1_4900`, release 0.1 `FM-1_49000100`). `FM-1_55` and `FM-1_56` are the backups.
+
+## 3. Input, LEDs and drawing
+
+**Keys** (`include/plat.h:53-62`): there are no events, only polling. `plat_keys()` returns a 27-bit held mask; key 0 is F3 (MIDI 53, `template/app.c:270-272`). The app finds presses and releases by comparing with last frame's mask (`firmware/morse/app.c:1911-1913`).
+- White and black key maps are `PLAT_WHITE_KEYS` / `PLAT_BLACK_KEYS`.
+- **Velocity** needs `APP_TOUCH` plus `touch_on(1)`, then each frame `touch_poll()`, `touch_keys()`, `touch_vel(k)` (`template/app.c:268-275, 456`).
+  - There is also an event mode, `touch_take` (`lib/touch.h:6-16, 29-41`).
+  - The 7 top keys (C#5–G5) have velocity only through `touch_vel_contact`, and no pressure.
+
+**Buttons and encoders:**
+- `plat_buttons()` returns a held mask of `B_*` bits (`plat.h:49, 61`). For SEL + key, test the SEL bit when the key goes down.
+- `plat_enc(EN_*)` returns detents since the last call, positive is clockwise (`plat.h:63`). Read the unused encoders every frame anyway to throw their turns away (`firmware/morse/app.c:2035`).
+
+**LEDs:**
+- `plat_lights(buttons, keys, dim_buttons, dim_keys, glow)` gives lit/dim, `plat_lights_mid()` adds a middle level, and `plat_leds` / `plat_glow` are the simple versions (`plat.h:77-94`). Bit k = key k; `LED_PLAY_GREEN` is bit `NB`.
+- `firmware/common/ledfx.h:13-31` adds `FX_GLOW`, `FX_MID`, `FX_LIT` and `FX_BLINK`. That covers "scale notes glow, tonic lit, played notes blink"; Morse's `lights()` is the model (`app.c:2052-2072`).
+
+**Drawing** (`device/gfx.c`):
+
+| Call | Line | Notes |
+|---|---|---|
+| `cv_begin(w,h,bg)` | 63 | **Silently shrinks h** if w×h exceeds the canvas (66-67) |
+| `cv_band` | 80 | |
+| `cv_blit(x,y)` / `cv_blit_from` | 86, 89 | |
+| `cv_pset` | 95 | Clipped |
+| `cv_rect` | 102 | Filled |
+| `cv_line` | 120 | 1-pixel line |
+| `cv_text(x,y,&amp;FONT_*,s,c)` | 213 | Returns end x; anti-aliased |
+| `text_w` | 294 | |
+| `draw_text_box` | 303 | |
+
+- Colours are RGB565 via `RGB(r,g,b)`. `C_BLACK` and `C_WHITE` are fixed; the palette gives `C_LINE`, `C_DIM`, `C_GRAY`, `C_AMB`, `C_HI` (27-52).
+- `lcd_fill` / `lcd_blit` write straight to the screen (`host/plat_host.c:159-186`).
+- `APP_CANVAS_PX` defaults to 240×144 (gfx.c:18-21), so a full 240×240 canvas does not fit.
+
+**Font roles** (Barlow; from the generated `firmware/morse/build/gen/felucca_font.h`):
+
+| Role | Height (px) | Characters |
+|---|---|---|
+| T | 12 | 32..95 (no lower case) |
+| XS | 15 | 32..126 |
+| S | 16 | 32..126 |
+| B | 16 | 32..126 |
+| M | 24 | 32..95 (no lower case) |
+| L | 32 | 32..95 (no lower case) |
+
+Missing lower case is folded to capitals, and anything else unknown (including bytes below 32 and 127–159) draws as `?` (`gfx.c:143-150`). So "F#m7", "viio" and "Bb" in M or L would show as "F#M7", "VIIO", "BB" unless you add `font_full = ["M"]` (or `["L"]`) (`build.py:48`). `#` and `/` exist in every role.
+
+**No bitmap or blit call exists for small glyphs.** The only example is Conductor's 1-bit bitmap drawn pixel by pixel with `cv_pset` (`firmware/conductor/app.c:577-583`). For ♯ ♭ ° you would need your own text drawer that spots marker bytes and draws a small bitmap.
+
+**How Morse redraws:**
+- Redraw flags: `R_HEAD=1`, `R_MAIN=2`, `R_LAMP=4`, `R_FOOT=8` (`app.c:206`). `draw()` acts on them (3048-3060), and `app_frame` sets them when state changes (3146-3176).
+- `app_ui_init` clears the screen with `lcd_fill` and sets `R_ALL` (3123-3127).
+- Screen bands:
+
+| Band | Position | Code |
+|---|---|---|
+| Header | 240×32 at y=0, with a 1-pixel rule at y=31 | `app.c:2116-2157` |
+| Main | 240×176 at y=32, drawn in two 88-row halves; each callback subtracts its offset `oy` | `main_area`, `app.c:2901-2910`; Conductor does the same, `conductor/app.c:564-574` |
+| Lamp | 240×10 at y=88 or 196 | `app.c:3036-3046` |
+| Footer | 240×32 at y=208 | `app.c:2968-3034` |
+
+- Morse draws nothing non-text except with `cv_rect`: Morse code marks (`draw_code`, 2090-2109), the lamp (a 200×6 bar, 2159-2165), timing bars sized in proportion to milliseconds (`bars`, 2446-2475), and the menu highlight (2894). Morse never calls `cv_line` or `cv_pset`.
+- For the wheel: compute the 12 positions with `fm_sinf` / `fm_cosf` (`include/fastmath.h:164-165`), then draw with `cv_line` / `cv_pset` in both halves.
+
+## 4. Storage
+
+- `plat_store_load(obj, dst, max)` returns the byte count, or &lt;0 for none/bad. `plat_store_save(obj, src, len)` returns 0 on success. One object holds at most 3840 B (`plat.h:471-490`).
+- `APP_STORE_MAP` gives each object's first offset; it uses an A/B pair of 4 KiB sectors from there. It must sit in `0x97000–0xDFFFF` or the `0xFC000` pair.
+- **Gotcha:** the record header's magic `X0X0` is the same for every fm1-base app, and the header stores the object's index (`device/storage.c:28-35, 80-85`). An app reading another app's sector would accept its record, so put your own magic in the payload, like the template's `SET_MAGIC` check (`template/app.c:10, 102-104`).
+- Morse: `enum {OBJ_PANEL, OBJ_MORSE}`, `APP_STORE_MAP {0xDC000u, 0xDA000u}` (`app.h:18-21`). It saves 3 s after a change (`app.c:113-121, 3100-3107, 3171-3172`).
+- **`OBJ_PANEL` at `0xDC000` is the panel calibration** (which matrix button carries which label) and is shared by every fm1-base app. It is only written after the hardware calibration (OCT- + OCT+ held at power-on) (`device/panel.c:4-6, 41, 104`). It is also Felucca's user-preset bank (`docs/hardware/flash-map.md:41`). Keep it at `0xDC000`.
+
+**Who uses what:**
+- SLOOP: `0x97000`, `0x9F000`, `0xFC000–0xFEFFF`
+- Felucca-family samples: from `0xA0000`
+- Morse: `0xDA000–0xDBFFF`
+- CTL-1 / the template's `OBJ_BLE`: `0xDE000`
+- Update loader staging: `0xE0000`
+- Shared global settings (SLOOP, Agent Deck, CTL-1, and the template's default `OBJ_SETTINGS`): `0xFC000`
+- Sources: `flash-map.md:37-46`, `docs/firmware/switching.md:65-91`.
+
+**This unit's backups.** I read all 23 full backups. Across them, the only sectors ever written in `0x97000–0xDFFFF` were `0x97000–0x9FFFF`, `0xDA000–0xDBFFF` and `0xDE000–0xDFFFF`. `0xA0000–0xD9FFF` and `0xDC000–0xDDFFF` are erased in every one.
+
+**Recommendation: `0xD8000` (the `0xD8000` / `0xD9000` pair), right below Morse.** No legal sector is safe from every Felucca-family firmware. ChoralRoot 0.41 keeps its FM-1 loop slots at `0xC8000–0xDBFFF` (`vendor/ChoralRootFM1/firmware/src/storage.c:31-36`, `cr_ui.c:2440`). That range already covers Morse's `0xDA000`, so `0xD8000` carries the same risk Morse accepted. Do not copy the template's `0xFC000` settings slot. For Bluetooth, use Morse's `APP_BLE_STORE` approach (`app.h:22-26`) rather than an object at `0xDE000`. The theory design doc already says to avoid `0xDA000` and `0xDC000`, check with `emu-rehearse`, and update the flash map (`docs/dev/theory.md:298`).
+
+**Before proposing a flash** (`AGENTS.md:206-216, 169-190`):
+1. `just fw-test theory` passes.
+2. Run the `.fwsc` with `just emu-run` on **both** `uc25hq80` and `p25q80`, including a save, a restart and a reload. Report the results as `[模擬]`.
+3. Theory is not yet in the switching table, so run `just emu-rehearse PKG &lt;latest backup&gt;` and report which sectors it rewrites. The latest backup is `backups/2026-11-18-pre-morse-0.5/fm1-20261118-161218.bin`.
+4. Show the 4-item preflight: backup with SHA-256 recorded in `device-log`, chip `0xB36014`, the package's SHA-256, and what is installed now (Morse 0.6) and what the write changes.
+5. The owner approves and runs that one write, then `docs/device-log.md` is updated.
+6. Persist only through `APP_STORE_MAP`.
+
+## 5. Simulator test language (`host/plat_host.c:10-118`)
+
+- `key K down|up [VEL [PRESS]]`: K is 0..26, `w0..w15` (white) or `b0..b10` (black) (`key_of`, 2152-2159). The key stays held until `up`.
+- `tapkey K [VEL]`: 60 ms down, then 30 ms released.
+- `turn ENC N [MS]`: SELECT, ALGO, PRESET, K1..K4; N detents, 80 ms apart by default (2604-2615). `spin ENC N` gives exactly N steps at once.
+- `press` / `release` / `tap BTN`: `tap` is 40 ms down plus 40 ms (2552-2565). `strum A B [MS]` runs across white keys.
+- `expect WHAT VALUE`: integers only; `&lt;N` and `&gt;N` are bounds. The app's `app_expect` is asked first (2188-2192). Built-ins include `store_writes`, `midi_out` and `peak_db_*` (2199-2277).
+- `shot F.png` saves to `OUTDIR/F.png` (2692). `wav F` / `wavstop` record audio.
+- `reboot` boots again from the simulated flash and calls `app_init` (2752-2757).
+- `leds` prints `#` for bright and `+` for dim/mid (2695-2710). **There is no built-in expect for key LEDs**, so expose something like `lit_keys` / `dim_keys` through `app_expect`.
+- `listen` / `said TEXT` / `unsaid TEXT` check screen-reader output.
+- `app_host_cmd` is tried **before** the built-in commands on every line (2546-2549); return 1 if you handled it. Morse's `expect_text` (`app.c:3322-3343`) shows how to compare strings, such as a chord name: print `ok` or `FAIL` and count failures that `APP_HOST_FAILS` adds at the end (`app.c:3445`, `plat_host.c:2960`).
+- The simulator exits with 1 if anything failed (2974).
+
+## 6. Justfile
+
+- `fw-test app="hello"` (`justfile:197-204`) works for any app name: `build.py firmware/&lt;app&gt; --host`, then it runs `build/host/*_host tests/basic.txt build/host` from inside the app folder. **Screenshots and audio go to `firmware/&lt;app&gt;/build/host/`.** It only runs `basic.txt`; `morse-shots` (313-332) shows how to make a screenshots recipe.
+- `fw-build app="hello"` (215-217) is also generic. Output is `firmware/&lt;app&gt;/build/&lt;name&gt;.fwsc`, with the name lower-cased from `fm1.toml` (`build.py:1699, 1708`).
+- `emu-run package chip *args` (136-142) takes a **.fwsc path**, not an app name. Flash state persists in `tools/emu-state/&lt;pkg&gt;-&lt;chip&gt;.flash`, so running it again is the reload.
+- `emu-shot package chip ms` (144-155) and `emu-rehearse package backup chip` (157-173) also take paths.
+- There is no generic release recipe; `morse-release` (272-275) is the model. Theory currently has only `theory-unit` and `theory-vectors` (334-348).</result>
+<usage><subagent_tokens>277328</subagent_tokens><tool_uses>81</tool_uses><duration_ms>608517</duration_ms></usage>
+</task-notification>
+
+---
+
+_**Agent (claude-opus-5-5 2026-11-18 10:26:56Z)**_
+
+兩份研究都回來了：識別碼建議用 `FM-1_49`，設定存在 `0xD8000`。M 和 L 字型要加 `font_full` 才有小寫；♯♭ 得自己畫 bitmap。canvas 一次只能畫 240×144，所以主畫面要分兩半畫。接著我自己確認模擬器能不能用腳本做「存檔、重開、讀回」，以及 `words.tsv` 的格式。
+
+_**Agent (claude-opus-5-5 2026-11-18 10:26:59Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Check emulator scripting, words.tsv format, Morse's emulator verification, and device state
+
+`sed -n 1,80p tools/fm1-emu/README.txt | grep -n -i -E "script|--keys|--press|--input|--shot|--midi|--run|usb|--flash|--exit|replay" | head -30; echo ---; head -8 firmware/voicelab/words.tsv; echo ---; grep -n -i "emu-run\|save, a restart\|reload\|emu-rehearse" docs/dev/morse.md | head -12; echo ---; tail -25 docs/device-log.md | head -30; ls LICENSE* 2>/dev/null; head -3 LICENSE 2>/dev/null`
+
+```text
+Exit code 1
+---
+# SPDX-License-Identifier: MIT
+# Voice Lab's words for a screen reader (fm1-reader): the text on the screen <TAB> what to say.
+# url: https://daviddwlee84.github.io/M-VAVE_FM-1/dev/tts/
+VOICELAB	voice lab
+LPC 25 MS	L P C, 25 milliseconds
+ADPCM 11 KHZ	A D P C M, 11 kilohertz
+---
+---
+| 2026-11-18 02:46 | agent 執行 `just fm1-download-mode`（原廠執行中）、`fm1-backup pre-hub-test-3-stock`、`fm1-restart` | M-Flasher 回報 bootloader stock、firmware `FM-1 015 (stock)`；備份 SHA-256 `c6a47902…44fd38`，**和 11/17 的原廠備份逐 sector 完全相同**：還原是完整的。重開回原廠 |
+| 2026-11-18 02:48 | Hub 測試 3：本人執行 `fm1_install.py firmware/morse/build/morse-0.3.fwsc`，機器上是原廠 015（`FM-1_015`，port `FM-1`） | 成功：`checking the package (34 reads)` → `switching to update mode` → `the loader writes only the sectors that changed (fast install)` → `done: the FM-1 runs FM-1_41000300`。PRACTICE 從 ROUND 1 開始（原廠備份裡沒有 Morse 紀錄）。Hub 要求的三項實機測試全部通過 |
+| 2026-11-18 04:47 | agent 執行 `fm1_install.py --info`、`just fm1-download-mode`、`fm1-backup pre-morse-0.4`、`fm1-restart`（刷 Morse 0.4 前的 preflight） | `--info` 回答 `FM-1_41000300 [running]`；flash `0xB36014`；備份 SHA-256 `73a530d2…2e9b556`，`0xDA000`–`0xDBFFF` 有 Morse 的紀錄；重開回 Morse 0.3。0.4 的紀錄格式沒變，[模擬] 疊在 0.2／0.3 紀錄上升級都保留 |
+| 2026-11-18 05:20 | 本人執行 `fm1_install.py firmware/morse/build/morse-0.4.fwsc`（Morse 0.4 release build，`FM-1_41000400`，SHA-256 `3bc1b23b…7e471f`，fm1-morse `323d79b`），機器上是 Morse 0.3 release | 成功：`checking the package (30 reads)` → `switching to update mode` → `the loader writes only the sectors that changed (fast install)` → `done: the FM-1 runs FM-1_41000400` |
+| 2026-11-18 05:25 | agent 執行 `just morse-backup`（唯讀）；用 Playwright 的 Chromium 開 `web/progress.html` 下載進度（唯讀） | 指令列：`round 16, 10 open (KMURESNAPT), 4 past the line, 169 answered, 132 right`，**升級後學習紀錄保留**，存成 `backups/progress/2026-11-18-after-0.4.json`。網頁第一版找不到機器：macOS 把這台的 MIDI port 叫做 `Felucca`（第一次接上時的韌體名），網頁只找名字有 MORSE 的 port；改成聽哪個 port 送出 HELLO 後，網頁下載的 JSON 和指令列的完全相同 |
+| 2026-11-18 16:11 | agent 執行 `just morse-backup`（唯讀，刷 Morse 0.5 前） | `round 29, 20 open (KMURESNAPTLWI.JZ=FOY), 15 past the line, 451 answered, 386 right, streak 5`，存成 `backups/progress/2026-11-18-pre-0.5.json`。FM-1 已經和另一個程式連著（只送 HEARTBEAT、不送 HELLO），host 0.5.0 原本因為不知道韌體版本而拒絕備份，改成照樣嘗試 |
+| 2026-11-18 16:12 | agent 執行 `just fm1-download-mode`、`fm1-backup pre-morse-0.5`、`fm1-restart`（刷 Morse 0.5 前的 preflight） | flash `0xB36014`；備份 SHA-256 `d8f8889e…a0d44`；重開回 Morse 0.4。fm1-emu 兩種晶片上把 0.5 release build 疊在這份備份上預演：讀到 ROUND 30、開放 20 個字，0 次寫入 `[模擬]` |
+| 2026-11-18 16:15 | 本人要求後，agent 執行 `just --yes fm1-backup-release 2026-11-18-pre-morse-0.5` | 公開 release [`backup-2026-11-18-pre-morse-0.5`](https://github.com/daviddwlee84/M-VAVE_FM-1/releases/tag/backup-2026-11-18-pre-morse-0.5)：整片 flash 備份、M-Flasher 的 JSON、學習進度 JSON；上傳後的 digest 和本機的 SHA-256 相同 |
+| 2026-11-18 16:20 | 本人執行 `fm1_install.py firmware/morse/build/morse-0.5.fwsc`（Morse 0.5 release build，`FM-1_41000500`，SHA-256 `49433190…154457`，fm1-morse `a75c29e`），機器上是 Morse 0.4 | 第一次在 `[y/N]` 輸入時 Python 報 `UnicodeDecodeError`（終端機送了非 UTF-8 的位元組，大概是輸入法），還沒寫入就結束。第二次成功：`checking the package (30 reads)` → `switching to update mode` → `the loader writes only the sectors that changed (fast install)` → `done: the FM-1 runs FM-1_41000500` |
+| 2026-11-18 16:22 | agent 執行 `fm1_install.py --info`、`just morse-backup`（唯讀） | `FM-1_41000500 [running] port: Felucca`；進度和刷機前相同（round 29、20 open、451 answered、386 right、streak 5），存成 `backups/progress/2026-11-18-after-0.5.json` |
+| 2026-11-18 16:23–16:29 | 本人在 Mac 的藍牙 MIDI 視窗連上 `FM-1 3399`、拔掉 USB；agent 執行 `just morse-send`、`just morse-backup`（唯讀），用 python-rtmidi 錄 TYPE 頁播出的按鍵時間 | 藍牙 port `FM-1 3399 Bluetooth`；`morse-send paris` 播出；進度備份走藍牙 1.7 秒，內容和走 USB 時相同。插回 USB 後兩條同時錄：照 CoreMIDI 時間戳記算，藍牙的點、劃、停頓誤差 ≤ 1 ms（和 USB 一樣），照到達時間算最差 ±16 ms。拔線後 `PC` 大約 10 秒才消失（host 逾時） |
+| 2026-11-18（16:29 之後） | 本人只用藍牙（沒接 USB）：Chrome 開 MORSE on the web，以及 vailmorse.com 的 Repeater | 網頁顯示 `MORSE 0.5 connected over Bluetooth`，Live 收到 FM-1 讀到的字；Vail 不用設定就收到 FM-1 的發報。拔線用電池時沒有斷線 |
+| 2026-11-18 16:55 前後 | 本人執行 `fm1_install.py firmware/morse/build/morse-0.6.fwsc`（Morse 0.6 release build，`FM-1_41000600`，SHA-256 `d65b6df5…8fd7e`，fm1-morse `60f76cf`），機器上是 Morse 0.5 | 成功：fast install，`done: the FM-1 runs FM-1_41000600`；17:02 `--info` 回答 `FM-1_41000600 [running] port: Felucca` |
+| 2026-11-18 17:00 前後 | 本人試網頁和 Vail | 網頁的 *Over Bluetooth, directly*（Web Bluetooth）配對 `FM-1 3399` 成功，Live 和 Timing 都能用；USB 和藍牙都在時網頁走 USB。Vail Decoder：20/13、20/14 字母還是分開，22/18 連成詞 |
+| 2026-11-18 17:10 前後 | 本人測 0.6 的拔線 | 用 USB 連上、`PC` 亮起後拔線，`PC` 半秒內消失；接著線時幾乎沒看到 `PC` 閃 |
+
+## Phase 1 驗收
+
+- [x] 原廠韌體版本已記錄
+- [x] M-Flasher 已安裝，首次授權完成
+- [x] `FLASH CHIP` / JEDEC ID 已記錄
+- [x] 完整 flash 備份已存，SHA-256 已記錄
+- [x] 備份另存一份到這台電腦以外的地方（GitHub Release）
+- [x] SLOOP 2.8.5 已刷入
+- [x] Save → 關機 → 開機 → Load 測試通過
+(eval):1: no matches found: LICENSE*
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 10:27:06Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Read the emulator's command-line options and Morse's emulator notes
+
+`tools/fm1-emu/fm1-live --help 2>&1 | head -60; grep -n -i "emu" docs/dev/morse.md | sed -n 1,15p`
+
+```text
+usage: fm1-live --fwsc FIRMWARE.fwsc   (a firmware package: a community firmware, or M-VAVE's own)
+       fm1-live --fw ID | --fw list    (the page's list, in a checkout: node tools/fetch_firmwares.mjs)
+       fm1-live --bin XIP.bin [--entry 0x02000120]
+options: [--mhz 240] [--syx BANK.syx] [--midi all|none|NAME] [--midi-ch N] [--flash FILE] [--usb]
+         [--latency MS] (12 on Windows, else 50)
+                                 audio queued ahead of the device to start with; it grows by itself
+                                 on underruns and back down after 10 s without one, no lower
+                                 than a level that underran
+         [--buffer FRAMES]       the audio device's buffer, if it takes one
+         [--exclusive]           Windows: the output in WASAPI exclusive mode, the device's shortest
+                                 period (lowest latency; other programs can't play on it meanwhile)
+         [--flash-chip p25q80|uc25hq80]
+                                 the FM-1's flash part: the stock Puya P25Q80 (85 60 14), or the
+                                 UC25HQ80 (B3 60 14) of units sold since autumn 2026
+         [--flaky-core1 RATE [--seed N]] [--cpu1-survives] [--version] [--help]
+headless: --bench MS   run MS emulated ms as fast as it goes, report the speed
+          --shot MS    run MS ms, then write the panel to work/panel.ppm
+          --record DIR with --shot: a PPM frame every 16 ms (62.5 fps) as DIR/000000.ppm…, and the audio
+                       from boot as DIR/audio.raw (44118 Hz stereo s16le; silence until the DMA starts)
+          --record -   the frames as one PPM stream on stdout (tools/bench_video.sh pipes it into ffmpeg),
+                       audio.raw in work/; the run's reports go to stderr then
+          --lcd-only   --shot, --record: the 240x240 LCD alone (work/lcd.ppm), not the panel
+env: FM1_BENCH_KEYS='T:PLAY,T:PLAY^,T:C4@100,T:e0:+3,T:pot:512,T:mHEX'  scripted input (--bench, --shot;
+                         times in ms; ^ releases, @VEL the velocity, eN an encoder's clicks, mHEX: MIDI
+                         bytes into the DIN jack; @FILE: the script from a file)
+     FM1_BENCH_WAV=FILE    --bench: the audio (44.1 kHz stereo s16le, no header)
+     FM1_BENCH_PANEL=FILE  --bench: the panel at the end (PPM)
+     FM1_BENCH_FRAMES=DIR[,MS]  --bench: a film: the panel every MS ms (40) as DIR/000000.ppm..., and
+                           DIR/audio.raw from the boot (tools/film.py turns them into a video)
+     FM1_DUMPRAM=FILE      --bench, --shot: the 1 MiB of RAM at the end
+     FM1_BENCH_JSON=FILE   --bench: the speed as JSON
+     FM1_BENCH_NOKEYS, FM1_WARMUP_MS=N (1000), FM1_BENCH_THREAD, FM1_BENCH_TRACE, FM1_BENCH_PCS,
+     FM1_BENCH_ROUTES      --bench: no default keys, the steady-speed start, a thread, checkpoints, profiles
+     FM1_KEY_AT, FM1_KEY_UP, FM1_NO_PLAY, FM1_NO_SKIP, FM1_SKIP_FROM, FM1_DUMP=ADDR  --shot
+     FM1_NO_JIT            the interpreter (byte-identical, slower); FM1_NO_BLOCKS: a step at a time
+     FM1_NO_LOOPSKIP       run polling loops round by round instead of skipping them (byte-identical, slower)
+     FM1_FLASH_CUT=N       cut the power half way through the Nth flash erase / program (--flash keeps what is left)
+     FM1_USB_SEND='MS:HEX;…'  --shot --usb: MIDI messages over USB at those times (@PATH: from a file); FM1_USB_TRACE: the bus
+     FM1_USB_SIE_NS=N      --usb: each SIE register access takes N ns (default 1000)
+     FM1_USB_WAV=FILE      --usb, --bench / --shot: record the USB audio as a computer would (s16le, no header);
+                           FM1_USB_RATE=HZ asks for that rate if the device lists it (default 44100)
+     FM1_LCD_TIMED=1       the LCD's transfers take their time at the SPI clock, as on an FM-1 (a 240 x 240
+                           frame ~77 ms at 12 MHz; by default they finish at once). On with FM1_STRICT too;
+                           FM1_LCD_INSTANT=1 turns it off again
+     FM1_STRICT=1          as an FM-1 is: a misaligned 16- / 32-bit RAM access faults (EMU_MSG bit 0), the
+                           LCD is timed (FM1_LCD_TIMED), and each instruction takes its measured cycles (a
+                           taken branch ~5, a call ~5, ALU ~0.6), both cores, the flash cache's misses each
+                           core's own; the interpreter, no JIT: slower. FM1_STRICT_LOG: list misaligned
+                           accesses
+     FM1_TPROF=PATH,FROM,TO  --shot: both cores' time-weighted PCs and the flash cache's misses by line from
+                           FROM to TO ms, into PATH (with FM1_STRICT: where the cycles go)
+225:- **驗證狀態**：位元組在 host simulator 和 fm1-emu 都確認過 `[模擬]`；**還沒有實際在瀏覽器裡用 FM-1 開 Vail 測過。**
+249:2026-11-18 做好，host simulator 和 fm1-emu 都驗證過，16:20 刷進實機（進度保留）。同一天在實機上用藍牙連上 Mac：`morse-send`、進度備份都能用，按鍵的時間戳記和 USB 一樣準 `[實機]`。
+277:2. **`APP_BLE_STORE`**：`app_ble_load`／`app_ble_save` 什麼都不存。own stack 用 flash 晶片的 unique ID 產生位址，Mac 和 iOS 不配對也能連，所以**藍牙不寫 flash**（fm1-emu 兩種晶片都驗證過）。
+334:- **模擬器沒有無線電**：fm1-emu 只能驗證開關、存檔、不寫 flash；連線本身要在實機上測。
+340:- fm1-emu 兩種晶片：疊在實機 0.4 前的備份上，關掉藍牙、重開讀回 OFF、再打開，ROUND 17 的紀錄保留，開機 0 次寫入。
+364:- **琴鍵的 debounce**：按下約 1–2 ms 後看到、放開約 9 ms 後看到，所以直鍵的每個 mark 會被量長約 7 ms（fm1-base `bsp/boards/fm1/fm1_input.h`）。韌體在實機 build 時從直鍵的 mark 扣掉 7 ms 再解碼。fm1-emu 裡看到的是按下 +3 ms、放開 +10 ms，和預期一致 `[模擬]`。
+372:0.2 沿用 0.1 的紀錄格式：0.1 留下的空位改放 KEY／TYPE／LISTEN 的顯示選項、發報速度、LISTEN 的節目。從 0.1 升級時設定和進度都保留，發報速度從 0 補成預設的 10（fm1-emu 兩種晶片驗證過 `[模擬]`）。
+404:| 兩種晶片：改設定、玩一回合、重開讀回 | fm1-emu `uc25hq80`、`p25q80` | 都讀回「ROUND 2」和改過的設定 `[模擬]` |
+405:| USB MIDI 的實際位元組 | fm1-emu `--usb` 的 trace | 按 K 送出 `90 00 7F`／`80 00 00`、`T_CHAR 'K'`；收到 host 的 `T_TEXT` 會顯示 `[模擬]` |
+406:| host 接模擬器的虛擬 USB 線 | `just morse-emu` + `just morse-send` | 找到 `MORSE FM-1 (emu)`、收到 HELLO、送出文字 `[模擬]` |
+416:| 0.2：從 0.1 的紀錄升級、改設定、重開讀回 | fm1-emu `uc25hq80`、`p25q80` | 設定和進度保留，發報速度補成 10，改過的值重開後讀回 `[模擬]` |
+417:| 0.2：疊在實機 0.1 的備份上 | `emu_rehearse.py` + fm1-emu | 真正的學習紀錄（ROUND 4、聽 15/14）升級後保留 `[模擬]` |
+421:| 0.3：TYPE 鍵上點劃、從 0.2 升級、存檔重開讀回 | `just fw-test morse`、fm1-emu 兩種晶片 | 全過；字母頁和數字頁的碼與字母都放得下 `[模擬]` |
+427:| 0.4：疊在實機 0.2 紀錄的備份上、改設定、重開讀回 | `emu_rehearse.py` + fm1-emu `uc25hq80`、`p25q80` | ROUND 5 的紀錄保留，改過的速度重開後讀回 `[模擬]` |
+431:| 0.5：疊在實機 0.4 前的備份上，BLUETOOTH 關、重開讀回、再開 | `emu_rehearse.py` + fm1-emu `uc25hq80`、`p25q80` | ROUND 17 的紀錄保留；改設定時存一筆紀錄（4 次 erase／program），開機 0 次 `[模擬]` |
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 10:27:15Z)**_
+
+<think><details><summary>Thought Process</summary>
+模擬器可以用 `FM1_BENCH_KEYS` 自動跑「存檔、重開、讀回」，兩種晶片都適用。目前機器跑的是 Morse 0.6，學習進度放在 `0xDA000`，和 THEORY 的 `0xD8000` 不重疊；另外有兩個設計選擇需要你決定。
+
+</details></think>
+
+_**Agent (claude-opus-5-5 2026-11-18 10:28:37Z)**_
+
+<tool-use data-tool-type="generic" data-tool-name="AskUserQuestion"><details>
+<summary>Tool use: **AskUserQuestion**</summary>
+**樂理練習機的韌體名稱（會出現在開機畫面、USB 裝置名、套件檔名，上 Hub 前還能改）用哪個？**
+
+Options:
+- **THEORY (Recommended)** - 直白，和目錄名一致；套件是 theory.fwsc，USB 名稱 THEORY FM-1。
+- **CIRCLE** - 強調五度圈，但之後的聽力、節奏、DRILL 不太對得上。
+- **HARMONY** - 偏和聲與和弦進行的意象。
+
+**WHEEL 的「順級和弦」模式裡，白鍵怎麼對應到 I–vii？（兩種都會做，用 SETTINGS 切換，這題只問預設）**
+
+Options:
+- **字母 = 根音 (Recommended)** - 按哪個字母的白鍵，就是以那個字母為根音的調內和弦：D 大調按 D 是 D、按 F 是 F#m、按 C 是 C#dim；Eb 大調按 A 是 Ab。同時練到拼法和鍵盤位置。
+- **C 鍵永遠是 I** - 像 fm1-chord 或 Nashville：C D E F G A B = I ii iii IV V vi vii°，不管什麼調。同一個手型（例如 C-A-F-G 彈 1645）在每個調都一樣，適合練移調。
+
+
+**Answer:** THEORY (Recommended), 字母 = 根音 (Recommended)
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 10:29:17Z)**_
+
+名稱用 THEORY，白鍵預設「字母 = 根音」。接著寫完整的 v0.1 plan。
+
+_**Agent (claude-opus-5-5 2026-11-18 10:30:06Z)**_
+
+<tool-use data-tool-type="write" data-tool-name="Write"><details>
+<summary>Tool use: **Write**</summary>
+
+```markdown
+# THEORY v0.1：WHEEL（五度圈 + 和弦辨識）
+
+## Context 背景
+
+樂理核心（`firmware/theory/theory.c`，26,661 個檢查）和設計文件（`docs/dev/theory.md`）已經 commit（`d33b979`、`7731b3d`）。本人決定 v0.1 做 **WHEEL**：隨身的樂理參考，不打分數。
+
+本人在 fm1-emu 試用了 Keyboard Academy：「效果還可以，但一直有琴鍵燈提示，所以非常簡單。」這對應到運動學習的 guidance hypothesis：提示太頻繁、太好用時，練習的表現很好，但學的人會依賴提示，拿掉之後就彈不出來。所以 WHEEL 的 LED 只顯示調，不帶彈；之後的卡片也要讓提示逐漸撤掉。這點要寫進設計文件。
+
+已決定（2026-11-18，本人）：
+- 名稱 **THEORY**。
+- 順級和弦模式的白鍵預設是 **字母 = 根音**：D 大調按 F 是 F#m，按 C 是 C#dim。另一種「C 鍵永遠是 I」放在設定裡。
+
+這一輪只做到 host simulator 和 fm1-emu，不刷實機。實刷另外走 preflight，並要本人批准。
+
+## 機器上的行為
+
+**畫面（240×240）**
+
+- **Header**（y 0–31）：左邊是調名（`D major`、`E dorian`），右邊是調號（`2♯`、`3♭`），角落小字標出琴鍵模式 `NOTES` / `CHORDS`。
+- **Main**（y 32–207，分兩個 240×88 的半張畫，因為 canvas 最多 240×144）：
+  - **左邊 176×176 是五度圈。** 外圈是 12 個大調（S 字型，半徑約 70），內圈是關係小調，用小寫表示（XS 字型，半徑約 44），圓周用 `fm_sinf` / `fm_cosf` 算點，`cv_pset` 畫。
+  - 目前調號所在位置的 c−1、c、c+1，外圈加內圈共 6 格，用 `C_AMB` 標出：這就是調內的 6 個大、小和弦。主音另外用 `C_HI` 框起來。
+  - 剛彈的和弦如果是大或小三和弦家族，在它的位置畫圈。這樣副屬和弦、借用和弦會出現在鄰近 6 格之外，一眼看得出是調外的和弦。
+  - **右邊 64 px 寬，列出 7 個順級和弦**：級數（T 字型）加和弦名（S 字型）。
+- **Footer**（y 208–239）：剛彈的東西。
+  - 和弦：用 M 字型顯示名稱（`F#m7/A`），旁邊是級數（`iii7`）和轉位。
+  - 單音：音名加級數（`F#4 3`）。
+  - 兩個音：音程（`M3`）。
+  - 認不出來：列出音名。
+  - 轉旋鈕改設定時，footer 暫時顯示 1.5 秒（例如 `MODE DORIAN`）。
+- ♯ ♭ ° ø 用自己畫的小 bitmap（`gtext`）。app 在 include `theory.c` 之前把 `TH_GLYPH_*` 定義成 `\x01`–`\x04`，`gtext` 遇到這些位元組就畫 bitmap，其他文字交給 `cv_text`。`fm1.toml` 加 `font_full = ["M"]`，M 字型才有小寫（`m`、`b`）。
+
+**操作**
+
+| 操作 | 作用 |
+|---|---|
+| 轉 `SELECT` | 沿五度圈換調（調式不變） |
+| 按住 `SEL` 再按琴鍵 | 跳到以那個音為主音的調（`th_key_for_pc`） |
+| `K1` | 調式：大調、小調、和聲小調、旋律小調、dorian、phrygian、lydian、mixolydian、locrian |
+| `K2` | 三和弦或七和弦 |
+| `K3` | 順級和弦的標示：和弦名、Roman 或 Nashville |
+| `K4` | 和弦鍵的對應：字母 = 根音（預設），或 C = I |
+| `PLAY` | 切換琴鍵模式：**NOTES**（彈什麼就辨認什麼）或 **CHORDS**（白鍵彈順級和弦；`PLAY` 亮綠燈） |
+| `OCT-` / `OCT+` | 發聲的八度，−2 到 +2，不影響辨認 |
+
+**琴鍵與 LED**
+
+- **NOTES 模式**：每個琴鍵發出自己的音，`th_identify` 辨認目前按住的所有鍵。一次按和弦的過程中，記住音最多的那一組，全部放開後畫面繼續顯示它。
+- **CHORDS 模式**：
+  - 白鍵的字母決定級數，`th_diatonic` 算出和弦。
+  - `th_voice_near` 依前一個和弦選就近的轉位，範圍 G3–E5，另外加一個低八度的根音當 bass。
+  - 放開琴鍵時，關掉這個鍵觸發的所有音。黑鍵在 v0.1 不出聲。
+- **LED**（用 `firmware/common/ledfx`）：調內的音 glow，主音 mid，按住的鍵 lit。CHORDS 模式下，白鍵 glow，I 級的鍵 mid。
+- 按鍵的音同時從 USB-MIDI 送出（`plat_midi_send`，note on / off），可以錄進 DAW。
+
+**聲音**：新的 `synth.c`，從 `common/chime` 的 2-op FM 做法改寫，標示出處。
+- 8 個 voice，不夠時搶走最舊的。
+- 128 格的 phase increment 表在 `app_init` 用 `fm_exp2f` 算好，render 只用 `fm_sin_turns`。
+- envelope：attack 3 ms，接著指數 decay 到 sustain，FM index 隨 envelope 變小（音色變暗，像電鋼琴）。note off 之後約 200 ms release。音量依 velocity（開 `APP_TOUCH`）。
+- note event 用單一寫入者的 ring buffer 傳遞：只有主迴圈（`app_input_only` / `app_frame`）寫，render 在每個 block 開頭讀完。
+- 混音每個 voice 約 0.12，總線過 `fm_tanhf` 軟限幅，再乘上 `master_q12`，然後直接寫進 `lr`（覆蓋，不是相加）。
+
+**存檔**
+- `enum { OBJ_PANEL, OBJ_THEORY, OBJ_NOBJ }`，`APP_STORE_MAP { 0xDC000u, 0xD8000u }`。
+- `0xD8000` / `0xD9000` 在這台機器的 23 份備份裡都沒被寫過，而且不和 Morse 的 `0xDA000`（Morse 0.6 的學習進度在那裡）或面板校正的 `0xDC000` 重疊。
+- 紀錄格式：magic `TH01`、版本、長度，加上調、調式、三或七和弦、標示方式、對應方式、琴鍵模式、八度。設定改了 3 秒後存檔，和 Morse 一樣。讀回時 magic 或範圍不對就用預設值。
+
+## 要新增或修改的檔案
+
+**新增在 `firmware/theory/`**
+- `fm1.toml`：
+  - `name = "THEORY"`、`id_prefix = "FM-1_49"`（dev 版是 `FM-1_4900`）。這個前綴查過 Hub catalog 沒人用，也避開了 LOOM-8 佔用的 1x。
+  - `usb_product = "THEORY FM-1"`、`include = ["../common"]`、`words = "words.tsv"`、`font_full = ["M"]`、`ble = false`。
+  - `licence = "GPL-3.0-or-later"`，以及 tagline、description、credits（fm1-base、chime 的做法、music21 只是測試工具）。
+- `app.h`：`APP_NAME`、`APP_TOUCH`、`APP_STORE_MAP`、物件的 enum，以及 `#ifdef PLAT_HOST` 裡的 `APP_HOST_EXPECT` / `APP_HOST_CMD` / `APP_HOST_FAILS`。
+- `app.c`：
+  - fm1-base 的必要 hook：`app_init`、`app_render`、`app_panic`、`app_ui_init`、`app_frame`、`app_input_only`、`app_say`。
+  - 狀態、輸入（`plat_keys` 遮罩比對、`plat_buttons`、`plat_enc`，沒用到的 encoder 也每個 frame 讀掉）、存檔、`R_HEAD` / `R_MAIN` / `R_FOOT` 局部重畫（照 Morse 的 `draw()`）。
+  - host simulator 的 `app_expect`：`tonic`、`mode`、`keymode`、`sevenths`、`labels`、`mapping`、`oct`、`voices`、`lit_keys`、`dim_keys`、`glow_keys`。
+  - host simulator 的 `app_host_cmd`：`expect_text chord|roman|footer|key TEXT`，寫法照 Morse 的 `expect_text`（`firmware/morse/app.c` 約 3322 行）。
+- `synth.h` / `synth.c`：8 voice 的 FM 電鋼琴，event ring，`synth_active()`。
+- `gtext.h` / `gtext.c`：♯ ♭ ° ø 的 1-bit bitmap（16 px 和 24 px 兩種大小），`gtext()` 和 `gtext_w()`。
+- `words.tsv`：螢幕閱讀器的字，第一行是 `# url:`，只能用 ASCII（格式照 `firmware/voicelab/words.tsv`）。
+- `tests/basic.txt`：host simulator 腳本，內容見下面的驗證。
+- `.gitignore`：`build/`、`web/words/`（同 `firmware/conductor/.gitignore`）。
+- `LICENSE`：GPL-3.0 全文，從 `firmware/morse/LICENSE` 複製。
+
+**沿用、不改**：`theory.c` / `theory.h`、`firmware/common/ledfx`、fastmath。
+
+**其他**
+- `Justfile`：
+  - `theory-emu chip="uc25hq80"`：用 `just emu-run firmware/theory/build/theory.fwsc`。
+  - `theory-unit` 不變。
+- 文件：
+  - `docs/dev/theory.md`：
+    - 狀態改成 v0.1。
+    - Keyboard Academy 試用心得，加上「提示要逐漸撤掉」的原則，來源是 guidance hypothesis（Salmoni, Schmidt & Walter 1984）。只讀到二手資料，例如 [Frontiers 2010](https://www.frontiersin.org/articles/10.3389/fpsyg.2010.00190/full)，所以標 `[調研]`。
+    - WHEEL 最後定下的操作（`K4` = 對應方式）。
+    - synth、識別碼 `FM-1_49`、存檔位置 `0xD8000`。
+    - 驗證結果標 `[模擬]`。
+  - `docs/hardware/flash-map.md`：加一列 THEORY 的 `0xD8000–0xD9FFF`，附 rehearse 的結果。
+  - `firmware/theory/README.md`：說明現在是 app 了。
+  - `AGENTS.md`：layout 那一列（現在是 app，識別碼 `FM-1_49`）和指令（`fw-test theory`、`theory-emu`）。
+- 不 commit，除非本人要求。
+
+## Verification 驗證
+
+1. **`just theory-unit`**：核心沒變，26,661 個檢查照樣全過。
+2. **`just fw-test theory`**：host simulator，`tests/basic.txt` 全部 `ok`，截圖輸出到 `firmware/theory/build/host/`。內容：
+    - 開機截圖；`expect tonic 0`。
+    - `turn SELECT 2` → `tonic 2`，`expect_text key D major`，截圖。
+    - NOTES 模式下 `key 7/11/14 down`（C4、E4、G4）→ `expect_text chord C`、`roman I`。先 `peakreset` 再 `expect peak_db_min -40`，確認有聲音。
+    - C/E 的轉位，以及 D7 → `V7/V`。
+    - 單音 → `footer` 顯示音名和級數；放開所有鍵後，footer 保留剛才的和弦。
+    - `lit_keys` / `glow_keys` 的位元遮罩符合 D 大調音階。
+    - `tap PLAY` → `keymode 1`；`tapkey w4`（C4）在 D 大調是 `C#dim`，`tapkey` D 鍵是 `D`；`voices` 是 4。
+    - `turn K4 1` → C = I：`tapkey w4` 是 `D`。
+    - 按住 `SEL` 再按 Eb 鍵 → `tonic -3`。
+    - `turn K1` → 調式變了，順級和弦的列表也跟著變。
+    - `turn K2` → `roman IM7`。
+    - 等 3 秒 → `expect store_writes >0`；`reboot` → 所有設定都讀回。
+    - 截圖：五度圈、CHORDS 模式、♯♭ glyph。
+3. **`just fw-build theory`**：build 出 `firmware/theory/build/theory.fwsc`，自帶的檢查要全部 ok（沒有 soft-double，大小在 581,564 B 以內）。
+4. **fm1-emu 兩種晶片**（`uc25hq80`、`p25q80`）：
+    - `just emu-shot` 開機，記下寫入次數。
+    - 用 `FM1_BENCH_KEYS` 腳本轉 `SELECT`、切 `PLAY`、等待存檔，再用同一個 `--flash` 檔重開，截圖確認調和模式都讀回。
+5. **`just emu-rehearse`**：疊在最新的實機備份上（`backups/` 裡最新的那份，目前是 `2026-11-18-pre-morse-0.5`）。回報開機和存檔時各寫了哪些 sector：預期只有 `0xD8000` / `0xD9000`，而且 `0xDA000` 的 Morse 紀錄要完整保留。
+6. **`just docs-check`** 通過。
+7. 回報結果之後，如果本人想刷實機，再另外提出完整的 preflight（備份與 SHA-256、晶片 `0xB36014`、套件 SHA-256、目前是 Morse 0.6 和這次寫入會改變什麼），等本人批准。
+
+```
+
+```text
+The file /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/.claude/plans/firmware-morse-concurrent-crane.md has been updated successfully. (file state is current in your context — no need to Read it back)
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 10:32:59Z)**_
+
+<tool-use data-tool-type="generic" data-tool-name="ExitPlanMode"><details>
+<summary>Tool use: **ExitPlanMode**</summary>
+
+```text
+User has approved your plan. You can now start coding. Start with updating your todo list if applicable
+
+Your plan has been saved to: /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/.claude/plans/firmware-morse-concurrent-crane.md
+You can refer back to it if needed during implementation.
+
+## Approved Plan:
+# THEORY v0.1：WHEEL（五度圈 + 和弦辨識）
+
+## Context 背景
+
+樂理核心（`firmware/theory/theory.c`，26,661 個檢查）和設計文件（`docs/dev/theory.md`）已經 commit（`d33b979`、`7731b3d`）。本人決定 v0.1 做 **WHEEL**：隨身的樂理參考，不打分數。
+
+本人在 fm1-emu 試用了 Keyboard Academy：「效果還可以，但一直有琴鍵燈提示，所以非常簡單。」這對應到運動學習的 guidance hypothesis：提示太頻繁、太好用時，練習的表現很好，但學的人會依賴提示，拿掉之後就彈不出來。所以 WHEEL 的 LED 只顯示調，不帶彈；之後的卡片也要讓提示逐漸撤掉。這點要寫進設計文件。
+
+已決定（2026-11-18，本人）：
+- 名稱 **THEORY**。
+- 順級和弦模式的白鍵預設是 **字母 = 根音**：D 大調按 F 是 F#m，按 C 是 C#dim。另一種「C 鍵永遠是 I」放在設定裡。
+
+這一輪只做到 host simulator 和 fm1-emu，不刷實機。實刷另外走 preflight，並要本人批准。
+
+## 機器上的行為
+
+**畫面（240×240）**
+
+- **Header**（y 0–31）：左邊是調名（`D major`、`E dorian`），右邊是調號（`2♯`、`3♭`），角落小字標出琴鍵模式 `NOTES` / `CHORDS`。
+- **Main**（y 32–207，分兩個 240×88 的半張畫，因為 canvas 最多 240×144）：
+  - **左邊 176×176 是五度圈。** 外圈是 12 個大調（S 字型，半徑約 70），內圈是關係小調，用小寫表示（XS 字型，半徑約 44），圓周用 `fm_sinf` / `fm_cosf` 算點，`cv_pset` 畫。
+  - 目前調號所在位置的 c−1、c、c+1，外圈加內圈共 6 格，用 `C_AMB` 標出：這就是調內的 6 個大、小和弦。主音另外用 `C_HI` 框起來。
+  - 剛彈的和弦如果是大或小三和弦家族，在它的位置畫圈。這樣副屬和弦、借用和弦會出現在鄰近 6 格之外，一眼看得出是調外的和弦。
+  - **右邊 64 px 寬，列出 7 個順級和弦**：級數（T 字型）加和弦名（S 字型）。
+- **Footer**（y 208–239）：剛彈的東西。
+  - 和弦：用 M 字型顯示名稱（`F#m7/A`），旁邊是級數（`iii7`）和轉位。
+  - 單音：音名加級數（`F#4 3`）。
+  - 兩個音：音程（`M3`）。
+  - 認不出來：列出音名。
+  - 轉旋鈕改設定時，footer 暫時顯示 1.5 秒（例如 `MODE DORIAN`）。
+- ♯ ♭ ° ø 用自己畫的小 bitmap（`gtext`）。app 在 include `theory.c` 之前把 `TH_GLYPH_*` 定義成 `\x01`–`\x04`，`gtext` 遇到這些位元組就畫 bitmap，其他文字交給 `cv_text`。`fm1.toml` 加 `font_full = ["M"]`，M 字型才有小寫（`m`、`b`）。
+
+**操作**
+
+| 操作 | 作用 |
+|---|---|
+| 轉 `SELECT` | 沿五度圈換調（調式不變） |
+| 按住 `SEL` 再按琴鍵 | 跳到以那個音為主音的調（`th_key_for_pc`） |
+| `K1` | 調式：大調、小調、和聲小調、旋律小調、dorian、phrygian、lydian、mixolydian、locrian |
+| `K2` | 三和弦或七和弦 |
+| `K3` | 順級和弦的標示：和弦名、Roman 或 Nashville |
+| `K4` | 和弦鍵的對應：字母 = 根音（預設），或 C = I |
+| `PLAY` | 切換琴鍵模式：**NOTES**（彈什麼就辨認什麼）或 **CHORDS**（白鍵彈順級和弦；`PLAY` 亮綠燈） |
+| `OCT-` / `OCT+` | 發聲的八度，−2 到 +2，不影響辨認 |
+
+**琴鍵與 LED**
+
+- **NOTES 模式**：每個琴鍵發出自己的音，`th_identify` 辨認目前按住的所有鍵。一次按和弦的過程中，記住音最多的那一組，全部放開後畫面繼續顯示它。
+- **CHORDS 模式**：
+  - 白鍵的字母決定級數，`th_diatonic` 算出和弦。
+  - `th_voice_near` 依前一個和弦選就近的轉位，範圍 G3–E5，另外加一個低八度的根音當 bass。
+  - 放開琴鍵時，關掉這個鍵觸發的所有音。黑鍵在 v0.1 不出聲。
+- **LED**（用 `firmware/common/ledfx`）：調內的音 glow，主音 mid，按住的鍵 lit。CHORDS 模式下，白鍵 glow，I 級的鍵 mid。
+- 按鍵的音同時從 USB-MIDI 送出（`plat_midi_send`，note on / off），可以錄進 DAW。
+
+**聲音**：新的 `synth.c`，從 `common/chime` 的 2-op FM 做法改寫，標示出處。
+- 8 個 voice，不夠時搶走最舊的。
+- 128 格的 phase increment 表在 `app_init` 用 `fm_exp2f` 算好，render 只用 `fm_sin_turns`。
+- envelope：attack 3 ms，接著指數 decay 到 sustain，FM index 隨 envelope 變小（音色變暗，像電鋼琴）。note off 之後約 200 ms release。音量依 velocity（開 `APP_TOUCH`）。
+- note event 用單一寫入者的 ring buffer 傳遞：只有主迴圈（`app_input_only` / `app_frame`）寫，render 在每個 block 開頭讀完。
+- 混音每個 voice 約 0.12，總線過 `fm_tanhf` 軟限幅，再乘上 `master_q12`，然後直接寫進 `lr`（覆蓋，不是相加）。
+
+**存檔**
+- `enum { OBJ_PANEL, OBJ_THEORY, OBJ_NOBJ }`，`APP_STORE_MAP { 0xDC000u, 0xD8000u }`。
+- `0xD8000` / `0xD9000` 在這台機器的 23 份備份裡都沒被寫過，而且不和 Morse 的 `0xDA000`（Morse 0.6 的學習進度在那裡）或面板校正的 `0xDC000` 重疊。
+- 紀錄格式：magic `TH01`、版本、長度，加上調、調式、三或七和弦、標示方式、對應方式、琴鍵模式、八度。設定改了 3 秒後存檔，和 Morse 一樣。讀回時 magic 或範圍不對就用預設值。
+
+## 要新增或修改的檔案
+
+**新增在 `firmware/theory/`**
+- `fm1.toml`：
+  - `name = "THEORY"`、`id_prefix = "FM-1_49"`（dev 版是 `FM-1_4900`）。這個前綴查過 Hub catalog 沒人用，也避開了 LOOM-8 佔用的 1x。
+  - `usb_product = "THEORY FM-1"`、`include = ["../common"]`、`words = "words.tsv"`、`font_full = ["M"]`、`ble = false`。
+  - `licence = "GPL-3.0-or-later"`，以及 tagline、description、credits（fm1-base、chime 的做法、music21 只是測試工具）。
+- `app.h`：`APP_NAME`、`APP_TOUCH`、`APP_STORE_MAP`、物件的 enum，以及 `#ifdef PLAT_HOST` 裡的 `APP_HOST_EXPECT` / `APP_HOST_CMD` / `APP_HOST_FAILS`。
+- `app.c`：
+  - fm1-base 的必要 hook：`app_init`、`app_render`、`app_panic`、`app_ui_init`、`app_frame`、`app_input_only`、`app_say`。
+  - 狀態、輸入（`plat_keys` 遮罩比對、`plat_buttons`、`plat_enc`，沒用到的 encoder 也每個 frame 讀掉）、存檔、`R_HEAD` / `R_MAIN` / `R_FOOT` 局部重畫（照 Morse 的 `draw()`）。
+  - host simulator 的 `app_expect`：`tonic`、`mode`、`keymode`、`sevenths`、`labels`、`mapping`、`oct`、`voices`、`lit_keys`、`dim_keys`、`glow_keys`。
+  - host simulator 的 `app_host_cmd`：`expect_text chord|roman|footer|key TEXT`，寫法照 Morse 的 `expect_text`（`firmware/morse/app.c` 約 3322 行）。
+- `synth.h` / `synth.c`：8 voice 的 FM 電鋼琴，event ring，`synth_active()`。
+- `gtext.h` / `gtext.c`：♯ ♭ ° ø 的 1-bit bitmap（16 px 和 24 px 兩種大小），`gtext()` 和 `gtext_w()`。
+- `words.tsv`：螢幕閱讀器的字，第一行是 `# url:`，只能用 ASCII（格式照 `firmware/voicelab/words.tsv`）。
+- `tests/basic.txt`：host simulator 腳本，內容見下面的驗證。
+- `.gitignore`：`build/`、`web/words/`（同 `firmware/conductor/.gitignore`）。
+- `LICENSE`：GPL-3.0 全文，從 `firmware/morse/LICENSE` 複製。
+
+**沿用、不改**：`theory.c` / `theory.h`、`firmware/common/ledfx`、fastmath。
+
+**其他**
+- `Justfile`：
+  - `theory-emu chip="uc25hq80"`：用 `just emu-run firmware/theory/build/theory.fwsc`。
+  - `theory-unit` 不變。
+- 文件：
+  - `docs/dev/theory.md`：
+    - 狀態改成 v0.1。
+    - Keyboard Academy 試用心得，加上「提示要逐漸撤掉」的原則，來源是 guidance hypothesis（Salmoni, Schmidt & Walter 1984）。只讀到二手資料，例如 [Frontiers 2010](https://www.frontiersin.org/articles/10.3389/fpsyg.2010.00190/full)，所以標 `[調研]`。
+    - WHEEL 最後定下的操作（`K4` = 對應方式）。
+    - synth、識別碼 `FM-1_49`、存檔位置 `0xD8000`。
+    - 驗證結果標 `[模擬]`。
+  - `docs/hardware/flash-map.md`：加一列 THEORY 的 `0xD8000–0xD9FFF`，附 rehearse 的結果。
+  - `firmware/theory/README.md`：說明現在是 app 了。
+  - `AGENTS.md`：layout 那一列（現在是 app，識別碼 `FM-1_49`）和指令（`fw-test theory`、`theory-emu`）。
+- 不 commit，除非本人要求。
+
+## Verification 驗證
+
+1. **`just theory-unit`**：核心沒變，26,661 個檢查照樣全過。
+2. **`just fw-test theory`**：host simulator，`tests/basic.txt` 全部 `ok`，截圖輸出到 `firmware/theory/build/host/`。內容：
+    - 開機截圖；`expect tonic 0`。
+    - `turn SELECT 2` → `tonic 2`，`expect_text key D major`，截圖。
+    - NOTES 模式下 `key 7/11/14 down`（C4、E4、G4）→ `expect_text chord C`、`roman I`。先 `peakreset` 再 `expect peak_db_min -40`，確認有聲音。
+    - C/E 的轉位，以及 D7 → `V7/V`。
+    - 單音 → `footer` 顯示音名和級數；放開所有鍵後，footer 保留剛才的和弦。
+    - `lit_keys` / `glow_keys` 的位元遮罩符合 D 大調音階。
+    - `tap PLAY` → `keymode 1`；`tapkey w4`（C4）在 D 大調是 `C#dim`，`tapkey` D 鍵是 `D`；`voices` 是 4。
+    - `turn K4 1` → C = I：`tapkey w4` 是 `D`。
+    - 按住 `SEL` 再按 Eb 鍵 → `tonic -3`。
+    - `turn K1` → 調式變了，順級和弦的列表也跟著變。
+    - `turn K2` → `roman IM7`。
+    - 等 3 秒 → `expect store_writes >0`；`reboot` → 所有設定都讀回。
+    - 截圖：五度圈、CHORDS 模式、♯♭ glyph。
+3. **`just fw-build theory`**：build 出 `firmware/theory/build/theory.fwsc`，自帶的檢查要全部 ok（沒有 soft-double，大小在 581,564 B 以內）。
+4. **fm1-emu 兩種晶片**（`uc25hq80`、`p25q80`）：
+    - `just emu-shot` 開機，記下寫入次數。
+    - 用 `FM1_BENCH_KEYS` 腳本轉 `SELECT`、切 `PLAY`、等待存檔，再用同一個 `--flash` 檔重開，截圖確認調和模式都讀回。
+5. **`just emu-rehearse`**：疊在最新的實機備份上（`backups/` 裡最新的那份，目前是 `2026-11-18-pre-morse-0.5`）。回報開機和存檔時各寫了哪些 sector：預期只有 `0xD8000` / `0xD9000`，而且 `0xDA000` 的 Morse 紀錄要完整保留。
+6. **`just docs-check`** 通過。
+7. 回報結果之後，如果本人想刷實機，再另外提出完整的 preflight（備份與 SHA-256、晶片 `0xB36014`、套件 SHA-256、目前是 Morse 0.6 和這次寫入會改變什麼），等本人批准。
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 10:33:06Z)**_
+
+Plan 已批准，開始寫。先讀 fm1-base 的 template，以及 Morse 裡會照著寫的那幾段。
+
+_**Agent (claude-opus-5-5 2026-11-18 10:33:07Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Read the fm1-base template header and config
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/third_party/fm1-base && cat template/app.h && cat template/fm1.toml && wc -l template/app.c`
+
+```text
+/* SPDX-License-Identifier: MPL-2.0
+ * Copyright (C) 2026 Charles Vestal */
+/* The template: the smallest complete fm1-base firmware. Copy this directory to start a firmware.
+ * This header is the app's half of the contract with the platform (device/unity.c, host/plat_host.c). */
+#pragma once
+#include <stdint.h>
+#include "plat.h"
+
+#define APP_NAME "TEMPLATE"
+#define APP_SPLASH_RGB RGB(242, 120, 72)
+#define APP_BLOCK 256u                   /* frames per audio block: 5.8 ms at 44.1 kHz */
+#define APP_TOUCH                        /* velocity and pressure from the keys (lib/touch.h) */
+#define APP_BTDEV                        /* Bluetooth MIDI devices (lib/btdev.h) */
+#define APP_BLE_AT_BOOT (!template_ble_off())   /* Bluetooth at power-on: as the player left it (REC held) */
+int template_ble_off(void);
+
+/* the store: the app's objects, the panel calibration (the platform's) and Bluetooth's address and pairing among
+ * them, and their flash offsets */
+enum { OBJ_SETTINGS, OBJ_PANEL, OBJ_BLE, OBJ_NOBJ };
+#define APP_STORE_MAP {0xFC000u, 0xDC000u, 0xDE000u}
+
+/* the contract: the platform calls these */
+void app_init(void);                     /* boot: the engine, then the saved settings (or defaults) */
+void app_render(int32_t *lr, uint32_t n, uint32_t master_q12);   /* audio interrupt: n stereo frames, 24-bit */
+void app_panic(void);                    /* silence now (before an update rewrites the flash) */
+void app_ui_init(void);                  /* the first screen, after the splash */
+void app_frame(void);                    /* the UI: input and a redraw, about 60 times a second */
+void app_input_only(void);               /* between frames: input only */
+void app_say(const char *a, const char *b);   /* a short message on the screen and to a screen reader */
+
+/* the host simulator's checks (host/plat_host.c "expect"): octave, wave, note (-1 none), dirty, turnsN */
+#define APP_HOST_EXPECT
+int app_expect(const char *what, int *got);
+# The template's build settings (tools/build.py)
+name = "TEMPLATE"              # APP_NAME is in app.h; this names the build's files
+id_prefix = "FM-1_11"          # package identity (each firmware its own): dev FM-1_1100, releases FM-1_11XXYYZZ
+usb_manufacturer = "fm1-base"
+usb_product = "TEMPLATE FM-1"
+o2 = []                        # separate units compiled at -O2 (an app's DSP)
+words = "words.tsv"
+ble = true                     # Bluetooth MIDI (--no-ble builds without it)
+ble_central = true             # and the FM-1 connects to Bluetooth MIDI devices too
+# the site (tools/make_site.py, tools/publish_site.sh)
+tagline = "a starting point for FM-1 firmware"
+repo = "https://github.com/charlesvestal/fm1-base"
+licence = "MPL-2.0"
+credits = ""                   # a sentence for the installer's footer: what your firmware is built from
+# firmware.json, for firmware hubs (docs/FIRMWARE-JSON.md): the build writes it from these and the keys above
+author = "Charles Vestal"      # who made it
+description = "The smallest complete firmware for the FM-1, made to be copied. The keys play a simple voice with velocity and pressure, your settings save, MIDI goes in and out over USB and Bluetooth and comes in over TRS, and it works with a screen reader."
+tags = ["synth", "utility"]    # from the list in docs/FIRMWARE-JSON.md; the build refuses another
+install = "https://charlesvestal.github.io/fm1-base/install/"   # the page that installs it
+site = "https://charlesvestal.github.io/fm1-base/"
+screenshot = "docs/img/screen-playing.png"   # for the hubs' cards: a square PNG, at least 240 x 240, in your repository
+     524 template/app.c
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 10:33:10Z)**_
+
+<tool-use data-tool-type="read" data-tool-name="Read"><details>
+<summary>Tool use: **Read**</summary>
+ `./third_party/fm1-base/template/app.c`
+
+```text
+1	/* SPDX-License-Identifier: MPL-2.0
+2	 * Copyright (C) 2026 Charles Vestal */
+3	/* The template app: every control on the screen as it arrives, by the name the app knows it by (plat.h B_*, EN_*,
+4	 * the keys), and a few of them doing something: the keys play a voice and go out over USB-MIDI (MIDI in plays it
+5	 * too), OCT- / OCT+ set the octave, PRESET the wave, MASTER the volume, SAVE stores the settings; the keys are
+6	 * played with velocity and pressure (lib/touch.h), shown on them. One of each thing the platform offers, kept short. Part of the unity build (device/unity.c, host/plat_host.c), after the platform:
+7	 * gfx.c and announce.c are in scope. */
+8	#include "fastmath.h"
+9	
+10	#define SET_MAGIC 0x54504C31u            /* "TPL1": the settings record; another magic loads defaults */
+11	typedef struct {
+12	    uint32_t magic;
+13	    int8_t octave;                       /* -2 .. +2 */
+14	    uint8_t wave;                        /* 0 sine, 1 triangle */
+15	    uint8_t ble_off;                     /* Bluetooth switched off (REC held); 0, the default: on */
+16	    uint8_t rsv[1];
+17	} settings_t;
+18	static settings_t set;
+19	static uint8_t set_dirty;                /* changed since the last save: SAVE is lit */
+20	
+21	static const char *const WAVE_NAME[] = {"SINE", "TRIANGLE"};
+22	/* the controls by their names in plat.h, in its order */
+23	static const char *const BTN_NAME[NB] = {"FX", "SEL", "ENV", "LFO", "EDIT", "GLO", "HOME", "SAVE", "ARP", "SEQ",
+24	                                         "PLAY", "REC", "OCT-", "OCT+"};
+25	static const char *const ENC_NAME[NE] = {"SELECT", "ALGO", "PRESET", "K1", "K2", "K3", "K4"};
+26	
+27	/* ------------------------------------------------------------------ voice --- */
+28	/* one voice, the last note wins; the main loop and MIDI in set it, the audio interrupt plays it */
+29	static volatile int32_t voice_note = -1;     /* MIDI note, -1 = released */
+30	static volatile float voice_vel = 1.0f;      /* the note's velocity, 0..1 */
+31	static float voice_phase, voice_level, gain_now;   /* gain_now glides to MASTER: no step at a block's edge */
+32	
+33	static void note_on(int32_t note, uint32_t vel)
+34	{
+35	    voice_vel = (float)vel / 127.0f;
+36	    voice_note = note;
+37	}
+38	static void note_off(int32_t note)
+39	{
+40	    if (voice_note == note)
+41	        voice_note = -1;
+42	}
+43	
+44	static volatile uint32_t midi_last, midi_last_port, midi_count;   /* the last message in (shown), and how many */
+45	static void midi_in(void)                    /* audio interrupt: the packets that came in */
+46	{
+47	    uint32_t pkt;
+48	    int port;
+49	    while (plat_midi_in(&pkt, &port)) {
+50	        uint32_t st = (pkt >> 8) & 0xFFu, d1 = (pkt >> 16) & 0x7Fu, d2 = pkt >> 24;
+51	        if (st != 0xF8u && st != 0xFEu) {    /* (clock and active sensing would flood the screen) */
+52	            midi_last = pkt;
+53	            midi_last_port = (uint32_t)port;
+54	            midi_count++;
+55	        }
+56	        if ((st & 0xF0u) == 0x90u && d2)
+57	            note_on((int32_t)d1, d2);
+58	        else if ((st & 0xF0u) == 0x80u || (st & 0xF0u) == 0x90u)
+59	            note_off((int32_t)d1);
+60	    }
+61	}
+62	
+63	void app_render(int32_t *lr, uint32_t n, uint32_t master_q12)
+64	{
+65	    uint32_t i;
+66	    int32_t note = voice_note;
+67	    float target = note >= 0 ? 0.25f * voice_vel : 0.0f;
+68	    float inc = note >= 0 ? 440.0f * fm_exp2f((float)(note - 69) / 12.0f) / 44100.0f : 0.0f;
+69	    float gain = (float)master_q12 / 4096.0f * 8300000.0f;   /* MASTER, read once a block */
+70	    midi_in();
+71	    for (i = 0; i < n; i++) {
+72	        float s;
+73	        voice_level += (target - voice_level) * 0.002f;          /* ~10 ms attack and release */
+74	        gain_now += (gain - gain_now) * 0.004f;                  /* ~5 ms: turning MASTER does not click */
+75	        voice_phase += inc;
+76	        if (voice_phase >= 1.0f)
+77	            voice_phase -= 1.0f;
+78	        s = set.wave ? 4.0f * fm_fabsf(voice_phase - 0.5f) - 1.0f : fm_sinf(voice_phase * 6.2831853f);
+79	        s *= voice_level * gain_now;
+80	        lr[2 * i] = (int32_t)s;
+81	        lr[2 * i + 1] = (int32_t)s;
+82	    }
+83	}
+84	
+85	void app_panic(void)
+86	{
+87	    voice_note = -1;
+88	    voice_level = 0.0f;
+89	}
+90	
+91	/* --------------------------------------------------------------- settings --- */
+92	static void settings_defaults(void)
+93	{
+94	    set.magic = SET_MAGIC;
+95	    set.octave = 0;
+96	    set.wave = 0;
+97	    set.ble_off = 0;
+98	}
+99	
+100	void app_init(void)
+101	{
+102	    if (plat_store_load(OBJ_SETTINGS, &set, sizeof set) != (int)sizeof set || set.magic != SET_MAGIC
+103	        || set.octave < -2 || set.octave > 2 || set.wave > 1u || set.ble_off > 1u)
+104	        settings_defaults();
+105	}
+106	
+107	/* --------------------------------------------------------------------- UI --- */
+108	static struct {
+109	    char msg[2][24];                     /* a short message over the header */
+110	    uint32_t msg_until;
+111	    uint32_t keys, btn;                  /* held at the last input */
+112	    uint8_t vel[NKEYS], prs[NKEYS];      /* each key's last velocity, and its pressure while held */
+113	    int32_t last_key;                    /* the key pressed last: its numbers in the header */
+114	    uint8_t looking;                     /* Bluetooth MIDI devices: REC pressed, the scan's list up (lib/btdev) */
+115	    uint32_t rec_t;                      /* REC went down (0: not held, or its hold already acted) */
+116	    int32_t turns[NE];                   /* detents since boot, per encoder */
+117	    uint32_t turned_at[NE];              /* when each was last turned: it shows lit for a moment */
+118	    uint8_t redraw;
+119	} ui;
+120	
+121	static void text_cat(char *d, const char *s)
+122	{
+123	    while (*d)
+124	        d++;
+125	    while (*s)
+126	        *d++ = *s++;
+127	    *d = 0;
+128	}
+129	
+130	static void int_text(int32_t v, char *b)     /* signed, no padding */
+131	{
+132	    char t[12];
+133	    int n = 0;
+134	    uint32_t u = (uint32_t)(v < 0 ? -v : v);
+135	    do
+136	        t[n++] = (char)('0' + u % 10u);
+137	    while ((u /= 10u) && n < 11);
+138	    if (v < 0)
+139	        *b++ = '-';
+140	    while (n)
+141	        *b++ = t[--n];
+142	    *b = 0;
+143	}
+144	
+145	void app_say(const char *a, const char *b)
+146	{
+147	    uint32_t i;
+148	    char t[48];
+149	    for (i = 0; i < 23u && a && a[i]; i++)
+150	        ui.msg[0][i] = a[i];
+151	    ui.msg[0][i] = 0;
+152	    for (i = 0; i < 23u && b && b[i]; i++)
+153	        ui.msg[1][i] = b[i];
+154	    ui.msg[1][i] = 0;
+155	    ui.msg_until = plat_ms() + 1300u;
+156	    ui.redraw = 1;
+157	    if (ann_on()) {                          /* and to a screen reader (announce.c, fm1-reader) */
+158	        t[0] = 0;
+159	        text_cat(t, ui.msg[0]);
+160	        if (ui.msg[1][0]) {
+161	            text_cat(t, " ");
+162	            text_cat(t, ui.msg[1]);
+163	        }
+164	        ann_say(t, 0, ANN_NOW);
+165	    }
+166	}
+167	
+168	static void octave_text(char *t)
+169	{
+170	    t[0] = set.octave < 0 ? '-' : '+';
+171	    t[1] = (char)('0' + (set.octave < 0 ? -set.octave : set.octave));
+172	    t[2] = 0;
+173	}
+174	
+175	/* a screen reader that has just started listening (or asks) hears the whole screen */
+176	static void speak(void)
+177	{
+178	    char t[96], o[4];
+179	    if (ann_on() && ann_where()) {
+180	        octave_text(o);
+181	        t[0] = 0;
+182	        text_cat(t, APP_NAME ". OCTAVE ");
+183	        text_cat(t, o);
+184	        text_cat(t, ". WAVE ");
+185	        text_cat(t, WAVE_NAME[set.wave]);
+186	        if (midi_count) {                    /* the last MIDI message in, as the screen shows it */
+187	            static const char *const PORT[NPORTS] = {"USB", "BLE", "TRS"};
+188	            static const char HEX[] = "0123456789ABCDEF";
+189	            uint32_t m = midi_last, b;
+190	            char h[10];
+191	            for (b = 0; b < 3u; b++) {
+192	                uint32_t v = (m >> (8u + 8u * b)) & 0xFFu;
+193	                h[3 * b] = HEX[v >> 4];
+194	                h[3 * b + 1] = HEX[v & 15u];
+195	                h[3 * b + 2] = b < 2u ? ' ' : 0;
+196	            }
+197	            text_cat(t, ". MIDI IN ");
+198	            text_cat(t, midi_last_port < NPORTS ? PORT[midi_last_port] : "");
+199	            text_cat(t, " ");
+200	            text_cat(t, h);
+201	        }
+202	        ann_say(t, 0, ANN_NOW);
+203	    }
+204	    ann_tick(plat_ms());
+205	}
+206	
+207	static void note_name(int32_t note, char *b)
+208	{
+209	    static const char *const N[] = {"C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"};
+210	    char o[12];
+211	    b[0] = 0;
+212	    text_cat(b, N[note % 12]);
+213	    int_text(note / 12 - 1, o);
+214	    text_cat(b, o);
+215	}
+216	
+217	static void octave_step(int32_t d)
+218	{
+219	    int32_t o = clamp(set.octave + d, -2, 2);
+220	    char t[4];
+221	    if (o == set.octave)
+222	        return;
+223	    voice_note = -1;                         /* a key held across the change would not find its note off */
+224	    set.octave = (int8_t)o;
+225	    set_dirty = 1;
+226	    octave_text(t);
+227	    app_say("OCTAVE", t);
+228	}
+229	
+230	int template_ble_off(void) { return set.ble_off; }
+231	
+232	/* REC held a second: Bluetooth off or on (kept with the settings, so it stays so at the next power-on) */
+233	static void ble_toggle(void)
+234	{
+235	    set.ble_off = (uint8_t)!set.ble_off;
+236	    set_dirty = 1;
+237	    plat_ble_enable(!set.ble_off);
+238	    app_say("BLUETOOTH", set.ble_off ? "OFF" : "ON");
+239	}
+240	
+241	/* REC: a Bluetooth MIDI device (FM1B_BLE_CENTRAL, lib/btdev): look for devices, then connect to the one ALGORITHM
+242	 * picks, then let it go */
+243	static void ble_device_say(void)
+244	{
+245	    char name[21];
+246	    if (btdev_found(btdev_pick(), name, 0))
+247	        app_say("DEVICE", name);
+248	    else
+249	        app_say("BLE", "SCANNING");
+250	}
+251	static void ble_device_button(void)
+252	{
+253	    int ev;
+254	    if (!btdev_busy() && !ui.looking) {
+255	        ui.looking = 1;
+256	        app_say("BLE", "SCANNING");
+257	        return;
+258	    }
+259	    ev = btdev_save();
+260	    ui.looking = 0;
+261	    app_say(ev == BTDEV_CONNECTING ? btdev_word(ev) : "BLE", ev == BTDEV_CONNECTING ? btdev_name() : btdev_word(ev));
+262	}
+263	
+264	static void input(void)
+265	{
+266	    uint32_t keys, btn = plat_buttons(), k;
+267	    int32_t e;
+268	    touch_poll();                            /* the sensed keys' presses, velocities and pressure */
+269	    keys = touch_keys();
+270	    for (k = 0; k < NKEYS; k++) {            /* key 0 is F3 (MIDI 53) */
+271	        uint32_t bit = 1u << k, v;
+272	        int32_t note = 53 + (int32_t)k + 12 * set.octave;
+273	        if ((keys & bit) && !(ui.keys & bit)) {
+274	            v = touch_vel(k);
+275	            ui.vel[k] = (uint8_t)v;
+276	            ui.prs[k] = 0;
+277	            ui.last_key = (int32_t)k;
+278	            note_on(note, v);
+279	            plat_midi_send(0x09u | 0x90u << 8 | (uint32_t)note << 16 | v << 24, TO_USB | TO_BLE);   /* BLE: if built with it */
+280	        } else if (!(keys & bit) && (ui.keys & bit)) {
+281	            ui.prs[k] = 0;
+282	            note_off(note);
+283	            plat_midi_send(0x08u | 0x80u << 8 | (uint32_t)note << 16, TO_USB | TO_BLE);
+284	        } else if ((keys & bit) && touch_pressure(k) != ui.prs[k]) {   /* pressure: poly aftertouch */
+285	            ui.prs[k] = touch_pressure(k);
+286	            ui.redraw = 1;
+287	            plat_midi_send(0x0Au | 0xA0u << 8 | (uint32_t)note << 16 | (uint32_t)ui.prs[k] << 24, TO_USB | TO_BLE);
+288	        }
+289	    }
+290	    for (k = 0; k < NB; k++) {               /* a button pressed: its name, and what it does here */
+291	        uint32_t bit = 1u << k;
+292	        if (!(btn & bit) || (ui.btn & bit))
+293	            continue;
+294	        if (k == B_OCTDN)
+295	            octave_step(-1);
+296	        else if (k == B_OCTUP)
+297	            octave_step(1);
+298	        else if (k == B_REC && FM1B_BLE)
+299	            ui.rec_t = plat_ms();                /* a press: on release (a hold switches Bluetooth) */
+300	        else if (k == B_SAVE) {
+301	            if (plat_store_save(OBJ_SETTINGS, &set, sizeof set) == 0) {
+302	                set_dirty = 0;
+303	                app_say("SAVED", "");
+304	            } else {
+305	                app_say("SAVE", "FAILED");
+306	            }
+307	        } else {
+308	            app_say("BUTTON", BTN_NAME[k]);
+309	        }
+310	    }
+311	    if (FM1B_BLE && ui.rec_t) {             /* REC: held a second, Bluetooth on / off; a press, a device */
+312	        if (btn >> B_REC & 1u) {
+313	            if (plat_ms() - ui.rec_t >= 1000u) {
+314	                ui.rec_t = 0;
+315	                ble_toggle();
+316	            }
+317	        } else {
+318	            ui.rec_t = 0;
+319	            if (FM1B_BLE_CENTRAL && !set.ble_off)
+320	                ble_device_button();
+321	            else
+322	                app_say("BUTTON", "REC");
+323	        }
+324	    }
+325	    for (k = 0; k < NE; k++) {               /* an encoder turned: its count; PRESET also changes the wave */
+326	        char t[12];
+327	        if ((e = plat_enc((int)k)) == 0)
+328	            continue;
+329	        ui.turns[k] += e;
+330	        ui.turned_at[k] = plat_ms();
+331	        ui.redraw = 1;
+332	        if (k == EN_ALGO && FM1B_BLE_CENTRAL && ui.looking) {
+333	            btdev_choose(btdev_pick() + e);
+334	            ble_device_say();
+335	        } else if (k == EN_PRESET) {
+336	            set.wave ^= 1u;
+337	            set_dirty = 1;
+338	            app_say("WAVE", WAVE_NAME[set.wave]);
+339	        } else {
+340	            int_text(ui.turns[k], t);
+341	            app_say(ENC_NAME[k], t);
+342	        }
+343	    }
+344	    if (keys != ui.keys || btn != ui.btn)
+345	        ui.redraw = 1;
+346	    ui.keys = keys;
+347	    ui.btn = btn;
+348	    plat_glow(1);                            /* the unlit buttons glow, readable in the dark */
+349	    plat_leds(btn | (set_dirty ? 1u << B_SAVE : 0u), keys);
+350	}
+351	
+352	void app_input_only(void) { input(); }
+353	
+354	static void cell(int32_t x, int32_t y, int32_t w, const char *s, int on)   /* a labelled box, lit when on */
+355	{
+356	    cv_rect(x, y, w, 18, on ? C_HI : C_LINE);
+357	    cv_text(x + (w - text_w(&FONT_XS, s)) / 2, y + 2, &FONT_XS, s, on ? C_BLACK : C_GRAY);
+358	}
+359	
+360	static void key_cell(int32_t x, int32_t y, int32_t w, int32_t h, uint32_t k, uint16_t off)
+361	{
+362	    int32_t v, p;
+363	    cv_rect(x, y, w, h, off);
+364	    if (!(ui.keys >> k & 1u))
+365	        return;
+366	    v = (ui.vel[k] * h + 126) / 127;
+367	    p = (ui.prs[k] * h + 126) / 127;
+368	    cv_rect(x, y + h - v, w, v, C_HI);
+369	    if (p)
+370	        cv_rect(x + 2, y + h - p, w - 4, p, C_WHITE);
+371	}
+372	
+373	static void draw(void)
+374	{
+375	    char t[24];
+376	    int32_t note = voice_note;
+377	    uint32_t i, now = plat_ms(), pct = plat_master() * 100u / 4096u;
+378	    static const uint8_t WK[16] = PLAT_WHITE_KEYS, BK[11] = PLAT_BLACK_KEYS;
+379	    /* the header: the name and the note, or a message for a moment */
+380	    cv_begin(240, 32, C_BLACK);
+381	    if (now < ui.msg_until) {
+382	        int32_t x = cv_text(10, 6, &FONT_B, ui.msg[0], C_WHITE);
+383	        cv_text(x + 8, 6, &FONT_B, ui.msg[1], C_HI);
+384	    } else {
+385	        int32_t x = cv_text(10, 6, &FONT_B, APP_NAME, C_WHITE);
+386	        if (FM1B_BLE)                        /* Bluetooth: grey while it waits, lit while a computer is connected */
+387	            x = cv_text(x + 8, 10, &FONT_XS, "BLE", plat_ble_connected() ? C_HI : C_DIM);
+388	        if (FM1B_BLE_CENTRAL)                /* a Bluetooth MIDI device: lit while connected */
+389	            cv_text(x + 6, 10, &FONT_XS, "DEV", plat_ble_device() == BLE_DEV_READY ? C_HI : C_DIM);
+390	        if (note >= 0) {                     /* the note, and the last key's velocity and pressure */
+391	            int32_t x;
+392	            note_name(note, t);
+393	            x = 230 - text_w(&FONT_B, t);
+394	            cv_text(x, 6, &FONT_B, t, C_HI);
+395	            if (ui.keys >> ui.last_key & 1u) {
+396	                char n[24] = "V ";
+397	                int_text(ui.vel[ui.last_key], t);
+398	                text_cat(n, t);
+399	                text_cat(n, "  P ");
+400	                int_text(ui.prs[ui.last_key], t);
+401	                text_cat(n, t);
+402	                cv_text(x - 12 - text_w(&FONT_XS, n), 10, &FONT_XS, n, C_GRAY);
+403	            }
+404	        }
+405	    }
+406	    cv_blit(0, 0);
+407	    /* the buttons, 4 to a row, lit while held; the encoders and their counts, lit for a moment after a turn */
+408	    cv_begin(240, 144, C_BLACK);
+409	    for (i = 0; i < NB; i++)
+410	        cell(4 + (int32_t)(i % 4u) * 58, (int32_t)(i / 4u) * 21, 56, BTN_NAME[i], (ui.btn >> i) & 1u);
+411	    for (i = 0; i < NE; i++) {
+412	        int32_t x = 4 + (int32_t)(i % 4u) * 58, y = 88 + (int32_t)(i / 4u) * 28;
+413	        int lit = ui.turned_at[i] && now - ui.turned_at[i] < 300u;
+414	        cv_text(x, y, &FONT_XS, ENC_NAME[i], lit ? C_HI : C_GRAY);
+415	        int_text(ui.turns[i], t);
+416	        cv_text(x, y + 13, &FONT_XS, t, lit ? C_WHITE : C_DIM);
+417	    }
+418	    cv_blit(0, 36);
+419	    /* the keys, black above white: a held key fills to its velocity (amber), its pressure over that (white) */
+420	    cv_begin(240, 60, C_BLACK);
+421	    for (i = 0; i < 16u; i++)
+422	        key_cell(4 + (int32_t)i * 14, 14, 13, 14, WK[i], C_DIM);
+423	    for (i = 0; i < 11u; i++) {
+424	        static const uint8_t AT[11] = {0, 1, 2, 4, 5, 7, 8, 9, 11, 12, 14};   /* the white key each one follows */
+425	        key_cell(4 + (int32_t)AT[i] * 14 + 8, 0, 11, 12, BK[i], C_LINE);
+426	    }
+427	    octave_text(t);
+428	    cv_text(4, 36, &FONT_XS, "OCT", C_GRAY);
+429	    cv_text(30, 36, &FONT_XS, t, C_HI);
+430	    cv_text(64, 36, &FONT_XS, "PRESET", C_GRAY);
+431	    cv_text(112, 36, &FONT_XS, WAVE_NAME[set.wave], C_HI);
+432	    if (midi_count) {                        /* the last MIDI message in, and where from */
+433	        static const char *const PORT[NPORTS] = {"USB", "BLE", "TRS"};
+434	        static const char HEX[] = "0123456789ABCDEF";
+435	        uint32_t m = midi_last, b;
+436	        char h[12];
+437	        for (b = 0; b < 3u; b++) {
+438	            uint32_t v = (m >> (8u + 8u * b)) & 0xFFu;
+439	            h[3 * b] = HEX[v >> 4];
+440	            h[3 * b + 1] = HEX[v & 15u];
+441	            h[3 * b + 2] = b < 2u ? ' ' : 0;
+442	        }
+443	        cv_text(4, 48, &FONT_XS, "MIDI IN", C_GRAY);
+444	        cv_text(52, 48, &FONT_XS, midi_last_port < NPORTS ? PORT[midi_last_port] : "", C_HI);
+445	        cv_text(82, 48, &FONT_XS, h, C_WHITE);
+446	    }
+447	    cv_text(178, 36, &FONT_XS, "VOL", C_GRAY);
+448	    int_text((int32_t)pct, t);
+449	    text_cat(t, "%");
+450	    cv_text(204, 36, &FONT_XS, t, C_HI);
+451	    cv_blit(0, 180);
+452	}
+453	
+454	void app_ui_init(void)
+455	{
+456	    touch_on(1);                             /* velocity and pressure: the keys' readings on */
+457	    lcd_fill(0, 0, 240, 240, C_BLACK);
+458	    ui.redraw = 1;
+459	}
+460	
+461	void app_frame(void)
+462	{
+463	    static uint32_t last_pct, lit_until, last_ble, last_midi;
+464	    uint32_t i, now = plat_ms(), pct = plat_master() * 100u / 4096u;
+465	    input();
+466	    speak();
+467	    for (i = 0; i < NE; i++)                 /* an encoder's light goes out */
+468	        if (ui.turned_at[i] && now - ui.turned_at[i] < 400u && now > lit_until)
+469	            lit_until = ui.turned_at[i] + 300u;
+470	    if (lit_until && now >= lit_until) {
+471	        lit_until = 0;
+472	        ui.redraw = 1;
+473	    }
+474	    if (FM1B_BLE_CENTRAL) {                  /* looking: a device found is named at once (REC connects to it) */
+475	        static int found;
+476	        int n = ui.looking ? btdev_count() : 0, ev;
+477	        btdev_page(ui.looking && !set.ble_off);
+478	        if (n > found && btdev_pick() < n)
+479	            ble_device_say();
+480	        found = n;
+481	        while ((ev = btdev_event()) != BTDEV_NONE)   /* a device connected, given up or lost */
+482	            if (ev == BTDEV_CONNECTED || ev == BTDEV_NO_ANSWER || ev == BTDEV_LOST)
+483	                app_say("DEVICE", btdev_word(ev));
+484	    }
+485	    if (midi_count != last_midi) {
+486	        last_midi = midi_count;
+487	        ui.redraw = 1;
+488	    }
+489	    if (pct != last_pct || (uint32_t)(plat_ble_connected() | plat_ble_device() << 1) != last_ble ||
+490	        (ui.msg_until && now >= ui.msg_until)) {
+491	        last_pct = pct;
+492	        last_ble = (uint32_t)(plat_ble_connected() | plat_ble_device() << 1);
+493	        if (now >= ui.msg_until)
+494	            ui.msg_until = 0;
+495	        ui.redraw = 1;
+496	    }
+497	    if (ui.redraw) {
+498	        ui.redraw = 0;
+499	        draw();
+500	    }
+501	}
+502	
+503	#ifdef PLAT_HOST
+504	int app_expect(const char *what, int *got)
+505	{
+506	    if (!strcmp(what, "octave"))
+507	        *got = set.octave;
+508	    else if (!strcmp(what, "wave"))
+509	        *got = set.wave;
+510	    else if (!strcmp(what, "note"))
+511	        *got = voice_note;
+512	    else if (!strcmp(what, "dirty"))
+513	        *got = set_dirty;
+514	    else if (!strcmp(what, "vel"))           /* the last key's velocity and pressure */
+515	        *got = ui.vel[ui.last_key];
+516	    else if (!strcmp(what, "prs"))
+517	        *got = ui.prs[ui.last_key];
+518	    else if (!strncmp(what, "turns", 5))    /* turnsN: encoder N's count (plat.h EN_*) */
+519	        *got = ui.turns[atoi(what + 5) % NE];
+520	    else
+521	        return 0;
+522	    return 1;
+523	}
+524	#endif
+525
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 10:33:18Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Read Morse's header and config, ledfx API, and the template test
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1 && cat firmware/morse/app.h | head -60; echo ----; cat firmware/morse/fm1.toml; echo ----; cat firmware/conductor/.gitignore; echo ----; cat firmware/common/ledfx.h; echo ----; cat third_party/fm1-base/template/tests/basic.txt | head -50`
+
+```text
+/* SPDX-License-Identifier: GPL-3.0-or-later */
+/* Morse: the FM-1 as a pocket Morse code machine. Key on the piano keys (a straight key, or two halves as iambic
+ * paddles) and read what you sent; type letters on the keys and hear them; learn the code with flash cards a few
+ * minutes at a time (Leitner boxes, Koch order); keep it silent and read the lights instead. Keying goes out and comes
+ * in as USB-MIDI note 0 on channel 1, the Vail adapter's format, so vailmorse.com and its training tools take it.
+ * A host program (host/morse) can type what you send into the computer and send text to play.
+ * Built on fm1-base (MPL-2.0, its headers). This app is GPL-3.0-or-later; common/ (hostlink, ledfx) is MIT. */
+#pragma once
+#include <stdint.h>
+#include "plat.h"
+
+#define APP_NAME "MORSE"
+#define APP_SPLASH_RGB RGB(90, 200, 255)
+#define APP_BLOCK 256u                   /* frames per audio block: 5.8 ms at 44.1 kHz (the sidetone's jitter) */
+#define APP_TICK                         /* 1 kHz: the key, the keyer, the players, MIDI in and out */
+#define APP_SYSEX                        /* our frames from the host (PROTOCOL.md in github.com/daviddwlee84/M-VAVE_FM-1 host/morse) */
+
+/* the settings and the flash cards' progress, one record (app.c rec_t), at 0xDA000: away from the 0xFC000 settings
+ * sector SLOOP, Agent Deck and CTL-1 share (docs/hardware/flash-map.md). The panel calibration is the platform's */
+enum { OBJ_PANEL, OBJ_MORSE, OBJ_NOBJ };
+#define APP_STORE_MAP {0xDC000u, 0xDA000u}
+/* Bluetooth's record is kept by the app, in RAM only (app.c app_ble_load / app_ble_save): nothing of it is written.
+ * Whether it starts at power-on: SETTINGS > BLUETOOTH, read from the record before app_init */
+#define APP_BLE_STORE
+int morse_ble_off(void);
+#define APP_BLE_AT_BOOT (!morse_ble_off())
+
+void app_init(void);
+void app_render(int32_t *lr, uint32_t n, uint32_t master_q12);
+void app_panic(void);
+void app_ui_init(void);
+void app_frame(void);
+void app_input_only(void);
+void app_say(const char *a, const char *b);
+void app_tick(void);
+int app_sysex(const uint8_t *p, uint32_t n);
+
+/* host simulator: checks (page, mute, wpm, ps, card, ...), commands (expect_text, sendkeys, answer, clear_text) and
+ * the failures of those commands */
+#define APP_HOST_EXPECT
+int app_expect(const char *what, int *got);
+#define APP_HOST_CMD
+int app_host_cmd(const char *cmd, const char *a, const char *b, const char *c, const char *d);
+#define APP_HOST_FAILS
+int app_host_fails(void);
+----
+# Morse's build settings (fm1-base tools/build.py)
+name = "MORSE"
+title = "MORSE"
+id_prefix = "FM-1_41"          # package identity: dev FM-1_4100, release 0.3 FM-1_41000300
+usb_manufacturer = "fm1-base"
+usb_product = "MORSE FM-1"     # host/morse finds the MIDI port by "MORSE"
+o2 = []
+include = ["common"]           # hostlink, ledfx (from M-VAVE_FM-1 firmware/common, MIT)
+ble = true                     # Bluetooth MIDI beside USB (SETTINGS > BLUETOOTH, kept)
+ble_stack = "own"              # fm1-base's own stack: incoming SysEx reaches the app, real BLE-MIDI timestamps out
+ble_diag = false               # no link-layer diagnostics: 2.4 KB of RAM back
+ble_midi_time = true           # keying in by the sender's time (plat_midi_in_t24), not bunched by the connection
+tagline = "a pocket Morse code machine"
+repo = "https://github.com/daviddwlee84/fm1-morse"
+site = "https://daviddwlee84.github.io/M-VAVE_FM-1/dev/morse/"
+install = "https://github.com/daviddwlee84/fm1-morse#install"
+screenshot = "docs/screen.png"
+licence = "GPL-3.0-or-later"
+credits = "Built on fm1-base by Charles Vestal. Koch order from LCWO; MIDI keying in the Vail adapter's format."
+author = "daviddwlee84"
+description = "Learn and use Morse code. Key on the piano keys (straight key or iambic paddles) and see what you sent, drill short and long presses, learn by sound with flash cards, listen to endless practice, type letters and CW phrases on the keys. Keying goes out over USB-MIDI in the Vail format. Settings and progress are kept; Koch order, Farnsworth spacing, a decoder that follows a beginner's hand."
+tags = ["utility"]
+----
+build/
+web/words/
+----
+/* SPDX-License-Identifier: MIT */
+/* ledfx: per-LED patterns on the FM-1's single-colour LEDs (fm1-base's off / glow / mid / lit), timed in
+ * software, so a key can say how urgent it is without colour.
+ *
+ *   ledfx_t k = {0}, b = {0};
+ *   ledfx_set(&k, key, FX_BLINK, now);   ...
+ *   ledfx_show(&b, &k, extra_lit_buttons);   (once a frame: plat_lights + plat_lights_mid)
+ *
+ * PLAY has two LEDs: its bit B_PLAY is the red one, LED_PLAY_GREEN (bit NB) the green one. */
+#pragma once
+#include <stdint.h>
+
+enum {
+    FX_OFF,
+    FX_GLOW,                             /* dim, steady */
+    FX_MID,                              /* between glow and lit, steady */
+    FX_LIT,                              /* full, steady */
+    FX_PULSE,                            /* glow - mid - lit - mid, 1.6 s round: alive, busy */
+    FX_BLINK,                            /* on / off at 2 Hz: needs you */
+    FX_DBLINK,                           /* two short flashes every 1.2 s: something broke */
+    FX_FAST,                             /* on / off at 6 Hz */
+    FX_N
+};
+
+typedef struct {
+    uint32_t lit, mid, dim;              /* the bits at each level, built by ledfx_set */
+} ledfx_t;
+
+int ledfx_level(int fx, uint32_t now);   /* 0 off, 1 glow, 2 mid, 3 lit */
+void ledfx_set(ledfx_t *o, uint32_t bit_index, int fx, uint32_t now);
+void ledfx_show(const ledfx_t *buttons, const ledfx_t *keys);
+----
+# The template in the host simulator: tools/build.py template --host, then
+#   template/build/host/template_host template/tests/basic.txt template/build/host
+wait 600
+shot boot.png
+key 7 down
+wait 50
+expect note 60
+expect midi_out 1
+shot key.png
+key 7 up
+wait 50
+expect note -1
+tap OCT+
+wait 30
+expect octave 1
+expect dirty 1
+turn PRESET 1
+wait 30
+expect wave 1
+turn K3 3
+wait 300
+expect turns5 3
+press FX
+wait 30
+shot controls.png
+release FX
+tap SAVE
+wait 30
+expect dirty 0
+expect store_writes 1
+reboot
+wait 600
+expect octave 1
+expect wave 1
+midi 90 3C 64
+wait 30
+expect note 60
+wav note.wav
+wait 200
+wavstop
+expect peak_db_min -30
+midi 80 3C 00
+listen
+wait 100
+said TEMPLATE. OCTAVE +1. WAVE TRIANGLE
+tap ARP
+wait 30
+said BUTTON ARP
+# MASTER turned while a note plays: the gain glides, so no sample jumps further than the wave itself does
+midi 90 45 64
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 10:33:24Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Read ledfx implementation and locate Morse functions
+
+`cat firmware/common/ledfx.c | sed -n 1,80p; grep -n "^static void lights\|^static void main_area\|^static void draw(\|expect_text\|^int app_host_fails\|^static void save\|static int store_save\|^void app_frame\|^void app_ui_init\|^void app_init\|^static void header\|^static void footer" firmware/morse/app.c`
+
+```text
+/* SPDX-License-Identifier: MIT */
+/* ledfx: see ledfx.h */
+#include "ledfx.h"
+
+int ledfx_level(int fx, uint32_t now)
+{
+    switch (fx) {
+    case FX_GLOW:
+        return 1;
+    case FX_MID:
+        return 2;
+    case FX_LIT:
+        return 3;
+    case FX_PULSE: {
+        static const uint8_t STEP[4] = {1, 2, 3, 2};
+        return STEP[(now / 400u) % 4u];
+    }
+    case FX_BLINK:
+        return now % 500u < 250u ? 3 : 0;
+    case FX_DBLINK: {
+        uint32_t t = now % 1200u;
+        return (t < 120u || (t >= 240u && t < 360u)) ? 3 : 0;
+    }
+    case FX_FAST:
+        return now % 166u < 83u ? 3 : 0;
+    default:
+        return 0;
+    }
+}
+
+void ledfx_set(ledfx_t *o, uint32_t i, int fx, uint32_t now)
+{
+    uint32_t bit = 1u << i;
+    o->lit &= ~bit;
+    o->mid &= ~bit;
+    o->dim &= ~bit;
+    switch (ledfx_level(fx, now)) {
+    case 1:
+        o->dim |= bit;
+        break;
+    case 2:
+        o->mid |= bit;
+        break;
+    case 3:
+        o->lit |= bit;
+        break;
+    default:
+        break;
+    }
+}
+
+void ledfx_show(const ledfx_t *b, const ledfx_t *k)
+{
+    plat_lights(b->lit, k->lit, b->dim, k->dim, 2);
+    plat_lights_mid(b->mid, k->mid);
+}
+175:static char txt[3][TXT_N + 1];           /* own decoded, received decoded, typed (the simulator's expect_text) */
+2052:static void lights(uint32_t now)
+2902:static void main_area(void (*fn)(int32_t oy))
+3048:static void draw(uint32_t now)
+3078:void app_init(void)
+3123:void app_ui_init(void)
+3129:void app_frame(void)
+3326:    if (!strcmp(cmd, "expect_text")) {   /* expect_text own|rx|typed TEXT (_ a space; trailing spaces ignored) */
+3337:            printf("  FAIL expect_text %s: \"%s\", got \"%s\"\n", a, t, g);
+3445:int app_host_fails(void) { return host_fails; }
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 10:33:29Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Read Morse's lights, header, draw loop, frame, and expect_text
+
+`sed -n 2052,2075p firmware/morse/app.c; echo ....; sed -n 2116,2160p firmware/morse/app.c; echo ....; sed -n 2900,2912p firmware/morse/app.c; echo ....; sed -n 3048,3180p firmware/morse/app.c; echo ....; sed -n 3316,3345p firmware/morse/app.c; sed -n 108,125p firmware/morse/app.c`
+
+```text
+static void lights(uint32_t now)
+{
+    ledfx_t kb = {0, 0, 0}, bb = {0, 0, 0};
+    uint32_t k, i;
+    int tx = tone_gated(TONE_TX), rx = tone_gated(TONE_RX);
+    const ln_card_t *c = ln_card(&pr.r);
+    for (k = 0; k < NB; k++)
+        if (k != B_PLAY)
+            ledfx_set(&bb, k, FX_GLOW, now);
+    if (muted())
+        ledfx_set(&bb, B_FX, FX_LIT, now);
+    if (ui.page == PG_PRACTICE && pr.ps == PS_CARD && c && ln_choose(c->type)) {
+        for (i = 0; i < 4u; i++)
+            ledfx_set(&kb, CHOICE_KEY[i], i == pr.pick ? FX_BLINK : FX_LIT, now);
+    } else
+        for (k = 0; k < NKEYS; k++)      /* the lamp: every key lights with the keying (the way to read it muted) */
+            ledfx_set(&kb, k, tx ? FX_LIT : rx ? FX_MID : FX_GLOW, now);
+    if (hl_host(&link, now))
+        bb.lit |= LED_PLAY_GREEN;
+    ledfx_show(&bb, &kb);
+}
+
+/* ----------------------------------------------------------------- screen --- */
+#define C_OWN C_WHITE
+....
+static void draw_header(uint32_t now)
+{
+    static const char *const PAGE[PG_N] = {"MENU", "PRACTICE", "LISTEN", "KEY", "RHYTHM", "TYPE", "CHART", "SETTINGS"};
+    char t[24];
+    int32_t x;
+    cv_begin(240, 32, C_BLACK);
+    if (now < ui.msg_until) {
+        x = cv_text(8, 7, &FONT_B, ui.msg[0], C_WHITE);
+        cv_text(x + 8, 9, &FONT_XS, ui.msg[1], C_RX);
+    } else {
+        cv_text(8, 7, &FONT_B, ui.page == PG_CHART && pg.edit ? (pg.dirty ? "EDIT *" : "EDIT") : PAGE[ui.page],
+                ui.page == PG_CHART && pg.edit ? C_MEH : C_WHITE);
+        t[0] = 0;
+        if (ui.page == PG_KEY || ui.page == PG_RHYTHM) {   /* the speed this page goes by */
+            text_cat(t, "SEND ");
+            int_cat(t, SET.send);
+        } else {
+            int_cat(t, SET.wpm);
+            if (SET.eff < SET.wpm) {
+                text_cat(t, "/");
+                int_cat(t, SET.eff);
+            }
+        }
+        text_cat(t, " WPM");
+        x = 232 - text_w(&FONT_XS, t);
+        cv_text(x, 10, &FONT_XS, t, C_GRAY);
+        if (muted()) {
+            x -= 8 + text_w(&FONT_XS, "MUTE");
+            cv_text(x, 10, &FONT_XS, "MUTE", C_RX);
+        }
+        if (hl_host(&link, now)) {
+            x -= 8 + text_w(&FONT_XS, "PC");
+            cv_text(x, 10, &FONT_XS, "PC", C_BLUE);
+        }
+        if (FM1B_BLE && !bt_off()) {    /* grey while it waits for a computer, blue once one is connected */
+            x -= 8 + text_w(&FONT_XS, "BT");
+            cv_text(x, 10, &FONT_XS, "BT", plat_ble_connected() ? C_BLUE : C_DIM);
+        }
+    }
+    cv_rect(0, 31, 240, 1, C_LINE);
+    cv_blit(0, 0);
+}
+
+static void draw_lamp(int32_t y)         /* the keying as a light: white sending, amber receiving */
+{
+....
+
+#define MAIN_H 176
+static void main_area(void (*fn)(int32_t oy))
+{
+    cv_begin(240, MAIN_H / 2, C_BLACK);
+    fn(0);
+    cv_blit(0, 32);
+    cv_begin(240, MAIN_H / 2, C_BLACK);
+    fn(MAIN_H / 2);
+    cv_blit(0, 32 + MAIN_H / 2);
+}
+
+static void ask_at(int32_t oy)           /* a question about the progress */
+....
+static void draw(uint32_t now)
+{
+    uint8_t r = ui.redraw;
+    ui.redraw = 0;
+    if (r & R_HEAD)
+        draw_header(now);
+    if (r & R_MAIN)
+        draw_main();
+    if ((r & (R_MAIN | R_LAMP)) && lamp_y() && (lamp_y() == 196 || !(r & R_MAIN)))
+        draw_lamp(lamp_y());
+    if (r & R_FOOT)
+        draw_footer();
+}
+
+/* ------------------------------------------------------------------ audio --- */
+static float gain_now;
+
+void app_render(int32_t *lr, uint32_t n, uint32_t master_q12)
+{
+    uint32_t i;
+    float gain = (float)master_q12 / 4096.0f * 8300000.0f;
+    gain_now += (gain - gain_now) * 0.5f;
+    for (i = 0; i < 2u * n; i++)
+        lr[i] = 0;
+    tone_render(lr, n, gain_now);
+}
+
+void app_panic(void) { tone_stop(); }
+
+/* ------------------------------------------------------------ the contract --- */
+void app_init(void)
+{
+    /* everything from nothing: the host simulator's reboot runs this again over the old RAM */
+    zero(&ui, sizeof ui);
+    zero(&pr, sizeof pr);
+    zero(&grid, sizeof grid);
+    zero(&tim, sizeof tim);
+    zero(&ls, sizeof ls);
+    zero(&rh, sizeof rh);
+    zero(txt, sizeof txt);
+    zero(dsrc, sizeof dsrc);
+    zero(&applied, sizeof applied);
+    ev_w = ev_r = 0;
+    rx_t = plat_ms();
+#if FM1B_BLE
+    bx_w = bx_r = 0;
+    zero(&ble_rx, sizeof ble_rx);
+#endif
+    own_down = ptx_down = prx_down = rx_midi = rx_down = midi_down = 0;
+    key_input = own_midi = ptx_midi = 0;
+    saves = 0;
+    dirty_at = 0;
+    if (plat_store_load(OBJ_MORSE, &rec, sizeof rec) == (int)sizeof rec && rec.set.send == 0u)
+        rec.set.send = SEND_DEFAULT;     /* a 0.1 record: it had no send speed */
+    if (rec.magic != REC_MAGIC || rec.ver != REC_VER || rec.size != sizeof rec || !set_valid(&rec.set)
+        || !ln_valid(&rec.ln)) {
+        zero(&rec, sizeof rec);
+        set_defaults();
+        ln_init(&rec.ln);
+    }
+    mo_keyer_init(&keyer, SET.keyer, mo_dit_ms(SET.send));
+    mo_player_init(&ptx, mo_dit_ms(SET.wpm), mo_gap_ms(SET.wpm, SET.eff));
+    mo_player_init(&prx, mo_dit_ms(SET.wpm), mo_gap_ms(SET.wpm, SET.eff));
+#ifdef PLAT_HOST
+    mo_player_init(&host_hand, mo_dit_ms(SET.send), mo_dit_ms(SET.send));
+#endif
+    tone_stop();
+    timing_apply();
+    hl_init(&link, 0x4D, 0x4F, MO_VER);
+    ui.page = PG_PRACTICE;               /* straight into today's practice */
+    ui.back = PG_PRACTICE;
+    pr.ps = PS_START;
+    rhythm_hint();
+}
+
+void app_ui_init(void)
+{
+    lcd_fill(0, 0, 240, 240, C_BLACK);
+    ui.redraw = R_ALL;
+}
+
+void app_frame(void)
+{
+    static const uint8_t HELLO[3] = {MO_VER, FW_MAJOR, FW_MINOR};
+    static uint32_t last_msg;
+    uint32_t now = plat_ms();
+    uint8_t host, lamp, pat;
+    input();
+#if FM1B_BLE
+    ble_in();
+#endif
+    read_events();
+    if (ui.page == PG_PRACTICE)
+        practice_step(now);
+    if (ui.page == PG_LISTEN)
+        listen_step();
+    hl_tick(&link, now, T_HELLO, T_HEARTBEAT, HELLO, 3);
+    prog_pump();
+    host = (uint8_t)hl_host(&link, now);
+    if (host != ui.host_was) {
+        ui.host_was = host;
+        ui.redraw |= R_HEAD | (ui.page == PG_SET ? R_MAIN : 0u);
+    }
+#if FM1B_BLE
+    if ((uint8_t)plat_ble_connected() != ui.ble_was) {   /* BT grey or blue, and SETTINGS says so */
+        ui.ble_was = (uint8_t)plat_ble_connected();
+        ui.redraw |= R_HEAD | (ui.page == PG_SET ? R_MAIN : 0u);
+    }
+#endif
+    if ((ui.msg_until && now >= ui.msg_until) != last_msg) {
+        last_msg = ui.msg_until && now >= ui.msg_until;
+        ui.redraw |= R_HEAD;
+    }
+    lamp = (uint8_t)(tone_gated(TONE_TX) | tone_gated(TONE_RX) << 1);
+    if (lamp != ui.lamp_was) {
+        ui.lamp_was = lamp;
+        ui.redraw |= R_LAMP;
+    }
+    pat = (uint8_t)ptx.cur;
+    if (ui.page == PG_TYPE && pat != ui.pat_was) {
+        ui.pat_was = pat;
+        ui.redraw |= R_MAIN;
+    }
+    if (dirty_at && (int32_t)(now - dirty_at) > 3000)   /* settings saved once the knobs rest */
+        rec_save();
+    lights(now);
+    ann_tick(now);
+    if (ui.redraw)
+        draw(now);
+}
+
+/* --------------------------------------------------------- host simulator --- */
+#ifdef PLAT_HOST
+....
+static void host_send(const char *s)     /* a hand on a straight key keys s */
+{
+    while (*s)
+        mo_player_push(&host_hand, *s++);
+}
+
+int app_host_cmd(const char *cmd, const char *a, const char *b, const char *c, const char *d)
+{
+    char t[128];
+    (void)c, (void)d;
+    if (!strcmp(cmd, "expect_text")) {   /* expect_text own|rx|typed TEXT (_ a space; trailing spaces ignored) */
+        int w = !strcmp(a, "rx") ? 1 : !strcmp(a, "typed") ? 2 : 0;
+        char g[TXT_N + 1];
+        uint32_t n;
+        host_text(b, t, sizeof t);
+        for (n = 0; txt[w][n]; n++)
+            g[n] = txt[w][n];
+        while (n && g[n - 1u] == ' ')
+            n--;
+        g[n] = 0;
+        if (strcmp(g, t)) {
+            printf("  FAIL expect_text %s: \"%s\", got \"%s\"\n", a, t, g);
+            host_fails++;
+        } else
+            printf("  ok text %s \"%s\"\n", a, t);
+        return 1;
+    }
+#if FM1B_BLE
+    if (!strcmp(cmd, "ble_frame")) {     /* ble_frame hello_ack|prog_req|text WORD: one of the host's frames over
+                                          * Bluetooth, as the own stack hands it over (SysEx packets, CIN 4..7) */
+           && s->pitch <= 1200u && (s->look & 3u) < KV_N && (s->look >> 3 & 3u) < TL_N
+           && s->send >= 5u && s->send <= 40u && s->prog < LP_N;
+}
+
+static uint32_t saves;                   /* records written since boot */
+static uint32_t dirty_at;                /* a setting changed at (0: saved) */
+
+static void rec_save(void)
+{
+    rec.magic = REC_MAGIC;
+    rec.ver = REC_VER;
+    rec.size = (uint16_t)sizeof rec;
+    if (plat_store_save(OBJ_MORSE, &rec, sizeof rec) == 0)
+        saves++;
+    dirty_at = 0;
+}
+
+/* ------------------------------------------------------------------- state --- */
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 10:33:37Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Look up input, LED, drawing and font declarations
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/third_party/fm1-base && sed -n 45,100p include/plat.h; grep -n "clamp\|plat_ms\b\|uint32_t plat_ms" include/plat.h | head; grep -n "^void cv_\|^int32_t cv_\|^int32_t text_w\|^void lcd_fill\|^#define C_\|FONT_\(T\|XS\|S\|B\|M\|L\)\b\|extern const font_t\|static const font_t\|^#define RGB" device/gfx.c include/*.h | head -40; grep -n "host_text" ../../firmware/morse/app.c | head -3`
+
+```text
+#endif
+
+/* panel controls, by printed label (Felucca's panel.c map turns these into matrix ids; Felucca
+ * calls the second button SCL, the panel prints SEL) */
+enum { B_FX, B_SEL, B_ENV, B_LFO, B_EDIT, B_GLO, B_HOME, B_SAVE, B_ARP, B_SEQ, B_PLAY, B_REC,
+       B_OCTDN, B_OCTUP, NB };
+enum { EN_SELECT, EN_ALGO, EN_PRESET, EN_K1, EN_K2, EN_K3, EN_K4, NE };
+
+#define NKEYS 27                       /* F3 .. G5 */
+/* key k by colour: the 16 white keys and the 11 black keys, left to right (initialisers for a uint8_t array) */
+#define PLAT_WHITE_KEYS {0, 2, 4, 6, 7, 9, 11, 12, 14, 16, 18, 19, 21, 23, 24, 26}
+#define PLAT_BLACK_KEYS {1, 3, 5, 8, 10, 13, 15, 17, 20, 22, 25}
+
+static inline int32_t clamp(int32_t v, int32_t lo, int32_t hi) { return v < lo ? lo : v > hi ? hi : v; }
+
+uint32_t plat_ms(void);
+uint32_t plat_buttons(void);           /* held: bit B_* */
+uint32_t plat_keys(void);              /* held: bit k = key k (0 = F3) */
+int32_t plat_enc(int role);            /* detents since the last call, + = clockwise; EN_* */
+uint32_t plat_master(void);            /* MASTER pot's position, 0..4096 (the render gets it as a gain: APP_GAIN) */
+int plat_battery(void);                /* the battery: 0 (empty) .. 3 (full), 4 a USB host powers the FM-1, -1 not read
+                                        * yet (the keys' readings own the converter: APP_KEY_SENSE) */
+int32_t plat_battery_raw(void);        /* the reading plat_battery's bars come from: ADC channel 3 (the battery's divider),
+                                        * the main loop's slow average, in the converter's counts (the bars' thresholds
+                                        * 531 / 561 / 591); 0 = not read yet. Whether USB powers the FM-1 or not. For an
+                                        * app that shows the volts itself; built for an app with APP_BATTERY_RAW (below) */
+int plat_headphones(void);             /* the headphone jack's switch (PB5: 0 with a plug in), with fm1.toml headphones = true
+                                        * (FM1B_HEADPHONES; without it -1 on the device, never read), read by the main loop every
+                                        * pass and debounced (a state counts once the pin held it 100 ms: the contact
+                                        * bounces ~150 ms a plug): 1 headphones in, 0 nothing plugged; -1 not read yet (the
+                                        * host: its script's "jack"). The speaker mutes itself in hardware on a plug */
+
+/* lights: bright buttons and keys, and dim ones (a short pulse each scan frame; a bright bit wins); glow 0 the dim
+ * ones off, 1 low, 2 high. Bit NB in buttons / dim_buttons is PLAY's second, green LED */
+void plat_lights(uint32_t buttons, uint32_t keys, uint32_t dim_buttons, uint32_t dim_keys, int glow);
+#define LED_PLAY_GREEN (1u << NB)
+/* a third level, between the glow and lit (~12 % of lit; ~8 % with glow 1): these buttons and keys, unless lit, until
+ * the next call (0, 0: none). Call it after plat_lights each time the lights change */
+void plat_lights_mid(uint32_t buttons, uint32_t keys);
+/* the dim ones at any brightness, not the glow's two (an app with APP_DIM_LEVELS): ns is the pulse each scan frame, in
+ * nanoseconds (a lit LED is lit ~95 us a frame, plat_lights' glow 2 is 3,200 ns and glow 1 1,600 ns); the FM-1 takes
+ * 500 .. 4,000, a value outside it is clamped to it. 0 hands the dim ones back to plat_lights' glow. One pulse serves
+ * every dim LED (the buttons' glow and the keys': a scan frame has one), so it is the brightness of the whole dim layer;
+ * the half level of plat_lights_mid is not changed. The host simulator keeps it (expect dim_ns, and "leds" prints it) */
+void plat_dim_ns(uint32_t ns);
+/* the same, simpler: the lit buttons and keys, the unlit buttons glowing if plat_glow(1); PLAY lights green, red
+ * while plat_play_red(1) */
+void plat_leds(uint32_t buttons, uint32_t keys);
+void plat_glow(int on);
+void plat_play_red(int red);
+
+/* MIDI: 4-byte USB-MIDI event packets (byte 0 = cable / CIN, then status, data 1, data 2). In from USB, the TRS jack
+ * (in only: the FM-1 has no MIDI out jack) and Bluetooth (FM1B_BLE); out to USB and Bluetooth. Bluetooth has two
+ * links with FM1B_BLE_CENTRAL (below), the computer's and the device's: both come in on PORT_BLE, TO_BLE goes to
+ * both, TO_BLE_HOST or TO_BLE_DEV to one. MIDI thru with nothing echoed back where it came from: after plat_midi_in,
+ * plat_midi_send(pkt, (TO_USB | TO_BLE) & ~plat_midi_in_from()) */
+58:static inline int32_t clamp(int32_t v, int32_t lo, int32_t hi) { return v < lo ? lo : v > hi ? hi : v; }
+60:uint32_t plat_ms(void);
+86: * 500 .. 4,000, a value outside it is clamped to it. 0 hands the dim ones back to plat_lights' glow. One pulse serves
+501:/* a free-running count of PLAT_TICKS_PER_US ticks a microsecond, for timing spans shorter than plat_ms can: a part of
+include/fm1b_config.h:10:#define APP_BIG_FONT FONT_L              /* the splash's name and the panel's screens (capitals): FONT_M saves 20 KB */
+device/gfx.c:27:#define RGB(r, g, b) ((uint16_t)((((r) >> 3) << 11) | (((g) >> 2) << 5) | ((b) >> 3)))
+device/gfx.c:28:#define C_BLACK 0x0000u
+device/gfx.c:29:#define C_WHITE 0xFFFFu              /* accent only: what is being touched / where we are */
+device/gfx.c:48:#define C_LINE pal[0]                /* 1 rules, separators */
+device/gfx.c:49:#define C_DIM pal[1]                 /* 2 inactive, empty steps, units */
+device/gfx.c:50:#define C_GRAY pal[2]                /* 3 labels */
+device/gfx.c:51:#define C_AMB pal[3]                 /* 4 secondary text */
+device/gfx.c:52:#define C_HI pal[4]                  /* 5 values, curves */
+3308:static void host_text(const char *a, char *out, uint32_t max)   /* a script word: _ is a space */
+3330:        host_text(b, t, sizeof t);
+3399:        host_text(a, t, sizeof t);
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 10:33:41Z)**_
+
+Still reading fm1-base's drawing and font interfaces before writing THEORY's `app.c`.
+
+_**Agent (claude-opus-5-5 2026-11-18 10:33:44Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Read the drawing primitives, fonts and touch API signatures
+
+`sed -n 27,70p device/gfx.c; grep -n "^[a-z].*cv_begin\|^[a-z].*cv_rect\|^[a-z].*cv_line\|^[a-z].*cv_pset\|^[a-z].*cv_text\|^[a-z].*text_w\|^[a-z].*cv_blit\|^[a-z].*lcd_fill\|FONT_[A-Z]* =\|font_t FONT" device/gfx.c | head -20; grep -n "touch_poll\|touch_keys\|touch_vel\b\|touch_on" lib/touch.h | head; grep -n "plat_midi_send\|TO_USB" include/plat.h | head -4`
+
+```text
+#define RGB(r, g, b) ((uint16_t)((((r) >> 3) << 11) | (((g) >> 2) << 5) | ((b) >> 3)))
+#define C_BLACK 0x0000u
+#define C_WHITE 0xFFFFu              /* accent only: what is being touched / where we are */
+/* The screen's five steps, darkest to brightest, plus white; picked as THEME in GLOBAL. */
+typedef struct {
+    const char *name;
+    uint16_t c[5];
+} palette_t;
+/* X0X: the first three steps are neutral greys in every theme (structure: rules, empty cells,
+ * labels); only the two brightest carry the theme's hue (values, highlights). Colour on the
+ * screen then means something: a part, a value, an alarm. */
+#define NEUTRALS RGB(34, 34, 40), RGB(74, 74, 82), RGB(150, 150, 158)
+static const palette_t PALETTES[] = {
+    {"GREEN", {NEUTRALS, RGB(80, 220, 120), RGB(150, 255, 175)}},
+    {"AMBER", {NEUTRALS, RGB(232, 136, 30), RGB(255, 184, 70)}},
+    {"CYAN", {NEUTRALS, RGB(60, 180, 235), RGB(150, 225, 255)}},
+    {"RED", {NEUTRALS, RGB(232, 76, 60), RGB(255, 132, 112)}},
+    {"MONO", {NEUTRALS, RGB(196, 196, 202), RGB(236, 236, 240)}},
+};
+#define NPALETTES (sizeof(PALETTES) / sizeof(PALETTES[0]))
+static uint16_t pal[5];
+#define C_LINE pal[0]                /* 1 rules, separators */
+#define C_DIM pal[1]                 /* 2 inactive, empty steps, units */
+#define C_GRAY pal[2]                /* 3 labels */
+#define C_AMB pal[3]                 /* 4 secondary text */
+#define C_HI pal[4]                  /* 5 values, curves */
+
+static void palette_set(uint32_t i)
+{
+    uint32_t k;
+    for (k = 0; k < 5u; k++)
+        pal[k] = PALETTES[i % NPALETTES].c[k];
+}
+
+static inline uint16_t swap16(uint32_t c) { return (uint16_t)(((c >> 8) & 0xFFu) | ((c & 0xFFu) << 8)); }
+
+static void cv_begin(uint32_t w, uint32_t h, uint16_t bg)
+{
+    uint32_t i, n;
+    if (w * h > CV_MAX)
+        h = CV_MAX / w;
+    lcd_sync();                     /* the last blit may still read cv_px */
+    cv_w = w;
+    cv_h = h;
+63:static void cv_begin(uint32_t w, uint32_t h, uint16_t bg)
+86:static void cv_blit(uint32_t x, uint32_t y) { lcd_blit(x, y, cv_w, cv_h, cv_px); }
+89:static void cv_blit_from(uint32_t x, uint32_t y, uint32_t r0)
+95:static inline void cv_pset(int32_t x, int32_t y, uint16_t c)
+102:static void cv_rect(int32_t x, int32_t y, int32_t w, int32_t h, uint16_t c)
+120:static void cv_line(int32_t x0, int32_t y0, int32_t x1, int32_t y1, uint16_t c)
+213:static int32_t cv_text(int32_t x, int32_t y, const felucca_font_t *f, const char *s, uint16_t c)
+294:static int32_t text_w(const felucca_font_t *f, const char *s)
+4: * app.h; lib/touch.c, on lib/sense.c). Off by default: touch_on(1) starts the scan's readings (plat_sense).
+7: * or touch_poll and touch_keys), with the velocity they landed at, and a held one has a pressure. The seven keys
+15: *   state     touch_poll every frame, then touch_keys (every key held, sensed or not: plat_keys for the top row)
+16: *             and touch_vel (the velocity of a key's last press); touch_poll keeps the pressure too. */
+29:void touch_on(int on);                   /* the readings on or off; let every key go first (the keys change hands) */
+36:void touch_poll(void);                   /* state: the events into touch_keys / touch_vel, and the pressure */
+37:uint32_t touch_keys(void);               /* state: every key held, bit k = key k */
+38:uint8_t touch_vel(uint32_t key);         /* state: the velocity of the key's last press, 1..127 */
+100: * plat_midi_send(pkt, (TO_USB | TO_BLE) & ~plat_midi_in_from()) */
+102:#define TO_USB (1u << PORT_USB)
+112:uint32_t plat_midi_in_from(void);      /* where the last one came from, as an out: TO_USB, TO_BLE_HOST or TO_BLE_DEV
+114:void plat_midi_send(uint32_t pkt, uint32_t to);   /* to: TO_USB | TO_BLE, or one link; main loop, the render or the
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 10:33:50Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Read the font struct and how text is drawn
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1 && grep -n "typedef struct" -A8 firmware/morse/build/gen/felucca_font.h | head -20; grep -n "^static const felucca_font_t\|^const felucca_font_t" firmware/morse/build/gen/felucca_font.h | head; sed -n 213,240p third_party/fm1-base/device/gfx.c`
+
+```text
+161:static const felucca_font_t FONT_T = { 12, 2, 32, 95, FONT_T_ADV, FONT_T_BW, FONT_T_OFF, FONT_T_DATA };
+460:static const felucca_font_t FONT_XS = { 15, 2, 32, 126, FONT_XS_ADV, FONT_XS_BW, FONT_XS_OFF, FONT_XS_DATA };
+825:static const felucca_font_t FONT_S = { 16, 2, 32, 126, FONT_S_ADV, FONT_S_BW, FONT_S_OFF, FONT_S_DATA };
+1197:static const felucca_font_t FONT_B = { 16, 2, 32, 126, FONT_B_ADV, FONT_B_BW, FONT_B_OFF, FONT_B_DATA };
+1697:static const felucca_font_t FONT_M = { 24, 2, 32, 95, FONT_M_ADV, FONT_M_BW, FONT_M_OFF, FONT_M_DATA };
+2528:static const felucca_font_t FONT_L = { 32, 2, 32, 95, FONT_L_ADV, FONT_L_BW, FONT_L_OFF, FONT_L_DATA };
+static int32_t cv_text(int32_t x, int32_t y, const felucca_font_t *f, const char *s, uint16_t c)
+{
+    uint32_t r = c >> 11, g = (c >> 5) & 63u, b = c & 31u;
+    for (; *s; s++) {
+        uint32_t gi = glyph(f, (uint8_t)*s), gx, gy, w, bpr;
+        const uint8_t *gd;
+        w = f->bw[gi];
+        bpr = (w + 1u) / 2u;
+        gd = f->data + f->off[gi];
+#ifdef FONT_TRIM                     /* (tools/gen_font.py FM1_FONT_TRIM: the glyph's lit box, after its left, top, rows) */
+        int32_t bx = x - f->pad + gd[0], by = y + gd[1] + cv_oy;
+        uint32_t rows = gd[2];
+        gd += 3;
+#ifdef FONT_CACHED                   /* (APP_FONT_CACHE: the alphas decoded once, then read; the box clipped once) */
+        {
+            int32_t x0 = bx < 0 ? -bx : 0, x1 = bx + (int32_t)w > (int32_t)cv_w ? (int32_t)cv_w - bx : (int32_t)w;
+            int32_t y0 = by < cv_y0 ? cv_y0 - by : 0, y1 = by + (int32_t)rows > cv_y1 ? cv_y1 - by : (int32_t)rows, i, j;
+            const uint8_t *ca = x0 < x1 && y0 < y1 ? font_cached(f, gd, w * rows) : 0;   /* (nothing shown: not decoded) */
+            (void)bpr;
+            for (j = y0; ca && j < y1; j++) {
+                const uint8_t *ar = ca + (uint32_t)j * w;
+                uint16_t *row = &cv_px[(uint32_t)(by + j) * cv_w];
+                for (i = x0; i < x1; i++) {
+                    uint32_t a = ar[i];
+                    uint16_t *p = &row[(uint32_t)(bx + i)];
+                    if (!a)
+                        continue;
+                    if (a == 15u) {
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 10:33:56Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Find the font struct fields and canvas origin handling
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/third_party/fm1-base && grep -rn "} felucca_font_t" -B10 tools/gen_font.py device/*.c include/*.h 2>/dev/null | head -14; grep -n "cv_oy\|cv_y0" device/gfx.c | head -5; sed -n 95,101p device/gfx.c`
+
+```text
+device/gfx.c-5- * an off-screen strip, then blit it in one DMA transfer. Pixels are stored
+device/gfx.c-6- * byte-swapped (the panel takes RGB565 big-endian). */
+device/gfx.c-7-typedef struct {               /* proportional, see tools/gen_font.py */
+device/gfx.c-8-    uint8_t h;
+device/gfx.c-9-    uint8_t pad;               /* bitmap starts this many pixels left of the pen */
+device/gfx.c-10-    uint8_t first, last;
+device/gfx.c-11-    const uint8_t *adv;        /* advance per glyph */
+device/gfx.c-12-    const uint8_t *bw;         /* bitmap width per glyph (starts FONT_PAD left of the pen) */
+device/gfx.c-13-    const uint16_t *off;       /* byte offset of each glyph */
+device/gfx.c-14-    const uint8_t *data;
+device/gfx.c:15:} felucca_font_t;
+24:static int32_t cv_oy;            /* y offset for graph drawing */
+25:static int32_t cv_y0, cv_y1;     /* X0X: the rows drawing may touch (cv_band) */
+71:    cv_oy = cv_y0 = 0;
+82:    cv_oy = cv_y0 = y0;
+97:    y += cv_oy;
+static inline void cv_pset(int32_t x, int32_t y, uint16_t c)
+{
+    y += cv_oy;
+    if ((uint32_t)x < cv_w && y >= cv_y0 && y < cv_y1)
+        cv_px[(uint32_t)y * cv_w + (uint32_t)x] = swap16(c);
+}
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 10:35:30Z)**_
+
+Now I'll check the screen-reader word list's format and the fastmath function signatures.
+
+_**Agent (claude-opus-5-5 2026-11-18 10:35:32Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Read words.tsv rules and fastmath sine/tanh helpers
+
+`sed -n 1,70p tools/gen_words.py | grep -v "^$" | head -60; sed -n 160,190p include/fastmath.h; grep -n "fm_tanhf" -A6 include/fastmath.h | head -10`
+
+```text
+#!/usr/bin/env python3
+# SPDX-License-Identifier: MPL-2.0
+# Copyright (C) 2026 Charles Vestal
+"""A firmware's words file for the screen reader (fm1-reader). The one copy is fm1-base's tools/gen_words.py;
+fm1-reader's tools/sync_announce.sh copies it into the firmwares not on fm1-base. Change it here, not in a copy.
+    gen_words.py firmware/words.tsv web/words build/gen/ann_words.h
+words.tsv: the screen's text <TAB> what to say, one a line ("#" starts a comment, unless the line has a tab: then
+it is an entry, e.g. "# KB<TAB># kilobytes"). A "# url: https://.../words/" line
+says where the words files are published. Written:
+  web/words/<id>.json   the firmware's words, then the common ones below: everything the reader needs, frozen.
+                        <id> is a fingerprint of the content: the same words, the same file. Keep every one in
+                        the repo and publish them all; never change or delete one (a device in the wild points at
+                        its own).
+  ann_words.h           #define ANN_WORDS_URL "<url><id>.json": the link the device sends with its HELLO.
+A words file over the reader's limits (WORDS_MAX entries with the common ones, WORD_MAX characters a side) is refused:
+the reader's page (fm1-reader web/words.js) would not take it.
+"""
+import hashlib, json, sys
+from pathlib import Path
+# the reader's limits (fm1-reader web/words.js WORDS_MAX, WORD_MAX): entries in a words file, characters a side
+WORDS_MAX, WORD_MAX = 5000, 120
+# words most FM-1 firmwares use; a firmware's own list comes first and can say any of them differently
+COMMON = [
+    ("FX", "effects"), ("REV", "reverb"), ("DLY", "delay"), ("ENV", "envelope"), ("LFO", "L F O"),
+    ("GLO", "global"), ("OCT+", "octave up"), ("OCT-", "octave down"), ("OCT", "octave"), ("REC", "record"),
+    ("SEQ", "sequence"), ("ALGO", "algorithm"), ("ARP", "arp"), ("USB", "U S B"), ("MIDI CH #", "MIDI channel #"),
+    ("MIDI", "midi"), ("dB", "decibels"), ("Hz", "hertz"), ("kHz", "kilohertz"), ("ms", "milliseconds"),
+    ("bpm", "B P M"), ("CC #", "controller #"), ("CC", "controller"), ("INF", "infinity"), ("PCT", "percent"), ("2ND", "second"),
+    ("FWD", "forward"), ("RND", "random"), ("MEM", "memory"), ("CPU", "C P U"), ("P-LOCK", "p-lock"),
+    ("MIN", "minor"), ("MAJ", "major"), ("ATK", "attack"), ("DCY", "decay"), ("SUS", "sustain"),
+    ("REL", "release"), ("RES", "resonance"), ("RESO", "resonance"), ("FREQ", "frequency"), ("AMT", "amount"),
+    ("LVL", "level"), ("VOL", "volume"), ("DIST", "distortion"), ("SAT", "saturation"), ("COMP", "compressor"),
+    ("THRESH", "threshold"), ("PERF", "performance"), ("HP", "high-pass"), ("LP", "low-pass"), ("BP", "band-pass"),
+]
+def main(tsv, out_dir, header):
+    url, own = "", []
+    for n, line in enumerate(Path(tsv).read_text(encoding="utf-8").splitlines(), 1):
+        if line.startswith("# url:"):
+            url = line.split(":", 1)[1].strip()
+        if not line.strip() or (line.startswith("#") and "\t" not in line):   # (a line with a tab is an entry,
+            continue                                                         #  even one starting with "#")
+        parts = line.split("\t")
+        if len(parts) != 2 or not parts[0].strip():
+            raise SystemExit(f"{tsv}:{n}: want: screen<TAB>said")
+        own.append([parts[0].strip(), parts[1].strip()])
+        if not all(32 <= ord(c) < 127 for c in parts[0] + parts[1]):
+            raise SystemExit(f"{tsv}:{n}: ASCII only")
+        for side, what in zip(own[-1], ("the screen's text", "what is said")):
+            if len(side) > WORD_MAX:
+                raise SystemExit(f"{tsv}:{n}: {what} is {len(side)} characters; the screen reader takes {WORD_MAX} at most")
+    if len(own) + len(COMMON) > WORDS_MAX:
+        raise SystemExit(f"{tsv}: {len(own)} entries (and {len(COMMON)} common ones); the screen reader takes "
+                         f"{WORDS_MAX} at most, so {WORDS_MAX - len(COMMON)} of a firmware's own")
+    if not url.startswith("https://") or not url.endswith("/"):
+        raise SystemExit(f"{tsv}: needs a '# url: https://.../words/' line")
+    body = {"format": 1, "words": own + [list(w) for w in COMMON]}
+    text = json.dumps(body, separators=(",", ":"), ensure_ascii=True) + "\n"
+    wid = hashlib.sha256(text.encode()).hexdigest()[:10]
+    out = Path(out_dir) / f"{wid}.json"
+    out.parent.mkdir(parents=True, exist_ok=True)
+    float k = fm_floorf(x * (1.0f / FM_TWO_PI) + 0.5f);
+    return ((x - k * 6.28125f) - k * 1.9353071693331003e-3f) - k * 1.0253131561401567e-11f;
+}
+
+static inline float fm_sinf(float x) { return fm_sin_pi(fm_wrap_pi(x)); }
+static inline float fm_cosf(float x)
+{
+    float r = fm_wrap_pi(x) + 0.5f * FM_PI;          /* reduce first: adding pi/2 to a big x loses bits */
+    if (r >= FM_PI)
+        r -= FM_TWO_PI;
+    return fm_sin_pi(r);
+}
+/* tan on (-pi/2, pi/2), the filter-coefficient range: cos(x) = sin(pi/2 - |x|), which keeps
+ * its relative accuracy next to the pole where cos is small */
+static inline float fm_tanf(float x)
+{
+    float a = fm_fabsf(x), c = (1.57079637f - a) - 4.37113883e-8f;
+    return fm_sin_pi(x) / fm_sin_pi(c);
+}
+
+/* sine of a phase in turns (0..1 = one cycle): the cheap oscillator form */
+static inline float fm_sin_turns(float ph)
+{
+    float x = ph - fm_floorf(ph + 0.5f);          /* [-0.5, 0.5) */
+    return fm_sin_pi(x * FM_TWO_PI);
+}
+
+static inline float fm_sqrtf(float x)
+{
+    fm_bits_t b;
+    float y;
+14: *   fm_powf   rel 1e-5 (x > 0)             fm_tanhf abs 3e-7
+15- *   fm_sinf / fm_cosf abs 1e-6 on [-100, 100] (three-part 2pi reduction)
+16- *   fm_tanf   rel 1e-6 on (-pi/2, pi/2)   fm_sqrtf rel 2e-7
+17- *
+18- * Every function is static inline and branch-light. None may be called with
+19- * NaN; none returns a denormal for an in-range argument. */
+20-#pragma once
+--
+127:static inline float fm_tanhf(float x)
+128-{
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 10:35:37Z)**_
+
+Next is the synth: 8 voices, adapted from `common/chime`'s 2-op FM approach.
+
+_**Agent (claude-opus-5-5 2026-11-18 10:35:42Z)**_
+
+<tool-use data-tool-type="write" data-tool-name="Write"><details>
+<summary>Tool use: **Write**</summary>
+
+```c
+/* SPDX-License-Identifier: GPL-3.0-or-later */
+/* synth: eight voices of a two-operator FM electric piano, enough to hear chords and voicings through the FM-1's
+ * speaker. The voice follows firmware/common/chime (MIT): a carrier phase-modulated by a sine whose depth falls as
+ * the note decays, so a note starts bright and mellows. Here the modulator runs at the carrier's frequency (an
+ * electric piano, not a bell), a fast envelope gives the attack its bite, a slow one holds the note while the key is
+ * down, and a release fades it when the key goes up.
+ *
+ * One writer: only the main loop calls synth_note_on / _off / _all_off; they queue events that the audio interrupt
+ * reads at the start of each block, so no lock is needed. Pitches come from a table built by synth_init. */
+#pragma once
+#include <stdint.h>
+
+#define SY_VOICES 8u
+
+void synth_init(void);                   /* the pitch table: the main loop, before any note */
+void synth_note_on(int note, int vel);   /* MIDI note 0..127, velocity 1..127 */
+void synth_note_off(int note);
+void synth_all_off(void);                /* every voice released */
+void synth_stop(void);                   /* silence now, nothing queued (app_panic, a reboot) */
+void synth_render(int32_t *lr, uint32_t n, float gain);   /* audio interrupt: writes every sample of n frames */
+int synth_active(void);                  /* voices sounding, as of the last block */
+
+```
+
+```text
+File created successfully at: /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/firmware/theory/synth.h (file state is current in your context — no need to Read it back)
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 10:36:02Z)**_
+
+<tool-use data-tool-type="write" data-tool-name="Write"><details>
+<summary>Tool use: **Write**</summary>
+
+```c
+/* SPDX-License-Identifier: GPL-3.0-or-later */
+/* synth: see synth.h. Needs fastmath.h (fm_exp2f, fm_sin_turns, fm_tanhf) included before it. */
+#include "synth.h"
+
+#define SY_RING 64u                      /* events between two blocks, at most */
+#define SY_FS 44100.0f
+
+enum { SY_FREE, SY_HELD, SY_REL };
+enum { SY_EV_ON, SY_EV_OFF, SY_EV_ALL };
+
+typedef struct {
+    uint8_t type, note, vel;
+} sy_ev_t;
+
+typedef struct {
+    float inc, pc, pm;                   /* phase increment and phases, in turns */
+    float amp;                           /* the note's loudness, from its velocity */
+    float env;                           /* the slow envelope: held, then released */
+    float bright;                        /* the fast one: the attack's modulation depth */
+    float att;                           /* 0..1 over the first 3 ms (no click) */
+    uint32_t age;                        /* when it started: the oldest is taken first */
+    uint8_t note, stage;
+} sy_voice_t;
+
+static sy_ev_t sy_ring[SY_RING];
+static volatile uint32_t sy_w, sy_r;     /* sy_w: the main loop's; sy_r: the audio interrupt's */
+static float sy_inc[128];
+static sy_voice_t sy_v[SY_VOICES];
+static uint32_t sy_clock;
+static volatile int sy_count;
+static volatile uint8_t sy_silence;      /* synth_stop asked: clear everything at the next block */
+
+void synth_init(void)
+{
+    int i;
+    for (i = 0; i < 128; i++) sy_inc[i] = 440.0f * fm_exp2f((float)(i - 69) / 12.0f) / SY_FS;
+}
+
+static void sy_push(uint8_t type, int note, int vel)
+{
+    uint32_t w = sy_w;
+    if (w - sy_r >= SY_RING) return;     /* full: a burst this big is dropped rather than block */
+    sy_ring[w % SY_RING].type = type;
+    sy_ring[w % SY_RING].note = (uint8_t)(note & 127);
+    sy_ring[w % SY_RING].vel = (uint8_t)(vel < 1 ? 1 : vel > 127 ? 127 : vel);
+    sy_w = w + 1u;
+}
+
+void synth_note_on(int note, int vel) { if (note >= 0 && note < 128) sy_push(SY_EV_ON, note, vel); }
+void synth_note_off(int note) { if (note >= 0 && note < 128) sy_push(SY_EV_OFF, note, 0); }
+void synth_all_off(void) { sy_push(SY_EV_ALL, 0, 0); }
+void synth_stop(void) { sy_silence = 1; sy_r = sy_w; }
+int synth_active(void) { return sy_count; }
+
+static void sy_start(int note, int vel)
+{
+    sy_voice_t *v = 0;
+    uint32_t i, oldest = 0;
+    float x = (float)vel / 127.0f;
+    for (i = 0; i < SY_VOICES && !v; i++)            /* the same note again: that voice, struck anew */
+        if (sy_v[i].stage != SY_FREE && sy_v[i].note == note) v = &sy_v[i];
+    for (i = 0; i < SY_VOICES && !v; i++)
+        if (sy_v[i].stage == SY_FREE) v = &sy_v[i];
+    if (!v) {                                        /* all busy: the oldest released one, else the oldest */
+        for (i = 1; i < SY_VOICES; i++) {
+            int rel_i = sy_v[i].stage == SY_REL, rel_o = sy_v[oldest].stage == SY_REL;
+            if (rel_i > rel_o || (rel_i == rel_o && sy_v[i].age < sy_v[oldest].age)) oldest = i;
+        }
+        v = &sy_v[oldest];
+    }
+    v->inc = sy_inc[note];
+    v->pc = v->pm = 0.0f;
+    v->amp = 0.035f + 0.11f * x * x;                 /* soft keys quiet, hard ones up to ~0.15 */
+    v->env = 1.0f;
+    v->bright = 0.6f + 0.9f * x;                     /* harder: brighter */
+    v->att = 0.0f;
+    v->age = sy_clock++;
+    v->note = (uint8_t)note;
+    v->stage = SY_HELD;
+}
+
+static void sy_events(void)
+{
+    while (sy_r != sy_w) {
+        sy_ev_t e = sy_ring[sy_r % SY_RING];
+        uint32_t i;
+        sy_r = sy_r + 1u;
+        if (e.type == SY_EV_ON) sy_start(e.note, e.vel);
+        else
+            for (i = 0; i < SY_VOICES; i++)
+                if (sy_v[i].stage == SY_HELD && (e.type == SY_EV_ALL || sy_v[i].note == e.note)) sy_v[i].stage = SY_REL;
+    }
+}
+
+void synth_render(int32_t *lr, uint32_t n, float gain)
+{
+    uint32_t i, k;
+    int count = 0;
+    if (sy_silence) {
+        for (k = 0; k < SY_VOICES; k++) sy_v[k].stage = SY_FREE;
+        sy_silence = 0;
+    }
+    sy_events();
+    for (i = 0; i < 2u * n; i++) lr[i] = 0;
+    for (k = 0; k < SY_VOICES; k++) {
+        sy_voice_t *v = &sy_v[k];
+        float out;
+        if (v->stage == SY_FREE) continue;
+        count++;
+        for (i = 0; i < n; i++) {
+            float m, s;
+            if (v->att < 1.0f) v->att += 1.0f / 132.0f;              /* 3 ms */
+            v->env *= v->stage == SY_HELD ? 0.99998f : 0.99955f;     /* held ~1.1 s to 1/e, released ~50 ms */
+            v->bright *= 0.99985f;                                   /* the bite fades in ~150 ms */
+            m = fm_sin_turns(v->pm) * (v->bright + 0.25f) * v->env;
+            s = fm_sin_turns(v->pc + m * 0.159f) * v->env * v->att * v->amp;
+            v->pc += v->inc;
+            v->pm += v->inc;
+            if (v->pc >= 1.0f) v->pc -= 1.0f;
+            if (v->pm >= 1.0f) v->pm -= 1.0f;
+            out = (float)lr[2 * i] + s * 8388608.0f;                 /* summed in the buffer, limited below */
+            lr[2 * i] = (int32_t)out;
+        }
+        if (v->env < 0.0005f) v->stage = SY_FREE;
+    }
+    for (i = 0; i < n; i++) {                                        /* a soft limit, then MASTER */
+        float s = fm_tanhf((float)lr[2 * i] * (1.0f / 8388608.0f)) * gain;
+        lr[2 * i] = (int32_t)s;
+        lr[2 * i + 1] = (int32_t)s;
+    }
+    sy_count = count;
+}
+
+```
+
+```text
+File created successfully at: /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/firmware/theory/synth.c (file state is current in your context — no need to Read it back)
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 10:36:08Z)**_
+
+Next is the glyph drawer: ♯ ♭ ° ø as small bitmaps.
+
+_**Agent (claude-opus-5-5 2026-11-18 10:36:13Z)**_
+
+<tool-use data-tool-type="write" data-tool-name="Write"><details>
+<summary>Tool use: **Write**</summary>
+
+```c
+/* SPDX-License-Identifier: GPL-3.0-or-later */
+/* gtext: text with music signs. fm1-base's fonts are ASCII, so theory.c is built with its glyph strings set to
+ * marker bytes (GT_SHARP .. GT_HDIM, below); gtext draws the text between them with cv_text and each marker as a
+ * small bitmap sized to the font: 1x for the 12-16 px fonts, 2x for M and L. Part of the unity build (gfx.c in
+ * scope). */
+#pragma once
+#include <stdint.h>
+
+#define GT_SHARP "\x01"
+#define GT_FLAT "\x02"
+#define GT_DIM "\x03"                     /* the degree sign of a diminished chord */
+#define GT_HDIM "\x04"                    /* o with a stroke: half-diminished */
+
+/* gtext(x, y, &FONT_B, "F\x01m7", colour) -> the x after it; gtext_w the width it takes */
+
+```
+
+```text
+File created successfully at: /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/firmware/theory/gtext.h (file state is current in your context — no need to Read it back)
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 10:36:24Z)**_
+
+<tool-use data-tool-type="write" data-tool-name="Write"><details>
+<summary>Tool use: **Write**</summary>
+
+```c
+/* SPDX-License-Identifier: GPL-3.0-or-later */
+/* gtext: see gtext.h. */
+#include "gtext.h"
+
+typedef struct {
+    uint8_t w, h, top;                    /* size, and rows down from the top of a 16 px line */
+    uint8_t rows[11];                     /* bit (w-1-x) of row y lit */
+} gt_glyph_t;
+
+static const gt_glyph_t GT_GLYPHS[4] = {
+    /* sharp: two upright strokes, two rising bars */
+    { 7, 11, 2, { 0x14, 0x14, 0x17, 0x7C, 0x74, 0x14, 0x17, 0x7C, 0x74, 0x14, 0x14 } },
+    /* flat: a stem and a bowl below */
+    { 5, 11, 2, { 0x10, 0x10, 0x10, 0x10, 0x16, 0x19, 0x11, 0x11, 0x12, 0x14, 0x18 } },
+    /* degree sign */
+    { 5, 5, 2, { 0x0E, 0x11, 0x11, 0x11, 0x0E } },
+    /* o with a stroke */
+    { 6, 6, 2, { 0x0D, 0x12, 0x15, 0x19, 0x12, 0x2C } },
+};
+
+static int gt_scale(const felucca_font_t *f) { return f->h >= 24u ? 2 : 1; }
+
+static int32_t gt_glyph(int32_t x, int32_t y, const felucca_font_t *f, int g, uint16_t c)
+{
+    const gt_glyph_t *d = &GT_GLYPHS[g];
+    int s = gt_scale(f), r, b, i, j;
+    int32_t y0 = y + (int32_t)d->top * s + (f->h >= 24u ? 1 : (f->h < 15u ? -2 : 0));
+    for (r = 0; r < d->h; r++)
+        for (b = 0; b < d->w; b++)
+            if (d->rows[r] >> (d->w - 1 - b) & 1u)
+                for (j = 0; j < s; j++)
+                    for (i = 0; i < s; i++) cv_pset(x + b * s + i, y0 + r * s + j, c);
+    return x + (d->w + 1) * s;
+}
+
+static int gt_marker(char ch) { return ch >= 1 && ch <= 4 ? ch - 1 : -1; }
+
+static int32_t gtext(int32_t x, int32_t y, const felucca_font_t *f, const char *s, uint16_t c)
+{
+    char run[48];
+    uint32_t n = 0;
+    for (;; s++) {
+        int g = gt_marker(*s);
+        if (g >= 0 || !*s || n == sizeof run - 1u) {
+            if (n) {
+                run[n] = 0;
+                x = cv_text(x, y, f, run, c);
+                n = 0;
+            }
+            if (!*s) return x;
+            if (g >= 0) x = gt_glyph(x, y, f, g, c);
+            else run[n++] = *s;
+        } else
+            run[n++] = *s;
+    }
+}
+
+static int32_t gtext_w(const felucca_font_t *f, const char *s)
+{
+    char run[48];
+    uint32_t n = 0;
+    int32_t w = 0;
+    for (;; s++) {
+        int g = gt_marker(*s);
+        if (g >= 0 || !*s || n == sizeof run - 1u) {
+            if (n) {
+                run[n] = 0;
+                w += text_w(f, run);
+                n = 0;
+            }
+            if (!*s) return w;
+            if (g >= 0) w += (GT_GLYPHS[g].w + 1) * gt_scale(f);
+            else run[n++] = *s;
+        } else
+            run[n++] = *s;
+    }
+}
+
+/* the same text in ASCII (# b o /o), for the screen reader's words and the simulator's checks */
+static void gt_ascii(const char *s, char *out, uint32_t max)
+{
+    static const char *const SUB[4] = { "#", "b", "o", "/o" };
+    uint32_t n = 0;
+    for (; *s && n + 3u < max; s++) {
+        int g = gt_marker(*s);
+        const char *p = g >= 0 ? SUB[g] : 0;
+        if (p) while (*p) out[n++] = *p++;
+        else out[n++] = *s;
+    }
+    out[n] = 0;
+}
+
+```
+
+```text
+File created successfully at: /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/firmware/theory/gtext.c (file state is current in your context — no need to Read it back)
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 10:36:32Z)**_
+
+Next: `app.h`, `fm1.toml`, `words.tsv`, `.gitignore`, and `LICENSE`.
+
+_**Agent (claude-opus-5-5 2026-11-18 10:36:41Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Copy the licence and write the ignore file, build config and screen reader words
+
+```bash
+cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/firmware/theory && cp ../morse/LICENSE LICENSE && head -3 LICENSE && printf 'build/\nweb/words/\n' > .gitignore && cat > fm1.toml <<'EOF'
+# THEORY's build settings (fm1-base tools/build.py)
+name = "THEORY"
+title = "THEORY"
+id_prefix = "FM-1_49"          # package identity: dev FM-1_4900, release 0.1 FM-1_49000100 (free in the Hub's catalog, 2026-11-18)
+usb_manufacturer = "fm1-base"
+usb_product = "THEORY FM-1"
+o2 = []
+include = ["../common"]        # ledfx (firmware/common, MIT)
+words = "words.tsv"
+font_full = ["M"]              # lower case in the 24 px font: chord names (m, b, dim) in the footer
+ble = false                    # USB only for now
+tagline = "a pocket music theory trainer"
+repo = "https://github.com/daviddwlee84/M-VAVE_FM-1"
+site = "https://daviddwlee84.github.io/M-VAVE_FM-1/dev/theory/"
+licence = "GPL-3.0-or-later"
+credits = "Built on fm1-base by Charles Vestal. The voice follows firmware/common/chime's two-operator FM. Spellings checked against music21 (tests only)."
+author = "daviddwlee84"
+description = "A pocket music theory reference and trainer. WHEEL: the circle of fifths with the key's chords marked; turn to change key and mode, the keys light the scale; play a chord and it is named with its Roman numeral in the key (secondary dominants, borrowed chords, inversions); or let the white keys play the key's own chords, voiced to move as little as possible. Every key spelled the way a score spells it."
+tags = ["utility"]
+EOF
+cat > words.tsv <<'EOF'
+# SPDX-License-Identifier: GPL-3.0-or-later
+# THEORY's words for a screen reader (fm1-reader): the text on the screen <TAB> what to say.
+# url: https://daviddwlee84.github.io/M-VAVE_FM-1/dev/theory/words/
+THEORY	theory
+WHEEL	wheel
+NOTES	notes
+CHORDS	chords
+LETTERS	letters
+C IS I	C is one
+ROMAN	roman numerals
+NASHVILLE	Nashville numbers
+TRIADS	triads
+SEVENTHS	sevenths
+HARM. MINOR	harmonic minor
+MEL. MINOR	melodic minor
+INV 1	first inversion
+INV 2	second inversion
+INV 3	third inversion
+NO 5	no fifth
+EOF
+grep -n "url" ../conductor/words.tsv ../morse/words.tsv | head
+```
+
+```text
+                    GNU GENERAL PUBLIC LICENSE
+                       Version 3, 29 June 2007
+
+../morse/words.tsv:3:# url: https://raw.githubusercontent.com/daviddwlee84/fm1-morse/main/web/words/
+../conductor/words.tsv:3:# url: https://daviddwlee84.github.io/M-VAVE_FM-1/agentic/conductor/
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 10:36:49Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Point the words URL at the theory docs page
+
+`sed -i '' 's#^\# url: .*#\# url: https://daviddwlee84.github.io/M-VAVE_FM-1/dev/theory/#' words.tsv && sed -n 3p words.tsv`
+
+```text
+# url: https://daviddwlee84.github.io/M-VAVE_FM-1/dev/theory/
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 10:37:00Z)**_
+
+<tool-use data-tool-type="write" data-tool-name="Write"><details>
+<summary>Tool use: **Write**</summary>
+
+```c
+/* SPDX-License-Identifier: GPL-3.0-or-later */
+/* THEORY: the FM-1 as a pocket music theory reference and trainer (design: docs/dev/theory.md in
+ * github.com/daviddwlee84/M-VAVE_FM-1). v0.1 is the WHEEL: the circle of fifths with the key's chords marked; play
+ * a chord and it is named, with its Roman numeral in the key; or let the white keys play the key's own chords.
+ * Built on fm1-base (MPL-2.0, its headers). This app is GPL-3.0-or-later; ../common (ledfx) is MIT. */
+#pragma once
+#include <stdint.h>
+#include "plat.h"
+
+#define APP_NAME "THEORY"
+#define APP_SPLASH_RGB RGB(120, 200, 255)
+#define APP_PALETTE 2                    /* cyan */
+#define APP_BLOCK 256u                   /* frames per audio block: 5.8 ms at 44.1 kHz */
+#define APP_TOUCH                        /* velocity from the keys (lib/touch.h): soft and loud chords */
+
+/* the settings, one record (app.c rec_t), at 0xD8000: a sector pair no firmware on this unit has written
+ * (docs/hardware/flash-map.md), below Morse's 0xDA000 and away from the 0xFC000 settings sector SLOOP, Agent Deck
+ * and CTL-1 share. The panel calibration is the platform's */
+enum { OBJ_PANEL, OBJ_THEORY, OBJ_NOBJ };
+#define APP_STORE_MAP {0xDC000u, 0xD8000u}
+
+void app_init(void);
+void app_render(int32_t *lr, uint32_t n, uint32_t master_q12);
+void app_panic(void);
+void app_ui_init(void);
+void app_frame(void);
+void app_input_only(void);
+void app_say(const char *a, const char *b);
+
+/* host simulator: checks (tonic, mode, keymode, voices, lit_keys, ...), commands (expect_text) and the failures of
+ * those commands */
+#define APP_HOST_EXPECT
+int app_expect(const char *what, int *got);
+#define APP_HOST_CMD
+int app_host_cmd(const char *cmd, const char *a, const char *b, const char *c, const char *d);
+#define APP_HOST_FAILS
+int app_host_fails(void);
+
+```
+
+```text
+File created successfully at: /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/firmware/theory/app.h (file state is current in your context — no need to Read it back)
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 10:38:16Z)**_
+
+接著是 `app.c`：WHEEL 頁的畫面、輸入、LED、存檔，以及模擬器測試用的 hook。
+
+_**Agent (claude-opus-5-5 2026-11-18 10:39:47Z)**_
+
+<tool-use data-tool-type="write" data-tool-name="Write"><details>
+<summary>Tool use: **Write**</summary>
+
+```c
+/* SPDX-License-Identifier: GPL-3.0-or-later */
+/* THEORY v0.1: the WHEEL page (see app.h). The theory is theory.c, the voice synth.c, the music signs gtext.c.
+ * Part of fm1-base's unity build, after the platform: gfx.c and announce.c are in scope. */
+#include "fastmath.h"
+#include "gtext.h"
+#define TH_GLYPH_SHARP GT_SHARP
+#define TH_GLYPH_FLAT GT_FLAT
+#define TH_GLYPH_DIM GT_DIM
+#define TH_GLYPH_HDIM GT_HDIM
+#include "theory.c"
+#include "synth.c"
+#include "gtext.c"
+#include "ledfx.c"
+
+#define FW_MAJOR 0
+#define FW_MINOR 1
+
+/* ---------------------------------------------------------------- settings --- */
+#define REC_MAGIC 0x31304854u            /* "TH01" */
+#define REC_VER 1u
+
+static const uint8_t MODES[] = { TH_MAJOR, TH_MINOR, TH_HARMONIC, TH_MELODIC, TH_DORIAN, TH_PHRYGIAN, TH_LYDIAN,
+                                 TH_MIXOLYDIAN, TH_LOCRIAN };
+static const char *const MODE_NAME[] = { "major", "minor", "harm. minor", "mel. minor", "dorian", "phrygian",
+                                         "lydian", "mixolydian", "locrian" };
+#define NMODES 9
+enum { KM_NOTES, KM_CHORDS };
+enum { LB_ROMAN, LB_NASH, LB_N };
+enum { MAP_LETTER, MAP_C, MAP_N };       /* chord keys: a white key's letter is the chord's root, or C is I */
+
+typedef struct {
+    uint32_t magic;
+    uint16_t ver, size;
+    int8_t tonic;                        /* on the line of fifths (theory.h) */
+    uint8_t mode;                        /* MODES[] */
+    uint8_t sevenths;                    /* the key's chords as sevenths */
+    uint8_t labels;                      /* LB_*: how the chords are numbered */
+    uint8_t mapping;                     /* MAP_* */
+    uint8_t keymode;                     /* KM_* */
+    int8_t oct;                          /* -2 .. +2: where the keys sound */
+    uint8_t rsv[5];
+} rec_t;
+static rec_t rec;
+static uint32_t saves;                   /* records written since boot */
+static uint32_t dirty_at;                /* a setting changed at (0: saved) */
+
+static void defaults(void)
+{
+    rec.tonic = 0;
+    rec.mode = 0;
+    rec.sevenths = 0;
+    rec.labels = LB_ROMAN;
+    rec.mapping = MAP_LETTER;
+    rec.keymode = KM_NOTES;
+    rec.oct = 0;
+}
+
+static int rec_valid(const rec_t *r)
+{
+    return r->magic == REC_MAGIC && r->ver == REC_VER && r->size == sizeof *r && r->tonic >= -9 && r->tonic <= 12
+           && r->mode < NMODES && r->sevenths <= 1u && r->labels < LB_N && r->mapping < MAP_N && r->keymode <= 1u
+           && r->oct >= -2 && r->oct <= 2;
+}
+
+static void rec_save(void)
+{
+    rec.magic = REC_MAGIC;
+    rec.ver = REC_VER;
+    rec.size = (uint16_t)sizeof rec;
+    if (plat_store_save(OBJ_THEORY, &rec, sizeof rec) == 0)
+        saves++;
+    dirty_at = 0;
+}
+
+static th_key_t cur_key(void)
+{
+    th_key_t k;
+    k.tonic = rec.tonic;
+    k.scale = MODES[rec.mode];
+    return k;
+}
+
+/* --------------------------------------------------------------------- UI --- */
+#define R_HEAD 1u
+#define R_MAIN 2u
+#define R_FOOT 4u
+#define R_ALL 7u
+#define MAIN_H 176
+#define KEY_MIDI(k) (53 + (int)(k))      /* key 0 is F3 */
+
+enum { SH_NONE, SH_NOTE, SH_INTERVAL, SH_CHORD, SH_UNKNOWN };
+
+static struct {
+    uint32_t keys, btn;
+    uint8_t redraw;
+    uint8_t knotes[NKEYS][TH_TONES_MAX + 1];  /* the notes each held key started */
+    uint8_t kn[NKEYS];
+    uint8_t prev[TH_TONES_MAX], nprev;   /* CHORDS: the last voicing, for the next to move least from */
+    uint8_t held_changed, best_n;        /* NOTES: the held keys changed; most notes held in this gesture */
+    uint8_t sh;                          /* SH_*: what the footer shows */
+    th_ident_t id;
+    uint8_t notes[12], nnotes;           /* the notes behind it (MIDI) */
+    char toast[2][24];
+    uint32_t toast_until;
+    uint32_t lit, mid, glow;             /* the keys' lights, last shown (the simulator's checks) */
+    int16_t ox[12], oy[12], ix[12], iy[12];  /* label centres on the circle, outer and inner ring */
+    int16_t rx[96], ry[96];              /* the ring between them */
+} ui;
+static int host_fails;
+
+static void zero(void *p, uint32_t n)
+{
+    uint8_t *b = (uint8_t *)p;
+    while (n--) *b++ = 0;
+}
+
+static void tcat(char *d, const char *s)
+{
+    while (*d) d++;
+    while (*s) *d++ = *s++;
+    *d = 0;
+}
+
+static void tint(char *d, int v)
+{
+    char t[12];
+    th_put_int(t, 0, v);
+    tcat(d, t);
+}
+
+static void key_text(char *t)            /* "D major" */
+{
+    th_name(rec.tonic, t);
+    tcat(t, " ");
+    tcat(t, MODE_NAME[rec.mode]);
+}
+
+static void sig_text(char *t)            /* "2#", "3b", "0" */
+{
+    int8_t s[7];
+    int c = th_keysig(rec.tonic, MODES[rec.mode], s);
+    t[0] = 0;
+    tint(t, c < 0 ? -c : c);
+    if (c) tcat(t, c > 0 ? GT_SHARP : GT_FLAT);
+}
+
+static void numeral_text(th_chord_t c, char *t)
+{
+    th_key_t k = cur_key();
+    if (rec.labels == LB_NASH) th_nashville_name(k, c, t);
+    else th_roman_name(k, c, t);
+}
+
+static void toast(const char *a, const char *b)
+{
+    uint32_t i;
+    for (i = 0; i < 23u && a[i]; i++) ui.toast[0][i] = a[i];
+    ui.toast[0][i] = 0;
+    for (i = 0; i < 23u && b[i]; i++) ui.toast[1][i] = b[i];
+    ui.toast[1][i] = 0;
+    ui.toast_until = plat_ms() + 1500u;
+    ui.redraw |= R_FOOT;
+}
+
+void app_say(const char *a, const char *b)
+{
+    char t[64], s[64];
+    toast(a ? a : "", b ? b : "");
+    if (ann_on()) {                      /* and to a screen reader (announce.c, fm1-reader) */
+        gt_ascii(ui.toast[0], t, sizeof t);
+        if (ui.toast[1][0]) {
+            tcat(t, " ");
+            gt_ascii(ui.toast[1], s, sizeof s);
+            tcat(t, s);
+        }
+        ann_say(t, 0, ANN_NOW);
+    }
+}
+
+static void changed(uint8_t r)           /* a setting changed: redraw, and save once the knobs rest */
+{
+    ui.redraw |= r;
+    dirty_at = plat_ms();
+    if (!dirty_at) dirty_at = 1u;
+}
+
+/* -------------------------------------------------------------- the notes --- */
+static void midi_out(int on, int note, int vel)
+{
+    if (note < 0 || note > 127) return;
+    if (on) plat_midi_send(0x09u | 0x90u << 8 | (uint32_t)note << 16 | (uint32_t)vel << 24, TO_USB);
+    else plat_midi_send(0x08u | 0x80u << 8 | (uint32_t)note << 16, TO_USB);
+}
+
+static void key_release(uint32_t k)
+{
+    uint32_t i;
+    for (i = 0; i < ui.kn[k]; i++) {
+        synth_note_off(ui.knotes[k][i]);
+        midi_out(0, ui.knotes[k][i], 0);
+    }
+    ui.kn[k] = 0;
+}
+
+static void release_all(void)
+{
+    uint32_t k;
+    for (k = 0; k < NKEYS; k++) key_release(k);
+    synth_all_off();
+    ui.nprev = 0;
+}
+
+static int white_letter(int pc)          /* C D E F G A B = 0..6; -1 a black key */
+{
+    static const int8_t L[12] = { 0, -1, 1, -1, 2, 3, -1, 4, -1, 5, -1, 6 };
+    return L[th_mod(pc, 12)];
+}
+
+static void show_chord(th_chord_t c, const uint8_t *notes, int n)
+{
+    int i;
+    ui.sh = SH_CHORD;
+    ui.id.c = c;
+    ui.id.inv = 0;
+    ui.id.no5 = 0;
+    ui.id.inkey = 1;
+    ui.nnotes = (uint8_t)(n > 12 ? 12 : n);
+    for (i = 0; i < ui.nnotes; i++) ui.notes[i] = notes[i];
+    ui.redraw |= R_MAIN | R_FOOT;
+}
+
+/* CHORDS: a white key plays the key's chord on its degree, voiced near the last one, with the root below */
+static void chord_key(uint32_t k, int vel)
+{
+    th_key_t key = cur_key();
+    th_chord_t c;
+    uint8_t v[TH_TONES_MAX];
+    int letter = white_letter(KEY_MIDI(k) % 12), degree, n, lo = 55 + 12 * rec.oct, hi = 76 + 12 * rec.oct, base, i;
+    if (letter < 0) return;              /* black keys: nothing yet */
+    degree = rec.mapping == MAP_C ? letter : th_mod(letter - th_letter(rec.tonic), 7);
+    if (!th_diatonic(key, degree, rec.sevenths, &c)) return;
+    n = th_voice_near(ui.prev, ui.nprev, c, lo, hi, v);
+    if (!n) return;
+    base = 41 + 12 * rec.oct;            /* the bass: the root between F2 and E3 */
+    ui.knotes[k][0] = (uint8_t)(base + th_mod(th_pc(c.root) - base, 12));
+    for (i = 0; i < n; i++) {
+        ui.knotes[k][i + 1] = v[i];
+        ui.prev[i] = v[i];
+    }
+    ui.nprev = (uint8_t)n;
+    ui.kn[k] = (uint8_t)(n + 1);
+    for (i = 0; i <= n; i++) {
+        synth_note_on(ui.knotes[k][i], vel);
+        midi_out(1, ui.knotes[k][i], vel);
+    }
+    show_chord(c, ui.knotes[k], n + 1);
+}
+
+/* NOTES: name what is held. While a chord is let go, the fullest one held stays on the screen */
+static void identify_held(void)
+{
+    th_key_t key = cur_key();
+    uint8_t m[NKEYS];
+    int n = 0, i;
+    uint32_t k;
+    for (k = 0; k < NKEYS; k++)
+        if (ui.keys >> k & 1u) m[n++] = (uint8_t)KEY_MIDI(k);
+    if (n == 0 || n < ui.best_n) return;
+    ui.best_n = (uint8_t)n;
+    ui.nnotes = (uint8_t)(n > 12 ? 12 : n);
+    for (i = 0; i < ui.nnotes; i++) ui.notes[i] = m[i];
+    if (n == 1) ui.sh = SH_NOTE;
+    else if (th_identify(m, n, key, &ui.id)) ui.sh = SH_CHORD;
+    else ui.sh = n == 2 ? SH_INTERVAL : SH_UNKNOWN;
+    ui.redraw |= R_MAIN | R_FOOT;
+}
+
+/* ----------------------------------------------------------------- input --- */
+static void set_tonic(int f)
+{
+    f = th_key_for_pc(th_pc(f), MODES[rec.mode]);
+    if (f == rec.tonic) return;
+    rec.tonic = (int8_t)f;
+    ui.nprev = 0;
+    changed(R_ALL);
+}
+
+static void input(void)
+{
+    uint32_t keys, btn = plat_buttons(), k, now = plat_ms();
+    int32_t e;
+    char t[32];
+    touch_poll();
+    keys = touch_keys();
+    for (k = 0; k < NKEYS; k++) {
+        uint32_t bit = 1u << k;
+        int vel;
+        if ((keys & bit) && !(ui.keys & bit)) {
+            if (btn >> B_SEL & 1u) {     /* SEL held: this note becomes the tonic */
+                set_tonic(th_spell_pc(KEY_MIDI(k) % 12, 0));
+                key_text(t);
+                app_say("KEY", t);
+                continue;
+            }
+            vel = touch_vel(k);
+            if (!ui.keys) ui.best_n = 0; /* a new gesture */
+            if (rec.keymode == KM_CHORDS) chord_key(k, vel);
+            else {
+                int note = KEY_MIDI(k) + 12 * rec.oct;
+                ui.knotes[k][0] = (uint8_t)note;
+                ui.kn[k] = 1;
+                synth_note_on(note, vel);
+                midi_out(1, note, vel);
+                ui.held_changed = 1;
+            }
+        } else if (!(keys & bit) && (ui.keys & bit)) {
+            key_release(k);
+            if (rec.keymode == KM_NOTES) ui.held_changed = 1;
+        }
+    }
+    for (k = 0; k < NB; k++) {
+        uint32_t bit = 1u << k;
+        if (!(btn & bit) || (ui.btn & bit)) continue;
+        if (k == B_PLAY) {
+            release_all();
+            rec.keymode = (uint8_t)!rec.keymode;
+            app_say("KEYS", rec.keymode ? "CHORDS" : "NOTES");
+            changed(R_ALL);
+        } else if (k == B_OCTDN || k == B_OCTUP) {
+            int o = clamp(rec.oct + (k == B_OCTUP ? 1 : -1), -2, 2);
+            if (o != rec.oct) {
+                rec.oct = (int8_t)o;
+                ui.nprev = 0;
+                t[0] = 0;
+                tcat(t, o < 0 ? "-" : "+");
+                tint(t, o < 0 ? -o : o);
+                app_say("OCTAVE", t);
+                changed(R_HEAD);
+            }
+        }
+    }
+    if ((e = plat_enc(EN_SELECT)) != 0) {    /* around the circle */
+        set_tonic(rec.tonic + e);
+        key_text(t);
+        app_say("KEY", t);
+    }
+    if ((e = plat_enc(EN_K1)) != 0) {        /* the mode, the tonic kept (respelled if it must be) */
+        rec.mode = (uint8_t)th_mod(rec.mode + e, NMODES);
+        rec.tonic = (int8_t)th_key_for_pc(th_pc(rec.tonic), MODES[rec.mode]);
+        ui.nprev = 0;
+        app_say("MODE", MODE_NAME[rec.mode]);
+        changed(R_ALL);
+    }
+    if ((e = plat_enc(EN_K2)) != 0 && rec.sevenths != (e > 0)) {
+        rec.sevenths = (uint8_t)(e > 0);
+        app_say("CHORDS", rec.sevenths ? "SEVENTHS" : "TRIADS");
+        changed(R_MAIN | R_FOOT);
+    }
+    if ((e = plat_enc(EN_K3)) != 0) {
+        rec.labels = (uint8_t)th_mod(rec.labels + e, LB_N);
+        app_say("NUMBERS", rec.labels == LB_NASH ? "NASHVILLE" : "ROMAN");
+        changed(R_MAIN | R_FOOT);
+    }
+    if ((e = plat_enc(EN_K4)) != 0) {
+        rec.mapping = (uint8_t)th_mod(rec.mapping + e, MAP_N);
+        app_say("CHORD KEYS", rec.mapping == MAP_C ? "C IS I" : "LETTERS");
+        changed(R_FOOT);
+    }
+    (void)plat_enc(EN_ALGO);             /* not used yet: their turns thrown away */
+    (void)plat_enc(EN_PRESET);
+    ui.keys = keys;
+    ui.btn = btn;
+    (void)now;
+}
+
+void app_input_only(void) { input(); }
+
+/* ---------------------------------------------------------------- lights --- */
+static void lights(uint32_t now)
+{
+    ledfx_t kb = { 0, 0, 0 }, bb = { 0, 0, 0 };
+    th_key_t key = cur_key();
+    int mask = th_key_mask(key), tpc = th_pc(rec.tonic), k;
+    for (k = 0; k < NB; k++)
+        if (k != B_PLAY) ledfx_set(&bb, (uint32_t)k, FX_GLOW, now);
+    if (rec.oct < 0) ledfx_set(&bb, B_OCTDN, FX_LIT, now);
+    if (rec.oct > 0) ledfx_set(&bb, B_OCTUP, FX_LIT, now);
+    for (k = 0; k < NKEYS; k++) {
+        int pc = KEY_MIDI(k) % 12, fx = FX_OFF;
+        if (rec.keymode == KM_CHORDS) {
+            int letter = white_letter(pc);
+            if (letter >= 0) {
+                int degree = rec.mapping == MAP_C ? letter : th_mod(letter - th_letter(rec.tonic), 7);
+                fx = degree == 0 ? FX_MID : FX_GLOW;
+            }
+        } else if (mask >> pc & 1)
+            fx = pc == tpc ? FX_MID : FX_GLOW;
+        if (ui.keys >> k & 1u) fx = FX_LIT;
+        ledfx_set(&kb, (uint32_t)k, fx, now);
+    }
+    if (rec.keymode == KM_CHORDS) bb.lit |= LED_PLAY_GREEN;
+    ui.lit = kb.lit;
+    ui.mid = kb.mid;
+    ui.glow = kb.dim;
+    ledfx_show(&bb, &kb);
+}
+
+/* ---------------------------------------------------------------- screen --- */
+#define WX 86                            /* the circle's centre in the main area */
+#define WY 88
+#define R_OUT 68
+#define R_IN 42
+#define R_RING 55
+
+static void layout(void)
+{
+    int i;
+    for (i = 0; i < 12; i++) {
+        float a = (float)i * (6.2831853f / 12.0f), s = fm_sinf(a), c = fm_cosf(a);
+        ui.ox[i] = (int16_t)(WX + (int)((float)R_OUT * s + (s < 0.0f ? -0.5f : 0.5f)));
+        ui.oy[i] = (int16_t)(WY - (int)((float)R_OUT * c + (c < 0.0f ? -0.5f : 0.5f)));
+        ui.ix[i] = (int16_t)(WX + (int)((float)R_IN * s + (s < 0.0f ? -0.5f : 0.5f)));
+        ui.iy[i] = (int16_t)(WY - (int)((float)R_IN * c + (c < 0.0f ? -0.5f : 0.5f)));
+    }
+    for (i = 0; i < 96; i++) {
+        float a = (float)i * (6.2831853f / 96.0f);
+        ui.rx[i] = (int16_t)(WX + (int)((float)R_RING * fm_sinf(a)));
+        ui.ry[i] = (int16_t)(WY - (int)((float)R_RING * fm_cosf(a)));
+    }
+}
+
+static void ring(int32_t x, int32_t y, int32_t r, int32_t oy, uint16_t c)  /* a thin circle around a label */
+{
+    int i;
+    for (i = 0; i < 48; i++) {
+        float a = (float)i * (6.2831853f / 48.0f);
+        cv_pset(x + (int32_t)((float)r * fm_sinf(a)), y - oy - (int32_t)((float)r * fm_cosf(a)), c);
+    }
+}
+
+static int family(int q)                 /* 1 major, 2 minor (where a chord sits on the circle), 0 neither */
+{
+    if (q == TH_MAJ || q == TH_7 || q == TH_MAJ7 || q == TH_6 || q == TH_ADD9 || q == TH_9 || q == TH_MAJ9) return 1;
+    if (q == TH_MIN || q == TH_M7 || q == TH_M6 || q == TH_M9 || q == TH_MADD9 || q == TH_MMAJ7) return 2;
+    return 0;
+}
+
+static void label(int32_t x, int32_t y, int32_t oy, const felucca_font_t *f, const char *s, int mark, int inner)
+{
+    int32_t w = gtext_w(f, s), tx = x - w / 2, ty = y - oy - (int32_t)f->h / 2;
+    uint16_t c = mark == 2 ? C_BLACK : mark == 1 ? C_HI : inner ? C_DIM : C_GRAY;
+    if (mark == 2) cv_rect(tx - 3, ty, w + 6, (int32_t)f->h, C_HI);
+    gtext(tx, ty, f, s, c);
+}
+
+static void draw_main_at(int32_t oy)
+{
+    th_key_t key = cur_key();
+    uint8_t out[12], in[12];
+    int8_t sig[7];
+    char t[TH_ROMAN_MAX], u[TH_CHORD_MAX];
+    int i, d, c, n;
+    zero(out, sizeof out);
+    zero(in, sizeof in);
+    for (d = 0; d < 7; d++) {            /* where the key's own major and minor triads sit */
+        th_chord_t ch;
+        int fam;
+        if (!th_diatonic(key, d, 0, &ch)) continue;
+        fam = family(ch.q);
+        if (fam == 1) out[th_circle_pos(ch.root)] = (uint8_t)(d == 0 ? 2 : out[th_circle_pos(ch.root)] ? out[th_circle_pos(ch.root)] : 1);
+        if (fam == 2) in[th_circle_pos(ch.root - 3)] = (uint8_t)(d == 0 ? 2 : in[th_circle_pos(ch.root - 3)] ? in[th_circle_pos(ch.root - 3)] : 1);
+    }
+    for (i = 0; i < 96; i++) cv_pset(ui.rx[i], ui.ry[i] - oy, C_LINE);
+    for (i = 0; i < 12; i++) {
+        th_name(th_circle_tonic(i, 0), t);
+        label(ui.ox[i], ui.oy[i], oy, &FONT_B, t, out[i], 0);
+        th_name(th_circle_tonic(i, 1), t);
+        t[0] = (char)(t[0] + 32);        /* minor keys in lower case */
+        label(ui.ix[i], ui.iy[i], oy, &FONT_XS, t, in[i], 1);
+    }
+    if (ui.sh == SH_CHORD) {             /* the chord just played, where it sits */
+        int fam = family(ui.id.c.q);
+        if (fam == 1) ring(ui.ox[th_circle_pos(ui.id.c.root)], ui.oy[th_circle_pos(ui.id.c.root)], 14, oy, C_WHITE);
+        if (fam == 2) ring(ui.ix[th_circle_pos(ui.id.c.root - 3)], ui.iy[th_circle_pos(ui.id.c.root - 3)], 12, oy, C_WHITE);
+    }
+    /* the centre: the key signature, its count and its letters */
+    c = th_keysig(rec.tonic, MODES[rec.mode], sig);
+    sig_text(t);
+    gtext(WX - gtext_w(&FONT_M, t) / 2, WY - 22 - oy, &FONT_M, t, C_WHITE);
+    n = c < 0 ? -c : c;
+    if (n > 7) n = 7;
+    for (i = 0; i < 2; i++) {
+        int j, a = i ? 4 : 0, b = i ? n : (n < 4 ? n : 4);
+        t[0] = 0;
+        for (j = a; j < b; j++) {
+            char one[2];
+            one[0] = "CDEFGAB"[th_letter(sig[j])];
+            one[1] = 0;
+            if (j > a) tcat(t, " ");
+            tcat(t, one);
+        }
+        if (t[0]) cv_text(WX - text_w(&FONT_T, t) / 2, WY + 6 + 12 * i - oy, &FONT_T, t, C_GRAY);
+    }
+    /* the key's chords, down the right */
+    for (d = 0; d < 7; d++) {
+        th_chord_t ch;
+        int32_t y = 3 + 25 * d - oy;
+        int played;
+        if (!th_diatonic(key, d, rec.sevenths, &ch)) continue;
+        played = ui.sh == SH_CHORD && ui.id.c.root == ch.root && ui.id.c.q == ch.q;
+        numeral_text(ch, t);
+        th_chord_t rootpos = ch;
+        rootpos.bass = rootpos.root;
+        th_chord_name(rootpos, u);
+        if (played) cv_rect(176, y, 64, 25, C_LINE);
+        gtext(180, y, &FONT_T, t, played ? C_WHITE : C_GRAY);
+        gtext(180, y + 10, &FONT_XS, u, played ? C_WHITE : C_HI);
+    }
+}
+
+static void draw_main(void)
+{
+    cv_begin(240, MAIN_H / 2, C_BLACK);
+    draw_main_at(0);
+    cv_blit(0, 32);
+    cv_begin(240, MAIN_H / 2, C_BLACK);
+    draw_main_at(MAIN_H / 2);
+    cv_blit(0, 32 + MAIN_H / 2);
+}
+
+static void draw_header(void)
+{
+    char t[40];
+    int32_t x;
+    cv_begin(240, 32, C_BLACK);
+    key_text(t);
+    gtext(8, 7, &FONT_B, t, C_WHITE);
+    x = 232;
+    t[0] = 0;
+    tcat(t, rec.keymode == KM_CHORDS ? "CHORDS" : "NOTES");
+    x -= text_w(&FONT_T, t);
+    cv_text(x, 10, &FONT_T, t, rec.keymode == KM_CHORDS ? C_HI : C_GRAY);
+    if (rec.oct) {
+        t[0] = 0;
+        tcat(t, rec.oct < 0 ? "OCT-" : "OCT+");
+        tint(t, rec.oct < 0 ? -rec.oct : rec.oct);
+        x -= 8 + text_w(&FONT_T, t);
+        cv_text(x, 10, &FONT_T, t, C_AMB);
+    }
+    cv_rect(0, 31, 240, 1, C_LINE);
+    cv_blit(0, 0);
+}
+
+/* the footer's two texts: the big one (a chord's name, a note) and the small one (its number, inversion) */
+static void footer_text(char *big, char *small)
+{
+    th_key_t key = cur_key();
+    char t[TH_ROMAN_MAX];
+    int i;
+    big[0] = small[0] = 0;
+    switch (ui.sh) {
+    case SH_NOTE: {
+        int f = th_spell_pc(ui.notes[0] % 12, rec.tonic);
+        th_note_name(ui.notes[0], rec.tonic, big);
+        th_degree_name(key, f, small);
+        break;
+    }
+    case SH_INTERVAL: {
+        int lo = ui.notes[0] < ui.notes[1] ? ui.notes[0] : ui.notes[1], hi = ui.notes[0] ^ ui.notes[1] ^ lo;
+        int f0 = th_spell_pc(lo % 12, rec.tonic), f1 = th_spell_pc(hi % 12, rec.tonic);
+        if (lo % 12 == hi % 12) tcat(big, "P8");
+        else th_interval_name(f1 - f0, big);
+        th_name(f0, t);
+        tcat(small, t);
+        tcat(small, " - ");
+        th_name(f1, t);
+        tcat(small, t);
+        break;
+    }
+    case SH_CHORD:
+        th_chord_name(ui.id.c, big);
+        numeral_text(ui.id.c, small);
+        if (ui.id.inv) {
+            tcat(small, " INV ");
+            tint(small, ui.id.inv);
+        }
+        if (ui.id.no5) tcat(small, " NO 5");
+        break;
+    case SH_UNKNOWN:
+        tcat(big, "?");
+        for (i = 0; i < ui.nnotes && i < 6; i++) {
+            th_name(th_spell_pc(ui.notes[i] % 12, rec.tonic), t);
+            if (i) tcat(small, " ");
+            tcat(small, t);
+        }
+        break;
+    default:
+        break;
+    }
+}
+
+static void draw_footer(void)
+{
+    char big[TH_CHORD_MAX], small[TH_CHORD_MAX + 16];
+    cv_begin(240, 32, C_BLACK);
+    cv_rect(0, 0, 240, 1, C_LINE);
+    if (plat_ms() < ui.toast_until) {
+        int32_t x = gtext(8, 9, &FONT_T, ui.toast[0], C_GRAY);
+        gtext(x + 8, 7, &FONT_B, ui.toast[1], C_HI);
+    } else {
+        footer_text(big, small);
+        if (big[0]) {
+            gtext(8, 3, &FONT_M, big, ui.id.inkey || ui.sh != SH_CHORD ? C_WHITE : C_AMB);
+            gtext(232 - gtext_w(&FONT_B, small), 8, &FONT_B, small, C_HI);
+        } else
+            cv_text(8, 10, &FONT_T, rec.keymode == KM_CHORDS ? "WHITE KEYS PLAY THE KEY'S CHORDS" : "PLAY A CHORD",
+                    C_DIM);
+    }
+    cv_blit(0, 208);
+}
+
+static void draw(void)
+{
+    uint8_t r = ui.redraw;
+    ui.redraw = 0;
+    if (r & R_HEAD) draw_header();
+    if (r & R_MAIN) draw_main();
+    if (r & R_FOOT) draw_footer();
+}
+
+/* a screen reader that has just started listening (or asks) hears the screen */
+static void speak(void)
+{
+    char t[96], k[40];
+    if (ann_on() && ann_where()) {
+        t[0] = 0;
+        tcat(t, APP_NAME ". ");
+        key_text(k);
+        gt_ascii(k, t + 8, sizeof t - 8);
+        tcat(t, ". ");
+        tcat(t, rec.keymode == KM_CHORDS ? "CHORDS" : "NOTES");
+        ann_say(t, 0, ANN_NOW);
+    }
+}
+
+/* ------------------------------------------------------------------ audio --- */
+static float gain_now;
+
+void app_render(int32_t *lr, uint32_t n, uint32_t master_q12)
+{
+    float gain = (float)master_q12 / 4096.0f * 8300000.0f;
+    gain_now += (gain - gain_now) * 0.5f;
+    synth_render(lr, n, gain_now);
+}
+
+void app_panic(void) { synth_stop(); }
+
+/* ------------------------------------------------------------ the contract --- */
+void app_init(void)
+{
+    /* everything from nothing: the host simulator's reboot runs this again over the old RAM */
+    zero(&ui, sizeof ui);
+    saves = 0;
+    dirty_at = 0;
+    if (plat_store_load(OBJ_THEORY, &rec, sizeof rec) != (int)sizeof rec || !rec_valid(&rec)) {
+        zero(&rec, sizeof rec);
+        defaults();
+    }
+    synth_init();
+    synth_stop();
+    layout();
+}
+
+void app_ui_init(void)
+{
+    touch_on(1);                         /* velocity from the keys */
+    lcd_fill(0, 0, 240, 240, C_BLACK);
+    ui.redraw = R_ALL;
+}
+
+void app_frame(void)
+{
+    static uint32_t last_toast;
+    uint32_t now = plat_ms();
+    input();
+    if (ui.held_changed) {
+        ui.held_changed = 0;
+        identify_held();
+    }
+    if ((ui.toast_until && now >= ui.toast_until) != last_toast) {
+        last_toast = ui.toast_until && now >= ui.toast_until;
+        ui.redraw |= R_FOOT;
+    }
+    if (dirty_at && (int32_t)(now - dirty_at) > 3000)   /* settings saved once the knobs rest */
+        rec_save();
+    lights(now);
+    speak();
+    ann_tick(now);
+    if (ui.redraw) draw();
+}
+
+/* --------------------------------------------------------- host simulator --- */
+#ifdef PLAT_HOST
+int app_expect(const char *what, int *got)
+{
+    if (!strcmp(what, "tonic")) *got = rec.tonic;
+    else if (!strcmp(what, "mode")) *got = rec.mode;
+    else if (!strcmp(what, "keymode")) *got = rec.keymode;
+    else if (!strcmp(what, "sevenths")) *got = rec.sevenths;
+    else if (!strcmp(what, "labels")) *got = rec.labels;
+    else if (!strcmp(what, "mapping")) *got = rec.mapping;
+    else if (!strcmp(what, "oct")) *got = rec.oct;
+    else if (!strcmp(what, "voices")) *got = synth_active();
+    else if (!strcmp(what, "lit_keys")) *got = (int)ui.lit;
+    else if (!strcmp(what, "mid_keys")) *got = (int)ui.mid;
+    else if (!strcmp(what, "glow_keys")) *got = (int)ui.glow;
+    else if (!strcmp(what, "shown")) *got = ui.sh;
+    else if (!strcmp(what, "saves")) *got = (int)saves;
+    else return 0;
+    return 1;
+}
+
+static void host_text(const char *a, char *out, uint32_t max)   /* a script word: _ is a space */
+{
+    uint32_t n = 0;
+    for (; a && *a && n + 1u < max; a++) out[n++] = *a == '_' ? ' ' : *a;
+    out[n] = 0;
+}
+
+int app_host_cmd(const char *cmd, const char *a, const char *b, const char *c, const char *d)
+{
+    char want[96], raw[96], got[96], small[96];
+    (void)c, (void)d;
+    if (strcmp(cmd, "expect_text")) return 0;
+    /* expect_text key|chord|roman|nash|footer|rowN TEXT (_ a space): what the screen shows, signs as # b o /o */
+    host_text(b, want, sizeof want);
+    raw[0] = 0;
+    if (!strcmp(a, "key")) key_text(raw);
+    else if (!strcmp(a, "chord") && ui.sh == SH_CHORD) th_chord_name(ui.id.c, raw);
+    else if (!strcmp(a, "roman") && ui.sh == SH_CHORD) th_roman_name(cur_key(), ui.id.c, raw);
+    else if (!strcmp(a, "nash") && ui.sh == SH_CHORD) th_nashville_name(cur_key(), ui.id.c, raw);
+    else if (!strcmp(a, "footer")) {
+        footer_text(raw, small);
+        if (small[0]) {
+            tcat(raw, " ");
+            tcat(raw, small);
+        }
+    } else if (!strncmp(a, "row", 3)) {
+        th_chord_t ch;
+        if (th_diatonic(cur_key(), atoi(a + 3), rec.sevenths, &ch)) th_chord_name(ch, raw);
+    }
+    gt_ascii(raw, got, sizeof got);
+    if (strcmp(got, want)) {
+        printf("  FAIL expect_text %s: \"%s\", got \"%s\"\n", a, want, got);
+        host_fails++;
+    } else
+        printf("  ok text %s \"%s\"\n", a, want);
+    return 1;
+}
+
+int app_host_fails(void) { return host_fails; }
+#endif
+
+```
+
+```text
+File created successfully at: /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/firmware/theory/app.c (file state is current in your context — no need to Read it back)
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 10:39:56Z)**_
+
+先改掉幾處寫得不乾淨的地方，再寫模擬器的測試腳本。
+
+_**Agent (claude-opus-5-5 2026-11-18 10:40:04Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Tidy app.c and look up the fw-test recipe
+
+```bash
+python3 - <<'EOF'
+p='app.c'; s=open(p).read()
+def sub(old,new):
+    global s
+    assert old in s, old[:70]; s=s.replace(old,new,1)
+sub('''        fam = family(ch.q);
+        if (fam == 1) out[th_circle_pos(ch.root)] = (uint8_t)(d == 0 ? 2 : out[th_circle_pos(ch.root)] ? out[th_circle_pos(ch.root)] : 1);
+        if (fam == 2) in[th_circle_pos(ch.root - 3)] = (uint8_t)(d == 0 ? 2 : in[th_circle_pos(ch.root - 3)] ? in[th_circle_pos(ch.root - 3)] : 1);''',
+'''        fam = family(ch.q);
+        if (fam) {
+            uint8_t *m = fam == 1 ? &out[th_circle_pos(ch.root)] : &in[th_circle_pos(ch.root - 3)];
+            if (d == 0) *m = 2;          /* the tonic's chord */
+            else if (!*m) *m = 1;
+        }''')
+sub('''        if (!th_diatonic(key, d, rec.sevenths, &ch)) continue;
+        played = ui.sh == SH_CHORD && ui.id.c.root == ch.root && ui.id.c.q == ch.q;
+        numeral_text(ch, t);
+        th_chord_t rootpos = ch;
+        rootpos.bass = rootpos.root;
+        th_chord_name(rootpos, u);''',
+'''        if (!th_diatonic(key, d, rec.sevenths, &ch)) continue;
+        played = ui.sh == SH_CHORD && ui.id.c.root == ch.root && ui.id.c.q == ch.q;
+        numeral_text(ch, t);
+        th_chord_name(ch, u);''')
+sub('''    char t[96], k[40];
+    if (ann_on() && ann_where()) {
+        t[0] = 0;
+        tcat(t, APP_NAME ". ");
+        key_text(k);
+        gt_ascii(k, t + 8, sizeof t - 8);
+        tcat(t, ". ");''',
+'''    char t[96], k[40], a[48];
+    if (ann_on() && ann_where()) {
+        t[0] = 0;
+        tcat(t, APP_NAME ". ");
+        key_text(k);
+        gt_ascii(k, a, sizeof a);
+        tcat(t, a);
+        tcat(t, ". ");''')
+sub('''    uint32_t keys, btn = plat_buttons(), k, now = plat_ms();''','''    uint32_t keys, btn = plat_buttons(), k;''')
+sub('''    ui.keys = keys;
+    ui.btn = btn;
+    (void)now;
+}''','''    ui.keys = keys;
+    ui.btn = btn;
+}''')
+open(p,'w').write(s)
+EOF
+grep -n "fw-test" -A8 ../../Justfile | head -12
+```
+
+```text
+197:fw-test app="hello": fw-setup
+198-    #!/usr/bin/env bash
+199-    set -euo pipefail
+200-    uv run --locked --all-groups python "{{fm1_base}}/tools/build.py" "firmware/{{app}}" --host
+201-    bin=$(ls firmware/{{app}}/build/host/*_host)
+202-    cd "firmware/{{app}}" && "build/host/$(basename "$bin")" tests/basic.txt build/host
+203-    echo "screenshots and audio: firmware/{{app}}/build/host/"
+204-
+205-# One-time for device builds: JieLi toolchain and the pinned AC79 SDK into tools/ (about 1.2 GB).
+--
+313:morse-shots: (fw-test "morse")
+314-    #!/usr/bin/env bash
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 10:40:24Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Compute the expected LED bit masks
+
+```bash
+python3 -c "
+def mask(pcs): return sum(1<<k for k in range(27) if (53+k)%12 in pcs)
+C=[0,2,4,5,7,9,11]; D=[2,4,6,7,9,11,1]
+print('C mid', mask([0]), 'C glow', mask(set(C)-{0}))
+print('D mid', mask([2]), 'D glow', mask(set(D)-{2}))
+whites=[0,2,4,6,7,9,11,12,14,16,18,19,21,23,24,26]
+print('D letters mid (D keys)', sum(1<<k for k in whites if (53+k)%12==2), 'glow', sum(1<<k for k in whites if (53+k)%12!=2))
+"
+```
+
+```text
+C mid 524416 C glow 94722645
+D mid 2097664 D glow 110455126
+D letters mid (D keys) 2097664 glow 93149397
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 10:40:43Z)**_
+
+<tool-use data-tool-type="write" data-tool-name="Write"><details>
+<summary>Tool use: **Write**</summary>
+
+```txt
+# THEORY in the host simulator: just fw-test theory (screenshots and audio in firmware/theory/build/host/)
+# Keys: 0 is F3; C4 7, D4 9, Eb4 10, E4 11, F#4 13, G4 14, A4 16, C5 19. White keys w0 F3 .. w4 C4, w5 D4.
+wait 600
+shot boot.png
+expect tonic 0
+expect mode 0
+expect keymode 0
+expect shown 0
+expect_text key C_major
+# the scale lit: C mid, the other white keys glowing, the black ones dark
+expect mid_keys 524416
+expect glow_keys 94722645
+expect lit_keys 0
+
+# ---- NOTES: a chord named, sounding
+key 7 down
+key 11 down
+key 14 down
+wait 60
+expect_text chord C
+expect_text roman I
+expect_text footer C_I
+expect voices 3
+expect lit_keys 18560
+peakreset
+wav chord.wav
+wait 200
+wavstop
+expect peak_db_min -40
+shot chord.png
+key 7 up
+key 11 up
+key 14 up
+wait 400
+# let go: the chord stays on the screen
+expect_text footer C_I
+expect voices 0
+# an inversion, a secondary dominant, a borrowed chord
+key 11 down
+key 14 down
+key 19 down
+wait 60
+expect_text footer C/E_I_INV_1
+key 11 up
+key 14 up
+key 19 up
+wait 30
+key 9 down
+key 13 down
+key 16 down
+key 19 down
+wait 60
+expect_text chord D7
+expect_text roman V7/V
+shot secondary.png
+key 9 up
+key 13 up
+key 16 up
+key 19 up
+wait 30
+key 5 down
+key 9 down
+key 12 down
+wait 60
+expect_text footer Bb_bVII
+key 5 up
+key 9 up
+key 12 up
+wait 30
+# one note: its name and degree; two: the interval
+key 13 down
+wait 60
+expect_text footer F#4_#4
+key 13 up
+wait 30
+key 7 down
+key 11 down
+wait 60
+expect_text footer M3_C_-_E
+key 7 up
+key 11 up
+wait 30
+# Nashville numbers
+turn K3 1
+wait 60
+expect labels 1
+key 16 down
+key 19 down
+key 23 down
+wait 60
+expect_text footer Am_6m
+key 16 up
+key 19 up
+key 23 up
+turn K3 -1
+wait 60
+expect labels 0
+
+# ---- around the circle
+turn SELECT 2
+wait 60
+expect tonic 2
+expect_text key D_major
+expect_text row0 D
+expect_text row2 F#m
+expect_text row6 C#dim
+expect mid_keys 2097664
+expect glow_keys 110455126
+shot dmajor.png
+turn SELECT -9
+wait 60
+expect tonic -5
+expect_text key Db_major
+turn SELECT 3
+wait 60
+expect tonic -2
+expect_text key Bb_major
+turn SELECT 4
+wait 60
+expect tonic 2
+
+# ---- CHORDS: the white keys play the key's chords (letters: the key's letter is the chord's root)
+tap PLAY
+wait 60
+expect keymode 1
+expect mid_keys 2097664
+expect glow_keys 93149397
+key 7 down
+wait 60
+expect_text chord C#dim
+expect_text roman viio
+expect voices 4
+shot chords.png
+key 7 up
+wait 30
+key 9 down
+wait 60
+expect_text chord D
+key 9 up
+wait 30
+key w7 down
+wait 60
+expect_text chord G
+key w7 up
+wait 30
+# C is I
+turn K4 1
+wait 60
+expect mapping 1
+key 7 down
+wait 60
+expect_text chord D
+key 7 up
+wait 30
+key 16 down
+wait 60
+expect_text chord Bm
+key 16 up
+wait 30
+# black keys: nothing yet
+key 8 down
+wait 60
+expect voices <2
+key 8 up
+wait 30
+
+# ---- SEL and a key: that note's key
+press SEL
+key 10 down
+wait 60
+key 10 up
+release SEL
+wait 60
+expect tonic -3
+expect_text key Eb_major
+expect voices 0
+# the mode
+turn K1 1
+wait 60
+expect mode 1
+expect_text key Eb_minor
+expect_text row0 Ebm
+expect_text row2 Gb
+turn K1 3
+wait 60
+expect mode 4
+expect_text key Eb_dorian
+turn K1 -4
+wait 60
+expect mode 0
+# sevenths
+turn K2 1
+wait 60
+expect sevenths 1
+key 7 down
+wait 60
+expect_text chord Ebmaj7
+expect_text roman IM7
+expect voices 5
+key 7 up
+wait 30
+key w10 down
+wait 60
+expect_text chord Bb7
+key w10 up
+wait 30
+shot sevenths.png
+# the octave: notes still let go cleanly
+tap OCT+
+wait 30
+expect oct 1
+key 9 down
+wait 60
+key 9 up
+wait 400
+expect voices 0
+
+# ---- kept: saved once the knobs rest, read back after a restart
+wait 3200
+expect saves >0
+expect store_writes >0
+reboot
+wait 600
+expect tonic -3
+expect mode 0
+expect keymode 1
+expect sevenths 1
+expect mapping 1
+expect oct 1
+expect_text key Eb_major
+shot reboot.png
+
+```
+
+```text
+File created successfully at: /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/firmware/theory/tests/basic.txt (file state is current in your context — no need to Read it back)
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 10:40:48Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Build THEORY for the host simulator and run its test script
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1 && just fw-test theory 2>&1 | tail -60`
+
+```text
+  ok text chord "D7"
+  ok text roman "V7/V"
+  ok text footer "Bb bVII"
+  ok text footer "F#4 #4"
+  ok text footer "M3 C - E"
+  ok labels == 1
+  ok text footer "Am 6m"
+  ok labels == 0
+  ok tonic == 2
+  ok text key "D major"
+  ok text row0 "D"
+  ok text row2 "F#m"
+  ok text row6 "C#dim"
+  ok mid_keys == 2097664
+  ok glow_keys == 110455126
+FAIL expect tonic == -5, got 5
+  FAIL expect_text key: "Db major", got "B major"
+FAIL expect tonic == -2, got -4
+  FAIL expect_text key: "Bb major", got "Ab major"
+FAIL expect tonic == 2, got 0
+  ok keymode == 1
+FAIL expect mid_keys == 2097664, got 524416
+FAIL expect glow_keys == 93149397, got 94722645
+  FAIL expect_text chord: "C#dim", got "C"
+  FAIL expect_text roman: "viio", got "I"
+  ok voices == 4
+  FAIL expect_text chord: "D", got "Dm"
+  FAIL expect_text chord: "G", got "F"
+  ok mapping == 1
+  FAIL expect_text chord: "D", got "C"
+  FAIL expect_text chord: "Bm", got "Am"
+FAIL expect voices <2, got 6
+  ok tonic == -3
+  ok text key "Eb major"
+FAIL expect voices == 0, got 6
+  ok mode == 1
+  ok text key "Eb minor"
+  ok text row0 "Ebm"
+  ok text row2 "Gb"
+  ok mode == 4
+  ok text key "Eb dorian"
+  ok mode == 0
+  ok sevenths == 1
+  ok text chord "Ebmaj7"
+  ok text roman "IM7"
+  ok voices == 5
+  FAIL expect_text chord: "Bb7", got "Dm7b5"
+  ok oct == 1
+  ok voices == 0
+  ok saves == 1 (>0)
+  ok store_writes == 1 (>0)
+  ok tonic == -3
+  ok mode == 0
+  ok keymode == 1
+  ok sevenths == 1
+  ok mapping == 1
+  ok oct == 1
+  ok text key "Eb major"
+host: 10300 ms simulated, 190 blits, render 0.1% of real time (host CPU), EXPECTATIONS FAILED
+error: recipe `fw-test` failed with exit code 1
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 10:41:03Z)**_
+
+<think><details><summary>Thought Process</summary>
+測試腳本的錯誤是我造成的：SELECT 要轉的格數算錯，導致後面的和弦測試連帶失敗，另外兩個白鍵編號也寫錯了。我接下來會在檢查前多等一下，讓放開後仍在 release 的 voice 不被算進數量。
+
+</details></think>
+
+_**Agent (claude-opus-5-5 2026-11-18 10:41:07Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Fix the test's key counts and rerun
+
+```bash
+cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/firmware/theory && python3 - <<'EOF'
+p='tests/basic.txt'; s=open(p).read()
+def sub(old,new):
+    global s
+    assert old in s, old; s=s.replace(old,new,1)
+sub("turn SELECT -9\n","turn SELECT -7\n")
+sub("""key w7 down
+wait 60
+expect_text chord G
+key w7 up""","""key w8 down
+wait 60
+expect_text chord G
+key w8 up""")
+sub("""# black keys: nothing yet
+key 8 down
+wait 60
+expect voices <2
+key 8 up""","""# black keys: nothing yet (once the last chord's release has died away)
+wait 500
+expect voices 0
+key 8 down
+wait 60
+expect voices 0
+key 8 up""")
+sub("""release SEL
+wait 60
+expect tonic -3""","""release SEL
+wait 60
+expect voices 0
+expect tonic -3""")
+sub("""key w10 down
+wait 60
+expect_text chord Bb7
+key w10 up""","""key w8 down
+wait 60
+expect_text chord Bb7
+expect_text roman V7
+key w8 up""")
+open(p,'w').write(s)
+EOF
+cd ../.. && just fw-test theory 2>&1 | grep -E "FAIL|host:" | head -30
+```
+
+```text
+host: 10640 ms simulated, 182 blits, render 0.2% of real time (host CPU)
+[This command modified 1 file you've previously read: firmware/theory/tests/basic.txt. Call Read before editing.]
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 10:41:12Z)**_
+
+所有檢查都通過了。接著看截圖，確認五度圈、♯♭ glyph 和版面的實際樣子。
+
+_**Agent (claude-opus-5-5 2026-11-18 10:41:14Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Drop a duplicate check and list the screenshots
+
+```bash
+cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/firmware/theory && python3 - <<'EOF'
+p='tests/basic.txt'; s=open(p).read()
+old="""expect_text key Eb_major
+expect voices 0
+# the mode"""
+assert old in s; s=s.replace(old,"""expect_text key Eb_major
+# the mode""",1); open(p,'w').write(s)
+EOF
+ls build/host/*.png
+```
+
+```text
+build/host/boot.png
+build/host/chord.png
+build/host/chords.png
+build/host/dmajor.png
+build/host/reboot.png
+build/host/secondary.png
+build/host/sevenths.png
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 10:41:18Z)**_
+
+<tool-use data-tool-type="read" data-tool-name="Read"><details>
+<summary>Tool use: **Read**</summary>
+ `./firmware/theory/build/host/secondary.png`
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 10:41:18Z)**_
+
+<tool-use data-tool-type="read" data-tool-name="Read"><details>
+<summary>Tool use: **Read**</summary>
+ `./firmware/theory/build/host/sevenths.png`
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 10:41:32Z)**_
+
+<think><details><summary>Thought Process</summary>
+截圖整體正常，但右欄的級數因為用了 T 字型而沒有小寫，ii、vi 顯示成 II、VI；我會把 T 也加進 font_full 修正。
+
+</details></think>
+
+_**Agent (claude-opus-5-5 2026-11-18 10:41:35Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Give the 12 px font lower case and rerun the tests
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1 && grep -n "font_full" third_party/fm1-base/tools/build.py | head -5 && sed -i '' 's/^font_full = \["M"\] .*/font_full = ["T", "M"]         # lower case in the 12 px font (Roman numerals: ii, vi) and the 24 px one (chord names)/' firmware/theory/fm1.toml && grep font_full firmware/theory/fm1.toml && just fw-test theory 2>&1 | grep -E "FAIL|host:"`
+
+```text
+48:  font_full = ["L"]          font roles with lower case too (by default M and L have capitals and digits only)
+435:        env = {**os.environ, "FM1_FONT_FULL": " ".join(CONF.get("font_full", [])),
+font_full = ["T", "M"]         # lower case in the 12 px font (Roman numerals: ii, vi) and the 24 px one (chord names)
+host: 10640 ms simulated, 182 blits, render 0.1% of real time (host CPU)
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 10:41:38Z)**_
+
+<tool-use data-tool-type="read" data-tool-name="Read"><details>
+<summary>Tool use: **Read**</summary>
+ `./firmware/theory/build/host/chords.png`
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 10:41:39Z)**_
+
+<tool-use data-tool-type="read" data-tool-name="Read"><details>
+<summary>Tool use: **Read**</summary>
+ `./firmware/theory/build/host/chord.png`
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 10:41:51Z)**_
+
+小寫級數正常了。2 倍大小的 ♯ 有點粗，先把 bitmap 改細，再 build 實機套件。
+
+_**Agent (claude-opus-5-5 2026-11-18 10:41:58Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Thin the sharp glyph, rerun tests, check Docker for the device build
+
+```bash
+python3 - <<'EOF'
+p='firmware/theory/gtext.c'; s=open(p).read()
+old="{ 7, 11, 2, { 0x14, 0x14, 0x17, 0x7C, 0x74, 0x14, 0x17, 0x7C, 0x74, 0x14, 0x14 } },"
+new="{ 7, 11, 2, { 0x14, 0x14, 0x17, 0x7C, 0x14, 0x14, 0x17, 0x7C, 0x14, 0x14, 0x14 } },"
+assert old in s; s=s.replace(old,new); open(p,'w').write(s)
+EOF
+just fw-test theory 2>&1 | grep -E "FAIL|host:" && (docker info >/dev/null 2>&1 && echo docker-ok || echo docker-missing)
+```
+
+```text
+host: 10640 ms simulated, 182 blits, render 0.2% of real time (host CPU)
+docker-ok
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 10:42:07Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Build the THEORY device package with the JieLi toolchain
+
+`just fw-build theory 2>&1 | tail -25`
+
+```text
+Resolved 21 packages in 4ms
+Checked 18 packages in 0.43ms
+JIELI_TOOLCHAIN="$PWD/tools/jieli/toolchain" AC79_SDK="$PWD/tools/fw-AC79_AIoT_SDK" uv run --locked --all-groups python "third_party/fm1-base/tools/build.py" "firmware/theory"
+warning: /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/firmware/theory/fm1.toml has no install, screenshot: firmware.json goes without them, and a release build refuses (docs/FIRMWARE-JSON.md)
+font T: BarlowSemiCondensed-SemiBold.ttf 10px h 12, digit adv 5, 5268 B
+font XS: BarlowSemiCondensed-SemiBold.ttf 12px h 15, digit adv 6, 7005 B
+font S: BarlowSemiCondensed-Medium.ttf 15px h 16, digit adv 7, 8576 B
+font B: BarlowSemiCondensed-Bold.ttf 15px h 16, digit adv 8, 8752 B
+font M: BarlowSemiCondensed-SemiBold.ttf 23px h 24, digit adv 12, 17208 B
+font L: BarlowSemiCondensed-Bold.ttf 31px h 32, digit adv 16, 19776 B
+font set barlow: 67973 B (approx)
+words: 16 own + 51 common -> /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/firmware/theory/web/words/d31e0ca90f.json (1371 B)
+loader: image 14896 B at 0x1c0a800, bss end 0x1c15b20
+loader: ota.bin 12847 B
+  ok    .ram_text: 1580 insns, no calls
+  ok    no 64-bit multiply inlined beside a load
+  ok    no soft-double routines (single-precision FPU only)
+  ok    image 122308 B; RAM code .ram_text 5100 B of 32768; RAM .data+.bss 29452 B of 98304; pool 69384 B of 344064
+  ok    register access: felucca-bsp only (device/, include/ and the app clean)
+parts    USB audio in, USB audio out, velocity, pressure, the screen reader  (not built in: Bluetooth MIDI, Bluetooth MIDI devices, Bluetooth audio, USB MIDI host, USB disk mode, WiFi, the second core, screen mirroring, backup and restore, a resource region)
+app      /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/firmware/theory/build/theory.bin  122308 B
+loader   /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/firmware/theory/build/loader/ota.bin  12847 B
+package  /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/firmware/theory/build/theory.fwsc  616003 B, identity FM-1_4900
+build    2516820B  (FM1B_BUILD: the build a crash record names, fm1_remote.py crashes)
+about    /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/firmware/theory/build/firmware.json  (for firmware hubs)
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 10:42:19Z)**_
+
+<think><details><summary>Thought Process</summary>
+實機套件已建置成功（app 122,308 B，在韌體槽上限 581,564 B 之內，內建檢查全部通過）；接下來我會在兩種模擬器晶片上測試換調、切 CHORDS，並重開確認設定有保留。
+
+</details></think>
+
+_**Agent (claude-opus-5-5 2026-11-18 10:42:30Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Run save, restart and reload in fm1-emu on both flash chips
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/tools/emu-state && PKG=$(cd ../../firmware/theory/build && pwd)/theory.fwsc && for c in uc25hq80 p25q80; do rm -f theory-save-$c.flash; echo "== $c run 1 (turn SELECT +2, PLAY, wait for the save)"; FM1_BENCH_KEYS='2000:e0:+2,2400:PLAY,2500:PLAY^' ../fm1-emu/fm1-live --fwsc "$PKG" --flash-chip $c --flash theory-save-$c.flash --midi none --shot 8000 --lcd-only 2>&1 | grep -i -E "^flash:|fault|error"; mv work/lcd.ppm theory-run1-$c.ppm; echo "== $c run 2 (reload)"; ../fm1-emu/fm1-live --fwsc "$PKG" --flash-chip $c --flash theory-save-$c.flash --midi none --shot 3000 --lcd-only 2>&1 | grep -i -E "^flash:|fault|error"; mv work/lcd.ppm theory-run2-$c.ppm; done; for f in theory-run1-uc25hq80 theory-run2-uc25hq80 theory-run2-p25q80; do sips -s format png $f.ppm --out /private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/7dcc67a0-a756-4514-85d7-b24e721b72ee/scratchpad/$f.png >/dev/null; done; ls /private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/7dcc67a0-a756-4514-85d7-b24e721b72ee/scratchpad/ | grep theory`
+
+```text
+== uc25hq80 run 1 (turn SELECT +2, PLAY, wait for the save)
+flash: 3 erases / programs
+== uc25hq80 run 2 (reload)
+flash: 0 erases / programs
+== p25q80 run 1 (turn SELECT +2, PLAY, wait for the save)
+flash: 3 erases / programs
+== p25q80 run 2 (reload)
+flash: 0 erases / programs
+theory-run1-uc25hq80.png
+theory-run2-p25q80.png
+theory-run2-uc25hq80.png
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 10:42:37Z)**_
+
+<tool-use data-tool-type="read" data-tool-name="Read"><details>
+<summary>Tool use: **Read**</summary>
+ `/private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/7dcc67a0-a756-4514-85d7-b24e721b72ee/scratchpad/theory-run2-p25q80.png`
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 10:42:45Z)**_
+
+<tool-use data-tool-type="read" data-tool-name="Read"><details>
+<summary>Tool use: **Read**</summary>
+ `/private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/7dcc67a0-a756-4514-85d7-b24e721b72ee/scratchpad/theory-run1-uc25hq80.png`
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 10:42:57Z)**_
+
+<think><details><summary>Thought Process</summary>
+第一次測試結果正確，但重開後模擬器多出一個 G 和弦並跑回 NOTES，原因是 `--shot` 預設會按一次 PLAY 和一個琴鍵。我接下來會改用一個不會觸發這些按鍵的腳本再重開一次。
+
+</details></think>
+
+_**Agent (claude-opus-5-5 2026-11-18 10:43:07Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Repeat the reload without the emulator's default key presses
+
+`PKG=$(cd ../../firmware/theory/build && pwd)/theory.fwsc && for c in uc25hq80 p25q80; do rm -f theory-save-$c.flash; FM1_BENCH_KEYS='2000:e0:+2,2400:PLAY,2500:PLAY^' ../fm1-emu/fm1-live --fwsc "$PKG" --flash-chip $c --flash theory-save-$c.flash --midi none --shot 8000 --lcd-only 2>&1 | grep -i -E "^flash:|fault|error" | sed "s/^/$c run1 /"; FM1_BENCH_KEYS='60000:PLAY' ../fm1-emu/fm1-live --fwsc "$PKG" --flash-chip $c --flash theory-save-$c.flash --midi none --shot 3000 --lcd-only 2>&1 | grep -i -E "^flash:|fault|error" | sed "s/^/$c reload /"; mv work/lcd.ppm theory-reload-$c.ppm; sips -s format png theory-reload-$c.ppm --out /private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/7dcc67a0-a756-4514-85d7-b24e721b72ee/scratchpad/theory-reload-$c.png >/dev/null; done`
+
+```text
+uc25hq80 run1 flash: 3 erases / programs
+uc25hq80 reload flash: 0 erases / programs
+p25q80 run1 flash: 3 erases / programs
+p25q80 reload flash: 0 erases / programs
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 10:43:12Z)**_
+
+<tool-use data-tool-type="read" data-tool-name="Read"><details>
+<summary>Tool use: **Read**</summary>
+ `/private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/7dcc67a0-a756-4514-85d7-b24e721b72ee/scratchpad/theory-reload-uc25hq80.png`
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 10:43:14Z)**_
+
+<tool-use data-tool-type="read" data-tool-name="Read"><details>
+<summary>Tool use: **Read**</summary>
+ `/private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/7dcc67a0-a756-4514-85d7-b24e721b72ee/scratchpad/theory-reload-p25q80.png`
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 10:43:21Z)**_
+
+兩種晶片都讀回 D major 和 CHORDS，重開時 0 次寫入 `[模擬]`。接著把 THEORY 疊在最新的實機備份上預演，看它會寫哪些 sector、Morse 的進度還在不在。
+
+_**Agent (claude-opus-5-5 2026-11-18 10:43:22Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Find the newest backup and read the rehearse recipe
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1 && ls -t backups | head -5 && sed -n 155,175p Justfile`
+
+```text
+# Rehearse a switch in the emulator: lay PACKAGE over a real BACKUP (.bin) as M-Flasher would, then boot it.
+# Shows how the new firmware copes with the data the old one left behind. Extra args go to fm1-live.
+emu-rehearse package backup chip="uc25hq80" *args:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    mkdir -p tools/emu-state/work
+    name="$(basename "{{package}}" .fwsc)"
+    pkg="$(cd "$(dirname "{{package}}")" && pwd)/$(basename "{{package}}")"
+    bak="$(cd "$(dirname "{{backup}}")" && pwd)/$(basename "{{backup}}")"
+    cd tools/emu-state
+    rm -f "pristine-$name.flash"
+    ../fm1-emu/fm1-live --fwsc "$pkg" --flash-chip "{{chip}}" --flash "pristine-$name.flash" --midi none --shot 1 --lcd-only >/dev/null 2>&1
+    python3 ../../scripts/emu_rehearse.py "pristine-$name.flash" "$bak" "rehearse-$name.flash"
+    cp "rehearse-$name.flash" "rehearse-$name.before"
+    echo "booting $name over $(basename "$bak") (window; Esc quits). State: tools/emu-state/rehearse-$name.flash"
+    ../fm1-emu/fm1-live --fwsc "$pkg" --flash-chip "{{chip}}" --flash "rehearse-$name.flash" {{args}}
+
+# ---- Agent Deck host daemon (no flashing) ------------------------------------
+
+# Clone Agent Deck at the pinned tag into vendor/ (git-ignored).
+agtdeck-clone:
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 10:43:29Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Find the newest full-flash backup files
+
+`find backups -name "*.bin" -newer backups/2026-11-18-pre-morse-0.5 2>/dev/null | head; find backups -maxdepth 2 -name "*.bin" | sort | tail -4`
+
+```text
+backups/2026-11-18-pre-morse-0.2/fm1-20261118-001247.bin
+backups/2026-11-18-pre-morse-0.3/fm1-20261118-021205.bin
+backups/2026-11-18-pre-morse-0.4/fm1-20261118-044757.bin
+backups/2026-11-18-pre-morse-0.5/fm1-20261118-161218.bin
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 10:43:45Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Rehearse THEORY over the latest real backup on both chips and diff sectors
+
+```bash
+cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/tools/emu-state && PKG=$(cd ../../firmware/theory/build && pwd)/theory.fwsc && BAK=$(cd ../../backups/2026-11-18-pre-morse-0.5 && pwd)/fm1-20261118-161218.bin && for c in uc25hq80 p25q80; do rm -f pristine-theory.flash; ../fm1-emu/fm1-live --fwsc "$PKG" --flash-chip $c --flash pristine-theory.flash --midi none --shot 1 --lcd-only >/dev/null 2>&1; python3 ../../scripts/emu_rehearse.py pristine-theory.flash "$BAK" rehearse-theory-$c.flash | tail -2; cp rehearse-theory-$c.flash rehearse-theory-$c.before; FM1_BENCH_KEYS='60000:PLAY' ../fm1-emu/fm1-live --fwsc "$PKG" --flash-chip $c --flash rehearse-theory-$c.flash --midi none --shot 3000 --lcd-only 2>&1 | grep -E "^flash:" | sed "s/^/$c boot over the backup: /"; cp rehearse-theory-$c.flash rehearse-theory-$c.boot; FM1_BENCH_KEYS='1500:e0:-3,1900:PLAY,2000:PLAY^' ../fm1-emu/fm1-live --fwsc "$PKG" --flash-chip $c --flash rehearse-theory-$c.flash --midi none --shot 7000 --lcd-only 2>&1 | grep -E "^flash:" | sed "s/^/$c change + save: /"; python3 -I - rehearse-theory-$c.before rehearse-theory-$c.boot rehearse-theory-$c.flash "$BAK" <<'EOF'
+import sys
+b, boot, a, bak = (open(p, 'rb').read() for p in sys.argv[1:5])
+def diff(x, y, lo=0x97000, hi=0x100000):
+    return [hex(o) for o in range(lo, hi, 0x1000) if x[o:o+0x1000] != y[o:o+0x1000]]
+print('  data area sectors changed by the boot:', diff(b, boot) or 'none')
+print('  data area sectors changed by the save:', diff(boot, a) or 'none')
+print('  Morse record 0xDA000-0xDBFFF same as the backup:', a[0xDA000:0xDC000] == bak[0xDA000:0xDC000])
+print('  0xFC000 settings same as the backup:', a[0xFC000:0x100000] == bak[0xFC000:0x100000])
+EOF
+done
+```
+
+```text
+package image 0x04000-0x92FFF laid over the backup
+uc25hq80 boot over the backup: flash: 0 erases / programs
+uc25hq80 change + save: flash: 3 erases / programs
+  data area sectors changed by the boot: none
+  data area sectors changed by the save: ['0xd8000']
+  Morse record 0xDA000-0xDBFFF same as the backup: True
+  0xFC000 settings same as the backup: True
+package image 0x04000-0x92FFF laid over the backup
+p25q80 boot over the backup: flash: 0 erases / programs
+p25q80 change + save: flash: 3 erases / programs
+  data area sectors changed by the boot: none
+  data area sectors changed by the save: ['0xd8000']
+  Morse record 0xDA000-0xDBFFF same as the backup: True
+  0xFC000 settings same as the backup: True
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 10:43:54Z)**_
+
+<think><details><summary>Thought Process</summary>
+我先在刷入 Morse 0.5 前的實機備份上預演：開機寫入 0 次，存檔只動 0xD8000，學習紀錄與 0xFC000 共用設定都與備份一致。接下來更新文件、flash 配置圖、README 和 AGENTS.md，並新增 theory-emu 指令。
+
+</details></think>
+
+_**Agent (claude-opus-5-5 2026-11-18 10:43:55Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Locate sections of the theory page and the flash map table
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1 && grep -n "狀態\|^## \|^### \|PLAY\` | 切換\|K3\|K4\|K1\|K2\|按住 \`SEL\`\|LED 用來\|~~樂理核心\|v0.1 WHEEL\|知識用 SRS\|Kodály method\]" docs/dev/theory.md | head -50; sed -n 30,48p docs/hardware/flash-map.md`
+
+```text
+5:**狀態（2026-11-18）：構想，加上一份 platform-free 的樂理核心（`firmware/theory/`，GPL-3.0-or-later）。** `just theory-unit` 的 26,661 個檢查全部通過，其中包含和 music21 的拼法對照。還沒有 app、畫面和聲音。
+14:## 有沒有人做過 { #prior-art }
+25:| 作品 | 做什麼 | 狀態 |
+58:## 學習方法 { #method }
+69:| **知識用 SRS，技巧看實際表現** | [Duke, Simmons & Cash 2009](https://cml.music.utexas.edu/research/skill-learning-and-procedural-memory)：練習時間和次數不能預測隔天的表現，最好的人會找出錯的地方、刻意改變速度。[Allingham & Wöllner 2022](https://ediss.sub.uni-hamburg.de/handle/ediss/9763)：大家都慢練，但證據很少，而且快慢動作可能組織不同 | DRILL 找出錯的位置，從那裡切一小段重練。速度階梯要練到、甚至超過目標速度 |
+72:| **先聽再看符號** | [Kodály method](https://en.wikipedia.org/wiki/Kod%C3%A1ly_method)：節奏先聽、唸、動，內化之後才看譜 | 節奏卡先出盲聽，熟了才出看譜的題 |
+78:## 課綱 { #curriculum }
+94:## 頁面 { #pages }
+109:### WHEEL（v0.1） { #wheel }
+132:| 按住 `SEL` 再按一個琴鍵 | 跳到以那個音為主音的調（Db、F#、Eb 小調這類常用拼法） |
+133:| `K1` | 調式：大調、小調、和聲小調、dorian… |
+134:| `K2` | 三和弦或七和弦 |
+135:| `K3` | 顯示和弦名稱、Roman 或 Nashville |
+136:| `PLAY` | 切換琴鍵模式：**彈奏**（彈什麼就辨認什麼）或**順級和弦**（從主音起算的 7 個白鍵分別是 I–vii，就近轉位） |
+139:LED 用來顯示調：音階內的音是 glow，主音是 lit，正在彈的音閃爍。
+141:### TODAY（v0.2）
+170:## 卡片 { #cards }
+196:## 小譜面 { #notation }
+217:## 機器限制怎麼處理 { #hardware }
+229:## 內容表示：程式產生、TSV、Alda { #content }
+277:## 網頁：匯入教材、備份進度 { #web }
+289:## 排程與存檔 { #srs }
+300:## 樂理核心 { #core }
+321:## 內容來源與 licence { #licence }
+337:## Roadmap
+340:1. ~~樂理核心和 unit test~~（2026-11-18 完成）。
+341:2. **v0.1 WHEEL**：fm1-base app、polyphonic synth、畫五度圈、♯♭ glyph、和弦辨識。
+348:## 還沒決定的事
+
+## Felucca 系韌體的資料位置
+
+Felucca、SLOOP、ChoralRoot 以及 Dinghy、fm1-base 系的韌體大多沿用同一套位址 `[上游]`：
+
+| 位址 | 內容 |
+|---|---|
+| `0x97000` 起 | project（曲子） |
+| `0x9F000` | SLOOP 的 autosave（和 ChoralRoot 的 FM6 bank 是同一個物件編號） |
+| `0xA0000` 起 | samples |
+| `0xDA000`–`0xDBFFF` | 自製 [Morse](../dev/morse.md#flash) 的設定與學習進度（這台機器的備份裡這兩個 sector 都是空的） |
+| `0xDC000` 起 | user preset bank；CTL-1 與 fm1-base 的 app（含 Conductor）用來放面板校正 |
+| `0xDE000` | CTL-1 的 Bluetooth 設定 |
+| `0xE0000` | 更新時暫存 update loader |
+| `0xF2000`–`0xF3FFF` | RemoteFM1 第一次開 Bluetooth 時寫入 |
+| `0xFC000` | 全域設定。**SLOOP、Agent Deck、CTL-1 都寫這裡** |
+| `0xFE000` | SLOOP autosave 的另一份 |
+
+因為位址共用，韌體之間會互相踩到對方的資料，也會讀到對方留下的東西。
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 10:44:00Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Read the WHEEL section and roadmap to edit
+
+`sed -n 109,140p docs/dev/theory.md && sed -n 337,356p docs/dev/theory.md`
+
+````text
+### WHEEL（v0.1） { #wheel }
+
+```text
+┌────────────────────────────────┐
+│ WHEEL           D major   2#   │
+│               C                │
+│          F         G           │
+│       Bb     (Bm)    [D]       │  外圈大調、內圈關係小調
+│       Eb               A       │  目前的調反白
+│          Ab         E          │
+│              Db  B             │
+│               F#               │
+├────────────────────────────────┤
+│  I   ii  iii  IV  V   vi  vii° │
+│  D   Em  F#m  G   A   Bm  C#°  │
+├────────────────────────────────┤
+│ F#m7/A    iii7   2nd inv       │  剛彈的和弦
+└────────────────────────────────┘
+```
+
+| 操作 | 作用 |
+|---|---|
+| 轉 `SELECT` | 沿五度圈換調，順時針多一個升記號 |
+| 按住 `SEL` 再按一個琴鍵 | 跳到以那個音為主音的調（Db、F#、Eb 小調這類常用拼法） |
+| `K1` | 調式：大調、小調、和聲小調、dorian… |
+| `K2` | 三和弦或七和弦 |
+| `K3` | 顯示和弦名稱、Roman 或 Nashville |
+| `PLAY` | 切換琴鍵模式：**彈奏**（彈什麼就辨認什麼）或**順級和弦**（從主音起算的 7 個白鍵分別是 I–vii，就近轉位） |
+| 彈和弦 | 畫面顯示和弦名、轉位和級數。調外的音換顏色；副屬和弦顯示成 `V7/V`，借用和弦顯示成 `bVII` |
+
+LED 用來顯示調：音階內的音是 glow，主音是 lit，正在彈的音閃爍。
+
+## Roadmap
+
+0. 在 fm1-emu 兩種晶片上試用 Keyboard Academy v0.1.2，讀 Shed 的 SHED_SPEC，把心得寫進這頁。
+1. ~~樂理核心和 unit test~~（2026-11-18 完成）。
+2. **v0.1 WHEEL**：fm1-base app、polyphonic synth、畫五度圈、♯♭ glyph、和弦辨識。
+3. **v0.2 TODAY 與 CHART**：樂理卡、級數與和弦性質的聽音卡、Leitner 回合、進度備份網頁。
+4. **v0.3 EAR**：節奏與旋律聽寫、小譜面、節奏產生器、絕對音感路線。
+5. **v0.4 DRILL**：節拍器、帶彈、時間評分、速度階梯。
+6. **v0.5 GROOVE 與 LISTEN**：TSV / Alda pipeline、網頁匯入、伴奏。
+7. 之後比照 Morse 拆成獨立 repo，再上 Hub（見 [Hub](../firmware/hub.md)）。
+
+## 還沒決定的事
+
+- **名稱**：`theory` 只是目錄名稱。
+- **要不要和背單字 app 共用排程模組**（FSRS 放進 `firmware/common`）。
+- **小調級數的古典寫法**（VI、VII）：輸入端靠檔頭宣告和編輯器的警告處理（見[內容表示](#content)）。畫面上要不要也提供古典寫法的顯示，還沒決定。
+- **DRILL 的時間評分標準**：均勻度的門檻、速度階梯每一階的幅度。
+- **Alda 子集的範圍**。
+````
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 10:44:16Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Count passing simulator checks and copy two screenshots into the docs
+
+`just fw-test theory 2>&1 | grep -c -E "^\s*ok" ; mkdir -p docs/assets/theory && cp firmware/theory/build/host/secondary.png docs/assets/theory/wheel-notes.png && cp firmware/theory/build/host/chords.png docs/assets/theory/wheel-chords.png && ls docs/assets/theory && git check-ignore -v docs/assets/theory/wheel-notes.png; echo "ignored? $?"`
+
+```text
+77
+wheel-chords.png
+wheel-notes.png
+ignored? 1
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 10:44:22Z)**_
+
+Next I'm updating the design doc to the v0.1 state: status, the trial insight, final controls, screenshots, verification results and roadmap.
+
+_**Agent (claude-opus-5-5 2026-11-18 10:44:54Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Update the theory page and the flash map for v0.1
+
+```bash
+python3 - <<'EOF'
+p='docs/dev/theory.md'; s=open(p).read()
+def sub(old,new):
+    global s
+    assert old in s, old[:80]; s=s.replace(old,new,1)
+
+sub("""**狀態（2026-11-18）：構想，加上一份 platform-free 的樂理核心（`firmware/theory/`，GPL-3.0-or-later）。** `just theory-unit` 的 26,661 個檢查全部通過，其中包含和 music21 的拼法對照。還沒有 app、畫面和聲音。""",
+"""**狀態（2026-11-18）：v0.1（WHEEL）寫好了，在 host simulator 和 fm1-emu 兩種晶片上都驗證過，還沒刷進實機 `[模擬]`。** 驗證結果見 [v0.1 驗證](#v01-verify)。
+
+- 韌體在 `firmware/theory/`，GPL-3.0-or-later，名稱 THEORY，識別碼 `FM-1_49`。
+- 樂理核心的 `just theory-unit` 有 26,661 個檢查，全部通過，其中包含和 music21 的拼法對照。""")
+
+sub("""| 有 release v0.1.2（2026-10-24），GPL-3.0 加 SDK exception。在 fm1-emu 的兩種晶片上都能開機，畫面是第一課「FIND MIDDLE C」，開機 8 秒內寫 flash 21 次 `[模擬]`（2026-11-18）。會寫到哪些 sector 還沒用 `emu-rehearse` 查過 |""",
+"""| 有 release v0.1.2（2026-10-24），GPL-3.0 加 SDK exception。在 fm1-emu 的兩種晶片上都能開機，畫面是第一課「FIND MIDDLE C」，開機 8 秒內寫 flash 21 次 `[模擬]`（2026-11-18）。會寫到哪些 sector 還沒用 `emu-rehearse` 查過。**本人在 fm1-emu 試用（2026-11-18）：效果還可以，但每個音都有琴鍵燈提示，所以非常簡單** |""")
+
+sub("""| **每個階段同時練四面** |""",
+"""| **提示要逐漸撤掉** | 運動學習的 guidance hypothesis（Salmoni, Schmidt & Walter 1984）：提示或回饋給得太頻繁、太好用，練習時表現很好，但學的人會依賴它，拿掉之後就做不出來；之後的研究對「最好多頻繁」有分歧（[Wulf et al. 2010 的整理](https://www.frontiersin.org/articles/10.3389/fpsyg.2010.00190/full)）`[調研]`。本人試用 Keyboard Academy 的感想正是如此 | WHEEL 的 LED 只顯示調，不亮出下一個音。DRILL 的帶彈燈只在新項目時亮，box 升高後改成只在猶豫或答錯時亮；有亮燈提示的作答不算答對 |
+| **每個階段同時練四面** |""")
+
+old_start = s.index("### WHEEL（v0.1） { #wheel }")
+old_end = s.index("### TODAY（v0.2）")
+s = s[:old_start] + """### WHEEL（v0.1） { #wheel }
+
+![WHEEL：C 大調裡彈了 D7](../assets/theory/wheel-notes.png){ width="240" } ![WHEEL：D 大調的 CHORDS 模式，按 C 鍵彈出 C#dim](../assets/theory/wheel-chords.png){ width="240" }
+
+上面兩張是 host simulator 的截圖 `[模擬]`。左邊：C 大調裡彈了 D F# A C，footer 顯示 `D7` 和 `V7/V`，五度圈上的 D 被圈起來，它在調內 6 個和弦（反白的格子）外面。右邊：D 大調的 CHORDS 模式，按 C 鍵彈出 `C#dim`，右欄的 vii° 跟著反白。
+
+- **Header**：調名，右邊是琴鍵模式（`NOTES` / `CHORDS`），八度不是 0 時也會標出來。
+- **五度圈**：外圈是大調，內圈是關係小調（小寫）。調內的大、小三和弦反白，主音的和弦加框。剛彈的和弦如果是大或小三和弦家族，就在它的位置畫圈。圓心是調號（`2♯`），下面列出升降的音名。
+- **右欄**：7 個順級和弦，上面是級數，下面是和弦名。剛彈的那一個反白。
+- **Footer**：剛彈的東西：和弦名（調外的和弦換顏色）與級數、轉位、省略五音；單音是音名加級數；兩個音是音程。全部放開後，畫面保留剛才按得最滿的那一組。轉旋鈕時 footer 暫時顯示新的設定。
+
+| 操作 | 作用 |
+|---|---|
+| 轉 `SELECT` | 沿五度圈換調，順時針多一個升記號；調號落在 Db 到 F# 之間（小調與調式落在 Eb 小調到 G# 小調之間） |
+| 按住 `SEL` 再按一個琴鍵 | 跳到以那個音為主音的調 |
+| `K1` | 調式：大調、小調、和聲小調、旋律小調、dorian、phrygian、lydian、mixolydian、locrian |
+| `K2` | 三和弦或七和弦 |
+| `K3` | 級數寫成 Roman 或 Nashville |
+| `K4` | 和弦鍵的對應：**字母 = 根音**（預設：D 大調按 F 是 F#m，按 C 是 C#dim），或 **C = I**（同一個手型在每個調都彈出同樣的級數） |
+| `PLAY` | 切換琴鍵模式：**NOTES**（彈什麼就辨認什麼）或 **CHORDS**（白鍵彈順級和弦，就近轉位，下面加一個根音；`PLAY` 亮綠燈）。黑鍵在 v0.1 不出聲 |
+| `OCT-` / `OCT+` | 發聲的八度，−2 到 +2，不影響辨認 |
+
+LED 只用來顯示調，不帶彈：NOTES 模式下調內的音 glow、主音 mid；CHORDS 模式下白鍵 glow、I 級的鍵 mid；按住的鍵 lit。按鍵的音也從 USB-MIDI 送出，可以錄進 DAW。設定在最後一次操作 3 秒後存起來。
+
+""" + s[old_end:]
+
+sub("""0. 在 fm1-emu 兩種晶片上試用 Keyboard Academy v0.1.2，讀 Shed 的 SHED_SPEC，把心得寫進這頁。
+1. ~~樂理核心和 unit test~~（2026-11-18 完成）。
+2. **v0.1 WHEEL**：fm1-base app、polyphonic synth、畫五度圈、♯♭ glyph、和弦辨識。""",
+"""0. ~~在 fm1-emu 試用 Keyboard Academy~~（2026-11-18，心得見[學習方法](#method)）。Shed 的 SHED_SPEC 還沒細讀。
+1. ~~樂理核心和 unit test~~（2026-11-18 完成）。
+2. **v0.1 WHEEL**：fm1-base app、8 voice synth、五度圈、♯♭ glyph、和弦辨識。2026-11-18 在 host simulator 和 fm1-emu 完成；刷實機要另外走 preflight，等本人批准。""")
+
+sub("""- **名稱**：`theory` 只是目錄名稱。
+""", "")
+
+sub("""## 還沒決定的事""", """## v0.1 驗證 { #v01-verify }
+
+2026-11-18，全部是 `[模擬]`，還沒有實機的結果。
+
+| 項目 | 怎麼驗證 | 結果 |
+|---|---|---|
+| 畫面、辨認、聲音、存檔 | `just fw-test theory`（`tests/basic.txt`） | 77 項全部 ok：C、C/E、D7 = `V7/V`、Bb = `bVII`、單音、音程、Nashville、換調、CHORDS 兩種對應、`SEL` 加琴鍵、調式、七和弦、八度、存檔重開讀回、和弦有聲音（peak > −40 dB） |
+| 實機套件 | `just fw-build theory` | app 122,308 B（槽 581,564 B），RAM `.data+.bss` 29,452 / 98,304 B，沒有 soft-double |
+| 兩種晶片：改設定、重開讀回 | fm1-emu `uc25hq80`、`p25q80`，`FM1_BENCH_KEYS` 腳本轉 `SELECT`、按 `PLAY` | 存檔寫 3 次，重開 0 次寫入，讀回 D major 和 CHORDS |
+| 疊在實機備份上 | `emu_rehearse.py` 疊在 `2026-11-18-pre-morse-0.5` 的備份上，兩種晶片 | 開機 0 次寫入；存檔只寫 `0xD8000`；Morse 的 `0xDA000`–`0xDBFFF` 和 `0xFC000` 的共用設定都和備份相同 |
+
+模擬器的 `--shot` 沒給腳本時，會自己按一次 `PLAY` 和一個琴鍵。驗證「重開讀回」時要給一個不會用到的腳本（例如 `FM1_BENCH_KEYS='60000:PLAY'`），否則它會把剛存的琴鍵模式切回去。
+
+## 還沒決定的事""")
+
+sub("""- store sector 要避開 Morse 的 `0xDA000` 和面板校正的 `0xDC000`。實作時用 `just emu-rehearse` 確認，並更新 [flash 配置圖](../hardware/flash-map.md)。""",
+"""- 設定存在 `0xD8000` / `0xD9000`：這台機器的 23 份備份裡都沒被寫過，也不和 Morse 的 `0xDA000` 或面板校正的 `0xDC000` 重疊。預演結果見 [v0.1 驗證](#v01-verify) 和 [flash 配置圖](../hardware/flash-map.md)。""")
+open(p,'w').write(s)
+
+p='docs/hardware/flash-map.md'; s=open(p).read()
+old="| `0xDA000`–`0xDBFFF` | 自製 [Morse](../dev/morse.md#flash) 的設定與學習進度（這台機器的備份裡這兩個 sector 都是空的） |"
+assert old in s
+s=s.replace(old, "| `0xD8000`–`0xD9FFF` | 自製 [THEORY](../dev/theory.md#srs) 的設定（v0.1，還沒刷實機）。這台機器的 23 份備份裡都是空的；疊在 Morse 0.5 前的備份上預演，只有存檔時寫 `0xD8000` `[模擬]` |\n"+old,1)
+open(p,'w').write(s)
+EOF
+grep -n "theory" docs/hardware/flash-map.md | head
+```
+
+```text
+40:| `0xD8000`–`0xD9FFF` | 自製 [THEORY](../dev/theory.md#srs) 的設定（v0.1，還沒刷實機）。這台機器的 23 份備份裡都是空的；疊在 Morse 0.5 前的備份上預演，只有存檔時寫 `0xD8000` `[模擬]` |
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 10:45:09Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Fix the pages table and update AGENTS.md, dev index and the Justfile
+
+```bash
+grep -n "SETTINGS\*\*" docs/dev/theory.md && python3 - <<'EOF'
+def sub(p, old, new):
+    s = open(p).read(); assert old in s, (p, old[:70]); s = s.replace(old, new, 1); open(p, 'w').write(s)
+sub('docs/dev/theory.md', "| **SETTINGS** | 音色、音量、每回合張數、絕對音感路線開關 | v0.1 |",
+    "| **SETTINGS** | 音色、每回合張數、絕對音感路線開關（v0.1 的設定都在 WHEEL 的旋鈕上） | v0.2 |")
+sub('AGENTS.md', "| `firmware/theory/` | Music theory trainer (GPL-3.0-or-later), so far only its platform-free core: spelling on the line of fifths, scales, keys, chords, Roman numerals, naming a played chord, voicing. Tests check it against music21 (`tests/vectors.h`, generated). No app yet. Design: `docs/dev/theory.md`. |",
+    "| `firmware/theory/` | THEORY, own music theory trainer (GPL-3.0-or-later, identity `FM-1_49`, settings at `0xD8000`). v0.1 is the WHEEL page (circle of fifths, naming a played chord, the key's chords on the white keys), verified in the simulator and fm1-emu, not yet flashed. Its platform-free core `theory.c` (spelling, scales, keys, chords, Roman numerals, voicing) is checked against music21 (`tests/vectors.h`, generated). Design: `docs/dev/theory.md`. |")
+sub('AGENTS.md', "just theory-unit       # firmware/theory core on this computer (strict C99, plus music21's spellings)\n",
+    "just theory-unit       # firmware/theory core on this computer (strict C99, plus music21's spellings)\njust theory-emu [CHIP] # THEORY in fm1-emu (after `just fw-build theory`; `just fw-test theory` is its simulator test)\n")
+sub('AGENTS.md', "A music theory trainer has its core and a design\n(`docs/dev/theory.md`) but no app; its imported content is meant to go through the store layer (`APP_STORE_MAP`),\nwhich needs no rule change.",
+    "THEORY (`docs/dev/theory.md`) has v0.1 but no learning yet;\nits imported content is meant to go through the store layer (`APP_STORE_MAP`), which needs no rule change.")
+sub('docs/dev/index.md', "firmware/theory/           樂理練習機的核心，還沒有 app（見樂理練習機頁）\n",
+    "firmware/theory/           樂理練習機 THEORY（見樂理練習機頁）\n")
+sub('Justfile', """# Regenerate firmware/theory/tests/vectors.h from music21""",
+"""# THEORY in the emulator (build it first: just fw-build theory). Its simulator test is `just fw-test theory`.
+theory-emu chip="uc25hq80":
+    just emu-run firmware/theory/build/theory.fwsc "{{chip}}"
+
+# Regenerate firmware/theory/tests/vectors.h from music21""")
+EOF
+sed -n 1,12p firmware/theory/README.md
+```
+
+```text
+111:| **SETTINGS** | 音色、音量、每回合張數、絕對音感路線開關 | v0.1 |
+# firmware/theory
+
+The start of a pocket music theory trainer for the M-VAVE FM-1: so far only its platform-free core. There is no
+`app.c` or `fm1.toml` yet, so `just fw-test theory` does not apply. Design (Traditional Chinese):
+[docs/dev/theory.md](../../docs/dev/theory.md).
+
+Licence: GPL-3.0-or-later.
+
+| File | What it is |
+|---|---|
+| `theory.h`, `theory.c` | Spelling on the line of fifths, 12 scales, key signatures, the circle of fifths, 23 chord qualities, Roman numerals and Nashville numbers (naming and reading, secondary dominants), naming a chord from MIDI notes, the nearest close voicing. C99, no platform calls, no libc, no floating point. |
+| `tests/theory_test.c` | Unit tests: hand-written answers, round trips, every diatonic chord in every key and inversion, random voicings. |
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 10:45:21Z)**_
+
+<tool-use data-tool-type="write" data-tool-name="Write"><details>
+<summary>Tool use: **Write**</summary>
+
+````markdown
+# firmware/theory
+
+THEORY, a pocket music theory trainer for the M-VAVE FM-1, built on fm1-base. v0.1 is the WHEEL page: the circle
+of fifths with the key's chords marked; play a chord and it is named, with its Roman numeral in the key
+(secondary dominants, borrowed chords, inversions); or let the white keys play the key's own chords, voiced to
+move as little as possible. Verified in the host simulator and fm1-emu; not yet flashed. Design and controls
+(Traditional Chinese): [docs/dev/theory.md](../../docs/dev/theory.md).
+
+Licence: GPL-3.0-or-later (`LICENSE`). Package identity `FM-1_49` (dev `FM-1_4900`). Settings: one record at
+`0xD8000` through fm1-base's store.
+
+| File | What it is |
+|---|---|
+| `app.c`, `app.h`, `fm1.toml` | The app: the WHEEL page, input, lights, the settings record, the simulator's checks. |
+| `theory.h`, `theory.c` | Spelling on the line of fifths, 12 scales, key signatures, the circle of fifths, 23 chord qualities, Roman numerals and Nashville numbers (naming and reading, secondary dominants), naming a chord from MIDI notes, the nearest close voicing. C99, no platform calls, no libc, no floating point. |
+| `synth.h`, `synth.c` | Eight voices of a two-operator FM electric piano (after `../common/chime`), fed by a one-writer event ring. |
+| `gtext.h`, `gtext.c` | Text with sharp, flat, diminished and half-diminished signs drawn as small bitmaps (the fonts are ASCII). |
+| `tests/basic.txt` | The host simulator's script (`just fw-test theory`). |
+| `tests/theory_test.c` | Unit tests for the core: hand-written answers, round trips, every diatonic chord in every key and inversion, random voicings. |
+| `tests/vectors.h` | Generated from music21 by `host/theory/make_vectors.py`; do not edit. |
+
+```sh
+just theory-unit      # the core's unit tests on this computer
+just fw-test theory   # the app in the host simulator (screenshots in build/host/)
+just fw-build theory  # the device package, build/theory.fwsc
+just theory-emu       # that package in fm1-emu
+just theory-vectors   # regenerate tests/vectors.h (uv fetches music21 10.5.2)
+```
+
+Conventions worth knowing before using the core:
+
+- A spelled note is an `int` f on the line of fifths: C = 0, G = 1, F = -1, F# = 6, Gb = -6. Pitch class is
+  `7f mod 12`; `+7` adds a sharp; `+12` is the next enharmonic spelling.
+- Roman numerals measure accidentals against the major scale on the same tonic, minor keys included: in A minor,
+  G is `bVII` and G#dim is `viio`.
+- Output is ASCII (`#`, `b`, `o`, `/o`) unless the includer defines `TH_GLYPH_SHARP`, `TH_GLYPH_FLAT`,
+  `TH_GLYPH_DIM` and `TH_GLYPH_HDIM` first; the app sets them to `gtext`'s marker bytes.
+- Static helpers and tables are prefixed `th_` / `TH_` so the file can be `#include`d into fm1-base's unity build
+  beside an app's own code.
+
+````
+
+```text
+The file /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/firmware/theory/README.md has been updated successfully. (file state is current in your context — no need to Read it back)
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 10:45:27Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Rerun unit tests, simulator tests and the docs check; show the changed files
+
+`just theory-unit && just fw-test theory 2>&1 | grep -E "FAIL|host:" && just docs-check 2>&1 | tail -1 && just --list 2>/dev/null | grep theory && git status --short`
+
+```text
+ok: 26661 checks, 0 failed
+host: 10640 ms simulated, 182 blits, render 0.2% of real time (host CPU)
+{"status": "ok", "pages": 50, "llm_pages": 50, "deployed": false}
+    theory-emu chip="uc25hq80"                        # THEORY in the emulator (build it first: just fw-build theory). Its simulator test is `just fw-test theory`.
+    theory-unit                                       # music21's spellings (tests/vectors.h). Strict flags: the core must build in fm1-base (no double, no libc).
+    theory-vectors                                    # Regenerate firmware/theory/tests/vectors.h from music21 (BSD-3-Clause; pinned, fetched by uv, not a project dependency).
+ M .claude/plans/firmware-morse-concurrent-crane.md
+ M .specstory/history/2026-11-17_13-42-11Z-ascii-firmware-focus-host.md
+ M .specstory/history/2026-11-18_07-29-47Z-at-firmware-morse-at.md
+ M .specstory/statistics.json
+ M AGENTS.md
+ M Justfile
+ M docs/dev/index.md
+ M docs/dev/theory.md
+ M docs/hardware/flash-map.md
+ M firmware/theory/README.md
+?? docs/assets/theory/
+?? firmware/theory/.gitignore
+?? firmware/theory/LICENSE
+?? firmware/theory/app.c
+?? firmware/theory/app.h
+?? firmware/theory/fm1.toml
+?? firmware/theory/gtext.c
+?? firmware/theory/gtext.h
+?? firmware/theory/synth.c
+?? firmware/theory/synth.h
+?? firmware/theory/tests/basic.txt
+?? firmware/theory/words.tsv
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 10:45:45Z)**_
+
+THEORY v0.1（WHEEL）寫好了，在 host simulator 和模擬器的兩種晶片上都驗證過。還沒刷實機，也還沒 commit。
+
+**做了什麼**
+- **五度圈**：外圈是大調，內圈是關係小調。調內的 6 個大、小和弦反白，主音的和弦加框，圓心顯示調號和升降的音名。
+- **NOTES 模式**：彈什麼就辨認什麼。例如在 C 大調彈 D F# A C，畫面顯示 `D7`、`V7/V`，五度圈上的 D 被圈起來，一眼看得出它在調外。轉位、借用和弦、單音的級數、兩個音的音程都會顯示。
+- **CHORDS 模式**（按 `PLAY` 切換）：白鍵彈調內和弦，自動選移動最少的轉位，下面加一個根音。白鍵的對應預設是你選的「字母 = 根音」，`K4` 可以切成「C = I」。
+- **旋鈕**：`SELECT` 換調，按住 `SEL` 再按琴鍵直接跳到那個調；`K1` 選 9 種調式，`K2` 切三和弦或七和弦，`K3` 切 Roman 或 Nashville。
+- **其他**：8 個 voice 的 FM 電鋼琴音色，彈的音也從 USB-MIDI 送出，♯♭ 是自己畫的。
+- **LED 只顯示調，不帶彈**。這是照你試用 Keyboard Academy 的心得，對應運動學習的 guidance hypothesis，我把它當作一條原則寫進設計文件。
+
+**驗證結果** `[模擬]`
+- `just fw-test theory`：77 項全部通過，包含和弦有沒有發出聲音，以及存檔、重開、讀回。
+- `just theory-unit`：26,661 個檢查照樣全過。
+- 實機套件：app 122,308 B（韌體槽上限 581,564 B），build 自帶的檢查全部 ok。
+- 模擬器兩種晶片：改設定後存檔，重開時 0 次寫入，D major 和 CHORDS 都讀回來了。
+- 疊在你 Morse 0.5 刷入前的實機備份上預演：開機 0 次寫入，存檔只寫 `0xD8000`。Morse 存在 `0xDA000` 的學習進度，以及 SLOOP 那些韌體共用的 `0xFC000` 設定，都和備份完全相同。
+
+**改到的檔案**
+- 新增 `firmware/theory/`：app、synth、glyph、測試、`fm1.toml`、LICENSE。
+- 更新 `docs/dev/theory.md`：附了截圖、v0.1 驗證表、新的「提示要逐漸撤掉」原則。
+- `docs/hardware/flash-map.md` 加了 THEORY 用的 `0xD8000` 那一列。
+- 另外更新 `firmware/theory/README.md`、`AGENTS.md`、`docs/dev/index.md` 和 `Justfile`（新增 `just theory-emu`）。
+
+建議下一步你先用 `just theory-emu` 在模擬器視窗裡玩玩看（要先 `just fw-build theory`），感受一下和弦辨識和 CHORDS 模式。要刷實機的話，我再把完整的刷機前檢查列給你，等你批准，刷完會從 Morse 換成 THEORY。
+
+---
+
+_**User (2026-11-18 10:55:08Z)**_
+
+```
+
+
+<pasted_content id="38ec">
+M-VAVE_FM-1 on  main [!⇡3] via  v3.15.1 took 4m13s
+❯ just theory-emu
+just emu-run firmware/theory/build/theory.fwsc "uc25hq80"
+audio: Mac mini Speakers at 48000 Hz, 2 channels, buffer Default
+MIDI in: Felucca
+mouse: click/drag the keys (lower = harder; drag down on a held key = aftertouch), click buttons, drag or scroll the knobs (MASTER = volume)
+keys: A W S E D F T G Y H U J K O L P ; ' = C4..F5, Z/X OCT, Space PLAY, R REC, 1..0 buttons, arrows and , . for SELECT/PRESETS/ALGORITHM; F3 records a WAV (to Music/fm1-emu); F4 another firmware; Esc quits
+[  2.1 s] 1.01x real time | 240 MHz | audio 56 ms queued (target 50), 0 underruns
+[  4.1 s] 1.00x real time | 240 MHz | audio 53 ms queued (target 50), 0 underruns
+[  6.1 s] 1.00x real time | 240 MHz | audio 45 ms queued (target 50), 0 underruns
+[  8.1 s] 1.00x real time | 240 MHz | audio 53 ms queued (target 50), 0 underruns
+[ 10.1 s] 1.00x real time | 240 MHz | audio 50 ms queued (target 50), 0 underruns
+[ 12.1 s] 0.99x real time | 240 MHz | audio 42 ms queued (target 50), 0 underruns
+[ 14.1 s] 1.01x real time | 240 MHz | audio 55 ms queued (target 50), 0 underruns
+[ 16.1 s] 1.00x real time | 240 MHz | audio 53 ms queued (target 50), 0 underruns
+[ 18.1 s] 1.00x real time | 240 MHz | audio 50 ms queued (target 50), 0 underruns
+[ 20.1 s] 1.00x real time | 240 MHz | audio 52 ms queued (target 50), 0 underruns
+[ 22.1 s] 1.01x real time | 240 MHz | audio 56 ms queued (target 50), 0 underruns
+[ 24.1 s] 0.99x real time | 240 MHz | audio 47 ms queued (target 50), 0 underruns
+[ 26.1 s] 1.01x real time | 240 MHz | audio 55 ms queued (target 50), 0 underruns
+[ 28.1 s] 1.00x real time | 240 MHz | audio 53 ms queued (target 50), 0 underruns
+[ 30.1 s] 1.00x real time | 240 MHz | audio 50 ms queued (target 50), 0 underruns
+[ 32.1 s] 0.99x real time | 240 MHz | audio 42 ms queued (target 50), 0 underruns
+[ 34.1 s] 1.01x real time | 240 MHz | audio 56 ms queued (target 50), 0 underruns
+[ 36.1 s] 1.00x real time | 240 MHz | audio 53 ms queued (target 50), 0 underruns
+[ 38.1 s] 1.00x real time | 240 MHz | audio 50 ms queued (target 50), 0 underruns
+[ 40.1 s] 1.00x real time | 240 MHz | audio 53 ms queued (target 50), 0 underruns
+[ 42.1 s] 1.01x real time | 240 MHz | audio 56 ms queued (target 50), 0 underruns
+[ 44.1 s] 1.00x real time | 240 MHz | audio 53 ms queued (target 50), 0 underruns
+[ 46.1 s] 1.01x real time | 240 MHz | audio 45 ms queued (target 50), 0 underruns
+[ 48.1 s] 1.00x real time | 240 MHz | audio 53 ms queued (target 50), 0 underruns
+[ 50.1 s] 1.00x real time | 240 MHz | audio 50 ms queued (target 50), 0 underruns
+[ 52.1 s] 0.99x real time | 240 MHz | audio 42 ms queued (target 50), 0 underruns
+[ 54.1 s] 1.01x real time | 240 MHz | audio 56 ms queued (target 50), 0 underruns
+[ 56.2 s] 1.00x real time | 240 MHz | audio 53 ms queued (target 50), 0 underruns
+[ 58.1 s] 1.00x real time | 240 MHz | audio 45 ms queued (target 50), 0 underruns
+[ 60.1 s] 1.00x real time | 240 MHz | audio 53 ms queued (target 50), 0 underruns
+[ 62.2 s] 1.00x real time | 240 MHz | audio 50 ms queued (target 50), 0 underruns
+flash: 6 erases / programs
+
+M-VAVE_FM-1 on  main [!?⇡3] via  v3.15.1 took 1m3s
+❯ just fw-build theory
+git submodule update --init --recursive third_party/fm1-base
+git submodule update --init firmware/morse
+uv sync --locked --all-groups
+Resolved 21 packages in 3ms
+Checked 18 packages in 4ms
+JIELI_TOOLCHAIN="$PWD/tools/jieli/toolchain" AC79_SDK="$PWD/tools/fw-AC79_AIoT_SDK" uv run --locked --all-groups python "third_party/fm1-base/tools/build.py" "firmware/theory"
+warning: /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/firmware/theory/fm1.toml has no install, screenshot: firmware.json goes without them, and a release build refuses (docs/FIRMWARE-JSON.md)
+font T: BarlowSemiCondensed-SemiBold.ttf 10px h 12, digit adv 5, 5268 B
+font XS: BarlowSemiCondensed-SemiBold.ttf 12px h 15, digit adv 6, 7005 B
+font S: BarlowSemiCondensed-Medium.ttf 15px h 16, digit adv 7, 8576 B
+font B: BarlowSemiCondensed-Bold.ttf 15px h 16, digit adv 8, 8752 B
+font M: BarlowSemiCondensed-SemiBold.ttf 23px h 24, digit adv 12, 17208 B
+font L: BarlowSemiCondensed-Bold.ttf 31px h 32, digit adv 16, 19776 B
+font set barlow: 67973 B (approx)
+words: 16 own + 51 common -> /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/firmware/theory/web/words/d31e0ca90f.json (1371 B)
+loader: image 14896 B at 0x1c0a800, bss end 0x1c15b20
+loader: ota.bin 12847 B
+  ok    .ram_text: 1580 insns, no calls
+  ok    no 64-bit multiply inlined beside a load
+  ok    no soft-double routines (single-precision FPU only)
+  ok    image 122308 B; RAM code .ram_text 5100 B of 32768; RAM .data+.bss 29452 B of 98304; pool 69384 B of 344064
+  ok    register access: felucca-bsp only (device/, include/ and the app clean)
+parts    USB audio in, USB audio out, velocity, pressure, the screen reader  (not built in: Bluetooth MIDI, Bluetooth MIDI devices, Bluetooth audio, USB MIDI host, USB disk mode, WiFi, the second core, screen mirroring, backup and restore, a resource region)
+app      /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/firmware/theory/build/theory.bin  122308 B
+loader   /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/firmware/theory/build/loader/ota.bin  12847 B
+package  /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/firmware/theory/build/theory.fwsc  616003 B, identity FM-1_4900
+build    2516820B  (FM1B_BUILD: the build a crash record names, fm1_remote.py crashes)
+about    /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/firmware/theory/build/firmware.json  (for firmware hubs)
+</pasted_content id="38ec">
+
+```
+簡單體驗了一下 好像還可以..?
+
+然後我感覺其實我們也可以有類似 ChoralRoot 那種 用 ARP toggle 那種有不是一下完全按下去的模式 而是有一點間隔那種
+（不過這個可以留給我們的「演奏模式」使用 如果有的話; 這部分是我在按PLAY試玩CHORDS模式體會的）
+
+K4的這種根音轉調體驗也不錯
+
+然後可以試試刷機了
+
+---
+
+_**Agent (claude-opus-5-5 2026-11-18 10:55:32Z)**_
+
+你在模擬器上試過了，也說可以準備刷機。ARP 那種有間隔的琶音彈法，我會記進設計文件，留給之後的「演奏模式」。
+
+刷機前我會照規則先做 preflight，這幾步都不寫入韌體：
+- 讀機器資訊
+- 備份 Morse 的學習進度
+- 把機器切到 download mode，做整片 flash 備份，再切回來
+
+切換模式不算寫入，但先跟你說一聲。真正的寫入還是由你來執行。先看工具和機器的狀態。
+
+_**Agent (claude-opus-5-5 2026-11-18 10:55:34Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Find the flashing and backup recipes and the installer script
+
+`grep -n "^fm1-flash\|^fm1-backup \|^fm1-download-mode\|^fm1-restart\|^fm1-info\|^morse-backup\|fm1_install" Justfile | head -20; find . -name fm1_install.py -not -path "./vendor/*" 2>/dev/null | head -3; grep -n "fm1_install" docs/device-log.md | head -3; grep -n "Morse 0.6\|0.6" docs/device-log.md | head -5`
+
+```text
+305:morse-backup file:
+414:fm1-info:
+418:fm1-backup label="backup":
+443:fm1-download-mode:
+447:fm1-restart:
+454:fm1-flash package:
+./third_party/fm1-base/tools/fm1_install.py
+./third_party/fm1-base/bsp/tools/fm1_install.py
+104:| 2026-11-18 02:12 | 本人執行 `just fm1-switch firmware/morse/build/morse.fwsc`（Morse 0.3，SHA-256 `64bfa57d…f8d4ea`，commit `02b0ea2`） | 先自動備份 `backups/2026-11-18-0212-pre-morse/`（SHA-256 同 02:12 那份）。M-Flasher 的計畫：`Writes 32 sectors (128 KiB): 0x04000-0x23FFF`，和預演一致；寫入後 CRC32 相符，自動重開，M-Flasher 另存 `fm1-20261118-021254.bin`。重開後 HELLO 回報 0.3；`fm1_install.py --info`（USB-MIDI 唯讀詢問）回答 `FM-1_1300 [running]` |
+106:| 2026-11-18 02:40 | Hub 測試 1：本人執行 `fm1_install.py downloads/sloop-2.8.5.fwsc`（USB-MIDI 更新路徑，和 Hub 網頁安裝同一套），機器上是 Morse 0.3（`FM-1_1300`） | 成功：`checking the package (18 reads)` → `switching to update mode` → `the loader reads and writes the whole package (classic install)` → `done: the FM-1 runs FM-1_900`。重開進 SLOOP，之前的曲子還在。證明可以從 Morse 換到別的韌體 |
+107:| 2026-11-18 02:39 | agent 執行 `just fm1-download-mode`（SLOOP 執行中）、`fm1-backup pre-hub-test-2`、`fm1-restart`，`fm1_install.py --info` | 備份 SHA-256 `deacf515…d4151464`，M-Flasher 回報 firmware `SLOOP 2.8.5`；重開回 SLOOP，`--info` 回答 `FM-1_900 [running]`。備份裡 `0xDA000`–`0xDBFFF` 的 Morse 紀錄沒被 SLOOP 動到 |
+13:| 目前韌體 | **Morse 0.6 release build（`FM-1_41000600`，藍牙）**（2026-11-18 從 0.4 → 0.5（16:20）→ 0.6 用 USB-MIDI 更新，學習紀錄保留；macOS 上的 USB MIDI port 名稱仍是 `Felucca`）。0.3 release 是 Hub 測試 3 從原廠 015 裝的，進度當時從 ROUND 1 重新開始。之前依序是原廠 015 → SLOOP 2.8.5 → Agent Deck 0.7 → SLOOP 2.8.5 → CTL-1 1.0.3 → ChoralRoot 0.41 → Conductor 0.1 → 0.2 → 0.3 → Morse 0.1 → 0.2 → 0.3 → SLOOP 2.8.5 → Morse 0.3 release → 原廠 015（還原）→ Morse 0.3 release → Morse 0.4 → Morse 0.5 → Morse 0.6 |
+14:| SLOOP 的曲子 | **已不在機器上**（`0x97000` 被 ChoralRoot 的韌體蓋掉）。完整保存在 `2026-11-17-0341-pre-ctl-1.0.3` 備份裡；回 SLOOP 要在 M-Flasher GUI 還原那份備份 |
+22:- 出廠是 015，不是 016，所以沒有 016 覆寫 preset 區的問題。不要用 M-UPGRADE 升到 016，除非確定要。
+30:| 2026-11-17 | 原廠完整 flash（015，stock bootloader） | `backups/2026-11-17-stock/fm1-20261117-011632.bin` + `.json` | `c6a4790266bdb9e97500c20f50a98b80f0d334d8a219e1744bfc8e656a44fd38` | [GitHub Release](https://github.com/daviddwlee84/M-VAVE_FM-1/releases/tag/backup-2026-11-17-stock)（2026-11-17，digest 相符） |
+31:| 2026-11-17 | SLOOP 2.8.5 裝好並玩過之後的完整 flash（含當時的曲子與設定） | `backups/2026-11-17-sloop-2.8.5/fm1-20261117-014153.bin` + `.json` | `783060c08ac0727916e997dfc0b295a7469a45afe0ab4d460a4d5bc9bfc018b2` | [GitHub Release](https://github.com/daviddwlee84/M-VAVE_FM-1/releases/tag/backup-2026-11-17-sloop-2.8.5)（2026-11-17，digest 相符） |
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 10:55:39Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Read the backup, mode-switch and flash recipes
+
+`sed -n 300,312p Justfile; sed -n 410,470p Justfile; grep -n "fm1_install.py --info\|fm1_install.py\b" docs/device-log.md | tail -3`
+
+```text
+# The host against a text stand-in for the FM-1 (lines you type are what it "read").
+morse-sim:
+    PYTHONPATH=host uv run --locked --all-groups python -m morse --simulate type --dry-run
+
+# The learning progress into a JSON file (firmware 0.4+; read-only on the FM-1).
+morse-backup file:
+    PYTHONPATH=host uv run --locked --all-groups python -m morse backup "{{file}}"
+
+# A progress JSON file back onto the FM-1: it asks on its screen first (PLAY yes, HOME no).
+morse-restore file:
+    PYTHONPATH=host uv run --locked --all-groups python -m morse restore "{{file}}"
+
+# The simulator's screenshots, doubled (nearest neighbour), into fm1-morse's docs/screens/ for its README.
+fm1-find:
+    "{{m_flasher}}" find
+
+# Show what is on the unit (needs download mode).
+fm1-info:
+    "{{m_flasher}}" info
+
+# Full-flash backup into backups/<date>-<label>/, then print its SHA-256.
+fm1-backup label="backup":
+    #!/usr/bin/env bash
+    set -euo pipefail
+    dir="backups/$(date +%Y-%m-%d)-{{label}}"
+    mkdir -p "$dir"
+    "{{m_flasher}}" backup "$dir"
+    shasum -a 256 "$dir"/*.bin
+    echo "Record this in docs/device-log.md and keep a copy off this machine."
+
+# Check every backup image against the SHA-256 stored in its .json.
+fm1-verify-backups:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    shopt -s nullglob
+    rc=0
+    for bin in backups/*/*.bin; do
+      want=$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["sha256"])' "${bin%.bin}.json")
+      got=$(shasum -a 256 "$bin" | cut -d' ' -f1)
+      if [ "$want" = "$got" ]; then echo "ok   $bin"; else echo "FAIL $bin" >&2; rc=1; fi
+    done
+    exit $rc
+
+# ---- device: mode switch ----------------------------------------------------
+
+# Restart a running unit into download mode over USB MIDI (stock 015, Felucca).
+fm1-download-mode:
+    "{{m_flasher}}" download-mode
+
+# Leave download mode and start the firmware. Does not touch the flash.
+fm1-restart:
+    "{{m_flasher}}" restart
+
+# ---- device: write (owner only) ---------------------------------------------
+
+# Install a .fwsc. M-Flasher shows the plan and waits for a typed "yes"; never add --yes.
+[confirm("This writes firmware to the FM-1. A verified backup exists and the package supports this flash chip?")]
+fm1-flash package:
+    "{{m_flasher}}" firmware "{{package}}"
+
+# M-Flasher shows the plan and waits for a typed "yes". Owner only.
+# Switch firmware: download mode -> backup -> install -> restart. No argument lists the targets.
+fm1-switch target="":
+    #!/usr/bin/env bash
+    set -euo pipefail
+    case "{{target}}" in
+      ""|-h|--help|list)
+        echo "usage: just fm1-switch TARGET"
+        echo
+        echo "named targets:"
+        for t in "sloop=downloads/sloop-{{sloop_version}}.fwsc" "agtdeck=downloads/agtdeck-{{agtdeck_version}}.fwsc" \
+                 "ctl=downloads/ctl-{{ctl_version}}.fwsc" "choralroot=downloads/{{choralroot_pkg}}" \
+                 "remote=downloads/remote-{{remote_version}}.fwsc"; do
+          f="${t#*=}"; if [ -f "$f" ]; then st="ready"; else st="not downloaded"; fi
+119:| 2026-11-18 16:20 | 本人執行 `fm1_install.py firmware/morse/build/morse-0.5.fwsc`（Morse 0.5 release build，`FM-1_41000500`，SHA-256 `49433190…154457`，fm1-morse `a75c29e`），機器上是 Morse 0.4 | 第一次在 `[y/N]` 輸入時 Python 報 `UnicodeDecodeError`（終端機送了非 UTF-8 的位元組，大概是輸入法），還沒寫入就結束。第二次成功：`checking the package (30 reads)` → `switching to update mode` → `the loader writes only the sectors that changed (fast install)` → `done: the FM-1 runs FM-1_41000500` |
+120:| 2026-11-18 16:22 | agent 執行 `fm1_install.py --info`、`just morse-backup`（唯讀） | `FM-1_41000500 [running] port: Felucca`；進度和刷機前相同（round 29、20 open、451 answered、386 right、streak 5），存成 `backups/progress/2026-11-18-after-0.5.json` |
+123:| 2026-11-18 16:55 前後 | 本人執行 `fm1_install.py firmware/morse/build/morse-0.6.fwsc`（Morse 0.6 release build，`FM-1_41000600`，SHA-256 `d65b6df5…8fd7e`，fm1-morse `60f76cf`），機器上是 Morse 0.5 | 成功：fast install，`done: the FM-1 runs FM-1_41000600`；17:02 `--info` 回答 `FM-1_41000600 [running] port: Felucca` |
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 10:55:46Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Ask the unit what firmware it runs (read-only USB-MIDI query)
+
+`uv run --locked --all-groups python third_party/fm1-base/tools/fm1_install.py --info 2>&1 | tail -8`
+
+```text
+FM-1_41000600  [running]  port: Felucca
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 10:55:54Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Save Morse's learning progress to JSON (read-only on the unit)
+
+`mkdir -p backups/progress && just morse-backup backups/progress/2026-11-18-pre-theory-0.1.json 2>&1 | tail -5`
+
+```text
+PYTHONPATH=host uv run --locked --all-groups python -m morse backup "backups/progress/2026-11-18-pre-theory-0.1.json"
+[morse] no Morse FM-1 on MIDI: no port named MORSE and none saying HELLO (inputs: ['Felucca']). Over Bluetooth (firmware 0.5): connect FM-1 XXXX first in Audio MIDI Setup > Window > Show MIDI Studio > Bluetooth, or run with --bluetooth to open that window and wait
+error: recipe `morse-backup` failed on line 306 with exit code 1
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 10:56:19Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Retry the progress backup after the host timeout
+
+`sleep 12; just morse-backup backups/progress/2026-11-18-pre-theory-0.1.json 2>&1 | tail -3`
+
+```text
+PYTHONPATH=host uv run --locked --all-groups python -m morse backup "backups/progress/2026-11-18-pre-theory-0.1.json"
+[morse] no Morse FM-1 on MIDI: no port named MORSE and none saying HELLO (inputs: ['Felucca']). Over Bluetooth (firmware 0.5): connect FM-1 XXXX first in Audio MIDI Setup > Window > Show MIDI Studio > Bluetooth, or run with --bluetooth to open that window and wait
+error: recipe `morse-backup` failed on line 306 with exit code 1
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 10:56:29Z)**_
+
+<think><details><summary>Thought Process</summary>
+Morse 的進度 JSON 存不了，因為 Felucca port 一直等不到 FM-1 的 HELLO，可能有別的程式（例如瀏覽器開著的 MORSE 頁面）連著它。不過整片 flash 備份裡已有 0xDA000 的學習紀錄，預演也確認 THEORY 不會寫那裡，所以不影響安全；接下來我會切到 download mode 做唯讀備份，再切回 Morse。
+
+</details></think>
+
+_**Agent (claude-opus-5-5 2026-11-18 10:56:30Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Switch the unit into download mode (mode switch, no flash write)
+
+`just fm1-download-mode 2>&1 | tail -5`
+
+```text
+"/Applications/M-Flasher.app/Contents/MacOS/M-Flasher" download-mode
+Sent the Felucca the download-mode message over USB MIDI; waiting for it
+In download mode: usb:2-4	WL82 UBOOT1.00 (USB bus 2, device 4)
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 10:56:52Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Read the unit's info and take a full-flash backup (read-only)
+
+`just fm1-info 2>&1 | tail -12 && just fm1-backup pre-theory-0.1 2>&1 | tail -8`
+
+```text
+Read in 1.3 s (813 KB/s)
+Checked: the chip's CRC32 of the flash matches the read
+  model       FM-1
+  bootloader  stock (M-VAVE)
+  firmware    FM-1 410
+  app         OK
+  chip key    0x980F
+  flash       0xB36014
+  unit id     55227286a0cb022a
+  loader      M-Flasher 1.3, CPU at 96 MHz
+    - the firmware uses the FM-1 flash layout
+    - flash chip 0xB36014 (new)
+  flash       0xB36014
+  unit id     55227286a0cb022a
+  loader      M-Flasher 1.3, CPU at 96 MHz
+    - the firmware uses the FM-1 flash layout
+    - flash chip 0xB36014 (new)
+Backup saved: backups/2026-11-18-pre-theory-0.1/fm1-20261118-185652.bin
+5b62a3daeed2f23c7198f4f0cf56f02aaf432355727d78e6f1e8586beed879ea  backups/2026-11-18-pre-theory-0.1/fm1-20261118-185652.bin
+Record this in docs/device-log.md and keep a copy off this machine.
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 10:57:10Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Restart the unit, confirm it runs Morse, inspect the backup, hash the package
+
+```bash
+just fm1-restart 2>&1 | tail -3; sleep 4; uv run --locked --all-groups python third_party/fm1-base/tools/fm1_install.py --info 2>&1 | tail -2; python3 -I - backups/2026-11-18-pre-theory-0.1/fm1-20261118-185652.bin backups/2026-11-18-pre-morse-0.5/fm1-20261118-161218.bin <<'EOF'
+import sys
+a, b = (open(p, 'rb').read() for p in sys.argv[1:3])
+ch = [hex(o) for o in range(0, len(a), 0x1000) if a[o:o+0x1000] != b[o:o+0x1000]]
+print('sectors that differ from the pre-morse-0.5 backup:', len(ch), ch[:12], '...' if len(ch) > 12 else '')
+print('0xD8000-0xD9FFF erased:', set(a[0xD8000:0xDA000]) == {0xFF})
+print('Morse record present at 0xDA000:', a[0xDA000:0xDA004] != b'\xff\xff\xff\xff' or a[0xDB000:0xDB004] != b'\xff\xff\xff\xff')
+EOF
+shasum -a 256 firmware/theory/build/theory.fwsc; git -C . log --oneline -1
+```
+
+```text
+Connecting to usb:2-4
+Sent the restart (a 34-byte program at 0x01C28000); waiting for the unit to reset
+Running: the Felucca is on USB MIDI
+FM-1_41000600  [running]  port: Felucca
+sectors that differ from the pre-morse-0.5 backup: 45 ['0x4000', '0x5000', '0x6000', '0x7000', '0x8000', '0x9000', '0xa000', '0xb000', '0xc000', '0xd000', '0xe000', '0xf000'] ...
+0xD8000-0xD9FFF erased: True
+Morse record present at 0xDA000: True
+0d86cc42dd3d48b1b95d97751ab16b59fcdc4883aa4d3ac25c3553301641ebcd  firmware/theory/build/theory.fwsc
+c7a7084 theory: Keyboard Academy boots in fm1-emu on both chips; rounds, not days
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 10:57:18Z)**_
+
+機器已經切回 Morse 0.6。新備份的 SHA-256 是 `5b62a3da…879ea`，裡面 `0xD8000` 整塊是空的，`0xDA000` 有 Morse 的紀錄。我再拿這份最新的備份重新預演一次。
+
+_**Agent (claude-opus-5-5 2026-11-18 10:57:31Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Rehearse THEORY over the fresh backup on both chips
+
+```bash
+cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/tools/emu-state && PKG=$(cd ../../firmware/theory/build && pwd)/theory.fwsc && BAK=$(cd ../../backups/2026-11-18-pre-theory-0.1 && pwd)/fm1-20261118-185652.bin && for c in uc25hq80 p25q80; do rm -f pristine-theory.flash; ../fm1-emu/fm1-live --fwsc "$PKG" --flash-chip $c --flash pristine-theory.flash --midi none --shot 1 --lcd-only >/dev/null 2>&1; python3 ../../scripts/emu_rehearse.py pristine-theory.flash "$BAK" r6-$c.flash >/dev/null; cp r6-$c.flash r6-$c.before; FM1_BENCH_KEYS='60000:PLAY' ../fm1-emu/fm1-live --fwsc "$PKG" --flash-chip $c --flash r6-$c.flash --midi none --shot 3000 --lcd-only 2>&1 | grep -E "^flash:" | sed "s/^/$c boot: /"; cp r6-$c.flash r6-$c.boot; FM1_BENCH_KEYS='1500:e0:+1,1900:PLAY,2000:PLAY^' ../fm1-emu/fm1-live --fwsc "$PKG" --flash-chip $c --flash r6-$c.flash --midi none --shot 7000 --lcd-only 2>&1 | grep -E "^flash:" | sed "s/^/$c save: /"; python3 -I - r6-$c.before r6-$c.boot r6-$c.flash "$BAK" <<'EOF'
+import sys
+b, boot, a, bak = (open(p, 'rb').read() for p in sys.argv[1:5])
+d = lambda x, y: [hex(o) for o in range(0x97000, 0x100000, 0x1000) if x[o:o+0x1000] != y[o:o+0x1000]]
+print('  boot changed:', d(b, boot) or 'none', '| save changed:', d(boot, a) or 'none',
+      '| Morse 0xDA000 kept:', a[0xDA000:0xDC000] == bak[0xDA000:0xDC000], '| 0xFC000 kept:', a[0xFC000:] == bak[0xFC000:])
+EOF
+done
+```
+
+```text
+uc25hq80 boot: flash: 0 erases / programs
+uc25hq80 save: flash: 3 erases / programs
+  boot changed: none | save changed: ['0xd8000'] | Morse 0xDA000 kept: True | 0xFC000 kept: True
+p25q80 boot: flash: 0 erases / programs
+p25q80 save: flash: 3 erases / programs
+  boot changed: none | save changed: ['0xd8000'] | Morse 0xDA000 kept: True | 0xFC000 kept: True
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 10:57:36Z)**_
+
+預演結果和前一份備份一樣。接著把這些機器操作記進 `docs/device-log.md`，ARP 的點子寫進設計文件。
+
+_**Agent (claude-opus-5-5 2026-11-18 10:57:38Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Locate the backups table and the last history row
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1 && grep -n "pre-morse-0.5" docs/device-log.md | head -5 && sed -n 26,29p docs/device-log.md && grep -n "^| 2026-11-18 17:10" docs/device-log.md`
+
+```text
+117:| 2026-11-18 16:12 | agent 執行 `just fm1-download-mode`、`fm1-backup pre-morse-0.5`、`fm1-restart`（刷 Morse 0.5 前的 preflight） | flash `0xB36014`；備份 SHA-256 `d8f8889e…a0d44`；重開回 Morse 0.4。fm1-emu 兩種晶片上把 0.5 release build 疊在這份備份上預演：讀到 ROUND 30、開放 20 個字，0 次寫入 `[模擬]` |
+118:| 2026-11-18 16:15 | 本人要求後，agent 執行 `just --yes fm1-backup-release 2026-11-18-pre-morse-0.5` | 公開 release [`backup-2026-11-18-pre-morse-0.5`](https://github.com/daviddwlee84/M-VAVE_FM-1/releases/tag/backup-2026-11-18-pre-morse-0.5)：整片 flash 備份、M-Flasher 的 JSON、學習進度 JSON；上傳後的 digest 和本機的 SHA-256 相同 |
+備份檔放在本機的 `backups/`（gitignore，不進 git），異地副本用 `just fm1-backup-release <目錄>` 上傳成這個 repo 的 Release 附件。這個 repo 是 public，所以附件任何人都能下載；這是我自己的決定，映像只適用於這台機器。
+
+| 日期 | 內容 | 檔名 | SHA-256 | 異地副本 |
+|---|---|---|---|---|
+125:| 2026-11-18 17:10 前後 | 本人測 0.6 的拔線 | 用 USB 連上、`PC` 亮起後拔線，`PC` 半秒內消失；接著線時幾乎沒看到 `PC` 閃 |
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 10:57:43Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Find the last row of the backups table
+
+`awk 'NR>=29 && NR<=60 && /^\| 2026/ {last=NR} END {print last}' docs/device-log.md && sed -n '/^| 日期 | 內容 | 檔名/,/^$/p' docs/device-log.md | tail -4`
+
+```text
+60
+| 2026-11-18 02:39 | Hub 測試 2（SLOOP → Morse release，走 USB-MIDI）之前的 SLOOP 2.8.5（`0xDA000` 仍有 Morse 的紀錄） | `backups/2026-11-18-pre-hub-test-2/fm1-20261118-023901.bin` + `.json` | `deacf5153e17b52a6675a429bf063cb76e29ffff01d87de3214cd824d4151464` | 尚未上傳 |
+| 2026-11-18 02:42 | Hub 測試 3 之前的 Morse 0.3 release（`FM-1_41000300`，含學習紀錄）：測完要回到這裡就還原這份 | `backups/2026-11-18-pre-hub-test-3/fm1-20261118-024232.bin` + `.json` | `5601847d2505efa80d85ec611a0813f2854bb9f40c91cb49d47d65299f7e50b5` | 尚未上傳 |
+| 2026-11-18 04:47 | 刷 Morse 0.4 之前的 Morse 0.3 release（`FM-1_41000300`，含學習紀錄：ROUND 15、S N A P T 剛解鎖） | `backups/2026-11-18-pre-morse-0.4/fm1-20261118-044757.bin` + `.json` | `73a530d20bc6409488a28717a2f5c5817a7083c023dc88f657ecd37fcc82602b` | 尚未上傳 |
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 10:58:03Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Log the preflight in device-log and add the performance-mode idea
+
+```bash
+python3 - <<'EOF'
+p='docs/device-log.md'; s=open(p).read()
+row_b = "| 2026-11-18 04:47 | 刷 Morse 0.4 之前的 Morse 0.3 release（`FM-1_41000300`，含學習紀錄：ROUND 15、S N A P T 剛解鎖） | `backups/2026-11-18-pre-morse-0.4/fm1-20261118-044757.bin` + `.json` | `73a530d20bc6409488a28717a2f5c5817a7083c023dc88f657ecd37fcc82602b` | 尚未上傳 |"
+assert row_b in s
+s = s.replace(row_b, row_b + "\n| 2026-11-18 18:56 | 刷 THEORY 0.1（dev build）之前的 Morse 0.6 release（`FM-1_41000600`，`0xDA000` 有學習紀錄，`0xD8000`–`0xD9FFF` 是空的） | `backups/2026-11-18-pre-theory-0.1/fm1-20261118-185652.bin` + `.json` | `5b62a3daeed2f23c7198f4f0cf56f02aaf432355727d78e6f1e8586beed879ea` | 尚未上傳 |", 1)
+row_h = "| 2026-11-18 17:10 前後 | 本人測 0.6 的拔線 | 用 USB 連上、`PC` 亮起後拔線，`PC` 半秒內消失；接著線時幾乎沒看到 `PC` 閃 |"
+assert row_h in s
+s = s.replace(row_h, row_h + """
+| 2026-11-18 18:55 前後 | agent 執行 `fm1_install.py --info`、`just morse-backup`（唯讀，刷 THEORY 0.1 前） | `FM-1_41000600 [running] port: Felucca`。進度 JSON 兩次都沒存到：host 在 `Felucca` 上等不到 HELLO（大概有別的程式連著 FM-1）。學習紀錄在下一列的整片備份裡（`0xDA000`） |
+| 2026-11-18 18:56 | agent 執行 `just fm1-download-mode`、`fm1-info`、`fm1-backup pre-theory-0.1`、`fm1-restart`、`fm1_install.py --info`（刷 THEORY 0.1 前的 preflight） | bootloader stock、firmware `FM-1 410`、flash `0xB36014`；備份 SHA-256 `5b62a3da…879ea`；重開回 Morse 0.6（`FM-1_41000600 [running]`）。fm1-emu 兩種晶片上把 THEORY 0.1 dev build（SHA-256 `0d86cc42…41ebcd`）疊在這份備份上預演：開機 0 次寫入，存檔只寫 `0xD8000`，`0xDA000` 的 Morse 紀錄和 `0xFC000` 都沒變 `[模擬]` |""", 1)
+open(p,'w').write(s)
+
+p='docs/dev/theory.md'; s=open(p).read()
+old = "7. 之後比照 Morse 拆成獨立 repo，再上 Hub（見 [Hub](../firmware/hub.md)）。"
+assert old in s
+s = s.replace(old, old + """
+
+**之後的「演奏模式」**（本人 2026-11-18 在 fm1-emu 試 CHORDS 模式時想到）：
+
+- 用 `ARP` 切換，和弦不是一次全部按下去，而是一個音接一個音、有一點間隔地出來（strum 或琶音），像 [ChoralRoot](../firmware/choralroot/index.md) 的 strum / arpeggiate。
+- 間隔和方向用旋鈕調。
+- 這屬於彈奏，不是練習，所以放在演奏模式（如果有的話），不放進 WHEEL 的辨認畫面。
+- 本人也覺得 `K4` 的「字母 = 根音」換調體驗不錯。""", 1)
+open(p,'w').write(s)
+EOF
+just docs-check 2>&1 | tail -1
+```
+
+```text
+{"status": "ok", "pages": 50, "llm_pages": 50, "deployed": false}
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 10:58:16Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Check the Morse 0.6 package is on hand for going back
+
+`ls -la firmware/morse/build/*.fwsc 2>/dev/null | awk '{print $5, $9}'; shasum -a 256 firmware/morse/build/morse-0.6.fwsc 2>/dev/null | cut -c1-16`
+
+```text
+Nov 
+Nov 
+Nov 
+Nov 
+Nov 
+d65b6df5570aa632
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 10:58:33Z)**_
+
+刷機前檢查做完了，四項都齊全。下面這次寫入要你自己執行，我不會代按。
+
+**刷機前檢查（THEORY 0.1 dev build → 你的 FM-1）**
+
+1. **整片備份**：剛做的 `backups/2026-11-18-pre-theory-0.1/fm1-20261118-185652.bin`，SHA-256 `5b62a3daeed2f23c7198f4f0cf56f02aaf432355727d78e6f1e8586beed879ea`，已記進 `docs/device-log.md`。還沒上傳到 GitHub Release，要的話跟我說。
+   - Morse 的進度 JSON 兩次都沒存到：電腦端在 `Felucca` port 上等不到 FM-1 的 HELLO，可能你開著 MORSE 網頁之類的程式連著它。
+   - 不過整片備份裡就有 `0xDA000` 的學習紀錄，所以進度並沒有暴露在風險裡。
+2. **晶片**：`0xB36014`（新的 UCUN 晶片）。THEORY 建在 fm1-base 上，它的存檔層會處理兩種晶片；fm1-emu 在 `uc25hq80`（就是這顆）和 `p25q80` 上都測過 `[模擬]`。
+3. **套件**：這是自己 build 的，沒有上游 release 的 digest 可以比對。
+   - `firmware/theory/build/theory.fwsc`，SHA-256 `0d86cc42dd3d48b1b95d97751ab16b59fcdc4883aa4d3ac25c3553301641ebcd`，識別碼 `FM-1_4900`，是 FM-1 的套件。
+   - 它是從還沒 commit 的工作目錄 build 出來的，基底是 `c7a7084`。
+4. **現在和寫入後**：
+   - 現在是 stock bootloader 加 Morse 0.6（`FM-1_41000600`）。
+   - 寫入只換掉韌體區（`0x04000`–`0x92FFF`），資料區不動。
+   - 疊在剛才這份備份上預演：THEORY 開機 0 次寫入，第一次存設定時只寫 `0xD8000`；Morse 的 `0xDA000` 和共用設定 `0xFC000` 都沒變 `[模擬]`。
+   - 要回 Morse 時，裝 `firmware/morse/build/morse-0.6.fwsc` 就好（SHA-256 `d65b6df5…`，和紀錄一致），學習進度會還在。
+
+**指令**：和你裝 Morse 0.4–0.6 時同一條 USB-MIDI 更新路徑。
+
+```sh
+uv run --locked --all-groups python third_party/fm1-base/tools/fm1_install.py firmware/theory/build/theory.fwsc
+```
+
+它出現 `[y/N]` 時，你自己輸入 `y`。上次輸入法送出了非 UTF-8 的字元，造成 `UnicodeDecodeError`，所以輸入前先切成英文。裝完跟我說，我會用 `--info` 確認它跑的是 `FM-1_4900`，再把結果記進 device-log。
+
+另外兩件事已經寫進 `docs/dev/theory.md`：你在 CHORDS 模式想到的「用 `ARP` 切換、和弦一個音接一個音出來」，以及 `K4` 換調手感不錯的感想，都記在之後的「演奏模式」。這輪的程式和文件都還沒 commit。
+
+---
+
+_**User (2026-11-18 11:01:52Z)**_
+
+```
+
+
+<pasted_content id="38ec">
+❯ uv run --locked --all-groups python third_party/fm1-base/tools/fm1_install.py firmware/theory/build/theory.fwsc
+package: FM-1_4900  (firmware/theory/build/theory.fwsc)
+device:  FM-1_41000600  (Felucca)
+Install? Do not unplug the FM-1 while writing. [y/N] y
+starting the update on FM-1_41000600
+checking the package (30 reads)
+switching to update mode
+writing   0%
+the loader writes only the sectors that changed (fast install)
+writing 100%
+restarting
+done: the FM-1 runs FM-1_4900
+</pasted_content id="38ec">
+
+```
+裝上了 好像還可以 可以commit
+
+---
+
+_**Agent (claude-opus-5-5 2026-11-18 11:02:00Z)**_
+
+你已經裝好了。先用 `--info` 確認機器在跑 THEORY，再更新文件、commit。
+
+_**Agent (claude-opus-5-5 2026-11-18 11:02:02Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Confirm the unit runs THEORY (read-only query)
+
+`uv run --locked --all-groups python third_party/fm1-base/tools/fm1_install.py --info 2>&1 | tail -2; date "+%H:%M"; sed -n 13p docs/device-log.md | cut -c1-200`
+
+```text
+error: FM-1 not found (USB data cable? another app using it?)
+  MIDI inputs: (none)
+19:02
+| 目前韌體 | **Morse 0.6 release build（`FM-1_41000600`，藍牙）**（2026-11-18 從 0.4 → 0.5（16:20）→ 0.6 用 USB-MIDI 更新，學習紀錄保留；macOS 上的 USB MIDI port 名稱仍是 `Felucca`）。0.3 release 是 Hub 測試 3 從原廠 015 裝的，進度當時從 ROUND 1
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 11:02:15Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Retry the query and check whether the unit is on USB
+
+`sleep 5; uv run --locked --all-groups python third_party/fm1-base/tools/fm1_install.py --info 2>&1 | tail -2; system_profiler SPUSBDataType 2>/dev/null | grep -i -E "FM-1|THEORY|Felucca|fm1-base|JieLi" | head`
+
+```text
+error: FM-1 not found (USB data cable? another app using it?)
+  MIDI inputs: (none)
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 11:02:27Z)**_
+
+<think><details><summary>Thought Process</summary>
+機器已不在 USB 上，`--info` 因此沒有結果，我以安裝程式回報的 `done` 作為確認並記錄下來，接著更新紀錄與文件。
+
+</details></think>
+
+_**Agent (claude-opus-5-5 2026-11-18 11:02:45Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Record the install, mark v0.1 as flashed, and rerun all checks
+
+```bash
+python3 - <<'EOF'
+import re
+def sub(p, old, new, count=1):
+    s = open(p).read(); assert old in s, (p, old[:80]); s = s.replace(old, new, count); open(p, 'w').write(s)
+
+p = 'docs/device-log.md'
+s = open(p).read()
+line = [l for l in s.splitlines() if l.startswith('| 目前韌體 |')][0]
+new = line.replace('| 目前韌體 | **Morse 0.6 release build（`FM-1_41000600`，藍牙）**（',
+                   '| 目前韌體 | **THEORY 0.1 dev build（`FM-1_4900`，只有 USB）**（2026-11-18 19:00 前後從 Morse 0.6 用 USB-MIDI 更新；Morse 的學習紀錄留在 `0xDA000`，裝回 `morse-0.6.fwsc` 就會讀到）。之前是 Morse 0.6 release build（`FM-1_41000600`，藍牙；', 1)
+new = new.replace('→ Morse 0.5 → Morse 0.6 |', '→ Morse 0.5 → Morse 0.6 → THEORY 0.1 |')
+assert new != line and '→ THEORY 0.1 |' in new, new[-80:]
+s = s.replace(line, new, 1)
+open(p, 'w').write(s)
+
+sub(p, "`0xDA000` 的 Morse 紀錄和 `0xFC000` 都沒變 `[模擬]` |",
+"""`0xDA000` 的 Morse 紀錄和 `0xFC000` 都沒變 `[模擬]` |
+| 2026-11-18 19:00 前後 | 本人執行 `fm1_install.py firmware/theory/build/theory.fwsc`（THEORY 0.1 dev build，`FM-1_4900`，SHA-256 `0d86cc42…41ebcd`，從 `c7a7084` 上未 commit 的工作目錄 build），機器上是 Morse 0.6 | 成功：`checking the package (30 reads)` → `switching to update mode` → `the loader writes only the sectors that changed (fast install)` → `done: the FM-1 runs FM-1_4900`。本人試用：「好像還可以」。19:02 agent 想用 `--info` 再確認時，FM-1 已不在 USB 上（沒有任何 MIDI input），所以以安裝程式最後的回報為準 |""")
+
+p = 'docs/dev/theory.md'
+sub(p, "**狀態（2026-11-18）：v0.1（WHEEL）寫好了，在 host simulator 和 fm1-emu 兩種晶片上都驗證過，還沒刷進實機 `[模擬]`。** 驗證結果見 [v0.1 驗證](#v01-verify)。",
+       "**狀態（2026-11-18）：v0.1（WHEEL）在 host simulator 和 fm1-emu 兩種晶片上驗證過 `[模擬]`，19:00 前後刷進實機，本人試用的感想是「好像還可以」`[實機]`。** 驗證結果見 [v0.1 驗證](#v01-verify)，刷機紀錄見[我的機器](../device-log.md)。")
+sub(p, "2. **v0.1 WHEEL**：fm1-base app、8 voice synth、五度圈、♯♭ glyph、和弦辨識。2026-11-18 在 host simulator 和 fm1-emu 完成；刷實機要另外走 preflight，等本人批准。",
+       "2. ~~**v0.1 WHEEL**~~：fm1-base app、8 voice synth、五度圈、♯♭ glyph、和弦辨識。2026-11-18 完成並刷進實機。")
+sub(p, "2026-11-18，全部是 `[模擬]`，還沒有實機的結果。",
+       "2026-11-18。前四列是 `[模擬]`，最後一列是實機。")
+sub(p, "| 疊在實機備份上 | `emu_rehearse.py` 疊在 `2026-11-18-pre-morse-0.5` 的備份上，兩種晶片 | 開機 0 次寫入；存檔只寫 `0xD8000`；Morse 的 `0xDA000`–`0xDBFFF` 和 `0xFC000` 的共用設定都和備份相同 |",
+       "| 疊在實機備份上 | `emu_rehearse.py` 疊在 `2026-11-18-pre-morse-0.5` 和刷機前剛做的 `2026-11-18-pre-theory-0.1` 備份上，兩種晶片 | 開機 0 次寫入；存檔只寫 `0xD8000`；Morse 的 `0xDA000`–`0xDBFFF` 和 `0xFC000` 的共用設定都和備份相同 |\n| 實機 | 本人用 `fm1_install.py` 從 Morse 0.6 更新（fast install） | `done: the FM-1 runs FM-1_4900`；本人試用：「好像還可以」`[實機]` |")
+
+sub('docs/hardware/flash-map.md', "自製 [THEORY](../dev/theory.md#srs) 的設定（v0.1，還沒刷實機）。",
+    "自製 [THEORY](../dev/theory.md#srs) 的設定（v0.1，2026-11-18 刷進實機）。")
+sub('AGENTS.md', "verified in the simulator and fm1-emu, not yet flashed.",
+    "on the owner's unit since 2026-11-18 (installed over Morse 0.6, whose record at `0xDA000` it leaves alone).")
+sub('firmware/theory/README.md', "Verified in the host simulator and fm1-emu; not yet flashed.",
+    "Verified in the host simulator and fm1-emu, and running on the owner's unit since 2026-11-18.")
+EOF
+just theory-unit && just fw-test theory 2>&1 | grep -E "FAIL|host:" && just docs-check 2>&1 | tail -1 && git status --short
+```
+
+```text
+ok: 26661 checks, 0 failed
+host: 10640 ms simulated, 182 blits, render 0.2% of real time (host CPU)
+{"status": "ok", "pages": 50, "llm_pages": 50, "deployed": false}
+ M .claude/plans/firmware-morse-concurrent-crane.md
+ M .claude/plans/squishy-riding-flute.md
+ M .specstory/history/2026-11-17_13-42-11Z-ascii-firmware-focus-host.md
+ M .specstory/history/2026-11-18_07-29-47Z-at-firmware-morse-at.md
+ M .specstory/statistics.json
+ M AGENTS.md
+ M Justfile
+ M docs/dev/index.md
+ M docs/dev/theory.md
+ M docs/device-log.md
+ M docs/hardware/flash-map.md
+ M firmware/theory/README.md
+?? docs/assets/theory/
+?? firmware/theory/.gitignore
+?? firmware/theory/LICENSE
+?? firmware/theory/app.c
+?? firmware/theory/app.h
+?? firmware/theory/fm1.toml
+?? firmware/theory/gtext.c
+?? firmware/theory/gtext.h
+?? firmware/theory/synth.c
+?? firmware/theory/synth.h
+?? firmware/theory/tests/basic.txt
+?? firmware/theory/words.tsv
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 11:02:53Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Check whether README and the docs home list own firmwares
+
+`grep -n -i "own firmware\|自製韌體\|MORSE\|Morse 0\." README.md docs/index.md | head -12`
+
+```text
+docs/index.md:20:| 自己寫韌體 | [自製韌體環境](dev/index.md) |
+docs/index.md:22:| 用 FM-1 學摩斯電碼、跟人互傳（自製） | [用 MORSE 學摩斯](dev/morse-learn.md)、[摩斯電碼機](dev/morse.md)、[操作速查](dev/morse-cheatsheet.md)、[兩台互連](hardware/io.md#two-units) |
+docs/index.md:44:## 自製韌體 + host
+docs/index.md:46:在 [fm1-base](dev/index.md) 上寫的。Conductor 和共用模組是 MIT；Morse 的韌體是 GPL-3.0-or-later（電腦端仍是 MIT）。每個專案是一套 FM-1 韌體，需要的話再加一個電腦端程式。
+docs/index.md:50:| **Conductor** | coding agent 的桌上控制台：一個琴鍵一個 agent，LED 表示急不急，螢幕顯示狀態與輸出（含中文），提示音，按鈕批准 / 拒絕 / 中斷，按住說話的語音輸入，USB 或藍牙 | `firmware/conductor/` | `host/conductor/`（接 hc 與 classic Herdr 的 Python daemon） | 韌體 0.3、host 0.3.2；2026-11-17 在我的機器上用過，目前機器上換成 Morse（換回來：`just fm1-switch firmware/conductor/build/conductor.fwsc`），見[設計](agentic/conductor.md)、[速查](agentic/conductor-cheatsheet.md)、[版本紀錄](agentic/conductor-changelog.md) |
+docs/index.md:51:| **Morse** | 隨身摩斯電碼機：琴鍵當電鍵（直鍵或 iambic paddle）即時解碼、練長短的 RHYTHM 頁、琴鍵當字母鍵盤和片語鍵、閃卡間隔複習（預設只用聽的，打碼卡看自己的節奏判斷）、分級測驗與手動調整進度、進度備份還原、連續收聽、靜音看燈、USB 或藍牙 MIDI 用 Vail 的格式 | `firmware/morse/` | `host/morse/`（把發的字打進電腦、電腦送字給 FM-1 播） | 韌體 0.6、host 0.6.0（藍牙）；2026-11-17 起在我的機器上，見[怎麼用它學](dev/morse-learn.md)、[設計](dev/morse.md)、[速查](dev/morse-cheatsheet.md) |
+docs/index.md:53:| 共用模組 | `hostlink`（經 USB / 藍牙和電腦的 SysEx 連線）、`ledfx`（LED 動態）、`chime`（FM 提示音） | `firmware/common/` | — | Conductor 在用；Morse 用 `hostlink`、`ledfx` |
+README.md:16:- [Morse](docs/dev/morse.md) — our own pocket Morse code machine (firmware + host), see below
+README.md:20:## Our own firmware + host
+README.md:22:Built here on [fm1-base](https://github.com/charlesvestal/fm1-base) (MPL-2.0). Conductor and the shared modules are MIT; Morse's firmware is GPL-3.0-or-later (its host program here is MIT).
+README.md:27:| **Conductor** | The FM-1 as a desk console for coding agents: one agent per key, urgency on the key LEDs, state and output on the screen (Chinese included), chimes, approve / deny / interrupt from the buttons, push-to-talk dictation, USB or Bluetooth | [`firmware/conductor/`](firmware/conductor/) | [`host/conductor/`](host/conductor/) (Python daemon for [herdr-core](https://github.com/herdrdev/herdr-core) `hc` and classic Herdr) | Firmware 0.3, host 0.3.2; ran on my unit 2026-11-17, now switched to Morse |
+README.md:28:| **Morse** | A pocket Morse code machine: key on the piano keys (straight key or iambic paddles) and read what you sent, type letters on the keys and hear them, flash cards with spaced repetition (by sound by default; keyed answers judged by their own rhythm), a placement test, progress you can edit, back up and restore, silent mode with the lights, USB or Bluetooth MIDI in the Vail adapter's format | [`firmware/morse/`](firmware/morse/) | [`host/morse/`](host/morse/) (types what you key into the computer; sends text for the FM-1 to play) | Firmware 0.6 (Bluetooth), host 0.6.0; on my unit since 2026-11-17; [learning with it](docs/dev/morse-learn.md) |
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 11:03:00Z)**_
+
+首頁和 README 都有「自製韌體」表格，THEORY 應該列進去。Morse 那一列的狀態也要改，因為機器上現在換成 THEORY 了。
+
+_**Agent (claude-opus-5-5 2026-11-18 11:03:01Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Read the own-firmware tables in README and the docs home
+
+`sed -n 12,30p README.md; echo ----; sed -n 18,24p docs/index.md; sed -n 44,54p docs/index.md`
+
+```text
+- [Cautions](docs/getting-started/cautions.md) and [recovery](docs/getting-started/recovery.md)
+- [Firmware map](docs/firmware/index.md) and the [SLOOP section](docs/firmware/sloop/index.md)
+- [Agentic workflow](docs/agentic/index.md) — what an agent may automate and what needs approval
+- [Conductor](docs/agentic/conductor.md) — our own coding-agent console (firmware + host), see below
+- [Morse](docs/dev/morse.md) — our own pocket Morse code machine (firmware + host), see below
+- [Resource map](docs/resources.md) — upstream repos and current versions
+- [Device log](docs/device-log.md) — the state of my own unit
+
+## Our own firmware + host
+
+Built here on [fm1-base](https://github.com/charlesvestal/fm1-base) (MPL-2.0). Conductor and the shared modules are MIT; Morse's firmware is GPL-3.0-or-later (its host program here is MIT).
+Each one is a firmware for the FM-1 plus, where it needs one, a program on the computer.
+
+| Project | What it is | Firmware | Host | Status |
+|---|---|---|---|---|
+| **Conductor** | The FM-1 as a desk console for coding agents: one agent per key, urgency on the key LEDs, state and output on the screen (Chinese included), chimes, approve / deny / interrupt from the buttons, push-to-talk dictation, USB or Bluetooth | [`firmware/conductor/`](firmware/conductor/) | [`host/conductor/`](host/conductor/) (Python daemon for [herdr-core](https://github.com/herdrdev/herdr-core) `hc` and classic Herdr) | Firmware 0.3, host 0.3.2; ran on my unit 2026-11-17, now switched to Morse |
+| **Morse** | A pocket Morse code machine: key on the piano keys (straight key or iambic paddles) and read what you sent, type letters on the keys and hear them, flash cards with spaced repetition (by sound by default; keyed answers judged by their own rhythm), a placement test, progress you can edit, back up and restore, silent mode with the lights, USB or Bluetooth MIDI in the Vail adapter's format | [`firmware/morse/`](firmware/morse/) | [`host/morse/`](host/morse/) (types what you key into the computer; sends text for the FM-1 to play) | Firmware 0.6 (Bluetooth), host 0.6.0; on my unit since 2026-11-17; [learning with it](docs/dev/morse-learn.md) |
+| `hello` | fm1-base's template, unmodified: the toolchain smoke test | [`firmware/hello/`](firmware/hello/) | — | Builds and boots in the emulator |
+| Shared modules | `hostlink` (SysEx link to a host over USB / BLE), `ledfx` (LED patterns), `chime` (FM notification voice) | [`firmware/common/`](firmware/common/) | — | Used by Conductor; Morse uses `hostlink` and `ledfx` |
+----
+| 學 SLOOP 怎麼操作 | [SLOOP](firmware/sloop/index.md) |
+| 讓 agent 幫忙刷機或開發 | [Agentic 工作流](agentic/index.md) |
+| 自己寫韌體 | [自製韌體環境](dev/index.md) |
+| 用 FM-1 管 coding agent（自製） | [Conductor](agentic/conductor.md)、[操作速查](agentic/conductor-cheatsheet.md) |
+| 用 FM-1 學摩斯電碼、跟人互傳（自製） | [用 MORSE 學摩斯](dev/morse-learn.md)、[摩斯電碼機](dev/morse.md)、[操作速查](dev/morse-cheatsheet.md)、[兩台互連](hardware/io.md#two-units) |
+| 試 Agent Deck | [Agent Deck 試用](firmware/agent-deck/index.md) |
+| 搞懂官方、社群、Hub、VIBE 的關係 | [生態是怎麼來的](ecosystem.md) |
+## 自製韌體 + host
+
+在 [fm1-base](dev/index.md) 上寫的。Conductor 和共用模組是 MIT；Morse 的韌體是 GPL-3.0-or-later（電腦端仍是 MIT）。每個專案是一套 FM-1 韌體，需要的話再加一個電腦端程式。
+
+| 專案 | 是什麼 | 韌體 | 電腦端 | 狀態 |
+|---|---|---|---|---|
+| **Conductor** | coding agent 的桌上控制台：一個琴鍵一個 agent，LED 表示急不急，螢幕顯示狀態與輸出（含中文），提示音，按鈕批准 / 拒絕 / 中斷，按住說話的語音輸入，USB 或藍牙 | `firmware/conductor/` | `host/conductor/`（接 hc 與 classic Herdr 的 Python daemon） | 韌體 0.3、host 0.3.2；2026-11-17 在我的機器上用過，目前機器上換成 Morse（換回來：`just fm1-switch firmware/conductor/build/conductor.fwsc`），見[設計](agentic/conductor.md)、[速查](agentic/conductor-cheatsheet.md)、[版本紀錄](agentic/conductor-changelog.md) |
+| **Morse** | 隨身摩斯電碼機：琴鍵當電鍵（直鍵或 iambic paddle）即時解碼、練長短的 RHYTHM 頁、琴鍵當字母鍵盤和片語鍵、閃卡間隔複習（預設只用聽的，打碼卡看自己的節奏判斷）、分級測驗與手動調整進度、進度備份還原、連續收聽、靜音看燈、USB 或藍牙 MIDI 用 Vail 的格式 | `firmware/morse/` | `host/morse/`（把發的字打進電腦、電腦送字給 FM-1 播） | 韌體 0.6、host 0.6.0（藍牙）；2026-11-17 起在我的機器上，見[怎麼用它學](dev/morse-learn.md)、[設計](dev/morse.md)、[速查](dev/morse-cheatsheet.md) |
+| `hello` | fm1-base 的 template 原樣複本，用來驗證工具鏈 | `firmware/hello/` | — | 模擬器開得起來 |
+| 共用模組 | `hostlink`（經 USB / 藍牙和電腦的 SysEx 連線）、`ledfx`（LED 動態）、`chime`（FM 提示音） | `firmware/common/` | — | Conductor 在用；Morse 用 `hostlink`、`ledfx` |
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 11:03:18Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Add THEORY to the own-firmware tables and update Morse's status
+
+```bash
+python3 - <<'EOF'
+def sub(p, old, new):
+    s = open(p).read(); assert old in s, (p, old[:80]); s = s.replace(old, new, 1); open(p, 'w').write(s)
+R = 'README.md'
+sub(R, "- [Morse](docs/dev/morse.md) — our own pocket Morse code machine (firmware + host), see below\n",
+       "- [Morse](docs/dev/morse.md) — our own pocket Morse code machine (firmware + host), see below\n- [THEORY](docs/dev/theory.md) — our own pocket music theory trainer (firmware), see below\n")
+sub(R, "Conductor and the shared modules are MIT; Morse's firmware is GPL-3.0-or-later (its host program here is MIT).",
+       "Conductor and the shared modules are MIT; the Morse and THEORY firmwares are GPL-3.0-or-later (Morse's host program here is MIT).")
+sub(R, "| Firmware 0.6 (Bluetooth), host 0.6.0; on my unit since 2026-11-17; [learning with it](docs/dev/morse-learn.md) |",
+       "| Firmware 0.6 (Bluetooth), host 0.6.0; on my unit 2026-11-17 to 2026-11-18, now switched to THEORY (its progress stays at `0xDA000`); [learning with it](docs/dev/morse-learn.md) |\n| **THEORY** | A pocket music theory trainer. v0.1, the WHEEL: the circle of fifths with the key's chords marked; play a chord and it is named with its Roman or Nashville number in the key (secondary dominants, borrowed chords, inversions); or the white keys play the key's own chords, voiced to move least; nine modes, every key spelled right. Lessons, ear and rhythm training come next | [`firmware/theory/`](firmware/theory/) | — | Firmware 0.1 (dev build); on my unit since 2026-11-18; [design](docs/dev/theory.md) |")
+I = 'docs/index.md'
+sub(I, "| 試 Agent Deck | [Agent Deck 試用](firmware/agent-deck/index.md) |",
+       "| 用 FM-1 學樂理：五度圈、和弦、級數（自製） | [樂理練習機](dev/theory.md) |\n| 試 Agent Deck | [Agent Deck 試用](firmware/agent-deck/index.md) |")
+sub(I, "Conductor 和共用模組是 MIT；Morse 的韌體是 GPL-3.0-or-later（電腦端仍是 MIT）。",
+       "Conductor 和共用模組是 MIT；Morse 與 THEORY 的韌體是 GPL-3.0-or-later（Morse 的電腦端仍是 MIT）。")
+sub(I, "| 韌體 0.6、host 0.6.0（藍牙）；2026-11-17 起在我的機器上，見[怎麼用它學](dev/morse-learn.md)、[設計](dev/morse.md)、[速查](dev/morse-cheatsheet.md) |",
+       "| 韌體 0.6、host 0.6.0（藍牙）；2026-11-17 到 11-18 在我的機器上，目前換成 THEORY（學習紀錄留在 `0xDA000`），見[怎麼用它學](dev/morse-learn.md)、[設計](dev/morse.md)、[速查](dev/morse-cheatsheet.md) |\n| **THEORY** | 隨身樂理練習機。v0.1 是 WHEEL：五度圈上標出調內和弦；彈和弦就說出它的名稱和在調裡的 Roman / Nashville 級數（副屬、借用、轉位）；或讓白鍵彈調內和弦，自動就近轉位；九種調式，每個調都拼對音名。之後加閃卡、聽音、節奏 | `firmware/theory/` | — | 韌體 0.1（dev build）；2026-11-18 起在我的機器上，見[設計](dev/theory.md) |")
+EOF
+just docs-check 2>&1 | tail -1
+```
+
+```text
+{"status": "ok", "pages": 50, "llm_pages": 50, "deployed": false}
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 11:03:28Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Commit THEORY 0.1 and its docs
+
+```bash
+git add AGENTS.md Justfile README.md docs/index.md docs/dev/index.md docs/dev/theory.md docs/device-log.md docs/hardware/flash-map.md docs/assets/theory firmware/theory && git status --short | grep -v "^??" && git commit -q -F - <<'EOF'
+theory 0.1: the WHEEL, on my unit
+
+THEORY's first firmware (firmware/theory, GPL-3.0-or-later, identity
+FM-1_49, settings at 0xD8000). The WHEEL page: the circle of fifths with
+the key's major and minor chords marked and the key signature in the
+middle; SELECT changes key, SEL + a key jumps to it, K1 nine modes, K2
+triads or sevenths, K3 Roman or Nashville, K4 chord keys by letter or
+C = I. NOTES names what is played (inversions, secondary dominants,
+borrowed chords, single notes, intervals); CHORDS lets the white keys
+play the key's chords, voiced to move least, with the root below.
+LEDs show the key only, never the next note (the Keyboard Academy trial:
+hints on every note make it too easy). Eight-voice FM electric piano
+after common/chime; sharp/flat/dim signs drawn as bitmaps.
+
+Verified: 77 simulator checks, the device build (122,308 B), save and
+reload on both chips in fm1-emu, and rehearsals over this unit's backups
+(boot writes nothing, a save writes 0xD8000 only, Morse's 0xDA000 kept).
+Installed over Morse 0.6 with fm1_install.py (fast install); preflight
+backup 2026-11-18-pre-theory-0.1 recorded in the device log.
+
+Docs: the design page's status, controls, screenshots and verification,
+guidance fading as a principle, the performance-mode idea (ARP strum),
+the flash map, the own-firmware tables, theory-emu.
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+EOF
+git log --oneline -3 && git status --short
+```
+
+```text
+ M .claude/plans/firmware-morse-concurrent-crane.md
+ M .claude/plans/squishy-riding-flute.md
+ M .specstory/history/2026-11-17_13-42-11Z-ascii-firmware-focus-host.md
+ M .specstory/history/2026-11-18_07-29-47Z-at-firmware-morse-at.md
+ M .specstory/statistics.json
+M  AGENTS.md
+M  Justfile
+M  README.md
+A  docs/assets/theory/wheel-chords.png
+A  docs/assets/theory/wheel-notes.png
+M  docs/dev/index.md
+M  docs/dev/theory.md
+M  docs/device-log.md
+M  docs/hardware/flash-map.md
+M  docs/index.md
+A  firmware/theory/.gitignore
+A  firmware/theory/LICENSE
+M  firmware/theory/README.md
+A  firmware/theory/app.c
+A  firmware/theory/app.h
+A  firmware/theory/fm1.toml
+A  firmware/theory/gtext.c
+A  firmware/theory/gtext.h
+A  firmware/theory/synth.c
+A  firmware/theory/synth.h
+A  firmware/theory/tests/basic.txt
+A  firmware/theory/words.tsv
+1a8f7c6 theory 0.1: the WHEEL, on my unit
+aca467b chore: backup plan and chat history
+c7a7084 theory: Keyboard Academy boots in fm1-emu on both chips; rounds, not days
+ M .claude/plans/firmware-morse-concurrent-crane.md
+ M .claude/plans/squishy-riding-flute.md
+ M .specstory/history/2026-11-17_13-42-11Z-ascii-firmware-focus-host.md
+ M .specstory/history/2026-11-18_07-29-47Z-at-firmware-morse-at.md
+ M .specstory/statistics.json
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 11:03:41Z)**_
+
+THEORY 0.1 已經 commit 成 `1a8f7c6`，在 `main` 上，沒有 push。刷機之後我只改了文件，所以這個 commit 裡的程式碼和機器上跑的那個 build 完全相同。
+
+**安裝確認**：安裝程式最後回報 `done: the FM-1 runs FM-1_4900`，這次走的是只寫有變動 sector 的快速安裝。我 19:02 想再用 `--info` 確認時，FM-1 已經不在 USB 上了，所以紀錄裡以安裝程式的回報為準，也註明了這一點。
+
+**這次 commit 包含**
+- `firmware/theory/` 的 app 本體：WHEEL 頁、synth、♯♭ glyph、77 項模擬器測試、`fm1.toml`、LICENSE。
+- `docs/device-log.md`：目前韌體改成 THEORY 0.1，加上刷機前的整片備份（`5b62a3da…`）、preflight 和安裝紀錄，以及你的感想「好像還可以」。
+- `docs/dev/theory.md`：狀態改成已上實機 `[實機]`，加上截圖、驗證表，以及從你試用 Keyboard Academy 得出的「提示要逐漸撤掉」原則。之後的「演奏模式」（用 `ARP` 讓和弦一個音接一個音出來）也記在這頁。
+- `README.md` 和 `docs/index.md` 的自製韌體表格加了 THEORY；Morse 那一列改成「目前換成 THEORY，學習紀錄留在 `0xDA000`」。
+- `docs/hardware/flash-map.md`、`AGENTS.md`、`Justfile`（新增 `just theory-emu`）。
+- `.specstory/` 和 `.claude/plans/` 沒有放進去。
+
+還有兩件事：
+- 刷機前的整片備份 `2026-11-18-pre-theory-0.1` 還沒傳到 GitHub Release 做異地備份，要的話跟我說。
+- Morse 的進度 JSON 這次沒存到，但紀錄還好好地留在機器的 `0xDA000`。之後裝回 `morse-0.6.fwsc` 就會讀到，那時再補存一份 JSON。
+
+下一步照 roadmap 是 v0.2 TODAY：閃卡回合、聽音卡、進度備份網頁。
