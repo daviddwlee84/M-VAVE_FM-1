@@ -228,26 +228,29 @@ fw-build app="hello": fw-setup fw-toolchain
 
 # A package to try in the browser, in fm1-emu (the .fwsc itself, emulated): firmware/APP/build/APP.fwsc (just fw-build
 # APP first) onto the `previews` branch as SLOT/APP.fwsc (SLOT: pr-N, or main), pushed; prints the public link.
-# PUBLISHES to GitHub (a branch of packages only; not for installing). `just fw-preview APP pr-N --remove` takes it off.
+# PUBLISHES to GitHub. The branch is always one commit, force-pushed (with a lease: a parallel push is not lost), so
+# old packages do not pile up in the repo's history. `just fw-preview APP pr-N --remove` takes one off.
 fw-preview app slot *flags:
     #!/usr/bin/env bash
     set -euo pipefail
     pkg="$PWD/firmware/{{app}}/build/{{app}}.fwsc"
+    src="$(git rev-parse --short HEAD)"
+    [ "{{flags}}" = "--remove" ] || test -f "$pkg" || { echo "fw-preview: no $pkg (just fw-build {{app}})"; exit 1; }
     w="$(mktemp -d)/previews"
     git fetch -q origin previews
+    lease="$(git rev-parse origin/previews)"
     git worktree add -q --detach "$w" origin/previews
     trap 'git worktree remove --force "$w"' EXIT
     cd "$w"
     if [ "{{flags}}" = "--remove" ]; then
       git rm -q -r --ignore-unmatch "{{slot}}"
-      msg="previews: {{slot}} removed"
     else
-      test -f "$pkg" || { echo "fw-preview: no $pkg (just fw-build {{app}})"; exit 1; }
       mkdir -p "{{slot}}" && cp "$pkg" "{{slot}}/{{app}}.fwsc" && git add "{{slot}}"
-      msg="previews: {{app}} for {{slot}} ($(git -C "$OLDPWD" rev-parse --short HEAD), sha256 $(shasum -a 256 "$pkg" | cut -c1-12))"
     fi
     git diff --cached --quiet && { echo "fw-preview: nothing changed"; exit 0; }
-    git commit -q -m "$msg" && git push -q origin HEAD:previews
+    tree="$(git write-tree)"
+    commit="$(git commit-tree "$tree" -m "previews: packages to try in fm1-emu (last: {{app}} {{slot}} {{flags}} from $src)")"
+    git push -q --force-with-lease=previews:"$lease" origin "$commit":refs/heads/previews
     [ "{{flags}}" = "--remove" ] || echo "try it: https://joakimeriksson.github.io/fm1-emu/?package=https://raw.githubusercontent.com/daviddwlee84/M-VAVE_FM-1/previews/{{slot}}/{{app}}.fwsc&name={{app}}&chip=uc25hq80"
 
 # The browser emulator (the same app in WebAssembly) into firmware/APP/build/emu/: open its index.html over http, or

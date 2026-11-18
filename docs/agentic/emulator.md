@@ -149,6 +149,12 @@ fm1-base 可以把同一個 app 編成 WebAssembly，在瀏覽器裡跑（`tools
         - 做法：`just fw-build APP`，再 `just fw-preview APP pr-N`。
         - 它會把套件推到 `previews` 分支（只放套件，和 `main` 的歷史分開），然後印出連結，例如 `https://joakimeriksson.github.io/fm1-emu/?package=https://raw.githubusercontent.com/daviddwlee84/M-VAVE_FM-1/previews/pr-N/APP.fwsc&name=APP&chip=uc25hq80`。
         - fm1-emu 的 `?package=` 只收有開 CORS 的 https 網址。`raw.githubusercontent.com` 有開（`Access-Control-Allow-Origin: *`），GitHub release 的下載檔沒有（2026-11-18 用 curl 查過），所以放在分支裡。
+        - `previews` 分支**永遠只有一個 commit**：每次更新都重新產生一個沒有上一代的 commit，用 `--force-with-lease` 推上去。舊的套件不會累積在 repo 的歷史裡；另一個 PR 同時推的話，會因為 lease 不符而失敗，不會被蓋掉，重跑一次即可。這是 side agent 提醒的：每個套件約 600 KB，一般的 `git clone` 會連這個分支一起下載。
+        - **為什麼不放在 PR 留言的附件**（本人 2026-11-19 問）：這樣不用進 repo，但做不到 `[調研]`：
+            - GitHub 沒有正式的 API 可以上傳留言附件，只能在網頁上拖曳，agent 自動做不到。
+            - 附件只收特定的副檔名，`.fwsc` 要先壓成 zip，但 fm1-emu 要的是 `.fwsc` 本身。
+            - 附件網址會轉到有時效的下載網址，不保證有開 CORS（沒有實測）。
+            - 其他不進這個 repo 的做法有：另開一個 repo 只放套件、用 gist、用外部服務。目前單一 commit 的分支已經不會讓 repo 變肥，所以先這樣。
         - 2026-11-18 用 headless Chromium 開過 `main` 的 THEORY：開機進到第一次開機的選單 `[模擬]`。
         - 跑的是真正的套件，但仍是模擬，第 3 層的檢查照樣要做。有新的 commit 要重新推；PR 合併或關閉後用 `--remove` 拿掉。
         - 頁面預設 100 MHz，可以在右邊的 Clock 選單改成 240 MHz。

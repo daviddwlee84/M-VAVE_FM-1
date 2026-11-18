@@ -246,7 +246,7 @@ Other rules:
 - Pull requests that change a firmware follow `.github/pull_request_template.md`, three layers of acceptance:
   1. **Try it**: a public link to the PR's package running in fm1-emu's web page (no account needed):
      `just fw-build APP`, then `just fw-preview APP pr-N` (it pushes the `.fwsc` to the `previews` branch, which
-     holds packages only, and prints the link). Run it again after new commits; `just fw-preview APP pr-N --remove`
+     holds packages only, always as one force-pushed commit so nothing piles up in history, and prints the link). Run it again after new commits; `just fw-preview APP pr-N --remove`
      once the PR is merged or closed. It is the real package, but a browser emulation: it shows how it plays, and
      the checks in 3 still decide. (`just fw-web APP`, fm1-base's host build in WebAssembly, is a lighter
      alternative when the JieLi toolchain is not at hand.)
