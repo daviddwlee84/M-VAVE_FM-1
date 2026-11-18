@@ -30,6 +30,16 @@ static uint32_t sy_clock;
 static volatile int sy_count;
 static volatile uint8_t sy_silence;      /* synth_stop asked: clear everything at the next block */
 
+/* the score: two buffers, the main loop fills the one not playing, then names it */
+static sy_note_t sy_sc[2][SY_SCORE_MAX];
+static uint8_t sy_sc_n[2];
+static volatile uint8_t sy_sc_go, sy_sc_seen, sy_sc_buf, sy_sc_stop;
+static volatile uint8_t sy_sc_busy;
+static uint8_t sy_sc_play;               /* the audio interrupt's: the buffer playing */
+static uint32_t sy_sc_pos;               /* samples since it started */
+static uint8_t sy_sc_state[SY_SCORE_MAX];   /* 0 waiting, 1 sounding, 2 done */
+static uint8_t sy_sc_active;
+
 void synth_init(void)
 {
     int i;
@@ -49,7 +59,22 @@ static void sy_push(uint8_t type, int note, int vel)
 void synth_note_on(int note, int vel) { if (note >= 0 && note < 128) sy_push(SY_EV_ON, note, vel); }
 void synth_note_off(int note) { if (note >= 0 && note < 128) sy_push(SY_EV_OFF, note, 0); }
 void synth_all_off(void) { sy_push(SY_EV_ALL, 0, 0); }
-void synth_stop(void) { sy_silence = 1; sy_r = sy_w; }
+void synth_stop(void) { sy_silence = 1; sy_r = sy_w; sy_sc_stop = 1; }
+
+void synth_score(const sy_note_t *notes, uint32_t n)
+{
+    uint8_t b = (uint8_t)(sy_sc_buf ^ 1u);
+    uint32_t i;
+    if (n > SY_SCORE_MAX) n = SY_SCORE_MAX;
+    for (i = 0; i < n; i++) sy_sc[b][i] = notes[i];
+    sy_sc_n[b] = (uint8_t)n;
+    sy_sc_buf = b;
+    sy_sc_busy = n > 0;
+    sy_sc_go = (uint8_t)(sy_sc_go + 1u);
+}
+
+void synth_score_stop(void) { sy_sc_stop = 1; sy_sc_busy = 0; }
+int synth_score_busy(void) { return sy_sc_busy; }
 int synth_active(void) { return sy_count; }
 
 static void sy_start(int note, int vel)
@@ -79,6 +104,55 @@ static void sy_start(int note, int vel)
     v->stage = SY_HELD;
 }
 
+static void sy_release(int note)
+{
+    uint32_t i;
+    for (i = 0; i < SY_VOICES; i++)
+        if (sy_v[i].stage == SY_HELD && sy_v[i].note == note) sy_v[i].stage = SY_REL;
+}
+
+/* the score's notes that start or end in this block (main loop: synth_score; here: the audio interrupt) */
+static void sy_score_step(uint32_t n)
+{
+    uint32_t i, left = 0;
+    if (sy_sc_stop) {
+        sy_sc_stop = 0;
+        if (sy_sc_active)
+            for (i = 0; i < sy_sc_n[sy_sc_play]; i++)
+                if (sy_sc_state[i] == 1u) sy_release(sy_sc[sy_sc_play][i].note);
+        sy_sc_active = 0;                /* (a score named since starts below) */
+    }
+    if (sy_sc_go != sy_sc_seen) {        /* a new score: the old one's notes let go */
+        if (sy_sc_active)
+            for (i = 0; i < sy_sc_n[sy_sc_play]; i++)
+                if (sy_sc_state[i] == 1u) sy_release(sy_sc[sy_sc_play][i].note);
+        sy_sc_seen = sy_sc_go;
+        sy_sc_play = sy_sc_buf;
+        sy_sc_pos = 0;
+        sy_sc_active = 1;
+        for (i = 0; i < SY_SCORE_MAX; i++) sy_sc_state[i] = 0;
+    }
+    if (!sy_sc_active) return;
+    for (i = 0; i < sy_sc_n[sy_sc_play]; i++) {
+        const sy_note_t *e = &sy_sc[sy_sc_play][i];
+        uint32_t on = (uint32_t)e->at * 44u + (uint32_t)e->at / 10u, off = on + (uint32_t)e->dur * 44u;
+        if (sy_sc_state[i] == 0u && on <= sy_sc_pos + n) {
+            sy_start(e->note, e->vel);
+            sy_sc_state[i] = 1;
+        }
+        if (sy_sc_state[i] == 1u && off <= sy_sc_pos + n) {
+            sy_release(e->note);
+            sy_sc_state[i] = 2;
+        }
+        if (sy_sc_state[i] != 2u) left++;
+    }
+    sy_sc_pos += n;
+    if (!left) {
+        sy_sc_active = 0;
+        sy_sc_busy = 0;
+    }
+}
+
 static void sy_events(void)
 {
     while (sy_r != sy_w) {
@@ -101,6 +175,7 @@ void synth_render(int32_t *lr, uint32_t n, float gain)
         sy_silence = 0;
     }
     sy_events();
+    sy_score_step(n);
     for (i = 0; i < 2u * n; i++) lr[i] = 0;
     for (k = 0; k < SY_VOICES; k++) {
         sy_voice_t *v = &sy_v[k];

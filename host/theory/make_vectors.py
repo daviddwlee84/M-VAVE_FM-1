@@ -7,6 +7,8 @@ against an implementation it did not come from. The file is committed; the tests
 
     just theory-vectors     (uv run --with music21==10.5.2 python -I host/theory/make_vectors.py)
 
+Ours differs from music21 by design in one place: the 13th chord leaves out the 11th.
+
 Left out on purpose: pentatonic and blues scales (no music21 class; tests/theory_test.c has them by hand), and
 Roman numerals in minor keys (music21 reads VI and VII against the minor scale, theory.c against the major
 scale on the same tonic, the pop habit: see theory.h).
@@ -41,8 +43,9 @@ CHORDS = {  # theory.c's chord symbol -> music21's
     "": "", "m": "m", "dim": "dim", "aug": "+", "sus4": "sus4", "sus2": "sus2",
     "7": "7", "maj7": "maj7", "m7": "m7", "m7b5": "ø7", "dim7": "o7", "m(maj7)": "mM7", "6": "6", "m6": "m6",
     "7sus4": "7sus4", "add9": "add9", "m(add9)": "madd9", "9": "9", "maj9": "M9", "m9": "m9",
-    "7#5": "+7", "maj7#5": "+M7", "5": "power",
+    "7#5": "+7", "maj7#5": "+M7", "6/9": "6add9", "7b9": "7b9", "7#9": "7#9", "13": "13", "5": "power",
 }
+NO_11 = {"13"}  # music21's 13th has the 11th; ours leaves it out, as voicings usually do
 
 # Roman numerals the two read the same way (music21's 7 is the key's own seventh, so bVII7 is left out).
 NUMERALS = ["I", "ii", "iii", "IV", "V", "vi", "viio", "IM7", "ii7", "iii7", "IVM7", "V7", "vi7", "vii/o7",
@@ -85,7 +88,10 @@ def main() -> int:
     for sym, fig in CHORDS.items():
         for r in ROOTS:
             cs = harmony.ChordSymbol(m21(r) + fig)
-            notes = " ".join(ours(p) for p in cs.pitches)
+            root = cs.root()
+            pitches = [p for p in cs.pitches
+                       if not (sym in NO_11 and interval.Interval(root, p).simpleName == "P4")]
+            notes = " ".join(ours(p) for p in pitches)
             lines.append(f"    {{ {c_str(r)}, {c_str(sym)}, {c_str(notes)} }},")
     lines += ["};", "", "static const struct { const char *note, *name; } VEC_INTERVALS[] = {"]
     for letter in "CDEFGAB":

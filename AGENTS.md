@@ -28,7 +28,8 @@ experimental firmware apps under `firmware/`, built on the `fm1-base` submodule.
 | `firmware/conductor/` | Own agent-console firmware (MIT). Design: `docs/agentic/conductor.md`. |
 | `firmware/morse/` | Submodule: [fm1-morse](https://github.com/daviddwlee84/fm1-morse), own pocket Morse code machine (GPL-3.0-or-later since 2026-11-18, MIT before; `common/` in it stays MIT; its own repo for The Firmware Hub, with `LICENSE` and `fmhub.json`). Built here with `third_party/fm1-base`; commit inside it, then bump the pointer here. Design: `docs/dev/morse.md`. |
 | `firmware/common/` | Modules shared by own apps (`hostlink`, `ledfx`, `chime`, and the speech decoders `lpc`, `adpcm`; MIT). Apps add `include = ["../common"]`. |
-| `firmware/theory/` | THEORY, own music theory trainer (GPL-3.0-or-later, identity `FM-1_49`, settings at `0xD8000`). v0.1 is the WHEEL page (circle of fifths, naming a played chord, the key's chords on the white keys), on the owner's unit since 2026-11-18 (installed over Morse 0.6, whose record at `0xDA000` it leaves alone). Its platform-free core `theory.c` (spelling, scales, keys, chords, Roman numerals, voicing) is checked against music21 (`tests/vectors.h`, generated). Design: `docs/dev/theory.md`. |
+| `firmware/theory/` | THEORY, own music theory trainer (GPL-3.0-or-later, identity `FM-1_49`; settings at `0xD8000`, flash-card progress at `0xD6000`). 0.1 (the WHEEL page) is on the owner's unit since 2026-11-18, installed over Morse 0.6, whose record at `0xDA000` it leaves alone; 0.2 (MENU, TODAY flash cards, CHORD, CHART, SETTINGS, progress backup) is verified in the simulator and fm1-emu, not yet flashed. Platform-free parts: `theory.c` (spelling, scales, keys, chords, Roman numerals, voicing; checked against music21 in `tests/vectors.h`, generated) and `srs.c` (Leitner rounds after Morse's `learn.c`); `course.h` is the card list, append only. Design: `docs/dev/theory.md`. |
+| `host/theory/` | THEORY's computer side (GPL-3.0-or-later): progress backup and restore (`protocol.py`, `progress.py`, `device.py`, finds the unit by its frames, not the port name), and `make_vectors.py` (music21 vectors for the core's tests). The same backup in the browser: `docs/assets/theory/progress.html`. |
 | `firmware/voicelab/` | Spike app (MIT): each key says a test word with the `lpc` / `adpcm` decoders. Not for installing. Its data (`gen/`) is generated and git-ignored. Design: `docs/dev/tts.md`. |
 | `host/conductor/` | Conductor's host daemon (Python, MIT): backends `hc`, `herdr`, `fake`. Protocol spec in `PROTOCOL.md`; tests in `host/tests/`. |
 | `host/morse/` | Morse's host (Python, MIT): types what the FM-1 reads into the Mac, sends text for it to play. Protocol in `PROTOCOL.md` (keying is Vail-format MIDI note 0). |
@@ -78,6 +79,9 @@ just morse-shots       # simulator screenshots into fm1-morse docs/screens/
 
 just theory-unit       # firmware/theory core on this computer (strict C99, plus music21's spellings)
 just theory-emu [CHIP] # THEORY in fm1-emu (after `just fw-build theory`; `just fw-test theory` is its simulator test)
+just theory-test       # THEORY's host tests (wire, record, JSON; vectors shared with its tests/basic.txt)
+just theory-backup FILE  # THEORY 0.2+: progress and settings into JSON (read-only on the unit)
+just theory-restore FILE # back onto the unit; it asks on its screen (PLAY yes)
 just theory-vectors    # regenerate firmware/theory/tests/vectors.h from music21 (uv fetches it)
 
 just voice-vendor      # Moonshine Klatt, python_wizard, CMUdict, 386DX engine into vendor/ (pinned commits)
@@ -254,5 +258,6 @@ A repo-owned skill for operating the unit and an `fm1` CLI wrapper (the `Justfil
 `fm1-hub-listing` covers publishing only). `fm1-emu` is a downloaded binary, not a source checkout.
 A vocabulary app is at the idea stage (`docs/dev/vocab.md`). A deck written to the flash data area would need
 the firmware-development rule "never compute flash addresses or call erase/program directly" changed first,
-with the owner's approval; the proposed wording is in that page. THEORY (`docs/dev/theory.md`) has v0.1 but no learning yet;
-its imported content is meant to go through the store layer (`APP_STORE_MAP`), which needs no rule change.
+with the owner's approval; the proposed wording is in that page. THEORY (`docs/dev/theory.md`) has flash cards from 0.2; importing
+own content (progressions, melodies) is still to come and is meant to go through the store layer (`APP_STORE_MAP`), which needs
+no rule change.

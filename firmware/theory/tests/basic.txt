@@ -1,6 +1,31 @@
 # THEORY in the host simulator: just fw-test theory (screenshots and audio in firmware/theory/build/host/)
 # Keys: 0 is F3; C4 7, D4 9, Eb4 10, E4 11, F#4 13, G4 14, A4 16, C5 19. White keys w0 F3 .. w4 C4, w5 D4.
 wait 600
+# ---- the computer: HELLO once a second until it answers (protocol 1, firmware 0.2, transport USB)
+sysex_out
+wait 1100
+expect_sysex F0 7D 54 48 01 41 01 00 02 00 F7
+sysex F0 7D 54 48 01 01 01 F7
+wait 30
+# ---- the progress out: a fresh record in 5 chunks (host/theory/progress.py vectors()); nothing written
+sysex_out
+sysex F0 7D 54 48 01 04 F7
+wait 300
+expect_sysex F0 7D 54 48 01 44 00 05 00 01 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 3F 06 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 F7
+expect_sysex F0 7D 54 48 01 44 01 05 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 40 00 00 00 00 00 00 7F 7F 7F 7F 7F 7F 7F 7F 7F F7
+expect_sysex F0 7D 54 48 01 44 02 05 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F F7
+expect_sysex F0 7D 54 48 01 44 03 05 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F F7
+expect_sysex F0 7D 54 48 01 44 04 05 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 15 01 59 F7
+expect store_writes 0
+# the first power-on asks which page to start on: WHEEL for these checks
+expect first 1
+shot first.png
+turn SELECT 1
+tap PLAY
+wait 60
+expect first 0
+expect page 2
+expect start 3
 shot boot.png
 expect tonic 0
 expect mode 0
@@ -232,3 +257,324 @@ expect mapping 1
 expect oct 1
 expect_text key Eb_major
 shot reboot.png
+
+# ---- MENU, then TODAY
+tap HOME
+wait 60
+expect page 0
+shot menu.png
+# the menu's cursor starts on the page it came from (WHEEL); one up is TODAY
+turn SELECT -1
+tap PLAY
+wait 60
+expect page 1
+expect ps 0
+expect round 0
+expect open 6
+shot today.png
+# a first round: the three new items shown first, together (and heard)
+tap PLAY
+wait 60
+expect ps 1
+expect kind 1
+expect item 0
+expect_text item C_scale
+expect_text answer C_D_E_F_G_A_B
+expect busy 1
+shot new.png
+wait 2500
+tapkey 9
+wait 60
+expect kind 1
+expect item 1
+answer right
+expect item 2
+answer right
+expect kind 0
+# a key signature (G: F#), with a key brushed first (20 ms: not played)
+setcard 7
+wait 30
+expect answer_ok 1
+key 7 down
+wait 20
+key 7 up
+wait 30
+expect tray 0
+key 13 down
+wait 100
+key 13 up
+wait 30
+expect ps 2
+expect res 3
+expect_text answer F#
+expect lit_keys 0
+shot result.png
+tapkey 9
+wait 1500
+expect ps 1
+# a scale (C major), one slip on the way: right, but slow (the box stays)
+setcard 0
+wait 30
+key 7 down
+wait 80
+key 7 up
+key 9 down
+wait 80
+key 9 up
+key 13 down
+wait 80
+key 13 up
+key 11 down
+wait 80
+key 11 up
+key 12 down
+wait 80
+key 12 up
+key 14 down
+wait 80
+key 14 up
+key 16 down
+wait 80
+key 16 up
+key 18 down
+wait 80
+key 18 up
+wait 30
+expect ps 2
+expect res 2
+tapkey 9
+wait 2500
+expect ps 1
+# D's key signature (F# C#): E pressed by mistake, then pressed again to take it out; right, but slow
+setcard 17
+wait 30
+key 13 down
+wait 100
+key 11 down
+wait 100
+key 11 up
+wait 30
+expect tray 80
+key 11 down
+wait 100
+key 11 up
+wait 30
+key 13 up
+wait 30
+expect ps 1
+expect tray 64
+shot tray.png
+key 20 down
+wait 100
+key 20 up
+wait 30
+expect ps 2
+expect res 2
+tapkey 9
+wait 2500
+# G's relative minor (E): F first, a second try, then E: slow
+setcard 8
+wait 30
+key 12 down
+wait 100
+key 12 up
+wait 30
+expect ps 1
+key 11 down
+wait 100
+key 11 up
+wait 30
+expect ps 2
+expect res 2
+tapkey 9
+wait 1500
+# a degree by ear: the cadence and the note first, keys ignored meanwhile
+setcard 3
+wait 100
+expect busy 1
+expect answer_ok 0
+expect voices >2
+shot ear.png
+wait 3600
+expect busy 0
+expect answer_ok 1
+answer right
+expect res 1
+wait 1500
+# a chord quality by ear: the choices on E4 F4 (major, minor open so far)
+setcard 4
+wait 1600
+expect answer_ok 1
+expect lit_keys >0
+shot quality.png
+key 11 down
+wait 60
+key 11 up
+wait 30
+expect ps 2
+expect res 3
+# the rest of the round
+answer_all right
+expect ps 3
+expect round 1
+expect streak 1
+expect box7 1
+shot done.png
+reboot
+wait 600
+expect round 1
+expect box7 1
+expect page 2
+
+# ---- CHART
+turn ALGO 2
+wait 60
+expect page 4
+shot chart.png
+
+# ---- CHORD: whatever is played, named; the chords as numbers in the key
+turn ALGO -1
+wait 60
+expect page 3
+turn SELECT 3
+wait 60
+expect tonic 0
+key 7 down
+key 11 down
+key 14 down
+wait 60
+key 7 up
+key 11 up
+key 14 up
+wait 30
+key 14 down
+key 18 down
+key 21 down
+wait 60
+key 14 up
+key 18 up
+key 21 up
+wait 30
+key 16 down
+key 19 down
+key 23 down
+wait 60
+key 16 up
+key 19 up
+key 23 up
+wait 30
+key 12 down
+key 16 down
+key 19 down
+wait 60
+key 12 up
+key 16 up
+key 19 up
+wait 30
+expect hist 4
+expect_text hist I_V_vi_IV
+key 7 down
+key 11 down
+key 14 down
+key 16 down
+wait 60
+expect_text chord C6
+expect_text also Am7/C
+shot chord.png
+key 7 up
+key 11 up
+key 14 up
+key 16 up
+wait 30
+expect_text hist V_vi_IV_Iadd6
+key 6 down
+key 9 down
+key 12 down
+key 15 down
+wait 60
+expect_text chord Bdim7
+expect nalt 3
+expect_text also Ddim7/B_Fdim7/B_G#dim7/B
+shot dim7.png
+key 6 up
+key 9 up
+key 12 up
+key 15 up
+wait 30
+tap PLAY
+wait 30
+expect hist 0
+
+# ---- SETTINGS: cards a round
+turn ALGO 2
+wait 60
+expect page 5
+turn SELECT 1
+turn K1 1
+wait 60
+expect cards 16
+shot settings.png
+
+# ---- a backup loaded from the computer: asked first; HOME keeps what is here
+sysex_out
+sysex F0 7D 54 48 01 05 00 05 00 01 02 00 00 00 00 00 00 00 02 0C 00 00 00 05 00 00 02 00 3F 0B 28 00 00 00 00 23 00 00 00 01 00 02 03 01 02 03 01 02 00 03 01 02 00 00 00 00 00 00 00 00 00 00 00 00 F7
+wait 40
+sysex F0 7D 54 48 01 05 01 05 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 04 00 00 04 00 04 00 04 00 F7
+wait 40
+sysex F0 7D 54 48 01 05 02 05 00 04 00 04 00 04 00 04 00 00 04 00 04 00 04 00 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F F7
+wait 40
+sysex F0 7D 54 48 01 05 03 05 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F F7
+wait 40
+sysex F0 7D 54 48 01 05 04 05 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 74 01 10 F7
+wait 40
+wait 60
+expect ask 1
+shot ask.png
+tap HOME
+wait 60
+expect ask 0
+expect round 1
+expect_sysex F0 7D 54 48 01 45 01 F7
+# PLAY loads it
+sysex_out
+sysex F0 7D 54 48 01 05 00 05 00 01 02 00 00 00 00 00 00 00 02 0C 00 00 00 05 00 00 02 00 3F 0B 28 00 00 00 00 23 00 00 00 01 00 02 03 01 02 03 01 02 00 03 01 02 00 00 00 00 00 00 00 00 00 00 00 00 F7
+wait 40
+sysex F0 7D 54 48 01 05 01 05 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 04 00 00 04 00 04 00 04 00 F7
+wait 40
+sysex F0 7D 54 48 01 05 02 05 00 04 00 04 00 04 00 04 00 00 04 00 04 00 04 00 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F F7
+wait 40
+sysex F0 7D 54 48 01 05 03 05 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F F7
+wait 40
+sysex F0 7D 54 48 01 05 04 05 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 74 01 10 F7
+wait 40
+wait 60
+expect ask 1
+tap PLAY
+wait 60
+expect ask 0
+expect round 5
+expect open 11
+expect tonic 2
+expect start 2
+expect cards 12
+expect box1 2
+expect_sysex F0 7D 54 48 01 45 00 F7
+# a damaged one is refused, nothing asked
+sysex_out
+sysex F0 7D 54 48 01 05 00 05 00 01 02 00 00 00 00 00 00 00 02 0C 00 00 00 05 00 00 02 00 3F 0B 28 00 00 00 00 23 00 00 00 01 00 02 03 01 02 03 01 02 00 03 01 02 00 00 00 00 00 00 00 00 00 00 00 00 F7
+wait 40
+sysex F0 7D 54 48 01 05 01 05 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 04 00 00 04 00 04 00 04 00 F7
+wait 40
+sysex F0 7D 54 48 01 05 02 05 00 04 00 04 00 04 00 04 00 00 04 00 7E 00 04 00 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F F7
+wait 40
+sysex F0 7D 54 48 01 05 03 05 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F F7
+wait 40
+sysex F0 7D 54 48 01 05 04 05 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 74 01 10 F7
+wait 40
+wait 60
+expect ask 0
+expect_sysex F0 7D 54 48 01 45 02 F7
+reboot
+wait 600
+expect round 5
+expect page 1

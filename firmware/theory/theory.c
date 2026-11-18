@@ -43,6 +43,10 @@ const th_qual_t th_quals[TH_NQUAL] = {
     { "m9",      "9",                   1, 5, { 0, -3,  1, -2,  2 } },
     { "7#5",     "+7",                  0, 4, { 0,  4,  8, -2 } },
     { "maj7#5",  "+M7",                 0, 4, { 0,  4,  8,  5 } },
+    { "6/9",     "69",                  0, 5, { 0,  4,  1,  3,  2 } },
+    { "7b9",     "7b9",                 0, 5, { 0,  4,  1, -2, -5 } },
+    { "7#9",     "7#9",                 0, 5, { 0,  4,  1, -2,  9 } },
+    { "13",      "13",                  0, 6, { 0,  4,  1, -2,  2,  3 } },
     { "5",       "5",                   0, 2, { 0,  1 } },
 };
 
@@ -264,6 +268,7 @@ int th_qual_find(const char *sym)
         { "M", TH_MAJ }, { "maj", TH_MAJ }, { "min", TH_MIN }, { "-", TH_MIN }, { "o", TH_DIM }, { "+", TH_AUG },
         { "M7", TH_MAJ7 }, { "-7", TH_M7 }, { "min7", TH_M7 }, { "/o7", TH_M7B5 }, { "o7", TH_DIM7 },
         { "mM7", TH_MMAJ7 }, { "+7", TH_AUG7 }, { "aug7", TH_AUG7 }, { "+M7", TH_AUGMAJ7 }, { "madd9", TH_MADD9 },
+        { "69", TH_69 }, { "6add9", TH_69 },
     };
     unsigned i;
     for (i = 0; i < TH_NQUAL; i++) if (th_str_eq(sym, th_quals[i].sym)) return (int)i;
@@ -382,6 +387,8 @@ static const struct { const char *s; uint8_t up, low; } TH_SUFFIX[] = {
     { "+7", TH_AUG7, TH_AUG7 }, { "7#5", TH_AUG7, TH_AUG7 }, { "aug", TH_AUG, TH_AUG }, { "+", TH_AUG, TH_AUG },
     { "m(maj7)", TH_MMAJ7, TH_MMAJ7 }, { "mM7", TH_MMAJ7, TH_MMAJ7 }, { "m9", TH_M9, TH_M9 }, { "m7", TH_M7, TH_M7 },
     { "m6", TH_M6, TH_M6 }, { "m", TH_MIN, TH_MIN }, { "maj", TH_MAJ, TH_MAJ },
+    { "69", TH_69, TH_69 }, { "6/9", TH_69, TH_69 }, { "7b9", TH_7B9, TH_7B9 }, { "7#9", TH_7S9, TH_7S9 },
+    { "13", TH_13, TH_13 },
     { "9", TH_9, TH_M9 }, { "7", TH_7, TH_M7 }, { "6", TH_6, TH_M6 }, { "5", TH_5, TH_5 },
 };
 
@@ -462,7 +469,7 @@ static int th_qual_mask(int q)
 }
 
 /* Accidentals against the key signature, the root's counted twice: C#dim7 (C# E G Bb) over Dbdim7 in C, C# major
- * over Db in B major, and Cdim7 stays Cdim7 rather than B#dim7. */
+ * over Db in B major, and Cdim7 stays Cdim7 rather than B#dim7 (th_ident_fill also wants two saved to respell). */
 static int th_spell_cost(th_key_t key, int root, int q)
 {
     int8_t t[TH_TONES_MAX];
@@ -471,11 +478,33 @@ static int th_spell_cost(th_key_t key, int root, int q)
     return cost;
 }
 
-int th_identify(const uint8_t *midi, int n, th_key_t key, th_ident_t *out)
+static void th_ident_fill(th_key_t key, int root_pc, int q, int no5, int bass, int mask, th_ident_t *out)
 {
-    int mask = 0, low = 1000, bass, kmask = th_key_mask(key), best = -1, bscore = 1 << 30, broot = 0, bno5 = 0;
-    int r, q, i;
-    if (n <= 0) return 0;
+    int kmask = th_key_mask(key), f0 = th_spell_pc(root_pc, key.tonic), f = f0, c = th_spell_cost(key, f0, q), k, nt;
+    int8_t t[TH_TONES_MAX];
+    /* respelled only when that saves two accidentals or more: G#dim7 over Abdim7 in C, but Fdim7, not E#dim7 */
+    if (th_spell_cost(key, f0 - 12, q) <= c - 2) { f = f0 - 12; c = th_spell_cost(key, f, q); }
+    if (th_spell_cost(key, f0 + 12, q) <= c - 2) f = f0 + 12;
+    nt = th_chord(f, q, t);
+    out->c.root = out->c.bass = (int8_t)f;
+    out->c.q = (uint8_t)q;
+    out->inv = 0;
+    for (k = 0; k < nt; k++)
+        if (th_pc(t[k]) == bass) {       /* the bass as the chord spells it, or as the key does if that is plainer */
+            int kf = th_spell_pc(bass, key.tonic);
+            out->c.bass = (int8_t)(k && th_iabs(th_acc(kf)) < th_iabs(th_acc(t[k])) ? kf : t[k]);
+            out->inv = (uint8_t)k;
+        }
+    out->no5 = (uint8_t)no5;
+    out->inkey = (mask & ~kmask) == 0;
+}
+
+int th_identify_all(const uint8_t *midi, int n, th_key_t key, th_ident_t *out, int max)
+{
+    enum { CAND = 16 };
+    struct { int score; uint8_t root, q, no5; } cand[CAND];
+    int mask = 0, low = 1000, bass, kmask = th_key_mask(key), nc = 0, r, q, i, j;
+    if (n <= 0 || max <= 0) return 0;
     for (i = 0; i < n; i++) {
         mask |= 1 << (midi[i] % 12);
         if (midi[i] < low) low = midi[i];
@@ -492,26 +521,41 @@ int th_identify(const uint8_t *midi, int n, th_key_t key, th_ident_t *out)
                 else continue;
             }
             score = no5 * 1000 + (r != bass) * 100 + !(kmask >> r & 1) * 30 + q;
-            if (score < bscore) { bscore = score; best = q; broot = r; bno5 = no5; }
+            if (nc == CAND && score >= cand[CAND - 1].score) continue;   /* full, and no better than the last */
+            for (i = nc < CAND ? nc : CAND - 1; i > 0 && cand[i - 1].score > score; i--)
+                if (i < CAND) cand[i] = cand[i - 1];
+            if (i < CAND) {
+                cand[i].score = score;
+                cand[i].root = (uint8_t)r;
+                cand[i].q = (uint8_t)q;
+                cand[i].no5 = (uint8_t)no5;
+                if (nc < CAND) nc++;
+            }
         }
     }
-    if (best < 0) return 0;
-    {
-        int f0 = th_spell_pc(broot, key.tonic), f = f0, c = th_spell_cost(key, f0, best), k;
-        int8_t t[TH_TONES_MAX];
-        int nt;
-        if (th_spell_cost(key, f0 - 12, best) < c) { f = f0 - 12; c = th_spell_cost(key, f, best); }
-        if (th_spell_cost(key, f0 + 12, best) < c) f = f0 + 12;
-        nt = th_chord(f, best, t);
-        out->c.root = out->c.bass = (int8_t)f;
-        out->c.q = (uint8_t)best;
-        out->inv = 0;
-        for (k = 0; k < nt; k++)
-            if (th_pc(t[k]) == bass) { out->c.bass = t[k]; out->inv = (uint8_t)k; }
-        out->no5 = (uint8_t)bno5;
-        out->inkey = (mask & ~kmask) == 0;
-    }
-    return 1;
+    for (j = 0; j < nc && j < max; j++) th_ident_fill(key, cand[j].root, cand[j].q, cand[j].no5, bass, mask, &out[j]);
+    return j;
+}
+
+int th_identify(const uint8_t *midi, int n, th_key_t key, th_ident_t *out)
+{
+    return th_identify_all(midi, n, key, out, 1);
+}
+
+int th_tone_label(int q, int d, char *buf)
+{
+    static const struct { int8_t d; const char *s; } L[] = {
+        { 0, "R" }, { -5, "b9" }, { 2, "9" }, { 9, "#9" }, { -3, "b3" }, { 4, "3" }, { -1, "11" }, { 6, "#11" },
+        { -6, "b5" }, { 1, "5" }, { 8, "#5" }, { -4, "b13" }, { 3, "6" }, { -9, "bb7" }, { -2, "b7" }, { 5, "7" },
+    };
+    const char *s = "?";
+    unsigned i;
+    for (i = 0; i < sizeof L / sizeof L[0]; i++)
+        if (L[i].d == d) s = L[i].s;
+    if (d == 2 && q == TH_SUS2) s = "2";
+    if (d == -1 && (q == TH_SUS4 || q == TH_7SUS4)) s = "4";
+    if (d == 3 && q == TH_13) s = "13";
+    return th_put(buf, 0, s);
 }
 
 /* ------------------------------------------------------------------- voice --- */

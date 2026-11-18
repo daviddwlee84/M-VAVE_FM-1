@@ -136,8 +136,18 @@ agtdeck-fetch:
 emu-run package chip="uc25hq80" *args:
     #!/usr/bin/env bash
     set -euo pipefail
-    mkdir -p tools/emu-state
+    mkdir -p tools/emu-state/work
     state="tools/emu-state/$(basename "{{package}}" .fwsc)-{{chip}}.flash"
+    if [ -f "$state" ]; then
+      # fm1-live boots the firmware the state file holds and installs the package only into a new one: after a
+      # rebuild, lay the package's firmware over the state (its data kept), as an update on the unit would
+      fresh="$(mktemp -d)/pristine.flash"
+      (cd tools/emu-state && ../fm1-emu/fm1-live --fwsc "$(cd "$OLDPWD" && cd "$(dirname "{{package}}")" && pwd)/$(basename "{{package}}")" \
+        --flash-chip "{{chip}}" --flash "$fresh" --midi none --shot 1 --lcd-only >/dev/null 2>&1)
+      python3 scripts/emu_rehearse.py "$fresh" "$state" "$state.new" >/dev/null
+      if cmp -s "$state" "$state.new"; then rm -f "$state.new"
+      else mv "$state.new" "$state"; echo "emu-run: $(basename "{{package}}") laid over the saved state (its data kept)"; fi
+    fi
     exec tools/fm1-emu/fm1-live --fwsc "{{package}}" --flash-chip "{{chip}}" --flash "$state" {{args}}
 
 # Headless boot for `ms` emulated ms; writes the LCD to tools/emu-state/<name>-<chip>.ppm and reports flash writes.
@@ -329,8 +339,8 @@ morse-shots: (fw-test "morse")
 
 # ---- theory: a music theory trainer, so far its platform-free core (firmware/theory, docs/dev/theory.md) ----
 
-# theory.c on this computer: spelling, scales, keys, chords, Roman numerals, naming a chord, voicing, and
-# music21's spellings (tests/vectors.h). Strict flags: the core must build in fm1-base (no double, no libc).
+# theory.c and srs.c on this computer: spelling, scales, keys, chords, Roman numerals, naming a chord, voicing,
+# music21's spellings (tests/vectors.h); then the flash cards' rounds. Strict flags: no double, no libc in fm1-base.
 theory-unit:
     #!/usr/bin/env bash
     set -euo pipefail
@@ -338,10 +348,25 @@ theory-unit:
     cc -std=c99 -Wall -Wextra -pedantic -Wdouble-promotion -Wfloat-equal -Wshadow -o build/theory_test \
       firmware/theory/tests/theory_test.c
     build/theory_test
+    cc -std=c99 -Wall -Wextra -pedantic -Wdouble-promotion -Wfloat-equal -Wshadow -o build/srs_test \
+      firmware/theory/tests/srs_test.c
+    build/srs_test
 
 # THEORY in the emulator (build it first: just fw-build theory). Its simulator test is `just fw-test theory`.
 theory-emu chip="uc25hq80":
     just emu-run firmware/theory/build/theory.fwsc "{{chip}}"
+
+# The computer side's tests: the wire, the record, JSON, backup and restore (vectors shared with tests/basic.txt).
+theory-test:
+    uv run --locked --all-groups pytest -q host/tests/test_theory.py
+
+# THEORY's progress and settings into a JSON file (0.2+; read-only on the FM-1). Finds the unit by what it says.
+theory-backup file:
+    PYTHONPATH=host uv run --locked --all-groups python -m theory backup "{{file}}"
+
+# A progress JSON file back onto the FM-1: it asks on its screen first (PLAY yes, HOME no).
+theory-restore file:
+    PYTHONPATH=host uv run --locked --all-groups python -m theory restore "{{file}}"
 
 # Regenerate firmware/theory/tests/vectors.h from music21 (BSD-3-Clause; pinned, fetched by uv, not a project dependency).
 theory-vectors:
