@@ -19,6 +19,7 @@ typedef struct {
     float bright;                        /* the fast one: the attack's modulation depth */
     float att;                           /* 0..1 over the first 3 ms (no click) */
     float floor;                         /* held: the envelope settles here (0: it dies away like a piano's) */
+    float low;                           /* below E4: kept modulation, so the small speaker hears its overtones */
     uint32_t age;                        /* when it started: the oldest is taken first */
     uint8_t note, stage;
 } sy_voice_t;
@@ -98,6 +99,9 @@ static void sy_start(int note, int vel, float floor)
     v->inc = sy_inc[note];
     v->pc = v->pm = 0.0f;
     v->amp = 0.035f + 0.11f * x * x;                 /* soft keys quiet, hard ones up to ~0.15 */
+    v->low = note < 64 ? (float)(64 - note) / 24.0f : 0.0f;   /* 0 at E4, 1 at E2 */
+    if (v->low > 1.2f) v->low = 1.2f;
+    v->amp *= 1.0f + 0.6f * v->low;                  /* the speaker hardly plays them: louder, and brighter below */
     v->env = 1.0f;
     v->bright = 0.6f + 0.9f * x;                     /* harder: brighter */
     v->att = 0.0f;
@@ -191,7 +195,7 @@ void synth_render(int32_t *lr, uint32_t n, float gain)
             if (v->stage == SY_HELD) v->env = v->floor + (v->env - v->floor) * 0.99998f;   /* ~1.1 s to 1/e */
             else v->env *= 0.99955f;                                 /* released: ~50 ms */
             v->bright *= 0.99985f;                                   /* the bite fades in ~150 ms */
-            m = fm_sin_turns(v->pm) * (v->bright + 0.25f) * v->env;
+            m = fm_sin_turns(v->pm) * (v->bright + 0.25f + 0.9f * v->low) * v->env;
             s = fm_sin_turns(v->pc + m * 0.159f) * v->env * v->att * v->amp;
             v->pc += v->inc;
             v->pm += v->inc;

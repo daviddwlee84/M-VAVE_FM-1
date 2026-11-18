@@ -1,172 +1,154 @@
-# THEORY v0.2：MENU、TODAY、CHART、CHORD、進度備份
+# THEORY v0.3：TODAY 教學、點亮式托盤、更隨機、PITCH、能開練的 CHART、CHORD 點亮模式
 
 ## Context 背景
 
-THEORY 0.1（WHEEL）已經在實機上（commit `1a8f7c6`）。v0.2 要加上「學」的部分。本人 2026-11-18 決定：
+THEORY 0.2 已經在實機上（commit `cf80948`）。本人 2026-11-18 的試用回饋記在 `docs/dev/theory.md` 的「v0.2 試用心得」：
+- TODAY 對新手來說不知道在做什麼。
+- 和弦題想要逐一點亮、可以撤回、而且持續發聲。
+- 題目常重複。
+- 想要單獨練絕對音感（三種玩法）。
+- CHART 不知道要做什麼。
+- CHORD 想要單指點亮模式。
 
-- **TODAY**：間隔複習的閃卡回合，四種卡片都要。
-  - 樂理：音階、調號、關係小調。
-  - 樂理：級數和弦。
-  - 聽音：級數。
-  - 聽音：和弦性質。
-- **CHART**：熟練度圖。
-- **CHORD 頁**：本人提的「自由按鍵、判斷是什麼和弦、ChoralRoot 風格顯示」。
-- **開機頁**比照 Morse：預設是 MENU，SETTINGS 可以改。第一次開機（包括從 0.1 升級）先請使用者選偏好的開機頁，選完存起來。
-- **進度備份**比照 Morse 自己寫：hostlink SysEx，可讀的 JSON，電腦端 CLI 加一個網頁。
-- 本人問「卡片混在一起會不會效果不好」。答案寫進設計：
-  - 交錯練習主要幫助分辨相似的類別（Brunmair & Richter 2019 `[調研]`；Wong 2021），新內容要先集中介紹（Carter & Grahn 2016）。
-  - 所以回合採用「主題式 + 交錯」：新解鎖的調先集中出，每回合分成樂理段和聽音段，段內不同的調交錯；開始畫面可以選只練一個主題（FOCUS）。
+本次決定：
+- 多音題的送出方式兩種都做，SETTINGS 切換，預設 PLAY 送出。
+- CHORD 點亮模式用 `REC` 記進軌跡並清空，`PLAY` 依序彈一遍軌跡，長按 `PLAY` 清空軌跡。本人補充：要和原本的方式互補，也能在 SETTINGS 設定。我的理解是加一個 AUTO 選項，停手一段時間就自動記下；`REC` 在任何模式都有效。
+- 用 `ARP` 切換 HOLD / LATCH。
+- 節奏和旋律聽寫留到 v0.4。
 
-設計和照搬的對象是 Morse（同一個作者，GPL）：`firmware/morse/learn.c`、`app.c` 的 PRACTICE / CHART / ASK、host 的 progress 協定、網頁的 port 搜尋。
+## 共用：點亮式托盤（latch tray）
 
-## 頁面與流程
-
-`ALGO` 切換頁面，`HOME` 在 MENU 和上一頁之間切換，和 Morse 一樣。頁面依序是 MENU、TODAY、WHEEL、CHORD、CHART、SETTINGS。
-
-- **第一次開機**：設定紀錄裡「開機頁」那個 byte 是 0（新機器，或從 0.1 升級上來）時，先顯示 `START PAGE?` 選單。`SELECT` 選，`PLAY` 確認，選完存起來；之後開機直接進那一頁。
-- **SETTINGS**：開機頁（MENU / TODAY / WHEEL / CHORD / CHART）、每回合張數（10–30，預設 15）、cadence 的速度。
-- 設定照 Morse 的做法原地沿用 0.1 的 `rsv` byte，不升 `REC_VER`：`rsv[0]` 是開機頁（0 = 還沒選），`rsv[1]` 是每回合張數（0 = 15），`rsv[2]` 是速度。0.1 的設定可以保留，裝回 0.1 也讀得懂。
+TODAY 的多音題、PITCH 的「一團」、CHORD 的 LATCH 模式共用同一套程式，寫在 `app.c` 新的一節。
+- **點亮**：按下立刻切換那個音的亮滅；亮著的音持續發聲（`synth_note_on`，熄掉時 `note_off`）。
+- **擦到不算**：放開時如果按不到 `BRUSH_MS`（50 ms），把這次切換還原，沿用現在的過濾。
+- **怎麼比對**：TODAY 和 PITCH 依音名比，不分八度；CHORD 依實際的鍵比，因為轉位要看低音。最多亮 8 個音（synth 只有 8 個 voice），再多就跳出提示。
+- **送出**：
+  - `PLAY` 一律可以送出。
+  - SETTINGS 的 `SUBMIT` 設成 AUTO 時，亮的音數等於答案的音數、而且 1 秒沒變動，就自動判斷。
+  - `SEL`：托盤有音時清空；托盤空的時候才是「不會」。
+- 熄掉又點亮算「修正」，評分記為 SLOW，和現在一樣。
+- 單音題（RELMIN、EAR_DEG）照舊，放開時判斷，答錯可以再試一次。
 
 ## TODAY
 
-**項目**：一共 63 個，依解鎖順序列在表格裡，只能往後加，不能改順序，備份才對得上。
+**教學**：
+- **第一回合**（round 0）的開始畫面，用三行說明一回合是什麼：先看新東西、照著亮的鍵彈，再作答。
+- **每種卡片第一次出現**，先出一張「怎麼玩」說明卡。判斷方式是這種技能的項目從來沒被問過（看 `st.last`），所以不必多存資料。
+- **SHOW 卡改成「照著彈」**：
+  - 亮出答案的鍵並播出聲音；照亮的鍵彈完（音階要照順序）才進下一張。`SEL` 跳過。
+  - 這是教，不是考，所以 LED 可以帶彈；ASK 卡照舊不帶彈。
+- **題目改成完整句子**，例如：
+  - 音階：`Play the D major scale, D up, one note at a time`
+  - 和弦：`Play chord IV of Eb major, any order`
+  - 聽音：`Listen: Eb major, then one note. Play it`
+  - box 0–1 的卡多一行提示。
+  - 需要一個換行的文字函式，放在 `gtext.c` 的 `gtext_wrap`。
+- footer 的按鍵說明寫成句子，例如 `PLAY check · SEL clear · SEQ show me`。
 
-| 種類 | 題目 | 怎麼作答 | 每個調一項 |
+**更隨機**：
+- **同一回合不重複題目**：
+  - CHORDS 和 EAR_DEG 的級數、EAR_Q 的根音，同一回合裡從「還沒用過的」抽（shuffle bag）。
+  - 用到的記錄存在 `pr` 裡，以項目為單位：級數用 7-bit mask，根音用 12-bit mask。
+- **項目太少時改出變化題**：`sr_build` 加第三輪。
+  - 當開放的項目填不滿一回合，用「內容會變」的項目補：CHORDS、EAR_DEG、EAR_Q；SCALE 到 box 2 以上會變成下行。
+  - 補上的卡標成 `again`，所以答對不升 box，答錯照樣回 0。
+- **`sr_spread`**：不讓同一個項目連續出現，優先度高於「不同調」。
+- 種子加上 `answered`。
+
+## PITCH（新頁，絕對音感遊戲，不排程）
+
+頁面順序改成 MENU、TODAY、WHEEL、CHORD、CHART、PITCH、SETTINGS。PITCH 排在後面，`rec.start` 的舊值才不會對錯頁；`start` 的上限改成 6。
+
+**音池**：
+- 依序加入 C G E A D F B，再加 F# Bb Eb C# G#。等級 L 有 2+L 個音（L = 0–10）。
+- 起始等級存在 `rsv[1]`（`pitch`）。
+- 等級 4 以上，音會落在隨機的八度。作答依音名，不分八度。
+
+**三種遊戲**，在開始畫面用 `SELECT` 選、`PLAY` 開始。
+
+| 遊戲 | 一局 | 作答 | 調整 |
 |---|---|---|---|
-| SCALE | `D major scale` | 依序彈 7 個音，不分八度。每彈對一個音就拼在畫面上，彈錯當下就算錯 | 12 個大調 |
-| KEYSIG | `E major: key signature?` | 按出所有升降的音，順序不拘，可以一次按或分開按。按到不該按的音當下就算錯 | 11 個（C 沒有） |
-| RELMIN | `relative minor of Bb?` | 按出它 | 12 |
-| CHORDS | `IV in Eb` | 按出和弦音，不分八度、不分轉位。每次隨機一個級數 | 12 |
-| EAR_DEG | 畫面寫調名；先放 I–IV–V–I，再放一個音 | 按出那個音。box 0–1 只出 1、3、5 級，之後出 7 個級數 | 12 |
-| EAR_Q | 聽一個和弦（根音隨機） | 用 E4 F4 G4 A4 從已開放的大、小、減、增裡選（同 Morse 的 `CHOICE_KEY`），也可以用 `SELECT` + `SEL` | 大、小、減、增各一項 |
+| SINGLE 單音 | 20 個音 | 聽一個音，限時 4 秒內按對（畫面上有倒數條）。錯或超時：再播一次正確的音，並亮出它的鍵 | 一局答對 ≥ 90% 升一級（新音先介紹一次），< 60% 降一級 |
+| COMBO 一串 | 10 串 | 依序播 n 個音（從 2 個起，最多 8 個），照順序按，按一個判一個 | 對了 n+1，錯了 n−1 並亮出答案；分數是最長的一串 |
+| CLUSTER 一團 | 10 團 | 同時播 n 個不同的音（2–5 個），用點亮式托盤找出全部 | 連對兩次 n+1，錯了亮出答案 |
 
-**解鎖**：
-- 以調為單位分組，順序是 C、G、F、D、Bb、A、Eb、E、Ab、B、Db、F#（ABRSM 式的螺旋）。
-- 第一組是 C，加上 EAR_Q 的大、小。開到 D 時加減和弦，開到 A 時加增和弦。
-- 已開放的項目都到 box 2 以上，才開下一組。
-
-**回合**：
-- 新卡（每回合最多 3 張）先集中出，不打散。
-- 接著是樂理段，再來是聽音段，段內打散，同一個調不連續出現。
-- 弱卡（box 0–1）在回合末再出一次；答錯和偏慢的卡也在回合末重問。
-- FOCUS 選項（開始畫面轉 `SELECT`）：ALL / THEORY / EAR。
-
-**評分**：
-- 從可以作答那一刻開始計時。
-- 錯，或用了 `SEQ` 偷看：box 回到 0。
-- 對但慢（超過門檻，或聽音卡重播兩次以上）：box 不動，回合末再問。
-- 對：box +1。
-- 又快又對，而且 box ≥ 1：box +2。
-
-**畫面**：
-- 開始畫面：`ROUND n`、到期 / 新卡 / 已開放的數量、streak、「下一個調還差哪些項目」、`PLAY: START`。
-- 卡片：題目，答到一半時的進度（彈對的音拼出來）。
-- 結果：`RIGHT` / `SLOW` / `NO`，加上拼好的答案，並播出答案的聲音。
-- 回合結束：統計，以及有沒有開放新的調。
-
-**LED 不帶彈**（guidance hypothesis）：作答時只有按住的鍵亮；選擇題亮出 4 個選項鍵；答完之後才亮出答案。
-
-**按鍵**：琴鍵作答（照樣發聲）；`PLAY` 開始或重播；`SEL` 不會；`SEQ` 偷看（算錯）。存檔時機和 Morse 一樣：回合結束、中途離開回合時。
+- 結束畫面顯示正確率、平均時間、最長一串。等級變了就存。
+- 按鍵：`PLAY` 托盤空的時候重播，托盤有音時送出；`HOME` 離開；`SEL` 清空托盤。
 
 ## CHART
 
-- 五度圈上每個調的顏色代表它所有項目的平均 box，色階沿用 Morse 的 `level_rgb`；還沒開放的調是暗的。
-- 轉 `SELECT` 移動游標，旁邊列出那個調各種卡片的 box 條，下方是 EAR_Q 四項。
-- v0.2 只能看，不能編輯。
+- **說明**：畫面上加一行 `your progress, key by key`，和 6 格的色階圖例（`new … known`）。旁邊列出選中那個調的各項 box，以及回合數和正確率。
+- **選調開練**：選一個調按 `PLAY`，就開一回只練那個調的 TODAY，進 TODAY 直接開始。
+  - 實作上是 `sr_build` 的 focus 多一段：bits 8–15 放「調 + 1」，`sr_in_focus` 跟著改；沒有調的 EAR_Q 不出。
+  - 還沒開放的調顯示 `LOCKED` 提示，不開始。
 
-## CHORD 頁
+## CHORD
 
-自由彈，全畫面顯示：
-- **大字和弦名**（L 字型，延伸音用小一號的字）。
-- **組成音**：拼對音名，並各自標出它是和弦裡的 R、3、b3、5、b7、7、9…。
-- 在 WHEEL 設定的調裡是第幾級，有沒有出調。
-- **其他讀法**：例如 `also Am7/C`。
-- **27 鍵的小鍵盤圖**，標出按住的鍵。
-- **最近 4 個和弦的級數軌跡**：例如 `I  V  vi  IV`。
+- **切換輸入方式**：`ARP` 在 HOLD 和 LATCH 之間切換。LATCH 時 `ARP` 燈亮，header 標 `LATCH`；這個選擇記在設定的旗標裡。
+- **LATCH 模式**：
+  - 用托盤，依實際的鍵比對，畫面一直顯示目前亮著的音的辨認結果，不用「這次手勢最多音」那套邏輯。
+  - `SEL` 清空。
+- **記進軌跡**：
+  - `REC` 把目前的和弦記進軌跡，在 LATCH 模式下同時清空。HOLD 模式下 `REC` 也能記下最後顯示的和弦。HOLD 照舊，放開就記。
+  - SETTINGS 的 `CHORD LOG` 設成 AUTO 時，亮的音是一個和弦、而且 2 秒沒變，就自動記下但不清空；同一個和弦不會重複記（`hist_push` 已經會去重）。
+- **`PLAY`**：
+  - 短按：用 `synth_score` 依序彈出軌跡。每個和弦一拍，用 `th_voice_near` 排出彼此最接近的位置，加上根音低音；速度依 `spd`。
+  - 長按（≥ 800 ms）：清空軌跡。要在 `input()` 記錄按鈕按下的時間，放開時才決定是短按還是長按。
 
-## 核心與聲音
+## 設定與備份
 
-- `theory.c` 加兩個函式，並寫 unit test：
-  - `th_identify_all()`：列出依偏好排序的所有候選讀法，`th_identify` 改成取它的第一個。
-  - `th_tone_label()`：從 fifths 位移得到 R、b3、3、5、b5、#5、6、bb7、b7、7、9、4、#11 這類標籤。
-  - 減類和弦（dim、dim7、m7b5）和增類和弦已經認得。dim7 和 aug 是對稱和弦，CHORD 頁的「其他讀法」會列出其他根音的讀法（例如 `Ddim7/B`）。
-  - 選配：和弦表補上 `6/9`、`7b9`、`7#9`、`13`（13 允許省略 11 和 5），music21 的對照 vector 跟著加，辨認的偏好順序放在現有和弦之後。
-- **新的 `srs.c` / `srs.h`**（GPL，platform-free）：
-  - 從 Morse `learn.c` 的 `ln_build`、`ln_answer`、`ln_finish`、`ln_due`、`ln_rand`、blob 和驗證照搬，把「字元 + 方向」換成「項目編號」。
-  - 新增：組別的結尾表、分段（樂理 / 聽音）、同一個調不連續、FOCUS 篩選、Easy +2、`static` 暫存區（避免堆疊用太多）。
-  - 寫 unit test `tests/srs_test.c`，由 `just theory-unit` 一起跑。
-- **`synth.c` 加 `synth_score()` / `synth_score_busy()`**：
-  - 主迴圈寫入一段「時間、音、長度」的樂譜，render 依 sample 數消化。
-  - 保持單一寫入者，不需要 tick，也不受重畫影響。
-  - 用來播 cadence 加目標音，以及答案的聲音。
-
-## 進度備份（比照 Morse）
-
-- **協定**：
-  - 框架是 `F0 7D 54 48 01 <type> … F7`，id `54 48`（"TH"）沒有人用。
-  - FM-1 送出：HELLO `41`、HEARTBEAT `42`、PROG `44`、PROG_DONE `45`。電腦送出：HELLO_ACK `01`、PROG_REQ `04`、PROG_LOAD `05`。
-  - 紀錄的格式是：format byte + 設定 + 進度 + CRC-16/CCITT-FALSE，切成 49 B 的 chunk，每 7 B 打包成 7-bit，大約 5 個 frame。
-  - 載入時 FM-1 先在螢幕問（`PLAY` 是 / `HOME` 否），損壞的資料拒收。
-  - 韌體端用 `firmware/common/hostlink`（`hl_init` / `hl_tick` / `hl_match` / `hl_send`）。`APP_SYSEX` 寫法照 Morse 的 `host_frame` 和 `prog_*`。
-- **存檔**：進度存在新的物件 `OBJ_PROGRESS`，位置 `0xD6000`（這台機器的所有備份裡都是空的）。設定紀錄不動。`APP_STORE_MAP` 改成 `{0xDC000, 0xD8000, 0xD6000}`。
-- **電腦端**：`host/theory/`（GPL）。
-  - `protocol.py`：frame、CRC、pack7、chunk。
-  - `progress.py`：blob 和 JSON 互轉。JSON 是 `fm1-theory-progress` v1，項目用穩定的名稱，例如 `scale:D`、`earq:dim`。
-  - `device.py`：依協定的 header 找 port，不依名稱，因為 macOS 把這台叫 `Felucca`；收到 HEARTBEAT 也算連上並回 ack；逾時就提示「關掉其他 MIDI 程式」。
-  - `__main__.py`：`backup` / `restore`。
-  - 通用的部分從 `host/morse`（MIT）複製過來並標示出處。
-- **網頁**：`docs/assets/theory/progress.html`（GPL，Web MIDI，只走 USB）。
-  - 依 header 找 port；備份是下載 JSON，還原是上傳 JSON 再送出 frame。
-  - 從 `docs/dev/theory.md` 用按鈕連過去，做法照 SLOOP editor 頁。
-- `Justfile`：`theory-test`（pytest）、`theory-backup FILE`、`theory-restore FILE`。
+- **`rec_t`**：原地用掉剩下的 `rsv`，不升 `REC_VER`；`set_valid` 跟著加檢查。
+  - `rsv[0]` 是 `flags`：bit0 SUBMIT AUTO、bit1 CHORD LOG AUTO、bit2 CHORD LATCH。
+  - `rsv[1]` 是 `pitch`（0–10）。
+- **SETTINGS** 的列：START（多了 PITCH）、CARDS、SPEED、SUBMIT、CHORD LOG。
+- **備份紀錄**：格式不變（format 1，218 B），只是 settings 的 byte 10、11 不再固定是 0。要一起改的地方：
+  - 韌體的 `set_blob` / `set_unblob`。
+  - `host/theory/progress.py`：`SET_FIELDS` 加 `flags`、`pitch`，檢查 `start <= 6`、`flags < 8`、`pitch <= 10`。
+  - `docs/assets/theory/progress.html`：同樣的改動。
+  - 舊的 JSON 沒有這兩個欄位，就當成 0。共用的測試 vector 重新產生，並同步到 `tests/basic.txt`。
+- **版本**：韌體 `FW_MINOR 3`（HELLO 帶 0.3）；host 改成 `__version__ "0.3.0"`、`FIRMWARE_KNOWN (0, 3)`。
 
 ## 檔案
 
-- **修改**：
-  - `firmware/theory/app.c`：分頁、MENU、SETTINGS、第一次開機、TODAY、CHART、CHORD、hostlink、`app_expect` 的新值，以及 host 指令 `answer right|wrong|slow`、`answer_all`、`setcard`。
-  - `app.h`（`APP_SYSEX`、物件）、`fm1.toml`、`theory.c` / `theory.h`、`synth.c` / `synth.h`、`tests/basic.txt`、`tests/theory_test.c`。
-- **新增**：
-  - `firmware/theory/srs.c` / `srs.h`、`course.h`（項目表與組別）、`tests/srs_test.c`。
-  - `host/theory/{__init__,__main__,protocol,progress,device}.py`、`host/tests/test_theory.py`。
-  - `docs/assets/theory/progress.html`。
+- **韌體**：
+  - `firmware/theory/app.c`：主要的改動，包括托盤、TODAY、PITCH、CHART、CHORD、設定、expect 和 host 指令。
+  - 其他：`srs.c` / `srs.h`、`gtext.c` / `gtext.h`、`tests/basic.txt`、`tests/srs_test.c`、`app.h`（如果需要新的 expect）。
+- **電腦端**：`host/theory/{progress,__init__}.py`、`host/tests/test_theory.py`、`docs/assets/theory/progress.html`。
 - **文件**：
-  - `docs/dev/theory.md`：
-    - TODAY / CHART / CHORD / MENU 的實際設計和按鍵。
-    - 「主題式 + 交錯」的理由和來源。
-    - 協定、v0.2 驗證、roadmap。
-  - `docs/hardware/flash-map.md`：加 `0xD6000`。
-  - `AGENTS.md`：layout 和指令。
-  - `README.md`、`docs/index.md`：狀態。
-- 韌體版本改成 0.2（HELLO 帶版本）。
+  - `docs/dev/theory.md`：v0.3 的設計、按鍵、PITCH、驗證、roadmap（聽寫移到 v0.4）。
+  - `README.md`、`docs/index.md`、`AGENTS.md`：狀態。
 
 ## 實作順序（每一步都要通過測試才往下）
 
-1. 核心加 `th_identify_all` / `th_tone_label`，寫 `srs.c` 和 `course.h`，加上 unit test。
-2. 分頁骨架：MENU、SETTINGS、第一次開機、設定的 `rsv` byte；WHEEL 照舊。
-3. `synth_score`；TODAY；CHART。
-4. CHORD 頁。
-5. hostlink 加進度協定，接著電腦端和測試，最後網頁。
-6. fm1-emu、預演、文件。
+1. **`srs.c`**：依調篩選（focus 的 bits 8–15）、變化題補位、不讓同一項目連續出現。同時加 unit test。
+2. **點亮式托盤**：放進 TODAY，包括 SUBMIT 兩種模式、`SEL` 清空。
+3. **TODAY 的教學和隨機**：說明卡、照著彈的 SHOW 卡、句子和換行、shuffle bag。
+4. **CHART**：圖例和選調開練。
+5. **CHORD**：LATCH、`ARP`、`REC`、`PLAY` 播放和長按、CHORD LOG。
+6. **PITCH** 三種遊戲。
+7. **設定旗標和備份欄位**：韌體、host、網頁、vector。
+8. **整體驗證**：fm1-emu 兩種晶片、預演、文件。
 
 ## Verification 驗證
 
-- **`just theory-unit`**：核心照樣全過，加上新的 srs 檢查：
-  - 新卡不超過 3 張；到期判斷正確。
-  - 錯回 0、慢不動、Easy +2。
-  - 同一個調不連續。
-  - FOCUS 篩選有效。
-  - 組別依門檻開放。
-  - blob 往返，壞資料被拒。
-- **`just fw-test theory`**：
-  - 新機器開機出現開機頁選單，選 TODAY 後重開直接進 TODAY；0.1 的紀錄升級後保留調和調式，並出現一次選單。
-  - 跑一回合：新卡；`answer right|wrong|slow` 對 box 的影響；回合結束，round +1；進度重開後還在；`store_writes` 有上限。
-  - KEYSIG、SCALE 實際按鍵的判斷，包括彈錯當下就算錯。
-  - EAR_DEG 播放時 `voices > 0`，播完才能作答。
-  - CHART、CHORD 截圖；CHORD 依序彈 C、G、Am、F 後，軌跡是 `I V vi IV`，還有 `also Am7/C`。
-  - SysEx：PROG_REQ 送出紀錄，PROG_LOAD 要 `PLAY` 確認，壞資料被拒；測試 vector 和電腦端共用。
-- **`just theory-test`**：協定 vector、JSON 往返、壞資料、對模擬裝置的備份和還原。
+- **`just theory-unit`**：
+  - 依調篩選只出那個調的項目。
+  - 只開第一組時，一回合不會同一項目連續出現，而且回合能填滿（有變化題）。
+  - 變化題答對不升 box。
+  - 原有的檢查全部照過。
+- **`just fw-test theory`**，新增的檢查：
+  - **TODAY 托盤**：點亮時 `voices` 增加，熄掉時減少；擦到的被還原。
+  - **送出**：PLAY 模式不會自動判斷，AUTO 模式等 1 秒後判斷；`SEL` 有音時清空、沒音時算不會。
+  - **教學**：第一次出現的說明卡；SHOW 卡要照著彈完才前進。
+  - **隨機**：同一回合裡和弦題的級數不重複。
+  - **CHART**：在 D 上按 `PLAY`，回合只出 D 的項目；鎖住的調不開始。
+  - **CHORD**：`ARP` 切到 LATCH；點 C E G 之後 `REC`，軌跡是 `I` 而且清空；再點 A C E、`REC`，軌跡是 `I vi`；短按 `PLAY` 時 `busy` = 1；長按 `PLAY` 清空軌跡；AUTO 停 2 秒自動記下。
+  - **PITCH**：三種遊戲各跑完一局（用 host 指令作答），等級的升降存起來，重開讀回。
+  - **設定和備份**：新的設定列；byte 10、11 往返；`start = 6` 開機直接進 PITCH。
+- **`just theory-test`**：新欄位往返；舊的 JSON（沒有 flags、pitch）也讀得進來；vector 和韌體測試一致。
+- **網頁**：用 node 執行網頁的 JS，和 Python 比對。
 - **`just fw-build theory`**：在大小上限內，沒有 soft-double。
-- **fm1-emu 兩種晶片**：改設定、玩一回合、重開讀回。
-- **預演**：疊在最新的實機備份上，預期只寫 `0xD6000` / `0xD8000`，Morse 的 `0xDA000` 不變。
+- **fm1-emu 兩種晶片**：改設定、玩一局 PITCH、TODAY 一回合，然後重開讀回。
+- **預演**：疊在 `2026-11-18-pre-theory-0.2` 的備份上，只寫 `0xD6000` 和 `0xD8000`，Morse 的 `0xDA000` 不變。
 - **`just docs-check`** 通過。
-- 刷實機另外走 preflight，等本人批准。不 commit，除非本人要求。
+- 刷實機另外走 preflight，等本人批准。commit 也要等本人要求。

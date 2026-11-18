@@ -816,8 +816,8 @@ static void intro_done(void)
     ui.redraw |= R_ALL;
 }
 
-/* CHART: the teacher plays each open card of a key and the pupil plays it back (new cards' play-along, all of
- * them); the ones whose question changes three times over. Not a test: no box moves, no round is counted. */
+/* CHART: the teacher plays each card of a key and the pupil plays it back (new cards' play-along, all of them),
+ * open or not yet; the ones whose question changes three times over. Not a test: no box moves, no round counted. */
 static void today_demo(int g)
 {
     int i, j;
@@ -826,7 +826,7 @@ static void today_demo(int g)
     zero(&pr.r, sizeof pr.r);
     pr.r.rng = plat_ms() * 2654435761u + 3u;
     pr.intro_seen = 0x3F;                /* the "how to" pages belong to the rounds */
-    for (i = 0; i < prec.st.open; i++)
+    for (i = 0; i < CO_N; i++)
         if (co_key[i] == g)
             for (j = 0; j < (co_vary[i] ? 3 : 1) && pr.r.n < SR_CARDS_MAX; j++) {
                 pr.r.card[pr.r.n].item = (uint8_t)i;
@@ -1131,9 +1131,9 @@ static void pi_play(void)                /* the question's sound; answering star
     ui.redraw |= R_MAIN;
 }
 
-static int pi_note(int pc, uint32_t *rng) /* a pitch class at a pitch: around middle C, or in any of three octaves */
+static int pi_note(int pc, uint32_t *rng) /* a pitch class at a pitch: from middle C up, or in any of C3 .. B5 */
 {
-    int oct = rec.pitch & PB_WIDE ? (int)(sr_rand(rng) % 3u) : 1;
+    int oct = rec.pitch & PB_WIDE ? (int)(sr_rand(rng) % 3u) : 1;   /* C3 is the lowest: the speaker's floor */
     return 48 + 12 * oct + pc;
 }
 
@@ -1569,10 +1569,6 @@ static void chart_go(void)               /* CHART, PLAY: a round of the key unde
     char t[16];
     th_name(CO_TONIC[ui.ccur], t);
     tcat(t, " major");
-    if (!key_open(ui.ccur)) {
-        app_say("LOCKED", t);
-        return;
-    }
     set_page(PG_TODAY);
     app_say("LISTEN AND PLAY", t);
     today_demo(ui.ccur);
@@ -1678,7 +1674,8 @@ static void button(uint32_t b)
                 play_prompt();
             } else if (pr.ps == PS_RESULT) pr.until = 0;
         } else if (b == B_SEL) {
-            if (pr.ps == PS_START || pr.ps == PS_DONE) today_start();   /* after a demonstration: a quiz of its key */
+            if (pr.ps == PS_DONE && pr.demo && !key_open(pr.focus_key - 1)) app_say("NOT OPEN YET", "PLAY: AGAIN");
+            else if (pr.ps == PS_START || pr.ps == PS_DONE) today_start();   /* after a demonstration: a quiz of its key */
             else if (pr.ps == PS_CARD && pr.intro) intro_done();
             else if (pr.ps == PS_CARD && pr.kind == SR_SHOW) show_next();
             else if (pr.ps == PS_CARD && pr.skill == SK_EARQ && pr.answer_ok)
@@ -2249,7 +2246,8 @@ static void draw_today_at(int32_t oy)
             gtext_wrap(10, 44 - oy, 220, 15, &FONT_XS, "You heard and played each of its cards. Nothing was scored.",
                        C_GRAY);
             cv_text(10, 110 - oy, &FONT_B, "PLAY: AGAIN", C_HI);
-            cv_text(10, 136 - oy, &FONT_B, "SEL: QUIZ ME ON IT", C_HI);
+            if (key_open(pr.focus_key - 1)) cv_text(10, 136 - oy, &FONT_B, "SEL: QUIZ ME ON IT", C_HI);
+            else cv_text(10, 136 - oy, &FONT_XS, "its quiz opens when the keys before it are known", C_DIM);
             return;
         }
         tcat(t, "ROUND ");

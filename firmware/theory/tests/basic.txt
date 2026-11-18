@@ -469,7 +469,7 @@ expect round 1
 expect box7 1
 expect page 2
 
-# ---- CHART: a key that is not open yet only says so; PLAY on C: C's cards shown and played along, unscored
+# ---- CHART: PLAY on any key, open or not: its cards shown and played along, unscored (a closed key's quiz waits)
 turn ALGO 2
 wait 60
 expect page 4
@@ -477,8 +477,17 @@ shot chart.png
 turn SELECT 1
 tap PLAY
 wait 60
+expect page 1
+expect demo 1
+expect key_of_card 1
+answer_all right
+expect ps 3
+tap SEL
+wait 30
+expect ps 3
+turn ALGO 3
+wait 60
 expect page 4
-turn SELECT -1
 tap PLAY
 wait 60
 expect page 1
