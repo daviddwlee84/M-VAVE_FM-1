@@ -6,6 +6,8 @@
 #define FM1B_BLE 0
 static unsigned plat_usb_session(void) { return 1; }
 static int plat_sysex_send(const unsigned char *f, unsigned n) { (void)f, (void)n; return 0; }
+static unsigned usb_room = 192;          /* 0: the bus suspended (the cable out) */
+static unsigned plat_sysex_room(void) { return usb_room; }
 #include "../hostlink.c"
 
 static int fails;
@@ -57,6 +59,32 @@ int main(void)
         for (i = 0; i < np; i++)
             got += (uint32_t)hl_sx_packet(&s, pk[i], &out, &n);
         CHECK(got == 1 && n == 3, "the next frame after it");
+    }
+    {                                      /* a host on USB is gone 0.5 s after USB shuts, not 10 s */
+        hostlink_t h;
+        hl_init(&h, 0x4D, 0x4F, 1);
+        hl_seen(&h, 1000);
+        hl_acked(&h, 1000, HL_USB);
+        hl_tick(&h, 1000, 0x41, 0x42, (const uint8_t *)"\1", 1);
+        CHECK(hl_host(&h, 1000), "acked over USB");
+        usb_room = 0;
+        hl_tick(&h, 1100, 0x41, 0x42, (const uint8_t *)"\1", 1);
+        hl_tick(&h, 1599, 0x41, 0x42, (const uint8_t *)"\1", 1);
+        CHECK(hl_host(&h, 1599), "a short stop is no unplug");
+        hl_tick(&h, 1600, 0x41, 0x42, (const uint8_t *)"\1", 1);
+        CHECK(!hl_host(&h, 1600), "gone after 0.5 s without room");
+        usb_room = 192;
+        hl_seen(&h, 2000);
+        hl_acked(&h, 2000, HL_USB);
+        usb_room = 0;
+        hl_tick(&h, 2100, 0x41, 0x42, (const uint8_t *)"\1", 1);
+        usb_room = 192;
+        hl_tick(&h, 2400, 0x41, 0x42, (const uint8_t *)"\1", 1);
+        usb_room = 0;
+        hl_tick(&h, 2500, 0x41, 0x42, (const uint8_t *)"\1", 1);
+        hl_tick(&h, 2800, 0x41, 0x42, (const uint8_t *)"\1", 1);
+        CHECK(hl_host(&h, 2800), "room again restarts the wait");
+        usb_room = 192;
     }
     printf(fails ? "hostlink: %d FAILED\n" : "hostlink: all ok\n", fails);
     return fails != 0;
