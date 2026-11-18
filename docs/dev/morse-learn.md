@@ -2,7 +2,7 @@
 
 MORSE 是這個 repo 自己寫的 FM-1 韌體（[fm1-morse](https://github.com/daviddwlee84/fm1-morse)，GPL-3.0-or-later）。目標是把 FM-1 變成隨身的摩斯練習機，用起來像背單字或學五十音：每天幾分鐘的閃卡，加上通勤時的背景收聽。進階的單字、呼號、通聯練習交給 [Vail](https://vailmorse.com/)，FM-1 當它的電鍵。
 
-這頁講怎麼用它學。每個按鍵的作用見[操作速查](morse-cheatsheet.md)，設計和原理見[摩斯電碼機](morse.md)。本頁寫的是韌體 0.4。
+這頁講怎麼用它學。每個按鍵的作用見[操作速查](morse-cheatsheet.md)，設計和原理見[摩斯電碼機](morse.md)。本頁寫的是韌體 0.4；0.5 加了不接線的[藍牙](morse.md#bluetooth)。
 
 ![PRACTICE 的開始畫面](https://raw.githubusercontent.com/daviddwlee84/fm1-morse/main/docs/screens/boot.png){ width="240" }
 ![一張打碼卡的結果](https://raw.githubusercontent.com/daviddwlee84/fm1-morse/main/docs/screens/result_keyed_wrong.png){ width="240" }
@@ -100,6 +100,6 @@ FM-1 收到備份後會顯示回合數、開放幾個字、答過幾題，按 `P
 
 ## 進階：交給 Vail
 
-接上電腦後，FM-1 在 Vail 眼中就是一個 MIDI 電鍵（[和 Vail 搭配](morse.md#vail)）。單字和呼號的抄收、QSO 模擬、和朋友互傳（Morse Mailbox、Repeater），都到 [training.vailmorse.com](https://training.vailmorse.com/) 練。MORSE 本身負責每天的字母和節奏基礎。
+接上電腦後（USB，或 0.5 起的[藍牙](morse.md#bluetooth)），FM-1 在 Vail 眼中就是一個 MIDI 電鍵（[和 Vail 搭配](morse.md#vail)）。單字和呼號的抄收、QSO 模擬、和朋友互傳（Morse Mailbox、Repeater），都到 [training.vailmorse.com](https://training.vailmorse.com/) 練。MORSE 本身負責每天的字母和節奏基礎。
 
 也可以把 FM-1 當成 Mac 的摩斯鍵盤：`just morse-type`，在 KEY 頁打的字會打進目前的視窗。只想看自己打了什麼、或讓電腦送字給 FM-1 練抄收，用 [MORSE on the web](https://daviddwlee84.github.io/fm1-morse/web/) 的 Live 區塊就好，不用裝東西，也不需要 Accessibility 權限。

@@ -13,26 +13,38 @@ from . import protocol as P
 PORT_HINTS = ("MORSE",)
 
 
+BLE_HINT = ("Over Bluetooth (firmware 0.5): connect FM-1 XXXX first in Audio MIDI Setup > Window > "
+            "Show MIDI Studio > Bluetooth, or run with --bluetooth to open that window and wait")
+
+
 def sniff_port(mido, names: list[str], seconds: float = 2.5) -> str | None:
     """The input that speaks our protocol: the device says HELLO or HEARTBEAT every second,
     whatever macOS calls the port (it keeps a firmware's old name, e.g. "Felucca", after a
-    switch)."""
-    found: list[str] = []
+    switch; over Bluetooth it is "FM-1 XXXX"). On USB and Bluetooth at once, USB wins."""
+    found: dict[str, int] = {}
     ports = []
     for n in names:
         def hear(msg, n=n):
-            if msg.type == "sysex" and bytes(msg.data[:3]) == P.HEADER and n not in found:
-                found.append(n)
+            if msg.type != "sysex" or bytes(msg.data[:3]) != P.HEADER:
+                return
+            try:
+                m = P.parse(bytes([0xF0, *msg.data, 0xF7]))
+            except P.ProtocolError:
+                return
+            if m and m.type in (P.T_HELLO, P.T_HEARTBEAT):
+                found[n] = P.transport_of(m)
         try:
             ports.append(mido.open_input(n, callback=hear))
         except (OSError, IOError):
             continue
-    end = time.time() + seconds
-    while time.time() < end and not found:
+    start = time.time()
+    while time.time() < start + seconds and P.TR_USB not in found.values():
+        if found and time.time() > start + 1.2:  # one link heard, and a beat's time for the other
+            break
         time.sleep(0.05)
     for p in ports:
         p.close()
-    return found[0] if found else None
+    return min(found, key=lambda n: found[n]) if found else None
 
 
 def find_port(names: list[str], want: str | None) -> str | None:
@@ -53,7 +65,8 @@ class MidiLink:
             name_in = sniff_port(mido, ins)
             name_out = name_in if name_in in outs else None
         if not name_in or not name_out:
-            raise RuntimeError(f"no Morse FM-1 on MIDI: no port named MORSE and none saying HELLO (inputs: {ins})")
+            raise RuntimeError(f"no Morse FM-1 on MIDI: no port named MORSE and none saying HELLO (inputs: {ins}). "
+                               + BLE_HINT)
         self.name = name_in
         self.q: queue.Queue[bytes] = queue.Queue()
         self.key_downs = 0

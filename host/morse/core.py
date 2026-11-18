@@ -19,6 +19,7 @@ class Host:
         self.log = log or (lambda s: None)
         self.firmware: tuple[int, int] | None = None
         self.connected = False
+        self.transport: int | None = None  # P.TR_USB / P.TR_BLE, from HELLO and HEARTBEAT
         self.received = ""
         self._asm: G.Assembler | None = None
         self.progress: G.Progress | None = None
@@ -40,6 +41,10 @@ class Host:
                     self.firmware = fw
                     newer = fw > FIRMWARE_KNOWN
                     self.log(f"FM-1 Morse firmware {fw[0]}.{fw[1]}" + (" (newer than this host knows)" if newer else ""))
+            tr = P.transport_of(m)
+            if tr != self.transport:
+                self.transport = tr
+                self.log("via " + ("Bluetooth" if tr == P.TR_BLE else "USB"))
             self.link.send(P.hello_ack())
             self.connected = True
         elif m.type == P.T_PROG and self._asm is not None:

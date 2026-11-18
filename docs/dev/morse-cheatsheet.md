@@ -1,6 +1,6 @@
 # 摩斯電碼機操作速查
 
-韌體 0.4（0.3 以前沒有的操作標了「0.4」；0.1 和 0.2 的差別見文末）。學習的步驟見[用 MORSE 學摩斯](morse-learn.md)。設計與原理見[摩斯電碼機](morse.md)。
+韌體 0.5（0.3 以前沒有的操作標了「0.4」，藍牙是「0.5」；0.1 和 0.2 的差別見文末）。學習的步驟見[用 MORSE 學摩斯](morse-learn.md)。設計與原理見[摩斯電碼機](morse.md)。
 
 ## 任何頁面
 
@@ -124,6 +124,9 @@ EDIT 裡（0.4）：
 | LEARN BY | SOUND（預設，建議）或 SIGHT（顯示點劃）。原因見[先用聽的](morse.md#by-sound) |
 | JUDGING | 0.4：BY RHYTHM（預設，看自己的長短比例）或 STRICT（照發報速度，0.3 的判法） |
 | TYPE KEYS | TYPE 頁的排列 |
+| BLUETOOTH | 0.5：ON（預設）或 OFF，關機後保留。旁邊會寫 NOT CONNECTED、CONNECTED，或 TALKING（電腦端程式或網頁正透過藍牙連著）。項目超過一頁，往下轉會捲動 |
+
+畫面右上角：`PC` 代表電腦端程式或網頁連著；`BT`（0.5）灰色代表藍牙開著、等電腦連上，藍色代表已經連上；`MUTE` 代表靜音。
 
 ## 燈
 
@@ -142,7 +145,10 @@ just morse-type --dry-run  # 只印出來
 just morse-send cq cq de fm1 k   # FM-1 當成收到的播出來（"73 <SK>" 這樣的 prosign 0.2 起可以）
 just morse-backup progress.json  # 0.4：學習進度存成 JSON（FM-1 上什麼都不變）
 just morse-restore progress.json # 0.4：載回去；FM-1 會先問，按 PLAY 才載入
+PYTHONPATH=host uv run python -m morse --bluetooth send cq   # 0.5：先打開 Mac 的藍牙 MIDI 視窗，等 FM-1 連上
 ```
+
+0.5 起不接線也行：Mac 的「音訊 MIDI 設定」→ 顯示 MIDI 工作室 → 藍牙 → `FM-1 XXXX` 的 Connect。FM-1 重開後要再按一次（見[藍牙](morse.md#bluetooth)）。
 
 不想裝 Python 的話，用 Chrome 或 Edge 開 [MORSE on the web](https://daviddwlee84.github.io/fm1-morse/web/)：看 FM-1 讀到的字、送字給它播、備份和還原，都不用安裝。
 

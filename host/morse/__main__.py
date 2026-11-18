@@ -28,9 +28,31 @@ def log(s: str) -> None:
     print(f"[morse] {s}", file=sys.stderr, flush=True)
 
 
+def bluetooth_window(seconds: float = 300.0) -> None:
+    """macOS does not connect a Bluetooth MIDI device by itself: its window (conductor.blelink, the same helper
+    Conductor uses), then wait until a port says HELLO."""
+    import mido
+    from conductor.blelink import open_panel
+    from .device import sniff_port
+
+    panel = open_panel()
+    log("Bluetooth MIDI window open: click Connect next to FM-1 XXXX (SETTINGS > BLUETOOTH on)")
+    end = time.time() + seconds
+    try:
+        while time.time() < end:
+            if sniff_port(mido, mido.get_input_names(), seconds=1.5):
+                return
+    finally:
+        if panel and panel.poll() is None:
+            panel.terminate()
+    raise RuntimeError("no FM-1 said HELLO over Bluetooth")
+
+
 def open_link(args):
     if args.simulate:
         return SimLink(out=sys.stderr)
+    if getattr(args, "bluetooth", False):
+        bluetooth_window()
     link = MidiLink(args.port)
     log(f"connected to {link.name}")
     return link
@@ -150,6 +172,8 @@ def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(prog="morse", description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--port", help="MIDI port name (part of it); default: one named MORSE, or one saying HELLO")
     ap.add_argument("--simulate", action="store_true", help="a text stand-in for the FM-1")
+    ap.add_argument("--bluetooth", action="store_true",
+                    help="macOS: open the Bluetooth MIDI window first and wait for the FM-1 (firmware 0.5)")
     ap.add_argument("--version", action="version", version=f"morse host {__version__}")
     sub = ap.add_subparsers(dest="cmd", required=True)
     t = sub.add_parser("type", help="type what the FM-1 reads into the computer")

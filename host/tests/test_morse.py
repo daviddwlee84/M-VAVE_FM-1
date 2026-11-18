@@ -60,7 +60,8 @@ def test_host_answers_hello_and_types():
     for _ in range(3):
         host.pump(0.01)
     assert link.acked and host.connected
-    assert host.firmware == (0, 4)
+    assert host.firmware == (0, 5)
+    assert host.transport == P.TR_USB
     assert typer.typed == "cq de fm1 "
     assert P.hello_ack() in link.sent
 
@@ -153,3 +154,19 @@ def test_backup_and_restore_against_the_simulator():
     p.round = 9
     assert host.restore(p, timeout=2, gap=0) == P.PD_DECLINED
     assert link.progress.round == 7
+
+
+def test_transport_from_hello_and_heartbeat():
+    hello_ble = P.parse(P.device_hello(0, 5, P.TR_BLE))
+    assert P.transport_of(hello_ble) == P.TR_BLE
+    assert P.transport_of(P.parse(P.device_heartbeat(P.TR_BLE))) == P.TR_BLE
+    assert P.transport_of(P.parse(P.device_hello(0, 4))) == P.TR_USB
+    assert P.transport_of(P.parse(P.device_char("E"))) == P.TR_USB
+
+
+def test_host_says_bluetooth():
+    logs = []
+    link = SimLink(lines=[], out=io.StringIO())
+    host = Host(link, PrintTyper(out=io.StringIO()), log=logs.append)
+    host.on_frame(P.device_hello(0, 5, P.TR_BLE))
+    assert host.transport == P.TR_BLE and "via Bluetooth" in logs

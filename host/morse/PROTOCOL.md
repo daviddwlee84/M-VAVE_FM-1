@@ -1,7 +1,8 @@
 # Morse wire protocol
 
 Between `firmware/morse` on the FM-1 and the host (`host/morse`). Two layers, both
-over USB-MIDI (fm1-emu's virtual cable works the same):
+over USB-MIDI (fm1-emu's virtual cable works the same) and, from firmware 0.5, Bluetooth MIDI
+(fm1-base's own stack; SysEx in BLE-MIDI packets, keying with real BLE-MIDI timestamps both ways):
 
 1. **Keying** — MIDI notes, the [Vail adapter's format](https://github.com/Vail-CW/vail-adapter/blob/master/docs/MIDI_INTEGRATION_SPEC.md),
    so Vail and any MIDI tool understand it without our host.
@@ -92,3 +93,7 @@ The same bytes are in `host/morse/protocol.py` (`VECTORS`) and in
 
 The protocol byte changes only for an incompatible change. A new frame type is gated on
 the firmware version the HELLO reports.
+
+Firmware 0.5 adds no frame: the same frames go over Bluetooth, and replies go back by the
+transport the host's HELLO_ACK came on. The transport byte of HELLO / HEARTBEAT says which one
+(the host logs it, prefers USB when it hears both, and the web page shows it).

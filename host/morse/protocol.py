@@ -132,6 +132,12 @@ def firmware_of(m: Msg) -> tuple[int, int] | None:
     return None
 
 
+def transport_of(m: Msg) -> int:
+    """USB unless a HELLO (4th byte) or HEARTBEAT (2nd byte) says Bluetooth (firmware 0.5)."""
+    i = 3 if m.type == T_HELLO else 1 if m.type == T_HEARTBEAT else None
+    return m.payload[i] if i is not None and len(m.payload) > i else TR_USB
+
+
 def chars_of(m: Msg) -> str:
     if m.type != T_CHAR:
         return ""
@@ -144,7 +150,7 @@ def hexs(b: bytes) -> str:
 
 # shared with firmware/morse/tests/basic.txt: the same bytes, by the name in its comments
 VECTORS = {
-    "hello": (device_hello(0, 4), "F0 7D 4D 4F 01 41 01 00 04 00 F7"),
+    "hello": (device_hello(0, 5), "F0 7D 4D 4F 01 41 01 00 05 00 F7"),
     "hello_ack": (hello_ack(), "F0 7D 4D 4F 01 01 01 F7"),
     "char_k": (device_char("K"), "F0 7D 4D 4F 01 43 4B F7"),
     "text_cq": (text("cq")[0], "F0 7D 4D 4F 01 02 43 51 F7"),
