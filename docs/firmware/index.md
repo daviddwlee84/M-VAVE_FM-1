@@ -53,7 +53,7 @@ FM-1 同一時間只跑一套主要韌體，換韌體就是重刷。可以先在
 |---|---|---|---|
 | [MORSE](https://github.com/daviddwlee84/fm1-morse) | 摩斯電碼：閃卡、發報、收聽 | 認得 | 我自己寫的，見[摩斯電碼機](../dev/morse.md) |
 | [Shed](https://github.com/Luisnvb/fm1-shed) | jazz 聽力：級數、和弦性質、音程、旋律聽寫等 9 種 drill | 不在 Hub | 沒有 release，只有原始碼（FM1 Open SDK） |
-| [FM1 Keyboard Academy](https://github.com/chmess/fm1-keyboard-academy) | 初學者鋼琴課程：LED 帶彈、30 首旋律 | 不在 Hub | 有 release v0.1.2，晶片支援不明 |
+| [FM1 Keyboard Academy](https://github.com/chmess/fm1-keyboard-academy) | 初學者鋼琴課程：LED 帶彈、30 首旋律 | 不在 Hub | 有 release v0.1.2。在 fm1-emu 兩種晶片都能開機 `[模擬]`，實機還沒試 |
 | [Kris Jangle](https://github.com/doohinkus/kris-jangle) | 聽聖誕歌的開頭，再彈回來 | 認得 | |
 | [FM-1 Midi-Mania](https://github.com/shan-sherif/fm-1-midi-mania) | 音符往下掉的節奏遊戲，MIDI 檔轉成歌 | 認得 | |
 | [Flyfish](https://github.com/delirioux/flyfish) | 練一首蕭邦練習曲 | 認得 | |

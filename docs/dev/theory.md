@@ -25,7 +25,7 @@
 | 作品 | 做什麼 | 狀態 |
 |---|---|---|
 | [Shed](https://github.com/Luisnvb/fm1-shed) | Jazz 聽力訓練，9 種 drill：級數、和弦性質、旋律與和聲音程、tension、琶音、調式、bass、旋律聽寫。每題先放 cadence（ii–V–I，初學者用 I–IV–V–I）再出題。用琴鍵作答，或用 `PRESET` 從清單選。一回合 20 題，難度隨連對調整，60% 的題目從最弱的項目出。另有 Vamp 模式，用 LED 帶彈。規格見 [SHED_SPEC](https://github.com/Luisnvb/fm1-shed/blob/main/SHED_SPEC.md)，網頁版是 [shed-web](https://github.com/Luisnvb/shed-web) | 建在 FM1 Open SDK 上，GPL-3.0 加 SDK linking exception。**沒有 release**，2026-10-23 之後沒有更新。音名拼法沒有定義 |
-| [FM1 Keyboard Academy](https://github.com/chmess/fm1-keyboard-academy) | 初學者課程，8 章。每課的流程是 listen → watch → play → review，LED 亮出下一個鍵。彈錯就停住，正確率 80% 解鎖下一課。附 30 首旋律，以及一個 Node 寫的 MIDI 匯入工具 | 有 release v0.1.2（2026-10-24），GPL-3.0 加 SDK exception。支援哪種晶片不知道 |
+| [FM1 Keyboard Academy](https://github.com/chmess/fm1-keyboard-academy) | 初學者課程，8 章。每課的流程是 listen → watch → play → review，LED 亮出下一個鍵。彈錯就停住，正確率 80% 解鎖下一課。附 30 首旋律，以及一個 Node 寫的 MIDI 匯入工具 | 有 release v0.1.2（2026-10-24），GPL-3.0 加 SDK exception。在 fm1-emu 的兩種晶片上都能開機，畫面是第一課「FIND MIDDLE C」，開機 8 秒內寫 flash 21 次 `[模擬]`（2026-11-18）。會寫到哪些 sector 還沒用 `emu-rehearse` 查過 |
 
 **其他相關的 FM-1 作品**：
 
@@ -290,6 +290,11 @@ LED 用來顯示調：音階內的音是 glow，主音是 lit，正在彈的音�
 
 - **項目是 (skill, key, variant)**，例如 (拼大調音階, D, 上行)，每個項目約 3 B：一個 box 加上最後一次出現的回合。
 - v1 沿用 Morse 的 Leitner rounds（box 0–5，box n 每 2^n 回合出一次）。等背單字 app 把 FSRS 移植成 C 之後，可以考慮放進 `firmware/common` 兩邊共用。
+- **FM-1 不知道今天幾號。** 它沒有關機後還會走的時鐘，開機時的計時器大約 3 分鐘就歸零一次（[背單字頁](vocab.md)也提過）。所以「隔 1、7、15、30 天再複習」這種以天計算的遺忘曲線，必須有人告訴它日期。這個 app 的取捨是**以回合計算，日期只是選配**：
+    - 一天練好幾回合，間隔會縮短，等於多複習幾次。對樂理知識來說，這只是多花一點時間，不會忘得更多。
+    - 好幾天沒練，回合數不會增加，所以**回來時不會堆一大疊到期的卡**。以天計算的排程休息一週後會堆積；隨手拿起來練的口袋機器比較適合用回合。
+    - FSRS 的遺忘模型 R(t) 以天為單位，所以只有在知道日期時才能用。背單字要和 Anki 同步，Anki 的排程本身就以天計算，那邊比較需要日期。
+    - 有日期的時候（接電腦開網頁，或之後透過 Bluetooth 用手機開網頁，見 Morse 0.5 的 Bluetooth 計畫），可以把「一天」當作另一個上限：同一天內多練的回合，不會讓高 box 的卡太早出現。這留到有網頁之後再做。
 - store sector 要避開 Morse 的 `0xDA000` 和面板校正的 `0xDC000`。實作時用 `just emu-rehearse` 確認，並更新 [flash 配置圖](../hardware/flash-map.md)。
 
 ## 樂理核心 { #core }
