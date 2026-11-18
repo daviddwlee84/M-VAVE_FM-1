@@ -50,7 +50,8 @@ typedef struct {
     uint8_t cards;                       /* 0.2: cards a round, 8 .. 24 (0: CARDS_DEFAULT) */
     uint8_t speed;                       /* 0.2: SP_*: how fast cadences play */
     uint8_t flags;                       /* 0.3: FL_* */
-    uint8_t pitch;                       /* 0.3: PITCH's level, 0 .. PI_TOP (its notes: 2 + level) */
+    uint8_t pitch;                       /* 0.3: PITCH's preset: PB_ALL all 12 notes (else the white keys), PB_WIDE
+                                          * three octaves (else one, around middle C) */
 } rec_t;
 #define FL_SUBMIT_AUTO 1u                /* lit answers checked once their count is right and the keys rest */
 #define FL_LOG_AUTO 2u                   /* CHORD LATCH: a chord kept 2 s goes into the history by itself */
@@ -521,6 +522,7 @@ static struct {
     sr_round_t r;
     uint8_t ps, focus;
     uint8_t focus_key;                   /* a round of one key (CHART), + 1; 0: the focus above */
+    uint8_t demo;                        /* CHART: the key's cards shown and played along, nothing scored */
     uint8_t item, kind, skill, again;    /* the card */
     int8_t tonic;
     uint8_t degree, down;                /* CHORDS / EARDEG: the degree; SCALE: asked going down */
@@ -779,6 +781,12 @@ static void card_present(void)
     pr.pick = 0;
     pr.answer_ok = 0;
     pr.intro = pr.shown_ok = 0;
+    if (!c && pr.demo) {                 /* a demonstration: nothing counted, nothing saved */
+        pr.ps = PS_DONE;
+        pr.opened_key = 0;
+        ui.redraw |= R_ALL;
+        return;
+    }
     if (!c) {
         pr.ps = PS_DONE;
         pr.opened_key = 0;
@@ -808,9 +816,32 @@ static void intro_done(void)
     ui.redraw |= R_ALL;
 }
 
+/* CHART: the teacher plays each open card of a key and the pupil plays it back (new cards' play-along, all of
+ * them); the ones whose question changes three times over. Not a test: no box moves, no round is counted. */
+static void today_demo(int g)
+{
+    int i, j;
+    release_all();
+    zero(pr.bag, sizeof pr.bag);
+    zero(&pr.r, sizeof pr.r);
+    pr.r.rng = plat_ms() * 2654435761u + 3u;
+    pr.intro_seen = 0x3F;                /* the "how to" pages belong to the rounds */
+    for (i = 0; i < prec.st.open; i++)
+        if (co_key[i] == g)
+            for (j = 0; j < (co_vary[i] ? 3 : 1) && pr.r.n < SR_CARDS_MAX; j++) {
+                pr.r.card[pr.r.n].item = (uint8_t)i;
+                pr.r.card[pr.r.n].kind = SR_SHOW;
+                pr.r.n++;
+            }
+    pr.demo = 1;
+    pr.focus_key = (uint8_t)(g + 1);
+    card_present();
+}
+
 static void today_start(void)
 {
     release_all();
+    pr.demo = 0;
     zero(pr.bag, sizeof pr.bag);
     pr.intro_seen = 0;
     sr_build(&prec.st, &pr.r, &course, cards_n(), focus_now(),
@@ -846,7 +877,7 @@ static int grade_right(void)             /* right: how fast, and was it clean */
 
 static void today_leave(void)            /* left halfway: what was answered still counts */
 {
-    if (pr.ps == PS_CARD || pr.ps == PS_RESULT) {
+    if ((pr.ps == PS_CARD || pr.ps == PS_RESULT) && !pr.demo) {
         if (pr.r.ok + pr.r.miss + pr.r.shown) {
             sr_finish(&prec.st, &pr.r, &course);
             prog_save();
@@ -856,6 +887,7 @@ static void today_leave(void)            /* left halfway: what was answered stil
     synth_score_stop();
     pr.ps = PS_START;
     pr.focus_key = 0;
+    pr.demo = 0;
 }
 
 static void today_submit(void)           /* the lit notes: the answer? */
@@ -1038,33 +1070,46 @@ static const char *const INTRO_TEXT[SK_N] = {       /* the "how to" page of each
 };
 
 /* ----------------------------------------------------------------- PITCH --- */
-/* Absolute pitch, as games (not scheduled): a note, a run of notes, a cluster, heard with no reference and found on
- * the keys, any octave. The notes in play grow with the level (2 + level, in PI_ORDER), kept in rec.pitch: a game
- * at 90 % or better goes up one, under 60 % down one. */
+/* Absolute pitch, as games (not scheduled, nothing to pass): a note, a run of notes, a cluster, heard with no
+ * reference and found on the keys, any octave. The notes in play: the white keys, or all twelve (rec.pitch, K1).
+ * A game ends with its score and the best this session; getting better is the point, not getting everything. A run
+ * is played back in full even after a slip, the slips shown at its end (as a typing test does). */
 enum { PI_SINGLE, PI_COMBO, PI_CLUSTER, PI_GAMES };
 enum { QS_START, QS_LISTEN, QS_ANSWER, QS_RESULT, QS_DONE };
+#define PB_ALL 1u                        /* rec.pitch: all 12 notes, not only the white keys */
+#define PB_WIDE 2u                       /* rec.pitch: anywhere in three octaves, not only around middle C */
 static const char *const PI_NAME[PI_GAMES] = { "SINGLE", "COMBO", "CLUSTER" };
-static const char *const PI_WHAT[PI_GAMES] = { "a note: find it within 4 seconds", "notes in a row: play them back in order",
+static const char *const PI_WHAT[PI_GAMES] = { "a note: find it within 4 seconds", "notes in a row: play them back",
                                                "notes at once: light them all" };
+static void pi_preset(char *t)           /* "WHITE KEYS, 1 OCT" */
+{
+    t[0] = 0;
+    tcat(t, rec.pitch & PB_ALL ? "ALL 12" : "WHITE KEYS");
+    tcat(t, rec.pitch & PB_WIDE ? ", 3 OCT" : ", 1 OCT");
+}
 static const uint8_t PI_ORDER[12] = { 0, 7, 4, 9, 2, 5, 11, 6, 10, 3, 1, 8 };   /* C G E A D F B, F# Bb Eb C# G# */
 static const uint8_t PI_TURNS[PI_GAMES] = { 20, 10, 10 };
 #define PI_SINGLE_MS 4000u
-#define PI_COMBO_MS 2000u                /* a note of a run */
+#define PI_COMBO_MS 2500u                /* a note of a run */
 #define PI_COMBO_MAX 8
 #define PI_CLUSTER_MAX 5
 
 static struct {
     uint8_t game, qs;
-    uint8_t level, turn, right;          /* the level this game started at; turns played, right */
+    uint8_t turn;                        /* questions asked */
+    uint16_t right, total;               /* notes right, of notes asked (a run counts each of its notes) */
     uint8_t n;                           /* COMBO / CLUSTER: notes in a question now */
-    uint8_t best, streak;                /* COMBO: the longest run right; CLUSTER: right in a row */
+    uint8_t best, streak;                /* COMBO: the longest run all right; CLUSTER: right in a row */
     uint8_t notes[PI_COMBO_MAX], step;   /* the question (MIDI); COMBO: notes played back so far */
+    uint8_t played[PI_COMBO_MAX];        /* COMBO: the pitch classes played back */
     uint8_t ok, wrong_pc, asked;         /* the last answer right; a wrong key's pitch class + 1; its notes */
-    int8_t moved;                        /* the game's end: the level went up (1) or down (-1) */
+    uint8_t best_pct[PI_GAMES];          /* this session's best score per game, + 1 (0: none yet) */
+    uint8_t new_best;
     uint32_t at, until, time_sum;        /* answering since; the result shown until; the right answers' time */
 } pi;
 
-static int pi_pool(void) { int n = 2 + rec.pitch; return n > 12 ? 12 : n; }
+static int pi_pool(void) { return rec.pitch & PB_ALL ? 12 : 7; }
+static int pi_pct(void) { return pi.total ? pi.right * 100 / pi.total : 0; }
 static uint16_t pi_pcs(int n) { uint16_t m = 0; int i; for (i = 0; i < n; i++) m |= (uint16_t)(1u << (pi.notes[i] % 12)); return m; }
 static uint32_t pi_limit(void) { return pi.game == PI_SINGLE ? PI_SINGLE_MS : pi.game == PI_COMBO ? PI_COMBO_MS * pi.n : 0; }
 
@@ -1086,9 +1131,9 @@ static void pi_play(void)                /* the question's sound; answering star
     ui.redraw |= R_MAIN;
 }
 
-static int pi_note(int pc, uint32_t *rng) /* a pitch class at a pitch: around middle C first, anywhere later */
+static int pi_note(int pc, uint32_t *rng) /* a pitch class at a pitch: around middle C, or in any of three octaves */
 {
-    int oct = rec.pitch >= 4 ? (int)(sr_rand(rng) % 3u) : 1;
+    int oct = rec.pitch & PB_WIDE ? (int)(sr_rand(rng) % 3u) : 1;
     return 48 + 12 * oct + pc;
 }
 
@@ -1098,32 +1143,19 @@ static void pi_next(void)
     int pool = pi_pool(), i, j;
     if (!rng) rng = plat_ms() * 2654435761u + 7u;
     rng ^= plat_ms();
-    if (pi.turn >= PI_TURNS[pi.game]) {  /* the game's end: the level moves */
-        int pct = pi.right * 100 / PI_TURNS[pi.game], lv = rec.pitch;
-        if (pct >= 90 && lv < PI_TOP) lv++;
-        else if (pct < 60 && lv > 0) lv--;
-        pi.moved = (int8_t)(lv - rec.pitch);
+    if (pi.turn >= PI_TURNS[pi.game]) {  /* the game's end: the score, and this session's best */
+        int pct = pi_pct();
         pi.qs = QS_DONE;
+        pi.new_best = pct + 1 > pi.best_pct[pi.game];
+        if (pi.new_best) pi.best_pct[pi.game] = (uint8_t)(pct + 1);
         lt_clear();
-        if (pi.moved) {
-            rec.pitch = (uint8_t)lv;
-            rec_save();
-            if (pi.moved > 0) {          /* the new note, heard twice */
-                sy_note_t s[2];
-                for (i = 0; i < 2; i++) {
-                    s[i].at = (uint16_t)(i * 700); s[i].dur = 600;
-                    s[i].note = (uint8_t)(60 + PI_ORDER[pi_pool() - 1]); s[i].vel = 90;
-                }
-                synth_score(s, 2);
-            }
-        }
         ui.redraw |= R_ALL;
         return;
     }
     if (pi.game == PI_SINGLE) {
         int pc;
         do pc = PI_ORDER[sr_rand(&rng) % (uint32_t)pool];
-        while (pi.turn && pc == pi.notes[0] % 12 && pool > 1);   /* not the same twice in a row */
+        while (pi.turn && pc == pi.notes[0] % 12);   /* not the same twice in a row */
         pi.notes[0] = (uint8_t)pi_note(pc, &rng);
     } else if (pi.game == PI_COMBO) {
         for (i = 0; i < pi.n; i++) {
@@ -1134,7 +1166,6 @@ static void pi_next(void)
         }
     } else {
         uint16_t used = 0;
-        if (pi.n > pool) pi.n = (uint8_t)pool;
         for (i = 0; i < pi.n; i++) {
             int pc;
             do pc = PI_ORDER[sr_rand(&rng) % (uint32_t)pool];
@@ -1156,34 +1187,40 @@ static void pi_start(void)
 {
     release_all();
     lt.by_pc = 1;
-    pi.level = rec.pitch;
-    pi.turn = pi.right = pi.best = pi.streak = 0;
-    pi.moved = 0;
+    pi.turn = 0;
+    pi.right = pi.total = 0;
+    pi.best = pi.streak = 0;
     pi.time_sum = 0;
     pi.n = 2;
     pi_next();
 }
 
-static int pi_asked(void)                /* notes in the question now (COMBO's n moves on at the result) */
+static int pi_asked(void) { return pi.game == PI_SINGLE ? 1 : pi.n; }
+
+static int pi_combo_right(void)          /* COMBO: notes played back right */
 {
-    return pi.game == PI_SINGLE ? 1 : pi.n;
+    int i, r = 0;
+    for (i = 0; i < pi.step; i++) r += pi.played[i] == pi.notes[i] % 12;
+    return r;
 }
 
-static void pi_result(int ok)
+static void pi_result(int ok)            /* COMBO: ok is ignored, its notes are counted */
 {
     uint32_t now = plat_ms();
-    pi.ok = (uint8_t)ok;
+    int got;
     pi.asked = (uint8_t)pi_asked();
+    got = pi.game == PI_COMBO ? pi_combo_right() : ok ? pi.asked : 0;
+    if (pi.game == PI_COMBO) ok = got == pi.asked;
+    pi.ok = (uint8_t)ok;
     pi.turn++;
+    pi.total = (uint16_t)(pi.total + (pi.game == PI_COMBO ? pi.asked : 1));
+    pi.right = (uint16_t)(pi.right + (pi.game == PI_COMBO ? got : ok));
     lt_clear();
-    if (ok) {
-        pi.right++;
-        pi.time_sum += now - pi.at;
-    }
+    if (ok) pi.time_sum += now - pi.at;
     if (pi.game == PI_COMBO) {
         if (ok && pi.n > pi.best) pi.best = pi.n;
         if (ok && pi.n < PI_COMBO_MAX) pi.n++;
-        else if (!ok && pi.n > 2) pi.n--;
+        else if (2 * got < pi.asked && pi.n > 2) pi.n--;   /* most of it missed: one shorter */
     } else if (pi.game == PI_CLUSTER) {
         if (ok && ++pi.streak >= 2) {
             pi.streak = 0;
@@ -1202,7 +1239,7 @@ static void pi_result(int ok)
         synth_score(s, pi.asked);
     }
     pi.qs = QS_RESULT;
-    pi.until = now + (ok ? 500u : 1600u);
+    pi.until = now + (ok ? 500u : pi.game == PI_COMBO ? 2600u : 1600u);
     ui.redraw |= R_MAIN;
 }
 
@@ -1217,11 +1254,14 @@ static void pi_key_down(uint32_t k, int vel)
     key_sound(k, vel);
     if (pi.qs == QS_RESULT) { pi.until = 0; return; }
     if (pi.qs != QS_ANSWER) return;
-    if (pc == pi.notes[pi.step] % 12) {
-        pi.step++;
-        if (pi.step >= pi_asked()) pi_result(1);
+    if (pi.game == PI_COMBO) {           /* every note played back, right or not; judged at the end */
+        pi.played[pi.step++] = (uint8_t)pc;
+        if (pi.step >= pi.n) pi_result(0);
         else ui.redraw |= R_MAIN;
-    } else {
+        return;
+    }
+    if (pc == pi.notes[0] % 12) pi_result(1);
+    else {
         pi.wrong_pc = (uint8_t)(pc + 1);
         pi_result(0);
     }
@@ -1252,7 +1292,7 @@ static void pi_step(uint32_t now)
     }
     if (pi.qs == QS_ANSWER) {
         uint32_t lim = pi_limit();
-        if (lim && now - pi.at >= lim) pi_result(0);
+        if (lim && now - pi.at >= lim) pi_result(0);   /* COMBO: the notes not played count wrong */
         else if (pi.game == PI_CLUSTER && (rec.flags & FL_SUBMIT_AUTO) && !ui.keys && popc(lt_pcs()) == pi.n
                  && now - lt.at >= AUTO_MS)
             pi_submit();
@@ -1534,9 +1574,8 @@ static void chart_go(void)               /* CHART, PLAY: a round of the key unde
         return;
     }
     set_page(PG_TODAY);
-    pr.focus_key = (uint8_t)(ui.ccur + 1u);
-    app_say("ROUND OF", t);
-    today_start();
+    app_say("LISTEN AND PLAY", t);
+    today_demo(ui.ccur);
 }
 
 static void chord_set_latch(int on)
@@ -1628,7 +1667,8 @@ static void button(uint32_t b)
         break;
     case PG_TODAY:
         if (b == B_PLAY) {
-            if (pr.ps == PS_START || pr.ps == PS_DONE) today_start();
+            if (pr.ps == PS_DONE && pr.demo) today_demo(pr.focus_key - 1);   /* the demonstration again */
+            else if (pr.ps == PS_START || pr.ps == PS_DONE) today_start();
             else if (pr.ps == PS_CARD && pr.intro) intro_done();
             else if (pr.ps == PS_CARD && pr.kind == SR_SHOW) play_answer();   /* hear it again */
             else if (pr.ps == PS_CARD && latch_card()) { if (pr.answer_ok) today_submit(); }
@@ -1638,7 +1678,7 @@ static void button(uint32_t b)
                 play_prompt();
             } else if (pr.ps == PS_RESULT) pr.until = 0;
         } else if (b == B_SEL) {
-            if (pr.ps == PS_START || pr.ps == PS_DONE) today_start();
+            if (pr.ps == PS_START || pr.ps == PS_DONE) today_start();   /* after a demonstration: a quiz of its key */
             else if (pr.ps == PS_CARD && pr.intro) intro_done();
             else if (pr.ps == PS_CARD && pr.kind == SR_SHOW) show_next();
             else if (pr.ps == PS_CARD && pr.skill == SK_EARQ && pr.answer_ok)
@@ -1728,7 +1768,7 @@ static void encoders(void)
         case PG_CHART: ui.ccur = (uint8_t)th_mod(ui.ccur + e, CO_KEYS); ui.redraw |= R_MAIN; break;
         case PG_TODAY:
             if (pr.ps == PS_START || pr.ps == PS_DONE) {
-                if (pr.focus_key) pr.focus_key = 0, e = 0;   /* out of CHART's key: back to the focus it had */
+                if (pr.focus_key) pr.focus_key = 0, pr.demo = 0, e = 0;   /* out of CHART's key: back to the focus */
                 pr.focus = (uint8_t)th_mod(pr.focus + e, FO_N);
                 app_say("FOCUS", FOCUS_NAME[pr.focus]);
                 ui.redraw |= R_MAIN;
@@ -1754,6 +1794,18 @@ static void encoders(void)
         default: break;
         }
     if (ui.page == PG_SET && (e = plat_enc(EN_K1)) != 0) settings_change(e > 0 ? 1 : -1);
+    if (ui.page == PG_PITCH && (pi.qs == QS_START || pi.qs == QS_DONE) && (e = plat_enc(EN_K1)) != 0) {
+        rec.pitch = (uint8_t)((rec.pitch & 3u) ^ PB_ALL);
+        pi.qs = QS_START;
+        app_say("NOTES", rec.pitch & PB_ALL ? "ALL 12" : "WHITE KEYS");
+        changed(R_MAIN | R_HEAD);
+    }
+    if (ui.page == PG_PITCH && (pi.qs == QS_START || pi.qs == QS_DONE) && (e = plat_enc(EN_K2)) != 0) {
+        rec.pitch = (uint8_t)((rec.pitch & 3u) ^ PB_WIDE);
+        pi.qs = QS_START;
+        app_say("RANGE", rec.pitch & PB_WIDE ? "3 OCTAVES" : "1 OCTAVE");
+        changed(R_MAIN | R_HEAD);
+    }
     if (ui.page == PG_WHEEL || ui.page == PG_CHORD) {
         if ((e = plat_enc(EN_K1)) != 0) {    /* the mode, the tonic kept (respelled if it must be) */
             rec.mode = (uint8_t)th_mod(rec.mode + e, NMODES);
@@ -2189,6 +2241,17 @@ static void draw_today_at(int32_t oy)
         uint8_t w[8];
         int nw;
         t[0] = 0;
+        if (pr.demo) {                   /* the end of a demonstration */
+            th_name(CO_TONIC[pr.focus_key - 1], u);
+            tcat(t, u);
+            tcat(t, " major");
+            gtext(10, 6 - oy, &FONT_M, t, C_WHITE);
+            gtext_wrap(10, 44 - oy, 220, 15, &FONT_XS, "You heard and played each of its cards. Nothing was scored.",
+                       C_GRAY);
+            cv_text(10, 110 - oy, &FONT_B, "PLAY: AGAIN", C_HI);
+            cv_text(10, 136 - oy, &FONT_B, "SEL: QUIZ ME ON IT", C_HI);
+            return;
+        }
         tcat(t, "ROUND ");
         tint(t, pr.ps == PS_DONE ? prec.st.round : prec.st.round + 1);
         if (pr.ps == PS_DONE) tcat(t, " DONE");
@@ -2249,7 +2312,8 @@ static void draw_today_at(int32_t oy)
     tcat(t, " / ");
     tint(t, pr.r.n);
     cv_text(8, 2 - oy, &FONT_T, t, C_DIM);
-    if (pr.kind == SR_SHOW) cv_text(60, 2 - oy, &FONT_T, "NEW", C_OK);
+    if (pr.demo) cv_text(60, 2 - oy, &FONT_T, "LISTEN, THEN PLAY ALONG", C_OK);
+    else if (pr.kind == SR_SHOW) cv_text(60, 2 - oy, &FONT_T, "NEW", C_OK);
     else if (pr.again) cv_text(60, 2 - oy, &FONT_T, "ONCE MORE", C_DIM);
     card_words(t, what, hint);
     gtext(8, 16 - oy, &FONT_M, t, C_WHITE);
@@ -2310,9 +2374,21 @@ static void pc_name(int pc, char *t)     /* PITCH: a pitch class, as PI_ORDER na
     th_name(F[th_mod(pc, 12)], t);
 }
 
+static int32_t pc_row(int32_t x, int32_t y, const felucca_font_t *f, const uint8_t *pcs, int n, const uint8_t *want,
+                      uint16_t c)      /* pitch classes in a row; with want, each green if it matches, else red */
+{
+    char u[8];
+    int i;
+    for (i = 0; i < n; i++) {
+        pc_name(pcs[i] % 12, u);
+        x = gtext(x, y, f, u, want ? (pcs[i] % 12 == want[i] % 12 ? C_OK : C_BAD) : c) + 8;
+    }
+    return x;
+}
+
 static void draw_pitch_at(int32_t oy)
 {
-    char t[64], u[8];
+    char t[64], u[8], u2[48];
     int i;
     if (pi.qs == QS_START || pi.qs == QS_DONE) {
         for (i = 0; i < PI_GAMES; i++) {
@@ -2328,13 +2404,18 @@ static void draw_pitch_at(int32_t oy)
             if (i) tcat(t, " ");
             tcat(t, u);
         }
-        cv_text(10, 98 - oy, &FONT_T, "THE NOTES IN PLAY", C_DIM);
+        pi_preset(u2);
+        tcat(u2, "   K1 NOTES  K2 RANGE");
+        cv_text(10, 98 - oy, &FONT_T, u2, C_DIM);
         gtext_wrap(10, 110 - oy, 220, 13, &FONT_T, t, C_GRAY);
         if (pi.qs == QS_DONE) {
             t[0] = 0;
             tint(t, pi.right);
             tcat(t, " / ");
-            tint(t, PI_TURNS[pi.game]);
+            tint(t, pi.total);
+            tcat(t, "  ");
+            tint(t, pi_pct());
+            tcat(t, "%");
             if (pi.game == PI_COMBO) { tcat(t, "  LONGEST "); tint(t, pi.best); }
             else if (pi.right) {
                 uint32_t ms = pi.time_sum / pi.right;
@@ -2344,12 +2425,11 @@ static void draw_pitch_at(int32_t oy)
                 tint(t, (int)(ms / 100u % 10u));
                 tcat(t, " S");
             }
-            if (pi.moved > 0) {
-                tcat(t, "  NEW: ");
-                pc_name(PI_ORDER[pi_pool() - 1], u);
-                tcat(t, u);
-            } else if (pi.moved < 0) tcat(t, "  ONE LESS");
-            gtext(10, 140 - oy, &FONT_B, t, pi.moved > 0 ? C_OK : C_HI);
+            gtext(10, 136 - oy, &FONT_B, t, C_HI);
+            t[0] = 0;
+            if (pi.new_best) tcat(t, "YOUR BEST TODAY");
+            else { tcat(t, "BEST TODAY "); tint(t, pi.best_pct[pi.game] - 1); tcat(t, "%"); }
+            cv_text(10, 158 - oy, &FONT_T, t, pi.new_best ? C_OK : C_DIM);
         } else cv_text(10, 146 - oy, &FONT_B, "PLAY: START", C_HI);
         return;
     }
@@ -2359,18 +2439,20 @@ static void draw_pitch_at(int32_t oy)
     tint(t, pi.turn + (pi.qs == QS_RESULT ? 0 : 1));
     tcat(t, " / ");
     tint(t, PI_TURNS[pi.game]);
-    tcat(t, "   RIGHT ");
-    tint(t, pi.right);
+    tcat(t, "   ");
+    tint(t, pi_pct());
+    tcat(t, "%");
     cv_text(8, 4 - oy, &FONT_T, t, C_DIM);
     if (pi.qs == QS_RESULT) {
-        cv_text(8, 30 - oy, &FONT_L, pi.ok ? "RIGHT" : "NO", pi.ok ? C_OK : C_BAD);
-        t[0] = 0;
-        for (i = 0; i < pi.asked; i++) {
-            pc_name(pi.notes[i] % 12, u);
-            if (i) tcat(t, " ");
-            tcat(t, u);
+        cv_text(8, 26 - oy, &FONT_L, pi.ok ? "RIGHT" : pi.game == PI_COMBO ? "SLIPS" : "NO", pi.ok ? C_OK : C_BAD);
+        if (pi.game == PI_COMBO && !pi.ok) {   /* what was played, marked; then what it was */
+            cv_text(8, 76 - oy, &FONT_T, "YOU PLAYED", C_DIM);
+            pc_row(8, 88 - oy, &FONT_B, pi.played, pi.step, pi.notes, 0);
+            cv_text(8, 114 - oy, &FONT_T, "IT WAS", C_DIM);
+            pc_row(8, 126 - oy, &FONT_B, pi.notes, pi.asked, 0, C_HI);
+            return;
         }
-        gtext(8, 90 - oy, &FONT_B, t, C_HI);
+        pc_row(8, 90 - oy, &FONT_B, pi.notes, pi.asked, 0, C_HI);
         if (pi.wrong_pc) {
             t[0] = 0;
             tcat(t, "you played ");
@@ -2382,7 +2464,7 @@ static void draw_pitch_at(int32_t oy)
     }
     if (pi.qs == QS_LISTEN) cv_text(8, 30 - oy, &FONT_M, "LISTEN", C_WHITE);
     else {
-        cv_text(8, 30 - oy, &FONT_M, pi.game == PI_SINGLE ? "WHICH NOTE?" : pi.game == PI_COMBO ? "IN ORDER" : "ALL OF THEM",
+        cv_text(8, 30 - oy, &FONT_M, pi.game == PI_SINGLE ? "WHICH NOTE?" : pi.game == PI_COMBO ? "PLAY IT BACK" : "ALL OF THEM",
                 C_WHITE);
         if (pi_limit()) {                /* the time left */
             uint32_t el = plat_ms() - pi.at, lim = pi_limit(), w = el >= lim ? 0 : 224u * (lim - el) / lim;
@@ -2394,23 +2476,20 @@ static void draw_pitch_at(int32_t oy)
     tint(t, pi_asked());
     tcat(t, pi_asked() == 1 ? " NOTE" : " NOTES");
     cv_text(8, 84 - oy, &FONT_XS, t, C_GRAY);
-    t[0] = 0;
-    if (pi.game == PI_COMBO)
-        for (i = 0; i < pi.step; i++) {
-            pc_name(pi.notes[i] % 12, u);
-            if (i) tcat(t, " ");
-            tcat(t, u);
-        }
-    else if (pi.game == PI_CLUSTER) {
+    if (pi.game == PI_COMBO) {           /* played so far: unmarked until the end */
+        for (i = 0; i < pi.n; i++) cv_rect(8 + i * 28, 132 - oy, 22, 4, i < pi.step ? C_HI : C_LINE);
+        pc_row(8, 108 - oy, &FONT_B, pi.played, pi.step, 0, C_WHITE);
+    } else if (pi.game == PI_CLUSTER) {
         uint16_t m = lt_pcs();
+        t[0] = 0;
         for (i = 0; i < 12; i++)
             if (m >> i & 1u) {
                 pc_name(i, u);
                 if (t[0]) tcat(t, " ");
                 tcat(t, u);
             }
+        if (t[0]) gtext(8, 108 - oy, &FONT_B, t, C_HI);
     }
-    if (t[0]) gtext(8, 108 - oy, &FONT_B, t, C_HI);
 }
 
 static void draw_main(void)
@@ -2456,10 +2535,7 @@ static void draw_header(void)
     } else {
         cv_text(8, 7, &FONT_B, ui.first ? "THEORY" : PAGE_NAME[ui.page], C_WHITE);
         t[0] = 0;
-        if (ui.page == PG_PITCH) {
-            tcat(t, "LEVEL ");
-            tint(t, rec.pitch + 1);
-        }
+        if (ui.page == PG_PITCH) pi_preset(t);
         if (ui.page == PG_TODAY || ui.page == PG_CHART) {
             tcat(t, "ROUND ");
             tint(t, prec.st.round);
@@ -2570,14 +2646,15 @@ static void draw_footer(void)
             hint = rec.flags & FL_SUBMIT_AUTO ? "TAP TO LIGHT   SEL CLEAR   SEQ SHOW" : "TAP TO LIGHT   PLAY CHECK   SEL CLEAR";
         else if (pr.ps == PS_CARD) hint = pr.skill >= SK_EARDEG ? "PLAY AGAIN   SEL DON'T KNOW   SEQ SHOW"
                                                                 : "SEL DON'T KNOW   SEQ SHOW ME";
+        else if (pr.ps == PS_DONE && pr.demo) hint = "PLAY AGAIN   SEL QUIZ   SELECT: BACK";
         else hint = pr.ps == PS_RESULT ? "SEL: NEXT" : "PLAY: START   SELECT: FOCUS";
     } else if (ui.page == PG_PITCH) {
-        hint = pi.qs == QS_START || pi.qs == QS_DONE ? "SELECT: GAME   PLAY: START"
+        hint = pi.qs == QS_START || pi.qs == QS_DONE ? "SELECT GAME  K1 NOTES  K2 RANGE  PLAY"
              : pi.game == PI_CLUSTER ? (rec.flags & FL_SUBMIT_AUTO ? "TAP TO LIGHT   SEL CLEAR   PLAY AGAIN"
                                                                    : "TAP TO LIGHT   PLAY CHECK   SEL CLEAR")
-             : "PLAY: AGAIN   HOME: STOP";
+             : pi.game == PI_COMBO ? "PLAY THEM ALL; SLIPS SHOWN AT THE END" : "PLAY: AGAIN   HOME: STOP";
     } else if (ui.page == PG_MENU) hint = "SELECT, PLAY   ALGO: PAGES";
-    else if (ui.page == PG_CHART) hint = "SELECT: A KEY   PLAY: PRACTISE IT";
+    else if (ui.page == PG_CHART) hint = "SELECT: A KEY   PLAY: SHOW ME IT";
     else if (ui.page == PG_SET) hint = "SELECT: ROW   K1 / SEL: CHANGE";
     if (hint) cv_text(8, 10, &FONT_T, hint, C_DIM);
     cv_blit(0, 208);
@@ -2748,6 +2825,7 @@ int app_expect(const char *what, int *got)
     else if (!strcmp(what, "intro")) *got = pr.intro;
     else if (!strcmp(what, "again")) *got = pr.again;
     else if (!strcmp(what, "fkey")) *got = pr.focus_key;
+    else if (!strcmp(what, "demo")) *got = pr.demo;
     else if (!strcmp(what, "flags")) *got = rec.flags;
     else if (!strcmp(what, "pq")) *got = pi.qs;
     else if (!strcmp(what, "pgame")) *got = pi.game;
@@ -2755,6 +2833,8 @@ int app_expect(const char *what, int *got)
     else if (!strcmp(what, "pturn")) *got = pi.turn;
     else if (!strcmp(what, "pright")) *got = pi.right;
     else if (!strcmp(what, "pn")) *got = pi.n;
+    else if (!strcmp(what, "pstep")) *got = pi.step;
+    else if (!strcmp(what, "ppct")) *got = pi_pct();
     else if (!strcmp(what, "key_of_card")) *got = co_key[pr.item];
     else return 0;
     return 1;
@@ -2803,12 +2883,23 @@ int app_host_cmd(const char *cmd, const char *a, const char *b, const char *c, c
             ui.redraw |= R_MAIN;
             return 1;
         }
+        if (pi.game == PI_COMBO) {       /* the run played back all right, or all wrong */
+            int i;
+            for (i = 0; i < pi.n; i++) pi.played[i] = (uint8_t)((pi.notes[i] + (strcmp(a, "right") ? 1 : 0)) % 12);
+            pi.step = pi.n;
+        }
         pi_result(!strcmp(a, "right"));
         return 1;
     }
     if (!strcmp(cmd, "pitch_all")) {     /* pitch_all right|wrong: the rest of the game */
         while (pi.qs != QS_DONE && pi.qs != QS_START) {
-            if (pi.qs == QS_LISTEN || pi.qs == QS_ANSWER) pi_result(!strcmp(a, "right"));
+            if (pi.qs == QS_LISTEN || pi.qs == QS_ANSWER) {
+                int i;
+                for (i = 0; i < pi.n && pi.game == PI_COMBO; i++)
+                    pi.played[i] = (uint8_t)((pi.notes[i] + (strcmp(a, "right") ? 1 : 0)) % 12);
+                if (pi.game == PI_COMBO) pi.step = pi.n;
+                pi_result(!strcmp(a, "right"));
+            }
             synth_score_stop();
             pi_next();
         }

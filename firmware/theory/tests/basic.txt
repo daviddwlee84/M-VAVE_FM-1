@@ -469,7 +469,7 @@ expect round 1
 expect box7 1
 expect page 2
 
-# ---- CHART: a key that is not open yet only says so; PLAY on C: a round of C's cards
+# ---- CHART: a key that is not open yet only says so; PLAY on C: C's cards shown and played along, unscored
 turn ALGO 2
 wait 60
 expect page 4
@@ -483,9 +483,23 @@ tap PLAY
 wait 60
 expect page 1
 expect fkey 1
+expect demo 1
 expect ps 1
+expect kind 1
+expect intro 0
 expect key_of_card 0
-answer right
+shot demo.png
+answer_all right
+expect ps 3
+expect round 1
+wait 60
+shot demo_done.png
+# SEL: now a quiz of C (scored)
+tap SEL
+wait 60
+expect demo 0
+expect fkey 1
+expect ps 1
 expect key_of_card 0
 turn ALGO 3
 wait 60
@@ -662,11 +676,12 @@ expect_text hist I_vi_V/V
 wait 2200
 expect hist 3
 tap SEL
-# ---- PITCH: three games of absolute pitch
+# ---- PITCH: three games of absolute pitch, each a game of its own (no level kept): the notes and range are a preset
 turn ALGO 2
 wait 60
 expect page 5
 expect pq 0
+expect plevel 0
 shot pitch.png
 tap PLAY
 wait 30
@@ -686,24 +701,37 @@ pitch right
 expect pright 1
 pitch_all right
 expect pq 4
-expect plevel 1
+expect ppct 95
+expect plevel 0
 wait 60
 shot pitch_done.png
-# COMBO: a run right, one note longer
+# COMBO: a slip does not stop the run; it is played back in full and marked at the end
 turn SELECT 1
 wait 30
 expect pgame 1
 tap PLAY
-wait 30
+wait 1500
+expect pq 2
 expect pn 2
+tapkey 7
+wait 30
+expect pq 2
+expect pstep 1
+tapkey 7
+wait 30
+expect pq 3
+pitch_all wrong
+expect pq 4
+expect ppct <30
+# a run all right: one note longer; all wrong: one shorter
+tap PLAY
+wait 30
 pitch right
 expect pn 3
 wait 1000
 pitch wrong
 expect pn 2
-pitch_all wrong
-expect pq 4
-expect plevel 0
+pitch_all right
 # CLUSTER: its notes lit (SUBMIT AUTO: checked once the keys rest)
 turn SELECT 1
 wait 30
@@ -714,9 +742,17 @@ expect lit 2
 wait 1200
 expect pq 3
 expect pright 1
+# the preset: K1 all 12 notes, K2 three octaves; kept
+pitch_all right
+turn K1 1
+turn K2 1
+wait 60
+expect plevel 3
+shot pitch_preset.png
+wait 3500
 reboot
 wait 600
-expect plevel 0
+expect plevel 3
 expect flags 7
 expect page 5
 # TODAY with SUBMIT AUTO: the right count of notes lit, the keys at rest a second: checked
@@ -754,7 +790,7 @@ shot ask.png
 tap HOME
 wait 60
 expect ask 0
-expect round 2
+expect round 1
 expect_sysex F0 7D 54 48 01 45 01 F7
 # PLAY loads it
 sysex_out
