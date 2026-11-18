@@ -203,6 +203,18 @@ F 和 Bm 在前面的階段先學簡易版，第 6 階段再多一張完整封�
 | fm1-emu 兩種晶片 | `HOME` 兩次進 LEARN（`WHICH IS F?`）、`SELECT` 選錯、`PLAY` 顯示 `NO: F` 並框出 F、`PLAY` 下一題、回 NECK：存 2 次，每次 3 次寫入；重開 0 次寫入 |
 | 疊在 `2026-11-18-pre-theory-0.2` 備份上 | 開機 0 次寫入；存檔只改 `0xD4000` 與 `0xD5000`（A/B 輪流）；`0xD6000`、`0xD8000`、`0xDA000`、`0xFC000` 都和備份相同 |
 
+## v0.3 驗證 { #v03-verify }
+
+2026-11-18，全部 `[模擬]`，在本人的 Mac 上跑（commit `9da94f1`）。
+
+| 項目 | 結果 |
+|---|---|
+| `just guitar-unit` | 335,537 個檢查全部通過 |
+| `just fw-test guitar` | 全部 ok |
+| `just fw-build guitar` | app 136,516 B（槽 581,564 B），RAM `.data+.bss` 29,936 / 98,304 B，`.ram_text` 5,100 / 32,768 B；沒有 soft-double，`firmware/guitar` 沒有 compiler warning；套件 `FM-1_5500`，616,003 B，SHA-256 `8d0ac4de…642b760d` |
+| fm1-emu 兩種晶片 | `HOME` 開 MENU、再按回 NECK，`ALGO` 到 SHAPE，`K4` 夾 3 品：存 1 次（3 次寫入），進出 MENU 不寫；重開 0 次寫入，讀回 SHAPE 頁、capo 3、`CAPO 3: AS A`、`x02220` |
+| 疊在 `pre-theory-0.3b` 備份上，兩種晶片 | 開機 0 次寫入；存檔只改 `0xD4000`；THEORY（`0xD6000`、`0xD8000`、`0xD9000`）、Morse（`0xDA000`、`0xDB000`）、`0xFC000` 都和備份相同 |
+
 ## v0.2 計畫 { #v02 }
 
 2026-11-18 本人試用 v0.1 的回饋：「體驗不錯」；想要封閉和弦、power chord、不同把位（參考 [learning-guitar 的音階頁](https://marsishandsome.github.io/learning-guitar/01_Basic/01_Guitar_Scale.html)），以及像 THEORY、MORSE 那樣的學習模式：按調由淺入深學和弦，C 調先學、G 調多學一個、再往下到 F 調，新手按不好封閉和弦時也有開放和弦可用。
