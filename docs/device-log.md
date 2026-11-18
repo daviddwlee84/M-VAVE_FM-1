@@ -10,7 +10,7 @@
 | Flash 晶片 / JEDEC ID | **`0xB36014` (new)**，UCUN UC25HQ80，1 MiB |
 | Bootloader | stock (M-VAVE) |
 | 出廠韌體版本 | FM-1 015 (stock)，firmware check OK |
-| 目前韌體 | **THEORY 0.1 dev build（`FM-1_4900`，只有 USB）**（2026-11-18 19:00 前後從 Morse 0.6 用 USB-MIDI 更新；Morse 的學習紀錄留在 `0xDA000`，裝回 `morse-0.6.fwsc` 就會讀到）。之前是 Morse 0.6 release build（`FM-1_41000600`，藍牙；2026-11-18 從 0.4 → 0.5（16:20）→ 0.6 用 USB-MIDI 更新，學習紀錄保留；macOS 上的 USB MIDI port 名稱仍是 `Felucca`）。0.3 release 是 Hub 測試 3 從原廠 015 裝的，進度當時從 ROUND 1 重新開始。之前依序是原廠 015 → SLOOP 2.8.5 → Agent Deck 0.7 → SLOOP 2.8.5 → CTL-1 1.0.3 → ChoralRoot 0.41 → Conductor 0.1 → 0.2 → 0.3 → Morse 0.1 → 0.2 → 0.3 → SLOOP 2.8.5 → Morse 0.3 release → 原廠 015（還原）→ Morse 0.3 release → Morse 0.4 → Morse 0.5 → Morse 0.6 → THEORY 0.1 |
+| 目前韌體 | **Morse 0.7 release build（`FM-1_41000700`，藍牙）**（2026-11-18 19:45 前後從 THEORY 0.1 用 USB-MIDI 更新（fast install），學習紀錄 ROUND 30 保留，開機進 MENU；THEORY 的存檔留在 `0xD8000`）。之前是 THEORY 0.1 dev build（`FM-1_4900`，只有 USB，2026-11-18 19:00 前後從 Morse 0.6 更新）。再之前是 Morse 0.6 release build（`FM-1_41000600`，藍牙；2026-11-18 從 0.4 → 0.5（16:20）→ 0.6 用 USB-MIDI 更新，學習紀錄保留；macOS 上的 USB MIDI port 名稱仍是 `Felucca`）。0.3 release 是 Hub 測試 3 從原廠 015 裝的，進度當時從 ROUND 1 重新開始。之前依序是原廠 015 → SLOOP 2.8.5 → Agent Deck 0.7 → SLOOP 2.8.5 → CTL-1 1.0.3 → ChoralRoot 0.41 → Conductor 0.1 → 0.2 → 0.3 → Morse 0.1 → 0.2 → 0.3 → SLOOP 2.8.5 → Morse 0.3 release → 原廠 015（還原）→ Morse 0.3 release → Morse 0.4 → Morse 0.5 → Morse 0.6 → THEORY 0.1 → Morse 0.7 |
 | SLOOP 的曲子 | **已不在機器上**（`0x97000` 被 ChoralRoot 的韌體蓋掉）。完整保存在 `2026-11-17-0341-pre-ctl-1.0.3` 備份裡；回 SLOOP 要在 M-Flasher GUI 還原那份備份 |
 | m-bootloader | 未安裝 |
 | 主機 | macOS，M-Flasher 0.12.1 |
@@ -49,6 +49,7 @@ M-Flasher 在兩次寫入前各自動存了一份：`~/Documents/M-Flasher/backu
 | 2026-11-18 02:42 | Hub 測試 3 之前的 Morse 0.3 release（`FM-1_41000300`，含學習紀錄）：測完要回到這裡就還原這份 | `backups/2026-11-18-pre-hub-test-3/fm1-20261118-024232.bin` + `.json` | `5601847d2505efa80d85ec611a0813f2854bb9f40c91cb49d47d65299f7e50b5` | 尚未上傳 |
 | 2026-11-18 04:47 | 刷 Morse 0.4 之前的 Morse 0.3 release（`FM-1_41000300`，含學習紀錄：ROUND 15、S N A P T 剛解鎖） | `backups/2026-11-18-pre-morse-0.4/fm1-20261118-044757.bin` + `.json` | `73a530d20bc6409488a28717a2f5c5817a7083c023dc88f657ecd37fcc82602b` | 尚未上傳 |
 | 2026-11-18 18:56 | 刷 THEORY 0.1（dev build）之前的 Morse 0.6 release（`FM-1_41000600`，`0xDA000` 有學習紀錄，`0xD8000`–`0xD9FFF` 是空的） | `backups/2026-11-18-pre-theory-0.1/fm1-20261118-185652.bin` + `.json` | `5b62a3daeed2f23c7198f4f0cf56f02aaf432355727d78e6f1e8586beed879ea` | 尚未上傳 |
+| 2026-11-18 19:38 | 刷 Morse 0.7 之前的 THEORY 0.1 dev build（`FM-1_4900`；`0xDA000` 是 Morse 0.6 的學習紀錄 ROUND 30，`0xD8000`–`0xD9FFF` 是 THEORY 的存檔） | `backups/2026-11-18-pre-morse-0.7/fm1-20261118-193823.bin` + `.json` | `4c3d061d886c58271e26bf05822ba9f6ff957ce551a95d338d93a05cd1712e85` | 尚未上傳 |
 
 ## 下載的檔案
 
@@ -127,6 +128,8 @@ M-Flasher 在兩次寫入前各自動存了一份：`~/Documents/M-Flasher/backu
 | 2026-11-18 18:55 前後 | agent 執行 `fm1_install.py --info`、`just morse-backup`（唯讀，刷 THEORY 0.1 前） | `FM-1_41000600 [running] port: Felucca`。進度 JSON 兩次都沒存到：host 在 `Felucca` 上等不到 HELLO（大概有別的程式連著 FM-1）。學習紀錄在下一列的整片備份裡（`0xDA000`） |
 | 2026-11-18 18:56 | agent 執行 `just fm1-download-mode`、`fm1-info`、`fm1-backup pre-theory-0.1`、`fm1-restart`、`fm1_install.py --info`（刷 THEORY 0.1 前的 preflight） | bootloader stock、firmware `FM-1 410`、flash `0xB36014`；備份 SHA-256 `5b62a3da…879ea`；重開回 Morse 0.6（`FM-1_41000600 [running]`）。fm1-emu 兩種晶片上把 THEORY 0.1 dev build（SHA-256 `0d86cc42…41ebcd`）疊在這份備份上預演：開機 0 次寫入，存檔只寫 `0xD8000`，`0xDA000` 的 Morse 紀錄和 `0xFC000` 都沒變 `[模擬]` |
 | 2026-11-18 19:00 前後 | 本人執行 `fm1_install.py firmware/theory/build/theory.fwsc`（THEORY 0.1 dev build，`FM-1_4900`，SHA-256 `0d86cc42…41ebcd`，從 `c7a7084` 上未 commit 的工作目錄 build），機器上是 Morse 0.6 | 成功：`checking the package (30 reads)` → `switching to update mode` → `the loader writes only the sectors that changed (fast install)` → `done: the FM-1 runs FM-1_4900`。本人試用：「好像還可以」。19:02 agent 想用 `--info` 再確認時，FM-1 已不在 USB 上（沒有任何 MIDI input），所以以安裝程式最後的回報為準 |
+| 2026-11-18 19:37–19:40 | agent 執行 `fm1_install.py --info`、`just fm1-download-mode`、`fm1-info`、`fm1-backup pre-morse-0.7`、`fm1-restart`（刷 Morse 0.7 前的 preflight） | `FM-1_4900 [running] port: Felucca`（19:02 不在 USB 上，是線沒接好；本人重接後就在）；bootloader stock、firmware `FM-1 490`、flash `0xB36014`；備份 SHA-256 `4c3d061d…712e85`，和刷 THEORY 前的備份相比，`0x93000` 以上只有 `0xD8000`、`0xD9000` 不同（THEORY 的存檔），`0xDA000` 的 Morse 紀錄沒變；重開回 THEORY。fm1-emu 兩種晶片上把 `morse-0.7.fwsc`（release，SHA-256 `c15541d5…aa45e3d`）疊在這份備份上預演：開機進 MENU、ROUND 30 保留、開機和進 PRACTICE 都是 0 次寫入 `[模擬]` |
+| 2026-11-18 19:45 前後 | 本人執行 `fm1_install.py firmware/morse/build/morse-0.7.fwsc`（release `FM-1_41000700`，SHA-256 `c15541d5…aa45e3d`，fm1-morse `52b048e`），機器上是 THEORY 0.1 | 成功：`checking the package (30 reads)` → `switching to update mode` → `the loader writes only the sectors that changed (fast install)` → `done: the FM-1 runs FM-1_41000700`。本人確認：開機進 MENU、進度還在，START PAGE 改了之後關機再開也照設定。觀察：在 SETTINGS 改完馬上關機不會存（設定在最後一次改動 3 秒後才寫入），`SAVE` 鍵沒有作用 |
 
 ## Phase 1 驗收
 
