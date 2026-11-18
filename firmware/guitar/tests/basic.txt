@@ -173,6 +173,29 @@ expect_text chord Gm
 expect_text frets 310033
 expect_text fingers 210034
 
+# v0.2: K3 picks which shapes: the barre chord, its form; a power chord
+turn K3 2
+wait 60
+expect filter 2
+expect_text frets 355333
+expect_text form E_FORM
+shot shape_barre.png
+turn K3 1
+wait 60
+expect filter 3
+turn K3 -3
+wait 60
+expect filter 0
+turn K1 6
+wait 60
+expect_text chord G5
+expect_text frets 355xxx
+expect_text form ROOT_ON_6
+shot shape_power.png
+turn K1 -6
+wait 60
+expect_text chord Gm
+
 # ---- tunings: the ukulele's C, the neck with four strings
 turn K1 -1
 wait 60
@@ -189,12 +212,116 @@ expect_text tuning UKULELE
 expect_text frets 0003
 shot shape_uke.png
 tap HOME
+wait 30
+expect page 2
+tap HOME
 wait 60
 expect page 0
 shot neck_uke.png
 turn K4 2
 wait 60
 expect_text tuning STANDARD
+
+# ---- LEARN: rounds of chord cards, stage 1 (key of C: C G Am F)
+tap HOME
+wait 30
+tap HOME
+wait 60
+expect page 2
+expect lstage 0
+expect lstate 0
+expect lcard 0
+# a chord not seen yet: its name, pick its shape of four
+expect lkind 0
+shot learn_name.png
+learn_pick right
+tap PLAY
+wait 60
+expect lstate 1
+expect lright 1
+expect playing 1
+shot learn_right.png
+# an answer mid-round is kept: saved once no other answer comes for 20 s
+expect lunsaved 1
+wait 20100
+expect lunsaved 0
+tap PLAY
+wait 60
+expect lcard 1
+expect lstate 0
+learn_card - 0
+learn_pick wrong
+tap PLAY
+wait 60
+expect lstate 1
+expect lright 1
+shot learn_wrong.png
+tap PLAY
+wait 60
+# a NOTES card: C as x32010 sounds C E G; played on the keys and let go
+learn_card 0 1
+wait 60
+expect lkind 1
+expect_text learn WHICH_NOTES?
+shot learn_notes.png
+key 7 down
+key 11 down
+wait 30
+key 14 down
+wait 60
+key 7 up
+key 11 up
+key 14 up
+wait 60
+expect lstate 1
+expect lright 2
+expect_text learn RIGHT:_C
+shot learn_notes_right.png
+tap PLAY
+wait 60
+learn_card - 0
+learn_pick right
+tap PLAY
+wait 60
+tap PLAY
+wait 60
+learn_card - 0
+learn_pick right
+tap PLAY
+wait 60
+tap PLAY
+wait 60
+learn_card - 0
+learn_pick right
+tap PLAY
+wait 60
+tap PLAY
+wait 60
+learn_card - 0
+learn_pick right
+tap PLAY
+wait 60
+tap PLAY
+wait 60
+learn_card - 0
+learn_pick right
+tap PLAY
+wait 60
+tap PLAY
+wait 60
+expect lstate 2
+expect lright 7
+expect lrounds 1
+expect saves >0
+expect_text learn ROUND_DONE
+shot learn_end.png
+tap PLAY
+wait 60
+expect lstate 0
+expect lcard 0
+tap HOME
+wait 60
+expect page 0
 
 # ---- kept: saved once the knobs rest, read back after a restart
 tap OCT-
@@ -211,4 +338,5 @@ expect_text key A_major
 expect_text chord C
 expect oct -1
 expect_text frets x32010
+expect lrounds 1
 shot reboot.png
