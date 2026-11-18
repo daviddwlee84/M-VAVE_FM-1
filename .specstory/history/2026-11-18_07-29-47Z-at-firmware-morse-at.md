@@ -70294,3 +70294,191 @@ _**Agent (claude-opus-5-5 2026-11-18 14:44:07Z)**_
 `main` 現在比遠端多 5 個 commit，沒 commit 的只剩 plan 檔和 `.specstory`，照慣例沒有放進來。
 
 實機上還是早一版的 0.3（commit `a0a14e9` 那一版），還不包含這次的兩項改動。要刷的話跟我說：我會先接著 USB 做一份新的完整備份，再請你執行和上次一樣的 `fm1_install.py` 指令。
+
+---
+
+_**User (2026-11-18 14:56:23Z)**_
+
+可以刷
+
+---
+
+_**Agent (claude-opus-5-5 2026-11-18 14:56:28Z)**_
+
+我先做刷機前的備份：把機器切到下載模式、做完整備份、再切回來。這幾步都不會寫入韌體。
+
+_**Agent (claude-opus-5-5 2026-11-18 14:56:50Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Progress JSON, download mode, full backup, restart
+
+`just theory-backup backups/progress/theory-2026-11-18-pre-0.3b.json 2>&1 | tail -1 && just fm1-download-mode 2>&1 | tail -1 && sleep 4 && just fm1-backup pre-theory-0.3b 2>&1 | grep -E "firmware|flash |Backup saved|Refused" ; shasum -a 256 backups/*pre-theory-0.3b*/*.bin; just fm1-restart 2>&1 | tail -1`
+
+```text
+[theory] round 1, 6 of 63 open (up to earq:min), 6 answered, 6 right, streak 1 -> backups/progress/theory-2026-11-18-pre-0.3b.json
+In download mode: usb:2-4	WL82 UBOOT1.00 (USB bus 2, device 4)
+Checked: the chip's CRC32 of the flash matches the read
+  firmware    FM-1 490
+  flash       0xB36014
+    - the firmware uses the FM-1 flash layout
+    - flash chip 0xB36014 (new)
+Backup saved: backups/2026-11-18-pre-theory-0.3b/fm1-20261118-225644.bin
+e382d5b321129973d9019f69f755d0fdf4f1b40c66950b1995262c0da1fbda7e  backups/2026-11-18-pre-theory-0.3b/fm1-20261118-225644.bin
+Running: the Felucca is on USB MIDI
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 14:56:59Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Confirm package matches commit; record backup
+
+```bash
+git diff --stat 92267f6 -- firmware/theory | tail -1; shasum -a 256 firmware/theory/build/theory.fwsc; python3 - <<'EOF'
+p='docs/device-log.md'; s=open(p).read()
+anchor="| 2026-11-18 22:30 | 刷 THEORY 0.3（dev build）之前的 THEORY 0.2"
+i=s.index(anchor); j=s.index("\n",i)+1
+s=s[:j]+"| 2026-11-18 22:56 | 重刷 THEORY 0.3（commit `92267f6`）之前的 THEORY 0.3（commit `a0a14e9`） | `backups/2026-11-18-pre-theory-0.3b/fm1-20261118-225644.bin` + `.json`；閃卡進度另存 `backups/progress/theory-2026-11-18-pre-0.3b.json` | `e382d5b321129973d9019f69f755d0fdf4f1b40c66950b1995262c0da1fbda7e` | 尚未上傳 |\n"+s[j:]
+open(p,'w').write(s)
+EOF
+echo recorded
+```
+
+```text
+2b7d5c3f6e28c70390dcc7308980ed65525010c2fe671058ebeb5a53654dd5bd  firmware/theory/build/theory.fwsc
+recorded
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 14:57:07Z)**_
+
+新的備份做好了，機器已經切回去，在 USB 上照常執行 0.3。這次的寫入可以開始。
+
+**刷機前檢查**
+
+| 項目 | 狀態 |
+|---|---|
+| 完整備份 | ✅ `backups/2026-11-18-pre-theory-0.3b/fm1-20261118-225644.bin`，SHA-256 `e382d5b321129973d9019f69f755d0fdf4f1b40c66950b1995262c0da1fbda7e`（M-Flasher 核對過 CRC32）。閃卡進度另存成 JSON：round 1，開放 6 項，答 6 對 6 |
+| Flash 晶片 | ✅ `0xB36014`（新的 UCUN） |
+| 套件 | ✅ `firmware/theory/build/theory.fwsc`，SHA-256 `2b7d5c3f6e28c70390dcc7308980ed65525010c2fe671058ebeb5a53654dd5bd`。和 commit `92267f6` 比對，`firmware/theory/` 底下沒有差異 |
+| 現在 → 之後 | THEORY 0.3（`a0a14e9`）→ 0.3（`92267f6`），identity 都是 `FM-1_4900`，只寫有變動的 sector。設定和進度保留，Morse 的紀錄不動 |
+
+備份已經記進 `docs/device-log.md`。請你執行：
+
+```
+uv run --locked --all-groups python third_party/fm1-base/tools/fm1_install.py firmware/theory/build/theory.fwsc
+```
+
+問你要不要繼續時由你回答 `y`。裝完把輸出貼給我，我再確認版本並補上紀錄。
+
+---
+
+_**User (2026-11-18 15:00:53Z)**_
+
+```
+
+
+<pasted_content id="38ec">
+❯ uv run --locked --all-groups python third_party/fm1-base/tools/fm1_install.py firmware/theory/build/theory.fwsc
+package: FM-1_4900  (firmware/theory/build/theory.fwsc)
+device:  FM-1_4900  (Felucca)
+Install? Do not unplug the FM-1 while writing. [y/N] y
+starting the update on FM-1_4900
+checking the package (30 reads)
+switching to update mode
+writing   0%
+the loader writes only the sectors that changed (fast install)
+writing 100%
+restarting
+done: the FM-1 runs FM-1_4900
+</pasted_content id="38ec">
+
+```
+
+done
+
+是說之前學琴的時候彈音階結束後會有中止式四個和弦 這個是不是也算比較重要 還有琶音？（哈農教材？）
+
+---
+
+_**Agent (claude-opus-5-5 2026-11-18 15:01:04Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Confirm install
+
+```bash
+uv run --locked --all-groups python third_party/fm1-base/tools/fm1_install.py --info 2>&1 | tail -1; sleep 2; PYTHONPATH=host uv run --locked --all-groups python -c "
+from theory.device import MidiLink
+from theory.__main__ import Session
+l=MidiLink(None); s=Session(l,log=lambda *a:None); print('connected',s.wait_connected(4),'firmware',s.firmware); l.close()" 2>&1 | tail -1
+```
+
+```text
+FM-1_4900  [running]  port: Felucca
+connected True firmware (0, 3)
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 15:01:25Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Record reinstall and cadence/arpeggio idea; commit
+
+```bash
+python3 - <<'EOF'
+p='docs/device-log.md'; s=open(p).read()
+s=s.replace("| 目前韌體 | **THEORY 0.3 dev build（`FM-1_4900`，只有 USB）**（2026-11-18 22:35 前後從 THEORY 0.2 用 USB-MIDI 更新，fast install；","| 目前韌體 | **THEORY 0.3 dev build（`FM-1_4900`，只有 USB，commit `92267f6`）**（2026-11-18 23:00 前後從 `a0a14e9` 那版重刷，fast install；22:35 前後從 THEORY 0.2 更新，fast install；",1)
+a="| 2026-11-18 22:35 前後 | 本人執行 `fm1_install.py firmware/theory/build/theory.fwsc`（THEORY 0.3 dev build"
+i=s.index(a); j=s.index("\n",i)+1
+s=s[:j]+"| 2026-11-18 23:00 前後 | 本人執行 `fm1_install.py firmware/theory/build/theory.fwsc`（THEORY 0.3 dev build，SHA-256 `2b7d5c3f…54dd5bd`，commit `92267f6`：CHART 示範任何調、低音較亮），機器上是 `a0a14e9` 那版 0.3 | 成功：fast install，`done: the FM-1 runs FM-1_4900`。agent 用 `--info` 確認 `FM-1_4900 [running]`，HELLO 回報 0.3 |\n"+s[j:]
+open(p,'w').write(s)
+p='docs/dev/theory.md'; s=open(p).read()
+a="## 還沒決定的事\n"
+s=s.replace(a,a+"""
+- **音階之後的終止式，以及琶音**（本人 2026-11-18 想到：學琴時彈完音階會接四個和弦的終止式）：
+    - 分級檢定的技巧項目通常就是音階、琶音、終止式三件，例如 I–IV–V–I 或 I–IV–I6/4–V7–I `[調研]`。哈農第二部分也有各調的音階和琶音，第一部分則是手指獨立的練習。
+    - 放進 TODAY 的話，可以加兩種卡：
+        - **終止式**：依序彈出四個和弦，每個和弦用點亮式托盤組好再送出，轉位不拘或照建議的按法。
+        - **琶音**：主和弦的音由低到高，照順序彈。
+    - 要先解決一件事：`course.h` 只能往後加，項目又是一個調一個調依序開放，新的卡加在最後面，要等到 F# 開了才輪得到。要讓它們跟著各調開放，得把「已開放」從一段連續的前綴改成依調判斷，備份格式也要一起改。
+    - 和節拍器、速度有關的部分（彈得穩不穩）放在 DRILL。
+""",1)
+open(p,'w').write(s)
+EOF
+just docs-check | tail -1 && git add docs/device-log.md docs/dev/theory.md && git commit -q -m "device-log: theory 0.3 (92267f6) reinstalled; notes on cadences and arpeggios
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>" && git log --oneline -1
+```
+
+```text
+uv run --locked --all-groups zensical build --strict
+No issues found
+uv run --locked --all-groups python scripts/check-docs-site.py
+{"status": "ok", "pages": 50, "llm_pages": 50, "deployed": false}
+2d01e29 device-log: theory 0.3 (92267f6) reinstalled; notes on cadences and arpeggios
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 15:01:42Z)**_
+
+裝好了，機器回報 `FM-1_4900 [running]`，THEORY 版本是 0.3，現在跑的是 commit `92267f6` 這版。安裝紀錄寫進了 `docs/device-log.md`，已 commit 成 `2d01e29`，沒有 push。
+
+**終止式和琶音：重要，值得加**
+
+音階、琶音、終止式通常是分級鋼琴檢定技巧項目的三件組。你學琴時彈完音階接四個和弦，就是這個傳統。常見的終止式是 I–IV–V–I，或 I–IV–I6/4–V7–I。這是我的印象，沒有逐一查證。
+
+**哈農**：第一部分主要是手指獨立的練習，第二部分才有各調的音階和琶音。
+
+放進 THEORY 的做法：
+- **TODAY 加兩種卡**：
+  - 終止式卡：依序組出四個和弦，每個和弦用點亮式托盤組好再送出。
+  - 琶音卡：主和弦的音由低到高照順序彈，判斷方式和現在的音階卡一樣。
+- **DRILL 頁（roadmap 的 v0.5）**：管節拍器和速度，練彈得穩不穩、快不快。
+
+**要先解決的問題**：課程表 `course.h` 只能往後加，而且各調照順序開放，現在的寫法是開放到第幾項為止。新卡加在最後面，要等 F# 開放了才會出現。要讓終止式和琶音跟著 C、G、F… 各調一起開放，得把「已開放」改成依調判斷，進度備份的格式也要跟著升版。這樣做是可以的，但比加一種卡多一步。
+
+這些記在 `docs/dev/theory.md` 的「還沒決定的事」。要排進下一版的話，可以和原本 v0.4 的節奏、旋律聽寫一起規劃，也可以先只做這兩種卡。
