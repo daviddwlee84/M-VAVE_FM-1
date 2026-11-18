@@ -1,27 +1,36 @@
 # firmware/theory
 
-THEORY, a pocket music theory trainer for the M-VAVE FM-1, built on fm1-base. v0.1 is the WHEEL page: the circle
-of fifths with the key's chords marked; play a chord and it is named, with its Roman numeral in the key
-(secondary dominants, borrowed chords, inversions); or let the white keys play the key's own chords, voiced to
-move as little as possible. Verified in the host simulator and fm1-emu, and running on the owner's unit since 2026-11-18. Design and controls
-(Traditional Chinese): [docs/dev/theory.md](../../docs/dev/theory.md).
+THEORY, a pocket music theory trainer for the M-VAVE FM-1, built on fm1-base. Pages: MENU; TODAY, flash cards a
+round a day (scales, key signatures, chords by degree, degrees and chord qualities by ear) in Leitner boxes; WHEEL,
+the circle of fifths with the key's chords marked, naming what is played; CHORD, a whole screen about whatever is
+played (its tones, other readings, the progression as numbers; keys held, or lit one by one with LATCH); CHART,
+progress on the circle, and a round of one key; PITCH, absolute pitch games (a note, a run, a cluster); SETTINGS.
+Answers of many notes are lit one by one and keep sounding (the latch tray). Progress backs up to a computer
+(`host/theory`, or `docs/assets/theory/progress.html`). 0.2 runs on the owner's unit since 2026-11-18; 0.3 is
+verified in the host simulator and fm1-emu. Design and controls (Traditional Chinese):
+[docs/dev/theory.md](../../docs/dev/theory.md).
 
-Licence: GPL-3.0-or-later (`LICENSE`). Package identity `FM-1_49` (dev `FM-1_4900`). Settings: one record at
-`0xD8000` through fm1-base's store.
+Licence: GPL-3.0-or-later (`LICENSE`). Package identity `FM-1_49` (dev `FM-1_4900`). Through fm1-base's store:
+the settings at `0xD8000`, the flash cards' progress at `0xD6000`.
 
 | File | What it is |
 |---|---|
-| `app.c`, `app.h`, `fm1.toml` | The app: the WHEEL page, input, lights, the settings record, the simulator's checks. |
+| `app.c`, `app.h`, `fm1.toml` | The app: the pages, input, lights, the records, the backup's SysEx (`F0 7D 54 48`), the simulator's checks. |
+| `srs.h`, `srs.c` | Leitner boxes counted in rounds, for any list of items (after Morse's `learn.c`): new items shown first, segments, no key twice in a row, focus, groups, grades, backup blob. No platform, no libc. |
+| `course.h` | The flash cards' 63 items in the order they open. Append only: progress and backups name items by place. |
 | `theory.h`, `theory.c` | Spelling on the line of fifths, 12 scales, key signatures, the circle of fifths, 23 chord qualities, Roman numerals and Nashville numbers (naming and reading, secondary dominants), naming a chord from MIDI notes, the nearest close voicing. C99, no platform calls, no libc, no floating point. |
 | `synth.h`, `synth.c` | Eight voices of a two-operator FM electric piano (after `../common/chime`), fed by a one-writer event ring. |
 | `gtext.h`, `gtext.c` | Text with sharp, flat, diminished and half-diminished signs drawn as small bitmaps (the fonts are ASCII). |
-| `tests/basic.txt` | The host simulator's script (`just fw-test theory`). |
-| `tests/theory_test.c` | Unit tests for the core: hand-written answers, round trips, every diatonic chord in every key and inversion, random voicings. |
+| `tests/basic.txt` | The host simulator's script (`just fw-test theory`); its backup frames come from `host/theory/progress.py`. |
+| `tests/theory_test.c` | Unit tests for the core: hand-written answers, round trips, every diatonic chord in every key and inversion, readings, random voicings. |
+| `tests/srs_test.c` | Unit tests for the rounds: the course, grades, interleaving, focus, groups, backup. |
 | `tests/vectors.h` | Generated from music21 by `host/theory/make_vectors.py`; do not edit. |
 
 ```sh
-just theory-unit      # the core's unit tests on this computer
+just theory-unit      # the core's and the rounds' unit tests on this computer
 just fw-test theory   # the app in the host simulator (screenshots in build/host/)
+just theory-test      # the computer side's tests
+just theory-backup FILE / just theory-restore FILE
 just fw-build theory  # the device package, build/theory.fwsc
 just theory-emu       # that package in fm1-emu
 just theory-vectors   # regenerate tests/vectors.h (uv fetches music21 10.5.2)

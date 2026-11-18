@@ -76,6 +76,29 @@ static int32_t gtext_w(const felucca_font_t *f, const char *s)
     }
 }
 
+/* text broken into lines of at most w pixels at the spaces, lh apart, from y; returns the y below the last line */
+static int32_t gtext_wrap(int32_t x, int32_t y, int32_t w, int32_t lh, const felucca_font_t *f, const char *s, uint16_t c)
+{
+    char line[96];
+    while (*s) {
+        uint32_t n = 0, cut = 0;
+        while (*s == ' ') s++;
+        if (!*s) break;
+        for (; s[n] && n < sizeof line - 1u; n++) {
+            line[n] = s[n];
+            line[n + 1] = 0;
+            if (s[n] == ' ') cut = n;
+            if (gtext_w(f, line) > w && cut) break;
+        }
+        if (s[n] && cut && gtext_w(f, line) > w) n = cut;
+        line[n] = 0;
+        gtext(x, y, f, line, c);
+        y += lh;
+        s += n;
+    }
+    return y;
+}
+
 /* the same text in ASCII (# b o /o), for the screen reader's words and the simulator's checks */
 static void gt_ascii(const char *s, char *out, uint32_t max)
 {

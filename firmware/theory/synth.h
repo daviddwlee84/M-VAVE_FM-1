@@ -14,8 +14,21 @@
 
 void synth_init(void);                   /* the pitch table: the main loop, before any note */
 void synth_note_on(int note, int vel);   /* MIDI note 0..127, velocity 1..127 */
+void synth_note_hold(int note, int vel);   /* the same, but it keeps sounding (softer) until let go: a lit note */
 void synth_note_off(int note);
 void synth_all_off(void);                /* every voice released */
 void synth_stop(void);                   /* silence now, nothing queued (app_panic, a reboot) */
 void synth_render(int32_t *lr, uint32_t n, float gain);   /* audio interrupt: writes every sample of n frames */
 int synth_active(void);                  /* voices sounding, as of the last block */
+
+/* A score: notes at times, played by the audio interrupt (to the block, 5.8 ms), so a redraw cannot delay them. The
+ * main loop writes it (one writer); a new score replaces the one playing. For cadences, ear-training prompts,
+ * answers. */
+#define SY_SCORE_MAX 48u
+typedef struct {
+    uint16_t at, dur;                    /* ms from the start; ms held */
+    uint8_t note, vel;
+} sy_note_t;
+void synth_score(const sy_note_t *notes, uint32_t n);
+void synth_score_stop(void);             /* its notes released */
+int synth_score_busy(void);              /* a score is still to play or sounding its last note */

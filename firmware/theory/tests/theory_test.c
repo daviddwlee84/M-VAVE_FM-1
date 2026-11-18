@@ -480,6 +480,45 @@ static void test_identify(void)
     }
 }
 
+/* every reading, best first; chord-tone labels */
+static void test_readings(void)
+{
+    static const uint8_t C6[4] = { 60, 64, 67, 69 }, BD7[4] = { 59, 62, 65, 68 }, AUG[3] = { 60, 64, 68 };
+    static const uint8_t C7B9[5] = { 48, 52, 55, 58, 61 }, G7S9[5] = { 55, 59, 62, 65, 70 }, C13[5] = { 48, 52, 58, 62, 69 };
+    static const uint8_t C69[5] = { 48, 52, 55, 57, 62 };
+    th_ident_t r[16];
+    char b[TH_NAME_MAX];
+    int n, i, roots = 0;
+    n = th_identify_all(C6, 4, C_MAJOR, r, 16);
+    CHECK(n == 2 && !strcmp(chord_str(r[0].c), "C6"), "C E G A: C6 first (%d, %s)", n, chord_str(r[0].c));
+    CHECK(n == 2 && !strcmp(chord_str(r[1].c), "Am7/C") && r[1].inv == 1, "then Am7/C (%s)", chord_str(r[1].c));
+    n = th_identify_all(BD7, 4, C_MAJOR, r, 16);
+    CHECK(n == 4 && !strcmp(chord_str(r[0].c), "Bdim7"), "B D F Ab: Bdim7 first (%d, %s)", n, chord_str(r[0].c));
+    for (i = 0; i < n; i++) roots |= 1 << th_pc(r[i].c.root);
+    CHECK(roots == (1 << 11 | 1 << 2 | 1 << 5 | 1 << 8), "and its four roots");
+    CHECK(th_identify_all(AUG, 3, C_MAJOR, r, 16) == 3, "an augmented triad: three readings");
+    CHECK(th_identify_all(AUG, 3, C_MAJOR, r, 1) == 1, "max is kept to");
+    CHECK(th_identify(C7B9, 5, C_MAJOR, &r[0]) && !strcmp(chord_str(r[0].c), "C7b9"), "C7b9 (%s)", chord_str(r[0].c));
+    CHECK(th_identify(G7S9, 5, C_MAJOR, &r[0]) && !strcmp(chord_str(r[0].c), "G7#9"), "G7#9 (%s)", chord_str(r[0].c));
+    CHECK(th_identify(C13, 5, C_MAJOR, &r[0]) && !strcmp(chord_str(r[0].c), "C13") && r[0].no5, "C13 without its fifth (%s)",
+          chord_str(r[0].c));
+    CHECK(th_identify(C69, 5, C_MAJOR, &r[0]) && !strcmp(chord_str(r[0].c), "C6/9"), "C6/9 (%s)", chord_str(r[0].c));
+    {
+        static const struct { int q, d; const char *s; } L[] = {
+            { TH_MAJ, 0, "R" }, { TH_MAJ, 4, "3" }, { TH_MIN, -3, "b3" }, { TH_MAJ, 1, "5" }, { TH_DIM, -6, "b5" },
+            { TH_AUG, 8, "#5" }, { TH_7, -2, "b7" }, { TH_MAJ7, 5, "7" }, { TH_DIM7, -9, "bb7" }, { TH_9, 2, "9" },
+            { TH_SUS2, 2, "2" }, { TH_SUS4, -1, "4" }, { TH_7B9, -5, "b9" }, { TH_7S9, 9, "#9" }, { TH_13, 3, "13" },
+            { TH_6, 3, "6" },
+        };
+        for (i = 0; i < (int)(sizeof L / sizeof L[0]); i++) {
+            th_tone_label(L[i].q, L[i].d, b);
+            CHECK(!strcmp(b, L[i].s), "tone %d in %s: %s, not %s", L[i].d, th_quals[L[i].q].sym, b, L[i].s);
+        }
+    }
+    /* the new qualities read back from Roman numerals */
+    CHECK(!strcmp(prog_str("V7b9 V7#9 V13 I69", C_MAJOR), "G7b9 G7#9 G13 C6/9"), "%s", prog_str("V7b9 V7#9 V13 I69", C_MAJOR));
+}
+
 /* -------------------------------------------------------------------- voice --- */
 static int all_moves(const uint8_t *prev, int np, th_chord_t c, int lo, int hi)  /* the least, found another way */
 {
@@ -596,6 +635,7 @@ int main(void)
     test_chords();
     test_roman();
     test_identify();
+    test_readings();
     test_voice();
     test_vectors();
     printf("%s: %d checks, %d failed\n", fails ? "FAIL" : "ok", checks, fails);

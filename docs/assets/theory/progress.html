@@ -1,0 +1,241 @@
+<!doctype html>
+<!-- SPDX-License-Identifier: GPL-3.0-or-later -->
+<!-- THEORY's progress backup in the browser: the same JSON as host/theory (github.com/daviddwlee84/M-VAVE_FM-1). -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>THEORY backup</title>
+<style>
+:root { --bg: #f6f6f4; --fg: #1c1c1f; --dim: #6b6b72; --line: #d6d6d2; --accent: #1f7fb8; --ok: #2f8f4e; --bad: #c0392b; }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) { --bg: #141417; --fg: #ececf0; --dim: #9a9aa3; --line: #2c2c32; --accent: #6cc4f5; --ok: #6bd18f; --bad: #f07a6c; }
+}
+:root[data-theme="dark"] { --bg: #141417; --fg: #ececf0; --dim: #9a9aa3; --line: #2c2c32; --accent: #6cc4f5; --ok: #6bd18f; --bad: #f07a6c; }
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--fg); font: 16px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; }
+main { max-width: 760px; margin: 0 auto; padding: 24px 16px 48px; }
+h1 { font-size: 1.6rem; margin: 0 0 4px; }
+h2 { font-size: 1.1rem; margin: 28px 0 8px; }
+.dim { color: var(--dim); }
+button, label.button { font: inherit; padding: 8px 16px; border-radius: 6px; border: 1px solid var(--accent); background: transparent;
+  color: var(--accent); cursor: pointer; margin: 4px 8px 4px 0; display: inline-block; }
+button:disabled { opacity: .4; cursor: default; }
+#status { padding: 8px 12px; border-left: 3px solid var(--line); margin: 12px 0; }
+#status.ok { border-color: var(--ok); } #status.bad { border-color: var(--bad); }
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 6px; margin-top: 8px; }
+.cell { padding: 6px 8px; border-radius: 4px; font-size: .85rem; border: 1px solid var(--line); }
+.cell b { font-weight: 600; }
+input[type=file] { display: none; }
+code { font-size: .9em; }
+</style>
+</head>
+<body>
+<main>
+  <h1>THEORY backup</h1>
+  <p class="dim">The flash cards' progress and the settings of an FM-1 running THEORY 0.2 or newer, to a JSON file and back,
+    over USB in Chrome or Edge (Web MIDI with SysEx: allow it when asked). Close other programs that hold the FM-1's MIDI
+    port first: a DAW, M-Flasher, another tab.</p>
+  <div id="status">Looking for MIDI…</div>
+  <button id="backup" disabled>Back up to a file</button>
+  <label class="button" id="restore-label">Restore from a file…<input type="file" id="restore" accept=".json,application/json"></label>
+  <section id="view" hidden>
+    <h2 id="view-title">The progress</h2>
+    <div id="summary" class="dim"></div>
+    <div class="grid" id="grid"></div>
+  </section>
+  <p class="dim">Source and licence (GPL-3.0-or-later): <code>firmware/theory</code> and <code>host/theory</code> in
+    <a href="https://github.com/daviddwlee84/M-VAVE_FM-1">github.com/daviddwlee84/M-VAVE_FM-1</a>. Without a browser:
+    <code>just theory-backup FILE</code> / <code>just theory-restore FILE</code>.</p>
+</main>
+<script>
+"use strict";
+// course.h's items, in their order (append only), and where each group ends (host/theory/progress.py course())
+const KEYS = ["C", "G", "F", "D", "Bb", "A", "Eb", "E", "Ab", "B", "Db", "F#"];
+const ITEMS = [], ENDS = [];
+KEYS.forEach((k, g) => {
+  ITEMS.push(`scale:${k}`);
+  if (g) ITEMS.push(`keysig:${k}`);
+  ITEMS.push(`relmin:${k}`, `chords:${k}`, `eardeg:${k}`);
+  if (g === 0) ITEMS.push("earq:maj", "earq:min");
+  if (g === 3) ITEMS.push("earq:dim");
+  if (g === 5) ITEMS.push("earq:aug");
+  ENDS.push(ITEMS.length);
+});
+const N = ITEMS.length, TOP = 5, NEVER = 0xFFFF, SET_N = 12, BLOB_N = 14 + 3 * N, RECORD_N = 1 + SET_N + BLOB_N + 2;
+const CHUNK = 49, FRAMES = Math.ceil(RECORD_N / CHUNK), FORMAT = 1;
+const SET_FIELDS = ["tonic", "mode", "sevenths", "labels", "mapping", "keymode", "oct", "start", "cards", "speed", "flags",
+  "pitch"];   // flags, pitch: 0.3 (0 in older records and files)
+const HEAD = [0x7D, 0x54, 0x48], VER = 1;
+const T_HELLO_ACK = 0x01, T_PROG_REQ = 0x04, T_PROG_LOAD = 0x05, T_HELLO = 0x41, T_HEARTBEAT = 0x42, T_PROG = 0x44, T_PROG_DONE = 0x45;
+const $ = id => document.getElementById(id);
+let out = null, inp = null, firmware = null, asm = null, onDone = null;
+
+function status(text, cls) { $("status").textContent = text; $("status").className = cls || ""; }
+function crc16(b) {
+  let c = 0xFFFF;
+  for (const x of b) { c ^= x << 8; for (let k = 0; k < 8; k++) c = ((c & 0x8000) ? (c << 1) ^ 0x1021 : c << 1) & 0xFFFF; }
+  return c;
+}
+function pack7(b) {
+  const o = [];
+  for (let i = 0; i < b.length; i += 7) {
+    const part = b.slice(i, i + 7);
+    o.push(part.reduce((h, x, j) => h | ((x >> 7) & 1) << j, 0), ...part.map(x => x & 0x7F));
+  }
+  return o;
+}
+function unpack7(b) {
+  const o = [];
+  for (let i = 0; i < b.length;) { const hi = b[i++]; for (let j = 0; j < 7 && i < b.length; j++) o.push(b[i++] | ((hi >> j) & 1) << 7); }
+  return o;
+}
+function check(p) {   // the firmware's own checks (app.c set_valid, srs.c sr_valid)
+  const s = p.settings;
+  const ok = s.tonic >= -9 && s.tonic <= 12 && s.mode < 9 && s.sevenths <= 1 && s.labels < 2 && s.mapping < 2 && s.keymode <= 1
+    && s.oct >= -2 && s.oct <= 2 && s.start <= 6 && (s.cards === 0 || (s.cards >= 8 && s.cards <= 24)) && s.speed < 3
+    && s.flags <= 7 && s.pitch <= 10;
+  if (!ok) throw Error("settings THEORY would refuse");
+  if (!(p.open >= ENDS[0] && p.open <= N) || p.right > p.answered) throw Error("open or answered out of range");
+  for (let i = 0; i < N; i++)
+    if (!(p.box[i] >= 0 && p.box[i] <= TOP) || (p.last[i] !== null && !(p.last[i] >= 0 && p.last[i] <= p.round)))
+      throw Error(`${ITEMS[i]}: box ${p.box[i]}, last ${p.last[i]}`);
+  return p;
+}
+function toBytes(p) {
+  check(p);
+  const s = p.settings, b = [FORMAT, s.tonic & 0xFF, s.mode, s.sevenths, s.labels, s.mapping, s.keymode, s.oct & 0xFF,
+    s.start, s.cards, s.speed, s.flags, s.pitch];
+  const put = (v, n) => { for (let k = 0; k < n; k++) b.push((v >>> (8 * k)) & 0xFF); };
+  put(p.round, 2); put(p.streak, 2); put(N, 1); put(p.open, 1); put(p.answered, 4); put(p.right, 4);
+  for (const x of p.box) b.push(x);
+  for (const x of p.last) put(x === null ? NEVER : x, 2);
+  const c = crc16(b);
+  b.push(c & 0xFF, c >> 8);
+  return b;
+}
+function fromBytes(b) {
+  b = b.slice(0, RECORD_N);
+  if (b.length < RECORD_N) throw Error("the backup is short");
+  if (b[0] !== FORMAT) throw Error(`format ${b[0]}: a newer THEORY?`);
+  const c = crc16(b.slice(0, -2));
+  if (b[RECORD_N - 2] !== (c & 0xFF) || b[RECORD_N - 1] !== c >> 8) throw Error("the backup is damaged (CRC)");
+  const sgn = v => v > 127 ? v - 256 : v, s = {};
+  SET_FIELDS.forEach((k, i) => { s[k] = b[1 + i]; });
+  s.tonic = sgn(s.tonic); s.oct = sgn(s.oct);
+  let o = 1 + SET_N;
+  const get = n => { let v = 0; for (let k = 0; k < n; k++) v += b[o++] * 2 ** (8 * k); return v; };
+  const p = { settings: s, round: get(2), streak: get(2) };
+  if (get(1) !== N) throw Error("another course: a newer THEORY?");
+  Object.assign(p, { open: get(1), answered: get(4), right: get(4), box: [], last: [] });
+  for (let i = 0; i < N; i++) p.box.push(b[o++]);
+  for (let i = 0; i < N; i++) { const v = get(2); p.last.push(v === NEVER ? null : v); }
+  return check(p);
+}
+function toJSON(p) {
+  const items = {};
+  ITEMS.forEach((n, i) => { items[n] = { box: p.box[i], last: p.last[i] }; });
+  return JSON.stringify({ format: "fm1-theory-progress", version: 1, firmware: firmware || "0.3", settings: p.settings,
+    round: p.round, streak: p.streak, open: p.open, open_up_to: ITEMS[p.open - 1], answered: p.answered, right: p.right,
+    items }, null, 1) + "\n";
+}
+function fromJSON(text) {
+  const d = JSON.parse(text);
+  if (d.format !== "fm1-theory-progress" || d.version !== 1) throw Error("not an fm1-theory-progress v1 file");
+  const s = {};
+  SET_FIELDS.forEach(k => { s[k] = +(d.settings || {})[k] || 0; });
+  const p = { settings: s, round: +d.round, streak: +d.streak, open: +d.open, answered: +d.answered, right: +d.right, box: [], last: [] };
+  ITEMS.forEach(n => { const it = (d.items || {})[n] || { box: 0, last: null }; p.box.push(+it.box); p.last.push(it.last === null ? null : +it.last); });
+  return check(p);
+}
+function show(p, title) {
+  $("view").hidden = false;
+  $("view-title").textContent = title;
+  $("summary").textContent = `Round ${p.round}, ${p.open} of ${N} open (up to ${ITEMS[p.open - 1]}), ${p.answered} answered, ${p.right} right, streak ${p.streak}.`;
+  $("grid").innerHTML = "";
+  ITEMS.forEach((n, i) => {
+    const el = document.createElement("div");
+    el.className = "cell";
+    el.style.opacity = i < p.open ? 1 : .35;
+    el.innerHTML = `<b>${n}</b> box ${p.box[i]}`;
+    $("grid").appendChild(el);
+  });
+}
+
+function send(type, payload = []) { out.send([0xF0, ...HEAD, VER, type, ...payload, 0xF7]); }
+function onMessage(e) {
+  const d = Array.from(e.data);
+  if (d[0] !== 0xF0 || d[1] !== HEAD[0] || d[2] !== HEAD[1] || d[3] !== HEAD[2] || d[4] !== VER) return;
+  const type = d[5], pl = d.slice(6, -1);
+  if (type === T_HELLO || type === T_HEARTBEAT) {
+    if (type === T_HELLO && pl.length >= 3) firmware = `${pl[1]}.${pl[2]}`;
+    send(T_HELLO_ACK, [VER]);
+    if (!$("backup").disabled) return;
+    $("backup").disabled = false;
+    status(`Connected: THEORY ${firmware || ""} on "${inp.name}".`, "ok");
+  } else if (type === T_PROG && asm) {
+    if (pl[0] !== asm.next || pl[1] !== FRAMES) { asm.fail("a chunk out of order; try again"); return; }
+    asm.buf.push(...unpack7(pl.slice(2)));
+    if (++asm.next === FRAMES) asm.done(asm.buf);
+  } else if (type === T_PROG_DONE && onDone) onDone(pl[0]);
+}
+function hunt(access) {   // the port that speaks THEORY (macOS may call it "Felucca" after an earlier firmware)
+  const ins = [...access.inputs.values()];
+  if (!ins.length) { status("No MIDI inputs. Connect the FM-1 by a USB data cable.", "bad"); return; }
+  let found = false;
+  for (const i of ins) {
+    i.onmidimessage = e => {
+      if (found || e.data[0] !== 0xF0 || e.data[1] !== HEAD[0] || e.data[2] !== HEAD[1] || e.data[3] !== HEAD[2]) return;
+      found = true;
+      inp = i;
+      out = [...access.outputs.values()].find(o => o.name === i.name && o.manufacturer === i.manufacturer)
+        || [...access.outputs.values()].find(o => o.name === i.name);
+      for (const j of ins) if (j !== i) j.onmidimessage = null;
+      i.onmidimessage = onMessage;
+      onMessage(e);
+    };
+  }
+  status("Listening for THEORY on " + ins.map(i => `"${i.name}"`).join(", ") + "…");
+  setTimeout(() => { if (!found) status("No FM-1 running THEORY 0.2 heard. Is it on, on USB, and is no other program holding its port?", "bad"); }, 3000);
+}
+$("backup").onclick = () => {
+  asm = { buf: [], next: 0 };
+  const timer = setTimeout(() => asm && asm.fail("no answer"), 5000);
+  asm.fail = msg => { clearTimeout(timer); asm = null; status(`Backup failed: ${msg}.`, "bad"); };
+  asm.done = buf => {
+    clearTimeout(timer); asm = null;
+    try {
+      const p = fromBytes(buf), now = new Date(), pad = v => String(v).padStart(2, "0");
+      const name = `fm1-theory-progress-${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}-${pad(now.getHours())}${pad(now.getMinutes())}.json`;
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(new Blob([toJSON(p)], { type: "application/json" }));
+      a.download = name;
+      a.click();
+      show(p, "Backed up");
+      status(`Saved ${name}.`, "ok");
+    } catch (err) { status(`Backup refused: ${err.message}.`, "bad"); }
+  };
+  send(T_PROG_REQ);
+};
+$("restore").onchange = async e => {
+  const f = e.target.files[0];
+  e.target.value = "";
+  if (!f) return;
+  if (!out) { status("No FM-1 connected yet.", "bad"); return; }
+  try {
+    const p = fromJSON(await f.text()), b = toBytes(p);
+    show(p, "Sending");
+    for (let i = 0; i < FRAMES; i++) {
+      send(T_PROG_LOAD, [i, FRAMES, ...pack7(b.slice(i * CHUNK, (i + 1) * CHUNK))]);
+      await new Promise(r => setTimeout(r, 30));
+    }
+    status("Sent. On the FM-1: PLAY loads it, HOME keeps what is there.");
+    onDone = a => { onDone = null; status(["Loaded.", "Declined on the FM-1.", "Refused: the FM-1 found it damaged."][a] || `Answer ${a}.`, a === 0 ? "ok" : "bad"); };
+  } catch (err) { status(`Not sent: ${err.message}.`, "bad"); }
+};
+if (!navigator.requestMIDIAccess) status("This browser has no Web MIDI: use Chrome or Edge, or the command line.", "bad");
+else navigator.requestMIDIAccess({ sysex: true }).then(a => { hunt(a); a.onstatechange = () => { if (!inp) hunt(a); }; },
+  () => status("MIDI access was refused (SysEx must be allowed).", "bad"));
+</script>
+</body>
+</html>

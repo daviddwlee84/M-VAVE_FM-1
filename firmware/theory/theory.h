@@ -36,7 +36,7 @@
 #define TH_NAME_MAX 16                   /* a note name, with room for multi-byte accidental glyphs */
 #define TH_CHORD_MAX 40                  /* a chord name: root, symbol, slash bass */
 #define TH_ROMAN_MAX 40                  /* a Roman numeral with a secondary target */
-#define TH_TONES_MAX 5                   /* notes in a chord at most */
+#define TH_TONES_MAX 6                   /* notes in a chord at most (a 13th: R 3 5 b7 9 13) */
 
 enum {                                   /* th_scales[] */
     TH_MAJOR, TH_DORIAN, TH_PHRYGIAN, TH_LYDIAN, TH_MIXOLYDIAN, TH_MINOR, TH_LOCRIAN,
@@ -52,6 +52,8 @@ enum {                                   /* th_quals[]; the order is the order o
     TH_MAJ, TH_MIN, TH_DIM, TH_AUG, TH_SUS4, TH_SUS2,
     TH_7, TH_MAJ7, TH_M7, TH_M7B5, TH_DIM7, TH_MMAJ7, TH_6, TH_M6, TH_7SUS4, TH_ADD9, TH_MADD9,
     TH_9, TH_MAJ9, TH_M9, TH_AUG7, TH_AUGMAJ7,
+    TH_69, TH_7B9, TH_7S9,               /* 6/9, 7b9, 7#9 */
+    TH_13,                               /* R 3 5 b7 9 13, the 11th left out as it usually is */
     TH_5,                                /* power chord: root and fifth */
     TH_NQUAL
 };
@@ -68,7 +70,7 @@ typedef struct {
     const char *rn;                      /* after a Roman numeral: "7", "M7", TH_GLYPH_DIM */
     uint8_t lower;                       /* the numeral is lower case (minor, diminished) */
     uint8_t n;
-    int8_t f[TH_TONES_MAX];              /* fifths from the root: root, third, fifth, seventh, ninth */
+    int8_t f[TH_TONES_MAX];              /* fifths from the root: root, third, fifth, seventh, ninth, 13th */
 } th_qual_t;
 
 typedef struct { int8_t tonic; uint8_t scale; } th_key_t;
@@ -125,6 +127,12 @@ int th_prog_parse(const char *s, th_key_t key, th_chord_t *out, int max);    /* 
  * a lone third). Prefers, in order: every note fits without leaving the fifth out, the root in the bass, a root
  * in the key, the simpler chord. So C E G A is C6 over C and Am7 over A. */
 int th_identify(const uint8_t *midi, int n, th_key_t key, th_ident_t *out);
+/* Every reading of the notes, best first (th_identify's is out[0]): C E G A gives C6, then Am7/C; a dim7 chord its
+ * four roots. Returns how many were written, at most max. */
+int th_identify_all(const uint8_t *midi, int n, th_key_t key, th_ident_t *out, int max);
+/* What a chord tone is in its chord, from its fifths above the root: "R", "b3", "3", "5", "b7", "9", "#11", "13";
+ * "2" in a sus2 chord, "4" in a sus4. */
+int th_tone_label(int q, int d, char *buf);
 
 /* A close voicing of c between lo and hi (MIDI) that moves least from prev (np notes, any order); np = 0 picks
  * the one nearest the middle. Returns how many notes, 0 if none fits. */

@@ -28,7 +28,8 @@ experimental firmware apps under `firmware/`, built on the `fm1-base` submodule.
 | `firmware/conductor/` | Own agent-console firmware (MIT). Design: `docs/agentic/conductor.md`. |
 | `firmware/morse/` | Submodule: [fm1-morse](https://github.com/daviddwlee84/fm1-morse), own pocket Morse code machine (GPL-3.0-or-later since 2026-11-18, MIT before; `common/` in it stays MIT; its own repo for The Firmware Hub, with `LICENSE` and `fmhub.json`). Built here with `third_party/fm1-base`; commit inside it, then bump the pointer here. Design: `docs/dev/morse.md`. |
 | `firmware/common/` | Modules shared by own apps (`hostlink`, `ledfx`, `chime`, and the speech decoders `lpc`, `adpcm`; MIT). Apps add `include = ["../common"]`. |
-| `firmware/theory/` | THEORY, own music theory trainer (GPL-3.0-or-later, identity `FM-1_49`, settings at `0xD8000`). v0.1 is the WHEEL page (circle of fifths, naming a played chord, the key's chords on the white keys), on the owner's unit since 2026-11-18 (installed over Morse 0.6, whose record at `0xDA000` it leaves alone). Its platform-free core `theory.c` (spelling, scales, keys, chords, Roman numerals, voicing) is checked against music21 (`tests/vectors.h`, generated). Design: `docs/dev/theory.md`. |
+| `firmware/theory/` | THEORY, own music theory trainer (GPL-3.0-or-later, identity `FM-1_49`; settings at `0xD8000`, flash-card progress at `0xD6000`). 0.2 (MENU, TODAY flash cards, WHEEL, CHORD, CHART, SETTINGS, progress backup) is on the owner's unit since 2026-11-18, installed over Morse 0.8, whose record at `0xDA000` it leaves alone. 0.3 (card intros, the latch tray, PITCH, CHART rounds of one key, CHORD LATCH; settings' last two bytes are flags and PITCH's preset) is built and tested in the simulator and emulator, not installed. Platform-free parts: `theory.c` (spelling, scales, keys, chords, Roman numerals, voicing; checked against music21 in `tests/vectors.h`, generated) and `srs.c` (Leitner rounds after Morse's `learn.c`); `course.h` is the card list, append only. Design: `docs/dev/theory.md`. |
+| `host/theory/` | THEORY's computer side (GPL-3.0-or-later): progress backup and restore (`protocol.py`, `progress.py`, `device.py`, finds the unit by its frames, not the port name), and `make_vectors.py` (music21 vectors for the core's tests). The same backup in the browser: `docs/assets/theory/progress.html`. |
 | `firmware/guitar/` | GUITAR, own guitar neck and chord book (GPL-3.0-or-later, identity `FM-1_55`, settings at `0xD4000`; separate firmware, decided 2026-11-18). v0.1: NECK (a key's scale on frets 0-12, CAGED / NPS positions, eight tunings) and SHAPE (chord diagrams found by search, easiest first). v0.2 (draft PR #3): power chords, SHAPE filters, LEARN (chord course by key in `lesson.c`, Leitner, progress in the same record). Includes THEORY's `theory.c`, `synth.c`, `gtext.c` from `../theory`. Its platform-free core `fret.c` has `just guitar-unit`. Verified in the host simulator and fm1-emu (both chips, rehearsed over a backup); not on the unit yet. Design: `docs/dev/guitar.md`. |
 | `firmware/voicelab/` | Spike app (MIT): each key says a test word with the `lpc` / `adpcm` decoders. Not for installing. Its data (`gen/`) is generated and git-ignored. Design: `docs/dev/tts.md`. |
 | `firmware/rhythm/` | RHYTHM, own rhythm trainer (GPL-3.0-or-later, identity `FM-1_54`, settings at `0xD2000`). v0.1: METRO (metronome, subdivisions, tap tempo, gap click) and ECHO (hear a bar or two, tap it back, per-onset ms error and a hint); verified in fm1-emu on both chips, not flashed yet. v0.2: one-line percussion notation, ECHO READ mode, ENDLESS (call and response without breaks, health bar, speeds up). Platform-free core `rhythm.c`. Design: `docs/dev/rhythm.md`. |
@@ -80,6 +81,9 @@ just morse-shots       # simulator screenshots into fm1-morse docs/screens/
 
 just theory-unit       # firmware/theory core on this computer (strict C99, plus music21's spellings)
 just theory-emu [CHIP] # THEORY in fm1-emu (after `just fw-build theory`; `just fw-test theory` is its simulator test)
+just theory-test       # THEORY's host tests (wire, record, JSON; vectors shared with its tests/basic.txt)
+just theory-backup FILE  # THEORY 0.2+: progress and settings into JSON (read-only on the unit; a 0.3 record needs host 0.3)
+just theory-restore FILE # back onto the unit; it asks on its screen (PLAY yes)
 just theory-vectors    # regenerate firmware/theory/tests/vectors.h from music21 (uv fetches it)
 
 just guitar-unit       # firmware/guitar/fret.c and lesson.c on this computer (tunings, positions, chord shape search, LEARN course)
@@ -98,6 +102,7 @@ just rhythm-emu [CHIP] # RHYTHM in fm1-emu (after `just fw-build rhythm`; `just 
 just fw-setup          # submodules + Python tools (needs `brew install libraqm`)
 just fw-test [APP]     # host simulator build + tests/basic.txt; no toolchain, no hardware
 just fw-build [APP]    # device package via JieLi toolchain in Docker (see docs/dev/ for current blockers)
+just fw-web [APP]      # browser emulator (WebAssembly) into firmware/APP/build/emu/; emcc or Docker
 
 just fm1-fetch         # download M-Flasher + SLOOP into downloads/, verify against release digests
 just fm1-find          # read-only: units in download mode / on USB MIDI
@@ -237,6 +242,17 @@ Other rules:
   `just fm1-backup-release` only when the owner asks for that specific backup,
   never as an automatic step after `fm1-backup`.
 - Commit or push only when the owner asks.
+- Pull requests that change a firmware follow `.github/pull_request_template.md`, three layers of acceptance:
+  1. **Try it**: a browser build (`just fw-web APP`), linked if it can be (a private claude.ai artifact for now;
+     public pages per app on the docs site from `main` are planned). It is the app's host build, not the `.fwsc`:
+     it shows how it plays and proves nothing about the package.
+  2. **Screens**: the simulator test's shots of what changed.
+  3. **Before the unit**: the checks this file already asks for (fm1-emu on both chips with a save, restart and
+     reload; a rehearsal over the latest backup), then a list of steps for the owner to try on the unit, each with
+     what should happen. There is one unit: one PR on it at a time, every install in `docs/device-log.md`.
+- Something outside the repo (not a git hook here; seen 2026-11-18) amends the newest commit with the `.specstory`
+  transcripts and `.claude/plans`, so a commit's hash can change right after it is made. Record a hash (device-log, docs, commit messages) only after the hook has run: read it back with
+  `git log -1`, never from `git commit`'s own output.
 - CI builds on pull requests and deploys `main` to GitHub Pages
   (`.github/workflows/docs.yml`).
 
@@ -262,5 +278,6 @@ A repo-owned skill for operating the unit and an `fm1` CLI wrapper (the `Justfil
 `fm1-hub-listing` covers publishing only). `fm1-emu` is a downloaded binary, not a source checkout.
 A vocabulary app is at the idea stage (`docs/dev/vocab.md`). A deck written to the flash data area would need
 the firmware-development rule "never compute flash addresses or call erase/program directly" changed first,
-with the owner's approval; the proposed wording is in that page. THEORY (`docs/dev/theory.md`) has v0.1 but no learning yet;
-its imported content is meant to go through the store layer (`APP_STORE_MAP`), which needs no rule change.
+with the owner's approval; the proposed wording is in that page. THEORY (`docs/dev/theory.md`) has flash cards from 0.2; importing
+own content (progressions, melodies) is still to come and is meant to go through the store layer (`APP_STORE_MAP`), which needs
+no rule change.

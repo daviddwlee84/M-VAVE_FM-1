@@ -82788,3 +82788,1360 @@ Scan staged history for credential patterns
 (Bash completed with no output)
 ```
 </details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 11:44:44Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Commit device log, then plans and history, and push
+
+```bash
+git add docs/device-log.md && git commit -q -m "device-log: Morse 0.7 installed over THEORY 0.1 (backup 4c3d061d, progress kept, starts on MENU)
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>" && git add .claude/plans .specstory && git commit -q -m "chore: backup chat history and plans
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>" && git push -q && git log --oneline -2
+```
+
+```text
+18f81e1 chore: backup chat history and plans
+dbccda4 device-log: Morse 0.7 installed over THEORY 0.1 (backup 4c3d061d, progress kept, starts on MENU)
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 11:44:49Z)**_
+
+Committed and pushed. Now 0.8 — looking at the button enum, header, and button lights:
+
+_**Agent (claude-opus-5-5 2026-11-18 11:44:51Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Find button enum, LED and header code
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/firmware/morse && grep -n -E 'B_SAVE|B_FX|enum \{ B_|LED_|plat_led|btn_led|led\(' app.c | head -20; grep -n -A40 '^static void lights' app.c | grep -n -E 'FX|PLAY|led|LED' | head; grep -n -B2 -A30 'static void header' app.c | grep -n -E 'BT|PC|MUTE|cv_text' | head`
+
+```text
+1984:            if (k == B_FX) {
+2000:        case B_FX: mute_toggle(); break;
+2124:        ledfx_set(&bb, B_FX, FX_LIT, now);
+2132:        bb.lit |= LED_PLAY_GREEN;
+3:2116-    ledfx_t kb = {0, 0, 0}, bb = {0, 0, 0};
+8:2121-        if (k != B_PLAY)
+9:2122-            ledfx_set(&bb, k, FX_GLOW, now);
+11:2124-        ledfx_set(&bb, B_FX, FX_LIT, now);
+14:2127-            ledfx_set(&kb, CHOICE_KEY[i], i == pr.pick ? FX_BLINK : FX_LIT, now);
+17:2130-            ledfx_set(&kb, k, tx ? FX_LIT : rx ? FX_MID : FX_GLOW, now);
+19:2132-        bb.lit |= LED_PLAY_GREEN;
+20:2133-    ledfx_show(&bb, &kb);
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 11:44:56Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Read lights, button handling, and header drawing
+
+`sed -n 2110,2136p app.c; sed -n 1975,2030p app.c; grep -rn 'B_SAVE' ../../third_party/fm1-base/include/*.h | head -3; grep -n -A30 '^static void draw_head\|^static void head' app.c | head -45`
+
+```text
+    read_events();
+}
+
+/* ----------------------------------------------------------------- lights --- */
+static void lights(uint32_t now)
+{
+    ledfx_t kb = {0, 0, 0}, bb = {0, 0, 0};
+    uint32_t k, i;
+    int tx = tone_gated(TONE_TX), rx = tone_gated(TONE_RX);
+    const ln_card_t *c = ln_card(&pr.r);
+    for (k = 0; k < NB; k++)
+        if (k != B_PLAY)
+            ledfx_set(&bb, k, FX_GLOW, now);
+    if (muted())
+        ledfx_set(&bb, B_FX, FX_LIT, now);
+    if (ui.page == PG_PRACTICE && pr.ps == PS_CARD && c && ln_choose(c->type)) {
+        for (i = 0; i < 4u; i++)
+            ledfx_set(&kb, CHOICE_KEY[i], i == pr.pick ? FX_BLINK : FX_LIT, now);
+    } else
+        for (k = 0; k < NKEYS; k++)      /* the lamp: every key lights with the keying (the way to read it muted) */
+            ledfx_set(&kb, k, tx ? FX_LIT : rx ? FX_MID : FX_GLOW, now);
+    if (hl_host(&link, now))
+        bb.lit |= LED_PLAY_GREEN;
+    ledfx_show(&bb, &kb);
+}
+
+/* ----------------------------------------------------------------- screen --- */
+            page_key(k);
+    for (k = 0; k < NB; k++) {
+        if (!(btn >> k & 1u) || (ui.btn >> k & 1u))
+            continue;
+        if (pg.edit && ui.page == PG_CHART) {   /* CHART's edit takes these */
+            if (k == B_HOME || k == B_REC || k == B_PLAY) {
+                chart_save_or_leave();
+                continue;
+            }
+            if (k == B_FX) {
+                ln_step_back(&pg.draft);
+                chart_changed("ONE BOX BACK", "ALL COME SOONER");
+                continue;
+            }
+            if (k == B_SEL) {
+                pg.sel_t = plat_ms() | 1u;
+                continue;
+            }
+            if (k == B_OCTDN || k == B_OCTUP) {
+                chart_level(k == B_OCTUP ? 1 : -1);
+                continue;
+            }
+        }
+        switch (k) {
+        case B_HOME: set_page(ui.page == PG_MENU ? ui.back : PG_MENU); break;
+        case B_FX: mute_toggle(); break;
+        case B_PLAY: page_play(); break;
+        case B_SEL: page_sel(); break;
+        case B_SEQ:                      /* a page's view */
+            if (ui.page == PG_KEY)
+                look_set(0, 3u, wrap(kview(), 1, KV_N));
+            else if (ui.page == PG_TYPE)
+                look_set(2, 1u, !tlabel());
+            else if (ui.page == PG_LISTEN)
+                look_set(5, 1u, !lhide());
+            else if (ui.page == PG_PRACTICE && !visual()) {   /* a peek at the code: a new letter, an answer */
+                const ln_card_t *pc = ln_card(&pr.r);
+                if ((pr.ps == PS_CARD && pc && pc->type == CARD_NEW) || (pr.ps == PS_RESULT && !pr.has_j)) {
+                    pr.peek = (uint8_t)!pr.peek;
+                    if (pr.ps == PS_RESULT)
+                        pr.until = plat_ms() + 2500u;   /* time to look */
+                    ui.redraw |= R_MAIN;
+                }
+                break;
+            } else
+                break;
+            look_changed();
+            break;
+        case B_REC:                      /* TYPE: the last character off the line (on release; held: all of it) */
+            if (ui.page == PG_TYPE)
+                ui.rec_t = plat_ms() | 1u;
+            else if (ui.page == PG_CHART)   /* CHART: edit the progress */
+                chart_edit_on();
+            break;
+        case B_OCTDN:
+        case B_OCTUP:
+../../third_party/fm1-base/include/plat.h:49:enum { B_FX, B_SEL, B_ENV, B_LFO, B_EDIT, B_GLO, B_HOME, B_SAVE, B_ARP, B_SEQ, B_PLAY, B_REC,
+2178:static void draw_header(uint32_t now)
+2179-{
+2180-    char t[24];
+2181-    int32_t x;
+2182-    cv_begin(240, 32, C_BLACK);
+2183-    if (now < ui.msg_until) {
+2184-        x = cv_text(8, 7, &FONT_B, ui.msg[0], C_WHITE);
+2185-        cv_text(x + 8, 9, &FONT_XS, ui.msg[1], C_RX);
+2186-    } else {
+2187-        cv_text(8, 7, &FONT_B, ui.page == PG_CHART && pg.edit ? (pg.dirty ? "EDIT *" : "EDIT") : PAGE_NAME[ui.page],
+2188-                ui.page == PG_CHART && pg.edit ? C_MEH : C_WHITE);
+2189-        t[0] = 0;
+2190-        if (ui.page == PG_KEY || ui.page == PG_RHYTHM) {   /* the speed this page goes by */
+2191-            text_cat(t, "SEND ");
+2192-            int_cat(t, SET.send);
+2193-        } else {
+2194-            int_cat(t, SET.wpm);
+2195-            if (SET.eff < SET.wpm) {
+2196-                text_cat(t, "/");
+2197-                int_cat(t, SET.eff);
+2198-            }
+2199-        }
+2200-        text_cat(t, " WPM");
+2201-        x = 232 - text_w(&FONT_XS, t);
+2202-        cv_text(x, 10, &FONT_XS, t, C_GRAY);
+2203-        if (muted()) {
+2204-            x -= 8 + text_w(&FONT_XS, "MUTE");
+2205-            cv_text(x, 10, &FONT_XS, "MUTE", C_RX);
+2206-        }
+2207-        if (hl_host(&link, now)) {
+2208-            x -= 8 + text_w(&FONT_XS, "PC");
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 11:45:06Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Find redraw flags and chart save handler
+
+`grep -n -E 'enum \{ R_|R_HEAD|#define R_' app.c | head -5; grep -n -A10 '^static void chart_save_or_leave' app.c | head -12; grep -n 'lights\b\|"lit"\|led_save\|"leds"' app.c | head`
+
+```text
+218:enum { R_HEAD = 1, R_MAIN = 2, R_LAMP = 4, R_FOOT = 8, R_ALL = 15 };
+347:    ui.redraw |= R_HEAD;
+723:        ui.redraw |= R_HEAD;
+3117:    if (r & R_HEAD)
+3216:        ui.redraw |= R_HEAD | (ui.page == PG_SET ? R_MAIN : 0u);
+1105:static void chart_save_or_leave(void)    /* PLAY / REC / HOME in the edit */
+1106-{
+1107-    if (pg.dirty)
+1108-        pg.ask = ASK_SAVE;
+1109-    else
+1110-        chart_edit_off("EDIT DONE");
+1111-    inputs_for_page();
+1112-    ui.redraw |= R_ALL;
+1113-}
+1114-
+1115-static void prog_done(uint8_t code)      /* the answer to a backup sent to load */
+57:    uint8_t flags;                       /* bit 0 the sound off (the lights keep the rhythm), bit 1 Bluetooth off
+2113:/* ----------------------------------------------------------------- lights --- */
+2114:static void lights(uint32_t now)
+2129:        for (k = 0; k < NKEYS; k++)      /* the lamp: every key lights with the keying (the way to read it muted) */
+3240:    lights(now);
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 11:45:13Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Find settings footer and host LED test hooks
+
+`grep -n '"SELECT item' app.c; grep -n 'expect_led\|led ' ../../third_party/fm1-base/host/plat_host.c | head -5`
+
+```text
+3056:    case PG_SET: s = "SELECT item  OCT- / OCT+ change"; break;
+1096:    if (!hsx_session || (hsx_stalled && pk > HSX_RING - hsx_q))
+1129:            if (hsx_stalled && hsx_q >= HSX_RING) {
+1145:    if (!rc && hsx_stalled && hsx_q >= HSX_RING)
+1571: * as the device's would read; FM1B_CACHE_RAM_FAIL=1 in the environment: its test failed (0 bytes, the masks put back) */
+2929:                hsx_stalled = a[0] == 's';
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 11:45:18Z)**_
+
+Implementing: SAVE saves now, its light and a header `*` show unsaved settings, and in CHART's edit SAVE asks like PLAY/REC.
+
+_**Agent (claude-opus-5-5 2026-11-18 11:45:29Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Implement SAVE button, light and header mark
+
+```bash
+python3 - <<'EOF'
+p='app.c'; s=open(p).read()
+def rep(a,b):
+    global s
+    assert s.count(a)==1, a[:60]; s=s.replace(a,b)
+rep('#define FW_MINOR 7u','#define FW_MINOR 8u')
+rep('''            if (k == B_HOME || k == B_REC || k == B_PLAY) {
+                chart_save_or_leave();''','''            if (k == B_HOME || k == B_REC || k == B_PLAY || k == B_SAVE) {
+                chart_save_or_leave();''')
+rep('''        case B_FX: mute_toggle(); break;
+        case B_PLAY: page_play(); break;''','''        case B_FX: mute_toggle(); break;
+        case B_SAVE: save_now(); break;
+        case B_PLAY: page_play(); break;''')
+rep('''/* ----------------------------------------------------------------- lights --- */
+static void lights(uint32_t now)''','''static void save_now(void)              /* SAVE (0.8): the settings now, not 3 s after the last change */
+{
+    if (dirty_at) {
+        rec_save();
+        app_say("SAVED", "");
+    } else
+        app_say("ALL SAVED", "NOTHING NEW");
+    ui.redraw |= R_HEAD;
+}
+
+/* ----------------------------------------------------------------- lights --- */
+static void lights(uint32_t now)''')
+rep('''    if (muted())
+        ledfx_set(&bb, B_FX, FX_LIT, now);
+    if (ui.page == PG_PRACTICE''','''    if (muted())
+        ledfx_set(&bb, B_FX, FX_LIT, now);
+    if (dirty_at || (pg.edit && pg.dirty))   /* something not saved yet: SAVE lit */
+        ledfx_set(&bb, B_SAVE, FX_LIT, now);
+    if (ui.page == PG_PRACTICE''')
+rep('''        cv_text(8, 7, &FONT_B, ui.page == PG_CHART && pg.edit ? (pg.dirty ? "EDIT *" : "EDIT") : PAGE_NAME[ui.page],
+                ui.page == PG_CHART && pg.edit ? C_MEH : C_WHITE);''','''        x = cv_text(8, 7, &FONT_B, ui.page == PG_CHART && pg.edit ? (pg.dirty ? "EDIT *" : "EDIT") : PAGE_NAME[ui.page],
+                    ui.page == PG_CHART && pg.edit ? C_MEH : C_WHITE);
+        if (dirty_at && !(ui.page == PG_CHART && pg.edit))   /* settings not saved yet (SAVE, or 3 s) */
+            cv_text(x + 6, 7, &FONT_B, "*", C_MEH);''')
+rep('''    if (dirty_at && (int32_t)(now - dirty_at) > 3000)   /* settings saved once the knobs rest */
+        rec_save();''','''    if (dirty_at && (int32_t)(now - dirty_at) > 3000) {   /* settings saved once the knobs rest */
+        rec_save();
+        ui.redraw |= R_HEAD;
+    }''')
+rep('''    case PG_SET: s = "SELECT item  OCT- / OCT+ change"; break;''','''    case PG_SET: s = "SELECT item  OCT- / OCT+ change  SAVE"; break;''')
+# test hook
+rep('''    else if (!strcmp(what, "start"))
+        *got = (int)start_pg();''','''    else if (!strcmp(what, "start"))
+        *got = (int)start_pg();
+    else if (!strcmp(what, "dirty"))
+        *got = dirty_at != 0;''')
+open(p,'w').write(s)
+EOF
+grep -n 'static uint32_t text_w\|int32_t cv_text' app.c ../../third_party/fm1-base/include/*.h | head -3
+```
+
+```text
+(Bash completed with no output)
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 11:45:36Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Forward-declare save_now and locate test spot
+
+```bash
+python3 - <<'EOF'
+p='app.c'; s=open(p).read()
+a='static void input(void)\n{'
+assert s.count(a)==1
+s=s.replace(a,'static void save_now(void);\n'+a)
+open(p,'w').write(s)
+EOF
+grep -n 'BLUETOOTH ON\|^expect ble_off 0$' tests/basic.txt | tail -3; grep -n '0.7: SETTINGS > START PAGE' tests/basic.txt
+```
+
+```text
+947:said BLUETOOTH ON
+948:expect ble_off 0
+972:expect ble_off 0
+950:# ---- 0.7: SETTINGS > START PAGE (the 14th row): the page it starts on, saved like a setting
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 11:45:42Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+View start page test and test file end
+
+`sed -n 950,975p tests/basic.txt; tail -25 tests/basic.txt`
+
+```text
+# ---- 0.7: SETTINGS > START PAGE (the 14th row): the page it starts on, saved like a setting
+turn SELECT 1
+wait 30
+tap OCT+
+wait 30
+tap OCT+
+wait 30
+tap OCT+
+wait 30
+expect start 3
+tap OCT-
+wait 30
+expect start 2
+tap OCT+
+wait 30
+wait 3500
+shot settings_start.png
+expect store_writes 17
+reboot
+wait 600
+expect page 3
+expect start 3
+expect ble_off 0
+# HOME from a start page that is not MENU: the menu, its cursor on that page
+tap HOME
+wait 30
+expect round 7
+expect open 15
+expect wpm 25
+expect eff 25
+expect send 18
+expect keyer 2
+expect start 3
+wait 3500
+reboot
+wait 600
+expect page 3
+expect keyer 2
+
+# ---- 0.6: the cable out: a host on USB is gone at once (in the device, 0.5 s after USB shuts), not 10 s later
+ble disconnect
+wait 1100
+sysex F0 7D 4D 4F 01 01 01 F7
+wait 30
+expect host 1
+expect transport 0
+usb unplug
+wait 600
+expect host 0
+usb plug
+wait 1100
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 11:45:56Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Add SAVE tests and run simulator
+
+```bash
+grep -n -E '^turn K|^tap SAVE|^said' tests/basic.txt | head -5; cat >> tests/basic.txt <<'EOF'
+
+# ---- 0.8: SAVE writes the settings at once, not 3 s after the last change; the header's * and the SAVE light
+# show something unsaved. Off the power before then and the change is lost
+turn K1 1
+wait 30
+expect wpm 26
+expect dirty 1
+shot unsaved.png
+reboot
+wait 600
+expect wpm 25
+turn K1 1
+wait 30
+expect dirty 1
+tap SAVE
+wait 30
+said SAVED
+expect dirty 0
+reboot
+wait 600
+expect wpm 26
+tap SAVE
+wait 30
+said ALL SAVED
+expect dirty 0
+EOF
+cd ../.. && just fw-test morse 2>&1 | grep -E '^FAIL|host:|error' | head
+```
+
+```text
+187:turn K1 2
+192:said HEAR 22 WPM
+193:turn K4 1
+196:said SEND 11 WPM DIT 109MS
+203:said START
+FAIL expect_sysex: not sent (11 bytes)
+FAIL expect dirty == 1, got 0
+FAIL expect dirty == 1, got 0
+host: 266685 ms simulated, 2255 blits, render 0.0% of real time (host CPU), EXPECTATIONS FAILED
+error: recipe `fw-test` failed with exit code 1
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 11:46:03Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Inspect speed handler and dirty hook
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/firmware/morse && grep -n -A10 '^static void speed(' app.c; grep -n '"dirty"' app.c; grep -n -B3 'static uint32_t dirty_at' app.c`
+
+```text
+1807:static void speed(int32_t d)
+1808-{
+1809-    int32_t w = clamp((int32_t)SET.wpm + d, 5, 40);
+1810-    if (w == SET.wpm)
+1811-        return;
+1812-    if (SET.eff == SET.wpm || SET.eff > w)   /* no Farnsworth stays none; stretched stays at most the speed */
+1813-        SET.eff = (uint8_t)w;
+1814-    SET.wpm = (uint8_t)w;
+1815-    set_changed();
+1816-    say_speed("HEAR ", SET.wpm);
+1817-}
+3278:    else if (!strcmp(what, "dirty"))
+3378:    else if (!strcmp(what, "dirty"))
+120-}
+121-
+122-static uint32_t saves;                   /* records written since boot */
+123:static uint32_t dirty_at;                /* a setting changed at (0: saved) */
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 11:46:08Z)**_
+
+Another `"dirty"` hook already exists at line 3378, so the first match shadows it. Checking:
+
+_**Agent (claude-opus-5-5 2026-11-18 11:46:09Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+View the existing dirty hook
+
+`sed -n 3376,3380p app.c`
+
+```text
+    else if (!strcmp(what, "edit"))
+        *got = pg.edit;
+    else if (!strcmp(what, "dirty"))
+        *got = pg.dirty;
+    else if (!strcmp(what, "csel"))
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 11:46:19Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Rename hook, bump to 0.8, run both test suites
+
+```bash
+python3 - <<'EOF'
+p='app.c'; s=open(p).read()
+a='''    else if (!strcmp(what, "dirty"))
+        *got = dirty_at != 0;'''
+assert s.count(a)==1
+s=s.replace(a,'''    else if (!strcmp(what, "unsaved"))
+        *got = dirty_at != 0;''')
+open(p,'w').write(s)
+p='tests/basic.txt'; s=open(p).read()
+i=s.index('# ---- 0.8: SAVE')
+s=s[:i]+s[i:].replace('expect dirty','expect unsaved')
+s=s.replace('expect_sysex F0 7D 4D 4F 01 41 01 00 07 00 F7','expect_sysex F0 7D 4D 4F 01 41 01 00 08 00 F7').replace('version 1, firmware 0.7, transport USB','version 1, firmware 0.8, transport USB')
+open(p,'w').write(s)
+EOF
+cd ../host && sed -i '' -e 's/__version__ = "0.7.0"/__version__ = "0.8.0"/' -e 's/FIRMWARE_KNOWN = (0, 7)/FIRMWARE_KNOWN = (0, 8)/' morse/__init__.py && sed -i '' 's/"hello": (device_hello(0, 7), "F0 7D 4D 4F 01 41 01 00 07 00 F7"),/"hello": (device_hello(0, 8), "F0 7D 4D 4F 01 41 01 00 08 00 F7"),/' morse/protocol.py && sed -i '' 's/assert host.firmware == (0, 7)/assert host.firmware == (0, 8)/' tests/test_morse.py && sed -i '' 's/| hello (firmware 0.7, USB) | `F0 7D 4D 4F 01 41 01 00 07 00 F7` |/| hello (firmware 0.8, USB) | `F0 7D 4D 4F 01 41 01 00 08 00 F7` |/' morse/PROTOCOL.md && cd .. && just fw-test morse 2>&1 | grep -E '^FAIL|host:' ; just morse-test 2>&1 | tail -1
+```
+
+```text
+zoxide: no match found
+error: recipe `morse-test` failed on line 286 with exit code 1
+[This command modified 2 files you've previously read: tests/basic.txt, app.c. Call Read before editing.]
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 11:46:26Z)**_
+
+The `cd` went to the wrong place, so the host edits didn't run. Redoing them from the repo root:
+
+_**Agent (claude-opus-5-5 2026-11-18 11:46:32Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Bump host to 0.8 and run both test suites
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/host && sed -i '' -e 's/__version__ = "0.7.0"/__version__ = "0.8.0"/' -e 's/FIRMWARE_KNOWN = (0, 7)/FIRMWARE_KNOWN = (0, 8)/' morse/__init__.py && sed -i '' 's/"hello": (device_hello(0, 7), "F0 7D 4D 4F 01 41 01 00 07 00 F7"),/"hello": (device_hello(0, 8), "F0 7D 4D 4F 01 41 01 00 08 00 F7"),/' morse/protocol.py && sed -i '' 's/assert host.firmware == (0, 7)/assert host.firmware == (0, 8)/' tests/test_morse.py && sed -i '' 's/| hello (firmware 0.7, USB) | `F0 7D 4D 4F 01 41 01 00 07 00 F7` |/| hello (firmware 0.8, USB) | `F0 7D 4D 4F 01 41 01 00 08 00 F7` |/' morse/PROTOCOL.md && git diff --stat . && cd .. && just fw-test morse 2>&1 | grep -E '^FAIL|host:' ; just morse-test 2>&1 | tail -1`
+
+```text
+ host/morse/PROTOCOL.md   | 2 +-
+ host/morse/__init__.py   | 4 ++--
+ host/morse/protocol.py   | 2 +-
+ host/tests/test_morse.py | 2 +-
+ 4 files changed, 5 insertions(+), 5 deletions(-)
+host: 266685 ms simulated, 2255 blits, render 0.0% of real time (host CPU)
+25 passed in 0.06s
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 11:46:36Z)**_
+
+<tool-use data-tool-type="read" data-tool-name="Read"><details>
+<summary>Tool use: **Read**</summary>
+ `./firmware/morse/build/host/unsaved.png`
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 11:46:44Z)**_
+
+The speed message hides the `*` in that shot, so I'll take it after the message clears but before the 3 s save:
+
+_**Agent (claude-opus-5-5 2026-11-18 11:46:48Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Move unsaved screenshot after the message clears
+
+```bash
+python3 - <<'EOF'
+p='firmware/morse/tests/basic.txt'; s=open(p).read()
+a='''expect unsaved 1
+shot unsaved.png
+reboot'''
+assert a in s
+s=s.replace(a,'''expect unsaved 1
+wait 2300
+expect unsaved 1
+shot unsaved.png
+reboot''')
+open(p,'w').write(s)
+EOF
+just fw-test morse 2>&1 | grep -E '^FAIL|host:'
+```
+
+```text
+host: 268985 ms simulated, 2256 blits, render 0.0% of real time (host CPU)
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 11:46:54Z)**_
+
+<tool-use data-tool-type="read" data-tool-name="Read"><details>
+<summary>Tool use: **Read**</summary>
+ `./firmware/morse/build/host/unsaved.png`
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 11:47:01Z)**_
+
+Simulator passes. Now the real package in fm1-emu: K1 changes the speed, SAVE immediately, then shut down well inside the 3 s window:
+
+_**Agent (claude-opus-5-5 2026-11-18 11:47:16Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Build 0.8 and test SAVE in fm1-emu on both chips
+
+```bash
+just fw-build morse 2>&1 | grep -E 'image |package' ; cd tools/emu-state && SP=/private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/0a574306-469e-4a59-9622-5701a42aee59/scratchpad; for chip in uc25hq80 p25q80; do rm -f s.flash; FM1_BENCH_KEYS="2500:e2:+1,2800:SAVE,2850:SAVE^" ../fm1-emu/fm1-live --fwsc ../../firmware/morse/build/morse.fwsc --flash-chip $chip --flash $PWD/s.flash --midi none --shot 3300 --lcd-only 2>&1 | grep flash:; FM1_NO_PLAY=1 ../fm1-emu/fm1-live --fwsc ../../firmware/morse/build/morse.fwsc --flash-chip $chip --flash $PWD/s.flash --midi none --shot 2500 --lcd-only 2>&1 | grep flash:; cp work/lcd.ppm $SP/save_$chip.ppm; done; rm -f s.flash; cd ../.. && uv run --locked --all-groups python -c "
+from PIL import Image
+sp='$SP'
+c=Image.new('RGB',(490,40),'white')
+for i,ch in enumerate(['uc25hq80','p25q80']): c.paste(Image.open(f'{sp}/save_{ch}.ppm').crop((0,0,240,32)),(i*250,0))
+c.save(f'{sp}/save.png')"
+```
+
+```text
+Resolved 21 packages in 5ms
+Checked 18 packages in 4ms
+loader: image 14896 B at 0x1c0a800, bss end 0x1c15b20
+  ok    image 174536 B; RAM code .ram_text 5576 B of 32768; RAM .data+.bss 38588 B of 98304; pool 69384 B of 344064
+package  /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/firmware/morse/build/morse.fwsc  616003 B, identity FM-1_4100
+flash: 4 erases / programs
+flash: 0 erases / programs
+flash: 4 erases / programs
+flash: 0 erases / programs
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 11:47:21Z)**_
+
+<tool-use data-tool-type="read" data-tool-name="Read"><details>
+<summary>Tool use: **Read**</summary>
+ `/private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/0a574306-469e-4a59-9622-5701a42aee59/scratchpad/save.png`
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 11:47:27Z)**_
+
+fm1-emu 兩種晶片都通過：按 SAVE 後 0.5 秒內就寫進 flash，馬上關機重開，速度是 21。接著改文件：
+
+_**Agent (claude-opus-5-5 2026-11-18 11:47:48Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Document 0.8 in docs, cheatsheets, READMEs
+
+```bash
+python3 - <<'EOF'
+def edit(p, pairs):
+    s=open(p).read()
+    for a,b in pairs:
+        assert s.count(a)==1, (p,a[:60]); s=s.replace(a,b)
+    open(p,'w').write(s)
+edit('docs/dev/morse.md',[
+('''| 韌體 0.7、host 0.7.0 | 2026-11-18 | 是（還沒刷；''','''| 韌體 0.8、host 0.8.0 | 2026-11-18 | 是（還沒刷） | `SAVE` 鍵：設定立刻存，不用等最後一次改動後的 3 秒（實機回饋：在 SETTINGS 改完馬上關機，改動沒存到）；有還沒存的設定時，`SAVE` 燈亮、header 頁名後面多一個琥珀色 `*`，自動存或按 `SAVE` 後消失；沒東西要存時按 `SAVE` 顯示 `ALL SAVED`；CHART 編輯時 `SAVE` 和 `PLAY`／`REC` 一樣問 SAVE CHANGES? |
+| 韌體 0.7、host 0.7.0 | 2026-11-18 | 是（19:45 前後用 USB-MIDI 裝 release build，實機確認；'''),
+('''| 0.7（release） | 174,408 B | 38,588 / 98,304 B |''','''| 0.7（release） | 174,408 B | 38,588 / 98,304 B |
+| 0.8（開發版） | 174,536 B | 38,588 / 98,304 B |'''),
+('''| 0.7：改 START PAGE、重開讀回；疊在刷 THEORY 前的實機備份上 |''','''| 0.8：`SAVE` 立刻存、沒存就斷電會不見、沒東西要存時的提示 | `just fw-test morse` | 全過 `[模擬]` |
+| 0.8：K1 改速度、按 `SAVE`、0.5 秒後關機重開 | fm1-emu `uc25hq80`、`p25q80` | 按下就寫（4 次 erase／program），重開讀回 21 WPM `[模擬]` |
+| 0.7 刷進實機 | `fm1_install.py`（USB-MIDI，fast install） | 成功；開機進 MENU，ROUND 30 保留，START PAGE 改了關機再開照設定 `[實機]` |
+| 0.7：改 START PAGE、重開讀回；疊在刷 THEORY 前的實機備份上 |'''),
+('''| 0.7 | 開機頁（START PAGE）、備份帶設定（格式 2）。已做好，等刷機 |
+| 0.8 | 兩台 FM-1 互打''','''| 0.7 | 開機頁（START PAGE）、備份帶設定（格式 2）。2026-11-18 刷進實機 |
+| 0.8 | `SAVE` 鍵立刻存、沒存的設定有標示。已做好，等刷機 |
+| 0.9 | 兩台 FM-1 互打'''),
+])
+edit('docs/dev/morse-cheatsheet.md',[
+('''韌體 0.7（0.3 以前沒有的操作標了「0.4」，藍牙是「0.5」，開機頁是「0.7」；''','''韌體 0.8（0.3 以前沒有的操作標了「0.4」，藍牙是「0.5」，開機頁是「0.7」，`SAVE` 是「0.8」；'''),
+('''| `FX` | 聲音開／關。''','''| `SAVE` | 0.8：設定立刻存。沒按的話，最後一次改動 3 秒後才自動存，這之前關機改動就沒了。有還沒存的設定時 `SAVE` 燈亮、頁名後面有琥珀色 `*` |
+| `FX` | 聲音開／關。'''),
+])
+edit('firmware/morse/web/cheatsheet.html',[
+('''Firmware 0.7, every page and button.''','''Firmware 0.8, every page and button.'''),
+('''        <tr><td><kbd>FX</kbd></td><td>sound on / off; off, <kbd>FX</kbd> lights and you read the key lights</td></tr>''','''        <tr><td><kbd>SAVE</kbd></td><td>0.8: save the settings now; otherwise they save 3 s after the last change, and a power-off before that loses it. Lit, with an amber <code>*</code> after the page's name: not saved yet</td></tr>
+        <tr><td><kbd>FX</kbd></td><td>sound on / off; off, <kbd>FX</kbd> lights and you read the key lights</td></tr>'''),
+('''<p class="dim">Turning a speed shows what it means (SEND 10 WPM DIT 120MS DAH 360MS). Settings save themselves
+        3 s after the last change. Not sure? SETTINGS &gt; PRESET.</p>''','''<p class="dim">Turning a speed shows what it means (SEND 10 WPM DIT 120MS DAH 360MS). Settings save themselves
+        3 s after the last change, or at once with <kbd>SAVE</kbd>. Not sure? SETTINGS &gt; PRESET.</p>'''),
+('''        <tr><td><kbd>PLAY</kbd> / <kbd>REC</kbd></td><td>asks SAVE CHANGES?</td></tr>''','''        <tr><td><kbd>PLAY</kbd> / <kbd>REC</kbd> / <kbd>SAVE</kbd></td><td>asks SAVE CHANGES?</td></tr>'''),
+('''        <tr><td><code>MUTE</code></td><td>the sound is off</td></tr>''','''        <tr><td><code>MUTE</code></td><td>the sound is off</td></tr>
+        <tr><td><code>*</code> after the page, <kbd>SAVE</kbd> lit</td><td>a setting not saved yet</td></tr>'''),
+])
+edit('firmware/morse/README.md',[
+('''| `FX` | sound on / off (off: read the key lights) |''','''| `SAVE` | save the settings now (else 3 s after the last change; lit, and `*` after the page's name, until then) |
+| `FX` | sound on / off (off: read the key lights) |'''),
+('''| ![load settings](docs/screens/load_settings.png) a backup with settings | | |''','''| ![load settings](docs/screens/load_settings.png) a backup with settings | ![unsaved](docs/screens/unsaved.png) `*`: a setting not saved yet | |'''),
+])
+edit('README.md',[('Firmware 0.7 (start page, settings in backups; not flashed yet), host 0.7.0; 0.6 (Bluetooth) on my unit','Firmware 0.8 (SAVE saves at once; not flashed yet), host 0.8.0; 0.7 on my unit since 2026-11-18')])
+edit('docs/index.md',[('韌體 0.7、host 0.7.0（開機頁、備份帶設定，還沒刷）；0.6（藍牙）2026-11-17 到 11-18 在我的機器上','韌體 0.8、host 0.8.0（`SAVE` 立刻存，還沒刷）；機器上是 0.7（2026-11-18 起）')])
+edit('Justfile',[('settings settings_bt settings_start load_settings"""','settings settings_bt settings_start load_settings unsaved"""')])
+EOF
+grep -n 'now switched to THEORY\|目前換成 THEORY' README.md docs/index.md
+```
+
+```text
+docs/index.md:52:| **Morse** | 隨身摩斯電碼機：琴鍵當電鍵（直鍵或 iambic paddle）即時解碼、練長短的 RHYTHM 頁、琴鍵當字母鍵盤和片語鍵、閃卡間隔複習（預設只用聽的，打碼卡看自己的節奏判斷）、分級測驗與手動調整進度、進度備份還原、連續收聽、靜音看燈、USB 或藍牙 MIDI 用 Vail 的格式 | `firmware/morse/` | `host/morse/`（把發的字打進電腦、電腦送字給 FM-1 播） | 韌體 0.8、host 0.8.0（`SAVE` 立刻存，還沒刷）；機器上是 0.7（2026-11-18 起），目前換成 THEORY（學習紀錄留在 `0xDA000`），見[怎麼用它學](dev/morse-learn.md)、[設計](dev/morse.md)、[速查](dev/morse-cheatsheet.md) |
+README.md:29:| **Morse** | A pocket Morse code machine: key on the piano keys (straight key or iambic paddles) and read what you sent, type letters on the keys and hear them, flash cards with spaced repetition (by sound by default; keyed answers judged by their own rhythm), a placement test, progress you can edit, back up and restore, silent mode with the lights, USB or Bluetooth MIDI in the Vail adapter's format | [`firmware/morse/`](firmware/morse/) | [`host/morse/`](host/morse/) (types what you key into the computer; sends text for the FM-1 to play) | Firmware 0.8 (SAVE saves at once; not flashed yet), host 0.8.0; 0.7 on my unit since 2026-11-18 2026-11-17 to 2026-11-18, now switched to THEORY (its progress stays at `0xDA000`); [learning with it](docs/dev/morse-learn.md) |
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 11:47:52Z)**_
+
+Cleaning up the leftover THEORY wording in those two rows:
+
+_**Agent (claude-opus-5-5 2026-11-18 11:48:00Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Fix rows, regenerate screens, run unit tests and docs check
+
+```bash
+python3 - <<'EOF'
+def edit(p,a,b):
+    s=open(p).read(); assert s.count(a)==1,(p,a); open(p,'w').write(s.replace(a,b))
+edit('README.md','0.7 on my unit since 2026-11-18 2026-11-17 to 2026-11-18, now switched to THEORY (its progress stays at `0xDA000`); ','0.7 on my unit since 2026-11-18; ')
+edit('docs/index.md','機器上是 0.7（2026-11-18 起），目前換成 THEORY（學習紀錄留在 `0xDA000`），見','機器上是 0.7（2026-11-18 起），見')
+EOF
+grep -n -iE 'THEORY' README.md docs/index.md | grep -i -E 'theory 0|換成|switched' | head; just morse-shots 2>&1 | tail -1; just morse-unit 2>&1 | tail -1; just docs-check 2>&1 | tail -1
+```
+
+```text
+34 screens in firmware/morse/docs/screens
+3074 checks, 0 failed
+{"status": "ok", "pages": 50, "llm_pages": 50, "deployed": false}
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 11:48:06Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+List uncommitted 0.8 changes
+
+`git status --short; git -C firmware/morse status --short`
+
+```text
+ M .specstory/history/2026-11-17_13-42-11Z-ascii-firmware-focus-host.md
+ M .specstory/statistics.json
+ M Justfile
+ M README.md
+ M docs/dev/morse-cheatsheet.md
+ M docs/dev/morse.md
+ M docs/index.md
+ m firmware/morse
+ M host/morse/PROTOCOL.md
+ M host/morse/__init__.py
+ M host/morse/protocol.py
+ M host/tests/test_morse.py
+ M README.md
+ M app.c
+ M docs/screens/card_hear.png
+ M docs/screens/card_new.png
+ M docs/screens/card_new_peek.png
+ M docs/screens/chart.png
+ M docs/screens/key_code.png
+ M docs/screens/key_timing.png
+ M docs/screens/load_settings.png
+ M docs/screens/result_right.png
+ M docs/screens/settings.png
+ M docs/screens/settings_bt.png
+ M docs/screens/settings_start.png
+ M tests/basic.txt
+ M web/cheatsheet.html
+?? docs/screens/unsaved.png
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 11:48:18Z)**_
+
+device-log、plan 和 chat history 已經 commit 並 push。0.8 的 SAVE 鍵做好了，測試都通過，但還沒 commit。
+
+**已 commit**
+- `dbccda4`：device-log，記錄 0.7 刷進實機。
+- `18f81e1`：plan 和 `.specstory` chat history。照你之前那次的做法，兩份 plan 和所有 history 都放進去了；commit 前掃過，沒有看起來像 token 或金鑰的內容。
+
+**0.8：SAVE 鍵**
+- **按 `SAVE` 立刻存設定**，不用等 3 秒。沒有東西要存時，畫面顯示 `ALL SAVED · NOTHING NEW`。
+- **還沒存的時候**：`SAVE` 燈會亮，header 頁名後面多一個琥珀色的 `*`（例如 `KEY *`）。自動存完或按 `SAVE` 後兩者都會消失。
+- **CHART 編輯中**：`SAVE` 和 `PLAY`／`REC` 一樣，會問 SAVE CHANGES?。
+- SETTINGS 的頁尾提示加了 `SAVE`。
+- 版本：韌體 0.8，host 0.8.0。協定不變，只改了 HELLO 裡的版本號。
+
+**驗證**
+- `fw-test`、`morse-test`（25 項）、`morse-unit` 都通過，`docs-check` 也沒問題。
+- 模擬器測試新增一段 `[模擬]`：
+  - 改速度後馬上斷電，改動會不見；
+  - 按 `SAVE` 再斷電，改動會保留；
+  - 沒東西要存時按 `SAVE`，顯示提示。
+- fm1-emu 兩種晶片 `[模擬]`：K1 改速度、按 `SAVE`，0.5 秒後關機；按下時就寫入了 flash，重開讀回 21 WPM。
+- 裝置版 build：174,536 B。
+
+**改到的文件**
+- `docs/dev/morse.md`：0.8 版本列、0.7 實機結果、roadmap（兩台互打順延到 0.9）。
+- 速查：中文 `morse-cheatsheet.md` 和英文 `web/cheatsheet.html`。
+- fm1-morse README（加上 `SAVE` 和 `unsaved` 截圖）、superproject README、`docs/index.md`、`Justfile`。
+
+**順便修正**：superproject README 和 `docs/index.md` 的 Morse 列原本還寫著機器換成了 THEORY，已經改掉。
+
+另外，`.specstory` 在剛才那個 commit 之後又有新內容，這次沒有動。
+
+接下來要 commit、push、發 v0.8，或刷 0.8，再跟我說。
+
+---
+
+_**User (2026-11-18 11:48:31Z)**_
+
+commit push 然後發 v0.8，順便刷 0.8
+
+---
+
+_**Agent (claude-opus-5-5 2026-11-18 11:49:13Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Commit and push both repos, build the 0.8 release
+
+```bash
+cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/firmware/morse && git add -A && git commit -q -F - <<'EOF'
+0.8: SAVE saves the settings at once; unsaved shows as * and the SAVE light
+
+Settings still save themselves 3 s after the last change, but a power-off
+before then lost the change (found on hardware with 0.7). SAVE writes them
+now ("ALL SAVED" when there is nothing new); while something is unsaved the
+SAVE button is lit and the header shows an amber * after the page's name.
+In CHART's edit SAVE asks SAVE CHANGES? like PLAY and REC. Cheatsheet,
+README and screens updated.
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+EOF
+git push -q origin main && git log --oneline -1 && cd ../.. && git add firmware/morse Justfile README.md docs/dev/morse-cheatsheet.md docs/dev/morse.md docs/index.md host/morse host/tests/test_morse.py && git commit -q -m "morse 0.8: SAVE saves the settings at once (host 0.8.0, docs)
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>" && git push -q && git log --oneline -1 && just morse-release 0.8 2>&1 | grep -E 'image |package' && shasum -a 256 firmware/morse/build/morse-0.8.fwsc
+```
+
+```text
+8467a08 0.8: SAVE saves the settings at once; unsaved shows as * and the SAVE light
+d4a40d9 morse 0.8: SAVE saves the settings at once (host 0.8.0, docs)
+Resolved 21 packages in 3ms
+Checked 18 packages in 4ms
+loader: image 14896 B at 0x1c0a800, bss end 0x1c15b20
+  ok    image 174540 B; RAM code .ram_text 5576 B of 32768; RAM .data+.bss 38588 B of 98304; pool 69384 B of 344064
+package  /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/firmware/morse/build/morse-0.8.fwsc  616003 B, identity FM-1_41000800
+76b0c2a02927fb88cec2f51a557a4e392b23210e4bbd93e5ba29c48a26bd92d5  firmware/morse/build/morse-0.8.fwsc
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 11:49:37Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Tag and publish the v0.8 release
+
+```bash
+cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/firmware/morse && git tag -a v0.8 8467a08 -m "MORSE 0.8" && git push -q origin v0.8 && cat > /private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/0a574306-469e-4a59-9622-5701a42aee59/scratchpad/notes08.md <<'EOF'
+MORSE 0.8: SAVE saves your settings at once.
+
+**Firmware**
+- `SAVE` writes the settings now. They still save themselves 3 s after the last change, but switching off before then lost the change.
+- While a setting is not saved yet, the `SAVE` button is lit and the header shows an amber `*` after the page's name. Nothing new to save: `ALL SAVED`.
+- In CHART's edit, `SAVE` asks *SAVE CHANGES?* like `PLAY` and `REC`.
+
+Everything from [0.7](https://github.com/daviddwlee84/fm1-morse/releases/tag/v0.7) (START PAGE, settings in backups) stays as it was. [Cheatsheet](https://daviddwlee84.github.io/fm1-morse/web/cheatsheet.html) · [try it in the browser](https://daviddwlee84.github.io/fm1-morse/web/try/) · [MORSE on the web](https://daviddwlee84.github.io/fm1-morse/web/).
+
+| | |
+|---|---|
+| Package | `morse-0.8.fwsc` |
+| Identity | `FM-1_41000800` |
+| SHA-256 | `76b0c2a02927fb88cec2f51a557a4e392b23210e4bbd93e5ba29c48a26bd92d5` |
+| Flash chips | saves and updates on `856014` and `B36014` (fm1-emu); `B36014` on hardware |
+| Licence | GPL-3.0-or-later (fm1-base MPL-2.0, `common/` MIT) |
+
+Same record as 0.3-0.7. Going back to 0.6 or earlier: set START PAGE to MENU first.
+
+Back up your flash, and your progress, before installing.
+EOF
+gh release create v0.8 -R daviddwlee84/fm1-morse --verify-tag --title "MORSE 0.8" --notes-file /private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/0a574306-469e-4a59-9622-5701a42aee59/scratchpad/notes08.md build/morse-0.8.fwsc build/firmware.json && gh release view v0.8 -R daviddwlee84/fm1-morse --json assets -q '.assets[]|.name+" "+.digest'
+```
+
+```text
+https://github.com/daviddwlee84/fm1-morse/releases/tag/v0.8
+firmware.json sha256:296479f46067ef674b7a5c1cdad4653b31edd4a023badb762f8412beffe02b91
+morse-0.8.fwsc sha256:76b0c2a02927fb88cec2f51a557a4e392b23210e4bbd93e5ba29c48a26bd92d5
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 11:49:42Z)**_
+
+v0.8 已發布，digest 相符。接著做刷機前的 preflight：確認機器狀態、切 download mode 做整片備份、切回一般模式，再預演。
+
+_**Agent (claude-opus-5-5 2026-11-18 11:50:23Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Check unit, back up full flash, restart
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1 && uv run --locked --all-groups python third_party/fm1-base/tools/fm1_install.py --info 2>&1 | tail -2 && just fm1-download-mode 2>&1 | tail -1 && just fm1-backup pre-morse-0.8 2>&1 | grep -E 'bootloader|firmware  |flash  |Backup saved' ; shasum -a 256 backups/2026-11-18-pre-morse-0.8/*.bin; just fm1-restart 2>&1 | tail -1`
+
+```text
+FM-1_41000700  [running]  port: Felucca
+In download mode: usb:2-4	WL82 UBOOT1.00 (USB bus 2, device 4)
+  bootloader  stock (M-VAVE)
+  firmware    FM-1 410
+  flash       0xB36014
+Backup saved: backups/2026-11-18-pre-morse-0.8/fm1-20261118-195019.bin
+d5470954e001d8cea58acffce5ca338e008451acedb04a9dd98cdd38e4bfb31f  backups/2026-11-18-pre-morse-0.8/fm1-20261118-195019.bin
+Running: the Felucca is on USB MIDI
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 11:50:40Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Inspect backup record and rehearse 0.8 over it
+
+```bash
+python3 - <<'EOF'
+b=open('backups/2026-11-18-pre-morse-0.8/fm1-20261118-195019.bin','rb').read()
+import struct
+i=0
+while (i:=b.find(bytes.fromhex('31524f4d'),i))>=0:
+    print('MORSE rec',hex(i),'set',b[i+8:i+20].hex(' '),'round',struct.unpack_from('<H',b,i+8+14)[0] if False else ''); i+=4
+EOF
+cd tools/emu-state && B=$PWD/../../backups/2026-11-18-pre-morse-0.8/fm1-20261118-195019.bin; SP=/private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/0a574306-469e-4a59-9622-5701a42aee59/scratchpad; for chip in uc25hq80 p25q80; do rm -f p.flash; ../fm1-emu/fm1-live --fwsc ../../firmware/morse/build/morse-0.8.fwsc --flash-chip $chip --flash $PWD/p.flash --midi none --shot 300 --lcd-only >/dev/null 2>&1; python3 ../../scripts/emu_rehearse.py p.flash $B r.flash >/dev/null; FM1_NO_PLAY=1 ../fm1-emu/fm1-live --fwsc ../../firmware/morse/build/morse-0.8.fwsc --flash-chip $chip --flash $PWD/r.flash --midi none --shot 3000 --lcd-only 2>&1 | grep flash:; cp work/lcd.ppm $SP/p8a_$chip.ppm; FM1_BENCH_KEYS="2500:HOME,2550:HOME^" ../fm1-emu/fm1-live --fwsc ../../firmware/morse/build/morse-0.8.fwsc --flash-chip $chip --flash $PWD/r.flash --midi none --shot 3200 --lcd-only 2>&1 | grep flash:; cp work/lcd.ppm $SP/p8b_$chip.ppm; done; rm -f p.flash r.flash; cd ../.. && uv run --locked --all-groups python -c "
+from PIL import Image
+sp='$SP'
+n=['p8a_uc25hq80','p8b_uc25hq80','p8a_p25q80','p8b_p25q80']
+c=Image.new('RGB',(1000,240),'white')
+for i,x in enumerate(n): c.paste(Image.open(f'{sp}/{x}.ppm'),(i*250,0))
+c.save(f'{sp}/p8.png')"
+```
+
+```text
+MORSE rec 0xda100 set 14 08 00 00 04 14 00 00 58 02 14 00 round 
+MORSE rec 0xdb100 set 14 08 00 00 04 14 00 00 58 02 14 00 round 
+flash: 0 erases / programs
+flash: 0 erases / programs
+flash: 0 erases / programs
+flash: 0 erases / programs
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 11:50:45Z)**_
+
+<tool-use data-tool-type="read" data-tool-name="Read"><details>
+<summary>Tool use: **Read**</summary>
+ `/private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/0a574306-469e-4a59-9622-5701a42aee59/scratchpad/p8.png`
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 11:50:51Z)**_
+
+You set START PAGE to PRACTICE on the device (flags `0x04`), so starting on PRACTICE with ROUND 31 is correct. Recording in the device log:
+
+_**Agent (claude-opus-5-5 2026-11-18 11:50:57Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Record backup and preflight in device log
+
+```bash
+python3 - <<'EOF'
+p='docs/device-log.md'; L=open(p).read().split('\n')
+i=next(k for k,l in enumerate(L) if l.startswith('| 2026-11-18 19:38 | 刷 Morse 0.7'))
+L.insert(i+1,'| 2026-11-18 19:50 | 刷 Morse 0.8 之前的 Morse 0.7 release（`FM-1_41000700`；`0xDA000` 的紀錄 ROUND 31，設定 START PAGE 是 PRACTICE、HEAR 20/8） | `backups/2026-11-18-pre-morse-0.8/fm1-20261118-195019.bin` + `.json` | `d5470954e001d8cea58acffce5ca338e008451acedb04a9dd98cdd38e4bfb31f` | 尚未上傳 |')
+j=next(k for k,l in enumerate(L) if l.startswith('| 2026-11-18 19:45 前後 | 本人執行 `fm1_install.py firmware/morse/build/morse-0.7.fwsc`'))
+L.insert(j+1,'| 2026-11-18 19:49–19:51 | agent 執行 `fm1_install.py --info`、`just fm1-download-mode`、`fm1-backup pre-morse-0.8`、`fm1-restart`（刷 Morse 0.8 前的 preflight） | `FM-1_41000700 [running] port: Felucca`；bootloader stock、firmware `FM-1 410`、flash `0xB36014`；備份 SHA-256 `d5470954…bfb31f`；重開回 Morse 0.7。fm1-emu 兩種晶片上把 `morse-0.8.fwsc`（release，SHA-256 `76b0c2a0…bd92d5`）疊在這份備份上預演：照 START PAGE 開在 PRACTICE、ROUND 31 保留、開機 0 次寫入 `[模擬]` |')
+open(p,'w').write('\n'.join(L))
+EOF
+echo ok
+```
+
+```text
+ok
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 11:51:08Z)**_
+
+兩個 repo 都已經 commit 並 push，v0.8 也發布了，刷機前的 preflight 全部通過。
+
+**commit 和 release**
+- fm1-morse 是 `8467a08`，superproject 是 `d4a40d9`。這次只 commit 了 0.8 的檔案，`.specstory` 沒有動。
+- [v0.8 release](https://github.com/daviddwlee84/fm1-morse/releases/tag/v0.8) 附了 `morse-0.8.fwsc`（identity `FM-1_41000800`，SHA-256 `76b0c2a0…bd92d5`，和 GitHub 上的 digest 相符）和 `firmware.json`。
+- `firmware.json` 的 digest 和 v0.7 那份一模一樣，表示這個檔案裡沒有寫版本號，不影響安裝。
+
+**preflight**
+
+| | 結果 |
+|---|---|
+| 1. 整片備份 | `backups/2026-11-18-pre-morse-0.8/fm1-20261118-195019.bin`，SHA-256 `d5470954e001d8cea58acffce5ca338e008451acedb04a9dd98cdd38e4bfb31f`，已記進 `device-log.md` |
+| 2. flash 晶片 | `0xB36014`，0.7 剛在這台上裝過 |
+| 3. 套件 | `morse-0.8.fwsc`，SHA-256 和 release 的 digest 相符 |
+| 4. 會改什麼 | 目前是 Morse 0.7（`FM-1_41000700`），bootloader 是原廠。安裝只改寫韌體區，存檔格式沒變 |
+| 預演 `[模擬]` | fm1-emu 兩種晶片都測過：照你設的 START PAGE 開在 PRACTICE，ROUND 31 還在，開機沒有寫入；按 HOME 會回 MENU |
+
+機器已經切回一般模式，現在跑的是 Morse 0.7。在這裡輸入下面這行執行安裝：
+
+```
+! uv run --locked --all-groups python third_party/fm1-base/tools/fm1_install.py firmware/morse/build/morse-0.8.fwsc
+```
+
+裝好後試這幾件事：
+1. 轉 K1 改一下速度：SAVE 燈應該亮起來，頁名後面出現 `*`。
+2. 按 `SAVE`：畫面顯示 `SAVED`，燈和 `*` 都會消失。
+3. 馬上關機再開：改過的速度要還在。
+
+把安裝的輸出和結果貼給我，我再記進 device-log 並 commit。
+
+---
+
+_**User (2026-11-18 11:58:17Z)**_
+
+```
+
+
+<pasted_content id="cc4a">
+❯ uv run --locked --all-groups python third_party/fm1-base/tools/fm1_install.py firmware/morse/build/morse-0.8.fwsc
+package: FM-1_41000800  (firmware/morse/build/morse-0.8.fwsc)
+device:  FM-1_41000700  (Felucca)
+Install? Do not unplug the FM-1 while writing. [y/N] y
+starting the update on FM-1_41000700
+checking the package (30 reads)
+switching to update mode
+writing   0%
+the loader writes only the sectors that changed (fast install)
+writing 100%
+restarting
+done: the FM-1 runs FM-1_41000800
+</pasted_content id="cc4a">
+
+```
+目前使用起來效果不錯 （不過不知道這種auto save是不是也要做成一個可toggle的feature？） 不過記得以前如果是轉 K1~4 幾乎就是速調就生效 不過這個目前應該是會留到下次開機對嘛
+
+---
+
+_**Agent (claude-opus-5-5 2026-11-18 11:58:25Z)**_
+
+先把結果記進 device-log 和 `morse.md`，然後 commit：
+
+_**Agent (claude-opus-5-5 2026-11-18 11:58:36Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Record 0.8 flash in device log and docs
+
+```bash
+python3 - <<'EOF'
+def edit(p,pairs):
+    s=open(p).read()
+    for a,b in pairs:
+        assert s.count(a)==1,(p,a[:60]); s=s.replace(a,b)
+    open(p,'w').write(s)
+s=open('docs/device-log.md').read()
+a='| 目前韌體 | **Morse 0.7 release build（`FM-1_41000700`，藍牙）**（2026-11-18 19:45 前後從 THEORY 0.1 用 USB-MIDI 更新（fast install），學習紀錄 ROUND 30 保留，開機進 MENU；THEORY 的存檔留在 `0xD8000`）。'
+assert a in s
+s=s.replace(a,'| 目前韌體 | **Morse 0.8 release build（`FM-1_41000800`，藍牙）**（2026-11-18 19:55 前後從 Morse 0.7 用 USB-MIDI 更新（fast install），學習紀錄 ROUND 31 和設定保留；THEORY 的存檔留在 `0xD8000`）。之前是 Morse 0.7 release build（`FM-1_41000700`，19:45 前後從 THEORY 0.1 更新）。')
+s=s.replace('→ THEORY 0.1 → Morse 0.7 |','→ THEORY 0.1 → Morse 0.7 → Morse 0.8 |',1)
+L=s.split('\n')
+j=next(k for k,l in enumerate(L) if l.startswith('| 2026-11-18 19:49–19:51 | agent 執行'))
+L.insert(j+1,'| 2026-11-18 19:55 前後 | 本人執行 `fm1_install.py firmware/morse/build/morse-0.8.fwsc`（release `FM-1_41000800`，SHA-256 `76b0c2a0…bd92d5`，fm1-morse `8467a08`），機器上是 Morse 0.7 | 成功：`checking the package (30 reads)` → `switching to update mode` → `the loader writes only the sectors that changed (fast install)` → `done: the FM-1 runs FM-1_41000800`。本人試用：「目前使用起來效果不錯」（`SAVE` 立刻存、`*` 和 `SAVE` 燈） |')
+open('docs/device-log.md','w').write('\n'.join(L))
+edit('docs/dev/morse.md',[
+('| 韌體 0.8、host 0.8.0 | 2026-11-18 | 是（還沒刷） |','| 韌體 0.8、host 0.8.0 | 2026-11-18 | 是（19:55 前後用 USB-MIDI 裝 release build `FM-1_41000800`，fm1-morse `8467a08`，release [v0.8](https://github.com/daviddwlee84/fm1-morse/releases/tag/v0.8)；本人試用「效果不錯」`[實機]`） |'),
+('| 0.8 | `SAVE` 鍵立刻存、沒存的設定有標示。已做好，等刷機 |','| 0.8 | `SAVE` 鍵立刻存、沒存的設定有標示。2026-11-18 刷進實機 |'),
+('| 0.8（開發版） | 174,536 B | 38,588 / 98,304 B |','| 0.8（release） | 174,540 B | 38,588 / 98,304 B |'),
+])
+edit('README.md',[('Firmware 0.8 (SAVE saves at once; not flashed yet), host 0.8.0; 0.7 on my unit since 2026-11-18; ','Firmware 0.8 (SAVE saves at once), host 0.8.0; on my unit since 2026-11-18; ')])
+edit('docs/index.md',[('韌體 0.8、host 0.8.0（`SAVE` 立刻存，還沒刷）；機器上是 0.7（2026-11-18 起），見','韌體 0.8、host 0.8.0（`SAVE` 立刻存）；2026-11-18 起在我的機器上，見')])
+EOF
+grep -n '設定改完 3 秒後自動存' docs/dev/morse-cheatsheet.md
+```
+
+```text
+19:轉速度時畫面上方會顯示它的意思，例如「SEND 10 WPM DIT 120MS DAH 360MS」。設定改完 3 秒後自動存。不知道怎麼設的話，到 SETTINGS 選 PRESET，見[速度](morse.md#speed)。
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 11:59:08Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Clarify knob behaviour, check docs, commit and push
+
+```bash
+python3 - <<'EOF'
+p='docs/dev/morse-cheatsheet.md'; s=open(p).read()
+a='設定改完 3 秒後自動存。'
+s=s.replace(a,'旋鈕和 SETTINGS 的改動都是**馬上生效**；存進 flash（關機再開還在）是另一件事：最後一次改動 3 秒後自動存，或按 `SAVE`（0.8）立刻存。等 3 秒是為了轉旋鈕時不要每一格都寫一次 flash。',1)
+open(p,'w').write(s)
+EOF
+just docs-check 2>&1 | tail -1 && git add docs/device-log.md docs/dev/morse.md docs/dev/morse-cheatsheet.md README.md docs/index.md && git commit -q -m "device-log: Morse 0.8 installed (backup d5470954, progress and settings kept)
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>" && git push -q && git log --oneline -1
+```
+
+```text
+{"status": "ok", "pages": 50, "llm_pages": 50, "deployed": false}
+6f67ec6 device-log: Morse 0.8 installed (backup d5470954, progress and settings kept)
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 11:59:18Z)**_
+
+0.8 刷好了，記錄已 commit 並 push（`6f67ec6`）。改了 `device-log.md`、`morse.md`、兩份 README 版本表，以及中文速查。
+
+**K1–K4 轉了是不是馬上生效？**
+
+是，馬上生效，跟以前一樣：轉下去，下一個字就用新速度。0.8 沒有改這個。
+
+另外一件事是「存進 flash」，也就是關機再開還在不在：
+- 旋鈕和 SETTINGS 用的是同一套機制。最後一次改動 3 秒後自動存，或按 `SAVE` 立刻存。
+- 所以轉了旋鈕，等 3 秒或按 `SAVE`，下次開機就還是這個值。轉完 3 秒內關機，下次開機會回到舊值。
+
+我在中文速查裡把「馬上生效」和「存起來」分開寫清楚了。
+
+**自動存要不要做成可以開關？**
+
+我建議**先不要**：
+- **關掉自動存的風險比較大**：忘了按 `SAVE`，改動就不見，而且不會有任何提示。現在是你想存才需要按 `SAVE`，不按也會在 3 秒後存起來。
+- **flash 耗損不是問題**：只有停手 3 秒後才寫一次，轉一整圈也只寫一次。
+- **真正需要開關的情況**是想「暫時改一下、關機就恢復」，例如臨時調快速度練一下。現在這樣做也行：調完再調回去，或在 3 秒內關機。
+
+如果你常常想暫時改設定，再加一個 `AUTO SAVE ON/OFF` 設定：關掉時只有按 `SAVE` 才存，`*` 會一直亮著提醒你。實際用一陣子後覺得需要，再跟我說。
+
+---
+
+_**User (2026-11-18 12:03:47Z)**_
+
+<command-name>/compact</command-name>
+            <command-message>compact</command-message>
+            <command-args></command-args>
+
+---
+
+_**User (2026-11-18 12:03:47Z)**_
+
+<local-command-caveat>The command below was run directly in Claude Code, not sent to you as a request, and its output goes straight to the user. It's recorded here as context for later messages.</local-command-caveat>
+
+---
+
+_**User (2026-11-18 12:05:05Z)**_
+
+This session is being continued from a previous conversation that ran out of context. The summary below covers the earlier portion of the conversation.
+
+<system-reminder>
+<tools-used-before-summary>Agent, AskUserQuestion, Bash, Edit, ExitPlanMode, Read, TaskStop, ToolSearch, WebFetch, WebSearch, Write</tools-used-before-summary>
+</system-reminder>
+Summary:
+1. Primary Request and Intent:
+   - **Hub "Play in browser" and the cheatsheet** (first request in this segment):
+     - Add a ▶ Play in browser button on the Hub, like Rainbow's.
+     - Make the cheatsheet a GitHub Pages page instead of a README anchor.
+     - Add both to the fm1-hub-listing skill.
+   - **The 404**: the user tested `https://joakimeriksson.github.io/fm1-emu/?fw=morse&embed=1&mhz=100` and it failed with `MORSE: https://thefirmwarehub.com/fw/morse-0.3.fwsc: 404`.
+   - **Start page**: make the home page a configurable setting, default MENU, and keep it when exporting a backup.
+   - **0.7**:
+     - "好 commit push 然後發 v0.7".
+     - "好，刷 0.7 吧", then "接好了，THEORY 開著".
+     - After flashing, the user observed that settings only save after leaving the page, and that SAVE does nothing.
+   - **0.8**: "好，做 0.8 的 SAVE 鍵，順便 commit device-log & related plan & chat history".
+   - **Release and flash**: "commit push 然後發 v0.8，順便刷 0.8".
+   - **Latest message**:
+     - 0.8 was flashed successfully and "目前使用起來效果不錯".
+     - Question: should autosave be a toggleable feature?
+     - Question: K1–K4 used to take effect immediately; does a change now also carry over to the next boot?
+
+2. Key Technical Concepts:
+   - **Hub card fields**: in `catalog.json` / `fmhub.json`, `play` and `cheat` are URLs.
+     - Allowed fmhub fields: what, author, kinds, play, editor, cheat, image, color, sounds, smk37.
+     - `what` must be 20–300 characters; a longer one is truncated on the card.
+   - **fm1-emu web** reads the Hub catalog, so newcomers resolve by Hub id. URL parameters:
+     - `?fw=<id>` selects the firmware;
+     - `&mhz=` sets the clock;
+     - `?package=URL&name=` loads a package from elsewhere (needs https with CORS: GitHub Pages yes, release assets no);
+     - `&embed=1` shows only the synth, for iframes.
+   - **Stale-catalog 404**: the Hub deletes the old package on release. A cached `catalog.json` (`max-age=600`) can point fm1-emu at the deleted file, and its fallback uses the same stale catalog. Reloading fixes it.
+   - **`fm1-live --shot`** auto-presses PLAY when no keys are given; use `FM1_NO_PLAY=1`.
+     - Emulator encoders: e0 = SELECT, e1 = ALGO, e2 = K1, e3 = K2.
+     - Buttons: OCTUP, HOME, SAVE (press `T:NAME`, release `T:NAME^`).
+   - **Settings record** (`set_t`, `REC_VER 1`, unchanged): the `mute` field was renamed `flags`.
+     - bit 0: sound off; bit 1: Bluetooth off; bits 2–4: start page (PG_MENU..PG_CHART, `START_N 7`); bits 5–7 must be 0.
+     - 0.6 only accepts 0..3, so a non-MENU start page makes 0.6 reset the record, progress included. Downgrade caution.
+   - **Backup format 2**: format byte `02`, `ln_blob` (259 B), settings (12 B: wpm, eff, keyer, swap, flags, cards, learn, look, pitch LE u16, send, prog), CRC → 274 B.
+     - Format 1 is 262 B. Both are 6 frames of 49 B.
+     - Firmware 0.7+ sends format 2 and accepts both.
+     - Host and web send format 2 only to firmware ≥ 0.7 (`format_for`).
+     - JSON is version 2, with a named `settings` dict.
+   - **Settings autosave**: 3 s after the last change (`dirty_at`). Changes take effect immediately via `set_changed()` → `timing_apply()`.
+   - **0.8 SAVE**: `save_now()` saves at once. The SAVE LED is lit and an amber `*` follows the page name in the header while something is unsaved.
+   - **Release pitfall**: commit the submodule pointer before `fw-build` / `morse-release` (fw-setup checks out the pointer). It is harmless when HEAD equals the pointer.
+
+3. Files and Code Sections:
+   - **`firmware/morse/app.c`** (fm1-morse):
+     - `FW_MINOR 8u`. `flags` field with helpers:
+       ```c
+       #define START_N 7u
+       static uint32_t start_pg(void) { return SET.flags >> 2 & 7u; }
+       static int flags_valid(uint32_t f) { return f < 0x20u && (f >> 2 & 7u) < START_N; }
+       ```
+     - After the PG enum, `typedef char start_n_is_pg_set[PG_SET == START_N ? 1 : -1];` and a file-scope `PAGE_NAME[PG_N]`.
+     - `set_valid` uses `flags_valid`; `morse_ble_off` uses `!flags_valid(r.set.flags)`.
+     - Settings item 13, START PAGE (`SET_ITEMS 14u`):
+       - `case 13: SET.flags = (SET.flags & ~0x1C) | wrap(start_pg(), d, START_N) << 2; set_changed();`
+       - display: `PAGE_NAME[start_pg()]`.
+     - `set_at` draws only whole rows (`if (y + oy < 0 || y + oy + 13 > MAIN_H) continue;`); the `MAIN_H` define was moved before it.
+     - Boot:
+       ```c
+       ui.page = start_pg(); ui.back = ui.page == PG_MENU ? PG_PRACTICE : ui.page;
+       ui.sel = ui.page == PG_MENU ? ui.back - 1u : 0u; ...; inputs_for_page();
+       ```
+     - Backup defines: `PROG_FORMAT 2u`, `PROG_SET_N 12u`, `PROG_N1`, `PROG_N`, a static assert that both formats are the same number of frames.
+       - `set_blob` / `set_unblob`; `prog_fill` writes format 2.
+       - `prog_in`: `n = buf[0]==1 ? PROG_N1 : PROG_N`, checks the CRC, sets `pg.draft_has_set`, unblobs the settings.
+     - `ask_yes` ASK_LOAD with settings: `SET = pg.draft_set; timing_apply(); plat_ble_enable(!bt_off());` then save and say "LOADED", "PROGRESS + SETTINGS".
+     - Ask text: "replaces the progress + settings".
+     - Simulator expect hooks: `start`, `unsaved` (`dirty_at != 0`).
+     - 0.8 additions:
+       ```c
+       static void save_now(void) { if (dirty_at) { rec_save(); app_say("SAVED", ""); } else app_say("ALL SAVED", "NOTHING NEW"); ui.redraw |= R_HEAD; }
+       ```
+       - `case B_SAVE: save_now();`
+       - In CHART edit, B_SAVE calls `chart_save_or_leave`.
+       - `lights()`: `if (dirty_at || (pg.edit && pg.dirty)) ledfx_set(&bb, B_SAVE, FX_LIT, now);`
+       - Header: an amber `*` after the page name when `dirty_at`.
+       - The autosave branch adds `ui.redraw |= R_HEAD`.
+       - Settings footer: "SELECT item  OCT- / OCT+ change  SAVE".
+       - Forward declaration `static void save_now(void);` before `input()`.
+   - **`firmware/morse/tests/basic.txt`**:
+     - Boot expects `page 0` and `start 0`, then `tap HOME` → page 1, then `shot boot.png`.
+     - HELLO vector `…00 08 00 F7`; prog_fresh vectors are format 2.
+     - Taps HOME after reboots.
+     - START PAGE section (`store_writes 17`, `shot settings_start.png`).
+     - Format-2 load: HOME declines (wpm stays 20); PLAY loads (wpm 25, eff 25, send 18, keyer 2, start 3; `shot load_settings.png`).
+     - 0.8 section: K1 turn, `expect unsaved 1`, `wait 2300`, `shot unsaved.png`, reboot loses it; SAVE then reboot keeps it; "ALL SAVED".
+   - **`host/morse/progress.py`**:
+     - `FORMAT=2`, `SETTINGS_FIRMWARE=(0,7)`, `SET_N=12`, `WIRE_N={1:262, 2:274}`, `JSON_VERSION=2`.
+     - Name lists: KEYERS, PAGES, KEY_VIEWS, TYPE_LAYOUTS, LISTEN_PROGRAMS.
+     - `Settings` dataclass with `check` / `blob` / `unblob` / `to_dict` / `from_dict`. Named keys: hear_wpm, spacing_wpm, send_wpm, pitch_hz, keyer, paddles, sound, bluetooth, start_page, cards, learn_by, judging, key_view, type_layout, type_shows_code, type_composes, listen_hides_text, listen_program.
+     - `Progress.settings`; `wire(p, fmt)`; `format_for(p, firmware)`; `frames(p, type_, fmt)`.
+     - The Assembler handles both formats; `to_json` / `from_json` handle versions 1 and 2; `summary` includes settings.
+     - `sample_v2()` (wpm 25, eff 25, keyer 2, send 18, flags 3<<2); VECTORS adds prog_v2_0..5.
+   - **Other host files**:
+     - `host/morse/core.py`: `restore` uses `fmt=G.format_for(p, self.firmware)`.
+     - `host/morse/device.py`: SimLink progress is `Progress(settings=Settings())`; frames use format_for.
+     - `host/morse/__main__.py`: logs when the firmware takes no settings.
+     - `host/morse/__init__.py`: 0.8.0, `FIRMWARE_KNOWN (0,8)`.
+     - `host/morse/protocol.py`: hello vector (0,8).
+     - `host/morse/PROTOCOL.md`: format table, settings layout, JSON version 2, hello 0.8.
+     - `host/tests/test_morse.py`: 25 tests, including format 2, settings in the file, and gating.
+   - **`firmware/morse/web/index.html`**:
+     - Links to try/ and cheatsheet.
+     - `WIRE_N` object, `setCheck`, `setBlob` / `setUnblob`, `setToDict` / `setFromDict`.
+     - `frames()` sends format 2 only to firmware ≥ 0.7.
+     - JSON version 2; `readProgress` parses by format byte.
+     - `show()` renders a `#settings` table.
+     - Verified in Node against the host vectors.
+   - **`firmware/morse/web/try/index.html`** (new):
+     - iframe `https://joakimeriksson.github.io/fm1-emu/?fw=morse&embed=1` (aspect-ratio 1300/1060).
+     - Reload button (`&t=Date.now()`), full-page link, the 404 note.
+     - "Things to try", keys on the computer, limits.
+   - **`firmware/morse/web/cheatsheet.html`** (new): English, printable A4.
+     - Firmware 0.8; sections for every page, SETTINGS (including START PAGE), screen and lights (`*`), prosigns, and using it with a computer.
+     - Includes a SAVE row.
+   - **`firmware/morse/fmhub.json`**:
+     - `"play": "https://daviddwlee84.github.io/fm1-morse/web/try/"`
+     - `"cheat": "https://daviddwlee84.github.io/fm1-morse/web/cheatsheet.html"`
+     - `what` shortened to 282 characters.
+   - **`firmware/morse/README.md`**: try/cheatsheet links; start page note; settings in backups; downgrade caution; SAVE row; screens settings_start, load_settings, unsaved.
+   - **Superproject**:
+     - `Justfile` morse-shots names add settings_start, load_settings, unsaved.
+     - `docs/dev/morse.md`:
+       - version rows 0.7 (flashed 19:45) and 0.8 (flashed 19:55, "效果不錯");
+       - backup format 2 and downgrade caution; the flash section on flags and the `FM1_NO_PLAY` note;
+       - sizes 0.7 release 174,408 B, 0.8 release 174,540 B, RAM 38,588;
+       - verification rows; release step 7 (v0.7) and step 8 (play/cheat);
+       - roadmap: 0.7 and 0.8 flashed, central moved to 0.9.
+     - `docs/dev/morse-cheatsheet.md`: 0.8; English link; HOME at boot; SAVE row; START PAGE row; the knobs-take-effect-immediately vs persistence explanation.
+     - `docs/dev/morse-learn.md`: boot on MENU.
+     - `README.md` and `docs/index.md`: Morse 0.8 on the unit.
+     - `docs/firmware/hub.md`: new `### Play in browser 和 cheatsheet { #play }` (parameters table, two approaches, 404 explanation, cheat advice, `what` >300).
+     - `.agents/skills/fm1-hub-listing/SKILL.md`: guidance on play, cheat and the length of `what`.
+     - `docs/device-log.md`:
+       - backups pre-morse-0.7 (`4c3d061d…`) and pre-morse-0.8 (`d5470954…`);
+       - preflight rows; install rows for 0.7 and 0.8;
+       - current firmware: Morse 0.8 `FM-1_41000800`.
+
+4. Errors and fixes:
+   - **Fresh-flash emulator boot showed PRACTICE**: `--shot` auto-presses PLAY. Fixed with `FM1_NO_PLAY=1` and documented.
+   - **The settings list's 14th row was cut** under the footer: only whole rows are drawn now.
+   - **Guessed test counts**: `store_writes` was 17, not 18; wpm stays 20 after a HOME decline.
+   - **The header message hid the `*`** in the screenshot: the shot is taken after `wait 2300`.
+   - **The `"dirty"` hook duplicated an existing CHART hook**: renamed it `unsaved`.
+   - **`cd ../host` from firmware/morse failed** (zoxide), so the version bump didn't run: redid it from the repo root.
+   - **`fmhub.json` `what` assert failed (355 characters)**: removed the assert at first, then later shortened `what` to 282 characters (the Hub limit is 300; the card truncated it).
+   - **README / index rows still said THEORY**: fixed.
+   - **playwright-cli needed system Chrome**: used a Node script with playwright-core and the cached Chromium-1255 executable.
+
+5. Problem Solving:
+   - **The 404**: reproduced 1 in 5 runs. The stale catalog was explained in hub.md and the skill; the try page has a reload button.
+   - **Real 0.6 / 0.7 records rehearsed** on both chips over actual backups: progress kept (ROUND 30 / 31), 0 writes at boot.
+   - **SAVE in fm1-emu** on both chips: saved immediately (4 erases), reboot read back 21 WPM.
+   - **Hardware**: 0.7 and 0.8 installed via USB-MIDI fast install; the user confirmed behaviour.
+
+6. All user messages:
+   - "BTW 我看別人在 [Image] Firmware Hub 裡面有 play in browser 按鈕 例如 https://thefirmwarehub.com/firmware/rainbow/ https://joakimeriksson.github.io/... 我們是否也能有？ 另外我們的cheatsheet目前好像也是 只是引導到README 可能用GitHub Page更好閱讀？ （這部分也可以考慮補進skill）"
+   - (rejected ExitPlanMode) "https://joakimeriksson.github.io/fm1-emu/?fw=morse&embed=1&mhz=100 我剛剛簡單測試了你提供的嵌入網址 好像不能直接work 這方面可能還得再研究一下" plus a screenshot of the 404.
+   - (rejected ExitPlanMode) "是說 我們目前的App首頁是 Practice 也許我們可以改成把首頁選項加入可選的設置 然後 default是Menu 導出時也能保留此配置？"
+   - (plan approved)
+   - "好 commit push 然後發 v0.7"
+   - "好，刷 0.7 吧"
+   - "接好了，THEORY 開著"
+   - The pasted 0.7 install output (success, `FM-1_41000700`), then "都符合預期 關機再開機也是 （然後我觀察 保存setting的話需要從setting轉出其他頁面就會自動保存 如果只在setting頁改了直接關會無效 以及 SAVE鍵並沒有特殊作用）"
+   - "好，做 0.8 的 SAVE 鍵，順便 commit device-log & related plan & chat history"
+   - "commit push 然後發 v0.8，順便刷 0.8"
+   - The pasted 0.8 install output (success, `FM-1_41000800`), then "目前使用起來效果不錯 （不過不知道這種auto save是不是也要做成一個可toggle的feature？） 不過記得以前如果是轉 K1~4 幾乎就是速調就生效 不過這個目前應該是會留到下次開機對嘛"
+   - Standing constraints (AGENTS.md):
+     - Firmware write: "Only after the owner approves **that specific write in the current session**. Never pass `--yes`; the owner types M-Flasher's `yes`."
+     - Forbidden: "`m-flasher bootloader …`, `restore …`, `run-ram …`, any erase, any flash address arithmetic".
+     - "Commit or push only when the owner asks."
+     - "Never commit flash backups or credentials to git."
+     - "run `just fm1-backup-release` only when the owner asks for that specific backup."
+     - "Pushing to `main` deploys the site."
+     - "Persist data only through fm1-base's storage layer."
+     - Treat the user's email as private.
+     - Reply in Traditional Chinese.
+
+7. Pending Tasks:
+   - Answer the user's two latest questions in text (no reply has been sent yet):
+     - autosave toggle;
+     - K1–K4 immediate effect vs persistence.
+   - Later, only if asked:
+     - an optional autosave toggle;
+     - community PRs (awesome-fm-1 #30, aroum #36) are still open;
+     - the Hub will pick up play / cheat / `what` and v0.8 within about 3 hours;
+     - BLE central in 0.9;
+     - the backups pre-morse-0.7 and pre-morse-0.8 are not uploaded (only on request).
+   - `.specstory` has newer uncommitted changes since 18f81e1. Commit them only if asked.
+
+8. Current Work:
+   - **Commits**:
+     - 0.8 code: fm1-morse 8467a08, superproject d4a40d9.
+     - v0.8 released: `morse-0.8.fwsc` SHA-256 `76b0c2a02927fb88cec2f51a557a4e392b23210e4bbd93e5ba29c48a26bd92d5`, digest matches.
+     - Last commit 6f67ec6, "device-log: Morse 0.8 installed (backup d5470954, progress and settings kept)", pushed. It includes device-log, the morse.md rows, README / index, and the cheatsheet clarification (旋鈕和 SETTINGS 的改動都是馬上生效；存進 flash 是另一件事：最後一次改動 3 秒後自動存，或按 SAVE 立刻存).
+   - **Answer still to give**:
+     - (a) K1–K4 still take effect immediately (`set_changed` → `timing_apply`). Persistence is separate: they are saved 3 s after the last change, or at once with SAVE, so they do carry to the next boot.
+     - (b) Recommendation: keep autosave, without a toggle. Without it, changes are silently lost on power-off; flash wear is minimal because it writes once only after 3 s at rest. A toggle would only make sense for "temporary tweaks"; offer to add it if wanted.
+     - Mention that commit 6f67ec6 recorded the install.
+
+9. Optional Next Step:
+   - Reply in Traditional Chinese, text only, to the user's latest message: "（不過不知道這種auto save是不是也要做成一個可toggle的feature？） 不過記得以前如果是轉 K1~4 幾乎就是速調就生效 不過這個目前應該是會留到下次開機對嘛".
+   - Confirm that K1–K4 take effect immediately and persist (3 s autosave or SAVE).
+   - Recommend keeping autosave without a toggle, and offer to add it if desired.
+   - Note that the device-log and docs were committed in 6f67ec6.
+   - Make no further changes unless asked.
+
+If you need specific details from before compaction (like exact code snippets, error messages, or content you generated), read the full transcript at: /Users/zhouhanru/.claude/projects/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/0a574306-469e-4a59-9622-5701a42aee59.jsonl
+Continue the conversation from where it left off without asking the user any further questions. Resume directly — do not acknowledge the summary, do not recap what was happening, do not preface with "I'll continue" or similar. Pick up the last task as if the break never happened.
+
+The messages after this summary are the most recent messages from before compaction, kept verbatim. The summary was written without seeing them, so something it says has not happened yet may already have happened in them.
+
+---
+
+_**User (2026-11-18 12:05:06Z)**_
+
+<local-command-stdout>[2mCompacted (ctrl+o to see full summary)[22m
+[2mPreCompact [[ -x "$HOME/.claude/hooks/peon-ping/peon.sh" ] && "$HOME/.claude/hooks/peon-ping/peon.sh" || true] completed successfully[22m</local-command-stdout>

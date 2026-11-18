@@ -11,4 +11,5 @@
 #define GT_DIM "\x03"                     /* the degree sign of a diminished chord */
 #define GT_HDIM "\x04"                    /* o with a stroke: half-diminished */
 
-/* gtext(x, y, &FONT_B, "F\x01m7", colour) -> the x after it; gtext_w the width it takes */
+/* gtext(x, y, &FONT_B, "F\x01m7", colour) -> the x after it; gtext_w the width it takes; gtext_wrap(x, y, w, lh, ...)
+ * the same broken into lines w wide at the spaces -> the y below it */
