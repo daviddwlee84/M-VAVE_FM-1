@@ -177,7 +177,7 @@ static void key_text(char *t)            /* "G major" */
     tcat(t, th_scales[rec.scale].name);
 }
 
-static void pos_text(char *t)            /* "ALL", "CAGED E", "3NPS 1" */
+static void pos_text(char *t)            /* "WHOLE NECK", "CAGED E / DO", "3NPS 1" */
 {
     int i, sys = pos_system(rec.pos, &i);
     char one[2];
@@ -188,6 +188,8 @@ static void pos_text(char *t)            /* "ALL", "CAGED E", "3NPS 1" */
         one[0] = fr_caged_name[i];
         one[1] = 0;
         tcat(t, one);
+        tcat(t, " / ");                  /* and its solfege name: CAGED E / DO */
+        tcat(t, fr_solfege_name[i]);
     } else {
         tint(t, fr_nps(cur_key()));
         tcat(t, "NPS ");

@@ -38,6 +38,7 @@ int fr_positions(th_key_t key, int system);  /* how many: ALL 1, CAGED 5, NPS 7 
 int fr_position(const fr_tuning_t *t, th_key_t key, int system, int pos, uint32_t *mask);   /* 1, or 0 if none */
 int fr_nps(th_key_t key);                    /* notes per string in an NPS position: 3, 2, or 0 */
 extern const char fr_caged_name[5];          /* "CAGED": the shape each CAGED position is named after */
+extern const char *const fr_solfege_name[5]; /* the same positions as "Mi, Sol, La, Do, Re" shapes (Mi型 ...) */
 
 /* chord shapes */
 typedef struct {

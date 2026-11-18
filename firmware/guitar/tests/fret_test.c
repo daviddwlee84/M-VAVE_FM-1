@@ -410,6 +410,27 @@ static void test_lesson(void)
     CHECK(!ls_valid(&p), "a stage past the end is not valid");
 }
 
+/* the solfege names (Mi型 = C shape ...): the named degree of the parent major lies on the low string in that position
+ * in every key, as in the book diagrams of C major */
+static void test_solfege(void)
+{
+    static const int SEMI[5] = { 4, 7, 9, 0, 2 };     /* MI SOL LA DO RE */
+    uint32_t m[FR_STR_MAX];
+    int t, p, f, ok;
+    for (t = -6; t <= 6; t++) {
+        th_key_t k;
+        k.tonic = (int8_t)t;
+        k.scale = TH_MAJOR;
+        for (p = 0; p < 5; p++) {
+            fr_position(STD, k, FR_CAGED, p, m);
+            for (ok = 0, f = 0; f <= FR_FRETS; f++)
+                if ((m[0] >> f & 1u) && (STD->open[0] + f) % 12 == (th_pc(t) + SEMI[p]) % 12) ok = 1;
+            CHECK(ok, "key %d: %s shape (CAGED %c) has its degree on the low string", t, fr_solfege_name[p],
+                  fr_caged_name[p]);
+        }
+    }
+}
+
 int main(void)
 {
     test_tunings();
@@ -417,6 +438,7 @@ int main(void)
     test_shapes();
     test_forms();
     test_lesson();
+    test_solfege();
     printf("%d checks, %d failed\n", checks, fails);
     return fails != 0;
 }

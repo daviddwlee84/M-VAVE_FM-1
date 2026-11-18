@@ -38,7 +38,7 @@ expect voices 0
 turn K3 4
 wait 60
 expect pos 4
-expect_text pos CAGED_E
+expect_text pos CAGED_E_/_DO
 # the E shape of G major: frets 2-5 (string 0 = low E: 2 3 5)
 expect mask0 44
 expect mask4 40

@@ -15,6 +15,9 @@ const fr_tuning_t fr_tunings[FR_NTUNINGS] = {
 };
 
 const char fr_caged_name[5] = { 'C', 'A', 'G', 'E', 'D' };
+/* the same five as Chinese guitar books name them, by the parent major's degree near the low string's first note
+ * (2026-11-18, checked against the owner's C major book diagrams: Mi = C, Sol = A, La = G, Do = E, Re = D) */
+const char *const fr_solfege_name[5] = { "MI", "SOL", "LA", "DO", "RE" };
 
 /* where each CAGED window starts (the index finger's fret), counted from the parent major's tonic on string 0:
  * in C on a standard guitar the C shape is frets 0-3, A 2-5 (3 + ...), G 5-8, E 7-10, D 9-12 */
