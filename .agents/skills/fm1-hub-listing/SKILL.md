@@ -146,8 +146,12 @@ The form at https://thefirmwarehub.com/submit/ (fmhub.md still mentions email; t
 
 The result page (its address is the owner's only; changes also come by mail) runs eight checks: source, LICENSE,
 fmhub.json, sounds, release, identity, update loader, flash chip. All green means "waiting for Sven": the maintainer
-reviews every listing. Fixes: push, then "Check again", or send the form again for the same repo (it updates).
-After listing: new versions are new releases; card changes are fmhub.json edits (live within three hours).
+reviews listings, but a fully green check with "tested" and "rights" ticked goes live by itself: MORSE was submitted
+2026-11-17 19:03 UTC, checked 19:06, and went live automatically at 23:00 ("no click of Sven's"), on the hub with the
+next sync. Fixes: push, then "Check again", or send the form again for the same repo (it updates).
+After listing: new versions are new releases; card changes are fmhub.json edits (live within three hours). MORSE v0.5,
+released 2026-11-18, was in `catalog.json` the same day (`beta: true` for 0.x). The catalog's `chip` said `new` while
+the check page said both chips: read from the package, not tested.
 
 ### 9. Community lists (owner's go-ahead per PR)
 

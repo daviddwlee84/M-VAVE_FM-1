@@ -196,6 +196,17 @@ WPM 是每分鐘幾個字，以 PARIS 這個字（50 個單位）為準：**dit 
 | NAME | 我的名字是 | OP | 操作員 |
 | UR | 你的 | ES | 和 |
 
+**prosign 和標點共用碼**：prosign 本身沒有專屬的碼，就是把字母連起來打，所以有幾個和標點符號的碼一樣。解碼器只聽得到碼，要顯示哪一個由它決定：
+
+| prosign | 碼 | 和這個標點同碼 | FM-1、MORSE on the web 顯示 | Vail 顯示 |
+|---|---|---|---|---|
+| `<AR>` 訊息結束 | `·−·−·` | `+` | `+` | `<AR>` |
+| `<KN>` 只請你回 | `−·−−·` | `(` | `(` | `<KN>` |
+| `<BT>` 換段 | `−···−` | `=` | `=` | `<BT>` |
+| `<SK>` 通聯結束 | `···−·−` | — | `<SK>`（網頁）／`*`（FM-1 解碼器沒有這個碼） | `<VA>`（同一個 prosign 的另一個名字） |
+
+TYPE 頁的片語鍵送給電腦的是文字，所以 Live 上面那格會寫 `<AR>`、`<KN>`。`[實機]`（2026-11-18 對照 Vail 私人房間的解碼）
+
 **實際上大家怎麼用**：大部分人仍然是**用手即時發**（直鍵或 paddle），對方**用耳朵抄**，這是這項技能的核心。另外也很常見：
 
 - 電腦或「CW 鍵盤」：先打好字放在緩衝區，機器用固定速度送出，一邊送一邊還可以繼續打（type-ahead）。
@@ -338,6 +349,7 @@ MORSE on the web 的 *Over Bluetooth, directly*（2026-11-18 加入，韌體 0.5
 - **MORSE on the web**（Chrome）經藍牙連上，狀態寫 `MORSE 0.5 connected over Bluetooth`，Live 顯示 FM-1 讀到的字。
 - **Vail**（vailmorse.com 的 Repeater）：只用藍牙連著，不用任何設定，FM-1 的 KEY 頁發報就出現在 Vail 上。Decoder 房間解得出 TYPE 頁播的字和片語，速度顯示 19.9 WPM。
 - **Vail 的 Decoder 每個字母都分開**：這是 Farnsworth 間隔造成的，不是 Vail 的問題。START（20/8）時字和字之間要停 890 ms，以 20 WPM 的點（60 ms）來算是 15 個點，超過字間的 7 個點，所以 Vail 把每個字母都當成一個詞。BUILDING（20/13）停 435 ms（約 7 個點），剛好在界線上；QSO（22/18）大約 4 個點，就會連成詞。實測 `[實機]`：20/13、20/14 還是分開，22/18 就連起來了。要給別人聽時，選 QSO 或 FAST，或把 `K2` 調到接近字元速度。
+- **Vail 的公開房間會混到別人的訊號**：Decoder 是公開房間，裡面有別人時，Vail 會把所有人的發報一起解，出現 `MTTN ATTN MT# ATC` 這種看不懂的東西。開 *Create Custom* 的私人房間就只解自己的，2026-11-18 在私人房間裡解出 `<KN> <AR> <VA> <BT> 73 Q S L QRS ES`，中途加快速度，分開的字母就連成詞 `[實機]`。Vail 把 `...-.-` 叫 `<VA>`（和 `<SK>` 同一個碼），`-...-` 叫 `<BT>`（和 `=` 同一個碼）。
 - **網頁比 Vail 早出字，不是作弊，但也不是解碼**：TYPE 頁按下鍵時，FM-1 就把那個字（`T_CHAR`）送給電腦，然後才開始播，所以網頁上的字比聲音早出現。Vail 是從按鍵的時間自己解碼，要等字間的停頓才知道一個字結束。KEY 頁送的才是 FM-1 解出來的字，也要等字間的停頓。
 - 拔掉 USB 只用電池，用藍牙連續使用一段時間，沒有斷線（還沒正式計時）。
 
@@ -453,7 +465,8 @@ MORSE on the web 的 *Over Bluetooth, directly*（2026-11-18 加入，韌體 0.5
     - [aroum/fm1-custom-fw #36](https://github.com/aroum/fm1-custom-fw/pull/36)（424 stars，放 1.1.4 的第 126 筆，和 CTL-1、MIDIMON 同段）
 
     fm1-emu、RemoteFM1、FMDB 會自動跟著 Hub 或 GitHub，不用送。fm1-editor.com 等 Hub 上架後看它會不會自己出現。整套流程整理成 repo 的 skill `fm1-hub-listing`。
-6. 新版本：2026-11-18 發布 [v0.6](https://github.com/daviddwlee84/fm1-morse/releases/tag/v0.6)（tag 在 `60f76cf`，`morse-0.6.fwsc` SHA-256 `d65b6df5…8fd7e`，刷進實機的那份，digest 相符）。之前同一天發了 [v0.5](https://github.com/daviddwlee84/fm1-morse/releases/tag/v0.5)（tag 在 `a75c29e`，0.4 沒有單獨發 release），附 `morse-0.5.fwsc`（SHA-256 `49433190…154457`，就是刷進實機的那份，GitHub 的 asset digest 相符）和 `firmware.json`。Hub 會跟著 GitHub 的最新 release。`fmhub.json` 的說明加上藍牙。
+6. **已上架**：Hub 在 UTC 2026-11-17 23:00 自動上架，8 項全綠，沒有等人工審核（[Hub 上的 MORSE](https://thefirmwarehub.com/firmware/morse/)，細節見 [Hub](../firmware/hub.md#listing)）`[實機]`。兩個社群清單的 PR 到 2026-11-18 都還沒合併。
+7. 新版本：2026-11-18 發布 [v0.6](https://github.com/daviddwlee84/fm1-morse/releases/tag/v0.6)（tag 在 `60f76cf`，`morse-0.6.fwsc` SHA-256 `d65b6df5…8fd7e`，刷進實機的那份，digest 相符）。之前同一天發了 [v0.5](https://github.com/daviddwlee84/fm1-morse/releases/tag/v0.5)（tag 在 `a75c29e`，0.4 沒有單獨發 release），附 `morse-0.5.fwsc`（SHA-256 `49433190…154457`，就是刷進實機的那份，GitHub 的 asset digest 相符）和 `firmware.json`。Hub 會跟著 GitHub 的最新 release。`fmhub.json` 的說明加上藍牙。
 
 ## 路線圖 { #roadmap }
 

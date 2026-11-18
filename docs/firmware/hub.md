@@ -129,7 +129,8 @@ Hub 之外的韌體清單，2026-11-18 查的。stars 是當天 GitHub 上的數
   7. update loader；
   8. flash 晶片。
 
-  Morse 8 項全過，狀態是 **waiting for Sven**：等維護者本人審核。之後的變化會寄到填寫的 email。
+  Morse 8 項全過，狀態是 **waiting for Sven**。結果沒有等到人工審核：Hub 的紀錄是 UTC 2026-11-17 19:03 送出、19:06 檢查完，**23:00 自動上架**（「every line of the check is green, tested and rights ticked (no click of Sven's)」），下一次同步就出現在 [Hub 上](https://thefirmwarehub.com/firmware/morse/)。也就是說，8 項全綠、表單上勾了「測試過」和「有權利發布」，大約 4 小時後自動上架 `[實機]`。
+- **上架後的新版本**：發新的 GitHub release 就好，Hub 自己會跟上。2026-11-18 發 v0.5 後，`catalog.json` 當天就列出 0.5（`beta: true`，因為是 0.x）。`catalog.json` 的 `chip` 欄寫 `new`，檢查頁卻寫「both chips」，兩邊的判斷不一樣；這個欄位是從套件讀的，不是硬體測試。
 - **進度**：Morse 照這份清單準備，2026-11-18 完成三項實機測試、發布 v0.3 release、通過 identity 和 `fmhub.json` 檢查，接著送審，也對 awesome-fm-1 和 aroum 各開了一個 PR。過程見 [Morse](../dev/morse.md#release)。這套流程整理成 repo 的 agent skill `fm1-hub-listing`（`.agents/skills/`）。
 
 **注意同名**：Hub 上的 CONDUCTOR 是 MammothCheese 的 groovebox（`MammothCheese/conductor`，GPL-3.0，identity `FM-1_1812`），不是本 repo 的 [Conductor](../agentic/conductor.md)。Hub 和 fm1-emu 上的 id `conductor` 已經被它用了。
