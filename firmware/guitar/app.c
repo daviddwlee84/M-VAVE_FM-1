@@ -13,7 +13,7 @@
 #include "fret.c"
 
 #define FW_MAJOR 0
-#define FW_MINOR 1
+#define FW_MINOR 2
 
 /* ---------------------------------------------------------------- settings --- */
 #define REC_MAGIC 0x31305447u            /* "GT01" */
@@ -23,6 +23,7 @@ enum { PG_NECK, PG_SHAPE, PG_N };
 enum { LB_DOTS, LB_NAMES, LB_DEGREES, LB_N };
 static const char *const PAGE_NAME[PG_N] = { "NECK", "SHAPE" };
 static const char *const LABEL_NAME[LB_N] = { "DOTS", "NAMES", "DEGREES" };
+static const char *const FILTER_NAME[FR_NFILTERS] = { "EASY", "OPEN", "BARRE", "MOVABLE" };
 
 /* the chord qualities SHAPE steps through with K1, the common ones first */
 static const uint8_t QUALS[] = { TH_MAJ, TH_MIN, TH_7, TH_M7, TH_MAJ7, TH_SUS4, TH_SUS2, TH_5, TH_DIM, TH_AUG,
@@ -42,7 +43,8 @@ typedef struct {
     int8_t oct;                          /* -2 .. +2: where the keys sound */
     int8_t root;                         /* SHAPE: the chord's root on the line of fifths */
     uint8_t qual;                        /* QUALS[] */
-    uint8_t rsv[5];
+    uint8_t filter;                      /* SHAPE: FR_F_* (0.1 left it 0: EASY) */
+    uint8_t rsv[4];
 } rec_t;
 static rec_t rec;
 static uint32_t saves;
@@ -65,7 +67,7 @@ static int rec_valid(const rec_t *r)
 {
     return r->magic == REC_MAGIC && r->ver == REC_VER && r->size == sizeof *r && r->tonic >= -9 && r->tonic <= 12
            && r->scale < TH_NSCALES && r->labels < LB_N && r->pos < 16 && r->tuning < FR_NTUNINGS && r->page < PG_N
-           && r->oct >= -2 && r->oct <= 2 && r->root >= -9 && r->root <= 12 && r->qual < NQUALS;
+           && r->oct >= -2 && r->oct <= 2 && r->root >= -9 && r->root <= 12 && r->qual < NQUALS && r->filter < FR_NFILTERS;
 }
 
 static void rec_save(void)
@@ -263,7 +265,7 @@ static void neck_update(void)
 
 static void shapes_update(void)
 {
-    ui.nshapes = fr_shapes(tun(), cur_chord(), ui.shapes, FR_SHAPES_MAX);
+    ui.nshapes = fr_shapes_filter(tun(), cur_chord(), rec.filter, ui.shapes, FR_SHAPES_MAX);
     ui.shape = 0;
 }
 
@@ -519,7 +521,13 @@ static void input(void)
         }
         changed(R_MAIN | R_FOOT);
     }
-    if ((e = plat_enc(EN_K3)) != 0 && rec.page == PG_NECK) {     /* the position */
+    if ((e = plat_enc(EN_K3)) != 0 && rec.page == PG_SHAPE) {    /* which shapes: easy, open, barre, movable */
+        rec.filter = (uint8_t)th_mod(rec.filter + e, FR_NFILTERS);
+        shapes_update();
+        seq_stop();
+        app_say("SHAPES", FILTER_NAME[rec.filter]);
+        changed(R_MAIN | R_FOOT);
+    } else if (e != 0) {                 /* NECK: the position */
         rec.pos = (uint8_t)th_mod(rec.pos + e, npos());
         neck_update();
         seq_stop();
@@ -673,6 +681,23 @@ static void draw_neck_at(int32_t oy)
     (void)i;
 }
 
+/* a closed shape's form: E FORM (the root on the 6th string, barred), A FORM (5th), D FORM (4th); a power chord's
+ * root string. Standard-tuned six strings only (empty otherwise) */
+static void form_text(const fr_shape_t *sh, char *t)
+{
+    int rs = fr_shape_root_string(tun(), sh);
+    t[0] = 0;
+    if (rec.tuning != FR_STANDARD && rec.tuning != FR_DROPD) return;
+    if (fr_shape_open(sh, tun()->n) || rs < 0 || rs > 2) return;
+    if (QUALS[rec.qual] == TH_5) {
+        tcat(t, "ROOT ON ");
+        tint(t, 6 - rs);
+        return;
+    }
+    if (!sh->barre) return;
+    tcat(t, rs == 0 ? "E FORM" : rs == 1 ? "A FORM" : "D FORM");
+}
+
 /* SHAPE: a chord diagram as chord books draw it, the low string on the left, the nut on top */
 #define SH_X0 22
 #define SH_Y0 30
@@ -689,7 +714,8 @@ static void draw_shape_at(int32_t oy)
     char lab[TH_CHORD_MAX];
     int8_t tones[TH_TONES_MAX];
     int nt = th_chord(c.root, c.q, tones), i;
-    if (sh && fr_shape_hi(sh, t->n) > SH_ROWS) start = fr_shape_lo(sh, t->n);
+    if (sh && (fr_shape_hi(sh, t->n) > SH_ROWS || (!fr_shape_open(sh, t->n) && fr_shape_lo(sh, t->n) > 1)))
+        start = fr_shape_lo(sh, t->n);   /* a movable shape is drawn from its own fret, as chord books do */
     /* the grid */
     for (s = 0; s < t->n; s++) cv_rect(SH_X0 + gap * s, SH_Y0 - oy, 1, SH_ROW * SH_ROWS + 1, C_GRAY);
     for (r = 0; r <= SH_ROWS; r++)
@@ -750,16 +776,19 @@ static void draw_shape_at(int32_t oy)
         if (sh->barre) {
             tcat(lab, "BARRE ");
             tint(lab, sh->barre);
-        } else if (start == 1) tcat(lab, "OPEN");
+        } else if (fr_shape_open(sh, t->n)) tcat(lab, "OPEN");
         else {
             tcat(lab, "FRET ");
-            tint(lab, start);
+            tint(lab, fr_shape_lo(sh, t->n));
         }
         cv_text(x, 96 - oy, &FONT_T, lab, C_GRAY);
-        if (sh->no5) cv_text(x, 112 - oy, &FONT_T, "NO 5TH", C_DIM);
+        form_text(sh, lab);
+        if (lab[0]) cv_text(x, 124 - oy, &FONT_T, lab, C_AMB);
+        if (sh->no5) cv_text(x, 110 - oy, &FONT_T, "NO 5TH", C_DIM);
         shape_text(lab);
         cv_text(x, 140 - oy, &FONT_T, lab, C_DIM);
     }
+    cv_text(x, 156 - oy, &FONT_T, FILTER_NAME[rec.filter], rec.filter ? C_HI : C_DIM);
 }
 
 static void draw_main(void)
@@ -950,6 +979,7 @@ int app_expect(const char *what, int *got)
     else if (!strcmp(what, "oct")) *got = rec.oct;
     else if (!strcmp(what, "root")) *got = rec.root;
     else if (!strcmp(what, "qual")) *got = rec.qual;
+    else if (!strcmp(what, "filter")) *got = rec.filter;
     else if (!strcmp(what, "shape")) *got = ui.shape;
     else if (!strcmp(what, "nshapes")) *got = ui.nshapes;
     else if (!strcmp(what, "view")) *got = ui.view;
@@ -984,6 +1014,7 @@ int app_host_cmd(const char *cmd, const char *a, const char *b, const char *c, c
     else if (!strcmp(a, "pos")) pos_text(raw);
     else if (!strcmp(a, "chord")) th_chord_name(cur_chord(), raw);
     else if (!strcmp(a, "frets")) shape_text(raw);
+    else if (!strcmp(a, "form") && ui.shape < ui.nshapes) form_text(&ui.shapes[ui.shape], raw);
     else if (!strcmp(a, "fingers") && ui.shape < ui.nshapes) {
         int s;
         for (s = 0; s < tun()->n; s++) {

@@ -172,6 +172,7 @@ typedef struct {
     int8_t fret[FR_STR_MAX];
     fr_shape_t *out;
     int max, n;
+    int filter;                          /* FR_F_*: only these are kept */
 } fr_search_t;
 
 /* fingers: with no barre, one per fretted note, from the lowest fret up (the lower string first at the same fret).
@@ -252,11 +253,53 @@ static int fr_same(const fr_shape_t *a, const int8_t *fret, int n)
     return 1;
 }
 
+int fr_shape_open(const fr_shape_t *sh, int n)
+{
+    int s;
+    for (s = 0; s < n; s++)
+        if (sh->fret[s] == 0) return 1;
+    return 0;
+}
+
+static int fr_passes(const fr_tuning_t *t, const fr_shape_t *sh, int filter)
+{
+    switch (filter) {
+    case FR_F_OPEN: return fr_shape_open(sh, t->n);
+    case FR_F_BARRE: return sh->barre && !fr_shape_open(sh, t->n);   /* a closed chord: no open string */
+    case FR_F_MOVABLE: return !fr_shape_open(sh, t->n);
+    default: return 1;
+    }
+}
+
+/* keep the best q->max, in order (ties: lower on the neck, then the fret numbers); the same frets once */
+static void fr_keep(fr_search_t *q, const fr_shape_t *sh)
+{
+    const fr_tuning_t *t = q->t;
+    int i, j, s;
+    if (!fr_passes(t, sh, q->filter)) return;
+    for (i = 0; i < q->n; i++)
+        if (fr_same(&q->out[i], sh->fret, t->n)) return;
+    for (i = 0; i < q->n; i++) {
+        const fr_shape_t *o = &q->out[i];
+        int lo_a = fr_shape_lo(sh, t->n), lo_b = fr_shape_lo(o, t->n), d = 0;
+        if (sh->score != o->score) d = sh->score - o->score;
+        else if (lo_a != lo_b) d = lo_a - lo_b;
+        else
+            for (s = 0; s < t->n && !d; s++) d = sh->fret[s] - o->fret[s];
+        if (d < 0) break;
+    }
+    if (i >= q->max) return;
+    j = q->n < q->max ? q->n : q->max - 1;
+    for (; j > i; j--) q->out[j] = q->out[j - 1];
+    q->out[i] = *sh;
+    if (q->n < q->max) q->n++;
+}
+
 static void fr_leaf(fr_search_t *q)
 {
     const fr_tuning_t *t = q->t;
     fr_shape_t sh;
-    int s, have = 0, sounding = 0, lowest = 999, low_pc = -1, i, j, minimum = t->n >= 6 ? t->n - 2 : t->n - 1;
+    int s, have = 0, sounding = 0, lowest = 999, low_pc = -1, minimum = t->n >= 6 ? t->n - 2 : t->n - 1;
     for (s = 0; s < t->n; s++) {
         int p;
         if (q->fret[s] < 0) continue;
@@ -273,26 +316,10 @@ static void fr_leaf(fr_search_t *q)
     if (!t->reentrant && low_pc != q->root) return;
     for (s = 0; s < FR_STR_MAX; s++) sh.fret[s] = (int8_t)(s < t->n ? q->fret[s] : -1);
     if (fr_shape_hi(&sh, t->n) - fr_shape_lo(&sh, t->n) >= FR_SPAN) return;
-    for (i = 0; i < q->n; i++)
-        if (fr_same(&q->out[i], sh.fret, t->n)) return;
     if (!fr_fingers(t, &sh)) return;
     sh.no5 = (uint8_t)(q->five >= 0 && !(have >> q->five & 1));
     sh.score = (int16_t)fr_score(t, &sh);
-    /* keep the best max, in order (ties: lower on the neck, then the fret numbers) */
-    for (i = 0; i < q->n; i++) {
-        const fr_shape_t *o = &q->out[i];
-        int lo_a = fr_shape_lo(&sh, t->n), lo_b = fr_shape_lo(o, t->n), d = 0;
-        if (sh.score != o->score) d = sh.score - o->score;
-        else if (lo_a != lo_b) d = lo_a - lo_b;
-        else
-            for (s = 0; s < t->n && !d; s++) d = sh.fret[s] - o->fret[s];
-        if (d < 0) break;
-    }
-    if (i >= q->max) return;
-    j = q->n < q->max ? q->n : q->max - 1;
-    for (; j > i; j--) q->out[j] = q->out[j - 1];
-    q->out[i] = sh;
-    if (q->n < q->max) q->n++;
+    fr_keep(q, &sh);
 }
 
 static void fr_search(fr_search_t *q, int s)
@@ -317,7 +344,51 @@ static void fr_search(fr_search_t *q, int s)
     q->fret[s] = -1;
 }
 
-int fr_shapes(const fr_tuning_t *t, th_chord_t c, fr_shape_t *out, int max)
+/* power chords: the root, its fifth and (on three strings) its octave on neighbouring strings, nothing else. The
+ * root on each of the lower strings, at frets 0..12; easiest: low on the neck, the 6th string's root first */
+static void fr_power(fr_search_t *q)
+{
+    const fr_tuning_t *t = q->t;
+    int s, f, k, i;
+    for (s = 0; s + 1 < t->n; s++)
+        for (f = 0; f <= 12; f++) {
+            int r = fr_midi(t, s, f), want[3], ok = 1;
+            fr_shape_t sh;
+            if (th_mod(r, 12) != q->root) continue;
+            want[0] = r;
+            want[1] = r + 7;
+            want[2] = r + 12;
+            for (k = 3; k >= 2; k--) {
+                if (s + k > t->n) continue;
+                for (i = 0; i < FR_STR_MAX; i++) sh.fret[i] = -1;
+                ok = 1;
+                for (i = 0; i < k; i++) {
+                    int g = want[i] - t->open[s + i];
+                    if (g < 0 || g > FR_FRETS) ok = 0;
+                    else sh.fret[s + i] = (int8_t)g;
+                }
+                if (!ok || fr_shape_hi(&sh, t->n) - fr_shape_lo(&sh, t->n) >= FR_SPAN) continue;
+                if (!fr_fingers(t, &sh)) continue;
+                sh.no5 = 0;
+                sh.score = (int16_t)(fr_shape_lo(&sh, t->n) + 2 * s + (k == 2 ? 3 : 0));
+                for (i = 0; i < t->n; i++) if (sh.fret[i] > 0) sh.score = (int16_t)(sh.score + 2);
+                fr_keep(q, &sh);
+            }
+        }
+}
+
+int fr_shape_root_string(const fr_tuning_t *t, const fr_shape_t *sh)
+{
+    int s, best = -1, lo = 999;
+    for (s = 0; s < t->n; s++)
+        if (sh->fret[s] >= 0 && fr_midi(t, s, sh->fret[s]) < lo) {
+            lo = fr_midi(t, s, sh->fret[s]);
+            best = s;
+        }
+    return best;
+}
+
+int fr_shapes_filter(const fr_tuning_t *t, th_chord_t c, int filter, fr_shape_t *out, int max)
 {
     fr_search_t q;
     int8_t f[TH_TONES_MAX];
@@ -336,6 +407,14 @@ int fr_shapes(const fr_tuning_t *t, th_chord_t c, fr_shape_t *out, int max)
     q.out = out;
     q.max = max > FR_SHAPES_MAX ? FR_SHAPES_MAX : max;
     q.n = 0;
-    for (q.b = 1; q.b <= 12; q.b++) fr_search(&q, 0);
+    q.filter = filter;
+    if (c.q == TH_5) fr_power(&q);         /* a power chord is its own shapes only */
+    else
+        for (q.b = 1; q.b <= 12; q.b++) fr_search(&q, 0);
     return q.n;
+}
+
+int fr_shapes(const fr_tuning_t *t, th_chord_t c, fr_shape_t *out, int max)
+{
+    return fr_shapes_filter(t, c, FR_F_EASY, out, max);
 }

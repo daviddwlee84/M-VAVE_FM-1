@@ -173,6 +173,29 @@ expect_text chord Gm
 expect_text frets 310033
 expect_text fingers 210034
 
+# v0.2: K3 picks which shapes: the barre chord, its form; a power chord
+turn K3 2
+wait 60
+expect filter 2
+expect_text frets 355333
+expect_text form E_FORM
+shot shape_barre.png
+turn K3 1
+wait 60
+expect filter 3
+turn K3 -3
+wait 60
+expect filter 0
+turn K1 6
+wait 60
+expect_text chord G5
+expect_text frets 355xxx
+expect_text form ROOT_ON_6
+shot shape_power.png
+turn K1 -6
+wait 60
+expect_text chord Gm
+
 # ---- tunings: the ukulele's C, the neck with four strings
 turn K1 -1
 wait 60

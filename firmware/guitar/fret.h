@@ -51,8 +51,14 @@ typedef struct {
 
 /* The chord's shapes on this instrument, easiest first: every sounding note a chord tone, every tone there (a
  * perfect fifth may be left out), the root in the bass (unless the tuning is re-entrant), within FR_SPAN frets,
- * at most four fingers (one barre counts as one). Returns how many (at most max). */
+ * at most four fingers (one barre counts as one). A power chord (TH_5) also gets its two- and three-string shapes.
+ * Returns how many (at most max). */
 int fr_shapes(const fr_tuning_t *t, th_chord_t c, fr_shape_t *out, int max);
+enum { FR_F_EASY, FR_F_OPEN, FR_F_BARRE, FR_F_MOVABLE, FR_NFILTERS };   /* fr_shapes_filter: all, with an open
+                                                                          * string, barred, no open string */
+int fr_shapes_filter(const fr_tuning_t *t, th_chord_t c, int filter, fr_shape_t *out, int max);
+int fr_shape_open(const fr_shape_t *sh, int n);  /* an open string sounds */
+int fr_shape_root_string(const fr_tuning_t *t, const fr_shape_t *sh);   /* the string with the lowest note */
 int fr_shape_lo(const fr_shape_t *sh, int n);    /* the lowest fretted fret (0 if none) */
 int fr_shape_hi(const fr_shape_t *sh, int n);    /* the highest */
 int fr_shape_midi(const fr_tuning_t *t, const fr_shape_t *sh, uint8_t *out);   /* sounding notes, low string first */

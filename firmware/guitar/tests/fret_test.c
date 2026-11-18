@@ -282,11 +282,72 @@ static void test_shapes(void)
     CHECK(n && !memcmp(out[0].fret, "\x00\x00\x00\x03", 4), "uke C first: %s", n ? frets_text(&out[0], 4) : "-");
 }
 
+/* v0.2: power chords on two or three strings; barre chords of the E and A forms in every key */
+static int has(const fr_shape_t *o, int n, const int8_t *want)
+{
+    int j;
+    for (j = 0; j < n; j++)
+        if (!memcmp(o[j].fret, want, 6)) return 1;
+    return 0;
+}
+
+static void test_forms(void)
+{
+    fr_shape_t out[FR_SHAPES_MAX];
+    static const char *const E_FORM[] = { "", "m", "7", "m7" };
+    static const int8_t E_REL[4][6] = { { 0, 2, 2, 1, 0, 0 }, { 0, 2, 2, 0, 0, 0 }, { 0, 2, 0, 1, 0, 0 }, { 0, 2, 0, 0, 0, 0 } };
+    static const int8_t A_REL[4][6] = { { -1, 0, 2, 2, 2, 0 }, { -1, 0, 2, 2, 1, 0 }, { -1, 0, 2, 0, 2, 0 }, { -1, 0, 2, 0, 1, 0 } };
+    int n, r, i, s;
+    n = fr_shapes(STD, chord("G", "5"), out, FR_SHAPES_MAX);
+    CHECK(n && !memcmp(out[0].fret, "\x03\x05\x05\xff\xff\xff", 6), "G5 first: %s", n ? frets_text(&out[0], 6) : "-");
+    CHECK(n && out[0].finger[0] == 1 && out[0].finger[1] == 2 && out[0].finger[2] == 3, "G5 fingers");
+    n = fr_shapes(STD, chord("C", "5"), out, FR_SHAPES_MAX);
+    CHECK(n && !memcmp(out[0].fret, "\xff\x03\x05\x05\xff\xff", 6), "C5 first: %s", n ? frets_text(&out[0], 6) : "-");
+    for (r = 0; r < 12; r++) {           /* every root: a 6th-string and a 5th-string power chord */
+        th_chord_t c;
+        int8_t six[6] = { -1, -1, -1, -1, -1, -1 }, five[6] = { -1, -1, -1, -1, -1, -1 };
+        int f6 = (r - 4 + 12) % 12, f5 = (r - 9 + 12) % 12;
+        c.root = (int8_t)th_spell_pc(r, 0);
+        c.q = TH_5;
+        c.bass = c.root;
+        six[0] = (int8_t)f6; six[1] = (int8_t)(f6 + 2); six[2] = (int8_t)(f6 + 2);
+        five[1] = (int8_t)f5; five[2] = (int8_t)(f5 + 2); five[3] = (int8_t)(f5 + 2);
+        n = fr_shapes(STD, c, out, FR_SHAPES_MAX);
+        CHECK(has(out, n, six) && has(out, n, five), "power chord on pc %d", r);
+    }
+    for (i = 0; i < 4; i++)              /* barre forms: roots on the 6th string at frets 1-9, the 5th at 1-7 */
+        for (r = 1; r <= 9; r++) {
+            th_chord_t c;
+            int8_t e[6], a[6];
+            int fe, fa;
+            for (s = 0; s < 6; s++) {
+                e[s] = (int8_t)(E_REL[i][s] + r);
+                a[s] = (int8_t)(A_REL[i][s] < 0 ? -1 : A_REL[i][s] + r);
+            }
+            c.root = (int8_t)th_spell_pc((4 + r) % 12, 0);
+            c.q = (uint8_t)th_qual_find(E_FORM[i]);
+            c.bass = c.root;
+            n = fr_shapes_filter(STD, c, FR_F_BARRE, out, FR_SHAPES_MAX);
+            fe = has(out, n, e);
+            CHECK(fe, "E form %s at %d", E_FORM[i], r);
+            for (s = 0; s < n; s++) CHECK(out[s].barre, "BARRE filter: %s", frets_text(&out[s], 6));
+            c.root = (int8_t)th_spell_pc((9 + r) % 12, 0);
+            n = fr_shapes_filter(STD, c, FR_F_BARRE, out, FR_SHAPES_MAX);
+            fa = has(out, n, a);
+            CHECK(fa || r > 7, "A form %s at %d", E_FORM[i], r);   /* above 7 the 6th-string form is lower */
+            n = fr_shapes_filter(STD, c, FR_F_MOVABLE, out, FR_SHAPES_MAX);
+            for (s = 0; s < n; s++) CHECK(!fr_shape_open(&out[s], 6), "MOVABLE: %s", frets_text(&out[s], 6));
+            n = fr_shapes_filter(STD, c, FR_F_OPEN, out, FR_SHAPES_MAX);
+            for (s = 0; s < n; s++) CHECK(fr_shape_open(&out[s], 6), "OPEN: %s", frets_text(&out[s], 6));
+        }
+}
+
 int main(void)
 {
     test_tunings();
     test_positions();
     test_shapes();
+    test_forms();
     printf("%d checks, %d failed\n", checks, fails);
     return fails != 0;
 }
