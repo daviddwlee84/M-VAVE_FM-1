@@ -38,7 +38,12 @@ int sr_due(const sr_state_t *s, int item)
     return (uint16_t)(s->round - s->last[item]) >= (1u << s->box[item]);
 }
 
-static int sr_in_focus(const sr_course_t *c, int item, uint32_t focus) { return (int)(focus >> c->seg[item] & 1u); }
+static int sr_in_focus(const sr_course_t *c, int item, uint32_t focus)
+{
+    uint32_t key = focus >> 8 & 0xFFu;
+    if (key) return c->key[item] == key - 1u;
+    return (int)(focus >> c->seg[item] & 1u);
+}
 
 int sr_due_count(const sr_state_t *s, const sr_course_t *c, uint32_t focus)
 {
@@ -54,41 +59,44 @@ int sr_new_count(const sr_state_t *s, const sr_course_t *c, uint32_t focus)
     return n;
 }
 
-/* shuffle, then lay the cards out again so that no two of one key follow each other: each place takes, of the cards
- * left whose key differs from the one before, one whose key has the most cards left (so no key is left over at the
- * end); keyless cards fit anywhere */
-static void sr_spread(uint8_t *it, int n, const sr_course_t *c, uint32_t *rng)
+/* shuffle, then lay the cards out again so that no item comes twice in a row and no two of one key follow each other:
+ * each place takes, of the cards left that differ from the one before, the one whose item, then key, has the most
+ * cards left (so nothing is left over at the end); keyless cards fit anywhere */
+static void sr_spread(uint8_t *it, uint8_t *ex, int n, const sr_course_t *c, uint32_t *rng)
 {
-    static uint8_t left[256];
+    static uint8_t left[256], ileft[SR_MAX];
     int i, j;
     for (i = n - 1; i > 0; i--) {
         uint8_t t;
         j = (int)(sr_rand(rng) % (uint32_t)(i + 1));
-        t = it[i];
-        it[i] = it[j];
-        it[j] = t;
+        t = it[i]; it[i] = it[j]; it[j] = t;
+        t = ex[i]; ex[i] = ex[j]; ex[j] = t;
     }
     for (i = 0; i < 256; i++) left[i] = 0;
-    for (i = 0; i < n; i++) left[c->key[it[i]]]++;
+    for (i = 0; i < (int)SR_MAX; i++) ileft[i] = 0;
+    for (i = 0; i < n; i++) { left[c->key[it[i]]]++; ileft[it[i]]++; }
     for (i = 0; i < n; i++) {
-        int prev = i ? c->key[it[i - 1]] : -1, best = -1, bc = -1;
+        int prev = i ? c->key[it[i - 1]] : -1, pit = i ? it[i - 1] : -1, best = -1, bs = -1, other = -1, os = -1;
         uint8_t t;
         for (j = i; j < n; j++) {
-            int k = c->key[it[j]], cnt = k == SR_NOKEY ? 0 : left[k];
+            int k = c->key[it[j]], sc = ileft[it[j]] * 256 + (k == SR_NOKEY ? 0 : left[k]);
+            if (it[j] == pit) continue;  /* one item twice in a row: never, if anything else is left */
+            if (sc > os) { os = sc; other = j; }
             if (k != SR_NOKEY && k == prev) continue;
-            if (cnt > bc) { bc = cnt; best = j; }
+            if (sc > bs) { bs = sc; best = j; }
         }
-        if (best < 0) best = i;          /* nothing else left: it has to follow */
-        t = it[i];
-        it[i] = it[best];
-        it[best] = t;
+        if (best < 0) best = other;      /* only its own key left: it has to follow */
+        if (best < 0) best = i;
+        t = it[i]; it[i] = it[best]; it[best] = t;
+        t = ex[i]; ex[i] = ex[best]; ex[best] = t;
         left[c->key[it[i]]]--;
+        ileft[it[i]]--;
     }
 }
 
 void sr_build(const sr_state_t *s, sr_round_t *r, const sr_course_t *c, int n, uint32_t focus, uint32_t seed)
 {
-    static uint8_t pick[SR_MAX], used[SR_MAX], seg_items[SR_MAX];
+    static uint8_t pick[SR_ROUND_MAX], extra[SR_ROUND_MAX], used[SR_MAX], seg_items[SR_ROUND_MAX], seg_ex[SR_ROUND_MAX];
     static uint32_t key[SR_MAX];
     int npick = 0, nnew = 0, base, i, j, seg, maxseg = 0, weak = 0, k;
     uint8_t *p = (uint8_t *)r;
@@ -107,6 +115,7 @@ void sr_build(const sr_state_t *s, sr_round_t *r, const sr_course_t *c, int n, u
             r->card[r->n].kind = SR_SHOW;
             r->n++;
             used[i] = 1;
+            extra[npick] = 0;
             pick[npick++] = (uint8_t)i;
             nnew++;
         }
@@ -126,26 +135,50 @@ void sr_build(const sr_state_t *s, sr_round_t *r, const sr_course_t *c, int n, u
         }
         for (k = 0; k < cand && npick < n; k++) {
             used[ci[k]] = 1;
+            extra[npick] = 0;
             pick[npick++] = ci[k];
         }
         if (j == 0) base = npick;        /* new + due: the weak ones among these come back at the end */
+    }
+    /* still short: the items whose question changes, once more each in turn (twice at most), as practice */
+    if (c->vary && npick < n) {
+        static uint8_t vi[SR_MAX];
+        int nv = 0, t;
+        for (i = 0; i < s->open; i++)
+            if (c->vary[i] && sr_in_focus(c, i, focus) && (s->last[i] != SR_NEVER || used[i])) vi[nv++] = (uint8_t)i;
+        for (i = nv - 1; i > 0; i--) {
+            uint8_t x;
+            j = (int)(sr_rand(&r->rng) % (uint32_t)(i + 1));
+            x = vi[i]; vi[i] = vi[j]; vi[j] = x;
+        }
+        for (t = 0; t < nv * (int)SR_EXTRA_MAX && npick < n; t++) {
+            extra[npick] = 1;
+            pick[npick++] = vi[t % nv];
+        }
     }
     /* each segment in turn, spread by key */
     for (seg = 0; seg <= maxseg; seg++) {
         int m = 0;
         for (i = 0; i < npick; i++)
-            if (c->seg[pick[i]] == seg) seg_items[m++] = pick[i];
-        sr_spread(seg_items, m, c, &r->rng);
+            if (c->seg[pick[i]] == seg) {
+                seg_ex[m] = extra[i];
+                seg_items[m++] = pick[i];
+            }
+        sr_spread(seg_items, seg_ex, m, c, &r->rng);
         for (i = 0; i < m && r->n < SR_CARDS_MAX; i++) {
             r->card[r->n].item = seg_items[i];
             r->card[r->n].kind = SR_ASK;
+            r->card[r->n].again = seg_ex[i];
             r->n++;
         }
     }
     /* the weak ones (new, or box 0..1) once more at the end */
     for (i = 0; i < base; i++)
-        if (s->last[pick[i]] == SR_NEVER || s->box[pick[i]] <= 1u) seg_items[weak++] = pick[i];
-    sr_spread(seg_items, weak, c, &r->rng);
+        if (s->last[pick[i]] == SR_NEVER || s->box[pick[i]] <= 1u) {
+            seg_ex[weak] = 1;
+            seg_items[weak++] = pick[i];
+        }
+    sr_spread(seg_items, seg_ex, weak, c, &r->rng);
     for (i = 0; i < weak && r->n < SR_CARDS_MAX; i++) {
         r->card[r->n].item = seg_items[i];
         r->card[r->n].kind = SR_ASK;

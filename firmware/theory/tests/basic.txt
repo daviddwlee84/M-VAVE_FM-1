@@ -1,10 +1,10 @@
 # THEORY in the host simulator: just fw-test theory (screenshots and audio in firmware/theory/build/host/)
 # Keys: 0 is F3; C4 7, D4 9, Eb4 10, E4 11, F#4 13, G4 14, A4 16, C5 19. White keys w0 F3 .. w4 C4, w5 D4.
 wait 600
-# ---- the computer: HELLO once a second until it answers (protocol 1, firmware 0.2, transport USB)
+# ---- the computer: HELLO once a second until it answers (protocol 1, firmware 0.3, transport USB)
 sysex_out
 wait 1100
-expect_sysex F0 7D 54 48 01 41 01 00 02 00 F7
+expect_sysex F0 7D 54 48 01 41 01 00 03 00 F7
 sysex F0 7D 54 48 01 01 01 F7
 wait 30
 # ---- the progress out: a fresh record in 5 chunks (host/theory/progress.py vectors()); nothing written
@@ -272,26 +272,43 @@ expect ps 0
 expect round 0
 expect open 6
 shot today.png
-# a first round: the three new items shown first, together (and heard)
+# a first round: the three new items shown first, together; each new kind of card says first what it asks
 tap PLAY
 wait 60
 expect ps 1
 expect kind 1
 expect item 0
+expect intro 1
+expect busy 0
+shot intro.png
+tap PLAY
+wait 60
+expect intro 0
 expect_text item C_scale
 expect_text answer C_D_E_F_G_A_B
 expect busy 1
+expect mid_keys 524416
 shot new.png
-wait 2500
-tapkey 9
-wait 60
-expect kind 1
+# played along: the lit key, then the next (a wrong one changes nothing)
+tapkey 9 90
+wait 30
+expect item 0
+tapkey 7 90
+tapkey 9 90
+tapkey 11 90
+tapkey 12 90
+tapkey 14 90
+tapkey 16 90
+expect mid_keys 262208
+tapkey 18 90
+wait 900
 expect item 1
+expect intro 1
 answer right
 expect item 2
 answer right
 expect kind 0
-# a key signature (G: F#), with a key brushed first (20 ms: not played)
+# a key signature (G: F#): keys light up and stay, sounding; a brush (20 ms) is undone; PLAY checks
 setcard 7
 wait 30
 expect answer_ok 1
@@ -300,14 +317,23 @@ wait 20
 key 7 up
 wait 30
 expect tray 0
+expect lit 0
 key 13 down
 wait 100
 key 13 up
+wait 1500
+expect tray 64
+expect lit_keys 8192
+expect voices >0
+expect ps 1
+shot tray.png
+tap PLAY
 wait 30
 expect ps 2
 expect res 3
 expect_text answer F#
 expect lit_keys 0
+expect lit 0
 shot result.png
 tapkey 9
 wait 1500
@@ -345,31 +371,48 @@ expect res 2
 tapkey 9
 wait 2500
 expect ps 1
-# D's key signature (F# C#): E pressed by mistake, then pressed again to take it out; right, but slow
+# D's key signature (F# C#): E lit by mistake, tapped again to take it out (any octave); right, but slow
 setcard 17
 wait 30
 key 13 down
 wait 100
+key 13 up
 key 11 down
 wait 100
 key 11 up
 wait 30
 expect tray 80
-key 11 down
+key 23 down
 wait 100
-key 11 up
+key 23 up
 wait 30
-key 13 up
-wait 30
-expect ps 1
 expect tray 64
-shot tray.png
 key 20 down
 wait 100
 key 20 up
 wait 30
+expect tray 66
+tap PLAY
+wait 30
 expect ps 2
 expect res 2
+tapkey 9
+wait 2500
+# SEL: the lit notes out first; with nothing lit, "don't know" (wrong)
+setcard 17
+wait 30
+key 13 down
+wait 100
+key 13 up
+wait 30
+tap SEL
+wait 30
+expect tray 0
+expect ps 1
+tap SEL
+wait 30
+expect ps 2
+expect res 0
 tapkey 9
 wait 2500
 # G's relative minor (E): F first, a second try, then E: slow
@@ -426,11 +469,27 @@ expect round 1
 expect box7 1
 expect page 2
 
-# ---- CHART
+# ---- CHART: a key that is not open yet only says so; PLAY on C: a round of C's cards
 turn ALGO 2
 wait 60
 expect page 4
 shot chart.png
+turn SELECT 1
+tap PLAY
+wait 60
+expect page 4
+turn SELECT -1
+tap PLAY
+wait 60
+expect page 1
+expect fkey 1
+expect ps 1
+expect key_of_card 0
+answer right
+expect key_of_card 0
+turn ALGO 3
+wait 60
+expect page 4
 
 # ---- CHORD: whatever is played, named; the chords as numbers in the key
 turn ALGO -1
@@ -501,23 +560,185 @@ key 9 up
 key 12 up
 key 15 up
 wait 30
+# PLAY: the history heard; held: cleared
 tap PLAY
 wait 30
+expect busy 1
+expect hist 4
+press PLAY
+wait 900
+release PLAY
+wait 30
 expect hist 0
+# ARP: LATCH, keys lit one by one and kept; REC logs the chord and clears the keys
+tap ARP
+wait 30
+expect flags 4
+key 7 down
+wait 80
+key 7 up
+key 11 down
+wait 80
+key 11 up
+key 14 down
+wait 80
+key 14 up
+wait 30
+expect lit 3
+expect voices >2
+expect_text chord C
+shot latch.png
+tap REC
+wait 30
+expect hist 1
+expect lit 0
+key 16 down
+wait 80
+key 16 up
+key 19 down
+wait 80
+key 19 up
+key 23 down
+wait 80
+key 23 up
+wait 30
+expect_text chord Am
+tap REC
+wait 30
+expect_text hist I_vi
+# a key tapped again goes out; SEL clears them all
+key 7 down
+wait 80
+key 7 up
+key 11 down
+wait 80
+key 11 up
+key 7 down
+wait 80
+key 7 up
+wait 30
+expect lit 1
+tap SEL
+wait 30
+expect lit 0
 
-# ---- SETTINGS: cards a round
-turn ALGO 2
+# ---- SETTINGS: cards a round; SUBMIT and CHORD LOG to AUTO
+turn ALGO 3
 wait 60
-expect page 5
+expect page 6
 turn SELECT 1
 turn K1 1
 wait 60
 expect cards 16
+turn SELECT 2
+tap SEL
+turn SELECT 1
+tap SEL
+wait 60
+expect flags 7
 shot settings.png
+# the start page can be PITCH
+turn SELECT 1
+tap SEL
+tap SEL
+tap SEL
+wait 60
+expect start 6
+# CHORD LOG AUTO: a chord left lit for 2 s goes into the history by itself, once
+turn ALGO -3
+wait 60
+expect page 3
+key 9 down
+wait 80
+key 9 up
+key 13 down
+wait 80
+key 13 up
+key 16 down
+wait 80
+key 16 up
+wait 2200
+expect_text hist I_vi_V/V
+wait 2200
+expect hist 3
+tap SEL
+# ---- PITCH: three games of absolute pitch
+turn ALGO 2
+wait 60
+expect page 5
+expect pq 0
+shot pitch.png
+tap PLAY
+wait 30
+expect pq 1
+expect busy 1
+wait 1200
+expect pq 2
+shot single.png
+# too slow: wrong
+wait 4100
+expect pq 3
+expect pturn 1
+expect pright 0
+wait 3000
+expect pq 2
+pitch right
+expect pright 1
+pitch_all right
+expect pq 4
+expect plevel 1
+wait 60
+shot pitch_done.png
+# COMBO: a run right, one note longer
+turn SELECT 1
+wait 30
+expect pgame 1
+tap PLAY
+wait 30
+expect pn 2
+pitch right
+expect pn 3
+wait 1000
+pitch wrong
+expect pn 2
+pitch_all wrong
+expect pq 4
+expect plevel 0
+# CLUSTER: its notes lit (SUBMIT AUTO: checked once the keys rest)
+turn SELECT 1
+wait 30
+tap PLAY
+wait 30
+pitch light
+expect lit 2
+wait 1200
+expect pq 3
+expect pright 1
+reboot
+wait 600
+expect plevel 0
+expect flags 7
+expect page 5
+# TODAY with SUBMIT AUTO: the right count of notes lit, the keys at rest a second: checked
+turn ALGO -4
+wait 60
+expect page 1
+tap PLAY
+wait 60
+setcard 7
+wait 30
+key 13 down
+wait 100
+key 13 up
+wait 400
+expect ps 1
+wait 900
+expect ps 2
+expect res 3
 
 # ---- a backup loaded from the computer: asked first; HOME keeps what is here
 sysex_out
-sysex F0 7D 54 48 01 05 00 05 00 01 02 00 00 00 00 00 00 00 02 0C 00 00 00 05 00 00 02 00 3F 0B 28 00 00 00 00 23 00 00 00 01 00 02 03 01 02 03 01 02 00 03 01 02 00 00 00 00 00 00 00 00 00 00 00 00 F7
+sysex F0 7D 54 48 01 05 00 05 00 01 02 00 00 00 00 00 00 00 02 0C 00 05 03 05 00 00 02 00 3F 0B 28 00 00 00 00 23 00 00 00 01 00 02 03 01 02 03 01 02 00 03 01 02 00 00 00 00 00 00 00 00 00 00 00 00 F7
 wait 40
 sysex F0 7D 54 48 01 05 01 05 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 04 00 00 04 00 04 00 04 00 F7
 wait 40
@@ -525,7 +746,7 @@ sysex F0 7D 54 48 01 05 02 05 00 04 00 04 00 04 00 04 00 00 04 00 04 00 04 00 7F
 wait 40
 sysex F0 7D 54 48 01 05 03 05 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F F7
 wait 40
-sysex F0 7D 54 48 01 05 04 05 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 74 01 10 F7
+sysex F0 7D 54 48 01 05 04 05 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 66 01 3B F7
 wait 40
 wait 60
 expect ask 1
@@ -533,11 +754,11 @@ shot ask.png
 tap HOME
 wait 60
 expect ask 0
-expect round 1
+expect round 2
 expect_sysex F0 7D 54 48 01 45 01 F7
 # PLAY loads it
 sysex_out
-sysex F0 7D 54 48 01 05 00 05 00 01 02 00 00 00 00 00 00 00 02 0C 00 00 00 05 00 00 02 00 3F 0B 28 00 00 00 00 23 00 00 00 01 00 02 03 01 02 03 01 02 00 03 01 02 00 00 00 00 00 00 00 00 00 00 00 00 F7
+sysex F0 7D 54 48 01 05 00 05 00 01 02 00 00 00 00 00 00 00 02 0C 00 05 03 05 00 00 02 00 3F 0B 28 00 00 00 00 23 00 00 00 01 00 02 03 01 02 03 01 02 00 03 01 02 00 00 00 00 00 00 00 00 00 00 00 00 F7
 wait 40
 sysex F0 7D 54 48 01 05 01 05 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 04 00 00 04 00 04 00 04 00 F7
 wait 40
@@ -545,7 +766,7 @@ sysex F0 7D 54 48 01 05 02 05 00 04 00 04 00 04 00 04 00 00 04 00 04 00 04 00 7F
 wait 40
 sysex F0 7D 54 48 01 05 03 05 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F F7
 wait 40
-sysex F0 7D 54 48 01 05 04 05 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 74 01 10 F7
+sysex F0 7D 54 48 01 05 04 05 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 66 01 3B F7
 wait 40
 wait 60
 expect ask 1
@@ -557,11 +778,13 @@ expect open 11
 expect tonic 2
 expect start 2
 expect cards 12
+expect flags 5
+expect plevel 3
 expect box1 2
 expect_sysex F0 7D 54 48 01 45 00 F7
 # a damaged one is refused, nothing asked
 sysex_out
-sysex F0 7D 54 48 01 05 00 05 00 01 02 00 00 00 00 00 00 00 02 0C 00 00 00 05 00 00 02 00 3F 0B 28 00 00 00 00 23 00 00 00 01 00 02 03 01 02 03 01 02 00 03 01 02 00 00 00 00 00 00 00 00 00 00 00 00 F7
+sysex F0 7D 54 48 01 05 00 05 00 01 02 00 00 00 00 00 00 00 02 0C 00 05 03 05 00 00 02 00 3F 0B 28 00 00 00 00 23 00 00 00 01 00 02 03 01 02 03 01 02 00 03 01 02 00 00 00 00 00 00 00 00 00 00 00 00 F7
 wait 40
 sysex F0 7D 54 48 01 05 01 05 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 04 00 00 04 00 04 00 04 00 F7
 wait 40
@@ -569,7 +792,7 @@ sysex F0 7D 54 48 01 05 02 05 00 04 00 04 00 04 00 04 00 00 04 00 7E 00 04 00 7F
 wait 40
 sysex F0 7D 54 48 01 05 03 05 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F F7
 wait 40
-sysex F0 7D 54 48 01 05 04 05 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 74 01 10 F7
+sysex F0 7D 54 48 01 05 04 05 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 66 01 3B F7
 wait 40
 wait 60
 expect ask 0

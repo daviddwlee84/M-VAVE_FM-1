@@ -7,7 +7,9 @@
  * What the app gives (sr_course_t): how many items, each item's segment and key, and the groups in which they open.
  * A round plays the new items first, shown together (a new thing is met in a block), then each segment in turn
  * (theory, then ear), its cards shuffled so that two cards of one key never come back to back (interleaving, once
- * the items are known), then the weak ones again. A focus mask keeps a round to some segments.
+ * the items are known), then the weak ones again. A focus mask keeps a round to some segments, or to one key.
+ * When the items in focus are too few to fill a round, the ones whose question changes each time (vary) are asked
+ * once more as practice (again: a right answer does not move them up).
  *
  * No platform calls, no libc (tests/srs_test.c). */
 #pragma once
@@ -16,6 +18,7 @@
 #define SR_MAX 96u                       /* items at most */
 #define SR_TOP 5u                        /* the highest box */
 #define SR_NEW_MAX 3u                    /* new items in one round at most */
+#define SR_EXTRA_MAX 2u                  /* practice cards of one item in a round at most */
 #define SR_CARDS_MAX 48u                 /* cards in a round, with the ones asked again */
 #define SR_ROUND_MAX 24u                 /* cards asked in a round before repeats */
 #define SR_NEVER 0xFFFFu
@@ -25,6 +28,7 @@ typedef struct {
     uint8_t n;                           /* items */
     const uint8_t *seg;                  /* per item: its segment (rounds play segment 0, then 1, ...) */
     const uint8_t *key;                  /* per item: items of one key are not asked back to back (SR_NOKEY: none) */
+    const uint8_t *vary;                 /* per item: 1 if its question changes each time (0 pointer: none do) */
     const uint8_t *group_end;            /* the course opens up to these, in turn */
     uint8_t ngroups;
     uint8_t unlock_box;                  /* every open item in this box or higher: the next group opens */
@@ -61,7 +65,11 @@ int sr_due(const sr_state_t *s, int item);
 int sr_due_count(const sr_state_t *s, const sr_course_t *c, uint32_t focus);
 int sr_new_count(const sr_state_t *s, const sr_course_t *c, uint32_t focus);
 
-/* a round of about n cards (clamped to 4 .. SR_ROUND_MAX), from the segments in focus (bit k: segment k) */
+/* focus: bit k (k < 8) takes segment k; SR_FOCUS_KEY(k) keeps the round to the items of key k */
+#define SR_FOCUS_KEY(k) ((uint32_t)((k) + 1) << 8)
+#define SR_FOCUS_SEGS 0xFFu
+
+/* a round of about n cards (clamped to 4 .. SR_ROUND_MAX), from the items in focus */
 void sr_build(const sr_state_t *s, sr_round_t *r, const sr_course_t *c, int n, uint32_t focus, uint32_t seed);
 const sr_card_t *sr_card(const sr_round_t *r);   /* the card now, 0 when the round is over */
 void sr_answer(sr_state_t *s, sr_round_t *r, int grade);    /* SR_*; a SR_SHOW card takes any grade */

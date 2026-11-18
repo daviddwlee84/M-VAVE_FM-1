@@ -38,6 +38,7 @@ def test_record_round_trip_and_checks():
     p = G.Progress(round=9, streak=3, open=16, answered=50, right=44)
     p.box[3], p.last[3] = 4, 8
     p.settings["tonic"], p.settings["oct"] = -3, -1
+    p.settings["flags"], p.settings["pitch"], p.settings["start"] = 7, 10, 6   # 0.3: SUBMIT / LOG AUTO, LATCH; PITCH
     b = G.to_bytes(p)
     assert len(b) == G.RECORD_N
     assert G.from_bytes(b) == p
@@ -60,6 +61,19 @@ def test_json_round_trip():
         G.from_json('{"format": "fm1-morse-progress", "version": 1}')
 
 
+def test_json_from_0_2_has_no_flags_or_pitch():
+    import json
+    d = json.loads(G.to_json(G.Progress(round=3, open=6)))
+    for k in ("flags", "pitch"):
+        del d["settings"][k]
+    p = G.from_json(json.dumps(d))
+    assert p.settings["flags"] == 0 and p.settings["pitch"] == 0
+    bad = G.Progress()
+    bad.settings["pitch"] = 11
+    with pytest.raises(G.ProgressError):
+        G.to_bytes(bad)
+
+
 def test_vectors_are_in_the_firmware_test():
     script = (ROOT / "firmware/theory/tests/basic.txt").read_text()
     for name, hexframe in G.vectors().items():
@@ -71,7 +85,7 @@ class StandIn:
 
     def __init__(self, record: G.Progress, answer: int = P.DONE_LOADED):
         self.record, self.answer = record, answer
-        self.out: list[bytes] = [P.frame(P.T_HELLO, bytes([1, 0, 2, 0]))]
+        self.out: list[bytes] = [P.frame(P.T_HELLO, bytes([1, 0, 3, 0]))]
         self.loaded: G.Progress | None = None
         self._rx = bytearray()
 
@@ -96,7 +110,7 @@ def test_backup_and_restore_against_a_stand_in():
     p = G.Progress(round=7, open=11, answered=30, right=25)
     dev = StandIn(p)
     s = Session(dev, log=lambda *_: None)
-    assert s.wait_connected(1.0) and s.firmware == (0, 2)
+    assert s.wait_connected(1.0) and s.firmware == (0, 3)
     assert s.backup(1.0) == p
     q = G.Progress(round=12, open=16, answered=60, right=50)
     assert s.restore(q, 1.0) == P.DONE_LOADED and dev.loaded == q

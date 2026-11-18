@@ -3,9 +3,11 @@
 THEORY, a pocket music theory trainer for the M-VAVE FM-1, built on fm1-base. Pages: MENU; TODAY, flash cards a
 round a day (scales, key signatures, chords by degree, degrees and chord qualities by ear) in Leitner boxes; WHEEL,
 the circle of fifths with the key's chords marked, naming what is played; CHORD, a whole screen about whatever is
-played (its tones, other readings, the progression as numbers); CHART, progress on the circle; SETTINGS. Progress
-backs up to a computer (`host/theory`, or `docs/assets/theory/progress.html`). 0.1 runs on the owner's unit since
-2026-11-18; 0.2 is verified in the host simulator and fm1-emu. Design and controls (Traditional Chinese):
+played (its tones, other readings, the progression as numbers; keys held, or lit one by one with LATCH); CHART,
+progress on the circle, and a round of one key; PITCH, absolute pitch games (a note, a run, a cluster); SETTINGS.
+Answers of many notes are lit one by one and keep sounding (the latch tray). Progress backs up to a computer
+(`host/theory`, or `docs/assets/theory/progress.html`). 0.2 runs on the owner's unit since 2026-11-18; 0.3 is
+verified in the host simulator and fm1-emu. Design and controls (Traditional Chinese):
 [docs/dev/theory.md](../../docs/dev/theory.md).
 
 Licence: GPL-3.0-or-later (`LICENSE`). Package identity `FM-1_49` (dev `FM-1_4900`). Through fm1-base's store:

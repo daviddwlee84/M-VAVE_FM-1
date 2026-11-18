@@ -64,7 +64,8 @@ KEYS.forEach((k, g) => {
 });
 const N = ITEMS.length, TOP = 5, NEVER = 0xFFFF, SET_N = 12, BLOB_N = 14 + 3 * N, RECORD_N = 1 + SET_N + BLOB_N + 2;
 const CHUNK = 49, FRAMES = Math.ceil(RECORD_N / CHUNK), FORMAT = 1;
-const SET_FIELDS = ["tonic", "mode", "sevenths", "labels", "mapping", "keymode", "oct", "start", "cards", "speed"];
+const SET_FIELDS = ["tonic", "mode", "sevenths", "labels", "mapping", "keymode", "oct", "start", "cards", "speed", "flags",
+  "pitch"];   // flags, pitch: 0.3 (0 in older records and files)
 const HEAD = [0x7D, 0x54, 0x48], VER = 1;
 const T_HELLO_ACK = 0x01, T_PROG_REQ = 0x04, T_PROG_LOAD = 0x05, T_HELLO = 0x41, T_HEARTBEAT = 0x42, T_PROG = 0x44, T_PROG_DONE = 0x45;
 const $ = id => document.getElementById(id);
@@ -92,7 +93,8 @@ function unpack7(b) {
 function check(p) {   // the firmware's own checks (app.c set_valid, srs.c sr_valid)
   const s = p.settings;
   const ok = s.tonic >= -9 && s.tonic <= 12 && s.mode < 9 && s.sevenths <= 1 && s.labels < 2 && s.mapping < 2 && s.keymode <= 1
-    && s.oct >= -2 && s.oct <= 2 && s.start <= 5 && (s.cards === 0 || (s.cards >= 8 && s.cards <= 24)) && s.speed < 3;
+    && s.oct >= -2 && s.oct <= 2 && s.start <= 6 && (s.cards === 0 || (s.cards >= 8 && s.cards <= 24)) && s.speed < 3
+    && s.flags <= 7 && s.pitch <= 10;
   if (!ok) throw Error("settings THEORY would refuse");
   if (!(p.open >= ENDS[0] && p.open <= N) || p.right > p.answered) throw Error("open or answered out of range");
   for (let i = 0; i < N; i++)
@@ -103,7 +105,7 @@ function check(p) {   // the firmware's own checks (app.c set_valid, srs.c sr_va
 function toBytes(p) {
   check(p);
   const s = p.settings, b = [FORMAT, s.tonic & 0xFF, s.mode, s.sevenths, s.labels, s.mapping, s.keymode, s.oct & 0xFF,
-    s.start, s.cards, s.speed, 0, 0];
+    s.start, s.cards, s.speed, s.flags, s.pitch];
   const put = (v, n) => { for (let k = 0; k < n; k++) b.push((v >>> (8 * k)) & 0xFF); };
   put(p.round, 2); put(p.streak, 2); put(N, 1); put(p.open, 1); put(p.answered, 4); put(p.right, 4);
   for (const x of p.box) b.push(x);
@@ -133,7 +135,7 @@ function fromBytes(b) {
 function toJSON(p) {
   const items = {};
   ITEMS.forEach((n, i) => { items[n] = { box: p.box[i], last: p.last[i] }; });
-  return JSON.stringify({ format: "fm1-theory-progress", version: 1, firmware: firmware || "0.2", settings: p.settings,
+  return JSON.stringify({ format: "fm1-theory-progress", version: 1, firmware: firmware || "0.3", settings: p.settings,
     round: p.round, streak: p.streak, open: p.open, open_up_to: ITEMS[p.open - 1], answered: p.answered, right: p.right,
     items }, null, 1) + "\n";
 }

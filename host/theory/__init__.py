@@ -4,5 +4,5 @@
     just theory-backup FILE      just theory-restore FILE
 """
 
-__version__ = "0.2.0"
-FIRMWARE_KNOWN = (0, 2)
+__version__ = "0.3.0"
+FIRMWARE_KNOWN = (0, 3)

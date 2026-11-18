@@ -99,7 +99,7 @@ def main(argv: list[str] | None = None) -> int:
             return 1
         if a.cmd == "backup":
             p = s.backup()
-            fw = f"{s.firmware[0]}.{s.firmware[1]}" if s.firmware else "0.2"
+            fw = f"{s.firmware[0]}.{s.firmware[1]}" if s.firmware else "0.3"
             with open(a.file, "w") as f:
                 f.write(G.to_json(p, fw) + "\n")
             print(f"[theory] {G.summary(p)} -> {a.file}")

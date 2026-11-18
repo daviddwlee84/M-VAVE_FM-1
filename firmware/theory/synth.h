@@ -14,6 +14,7 @@
 
 void synth_init(void);                   /* the pitch table: the main loop, before any note */
 void synth_note_on(int note, int vel);   /* MIDI note 0..127, velocity 1..127 */
+void synth_note_hold(int note, int vel);   /* the same, but it keeps sounding (softer) until let go: a lit note */
 void synth_note_off(int note);
 void synth_all_off(void);                /* every voice released */
 void synth_stop(void);                   /* silence now, nothing queued (app_panic, a reboot) */

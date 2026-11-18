@@ -58,11 +58,12 @@ static void test_first_round(void)
         else asks++;
     }
     CHECK(shows == 3, "3 new at most (%d)", shows);
-    CHECK(asks == 3 && again == 3, "each asked, then again at the end (%d, %d)", asks, again);
+    CHECK(asks == 3 && again == 5, "each asked, the chords twice more as practice, then again at the end (%d, %d)",
+          asks, again);
     while (sr_card(&rd)) sr_answer(&st, &rd, SR_RIGHT);
     CHECK(sr_finish(&st, &rd, &course) == 0 && st.round == 1 && st.streak == 1, "round 1, streak 1");
     for (i = 0; i < 3; i++) CHECK(st.box[i] == 1, "item %d: box 1 (the repeat does not move it up) (%d)", i, st.box[i]);
-    CHECK(st.answered == 6 && st.right == 6, "6 answered");
+    CHECK(st.answered == 8 && st.right == 8, "8 answered (%u)", (unsigned)st.answered);
 }
 
 static void test_grades(void)
@@ -136,6 +137,44 @@ static void test_spread_focus(void)
     CHECK(rd.n <= (int)SR_CARDS_MAX, "a round fits");
 }
 
+static void test_variety(void)
+{
+    int i, t;
+    /* the first group only: rounds fill up with practice, never one item twice in a row, and practice does not move */
+    for (t = 0; t < 40; t++) {
+        int extras = 0, per[CO_N];
+        sr_init(&st, &course);
+        st.round = 3;
+        for (i = 0; i < 6; i++) { st.last[i] = 2; st.box[i] = 1; }
+        memset(per, 0, sizeof per);
+        sr_build(&st, &rd, &course, 15, 3, 77u + (uint32_t)t * 13u);
+        for (i = 0; i < rd.n; i++) {
+            int it = rd.card[i].item;
+            if (i) CHECK(it != rd.card[i - 1].item || rd.card[i].again, "round %d: item %d twice in a row at %d", t, it, i);
+            if (rd.card[i].again && i < rd.n) per[it]++;
+        }
+        for (i = 0; i < 6; i++) {
+            if (co_vary[i]) extras += per[i];
+            else CHECK(per[i] <= 1, "round %d: item %d (fixed question) practised (%d)", t, i, per[i]);
+        }
+        CHECK(extras > 0, "round %d: practice cards fill it", t);
+        while (sr_card(&rd)) sr_answer(&st, &rd, SR_RIGHT);
+        for (i = 0; i < 6; i++) CHECK(st.box[i] == 2, "round %d: item %d up one box only (%d)", t, i, st.box[i]);
+    }
+    /* one key */
+    sr_init(&st, &course);
+    st.open = CO_N;
+    st.round = 50;
+    for (i = 0; i < CO_N; i++) { st.last[i] = 0; st.box[i] = 2; }
+    for (t = 0; t < 20; t++) {
+        int k = t % CO_KEYS;
+        sr_build(&st, &rd, &course, 15, SR_FOCUS_KEY(k), 5u + (uint32_t)t);
+        CHECK(rd.n > 0, "key %d: a round", k);
+        for (i = 0; i < rd.n; i++) CHECK(co_key[rd.card[i].item] == k, "key %d: only its items (%d)", k, rd.card[i].item);
+    }
+    CHECK(sr_due_count(&st, &course, SR_FOCUS_KEY(3)) == 5, "D: 5 items due (%d)", sr_due_count(&st, &course, SR_FOCUS_KEY(3)));
+}
+
 static void test_groups(void)
 {
     uint8_t w[SR_MAX];
@@ -194,6 +233,7 @@ int main(void)
     test_first_round();
     test_grades();
     test_spread_focus();
+    test_variety();
     test_groups();
     test_blob();
     printf("%s: %d checks, %d failed\n", fails ? "FAIL" : "ok", checks, fails);

@@ -20,7 +20,8 @@ FORMAT = 1
 KEYS = ["C", "G", "F", "D", "Bb", "A", "Eb", "E", "Ab", "B", "Db", "F#"]
 TOP = 5
 NEVER = 0xFFFF
-SET_FIELDS = ["tonic", "mode", "sevenths", "labels", "mapping", "keymode", "oct", "start", "cards", "speed"]
+SET_FIELDS = ["tonic", "mode", "sevenths", "labels", "mapping", "keymode", "oct", "start", "cards", "speed", "flags",
+              "pitch"]   # flags, pitch: 0.3 (0 in older records and JSON)
 SET_N = 12
 CHUNK = 49
 
@@ -73,8 +74,8 @@ class Progress:
         """The firmware's own checks (app.c set_valid, srs.c sr_valid): a record it would refuse is refused here."""
         s = self.settings
         ok = (-9 <= s["tonic"] <= 12 and s["mode"] < 9 and s["sevenths"] <= 1 and s["labels"] < 2 and s["mapping"] < 2
-              and s["keymode"] <= 1 and -2 <= s["oct"] <= 2 and s["start"] <= 5
-              and (s["cards"] == 0 or 8 <= s["cards"] <= 24) and s["speed"] < 3)
+              and s["keymode"] <= 1 and -2 <= s["oct"] <= 2 and s["start"] <= 6
+              and (s["cards"] == 0 or 8 <= s["cards"] <= 24) and s["speed"] < 3 and s["flags"] <= 7 and s["pitch"] <= 10)
         if not ok:
             raise ProgressError(f"settings out of range: {s}")
         if not (GROUP_ENDS[0] <= self.open <= N) or self.right > self.answered:
@@ -88,7 +89,7 @@ def to_bytes(p: Progress) -> bytes:
     p.check()
     s = p.settings
     sb = bytes([s["tonic"] & 0xFF, s["mode"], s["sevenths"], s["labels"], s["mapping"], s["keymode"], s["oct"] & 0xFF,
-                s["start"], s["cards"], s["speed"], 0, 0])
+                s["start"], s["cards"], s["speed"], s["flags"], s["pitch"]])
     blob = struct.pack("<HHBBII", p.round, p.streak, N, p.open, p.answered, p.right)
     blob += bytes(p.box) + b"".join(struct.pack("<H", v) for v in p.last)
     body = bytes([FORMAT]) + sb + blob
@@ -106,7 +107,7 @@ def from_bytes(b: bytes) -> Progress:
     if b[-2] != c & 0xFF or b[-1] != c >> 8:
         raise ProgressError("CRC mismatch: the record is damaged")
     sb = b[1:1 + SET_N]
-    s = dict(zip(SET_FIELDS, sb[:10]))
+    s = dict(zip(SET_FIELDS, sb[:SET_N]))
     s["tonic"] = struct.unpack("b", bytes([sb[0]]))[0]
     s["oct"] = struct.unpack("b", bytes([sb[6]]))[0]
     blob = b[1 + SET_N:1 + SET_N + BLOB_N]
@@ -140,7 +141,7 @@ class Assembler:
         return from_bytes(bytes(self.buf)) if self.next == FRAMES else None
 
 
-def to_json(p: Progress, firmware: str = "0.2") -> str:
+def to_json(p: Progress, firmware: str = "0.3") -> str:
     p.check()
     return json.dumps({
         "format": "fm1-theory-progress", "version": 1, "firmware": firmware,
@@ -175,7 +176,8 @@ def vectors() -> dict[str, str]:
     """Frames shared with firmware/theory/tests/basic.txt: a fresh record out, and a record to load."""
     fresh = Progress()
     fr = [P.frame(P.T_PROG, f[6:-1]) for f in frames(fresh)]
-    load = Progress(settings={**default_settings(), "tonic": 2, "start": 2, "cards": 12}, round=5, streak=2, open=11,
+    load = Progress(settings={**default_settings(), "tonic": 2, "start": 2, "cards": 12, "flags": 5, "pitch": 3}, round=5,
+                    streak=2, open=11,
                     answered=40, right=35)
     for i in range(11):
         load.box[i], load.last[i] = (i % 3) + 1, 4

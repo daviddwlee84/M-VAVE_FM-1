@@ -15,7 +15,7 @@ enum { SEG_THEORY, SEG_EAR };
 #define CO_N 63
 static const int8_t CO_TONIC[CO_KEYS] = { 0, 1, -1, 2, -2, 3, -3, 4, -4, 5, -5, 6 };   /* C G F D Bb A Eb E Ab B Db F# */
 
-static uint8_t co_skill[CO_N], co_key[CO_N], co_param[CO_N], co_seg[CO_N], co_group_end[CO_KEYS];
+static uint8_t co_skill[CO_N], co_key[CO_N], co_param[CO_N], co_seg[CO_N], co_vary[CO_N], co_group_end[CO_KEYS];
 static sr_course_t course;
 
 static void co_add(int *n, int skill, int key, int param)
@@ -24,6 +24,7 @@ static void co_add(int *n, int skill, int key, int param)
     co_key[*n] = (uint8_t)key;
     co_param[*n] = (uint8_t)param;
     co_seg[*n] = (uint8_t)(skill >= SK_EARDEG ? SEG_EAR : SEG_THEORY);
+    co_vary[*n] = (uint8_t)(skill == SK_CHORDS || skill == SK_EARDEG || skill == SK_EARQ);   /* a new question each time */
     (*n)++;
 }
 
@@ -47,6 +48,7 @@ static void course_init(void)
     course.n = (uint8_t)n;
     course.seg = co_seg;
     course.key = co_key;
+    course.vary = co_vary;
     course.group_end = co_group_end;
     course.ngroups = CO_KEYS;
     course.unlock_box = 2;
