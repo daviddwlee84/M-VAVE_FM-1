@@ -16,7 +16,7 @@
 | `K4` | 發報速度 5–40 WPM（預設 10）：keyer 的節奏、KEY 頁解碼器的起點、RHYTHM 的目標（0.4 起 PRACTICE 的打碼卡不看它） |
 | `MASTER` | 音量 |
 
-轉速度時畫面上方會顯示它的意思，例如「SEND 10 WPM DIT 120MS DAH 360MS」。設定改完 3 秒後自動存。不知道怎麼設的話，到 SETTINGS 選 PRESET，見[速度](morse.md#speed)。
+轉速度時畫面上方會顯示它的意思，例如「SEND 10 WPM DIT 120MS DAH 360MS」。旋鈕和 SETTINGS 的改動都是**馬上生效**；存進 flash（關機再開還在）是另一件事：最後一次改動 3 秒後自動存，或按 `SAVE`（0.8）立刻存。等 3 秒是為了轉旋鈕時不要每一格都寫一次 flash。不知道怎麼設的話，到 SETTINGS 選 PRESET，見[速度](morse.md#speed)。
 
 ## PRACTICE（閃卡）
 
