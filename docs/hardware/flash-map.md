@@ -37,8 +37,8 @@ Felucca、SLOOP、ChoralRoot 以及 Dinghy、fm1-base 系的韌體大多沿用�
 | `0x97000` 起 | project（曲子） |
 | `0x9F000` | SLOOP 的 autosave（和 ChoralRoot 的 FM6 bank 是同一個物件編號） |
 | `0xA0000` 起 | samples |
-| `0xD6000`–`0xD7FFF` | 自製 [THEORY](../dev/theory.md#srs) 0.2 的閃卡進度（還沒刷實機）。這台機器的備份裡都是空的；疊在刷 0.1 前的備份上預演，回合結束或離開 TODAY 時才寫 `[模擬]` |
-| `0xD8000`–`0xD9FFF` | 自製 [THEORY](../dev/theory.md#srs) 的設定（v0.1，2026-11-18 刷進實機）。這台機器的 23 份備份裡都是空的；疊在 Morse 0.5 前的備份上預演，只有存檔時寫 `0xD8000` `[模擬]` |
+| `0xD6000`–`0xD7FFF` | 自製 [THEORY](../dev/theory.md#srs) 0.2 的閃卡進度（2026-11-18 刷進實機）。這台機器的備份裡都是空的；疊在刷 0.1 前的備份上預演，回合結束或離開 TODAY 時才寫 `[模擬]` |
+| `0xD8000`–`0xD9FFF` | 自製 [THEORY](../dev/theory.md#srs) 的設定（0.1 起，2026-11-18 刷進實機）。這台機器的 23 份備份裡都是空的；疊在 Morse 0.5 前的備份上預演，只有存檔時寫 `0xD8000` `[模擬]` |
 | `0xDA000`–`0xDBFFF` | 自製 [Morse](../dev/morse.md#flash) 的設定與學習進度（這台機器的備份裡這兩個 sector 都是空的） |
 | `0xDC000` 起 | user preset bank；CTL-1 與 fm1-base 的 app（含 Conductor）用來放面板校正 |
 | `0xDE000` | CTL-1 的 Bluetooth 設定 |
