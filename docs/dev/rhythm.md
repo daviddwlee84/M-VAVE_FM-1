@@ -105,7 +105,11 @@ simulator 的劇本有幾個 app 自己的指令：`pattern q_ee_r_q` 指定 ECH
     - fm1-emu 的 `uc25hq80` 與 `p25q80`：開機進 ECHO；改 BPM 3 秒後存檔，重開後設定還在；METRO 與 ECHO 一輪都跑得起來。
     - 疊在 `2026-11-18-pre-theory-0.2` 備份上預演：開機 0 次寫入，存檔只寫設定所在的 sector，沒有碰 `0xD8000`、`0xDA000`、`0xDC000`、`0xFC000`。
     - **找到兩個衝突，已經改掉**：identity `FM-1_52` 已經有人用，改成 `FM-1_54`；設定原本放 `0xD6000`，和 THEORY 0.2 的閃卡進度撞到，改成 `0xD2000`。
-- **還沒做的**：修正後的版本還要在 Mac 上重新 build、在兩種晶片上跑，並用 THEORY 0.2 之後的備份 `emu-rehearse`，確認 `0xD2000` 是空的。刷機要本人逐次同意。
+- 2026-11-18 在 Mac 上驗證修正後的 `56d345e` `[模擬]`：
+    - 不用任何 patch，`just fw-build rhythm` 就可以 link。套件 616,003 B，identity `FM-1_5400`，SHA-256 `33fdab70eb30656e3984d1d806b72ca10ab184a1ad06530e80c571b14495a4d9`。build 的檢查顯示「no 64-bit multiply inlined beside a load」。
+    - fm1-emu 的兩種晶片：開機 0 次寫入；改 BPM 後存檔 3 次 erase/program；重開後設定還在。
+    - `0xD2000`–`0xD5FFF` 在 `backups/` 的 27 份備份裡全是 `0xFF`。疊在 `2026-11-18-pre-theory-0.2` 上預演：存檔只寫 `0xD2000`，`0xD6000`、`0xD8000`、`0xDA000`、`0xDC000`、`0xFC000` 都沒有碰。
+- **還沒做的**：還沒有 THEORY 0.2 之後的備份。刷機前先備份一次，確認 `0xD2000` 仍然是空的；刷機要本人逐次同意。`fm1.toml` 還沒有 `install` 與 `screenshot`，release build 會拒絕，上 Hub 前要補。
 
 ## 之後 { #next }
 
