@@ -158,7 +158,12 @@ simulator 的劇本有幾個 app 自己的指令：`pattern q_ee_r_q` 指定 ECH
     - 四種譜面的截圖（`notation_1.png` 到 `notation_4.png`）。
     - ENDLESS：第一段 4 回合都準時，血條維持 100，進到第二段而且 BPM 從 90 變 96；之後都不 tap，第 7 回合輸掉，`BEST` 是 6。
     - 重開機後 `BEST` 還在。
-- **還沒做的**：在 Mac 上 `just fw-build rhythm`，以及 fm1-emu 兩種晶片的試跑。
+- 2026-11-18 在 Mac 上驗證 `7e373f7` `[模擬]`：
+    - **`fw-build` 失敗**：譜面的 `st_head` 和 fm1-base `device/storage.c` 的 `st_head` 撞名（見[開發環境](index.md)的警告）。現在譜面的函式都改叫 `staff_*`，ENDLESS 的狀態改叫 `rh_en`。
+    - 只改名字的版本：套件 616,003 B，app 104,296 B，`.data`+`.bss` 41,008 / 98,304 B。
+    - fm1-emu 的 `uc25hq80` 與 `p25q80`：`HOME` 依序切換三頁；READ 模式畫得出譜；ENDLESS 的血條、回合數和上一回合的譜都有出現；設定重開後還在。
+    - 疊在 `2026-11-18-pre-theory-0.2` 上預演：存檔只寫 `0xD2000`。
+- **還沒做的**：改名後的 commit 要在 Mac 上再 build 一次。
 
 ## 之後 { #next }
 
