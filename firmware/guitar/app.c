@@ -525,6 +525,16 @@ static void chord_say(void)
     app_say("CHORD", t);
 }
 
+static void set_page(int p)
+{
+    seq_stop();
+    rec.page = (uint8_t)th_mod(p, PG_N);
+    ui.sh = SH_NONE;
+    if (rec.page == PG_LEARN && !ln.n) ln_round();
+    app_say("PAGE", PAGE_NAME[rec.page]);
+    changed(R_ALL);
+}
+
 static void input(void)
 {
     uint32_t keys, btn = plat_buttons(), k;
@@ -572,13 +582,8 @@ static void input(void)
     for (k = 0; k < NB; k++) {
         uint32_t bit = 1u << k;
         if (!(btn & bit) || (ui.btn & bit)) continue;
-        if (k == B_HOME) {               /* the other page */
-            seq_stop();
-            rec.page = (uint8_t)((rec.page + 1) % PG_N);
-            ui.sh = SH_NONE;
-            if (rec.page == PG_LEARN && !ln.n) ln_round();
-            app_say("PAGE", PAGE_NAME[rec.page]);
-            changed(R_ALL);
+        if (k == B_HOME) {               /* the next page (ALGO turns either way, as in THEORY and Morse) */
+            set_page(rec.page + 1);
         } else if (k == B_PLAY) {
             if (rec.page == PG_LEARN) {
                 if (ln.state != LN_ASK) ln_next();
@@ -669,7 +674,7 @@ static void input(void)
         app_say("TUNING", tun()->name);
         changed(R_ALL);
     }
-    (void)plat_enc(EN_ALGO);
+    if ((e = plat_enc(EN_ALGO)) != 0) set_page(rec.page + e);   /* pages: ALGO, as THEORY and Morse */
     (void)plat_enc(EN_PRESET);
     ui.btn = btn;
 }

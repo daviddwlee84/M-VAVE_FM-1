@@ -17,7 +17,7 @@
 
 ## 頁面 { #pages }
 
-用 `HOME` 依序切換 NECK → SHAPE → LEARN。
+轉 `ALGO` 換頁（NECK → SHAPE → LEARN，正反兩個方向都可以），和 THEORY、Morse 一樣；按 `HOME` 也會跳到下一頁（GUITAR 還沒有 MENU 頁，有了之後 `HOME` 改成開 MENU）。2026-11-18 以前只能用 `HOME` 循環。
 
 | 頁面 | 做什麼 | 版本 |
 |---|---|---|

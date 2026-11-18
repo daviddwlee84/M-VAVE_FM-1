@@ -323,6 +323,14 @@ tap HOME
 wait 60
 expect page 0
 
+# ---- pages also turn with ALGO, either way (as in THEORY and Morse)
+turn ALGO -1
+wait 60
+expect page 2
+turn ALGO 1
+wait 60
+expect page 0
+
 # ---- kept: saved once the knobs rest, read back after a restart
 tap OCT-
 wait 30
