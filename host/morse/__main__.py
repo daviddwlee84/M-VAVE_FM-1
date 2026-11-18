@@ -127,8 +127,10 @@ def _connected_for_progress(args):
     if not wait_connected(host):
         link.close()
         raise RuntimeError("the FM-1 has not said HELLO: is it running Morse?")
-    if not host.can_backup():
-        fw = host.firmware or (0, 0)
+    if host.firmware is None:  # only HEARTBEATs: another program (a browser tab?) answered its HELLO
+        log("firmware version not heard (the FM-1 is already talking to another program); trying anyway")
+    elif not host.can_backup():
+        fw = host.firmware
         link.close()
         raise RuntimeError(f"firmware {fw[0]}.{fw[1]} has no progress backup; it came in "
                            f"{P.PROG_FIRMWARE[0]}.{P.PROG_FIRMWARE[1]}")
