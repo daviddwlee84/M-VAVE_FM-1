@@ -1,0 +1,180 @@
+# RHYTHM in the host simulator: just fw-test rhythm (screenshots and audio in firmware/rhythm/build/host/)
+# The host has no audio queue and no debounce, so a tap lands where the script puts it (LAT 0).
+# hint numbers (rhythm.h): 1 GOOD, 3 MISSED NOTES, 5 SYNCOPATION SQUARED, 6 LATE AFTER RESTS, 8 RUSHING, 9 DRAGGING
+wait 600
+shot boot.png
+expect page 1
+expect bpm 90
+expect bpb 4
+expect echo 0
+expect running 0
+
+# ---- ECHO: a fixed rhythm at 120 BPM, tapped exactly
+turn SELECT 30
+expect bpm 120
+pattern q_ee_r_q
+expect notes 4
+expect_text pattern q_ee_r_q
+autotap 0
+tap REC
+expect running 1
+expect echo 1
+wait 2100
+expect echo 2
+shot echo_listen.png
+peakreset
+wav echo.wav
+wait 2000
+expect echo 3
+expect peak_db_min -30
+wait 2000
+expect echo 4
+shot echo_tap.png
+wait 2400
+wavstop
+expect echo 5
+expect running 0
+expect taps 4
+expect good 4
+expect missed 0
+expect score 100
+expect hint 1
+expect_text hint GOOD
+shot echo_good.png
+
+# ---- the same rhythm, every tap 45 ms early: RUSHING
+autotap -45
+tap REC
+wait 8600
+expect echo 5
+expect taps 4
+expect mean -45
+expect_text hint RUSHING
+shot echo_rushing.png
+
+# ---- 45 ms late: DRAGGING
+autotap 45
+tap REC
+wait 8600
+expect mean 45
+expect_text hint DRAGGING
+
+# ---- only the note after the rest late: LATE AFTER RESTS
+autotap 0 -1 3 60
+tap REC
+wait 8600
+expect_text hint LATE_AFTER_RESTS
+shot echo_late_rest.png
+
+# ---- a note missed (the second): the others still line up
+autotap 0 1
+tap REC
+wait 8600
+expect missed 1
+expect_text hint MISSED_NOTES
+shot echo_missed.png
+
+# ---- syncopation pulled onto the beat (at 90 BPM the CO is 333 ms off the beat)
+turn SELECT -30
+expect bpm 90
+pattern q_syn_q
+autotap 0 -1 2 150
+tap REC
+wait 11300
+expect echo 5
+expect_text hint SYNCOPATION_SQUARED
+shot echo_synco.png
+
+# ---- a generated rhythm, two bars, level 4 (up to TIKA-TIKA), tapped on time
+turn K2 3
+expect level 4
+turn K3 1
+expect bars 2
+tap PLAY
+expect running 1
+expect echo 1
+tap PLAY
+expect running 0
+expect echo 0
+tap PLAY
+wait 200
+# (autotap needs the rhythm first: stop, plan it, then REC plays the same one)
+tap PLAY
+autotap 0
+tap REC
+wait 16600
+expect echo 5
+expect missed 0
+expect score 100
+shot echo_level4.png
+
+# ---- METRO
+tap HOME
+expect page 0
+expect echo 0
+turn SELECT 30
+expect bpm 120
+shot metro_idle.png
+tap PLAY
+expect running 1
+peakreset
+wav metro.wav
+wait 1000
+wavstop
+expect peak_db_min -30
+metrotap 4 20
+wait 2200
+expect metro_taps 4
+expect metro_last 20
+expect metro_avg 20
+shot metro_taps.png
+# subdivisions and the gap: 1 bar on, 1 off
+turn K2 1
+expect sub 1
+turn K3 1
+expect gap 1
+expect running 1
+wait 2100
+# in the silent bar (2 s .. 4 s): no sound
+peakreset
+wait 300
+expect peak_db_max -60
+# tapped through it: beats at 2.5, 3.0, 3.5 s are silent, 4.0 s clicks again
+metrotap 4 -10
+wait 2000
+expect metro_taps 4
+expect metro_gap_taps 3
+expect metro_avg -10
+shot metro_gap.png
+tap PLAY
+expect running 0
+# tap tempo: REC four times, 500 ms apart
+tap REC
+wait 420
+tap REC
+wait 420
+tap REC
+wait 420
+tap REC
+expect bpm 120
+# OCT+ / OCT-: 5 BPM
+tap OCT+
+expect bpm 125
+tap OCT-
+expect bpm 120
+turn K4 12
+expect lat 12
+
+# ---- settings kept over a restart
+wait 3500
+# (saved once the knobs rest 3 s)
+reboot
+wait 600
+expect page 0
+expect bpm 120
+expect sub 1
+expect gap 1
+expect level 4
+expect bars 2
+expect lat 12
+shot reboot.png

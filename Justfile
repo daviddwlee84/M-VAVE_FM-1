@@ -522,3 +522,18 @@ fm1-backup-release dir:
       gh release create "$tag" "$d"/*.bin "$d"/*.json --title "Backup $name" --notes "$notes" --latest=false
     fi
     gh release view "$tag" --json url,assets --jq '.url, (.assets[] | "\(.name) \(.digest)")'
+
+# ---- rhythm: RHYTHM, a rhythm trainer (firmware/rhythm, docs/dev/rhythm.md) ----
+
+# rhythm.c on this computer: parsing, the generator's rules, timing, the alignment, grades and hints.
+rhythm-unit:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    mkdir -p build
+    cc -std=c99 -Wall -Wextra -pedantic -Wdouble-promotion -Wfloat-equal -Wshadow -o build/rhythm_test \
+      firmware/rhythm/tests/rhythm_test.c
+    build/rhythm_test
+
+# RHYTHM in the emulator (build it first: just fw-build rhythm). Its simulator test is `just fw-test rhythm`.
+rhythm-emu chip="uc25hq80":
+    just emu-run firmware/rhythm/build/rhythm.fwsc "{{chip}}"
