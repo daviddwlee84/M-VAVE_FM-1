@@ -1,7 +1,7 @@
 # GUITAR's build settings (fm1-base tools/build.py)
 name = "GUITAR"
 title = "GUITAR"
-id_prefix = "FM-1_53"          # package identity: dev FM-1_5300, release 0.1 FM-1_53000100 (not yet checked against the Hub's catalog)
+id_prefix = "FM-1_55"          # package identity: dev FM-1_5500, release 0.1 FM-1_55000100 (free in the Hub's catalog of 2026-11-18 12:01 UTC; FM-1_52 and FM-1_53 are taken)
 usb_manufacturer = "fm1-base"
 usb_product = "GUITAR FM-1"
 o2 = []

@@ -3,11 +3,11 @@
 GUITAR, a pocket guitar neck and chord book for the M-VAVE FM-1, built on fm1-base. v0.1 has two pages: NECK, a
 key's scale on frets 0-12 (the whole neck, or one CAGED / three-notes-per-string position at a time) on guitar,
 bass, ukulele or mandolin in eight tunings; SHAPE, chord diagrams (fingers, barres, open and muted strings) found by
-search, easiest first. Verified in the host simulator only so far. Design and controls (Traditional Chinese):
+search, easiest first. Verified in the host simulator and fm1-emu, not yet on the unit. Design and controls (Traditional Chinese):
 [docs/dev/guitar.md](../../docs/dev/guitar.md).
 
 Licence: GPL-3.0-or-later (`LICENSE`): it includes THEORY's `theory.c`, `synth.c` and `gtext.c` from `../theory`.
-Package identity `FM-1_53` (dev `FM-1_5300`; not yet checked against the Hub's catalog). Settings: one record at
+Package identity `FM-1_55` (dev `FM-1_5500`; free in the Hub's catalog of 2026-11-18). Settings: one record at
 `0xD4000` through fm1-base's store.
 
 | File | What it is |

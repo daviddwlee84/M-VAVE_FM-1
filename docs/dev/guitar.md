@@ -2,9 +2,9 @@
 
 把 FM-1 變成隨身的吉他指板與和弦圖：選一個調，指板上標出音階的每個位置，可以一次只看一個把位（CAGED、3NPS）；彈一個和弦，就畫出它的按法，最簡單的排第一。靈感來自 [ChordRoot](https://chordroot.com/)，但只借想法，不抓它的資料。
 
-**狀態（2026-11-18）：v0.1（NECK + SHAPE）只在 host simulator 上驗證過 `[模擬]`，還沒有做實機套件，也還沒在 fm1-emu 跑過。** 驗證結果見 [v0.1 驗證](#v01-verify)。
+**狀態（2026-11-18）：v0.1（NECK + SHAPE）在 host simulator 和 fm1-emu 兩種晶片上驗證過，也疊在實機備份上預演過 `[模擬]`；還沒刷進實機。** 驗證結果見 [v0.1 驗證](#v01-verify)。
 
-- 韌體在 `firmware/guitar/`，GPL-3.0-or-later，名稱 GUITAR，識別碼 `FM-1_53`（開發版 `FM-1_5300`）。這個前綴**還沒有**對照 Hub 的 catalog 確認（雲端環境連不到 Hub），上 Hub 前要用 #check 查。
+- 韌體在 `firmware/guitar/`，GPL-3.0-or-later，名稱 GUITAR，識別碼 `FM-1_55`（開發版 `FM-1_5500`）。原本選的 `FM-1_53` 和 Hub 上 LSDJ Burrito 的 `FM-1_537…` 開頭相同（嚴格說格式不會撞，但 Morse 遇到 `FM-1_13` 對 `FM-1_137` 時也照這個原則換掉），所以改成 `FM-1_55`：2026-11-18 對照 Hub catalog（12:01 UTC 版）沒有人用 `[上游]`。上 Hub 前仍要用 #check 再查一次。
 - 和 THEORY、RHYTHM 分開，是獨立的韌體（2026-11-18 本人決定，見[設計提案](#background)）。直接 `include` THEORY 的 `theory.c`、`synth.c`、`gtext.c`，所以授權跟著 THEORY 是 GPL-3.0-or-later。
 - 設定存在 `0xD4000`（見[存檔](#flash)）。
 - 指板核心 `fret.c` 的 `just guitar-unit` 有 299,610 個檢查，全部通過。
@@ -113,26 +113,28 @@ LED：NECK 亮調內的音（主音 mid、其他 glow），SHAPE 亮和弦的組
 
 ## 存檔 { #flash }
 
-設定是一筆 `rec_t`（`GT01`，約 24 bytes），透過 fm1-base 的 store（`APP_STORE_MAP {0xDC000, 0xD4000}`）存在 `0xD4000`。選這裡是因為：`0xD6000` 給 RHYTHM、`0xD8000` 是 THEORY、`0xDA000` 是 Morse、`0xDC000` 是面板校正，而 `0xFC000` 是 SLOOP、Agent Deck、CTL-1 共用的設定區。
+設定是一筆 `rec_t`（`GT01`，約 24 bytes），透過 fm1-base 的 store（`APP_STORE_MAP {0xDC000, 0xD4000}`）存在 `0xD4000`。選這裡是因為：`0xD6000` 是 THEORY 0.2 的閃卡進度、`0xD8000` 是 THEORY 的設定、`0xDA000` 是 Morse、`0xDC000` 是面板校正，而 `0xFC000` 是 SLOOP、Agent Deck、CTL-1 共用的設定區。
 
-**還沒做**：用 `just emu-rehearse` 疊在這台機器最新的備份上，確認 `0xD4000`–`0xD5FFF` 在備份裡是空的、開機不寫、存檔只寫 `0xD4000`。這要先有實機套件（`just fw-build guitar`，需要 JieLi toolchain，雲端環境下載不到）。做完之後在 [flash map](../hardware/flash-map.md) 加一列。
+疊在 `2026-11-18-pre-theory-0.2` 備份上預演（兩種晶片，`[模擬]`）：開機 0 次寫入；存檔只改 `0xD4000` 一個 sector；`0xD6000`、`0xD8000`（THEORY）、`0xDA000`（Morse）、`0xFC000` 都和備份相同。備份本身的 `0xD4000`–`0xD5FFF` 全是 `0xFF`。這份備份是裝 THEORY 0.2 之前做的，THEORY 0.2 的閃卡進度在 `0xD6000`，GUITAR 不碰那裡。
 
 ## v0.1 驗證 { #v01-verify }
 
-2026-11-18，全部 `[模擬]`。
+2026-11-18，全部 `[模擬]`。後三列在本人的 Mac 上跑（PR 的 worktree）。
 
 | 項目 | 怎麼驗證 | 結果 |
 |---|---|---|
 | 指板核心 | `just guitar-unit` | 299,610 個檢查全部通過 |
 | 畫面、辨認、聲音、存檔 | `just fw-test guitar`（`tests/basic.txt`） | 全部 ok：G 大調開機、琴鍵燈、單音 `G4 1`、和弦 `C IV`、CAGED E 與 3NPS 的格子、捲動、音名與級數標示、`PLAY` 跑音階、換調換音階、D 小調五聲 2NPS、`SEL` 加琴鍵；SHAPE 的 C `x32010` 指法 `032010`、strum 5 個聲部、彈 Am 得到 `x02210`、F、B7 `x21202`、Bbm、Gm、烏克麗麗 C `0003`；存檔、重開讀回 |
-| 實機套件 | `just fw-build guitar` | **還沒做**：雲端環境下載不到 JieLi toolchain |
-| 兩種晶片、疊在備份上 | `just guitar-emu`、`just emu-rehearse` | **還沒做**，需要上一步的 `.fwsc` |
+| 實機套件 | `just fw-build guitar`（本人的 Mac，dev build `FM-1_5300`，改 identity 之前） | app 125,944 B（槽 581,564 B），RAM `.data+.bss` 29,052 / 98,304 B，`.ram_text` 5,100 / 32,768 B；沒有 soft-double，`firmware/guitar` 沒有 compiler warning；套件 616,003 B |
+| 兩種晶片：改設定、重開讀回 | fm1-emu `uc25hq80`、`p25q80` headless，`FM1_BENCH_KEYS` 轉 `SELECT` 到 A major、按 `HOME` 到 SHAPE | 每次存檔寫 3 次；重開 0 次寫入，讀回 SHAPE 頁與 A major |
+| 疊在實機備份上 | `emu_rehearse.py` 疊在 `2026-11-18-pre-theory-0.2`，兩種晶片 | 開機 0 次寫入；存檔只寫 `0xD4000`（見[存檔](#flash)） |
 
 刷進實機之前要照 AGENTS.md：兩種晶片都跑過存檔與重開、`emu-rehearse` 報告寫入的 sector、完整備份、本人逐次同意。
 
 ## 之後 { #next }
 
-- 實機套件與 fm1-emu 驗證（在 Mac 上：`just fw-build guitar && just guitar-emu`，再 `just guitar-emu p25q80`）。
+- 換成 `FM-1_55` 之後重做一次 `fw-build`（只差 identity），刷實機前照 AGENTS.md 做完整 preflight。
+- release 版要在 `fm1.toml` 補 `install`、`screenshot`（build 會提醒）。
 - 指板方向可以反過來（低音弦在上）、左手吉他鏡像。
 - BOX 頁：5 品放大的音階指法，每個點寫手指編號。
 - SHAPE 的轉位與 slash chord（`C/E`）、jazz 的 shell voicing（目前要求根音在低音）。

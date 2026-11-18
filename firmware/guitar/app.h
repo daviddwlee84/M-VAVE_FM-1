@@ -14,7 +14,7 @@
 #define APP_BLOCK 256u                   /* frames per audio block: 5.8 ms at 44.1 kHz */
 #define APP_TOUCH                        /* velocity from the keys (lib/touch.h) */
 
-/* the settings, one record (app.c rec_t), at 0xD4000: below RHYTHM's 0xD6000, THEORY's 0xD8000 and Morse's 0xDA000,
+/* the settings, one record (app.c rec_t), at 0xD4000: below THEORY's 0xD6000 (0.2 progress) and 0xD8000 and Morse's 0xDA000,
  * away from the 0xFC000 settings sector SLOOP, Agent Deck and CTL-1 share. Not yet rehearsed over this unit's
  * backups (docs/dev/guitar.md). The panel calibration is the platform's */
 enum { OBJ_PANEL, OBJ_GUITAR, OBJ_NOBJ };
