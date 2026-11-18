@@ -91,3 +91,5 @@ fm1-base 的 resource region（`resources = FILE`）不適合拿來放可替換�
 3. 韌體 v1：開機卡片、四鍵評分、選擇題、拼字、遺忘曲線、FSRS，deck 編進映像。
 4. 同步：日期、複習紀錄、AnkiConnect 寫回。
 5. 之後如果要上 Firmware Hub，比照 Morse 拆成獨立 repo 再掛成 submodule（見 [Hub](../firmware/hub.md)）。
+
+[樂理練習機](theory.md)也要用 spaced repetition：v1 沿用 Morse 的 Leitner rounds。這裡的 FSRS 移植好之後，可以放進 `firmware/common` 讓兩個 app 共用。

@@ -327,6 +327,22 @@ morse-shots: (fw-test "morse")
     print(f"{len(names)} screens in {dst}")
     PY
 
+# ---- theory: a music theory trainer, so far its platform-free core (firmware/theory, docs/dev/theory.md) ----
+
+# theory.c on this computer: spelling, scales, keys, chords, Roman numerals, naming a chord, voicing, and
+# music21's spellings (tests/vectors.h). Strict flags: the core must build in fm1-base (no double, no libc).
+theory-unit:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    mkdir -p build
+    cc -std=c99 -Wall -Wextra -pedantic -Wdouble-promotion -Wfloat-equal -Wshadow -o build/theory_test \
+      firmware/theory/tests/theory_test.c
+    build/theory_test
+
+# Regenerate firmware/theory/tests/vectors.h from music21 (BSD-3-Clause; pinned, fetched by uv, not a project dependency).
+theory-vectors:
+    uv run --quiet --no-project --with music21==10.5.2 python -I host/theory/make_vectors.py
+
 # ---- voice lab: speech options for a vocabulary app (host/voicelab, docs/dev/tts.md) ----
 
 # Upstream code the lab builds on, at pinned commits, into vendor/ (git-ignored): Moonshine's Klatt TTS (MIT),

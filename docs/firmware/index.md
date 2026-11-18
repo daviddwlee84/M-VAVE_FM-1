@@ -45,6 +45,22 @@ FM-1 同一時間只跑一套主要韌體，換韌體就是重刷。可以先在
 | [Macropad Patch](https://github.com/smememe/fm1-macropad-patch) | 把原廠 V15 patch 成 MIDI macro pad | host 端自訂所有按鍵行為 |
 | [MIDI Processor](https://midihax.github.io/fm1-midi-processor/html/index.html) | MIDI filter、remap、monitor | MIDI routing、debug `[調研]` |
 
+## 學習類 { #learning }
+
+用 FM-1 來學東西的韌體。資料來自 Firmware Hub 目錄和 GitHub（2026-11-18），除了 MORSE 以外我都沒有用過 `[調研]`。
+
+| 韌體 | 學什麼 | 新晶片（Hub 標示） | 備註 |
+|---|---|---|---|
+| [MORSE](https://github.com/daviddwlee84/fm1-morse) | 摩斯電碼：閃卡、發報、收聽 | 認得 | 我自己寫的，見[摩斯電碼機](../dev/morse.md) |
+| [Shed](https://github.com/Luisnvb/fm1-shed) | jazz 聽力：級數、和弦性質、音程、旋律聽寫等 9 種 drill | 不在 Hub | 沒有 release，只有原始碼（FM1 Open SDK） |
+| [FM1 Keyboard Academy](https://github.com/chmess/fm1-keyboard-academy) | 初學者鋼琴課程：LED 帶彈、30 首旋律 | 不在 Hub | 有 release v0.1.2，晶片支援不明 |
+| [Kris Jangle](https://github.com/doohinkus/kris-jangle) | 聽聖誕歌的開頭，再彈回來 | 認得 | |
+| [FM-1 Midi-Mania](https://github.com/shan-sherif/fm-1-midi-mania) | 音符往下掉的節奏遊戲，MIDI 檔轉成歌 | 認得 | |
+| [Flyfish](https://github.com/delirioux/flyfish) | 練一首蕭邦練習曲 | 認得 | |
+| [SPELLBOX](https://github.com/pjac1810/spellbox) | Speak & Spell 風格的拼字 | **只認舊晶片** | |
+
+自己的樂理練習機構想見[樂理練習機](../dev/theory.md)，裡面有這些作品和其他平台的比較。
+
 ## 會講話的韌體
 
 Speak37、SPELLBOX、386DX、Chimera Vocal、EVIL GENIUS 都能在 FM-1 上合成英文語音（LPC、共振峰、聲道模型、SAM）。做法、licence 與試聽比較見[裝置端語音合成](../dev/tts.md#community)。
