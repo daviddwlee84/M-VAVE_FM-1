@@ -113,7 +113,7 @@ class SimLink:
         self._last = 0.0
         from . import progress as G
 
-        self.progress = G.Progress()      # what it has learnt
+        self.progress = G.Progress(settings=G.Settings())   # what it has learnt, and its settings (0.7)
         self.owner_says = P.PD_LOADED     # the owner's answer when a backup comes in (PLAY / HOME)
         self._asm = G.Assembler()
         self.q.put(P.device_hello(*_firmware()))
@@ -144,7 +144,7 @@ class SimLink:
         elif m and m.type == P.T_PROG_REQ:
             from . import progress as G
 
-            for f in G.frames(self.progress, P.T_PROG):
+            for f in G.frames(self.progress, P.T_PROG, fmt=G.format_for(self.progress, _firmware())):
                 self.q.put(f)
         elif m and m.type == P.T_PROG_LOAD:
             from . import progress as G

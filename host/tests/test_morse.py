@@ -2,6 +2,7 @@
 text cleaning, and the host's answers, against the simulated FM-1."""
 
 import io
+import json
 
 import pytest
 
@@ -60,7 +61,7 @@ def test_host_answers_hello_and_types():
     for _ in range(3):
         host.pump(0.01)
     assert link.acked and host.connected
-    assert host.firmware == (0, 6)
+    assert host.firmware == (0, 7)
     assert host.transport == P.TR_USB
     assert typer.typed == "cq de fm1 "
     assert P.hello_ack() in link.sent
@@ -140,12 +141,64 @@ def test_progress_json_round_trip_and_checks():
     assert "15 open" in G.summary(p)
 
 
+def test_progress_with_settings_format_2():
+    p = G.sample_v2()
+    w = G.wire(p)
+    assert w[0] == 2 and len(w) == G.WIRE_N[2] == 274
+    assert len(G.wire(p, fmt=1)) == G.WIRE_N[1] == 262   # the progress alone, for firmware 0.4-0.6
+    asm = G.Assembler()
+    got = None
+    for f in G.frames(p, P.T_PROG):
+        got = asm.feed(P.parse(f).payload)
+    assert got == p and got.settings.flags >> 2 == 3
+    asm = G.Assembler()
+    for f in G.frames(G.sample(), P.T_PROG):         # format 1 still read
+        got = asm.feed(P.parse(f).payload)
+    assert got == G.sample() and got.settings is None
+
+
+def test_settings_in_the_file():
+    p = G.sample_v2()
+    text = G.to_json(p, (0, 7))
+    d = json.loads(text)
+    assert d["version"] == 2
+    assert d["settings"]["start_page"] == "key" and d["settings"]["keyer"] == "iambic_b"
+    assert d["settings"]["hear_wpm"] == 25 and d["settings"]["sound"] is True
+    assert G.from_json(text) == p
+    v1 = json.loads(G.to_json(G.sample()))
+    v1["version"] = 1
+    assert G.from_json(json.dumps(v1)) == G.sample()   # a host 0.4-0.6 file
+    d["settings"]["start_page"] = "settings"
+    with pytest.raises(G.ProgressError):
+        G.from_json(json.dumps(d))
+    d["settings"] = {"hear_wpm": 50}
+    with pytest.raises(G.ProgressError):
+        G.from_json(json.dumps(d))
+    d["settings"] = {"colour": "blue"}
+    with pytest.raises(G.ProgressError):
+        G.from_json(json.dumps(d))
+    assert "start page key" in G.summary(p)
+
+
+def test_settings_go_only_to_firmware_0_7():
+    p = G.sample_v2()
+    assert G.format_for(p, (0, 7)) == 2
+    assert G.format_for(p, (0, 6)) == 1
+    assert G.format_for(p, None) == 1
+    assert G.format_for(G.sample(), (0, 7)) == 1
+    for raw in (bytes([4, 8, 0, 0, 0, 20, 0, 0, 0x58, 2, 10, 0]),          # hear speed under 5
+                bytes([20, 8, 0, 0, 0x20, 20, 0, 0, 0x58, 2, 10, 0]),      # flags bit 5
+                bytes([20, 8, 0, 0, 7 << 2, 20, 0, 0, 0x58, 2, 10, 0])):   # start page SETTINGS
+        with pytest.raises(G.ProgressError):
+            G.Settings.unblob(raw)
+
+
 def test_backup_and_restore_against_the_simulator():
     link = SimLink(lines=[], out=io.StringIO(), beat=0.01)
     host = Host(link)
     host.pump(0.05)
     assert host.can_backup()
-    assert host.backup(timeout=2) == G.Progress()
+    assert host.backup(timeout=2) == G.Progress(settings=G.Settings())
     assert host.restore(G.sample(), timeout=2, gap=0) == P.PD_LOADED
     assert link.progress == G.sample()
     assert host.backup(timeout=2) == G.sample()

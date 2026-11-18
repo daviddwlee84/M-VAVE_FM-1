@@ -83,13 +83,29 @@ git clone --branch <app>-split . /tmp/<repo> && cd /tmp/<repo> && git checkout -
 Only these fields: `what`, `author`, `kinds`, `play`, `editor`, `cheat`, `image`, `color`, `sounds` (and `smk37`).
 Any other field makes the whole file unused.
 
-- `what`: English, plain, 20-300 characters, no links, no `<>{}` or backticks.
+- `what`: English, plain, 20-300 characters, no links, no `<>{}` or backticks. Longer is not refused but the card
+  cuts it (MORSE's 350 ended at "Vail…"): count it.
 - `author` (2-60 characters): the name on the card's "By:". Keep it the same as the form's "Your name".
 - `kinds`: an array, first entry counts: synth, groove, drums, chords, tracker, other.
 - `image`: a repo path; square, 240-1024 px, PNG/WebP/JPEG, at most 300 KB (a 240 x 240 simulator `shot` works).
 - `sounds`: ask the owner; never guess. `"none"` only if every sound is generated in code and the repo holds no
   `.wav`, `.syx`, `.sf2` or sample arrays.
 - `python3 -m json.tool fmhub.json`, then the owner runs the KB's "Check your file" (https://thefirmwarehub.com/kb/).
+- `play` (the card's "Play in browser"): a URL. Most point at fm1-emu's web build, which plays the release package
+  itself and reads the Hub's catalog, so a listed firmware is found by its Hub id with no copy of the package:
+  - direct: `https://joakimeriksson.github.io/fm1-emu/?fw=<hub id>` (`&mhz=` sets the clock);
+  - better: an own `web/try/` page on the repo's GitHub Pages with an iframe of `…/fm1-emu/?fw=<hub id>&embed=1`
+    (only the synth), a few things to try, what the emulator cannot do (Bluetooth, MIDI out), a reload button and a
+    full-page link. MORSE: `firmware/morse/web/try/index.html`.
+  - `?package=URL&name=` plays a package from elsewhere, but needs https with CORS: GitHub Pages yes, release
+    assets no. Do not pin a Hub file with it: the Hub deletes the old package on each release.
+  - Before listing there is no Hub id yet: add `play` after the Hub lists the firmware (a card edit, live within
+    three hours). Check it in a fresh browser: right after a release fm1-emu can fetch the package a stale cached
+    catalog names and say `<NAME>: https://thefirmwarehub.com/fw/<id>-<old>.fwsc: 404`; reloading (or ten
+    minutes, the catalog's `max-age=600`) fixes it. Note `fm1-live --shot` presses PLAY by itself unless given keys
+    or `FM1_NO_PLAY=1`.
+- `cheat`: a URL. A README anchor works, a GitHub Pages single page (printable, `@media print`) reads better.
+  MORSE: `web/cheatsheet.html`, translated from the KB's Chinese cheatsheet; keep the two in step.
 
 ### 5. README
 

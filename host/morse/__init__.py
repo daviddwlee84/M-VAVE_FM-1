@@ -1,5 +1,5 @@
 """Morse host: the computer's side of firmware/morse. Types what the FM-1 reads into the
 computer, and sends text for the FM-1 to play. MIT."""
 
-__version__ = "0.6.0"
-FIRMWARE_KNOWN = (0, 6)  # the newest firmware (major, minor) this host was written against
+__version__ = "0.7.0"
+FIRMWARE_KNOWN = (0, 7)  # the newest firmware (major, minor) this host was written against

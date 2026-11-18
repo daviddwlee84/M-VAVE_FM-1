@@ -158,6 +158,9 @@ def cmd_restore(args) -> int:
         p = G.from_json(f.read())
     log(f"from the file: {G.summary(p)}")
     link, host = _connected_for_progress(args)
+    if p.settings is not None and G.format_for(p, host.firmware) == 1:
+        fw = f"{host.firmware[0]}.{host.firmware[1]}" if host.firmware else "unknown"
+        log(f"firmware {fw} takes no settings (0.7 and later do): the progress alone")
     try:
         log("sent: press PLAY on the FM-1 to load it, HOME to keep what is there")
         r = host.restore(p)

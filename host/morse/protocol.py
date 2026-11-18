@@ -150,7 +150,7 @@ def hexs(b: bytes) -> str:
 
 # shared with firmware/morse/tests/basic.txt: the same bytes, by the name in its comments
 VECTORS = {
-    "hello": (device_hello(0, 6), "F0 7D 4D 4F 01 41 01 00 06 00 F7"),
+    "hello": (device_hello(0, 7), "F0 7D 4D 4F 01 41 01 00 07 00 F7"),
     "hello_ack": (hello_ack(), "F0 7D 4D 4F 01 01 01 F7"),
     "char_k": (device_char("K"), "F0 7D 4D 4F 01 43 4B F7"),
     "text_cq": (text("cq")[0], "F0 7D 4D 4F 01 02 43 51 F7"),

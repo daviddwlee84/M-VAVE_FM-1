@@ -97,6 +97,30 @@ M-VAVE 官方的產品頁與下載在 [cuvave.com](https://www.cuvave.com/produc
 - **Hub 讀的是 `fmhub.json`**：fm1-base build 出來的 `firmware.json`，在 Hub 的文件裡完全沒提到。
 - **一個 repo 一張卡**：圖片路徑、`fmhub.json` 都以 repo 根目錄為準，所以要上架的韌體應該放在獨立 repo（見[自製韌體環境](../dev/index.md)）。
 
+### Play in browser 和 cheatsheet { #play }
+
+Hub 卡片上的 ▶ Play in browser 按鈕來自 `fmhub.json` 的 `play`，cheatsheet 連結來自 `cheat`，兩者都是網址。2026-11-18 從 `catalog.json` 看，有 `play` 的韌體大多連到 [fm1-emu](https://joakimeriksson.github.io/fm1-emu/) 網頁版，只有少數是自己寫的模擬器 `[上游]`。fm1-emu 的頁面寫明了幾種網址參數 `[上游]`：
+
+| 參數 | 作用 |
+|---|---|
+| `?fw=<id>` | 選韌體，id 用 Hub 的 id 也可以。fm1-emu 讀 Hub 的 `catalog.json`，Hub 新上架、它的清單還沒收的韌體也找得到（標成 not yet run here），套件從 Hub 抓 |
+| `&mhz=` | 時脈，例如 `?fw=x0x&mhz=120` |
+| `?package=URL&name=` | 播別的網站上的套件，要 https，而且那個網站要開 CORS。GitHub Pages 有開（`access-control-allow-origin: *`），GitHub release 的檔案沒有 |
+| `&embed=1` | 只顯示機器和它的控制項，給別的網站用 iframe 嵌入 |
+
+兩種做法：
+
+- **直接連**：`play` 填 `https://joakimeriksson.github.io/fm1-emu/?fw=<hub id>`，例如 conductor（別人的同名韌體）、argo、clavioline。
+- **自己的 Try 頁**：自己的 GitHub Pages 放一頁，iframe 嵌入 `?fw=<id>&embed=1`，旁邊寫先試什麼、模擬器做不到什麼（例如藍牙）。Rainbow、Skiff、Tuna 和 MORSE 都是這樣。MORSE 的在 [`web/try/`](https://daviddwlee84.github.io/fm1-morse/web/try/)。
+
+**換版時會短暫 404**：Hub 換新版時會刪掉舊套件。如果瀏覽器或 CDN 給 fm1-emu 的是舊的 `catalog.json`（`max-age=600`），它就會去抓已經不在的檔案，例如 `MORSE: https://thefirmwarehub.com/fw/morse-0.3.fwsc: 404`。fm1-emu 抓不到時，會改抓 Hub 目錄裡現在列的那個套件，但查的還是同一份舊目錄，所以救不回來。2026-11-18 本人遇到一次；我用全新的 headless Chromium 開了 5 次，第 1 次重現，後 4 次都抓到 `morse-0.5.fwsc` 並開機 `[模擬]`。重新整理通常就好。等 fm1-emu 的維護者把韌體收進它自己的清單，情況會穩定一點。
+
+`?package=` 不適合拿來釘死 Hub 的檔案：換版後舊檔被刪，連結就會一直是 404。
+
+**cheatsheet**：指到 README 的錨點也可以，例如 `#controls`，但 GitHub Pages 上的單頁比較好讀，也能列印。很多韌體這樣做，例如 DUELL、Aisling、Penumbra。MORSE 的在 [`web/cheatsheet.html`](https://daviddwlee84.github.io/fm1-morse/web/cheatsheet.html)。
+
+**`what` 超過 300 字元**：Hub 不會退件，但卡片會截斷。MORSE 原本的說明約 350 字元，在目錄裡被切在「Vail…」，2026-11-18 縮到 300 字元以內。
+
 ### 社群清單 { #lists }
 
 Hub 之外的韌體清單，2026-11-18 查的。stars 是當天 GitHub 上的數字，「外部 PR」是最近 15 個已關閉、不是維護者自己開的 PR 中被 merge 的比例。`[上游]`

@@ -15,7 +15,7 @@ MORSE 是這個 repo 自己寫的 FM-1 韌體（[fm1-morse](https://github.com/d
 
 ## 第一次
 
-1. 開機後直接進 PRACTICE。到 SETTINGS 確認 **PRESET 是 START**：字元用 20 WPM 播，字和字之間拉開到 8 WPM（Farnsworth）；發報速度是 10 WPM。
+1. 開機先進選單（0.7；0.6 以前直接進 PRACTICE），按 `HOME` 或選 PRACTICE 進去。想一開機就練，到 SETTINGS 把 START PAGE 改成 PRACTICE。到 SETTINGS 確認 **PRESET 是 START**：字元用 20 WPM 播，字和字之間拉開到 8 WPM（Farnsworth）；發報速度是 10 WPM。
 2. **LEARN BY 保持 SOUND。** 畫面不畫點劃，每個字當成一個聲音來記。先看圖學的人，之後聽的時候會習慣數點劃，速度容易卡在 10–15 WPM（原因見[先用聽的](morse.md#by-sound)）。
 3. 不想出聲的場合按 `FX` 靜音，琴鍵燈會照節奏閃。
 

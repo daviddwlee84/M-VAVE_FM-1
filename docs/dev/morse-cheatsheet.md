@@ -1,12 +1,12 @@
 # 摩斯電碼機操作速查
 
-韌體 0.6（0.3 以前沒有的操作標了「0.4」，藍牙是「0.5」；0.1 和 0.2 的差別見文末）。學習的步驟見[用 MORSE 學摩斯](morse-learn.md)。設計與原理見[摩斯電碼機](morse.md)。
+韌體 0.7（0.3 以前沒有的操作標了「0.4」，藍牙是「0.5」，開機頁是「0.7」；0.1 和 0.2 的差別見文末）。英文版、可以印成 A4 的單頁：[MORSE cheatsheet](https://daviddwlee84.github.io/fm1-morse/web/cheatsheet.html)（Hub 卡片的 cheatsheet 連到這裡）；沒有 FM-1 也能[在瀏覽器裡試](https://daviddwlee84.github.io/fm1-morse/web/try/)。學習的步驟見[用 MORSE 學摩斯](morse-learn.md)。設計與原理見[摩斯電碼機](morse.md)。
 
 ## 任何頁面
 
 | 控制 | 作用 |
 |---|---|
-| `HOME` | 叫出選單；在選單裡再按一次回到上一頁 |
+| `HOME` | 叫出選單；在選單裡再按一次回到上一頁。0.7 起開機先進選單（SETTINGS 的 START PAGE 可以改），這時按 `HOME` 進 PRACTICE |
 | `ALGO` 旋鈕 | 直接換頁 |
 | `FX` | 聲音開／關。關掉時 `FX` 燈亮，改看琴鍵燈和畫面上的燈號 |
 | `K1` | 聽的速度：字元 5–40 WPM（預設 20） |
@@ -125,6 +125,7 @@ EDIT 裡（0.4）：
 | JUDGING | 0.4：BY RHYTHM（預設，看自己的長短比例）或 STRICT（照發報速度，0.3 的判法） |
 | TYPE KEYS | TYPE 頁的排列 |
 | BLUETOOTH | 0.5：ON（預設）或 OFF，關機後保留。旁邊會寫 NOT CONNECTED、CONNECTED，或 TALKING（電腦端程式或網頁正透過藍牙連著）。項目超過一頁，往下轉會捲動 |
+| START PAGE | 0.7：開機進哪一頁：MENU（預設）、PRACTICE、LISTEN、KEY、RHYTHM、TYPE、CHART。0.6 以前固定進 PRACTICE。不是 MENU 時不要直接降回 0.6（見[備份與還原](morse.md#backup)） |
 
 畫面右上角：`PC` 代表有會回應 MORSE 的程式連著（`morse` 指令列或 MORSE on the web，USB 或藍牙都算；Vail 只收按鍵、不回應，所以不會亮），0.6 起拔線後半秒內消失、走藍牙的在藍牙斷線時消失，其他情況是 10 秒沒消息才消失；`BT`（0.5）灰色代表藍牙開著、等電腦連上，藍色代表已經連上；`MUTE` 代表靜音。
 
@@ -143,8 +144,8 @@ EDIT 裡（0.4）：
 just morse-type            # 解出的字打進 Mac 目前的視窗（要 Accessibility 權限）
 just morse-type --dry-run  # 只印出來
 just morse-send cq cq de fm1 k   # FM-1 當成收到的播出來（"73 <SK>" 這樣的 prosign 0.2 起可以）
-just morse-backup progress.json  # 0.4：學習進度存成 JSON（FM-1 上什麼都不變）
-just morse-restore progress.json # 0.4：載回去；FM-1 會先問，按 PLAY 才載入
+just morse-backup progress.json  # 0.4：學習進度存成 JSON（FM-1 上什麼都不變）；0.7 起連設定一起
+just morse-restore progress.json # 0.4：載回去；FM-1 會先問，按 PLAY 才載入；檔案有設定、韌體 0.7 以上時設定也換
 PYTHONPATH=host uv run python -m morse --bluetooth send cq   # 0.5：先打開 Mac 的藍牙 MIDI 視窗，等 FM-1 連上
 ```
 

@@ -97,9 +97,10 @@ class Host:
         return self.progress
 
     def restore(self, p: G.Progress, timeout: float = 120.0, gap: float = 0.03) -> int:
-        """Send p; the FM-1 asks its owner (PLAY yes, HOME no). Returns P.PD_* (TimeoutError if no answer)."""
+        """Send p; the FM-1 asks its owner (PLAY yes, HOME no). Returns P.PD_* (TimeoutError if no answer).
+        p's settings go only to firmware 0.7 and later (format 2); older firmware gets the progress alone."""
         self.prog_done = None
-        for f in G.frames(p):
+        for f in G.frames(p, fmt=G.format_for(p, self.firmware)):
             self.link.send(f)
             self.pump(gap)
         end = time.time() + timeout
