@@ -6,8 +6,8 @@
 
 ## 1. Try it (how it plays)
 
-- Browser build: <!-- link, or "none: no Docker / emsdk here". `just fw-web APP`; a private claude.ai artifact for now.
-  Public pages for each app come with the docs site on main (planned). This is the app's host build, not the .fwsc. -->
+- fm1-emu link: <!-- just fw-build APP && just fw-preview APP pr-N: the package itself in the browser, no account.
+  Refresh it after new commits; remove it (--remove) when the PR is merged or closed. -->
 
 ## 2. Screens
 

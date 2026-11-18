@@ -145,10 +145,20 @@ fm1-base 可以把同一個 app 編成 WebAssembly，在瀏覽器裡跑（`tools
     - 用 `python3 -m http.server -d firmware/APP/build/emu` 開，按 `Switch on` 開機。
     - 存檔放在瀏覽器的 localStorage。
 - **PR 的驗收分三層**（本人 2026-11-18 決定，範本是 `.github/pull_request_template.md`，規則在 `AGENTS.md`）：
-    1. **試玩**：網頁版的連結，只用來看玩法。它是 app 重新編成的電腦版，不是要刷的 `.fwsc`，所以網頁版沒問題，不代表要刷的套件沒問題。
-        - 目前發布成私人的 claude.ai artifact，沒有權限的隊友打不開。第一個例子是 PR #5。
-        - 連結只代表當時那一版，有新的 commit 要重新發布。
-        - 本人選擇以後在 `main` 的文件網站放每個 app 的公開試玩頁，PR 不另外架公開網址。這還沒做。
+    1. **試玩**：PR 附一個公開連結，用 fm1-emu 的網頁版跑這個 PR 編出來的 `.fwsc`，不需要帳號。
+        - 做法：`just fw-build APP`，再 `just fw-preview APP pr-N`。
+        - 它會把套件推到 `previews` 分支（只放套件，和 `main` 的歷史分開），然後印出連結，例如 `https://joakimeriksson.github.io/fm1-emu/?package=https://raw.githubusercontent.com/daviddwlee84/M-VAVE_FM-1/previews/pr-N/APP.fwsc&name=APP&chip=uc25hq80`。
+        - fm1-emu 的 `?package=` 只收有開 CORS 的 https 網址。`raw.githubusercontent.com` 有開（`Access-Control-Allow-Origin: *`），GitHub release 的下載檔沒有（2026-11-18 用 curl 查過），所以放在分支裡。
+        - `previews` 分支**永遠只有一個 commit**：每次更新都重新產生一個沒有上一代的 commit，用 `--force-with-lease` 推上去。舊的套件不會累積在 repo 的歷史裡；另一個 PR 同時推的話，會因為 lease 不符而失敗，不會被蓋掉，重跑一次即可。這是 side agent 提醒的：每個套件約 600 KB，一般的 `git clone` 會連這個分支一起下載。
+        - **為什麼不放在 PR 留言的附件**（本人 2026-11-19 問）：這樣不用進 repo，但做不到 `[調研]`：
+            - GitHub 沒有正式的 API 可以上傳留言附件，只能在網頁上拖曳，agent 自動做不到。
+            - 附件只收特定的副檔名，`.fwsc` 要先壓成 zip，但 fm1-emu 要的是 `.fwsc` 本身。
+            - 附件網址會轉到有時效的下載網址，不保證有開 CORS（沒有實測）。
+            - 其他不進這個 repo 的做法有：另開一個 repo 只放套件、用 gist、用外部服務。目前單一 commit 的分支已經不會讓 repo 變肥，所以先這樣。
+        - 2026-11-18 用 headless Chromium 開過 `main` 的 THEORY：開機進到第一次開機的選單 `[模擬]`。
+        - 跑的是真正的套件，但仍是模擬，第 3 層的檢查照樣要做。有新的 commit 要重新推；PR 合併或關閉後用 `--remove` 拿掉。
+        - 頁面預設 100 MHz，可以在右邊的 Clock 選單改成 240 MHz。
+        - 另一個選擇是上面的 `just fw-web`：fm1-base 的電腦版，比較輕，不需要 JieLi toolchain，但跑的不是 `.fwsc`。第一次試用時發布成私人的 claude.ai artifact（PR #5），沒有權限的隊友打不開，所以改成現在的做法。
     2. **截圖**：模擬器測試產生的畫面。
     3. **上實機之前**：fm1-emu 兩種晶片的存檔、重開、讀回，以及疊在最新備份上的預演，這部分跑的是真正的 `.fwsc`。之後是給本人在實機上照做的步驟清單，每一步寫出應該看到什麼。
         - 只有一台機器，所以一次只上一個 PR，每次安裝都記進[我的機器](../device-log.md)。

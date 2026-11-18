@@ -102,6 +102,7 @@ just rhythm-emu [CHIP] # RHYTHM in fm1-emu (after `just fw-build rhythm`; `just 
 just fw-setup          # submodules + Python tools (needs `brew install libraqm`)
 just fw-test [APP]     # host simulator build + tests/basic.txt; no toolchain, no hardware
 just fw-build [APP]    # device package via JieLi toolchain in Docker (see docs/dev/ for current blockers)
+just fw-preview APP SLOT  # PUBLISH a package to the previews branch (SLOT pr-N or main); prints an fm1-emu link
 just fw-web [APP]      # browser emulator (WebAssembly) into firmware/APP/build/emu/; emcc or Docker
 
 just fm1-fetch         # download M-Flasher + SLOOP into downloads/, verify against release digests
@@ -243,9 +244,12 @@ Other rules:
   never as an automatic step after `fm1-backup`.
 - Commit or push only when the owner asks.
 - Pull requests that change a firmware follow `.github/pull_request_template.md`, three layers of acceptance:
-  1. **Try it**: a browser build (`just fw-web APP`), linked if it can be (a private claude.ai artifact for now;
-     public pages per app on the docs site from `main` are planned). It is the app's host build, not the `.fwsc`:
-     it shows how it plays and proves nothing about the package.
+  1. **Try it**: a public link to the PR's package running in fm1-emu's web page (no account needed):
+     `just fw-build APP`, then `just fw-preview APP pr-N` (it pushes the `.fwsc` to the `previews` branch, which
+     holds packages only, always as one force-pushed commit so nothing piles up in history, and prints the link). Run it again after new commits; `just fw-preview APP pr-N --remove`
+     once the PR is merged or closed. It is the real package, but a browser emulation: it shows how it plays, and
+     the checks in 3 still decide. (`just fw-web APP`, fm1-base's host build in WebAssembly, is a lighter
+     alternative when the JieLi toolchain is not at hand.)
   2. **Screens**: the simulator test's shots of what changed.
   3. **Before the unit**: the checks this file already asks for (fm1-emu on both chips with a save, restart and
      reload; a rehearsal over the latest backup), then a list of steps for the owner to try on the unit, each with
