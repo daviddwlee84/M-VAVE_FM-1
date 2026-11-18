@@ -1,0 +1,234 @@
+# THEORY in the host simulator: just fw-test theory (screenshots and audio in firmware/theory/build/host/)
+# Keys: 0 is F3; C4 7, D4 9, Eb4 10, E4 11, F#4 13, G4 14, A4 16, C5 19. White keys w0 F3 .. w4 C4, w5 D4.
+wait 600
+shot boot.png
+expect tonic 0
+expect mode 0
+expect keymode 0
+expect shown 0
+expect_text key C_major
+# the scale lit: C mid, the other white keys glowing, the black ones dark
+expect mid_keys 524416
+expect glow_keys 94722645
+expect lit_keys 0
+
+# ---- NOTES: a chord named, sounding
+key 7 down
+key 11 down
+key 14 down
+wait 60
+expect_text chord C
+expect_text roman I
+expect_text footer C_I
+expect voices 3
+expect lit_keys 18560
+peakreset
+wav chord.wav
+wait 200
+wavstop
+expect peak_db_min -40
+shot chord.png
+key 7 up
+key 11 up
+key 14 up
+wait 400
+# let go: the chord stays on the screen
+expect_text footer C_I
+expect voices 0
+# an inversion, a secondary dominant, a borrowed chord
+key 11 down
+key 14 down
+key 19 down
+wait 60
+expect_text footer C/E_I_INV_1
+key 11 up
+key 14 up
+key 19 up
+wait 30
+key 9 down
+key 13 down
+key 16 down
+key 19 down
+wait 60
+expect_text chord D7
+expect_text roman V7/V
+shot secondary.png
+key 9 up
+key 13 up
+key 16 up
+key 19 up
+wait 30
+key 5 down
+key 9 down
+key 12 down
+wait 60
+expect_text footer Bb_bVII
+key 5 up
+key 9 up
+key 12 up
+wait 30
+# one note: its name and degree; two: the interval
+key 13 down
+wait 60
+expect_text footer F#4_#4
+key 13 up
+wait 30
+key 7 down
+key 11 down
+wait 60
+expect_text footer M3_C_-_E
+key 7 up
+key 11 up
+wait 30
+# Nashville numbers
+turn K3 1
+wait 60
+expect labels 1
+key 16 down
+key 19 down
+key 23 down
+wait 60
+expect_text footer Am_6m
+key 16 up
+key 19 up
+key 23 up
+turn K3 -1
+wait 60
+expect labels 0
+
+# ---- around the circle
+turn SELECT 2
+wait 60
+expect tonic 2
+expect_text key D_major
+expect_text row0 D
+expect_text row2 F#m
+expect_text row6 C#dim
+expect mid_keys 2097664
+expect glow_keys 110455126
+shot dmajor.png
+turn SELECT -7
+wait 60
+expect tonic -5
+expect_text key Db_major
+turn SELECT 3
+wait 60
+expect tonic -2
+expect_text key Bb_major
+turn SELECT 4
+wait 60
+expect tonic 2
+
+# ---- CHORDS: the white keys play the key's chords (letters: the key's letter is the chord's root)
+tap PLAY
+wait 60
+expect keymode 1
+expect mid_keys 2097664
+expect glow_keys 93149397
+key 7 down
+wait 60
+expect_text chord C#dim
+expect_text roman viio
+expect voices 4
+shot chords.png
+key 7 up
+wait 30
+key 9 down
+wait 60
+expect_text chord D
+key 9 up
+wait 30
+key w8 down
+wait 60
+expect_text chord G
+key w8 up
+wait 30
+# C is I
+turn K4 1
+wait 60
+expect mapping 1
+key 7 down
+wait 60
+expect_text chord D
+key 7 up
+wait 30
+key 16 down
+wait 60
+expect_text chord Bm
+key 16 up
+wait 30
+# black keys: nothing yet (once the last chord's release has died away)
+wait 500
+expect voices 0
+key 8 down
+wait 60
+expect voices 0
+key 8 up
+wait 30
+
+# ---- SEL and a key: that note's key
+press SEL
+key 10 down
+wait 60
+key 10 up
+release SEL
+wait 60
+expect voices 0
+expect tonic -3
+expect_text key Eb_major
+# the mode
+turn K1 1
+wait 60
+expect mode 1
+expect_text key Eb_minor
+expect_text row0 Ebm
+expect_text row2 Gb
+turn K1 3
+wait 60
+expect mode 4
+expect_text key Eb_dorian
+turn K1 -4
+wait 60
+expect mode 0
+# sevenths
+turn K2 1
+wait 60
+expect sevenths 1
+key 7 down
+wait 60
+expect_text chord Ebmaj7
+expect_text roman IM7
+expect voices 5
+key 7 up
+wait 30
+key w8 down
+wait 60
+expect_text chord Bb7
+expect_text roman V7
+key w8 up
+wait 30
+shot sevenths.png
+# the octave: notes still let go cleanly
+tap OCT+
+wait 30
+expect oct 1
+key 9 down
+wait 60
+key 9 up
+wait 400
+expect voices 0
+
+# ---- kept: saved once the knobs rest, read back after a restart
+wait 3200
+expect saves >0
+expect store_writes >0
+reboot
+wait 600
+expect tonic -3
+expect mode 0
+expect keymode 1
+expect sevenths 1
+expect mapping 1
+expect oct 1
+expect_text key Eb_major
+shot reboot.png

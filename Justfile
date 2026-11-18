@@ -339,6 +339,10 @@ theory-unit:
       firmware/theory/tests/theory_test.c
     build/theory_test
 
+# THEORY in the emulator (build it first: just fw-build theory). Its simulator test is `just fw-test theory`.
+theory-emu chip="uc25hq80":
+    just emu-run firmware/theory/build/theory.fwsc "{{chip}}"
+
 # Regenerate firmware/theory/tests/vectors.h from music21 (BSD-3-Clause; pinned, fetched by uv, not a project dependency).
 theory-vectors:
     uv run --quiet --no-project --with music21==10.5.2 python -I host/theory/make_vectors.py

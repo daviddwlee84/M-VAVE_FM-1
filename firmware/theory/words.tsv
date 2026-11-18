@@ -1,0 +1,19 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+# THEORY's words for a screen reader (fm1-reader): the text on the screen <TAB> what to say.
+# url: https://daviddwlee84.github.io/M-VAVE_FM-1/dev/theory/
+THEORY	theory
+WHEEL	wheel
+NOTES	notes
+CHORDS	chords
+LETTERS	letters
+C IS I	C is one
+ROMAN	roman numerals
+NASHVILLE	Nashville numbers
+TRIADS	triads
+SEVENTHS	sevenths
+HARM. MINOR	harmonic minor
+MEL. MINOR	melodic minor
+INV 1	first inversion
+INV 2	second inversion
+INV 3	third inversion
+NO 5	no fifth

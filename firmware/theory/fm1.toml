@@ -1,0 +1,19 @@
+# THEORY's build settings (fm1-base tools/build.py)
+name = "THEORY"
+title = "THEORY"
+id_prefix = "FM-1_49"          # package identity: dev FM-1_4900, release 0.1 FM-1_49000100 (free in the Hub's catalog, 2026-11-18)
+usb_manufacturer = "fm1-base"
+usb_product = "THEORY FM-1"
+o2 = []
+include = ["../common"]        # ledfx (firmware/common, MIT)
+words = "words.tsv"
+font_full = ["T", "M"]         # lower case in the 12 px font (Roman numerals: ii, vi) and the 24 px one (chord names)
+ble = false                    # USB only for now
+tagline = "a pocket music theory trainer"
+repo = "https://github.com/daviddwlee84/M-VAVE_FM-1"
+site = "https://daviddwlee84.github.io/M-VAVE_FM-1/dev/theory/"
+licence = "GPL-3.0-or-later"
+credits = "Built on fm1-base by Charles Vestal. The voice follows firmware/common/chime's two-operator FM. Spellings checked against music21 (tests only)."
+author = "daviddwlee84"
+description = "A pocket music theory reference and trainer. WHEEL: the circle of fifths with the key's chords marked; turn to change key and mode, the keys light the scale; play a chord and it is named with its Roman numeral in the key (secondary dominants, borrowed chords, inversions); or let the white keys play the key's own chords, voiced to move as little as possible. Every key spelled the way a score spells it."
+tags = ["utility"]

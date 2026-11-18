@@ -28,7 +28,7 @@ experimental firmware apps under `firmware/`, built on the `fm1-base` submodule.
 | `firmware/conductor/` | Own agent-console firmware (MIT). Design: `docs/agentic/conductor.md`. |
 | `firmware/morse/` | Submodule: [fm1-morse](https://github.com/daviddwlee84/fm1-morse), own pocket Morse code machine (GPL-3.0-or-later since 2026-11-18, MIT before; `common/` in it stays MIT; its own repo for The Firmware Hub, with `LICENSE` and `fmhub.json`). Built here with `third_party/fm1-base`; commit inside it, then bump the pointer here. Design: `docs/dev/morse.md`. |
 | `firmware/common/` | Modules shared by own apps (`hostlink`, `ledfx`, `chime`, and the speech decoders `lpc`, `adpcm`; MIT). Apps add `include = ["../common"]`. |
-| `firmware/theory/` | Music theory trainer (GPL-3.0-or-later), so far only its platform-free core: spelling on the line of fifths, scales, keys, chords, Roman numerals, naming a played chord, voicing. Tests check it against music21 (`tests/vectors.h`, generated). No app yet. Design: `docs/dev/theory.md`. |
+| `firmware/theory/` | THEORY, own music theory trainer (GPL-3.0-or-later, identity `FM-1_49`, settings at `0xD8000`). v0.1 is the WHEEL page (circle of fifths, naming a played chord, the key's chords on the white keys), on the owner's unit since 2026-11-18 (installed over Morse 0.6, whose record at `0xDA000` it leaves alone). Its platform-free core `theory.c` (spelling, scales, keys, chords, Roman numerals, voicing) is checked against music21 (`tests/vectors.h`, generated). Design: `docs/dev/theory.md`. |
 | `firmware/voicelab/` | Spike app (MIT): each key says a test word with the `lpc` / `adpcm` decoders. Not for installing. Its data (`gen/`) is generated and git-ignored. Design: `docs/dev/tts.md`. |
 | `host/conductor/` | Conductor's host daemon (Python, MIT): backends `hc`, `herdr`, `fake`. Protocol spec in `PROTOCOL.md`; tests in `host/tests/`. |
 | `host/morse/` | Morse's host (Python, MIT): types what the FM-1 reads into the Mac, sends text for it to play. Protocol in `PROTOCOL.md` (keying is Vail-format MIDI note 0). |
@@ -77,6 +77,7 @@ just morse-restore FILE  # back onto the unit; it asks on its screen (PLAY yes)
 just morse-shots       # simulator screenshots into fm1-morse docs/screens/
 
 just theory-unit       # firmware/theory core on this computer (strict C99, plus music21's spellings)
+just theory-emu [CHIP] # THEORY in fm1-emu (after `just fw-build theory`; `just fw-test theory` is its simulator test)
 just theory-vectors    # regenerate firmware/theory/tests/vectors.h from music21 (uv fetches it)
 
 just voice-vendor      # Moonshine Klatt, python_wizard, CMUdict, 386DX engine into vendor/ (pinned commits)
@@ -253,6 +254,5 @@ A repo-owned skill for operating the unit and an `fm1` CLI wrapper (the `Justfil
 `fm1-hub-listing` covers publishing only). `fm1-emu` is a downloaded binary, not a source checkout.
 A vocabulary app is at the idea stage (`docs/dev/vocab.md`). A deck written to the flash data area would need
 the firmware-development rule "never compute flash addresses or call erase/program directly" changed first,
-with the owner's approval; the proposed wording is in that page. A music theory trainer has its core and a design
-(`docs/dev/theory.md`) but no app; its imported content is meant to go through the store layer (`APP_STORE_MAP`),
-which needs no rule change.
+with the owner's approval; the proposed wording is in that page. THEORY (`docs/dev/theory.md`) has v0.1 but no learning yet;
+its imported content is meant to go through the store layer (`APP_STORE_MAP`), which needs no rule change.

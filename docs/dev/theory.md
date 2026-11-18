@@ -2,7 +2,10 @@
 
 把 FM-1 變成隨身的樂理、鍵盤與聽力練習機：五度圈、和弦進行、各調的音階與琶音、相對音感、節奏聽寫。內容偏向流行編曲，但古典的基本功也要涵蓋。延續[摩斯電碼機](morse.md)的閃卡與回合，以及[背單字 app](vocab.md) 的 spaced repetition 構想。
 
-**狀態（2026-11-18）：構想，加上一份 platform-free 的樂理核心（`firmware/theory/`，GPL-3.0-or-later）。** `just theory-unit` 的 26,661 個檢查全部通過，其中包含和 music21 的拼法對照。還沒有 app、畫面和聲音。
+**狀態（2026-11-18）：v0.1（WHEEL）在 host simulator 和 fm1-emu 兩種晶片上驗證過 `[模擬]`，19:00 前後刷進實機，本人試用的感想是「好像還可以」`[實機]`。** 驗證結果見 [v0.1 驗證](#v01-verify)，刷機紀錄見[我的機器](../device-log.md)。
+
+- 韌體在 `firmware/theory/`，GPL-3.0-or-later，名稱 THEORY，識別碼 `FM-1_49`。
+- 樂理核心的 `just theory-unit` 有 26,661 個檢查，全部通過，其中包含和 music21 的拼法對照。
 
 **已決定的方向（2026-11-18，本人決定）**
 
@@ -25,7 +28,7 @@
 | 作品 | 做什麼 | 狀態 |
 |---|---|---|
 | [Shed](https://github.com/Luisnvb/fm1-shed) | Jazz 聽力訓練，9 種 drill：級數、和弦性質、旋律與和聲音程、tension、琶音、調式、bass、旋律聽寫。每題先放 cadence（ii–V–I，初學者用 I–IV–V–I）再出題。用琴鍵作答，或用 `PRESET` 從清單選。一回合 20 題，難度隨連對調整，60% 的題目從最弱的項目出。另有 Vamp 模式，用 LED 帶彈。規格見 [SHED_SPEC](https://github.com/Luisnvb/fm1-shed/blob/main/SHED_SPEC.md)，網頁版是 [shed-web](https://github.com/Luisnvb/shed-web) | 建在 FM1 Open SDK 上，GPL-3.0 加 SDK linking exception。**沒有 release**，2026-10-23 之後沒有更新。音名拼法沒有定義 |
-| [FM1 Keyboard Academy](https://github.com/chmess/fm1-keyboard-academy) | 初學者課程，8 章。每課的流程是 listen → watch → play → review，LED 亮出下一個鍵。彈錯就停住，正確率 80% 解鎖下一課。附 30 首旋律，以及一個 Node 寫的 MIDI 匯入工具 | 有 release v0.1.2（2026-10-24），GPL-3.0 加 SDK exception。在 fm1-emu 的兩種晶片上都能開機，畫面是第一課「FIND MIDDLE C」，開機 8 秒內寫 flash 21 次 `[模擬]`（2026-11-18）。會寫到哪些 sector 還沒用 `emu-rehearse` 查過 |
+| [FM1 Keyboard Academy](https://github.com/chmess/fm1-keyboard-academy) | 初學者課程，8 章。每課的流程是 listen → watch → play → review，LED 亮出下一個鍵。彈錯就停住，正確率 80% 解鎖下一課。附 30 首旋律，以及一個 Node 寫的 MIDI 匯入工具 | 有 release v0.1.2（2026-10-24），GPL-3.0 加 SDK exception。在 fm1-emu 的兩種晶片上都能開機，畫面是第一課「FIND MIDDLE C」，開機 8 秒內寫 flash 21 次 `[模擬]`（2026-11-18）。會寫到哪些 sector 還沒用 `emu-rehearse` 查過。**本人在 fm1-emu 試用（2026-11-18）：效果還可以，但每個音都有琴鍵燈提示，所以非常簡單** |
 
 **其他相關的 FM-1 作品**：
 
@@ -67,6 +70,7 @@
 | **聽力先建立調性** | Functional Ear Trainer 和 [Bruce Arnold](https://brucearnold.com/?p=794) 都是先放 cadence 再出一個音。[Chenette《Foundations of Aural Skills》](https://uen.pressbooks.pub/auralskills/)也是從找主音開始 | 每題聽力先放 I–IV–V–I |
 | **調性螺旋** | ABRSM 2025–26 鋼琴音階：新的調先分手練，下一級再合手；調從 C 往五度圈兩側展開，不是繞一圈 | 解鎖順序是 C → G、F → D、Bb → A、Eb → … |
 | **知識用 SRS，技巧看實際表現** | [Duke, Simmons & Cash 2009](https://cml.music.utexas.edu/research/skill-learning-and-procedural-memory)：練習時間和次數不能預測隔天的表現，最好的人會找出錯的地方、刻意改變速度。[Allingham & Wöllner 2022](https://ediss.sub.uni-hamburg.de/handle/ediss/9763)：大家都慢練，但證據很少，而且快慢動作可能組織不同 | DRILL 找出錯的位置，從那裡切一小段重練。速度階梯要練到、甚至超過目標速度 |
+| **提示要逐漸撤掉** | 運動學習的 guidance hypothesis（Salmoni, Schmidt & Walter 1984）：提示或回饋給得太頻繁、太好用，練習時表現很好，但學的人會依賴它，拿掉之後就做不出來；之後的研究對「最好多頻繁」有分歧（[Wulf et al. 2010 的整理](https://www.frontiersin.org/articles/10.3389/fpsyg.2010.00190/full)）`[調研]`。本人試用 Keyboard Academy 的感想正是如此 | WHEEL 的 LED 只顯示調，不亮出下一個音。DRILL 的帶彈燈只在新項目時亮，box 升高後改成只在猶豫或答錯時亮；有亮燈提示的作答不算答對 |
 | **每個階段同時練四面** | Berklee Ear Training、Chenette | 每個階段都有樂理、鍵盤、聽力、節奏、流行應用 |
 | **相對音感是主線** | 教科書和課程的共識。成人學絕對音感：[Wong et al. 2020](https://scholars.ln.edu.hk/en/publications/is-it-impossible-to-acquire-absolute-pitch-in-adulthood/) 訓練 12–40 小時後，43 人裡有 6 人（14%）能以 90% 以上的正確率說出 12 個音名 | 絕對音感做成一條選用的獨立路線，不和主線混在一起 |
 | **先聽再看符號** | [Kodály method](https://en.wikipedia.org/wiki/Kod%C3%A1ly_method)：節奏先聽、唸、動，內化之後才看譜 | 節奏卡先出盲聽，熟了才出看譜的題 |
@@ -104,39 +108,31 @@ Yamaha 音樂教室的幼兒科（4、5 歲）除了彈鍵盤，還有用 Do Re 
 | **GROOVE** | 流行和弦進行伴奏：FM-1 彈 bass 和鼓，你彈和弦 | v0.5 |
 | **LISTEN** | 被動聆聽：在隨機的調裡一直播進行，可以隱藏級數，適合通勤 | v0.5 |
 | **CHART** | 五度圈上的熟練度熱圖 | v0.2 |
-| **SETTINGS** | 音色、音量、每回合張數、絕對音感路線開關 | v0.1 |
+| **SETTINGS** | 音色、每回合張數、絕對音感路線開關（v0.1 的設定都在 WHEEL 的旋鈕上） | v0.2 |
 
 ### WHEEL（v0.1） { #wheel }
 
-```text
-┌────────────────────────────────┐
-│ WHEEL           D major   2#   │
-│               C                │
-│          F         G           │
-│       Bb     (Bm)    [D]       │  外圈大調、內圈關係小調
-│       Eb               A       │  目前的調反白
-│          Ab         E          │
-│              Db  B             │
-│               F#               │
-├────────────────────────────────┤
-│  I   ii  iii  IV  V   vi  vii° │
-│  D   Em  F#m  G   A   Bm  C#°  │
-├────────────────────────────────┤
-│ F#m7/A    iii7   2nd inv       │  剛彈的和弦
-└────────────────────────────────┘
-```
+![WHEEL：C 大調裡彈了 D7](../assets/theory/wheel-notes.png){ width="240" } ![WHEEL：D 大調的 CHORDS 模式，按 C 鍵彈出 C#dim](../assets/theory/wheel-chords.png){ width="240" }
+
+上面兩張是 host simulator 的截圖 `[模擬]`。左邊：C 大調裡彈了 D F# A C，footer 顯示 `D7` 和 `V7/V`，五度圈上的 D 被圈起來，它在調內 6 個和弦（反白的格子）外面。右邊：D 大調的 CHORDS 模式，按 C 鍵彈出 `C#dim`，右欄的 vii° 跟著反白。
+
+- **Header**：調名，右邊是琴鍵模式（`NOTES` / `CHORDS`），八度不是 0 時也會標出來。
+- **五度圈**：外圈是大調，內圈是關係小調（小寫）。調內的大、小三和弦反白，主音的和弦加框。剛彈的和弦如果是大或小三和弦家族，就在它的位置畫圈。圓心是調號（`2♯`），下面列出升降的音名。
+- **右欄**：7 個順級和弦，上面是級數，下面是和弦名。剛彈的那一個反白。
+- **Footer**：剛彈的東西：和弦名（調外的和弦換顏色）與級數、轉位、省略五音；單音是音名加級數；兩個音是音程。全部放開後，畫面保留剛才按得最滿的那一組。轉旋鈕時 footer 暫時顯示新的設定。
 
 | 操作 | 作用 |
 |---|---|
-| 轉 `SELECT` | 沿五度圈換調，順時針多一個升記號 |
-| 按住 `SEL` 再按一個琴鍵 | 跳到以那個音為主音的調（Db、F#、Eb 小調這類常用拼法） |
-| `K1` | 調式：大調、小調、和聲小調、dorian… |
+| 轉 `SELECT` | 沿五度圈換調，順時針多一個升記號；調號落在 Db 到 F# 之間（小調與調式落在 Eb 小調到 G# 小調之間） |
+| 按住 `SEL` 再按一個琴鍵 | 跳到以那個音為主音的調 |
+| `K1` | 調式：大調、小調、和聲小調、旋律小調、dorian、phrygian、lydian、mixolydian、locrian |
 | `K2` | 三和弦或七和弦 |
-| `K3` | 顯示和弦名稱、Roman 或 Nashville |
-| `PLAY` | 切換琴鍵模式：**彈奏**（彈什麼就辨認什麼）或**順級和弦**（從主音起算的 7 個白鍵分別是 I–vii，就近轉位） |
-| 彈和弦 | 畫面顯示和弦名、轉位和級數。調外的音換顏色；副屬和弦顯示成 `V7/V`，借用和弦顯示成 `bVII` |
+| `K3` | 級數寫成 Roman 或 Nashville |
+| `K4` | 和弦鍵的對應：**字母 = 根音**（預設：D 大調按 F 是 F#m，按 C 是 C#dim），或 **C = I**（同一個手型在每個調都彈出同樣的級數） |
+| `PLAY` | 切換琴鍵模式：**NOTES**（彈什麼就辨認什麼）或 **CHORDS**（白鍵彈順級和弦，就近轉位，下面加一個根音；`PLAY` 亮綠燈）。黑鍵在 v0.1 不出聲 |
+| `OCT-` / `OCT+` | 發聲的八度，−2 到 +2，不影響辨認 |
 
-LED 用來顯示調：音階內的音是 glow，主音是 lit，正在彈的音閃爍。
+LED 只用來顯示調，不帶彈：NOTES 模式下調內的音 glow、主音 mid；CHORDS 模式下白鍵 glow、I 級的鍵 mid；按住的鍵 lit。按鍵的音也從 USB-MIDI 送出，可以錄進 DAW。設定在最後一次操作 3 秒後存起來。
 
 ### TODAY（v0.2）
 
@@ -295,7 +291,7 @@ LED 用來顯示調：音階內的音是 glow，主音是 lit，正在彈的音�
     - 好幾天沒練，回合數不會增加，所以**回來時不會堆一大疊到期的卡**。以天計算的排程休息一週後會堆積；隨手拿起來練的口袋機器比較適合用回合。
     - FSRS 的遺忘模型 R(t) 以天為單位，所以只有在知道日期時才能用。背單字要和 Anki 同步，Anki 的排程本身就以天計算，那邊比較需要日期。
     - 有日期的時候（接電腦開網頁，或之後透過 Bluetooth 用手機開網頁，見 Morse 0.5 的 Bluetooth 計畫），可以把「一天」當作另一個上限：同一天內多練的回合，不會讓高 box 的卡太早出現。這留到有網頁之後再做。
-- store sector 要避開 Morse 的 `0xDA000` 和面板校正的 `0xDC000`。實作時用 `just emu-rehearse` 確認，並更新 [flash 配置圖](../hardware/flash-map.md)。
+- 設定存在 `0xD8000` / `0xD9000`：這台機器的 23 份備份裡都沒被寫過，也不和 Morse 的 `0xDA000` 或面板校正的 `0xDC000` 重疊。預演結果見 [v0.1 驗證](#v01-verify) 和 [flash 配置圖](../hardware/flash-map.md)。
 
 ## 樂理核心 { #core }
 
@@ -336,18 +332,38 @@ App 是 GPL-3.0-or-later，所以 CC BY-SA 的內容可以用（CC BY-SA 4.0 [�
 
 ## Roadmap
 
-0. 在 fm1-emu 兩種晶片上試用 Keyboard Academy v0.1.2，讀 Shed 的 SHED_SPEC，把心得寫進這頁。
+0. ~~在 fm1-emu 試用 Keyboard Academy~~（2026-11-18，心得見[學習方法](#method)）。Shed 的 SHED_SPEC 還沒細讀。
 1. ~~樂理核心和 unit test~~（2026-11-18 完成）。
-2. **v0.1 WHEEL**：fm1-base app、polyphonic synth、畫五度圈、♯♭ glyph、和弦辨識。
+2. ~~**v0.1 WHEEL**~~：fm1-base app、8 voice synth、五度圈、♯♭ glyph、和弦辨識。2026-11-18 完成並刷進實機。
 3. **v0.2 TODAY 與 CHART**：樂理卡、級數與和弦性質的聽音卡、Leitner 回合、進度備份網頁。
 4. **v0.3 EAR**：節奏與旋律聽寫、小譜面、節奏產生器、絕對音感路線。
 5. **v0.4 DRILL**：節拍器、帶彈、時間評分、速度階梯。
 6. **v0.5 GROOVE 與 LISTEN**：TSV / Alda pipeline、網頁匯入、伴奏。
 7. 之後比照 Morse 拆成獨立 repo，再上 Hub（見 [Hub](../firmware/hub.md)）。
 
+**之後的「演奏模式」**（本人 2026-11-18 在 fm1-emu 試 CHORDS 模式時想到）：
+
+- 用 `ARP` 切換，和弦不是一次全部按下去，而是一個音接一個音、有一點間隔地出來（strum 或琶音），像 [ChoralRoot](../firmware/choralroot/index.md) 的 strum / arpeggiate。
+- 間隔和方向用旋鈕調。
+- 這屬於彈奏，不是練習，所以放在演奏模式（如果有的話），不放進 WHEEL 的辨認畫面。
+- 本人也覺得 `K4` 的「字母 = 根音」換調體驗不錯。
+
+## v0.1 驗證 { #v01-verify }
+
+2026-11-18。前四列是 `[模擬]`，最後一列是實機。
+
+| 項目 | 怎麼驗證 | 結果 |
+|---|---|---|
+| 畫面、辨認、聲音、存檔 | `just fw-test theory`（`tests/basic.txt`） | 77 項全部 ok：C、C/E、D7 = `V7/V`、Bb = `bVII`、單音、音程、Nashville、換調、CHORDS 兩種對應、`SEL` 加琴鍵、調式、七和弦、八度、存檔重開讀回、和弦有聲音（peak > −40 dB） |
+| 實機套件 | `just fw-build theory` | app 122,308 B（槽 581,564 B），RAM `.data+.bss` 29,452 / 98,304 B，沒有 soft-double |
+| 兩種晶片：改設定、重開讀回 | fm1-emu `uc25hq80`、`p25q80`，`FM1_BENCH_KEYS` 腳本轉 `SELECT`、按 `PLAY` | 存檔寫 3 次，重開 0 次寫入，讀回 D major 和 CHORDS |
+| 疊在實機備份上 | `emu_rehearse.py` 疊在 `2026-11-18-pre-morse-0.5` 和刷機前剛做的 `2026-11-18-pre-theory-0.1` 備份上，兩種晶片 | 開機 0 次寫入；存檔只寫 `0xD8000`；Morse 的 `0xDA000`–`0xDBFFF` 和 `0xFC000` 的共用設定都和備份相同 |
+| 實機 | 本人用 `fm1_install.py` 從 Morse 0.6 更新（fast install） | `done: the FM-1 runs FM-1_4900`；本人試用：「好像還可以」`[實機]` |
+
+模擬器的 `--shot` 沒給腳本時，會自己按一次 `PLAY` 和一個琴鍵。驗證「重開讀回」時要給一個不會用到的腳本（例如 `FM1_BENCH_KEYS='60000:PLAY'`），否則它會把剛存的琴鍵模式切回去。
+
 ## 還沒決定的事
 
-- **名稱**：`theory` 只是目錄名稱。
 - **要不要和背單字 app 共用排程模組**（FSRS 放進 `firmware/common`）。
 - **小調級數的古典寫法**（VI、VII）：輸入端靠檔頭宣告和編輯器的警告處理（見[內容表示](#content)）。畫面上要不要也提供古典寫法的顯示，還沒決定。
 - **DRILL 的時間評分標準**：均勻度的門檻、速度階梯每一階的幅度。
