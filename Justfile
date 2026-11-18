@@ -226,6 +226,30 @@ fw-build app="hello": fw-setup fw-toolchain
     JIELI_TOOLCHAIN="$PWD/tools/jieli/toolchain" AC79_SDK="$PWD/tools/fw-AC79_AIoT_SDK" \
       uv run --locked --all-groups python "{{fm1_base}}/tools/build.py" "firmware/{{app}}"
 
+# A package to try in the browser, in fm1-emu (the .fwsc itself, emulated): firmware/APP/build/APP.fwsc (just fw-build
+# APP first) onto the `previews` branch as SLOT/APP.fwsc (SLOT: pr-N, or main), pushed; prints the public link.
+# PUBLISHES to GitHub (a branch of packages only; not for installing). `just fw-preview APP pr-N --remove` takes it off.
+fw-preview app slot *flags:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    pkg="$PWD/firmware/{{app}}/build/{{app}}.fwsc"
+    w="$(mktemp -d)/previews"
+    git fetch -q origin previews
+    git worktree add -q --detach "$w" origin/previews
+    trap 'git worktree remove --force "$w"' EXIT
+    cd "$w"
+    if [ "{{flags}}" = "--remove" ]; then
+      git rm -q -r --ignore-unmatch "{{slot}}"
+      msg="previews: {{slot}} removed"
+    else
+      test -f "$pkg" || { echo "fw-preview: no $pkg (just fw-build {{app}})"; exit 1; }
+      mkdir -p "{{slot}}" && cp "$pkg" "{{slot}}/{{app}}.fwsc" && git add "{{slot}}"
+      msg="previews: {{app}} for {{slot}} ($(git -C "$OLDPWD" rev-parse --short HEAD), sha256 $(shasum -a 256 "$pkg" | cut -c1-12))"
+    fi
+    git diff --cached --quiet && { echo "fw-preview: nothing changed"; exit 0; }
+    git commit -q -m "$msg" && git push -q origin HEAD:previews
+    [ "{{flags}}" = "--remove" ] || echo "try it: https://joakimeriksson.github.io/fm1-emu/?package=https://raw.githubusercontent.com/daviddwlee84/M-VAVE_FM-1/previews/{{slot}}/{{app}}.fwsc&name={{app}}&chip=uc25hq80"
+
 # The browser emulator (the same app in WebAssembly) into firmware/APP/build/emu/: open its index.html over http, or
 # publish that folder for a PR's "try it" link. emcc from emsdk if installed, else Docker (scripts/emcc-docker.sh).
 fw-web app="hello": fw-setup
