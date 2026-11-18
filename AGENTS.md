@@ -242,10 +242,14 @@ Other rules:
   `just fm1-backup-release` only when the owner asks for that specific backup,
   never as an automatic step after `fm1-backup`.
 - Commit or push only when the owner asks.
-- A pull request that changes a firmware's behaviour links a build of it the owner can try in the browser:
-  `just fw-web APP`, then publish `firmware/APP/build/emu/` (index.html with app.js, app_worklet.js, worklet.js,
-  app.wasm, parts/) as a private claude.ai artifact and put the link in the PR. Without Docker or emsdk (or the
-  Artifact tool), say so in the PR instead. The link shows that build only: republish it after new commits.
+- Pull requests that change a firmware follow `.github/pull_request_template.md`, three layers of acceptance:
+  1. **Try it**: a browser build (`just fw-web APP`), linked if it can be (a private claude.ai artifact for now;
+     public pages per app on the docs site from `main` are planned). It is the app's host build, not the `.fwsc`:
+     it shows how it plays and proves nothing about the package.
+  2. **Screens**: the simulator test's shots of what changed.
+  3. **Before the unit**: the checks this file already asks for (fm1-emu on both chips with a save, restart and
+     reload; a rehearsal over the latest backup), then a list of steps for the owner to try on the unit, each with
+     what should happen. There is one unit: one PR on it at a time, every install in `docs/device-log.md`.
 - Something outside the repo (not a git hook here; seen 2026-11-18) amends the newest commit with the `.specstory`
   transcripts and `.claude/plans`, so a commit's hash can change right after it is made. Record a hash (device-log, docs, commit messages) only after the hook has run: read it back with
   `git log -1`, never from `git commit`'s own output.

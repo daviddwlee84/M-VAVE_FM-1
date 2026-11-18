@@ -144,9 +144,14 @@ fm1-base 可以把同一個 app 編成 WebAssembly，在瀏覽器裡跑（`tools
     - 有裝 emsdk 就用它的 `emcc`；沒有的話，`scripts/emcc-docker.sh` 用固定版本的 `emscripten/emsdk:3.1.74` image 代替。
     - 用 `python3 -m http.server -d firmware/APP/build/emu` 開，按 `Switch on` 開機。
     - 存檔放在瀏覽器的 localStorage。
-- **PR 的試玩連結**：把那個資料夾發布成私人的 claude.ai artifact，連結貼在 PR 裡。規則見 `AGENTS.md`。
-    - 第一個例子是 2026-11-18 THEORY 0.3 的 PR #5。
-    - 連結只代表當時那一版，有新的 commit 要重新發布。
+- **PR 的驗收分三層**（本人 2026-11-18 決定，範本是 `.github/pull_request_template.md`，規則在 `AGENTS.md`）：
+    1. **試玩**：網頁版的連結，只用來看玩法。它是 app 重新編成的電腦版，不是要刷的 `.fwsc`，所以網頁版沒問題，不代表要刷的套件沒問題。
+        - 目前發布成私人的 claude.ai artifact，沒有權限的隊友打不開。第一個例子是 PR #5。
+        - 連結只代表當時那一版，有新的 commit 要重新發布。
+        - 本人選擇以後在 `main` 的文件網站放每個 app 的公開試玩頁，PR 不另外架公開網址。這還沒做。
+    2. **截圖**：模擬器測試產生的畫面。
+    3. **上實機之前**：fm1-emu 兩種晶片的存檔、重開、讀回，以及疊在最新備份上的預演，這部分跑的是真正的 `.fwsc`。之後是給本人在實機上照做的步驟清單，每一步寫出應該看到什麼。
+        - 只有一台機器，所以一次只上一個 PR，每次安裝都記進[我的機器](../device-log.md)。
 - **名稱衝突**（2026-11-18 遇過）：瀏覽器版把 app 和 `web/emu/emu_web.c` 編在同一個檔案裡。THEORY 原本有一個 `static void ring()`，和 `emu_web.c` 的全域變數 `ring` 撞名，編不過。host simulator 和實機版都沒事，只有 `--web` 會出問題，所以改名成 `circle_ring()`。
     - app 裡全域範圍的名稱最好加上自己的前綴。
 - **讀螢幕**：頁面會去找 `reader/words.js`，`--web` 的輸出裡沒有這個檔案，所以內建的讀螢幕用不了，其他功能正常。
