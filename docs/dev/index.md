@@ -48,7 +48,7 @@ tools/fw-AC79_AIoT_SDK/    JieLi AC79 SDK，固定 tag（gitignore）
 Host simulator 讀一份腳本（`tests/basic.txt`）注入按鍵與 MIDI、檢查狀態、存截圖與音訊。這是讓 agent 自己驗證改動的主要手段，不需要任何硬體。
 
 !!! warning "host simulator 過了，實機套件不一定 build 得過"
-    2026-11-18，[RHYTHM](rhythm.md) 有兩次是 `fw-test` 全部通過，`fw-build` 卻失敗 `[實機]`（Mac 上的 build）：
+    2026-11-18，[RHYTHM](rhythm.md) 有兩次是 `fw-test` 全部通過，`fw-build`（在 Mac 上的 device build）卻失敗：
 
     - **沒有 64-bit 除法**：device 端沒有 link libgcc，`int64_t` 除以變數會變成 `undefined reference to __divdi3`（或 `__udivdi3`）。除以常數沒問題。改成 32-bit 整數或 float。build 的檢查也會提醒，64-bit 乘法放在 load 旁邊可能弄壞暫存器（felucca-bsp `docs/CPU.md`）。
     - **static 名稱和平台撞名**：實機套件把 `app.c` 和 fm1-base 的 `device/*.c` 編在同一個 unity build 裡，所以 app 的 `static` 函式不能和平台的同名。例如 `st_head` 和 `device/storage.c` 的 `st_head` 衝突（`conflicting types`）。host simulator 不含 `storage.c`，所以看不出來。新名字可以先 `grep -rw NAME third_party/fm1-base/device third_party/fm1-base/lib` 確認沒人用。
