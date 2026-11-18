@@ -283,7 +283,7 @@ USB 和藍牙都連著時：
     | 藍牙，CoreMIDI 時間戳記 | sd 0.3，最差 ±1 ms | sd 0.4，±1 | sd 0.4，±1 |
 
     **CoreMIDI 照 FM-1 送的 BLE-MIDI 時間戳記排時間，結果和 USB 一樣準**，誤差在 1 ms 以內（13-bit 時間戳記的精度就是 1 ms）。照到達時間算，最差會差 16 ms，大約是一個點的 25%，和研究時的預估相同。第一輪錄音有幾個劃只有 106–123 ms，兩種時間都一樣短，比較像是播放真的被下一個鍵打斷了，不是傳輸造成的；第二輪每個字都等播完再按，就沒有再出現。
-- **接收端用哪一種時間**：用 CoreMIDI 時間戳記的程式（python-rtmidi、DAW）不會抖。Chrome 的 Web MIDI（`MIDIMessageEvent.timeStamp`）和 Vail 網頁用的是哪一種，還沒測。
+- **接收端用哪一種時間**：用 CoreMIDI 時間戳記的程式（python-rtmidi、DAW）不會抖。Chrome 的 Web MIDI（`MIDIMessageEvent.timeStamp`）用的是哪一種，可以用 MORSE on the web 的 *Timing* 區量；Vail 網頁在藍牙上能用 `[實機]`，但它用哪一種時間還不知道。
 - **收進**：FM-1 照送出端的時間解碼（見上面第 6 點）`[模擬]`，模擬器的藍牙替身沒有時間戳記，所以只驗證了程式路徑。
 - **用 velocity 帶長度的備案**：接收端照時間戳記排時就不需要。只有在接收端用到達時間、又會誤判時才考慮（見 [Backlog](#backlog)）。
 
@@ -314,9 +314,11 @@ USB 和藍牙都連著時：
 - 抖動：見上面的[時間準不準](#bluetooth)，CoreMIDI 時間戳記的誤差 ≤ 1 ms。
 - 拔線後 header 的 `PC` 要大約 10 秒才消失：FM-1 要等 10 秒沒收到電腦的訊息（`HOSTLINK_TIMEOUT_MS`），才判定電腦離線。
 
-還要做：
-- MORSE on the web 和 Vail 經藍牙使用，以及 Chrome 的 `timeStamp` 是不是照時間戳記；
-- 只用電池，連著打 10 分鐘看會不會斷。
+- **MORSE on the web**（Chrome）經藍牙連上，狀態寫 `MORSE 0.5 connected over Bluetooth`，Live 顯示 FM-1 讀到的字。
+- **Vail**（vailmorse.com 的 Repeater）：只用藍牙連著，不用任何設定，FM-1 的 KEY 頁發報就出現在 Vail 上。
+- 拔掉 USB 只用電池，用藍牙連續使用一段時間，沒有斷線（還沒正式計時）。
+
+還要做：Chrome 的 `MIDIMessageEvent.timeStamp` 是照 BLE-MIDI 的時間戳記，還是照到達時間。網頁的 Live 區塊加了 *Timing* 折疊區，會同時列出兩種時間量到的長度，到 TYPE 頁播幾個字就能比較。
 
 ## 設計
 
@@ -399,7 +401,7 @@ USB 和藍牙都連著時：
 | 版本 | 日期 | 要刷機 | 內容 |
 |---|---|---|---|
 | 韌體 0.1、host 0.1.0 | 2026-11-17 | 是（22:54 刷入，`c3b5cd6`） | 第一版：KEY、TYPE、PRACTICE、CHART、SETTINGS，兩種學習方式，Vail 格式的 MIDI，host 的 `type`／`send`／`listen`。原本規劃分成 0.1（核心）和 0.2（閃卡），因為一起做完、都還沒刷，合併成 0.1 |
-| 韌體 0.5、host 0.5.0 | 2026-11-18 | 是（16:20 用 USB-MIDI 裝 release build `FM-1_41000500`，fm1-morse `a75c29e`） | [藍牙](#bluetooth)：fm1-base own stack 的 BLE-MIDI peripheral，和 USB 同時用；SETTINGS 加 BLUETOOTH 開關（存在紀錄裡，格式不變）；header 顯示 `BT`；SETTINGS 頁可以捲動；收訊按鍵照送出端的時間解碼；host 印出走哪條路、兩條都有時優先 USB、`--bluetooth` 打開 Mac 的藍牙 MIDI 視窗；網頁顯示走哪條路 |
+| 韌體 0.5、host 0.5.0 | 2026-11-18 | 是（16:20 用 USB-MIDI 裝 release build `FM-1_41000500`，fm1-morse `a75c29e`，release [v0.5](https://github.com/daviddwlee84/fm1-morse/releases/tag/v0.5)） | [藍牙](#bluetooth)：fm1-base own stack 的 BLE-MIDI peripheral，和 USB 同時用；SETTINGS 加 BLUETOOTH 開關（存在紀錄裡，格式不變）；header 顯示 `BT`；SETTINGS 頁可以捲動；收訊按鍵照送出端的時間解碼；host 印出走哪條路、兩條都有時優先 USB、`--bluetooth` 打開 Mac 的藍牙 MIDI 視窗；網頁顯示走哪條路 |
 | 韌體 0.4、host 0.4.0 | 2026-11-18 | 是（05:20 用 USB-MIDI 裝 release build `FM-1_41000400`，fm1-morse `323d79b`） | 實機回饋（ROUND 14 還停在第一組）：打碼卡改用答案自己的節奏判斷（[判定](#judging)），手速跨卡延續，評級和 SHOULD／YOU 對照圖，ALMOST；SET 頁的 JUDGING 可以切回 STRICT；CHART 編輯、分級測驗、開始畫面列出擋住下一組的字，SOUND 模式下新字和答案可以按 `SEQ` 偷看點劃，弱卡在同一回合重複出現、熟字只在有空位時補，[手動修改都要按 PLAY 確認](#progress)；進度的[備份與還原](#backup)（`T_PROG_*`、host 的 `backup`／`restore`、網頁）。藍牙順延到 0.5 |
 | 韌體 0.3 release（`FM-1_41000300`） | 2026-11-18 | 是（Hub 測試時用 USB-MIDI 裝過三次） | fm1-morse 的第一個 release [v0.3](https://github.com/daviddwlee84/fm1-morse/releases/tag/v0.3)：identity 改成 `FM-1_41`，授權改成 GPL-3.0-or-later，程式和 0.3 相同 |
 | 韌體 0.3、host 0.3.0 | 2026-11-18 | 是（02:12 刷入，`02b0ea2`） | TYPE 打開鍵上點劃時，鍵盤從 86 px 拉高到 126 px、上方輸入行縮成一行，黑鍵和白鍵都同時放得下碼和字母（0.2 黑鍵只剩碼、白鍵的碼壓到字母，數字頁的 `0` 放不下）。藍牙順延到 0.4 |
@@ -426,6 +428,7 @@ USB 和藍牙都連著時：
     - [aroum/fm1-custom-fw #36](https://github.com/aroum/fm1-custom-fw/pull/36)（424 stars，放 1.1.4 的第 126 筆，和 CTL-1、MIDIMON 同段）
 
     fm1-emu、RemoteFM1、FMDB 會自動跟著 Hub 或 GitHub，不用送。fm1-editor.com 等 Hub 上架後看它會不會自己出現。整套流程整理成 repo 的 skill `fm1-hub-listing`。
+6. 新版本：2026-11-18 發布 [v0.5](https://github.com/daviddwlee84/fm1-morse/releases/tag/v0.5)（tag 在 `a75c29e`，0.4 沒有單獨發 release），附 `morse-0.5.fwsc`（SHA-256 `49433190…154457`，就是刷進實機的那份，GitHub 的 asset digest 相符）和 `firmware.json`。Hub 會跟著 GitHub 的最新 release。`fmhub.json` 的說明加上藍牙。
 
 ## 路線圖 { #roadmap }
 
