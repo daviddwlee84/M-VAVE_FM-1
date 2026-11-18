@@ -109,6 +109,63 @@ expect score 100
 shot echo_level4.png
 
 # ---- METRO
+# ---- READ (0.2): SEL; the notes on the screen, nothing played, one bar counted in, then yours
+tap SEL
+expect read 1
+turn K3 -1
+expect bars 1
+pattern q_ee_r_h
+wait 50
+shot notation_1.png
+pattern ssss_ess_sse_ds
+wait 50
+shot notation_2.png
+pattern syn_trip_q
+wait 50
+shot notation_3.png
+pattern h_syn_|_ssss_trip_ess_ds
+wait 50
+shot notation_4.png
+pattern q_ee_r_q
+autotap 0
+tap REC
+wait 200
+expect echo 3
+shot read_count.png
+wait 5700
+expect echo 5
+expect taps 4
+expect score 100
+shot read_result.png
+tap SEL
+expect read 0
+
+# ---- ENDLESS (0.2): a bar played, a bar tapped back, again, no breaks; 4 rounds a stage, then faster
+tap HOME
+expect page 2
+turn K2 -3
+expect level 1
+shot endless_idle.png
+tap PLAY
+expect en_on 1
+expect health 100
+wait 3000
+shot endless_listen.png
+endtap 0
+wait 21600
+expect en_rounds 4
+expect health 100
+expect en_stage 1
+expect en_bpm 96
+shot endless_stage2.png
+# now nothing tapped: every round costs health, the game ends
+wait 30000
+expect en_on 0
+expect en_over 1
+# (two missed rounds survived, the third one ends it: -40 each from 100)
+expect best 6
+expect en_rounds 6
+shot endless_over.png
 tap HOME
 expect page 0
 expect echo 0
@@ -144,8 +201,7 @@ metrotap 4 -10
 wait 2000
 expect metro_taps 4
 expect metro_gap_taps 3
-# (the 1 kHz tick dates a press up to 1 ms after its sample: -10 reads -9.x, the average truncates)
-expect metro_avg -9
+expect metro_avg -10
 shot metro_gap.png
 tap PLAY
 expect running 0
@@ -175,7 +231,9 @@ expect page 0
 expect bpm 120
 expect sub 1
 expect gap 1
-expect level 4
-expect bars 2
+expect level 1
+expect bars 1
 expect lat 12
+expect read 0
+expect best 6
 shot reboot.png

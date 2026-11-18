@@ -12,14 +12,15 @@
 #include "ledfx.c"
 
 #define FW_MAJOR 0
-#define FW_MINOR 1
+#define FW_MINOR 2
 #define SR 44100u
 
 /* ---------------------------------------------------------------- settings --- */
 #define REC_MAGIC 0x31304852u            /* "RH01" */
 #define REC_VER 1u
 
-enum { PG_METRO, PG_ECHO, PG_N };
+enum { PG_METRO, PG_ECHO, PG_ENDLESS, PG_N };
+static const char *const PG_NAME[PG_N] = { "METRO", "ECHO", "ENDLESS" };
 enum { SUB_NONE, SUB_8, SUB_TRIP, SUB_16, SUB_N };
 static const char *const SUB_NAME[SUB_N] = { "OFF", "8THS", "TRIPLETS", "16THS" };
 static const uint8_t GAPS[][2] = { { 0, 0 }, { 1, 1 }, { 2, 1 }, { 2, 2 }, { 4, 2 }, { 4, 4 } };   /* bars on, off */
@@ -36,7 +37,9 @@ typedef struct {
     uint8_t level;                       /* ECHO: 1..RH_LEVELS */
     uint8_t bars;                        /* ECHO: 1, 2 */
     int8_t lat;                          /* ms taken off every tap: -30..+90 */
-    uint8_t rsv[4];
+    uint8_t read;                        /* ECHO: 0 HEAR (blind), 1 READ (the notes shown, nothing played) (0.2) */
+    uint8_t rsv;
+    uint16_t best;                       /* ENDLESS: most rounds survived (0.2) */
 } rec_t;
 static rec_t rec;
 static uint32_t saves, dirty_at;
@@ -57,7 +60,8 @@ static int rec_valid(const rec_t *r)
 {
     return r->magic == REC_MAGIC && r->ver == REC_VER && r->size == sizeof *r && r->page < PG_N && r->bpm >= 30
            && r->bpm <= 240 && r->bpb >= 2 && r->bpb <= 4 && r->sub < SUB_N && r->gap < NGAPS && r->level >= 1
-           && r->level <= RH_LEVELS && r->bars >= 1 && r->bars <= 2 && r->lat >= -30 && r->lat <= 90;
+           && r->level <= RH_LEVELS && r->bars >= 1 && r->bars <= 2 && r->lat >= -30 && r->lat <= 90
+           && r->read <= 1u;
 }
 
 static void rec_save(void)
@@ -72,7 +76,8 @@ static void rec_save(void)
 /* ------------------------------------------------------- audio and clock --- */
 enum { EV_ACCENT = 1, EV_CLICK = 2, EV_SOFT = 4, EV_SUB = 8, EV_NOTE = 16 };
 enum { TR_METRO, TR_ECHO };
-#define EV_MAX ((4 + RH_MAX_BEATS + 4 + RH_MAX_BEATS + 2) * RH_TPB)
+#define EN_ROUNDS 4                      /* ENDLESS: call-and-response rounds a stage */
+#define EV_MAX ((4 + 2 * 4 * EN_ROUNDS + 2) * RH_TPB)   /* the longest: an ENDLESS stage in 4/4 (ECHO's is shorter) */
 
 static volatile uint32_t au_blk;         /* the first sample of the block last rendered */
 static volatile uint32_t tk_since;       /* ms ticks since that block began */
@@ -203,7 +208,7 @@ static uint32_t host_tap[RH_MAX_TAPS], host_ntap, host_itap, host_down, host_arm
 
 void app_tick(void)
 {
-    uint32_t keys = plat_keys(), down;
+    uint32_t keys = plat_keys(), down, at = 0;
     tk_since++;
 #ifdef PLAT_HOST
     {
@@ -212,6 +217,7 @@ void app_tick(void)
             host_down--;
             keys |= 1u;
         } else if (host_itap < host_ntap && (int32_t)(s - host_tap[host_itap]) >= 0) {
+            at = host_tap[host_itap];    /* dated at the planned sample: the 1 ms tick would add up to 1 ms */
             host_itap++;
             host_down = 30;
             keys |= 1u;
@@ -221,7 +227,7 @@ void app_tick(void)
     down = keys & ~tk_keys;
     tk_keys = keys;
     if (down) {
-        tq[tq_w % TAPQ] = now_smp();
+        tq[tq_w % TAPQ] = at ? at : now_smp();
         tq_w++;
         tap_snd++;
     }
@@ -330,7 +336,8 @@ static void changed(uint32_t r)
 }
 
 /* --------------------------------------------------------------- transport --- */
-static uint32_t beat_smp_q8(void) { return SR * 60u * 256u / rec.bpm; }   /* (677,376,000: fits) */
+static uint32_t beat_q8_at(uint32_t bpm) { return SR * 60u * 256u / bpm; }   /* (677,376,000: fits) */
+static uint32_t beat_smp_q8(void) { return beat_q8_at(rec.bpm); }
 
 static void tr_stop(void)
 {
@@ -340,12 +347,12 @@ static void tr_stop(void)
     ui.running = 0;
 }
 
-static void tr_go(int mode, uint32_t start)
+static void tr_go_at(int mode, uint32_t start, uint32_t bpm)
 {
     uint32_t f = plat_lock();
     tr.mode = (uint8_t)mode;
     tr.start = start;
-    tr.tick_q8 = beat_smp_q8() / RH_TPB;
+    tr.tick_q8 = beat_q8_at(bpm) / RH_TPB;
     tr.bpb = rec.bpb;
     tr.sub = rec.sub;
     tr.gap_on = GAPS[rec.gap][0];
@@ -355,6 +362,8 @@ static void tr_go(int mode, uint32_t start)
     tr.run = 1;
     plat_unlock(f);
 }
+
+static void tr_go(int mode, uint32_t start) { tr_go_at(mode, start, rec.bpm); }
 
 static int32_t tick_now(void)            /* the tick playing now; negative before the start */
 {
@@ -426,16 +435,22 @@ static void echo_build(void)             /* the events: count-in, the rhythm (wi
 {
     uint32_t t, i, bpb = rec.bpb, n = ui.pat.nbeats;
     zero(tr.ev, sizeof tr.ev);
-    ui.t_listen = bpb * RH_TPB;
-    ui.t_count2 = ui.t_listen + n * RH_TPB;
-    ui.t_tap = ui.t_count2 + bpb * RH_TPB;
+    if (rec.read) {                      /* READ: the notes on the screen, one bar counted in, then yours */
+        ui.t_listen = ui.t_count2 = 0;
+        ui.t_tap = bpb * RH_TPB;
+    } else {
+        ui.t_listen = bpb * RH_TPB;
+        ui.t_count2 = ui.t_listen + n * RH_TPB;
+        ui.t_tap = ui.t_count2 + bpb * RH_TPB;
+    }
     ui.t_end = ui.t_tap + n * RH_TPB + RH_TPB / 2;   /* half a beat after: a late last tap still counts */
     for (t = 0; t < ui.t_tap + n * RH_TPB; t += RH_TPB) {
         uint32_t beat = t / RH_TPB;
         int count = t < ui.t_listen || (t >= ui.t_count2 && t < ui.t_tap);
         tr.ev[t] = (uint8_t)(count ? (beat % bpb ? EV_CLICK : EV_ACCENT) : EV_SOFT);
     }
-    for (i = 0; i < ui.pat.n; i++) tr.ev[ui.t_listen + ui.pat.on[i]] |= EV_NOTE;
+    if (!rec.read)
+        for (i = 0; i < ui.pat.n; i++) tr.ev[ui.t_listen + ui.pat.on[i]] |= EV_NOTE;
     tr.len = (uint16_t)(ui.t_tap + n * RH_TPB);
 }
 
@@ -511,13 +526,146 @@ static void echo_follow(void)            /* where the round is */
     }
 }
 
+/* ---------------------------------------------------------------- ENDLESS --- */
+/* call and response without a break: a bar is played, you tap it back in the next bar, the next call follows at
+ * once. A stage is EN_ROUNDS rounds at one tempo after a bar's count-in; each stage is faster, every second one
+ * harder. Health drops for what went wrong and comes back a little for a clean round; at 0 the game is over */
+#define EN_TAPS 24
+#define EN_SPEEDUP 6                     /* BPM a stage */
+static struct {
+    uint8_t on, over;                    /* a game running; the last game ended */
+    uint16_t rounds;                     /* rounds survived */
+    uint8_t stage, level, bpm, scored;   /* this stage; rounds of it scored */
+    int16_t health;                      /* 0..100 */
+    int16_t delta;                       /* the last round's change */
+    rh_pattern_t pat[EN_ROUNDS];
+    int32_t taps[EN_ROUNDS][EN_TAPS];
+    uint8_t ntaps[EN_ROUNDS];
+    rh_result_t last;                    /* the last round scored */
+    uint8_t last_k, have_last, new_best;
+} en;
+
+static uint32_t en_bar(void) { return (uint32_t)rec.bpb * RH_TPB; }
+static uint32_t en_call(uint32_t k) { return en_bar() * (1u + 2u * k); }   /* tick where round k's call starts */
+static uint32_t en_resp(uint32_t k) { return en_call(k) + en_bar(); }
+
+static void en_stage(void)               /* the next stage: its rhythms, its events, the transport */
+{
+    uint32_t k, t, i, bar = en_bar(), len = en_call(EN_ROUNDS);
+    for (k = 0; k < EN_ROUNDS; k++) {
+        rh_generate(&ui.seed, en.level, rec.bpb, 1, &en.pat[k]);
+        en.ntaps[k] = 0;
+    }
+    en.scored = 0;
+    zero(tr.ev, sizeof tr.ev);
+    for (t = 0; t < len; t += RH_TPB)
+        tr.ev[t] = (uint8_t)(t < bar ? ((t / RH_TPB) % rec.bpb ? EV_CLICK : EV_ACCENT) : EV_SOFT);
+    for (k = 0; k < EN_ROUNDS; k++) {
+        tr.ev[en_resp(k)] = EV_CLICK;    /* your bar starts on a louder beat */
+        for (i = 0; i < en.pat[k].n; i++) tr.ev[en_call(k) + en.pat[k].on[i]] |= EV_NOTE;
+    }
+    tr.len = (uint16_t)len;
+    tr_stop();
+    tq_r = tq_w;
+    tr_go_at(TR_ECHO, now_smp() + SR / 20u, en.bpm);
+    ui.running = 1;
+    ui.redraw |= R_ALL;
+}
+
+static void en_start(void)
+{
+    zero(&en, sizeof en);
+    en.on = 1;
+    en.health = 100;
+    en.bpm = rec.bpm;
+    en.level = rec.level;
+    en_stage();
+}
+
+static void en_end(void)
+{
+    tr_stop();
+    en.on = 0;
+    en.over = 1;
+    if (en.rounds > rec.best) {
+        rec.best = en.rounds;
+        en.new_best = 1;
+        changed(0);
+    }
+    {
+        char t[16];
+        t[0] = 0;
+        tint(t, en.rounds);
+        app_say(en.new_best ? "NEW BEST" : "ROUNDS", t);
+    }
+    ui.redraw |= R_ALL;
+}
+
+static void en_tap(uint32_t smp)         /* into the round whose bar (give or take half a beat) it falls in */
+{
+    int32_t d = (int32_t)(smp - tr.start), half = RH_TPB / 2;
+    float tick;
+    uint32_t k;
+    if (!en.on || d < 0) return;
+    tick = (float)d * 256.0f / (float)tr.tick_q8;
+    for (k = 0; k < EN_ROUNDS; k++) {
+        float r = (float)en_resp(k);
+        if (tick >= r - (float)half && tick < r + (float)(en_bar() + half)) {
+            if (en.ntaps[k] < EN_TAPS)
+                en.taps[k][en.ntaps[k]++] = smp_ms((int32_t)(smp - tick_at(en_resp(k)))) - rec.lat;
+            return;
+        }
+    }
+}
+
+static void en_follow(void)
+{
+    int32_t c = ui.cur;
+    if (!en.on || c < 0) return;
+    while (en.scored < EN_ROUNDS && c >= (int32_t)(en_resp(en.scored) + en_bar() + RH_TPB / 2)) {
+        uint32_t k = en.scored++;
+        rh_result_t *r = &en.last;
+        int d;
+        rh_score(&en.pat[k], en.bpm, en.taps[k], en.ntaps[k], r);
+        d = -(12 * r->missed + 8 * r->extra + 6 * r->off + 2 * r->ok);
+        if (d < -40) d = -40;            /* a lost round costs at most 40: three to lose it all */
+        if (r->good == r->n && !r->extra) d += 6;
+        en.delta = (int16_t)d;
+        en.health = (int16_t)clamp(en.health + d, 0, 100);
+        en.last_k = (uint8_t)k;
+        en.have_last = 1;
+        ui.redraw |= R_ALL;
+        if (!en.health) {
+            en_end();
+            return;
+        }
+        en.rounds++;
+    }
+    if (en.scored == EN_ROUNDS) {        /* the next stage: faster, every second one harder */
+        en.stage++;
+        en.bpm = (uint8_t)clamp(en.bpm + EN_SPEEDUP, 30, 240);
+        if (!(en.stage % 2u) && en.level < RH_LEVELS) en.level++;
+        app_say("FASTER", "");
+        en_stage();
+    }
+}
+
+static int en_part(void)                 /* 0 counting in, 1 listening (a call), 2 your bar */
+{
+    int32_t c = ui.cur;
+    uint32_t bar = en_bar();
+    if (c < (int32_t)bar) return 0;
+    return (((uint32_t)c - bar) / bar) % 2u ? 2 : 1;
+}
+
 /* ----------------------------------------------------------------- input --- */
 static void set_page(int p)
 {
     tr_stop();
+    en.on = 0;
     rec.page = (uint8_t)p;
     ui.es = ES_IDLE;
-    app_say("PAGE", p == PG_METRO ? "METRO" : "ECHO");
+    app_say("PAGE", PG_NAME[p]);
     changed(R_ALL);
 }
 
@@ -529,18 +677,26 @@ static void input(void)
     for (k = 0; k < NB; k++) {
         uint32_t bit = 1u << k;
         if (!(btn & bit) || (ui.btn & bit)) continue;
-        if (k == B_HOME) set_page(rec.page == PG_METRO ? PG_ECHO : PG_METRO);
+        if (k == B_HOME) set_page((rec.page + 1) % PG_N);
         else if (k == B_PLAY) {
-            if (ui.running) {
+            if (rec.page == PG_ENDLESS) {
+                if (en.on) en_end();
+                else en_start();
+            } else if (ui.running) {
                 tr_stop();
                 if (rec.page == PG_ECHO) ui.es = ES_IDLE;
                 ui.redraw |= R_ALL;
             } else if (rec.page == PG_METRO) metro_start();
             else echo_start(1);
+        } else if (k == B_SEL && rec.page == PG_ECHO && !ui.running) {
+            rec.read = (uint8_t)!rec.read;
+            app_say("ECHO", rec.read ? "READ" : "HEAR");
+            changed(R_ALL);
         } else if (k == B_REC) {
             if (rec.page == PG_METRO) tap_tempo();
-            else if (!ui.running && ui.have_pat) echo_start(0);   /* the same rhythm again */
+            else if (rec.page == PG_ECHO && !ui.running && ui.have_pat) echo_start(0);   /* the same rhythm again */
         } else if (k == B_OCTDN || k == B_OCTUP) {
+            if (en.on) continue;
             rec.bpm = (uint8_t)clamp(rec.bpm + (k == B_OCTUP ? 5 : -5), 30, 240);
             goto bpm_changed;
         }
@@ -553,7 +709,7 @@ static void input(void)
         changed(R_ALL);
     }
     ui.btn = btn;
-    if ((e = plat_enc(EN_SELECT)) != 0) {
+    if ((e = plat_enc(EN_SELECT)) != 0 && !en.on) {
         rec.bpm = (uint8_t)clamp(rec.bpm + e, 30, 240);
         t[0] = 0;
         tint(t, rec.bpm);
@@ -561,7 +717,7 @@ static void input(void)
         if (ui.running && rec.page == PG_METRO) metro_start();
         changed(R_ALL);
     }
-    if ((e = plat_enc(EN_K1)) != 0 && !(ui.running && rec.page == PG_ECHO)) {
+    if ((e = plat_enc(EN_K1)) != 0 && !(ui.running && rec.page != PG_METRO)) {
         rec.bpb = (uint8_t)clamp(rec.bpb + (e > 0 ? 1 : -1), 2, 4);
         t[0] = 0;
         tint(t, rec.bpb);
@@ -576,7 +732,7 @@ static void input(void)
             rec.sub = (uint8_t)clamp(rec.sub + (e > 0 ? 1 : -1), 0, SUB_N - 1);
             app_say("SUB", SUB_NAME[rec.sub]);
             if (ui.running) metro_start();
-        } else if (!ui.running) {
+        } else if (!ui.running) {          /* ECHO and ENDLESS: the level (ENDLESS starts from it) */
             rec.level = (uint8_t)clamp(rec.level + (e > 0 ? 1 : -1), 1, RH_LEVELS);
             for (k = 0; k < RH_NCELLS; k++)
                 if (rh_cell_level((int)k) == rec.level) break;
@@ -624,6 +780,7 @@ static void input(void)
         uint32_t s = tq[tq_r % TAPQ];
         tq_r++;
         if (rec.page == PG_METRO) metro_tap(s);
+        else if (rec.page == PG_ENDLESS) en_tap(s);
         else echo_tap(s);
     }
 }
@@ -651,7 +808,7 @@ static void lights(uint32_t now)
                 else if (tr.ev[t] & (EV_ACCENT | EV_CLICK)) flash = flash ? flash : 1;
                 if (!t) break;
             }
-            half = ui.es == ES_TAP || ui.es == ES_COUNT2;
+            half = rec.page == PG_ENDLESS ? en_part() == 2 : ui.es == ES_TAP || ui.es == ES_COUNT2;
         }
         bb.lit |= LED_PLAY_GREEN;
     }
@@ -677,11 +834,11 @@ static void draw_header(void)
 {
     char t[32];
     cv_begin(240, 32, C_BLACK);
-    cv_text(8, 8, &FONT_B, rec.page == PG_METRO ? "METRO" : "ECHO", C_WHITE);
+    cv_text(8, 8, &FONT_B, PG_NAME[rec.page], C_WHITE);
     t[0] = 0;
     tint(t, rec.bpb);
     tcat(t, "/4  ");
-    tint(t, rec.bpm);
+    tint(t, en.on ? en.bpm : rec.bpm);
     tcat(t, " BPM");
     cv_text(232 - text_w(&FONT_T, t), 11, &FONT_T, t, C_HI);
     cv_rect(0, 31, 240, 1, C_LINE);
@@ -751,7 +908,101 @@ static void draw_metro(int32_t oy)
     text_c(120, 156 - oy, &FONT_T, t, ui.mt_n ? C_HI : C_DIM);
 }
 
-/* the pattern as a line of boxes, one beat a column; taps below */
+/* -------------------------------------------------------------- notation --- */
+/* a one-line percussion staff: the pattern's ticks over x0 .. x0 + w, the line at y. Heads are centred on their
+ * tick; stems go up; a beat's eighths and sixteenths are beamed together, as a score groups them. With a result,
+ * each head is coloured by its grade (a missed one hollow and red) */
+#define ST_Y 88                          /* ECHO's staff line, in the main area */
+#define ST_STEM 15
+static int32_t st_x(const rh_pattern_t *p, int32_t x0, int32_t w, int32_t tick)
+{
+    return x0 + tick * w / (p->nbeats ? p->nbeats * RH_TPB : 1);
+}
+
+static void st_head(int32_t x, int32_t y, int32_t hw, int hollow, uint16_t c)
+{
+    int32_t l = x - hw / 2;
+    cv_rect(l + 1, y - 2, hw - 2, 1, c);
+    cv_rect(l + 1, y + 2, hw - 2, 1, c);
+    if (hollow) {
+        cv_rect(l, y - 1, 1, 3, c);
+        cv_rect(l + hw - 1, y - 1, 1, 3, c);
+    } else
+        cv_rect(l, y - 1, hw, 3, c);
+}
+
+static void st_rest(int32_t x, int32_t y, uint16_t c)   /* a quarter rest */
+{
+    cv_line(x, y - 8, x + 3, y - 4, c);
+    cv_line(x + 3, y - 4, x, y - 1, c);
+    cv_line(x, y - 1, x + 3, y + 3, c);
+    cv_line(x + 3, y + 3, x, y + 3, c);
+    cv_line(x, y + 3, x + 2, y + 6, c);
+}
+
+static void st_beam(int32_t xa, int32_t xb, int32_t y, uint16_t c) { cv_rect(xa, y, xb - xa + 1, 2, c); }
+
+static void draw_staff(const rh_pattern_t *p, const rh_result_t *r, int32_t x0, int32_t w, int32_t y, int show)
+{
+    int32_t total = p->nbeats * RH_TPB, sp = total ? 3 * w / total : 8, hw = clamp(sp - 1, 4, 6), by = y - ST_STEM;
+    int32_t sx[4];
+    uint16_t sc = r ? C_GRAY : C_HI;
+    int beat = 0, ci, j, i = 0, b;
+    cv_rect(x0 - 6, y, w + 10, 1, C_LINE);
+    for (b = 0; b <= p->nbeats; b++) {   /* beats under the line, bar lines through it */
+        int32_t x = st_x(p, x0, w, b * RH_TPB);
+        if (b % (p->bpb ? p->bpb : 4) == 0 && b) cv_rect(x - hw / 2 - 3, y - 10, 1, 21, C_GRAY);
+        else if (b < p->nbeats) cv_rect(x, y + 4, 1, 2, C_DIM);
+    }
+    if (!show) return;
+    for (ci = 0; ci < p->ncells; ci++) {
+        int cell = p->cells[ci], n = CELLS[cell].n;
+        if (cell == RH_REST) st_rest(st_x(p, x0, w, beat * RH_TPB) - 1, y, C_HI);
+        for (j = 0; j < n && i < p->n; j++, i++) {
+            int32_t x = st_x(p, x0, w, p->on[i]);
+            int miss = r && r->grade[i] == RH_G_MISS;
+            uint16_t c = r ? (miss ? C_BAD : grade_col(r->grade[i])) : C_WHITE;
+            st_head(x, y, hw, miss || cell == RH_TAA, c);
+            sx[j] = x - hw / 2 + hw - 1;
+            cv_rect(sx[j], by, 1, ST_STEM - 1, sc);
+        }
+        switch (cell) {
+        case RH_TITI:
+        case RH_TRIOLA:
+            st_beam(sx[0], sx[n - 1], by, sc);
+            if (cell == RH_TRIOLA) cv_text((sx[0] + sx[2]) / 2 - 2, by - 13, &FONT_T, "3", C_GRAY);
+            break;
+        case RH_TIKA:
+            st_beam(sx[0], sx[3], by, sc);
+            st_beam(sx[0], sx[3], by + 3, sc);
+            break;
+        case RH_TITIKA:
+            st_beam(sx[0], sx[2], by, sc);
+            st_beam(sx[1], sx[2], by + 3, sc);
+            break;
+        case RH_TIKATI:
+            st_beam(sx[0], sx[2], by, sc);
+            st_beam(sx[0], sx[1], by + 3, sc);
+            break;
+        case RH_TIMKA:                   /* a dotted eighth and a sixteenth: the dot, the short second beam */
+            st_beam(sx[0], sx[1], by, sc);
+            st_beam(sx[1] - 4, sx[1], by + 3, sc);
+            cv_rect(st_x(p, x0, w, p->on[i - 2]) + hw / 2 + 2, y - 1, 2, 2, C_WHITE);
+            break;
+        case RH_SYNCO:                   /* an eighth, a quarter, an eighth: two flags */
+            for (j = 0; j < 3; j += 2) {
+                cv_line(sx[j], by, sx[j] + 4, by + 5, sc);
+                cv_line(sx[j], by + 1, sx[j] + 4, by + 6, sc);
+            }
+            break;
+        default:
+            break;
+        }
+        beat += CELLS[cell].beats;
+    }
+}
+
+/* the pattern's ticks and ms on the same scale as the staff; taps below it */
 #define TL_X 14
 #define TL_W 212
 static int32_t tl_x(int32_t ms_or_tick, int is_tick)
@@ -768,8 +1019,7 @@ static void draw_echo(int32_t oy)
 {
     char t[RH_TEXT_MAX + 8];
     uint32_t i;
-    int32_t bw;
-    int k, res = ui.es == ES_RESULT;
+    int k, res = ui.es == ES_RESULT, show;
     const char *big = ES_NAME[ui.es];
     uint16_t bigc = C_HI;
     if (res) {
@@ -799,43 +1049,29 @@ static void draw_echo(int32_t oy)
         tcat(u, "  ");
         tint(u, rec.bars);
         tcat(u, rec.bars > 1 ? " BARS" : " BAR");
+        tcat(u, rec.read ? "  READ" : "  HEAR");
         text_c(120, 40 - oy, &FONT_T, u, C_GRAY);
     }
     if (!ui.have_pat) {
-        text_c(120, 96 - oy, &FONT_T, "PLAY: A NEW RHYTHM", C_DIM);
+        text_c(120, 96 - oy, &FONT_T, "PLAY: A NEW RHYTHM   SEL: HEAR / READ", C_DIM);
         return;
     }
-    /* the grid: beats, bar lines */
-    for (k = 0; k <= ui.pat.nbeats; k++) {
-        int32_t x = tl_x(k * RH_TPB, 1), bar = k % rec.bpb == 0;
-        cv_rect(x, (bar ? 64 : 72) - oy, 1, bar ? 60 : 44, bar ? C_GRAY : C_LINE);
-    }
-    /* the notes: hidden while you only hear them; in the result, coloured by how close. A box is as wide as a
-     * sixteenth leaves room for */
-    bw = (int32_t)clamp(3 * TL_W / (ui.pat.nbeats * RH_TPB) - 1, 3, 8);
-    for (i = 0; i < ui.pat.n; i++) {
-        int32_t x = tl_x(ui.pat.on[i], 1);
-        if (!res && ui.es != ES_IDLE) continue;
-        if (res && ui.res.grade[i] == RH_G_MISS) {
-            cv_rect(x, 76 - oy, bw, 1, C_BAD);
-            cv_rect(x, 91 - oy, bw, 1, C_BAD);
-            cv_rect(x, 76 - oy, 1, 16, C_BAD);
-            cv_rect(x + bw - 1, 76 - oy, 1, 16, C_BAD);
-        } else
-            cv_rect(x, 76 - oy, bw, 16, res ? grade_col(ui.res.grade[i]) : C_HI);
-        if (res && ui.res.tap_of[i] >= 0) {   /* how far: a line from the note to its tap */
-            int32_t tx = tl_x(ui.taps[ui.res.tap_of[i]], 0);
-            cv_rect(tx < x ? tx : x + bw / 2, 96 - oy, (tx < x ? x + bw / 2 - tx : tx - x - bw / 2) + 1, 1, C_DIM);
+    /* the notes: hidden while you only hear them (HEAR); in the result, coloured by how close */
+    show = res || rec.read;
+    draw_staff(&ui.pat, res ? &ui.res : 0, TL_X, TL_W, ST_Y - oy, show);
+    for (i = 0; res && i < ui.pat.n; i++)
+        if (ui.res.tap_of[i] >= 0) {     /* how far: a line from the note to its tap */
+            int32_t x = tl_x(ui.pat.on[i], 1), tx = tl_x(ui.taps[ui.res.tap_of[i]], 0);
+            cv_rect(tx < x ? tx : x, ST_Y + 10 - oy, (tx < x ? x - tx : tx - x) + 1, 1, C_DIM);
         }
-    }
     for (i = 0; i < ui.ntaps; i++) {      /* your taps */
         int32_t x = tl_x(ui.taps[i], 0);
-        if (x >= TL_X - 8 && x <= TL_X + TL_W + 8) cv_rect(x + bw / 2 - 1, 100 - oy, 2, 14, C_WHITE);
+        if (x >= TL_X - 8 && x <= TL_X + TL_W + 8) cv_rect(x - 1, ST_Y + 12 - oy, 2, 10, C_WHITE);
     }
     /* the playhead */
     if (ui.running && ui.cur >= 0) {
         int32_t base = ui.es == ES_LISTEN ? (int32_t)ui.t_listen : ui.es == ES_TAP ? (int32_t)ui.t_tap : -1;
-        if (base >= 0) cv_rect(tl_x(ui.cur - base, 1), 62 - oy, 2, 64, C_AMB);
+        if (base >= 0) cv_rect(tl_x(ui.cur - base, 1), ST_Y - 30 - oy, 2, 56, C_AMB);
     }
     if (res) {
         char u[48];
@@ -854,16 +1090,75 @@ static void draw_echo(int32_t oy)
             tcat(u, "  EXTRA ");
             tint(u, ui.res.extra);
         }
-        text_c(120, 132 - oy, &FONT_T, u, C_HI);
+        text_c(120, 128 - oy, &FONT_T, u, C_HI);
         u[0] = 0;
         for (i = 0; i < ui.pat.ncells; i++) {   /* what it was, by its syllables */
             if (i) tcat(u, " ");
             if (text_w(&FONT_T, u) + text_w(&FONT_T, rh_cell_name(ui.pat.cells[i])) > 230) break;
             tcat(u, rh_cell_name(ui.pat.cells[i]));
         }
-        text_c(120, 152 - oy, &FONT_T, u, C_GRAY);
+        text_c(120, 146 - oy, &FONT_T, u, C_GRAY);
     } else if (ui.es == ES_IDLE)
-        text_c(120, 140 - oy, &FONT_T, "PLAY: HEAR, THEN TAP IT BACK", C_DIM);
+        text_c(120, 140 - oy, &FONT_T, rec.read ? "PLAY: READ IT, TAP IT" : "PLAY: HEAR, THEN TAP IT BACK", C_DIM);
+}
+
+static void draw_endless(int32_t oy)
+{
+    char t[48];
+    const char *big;
+    uint16_t bigc = C_WHITE, hc;
+    int part = en.on ? en_part() : -1, i;
+    int32_t hb = 200 * en.health / 100;
+    if (en.on && part == 0 && ui.cur >= 0) {
+        t[0] = 0;
+        tint(t, (int)((uint32_t)ui.cur / RH_TPB % rec.bpb) + 1);
+        big = t;
+    } else if (en.on)
+        big = part == 1 ? "LISTEN" : "YOUR TURN", bigc = part == 1 ? C_HI : C_WHITE;
+    else if (en.over)
+        big = en.new_best ? "NEW BEST" : "GAME OVER", bigc = en.new_best ? C_GOOD : C_BAD;
+    else
+        big = "ENDLESS", bigc = C_HI;
+    text_c(120, 2 - oy, part == 0 ? &FONT_L : &FONT_M, big, bigc);
+    /* health */
+    hc = en.health > 50 ? C_GOOD : en.health > 25 ? C_OK : C_BAD;
+    cv_rect(20, 38 - oy, 200, 10, C_LINE);
+    if (en.on || en.over) cv_rect(20, 38 - oy, hb, 10, hc);
+    t[0] = 0;
+    tcat(t, "ROUND ");
+    tint(t, en.rounds);
+    tcat(t, "   ");
+    tint(t, en.on || en.over ? en.bpm : rec.bpm);
+    tcat(t, " BPM   LV ");
+    tint(t, en.on || en.over ? en.level : rec.level);
+    tcat(t, "   BEST ");
+    tint(t, rec.best);
+    text_c(120, 52 - oy, &FONT_T, t, C_GRAY);
+    if (!en.have_last) {
+        text_c(120, 96 - oy, &FONT_T, en.on ? "TAP EACH BAR BACK, NO BREAKS" : "PLAY: START   K2: LEVEL   SELECT: BPM", C_DIM);
+        return;
+    }
+    /* the last round: its notes coloured, your taps under them */
+    {
+        const rh_pattern_t *p = &en.pat[en.last_k];
+        int32_t total = p->nbeats * RH_TPB, tick_us = (int32_t)rh_tick_ms_x1000(en.bpm);
+        draw_staff(p, &en.last, TL_X, TL_W, ST_Y + 6 - oy, 1);
+        for (i = 0; i < en.ntaps[en.last_k]; i++) {
+            int32_t x = TL_X + en.taps[en.last_k][i] * 1000 / tick_us * TL_W / (total ? total : 1);
+            if (x >= TL_X - 8 && x <= TL_X + TL_W + 8) cv_rect(x - 1, ST_Y + 18 - oy, 2, 10, C_WHITE);
+        }
+    }
+    t[0] = 0;
+    tcat(t, "GOOD ");
+    tint(t, en.last.good);
+    tcat(t, "/");
+    tint(t, en.last.n);
+    tcat(t, "   HEALTH ");
+    if (en.delta >= 0) tcat(t, "+");
+    tint(t, en.delta);
+    tcat(t, "   ");
+    tcat(t, rh_hint_text(en.last.hint));
+    text_c(120, 136 - oy, &FONT_T, t, en.delta >= 0 ? C_GOOD : C_OK);
 }
 
 static void draw_main(void)
@@ -872,6 +1167,7 @@ static void draw_main(void)
     for (h = 0; h < 2; h++) {
         cv_begin(240, MAIN_H / 2, C_BLACK);
         if (rec.page == PG_METRO) draw_metro(h * MAIN_H / 2);
+        else if (rec.page == PG_ENDLESS) draw_endless(h * MAIN_H / 2);
         else draw_echo(h * MAIN_H / 2);
         cv_blit(0, 32 + (uint32_t)h * MAIN_H / 2);
     }
@@ -891,7 +1187,9 @@ static void draw_footer(void)
         if (x + 8 + text_w(&FONT_T, m) <= 232) cv_text(232 - text_w(&FONT_T, m), 10, &FONT_T, m, C_GRAY);
     } else
         cv_text(8, 10, &FONT_T,
-                rec.page == PG_METRO ? "HOME: ECHO   PLAY: START/STOP" : "HOME: METRO   PLAY: NEW   REC: AGAIN",
+                rec.page == PG_METRO ? "HOME: ECHO   PLAY: START/STOP"
+                : rec.page == PG_ECHO ? "HOME: ENDLESS   PLAY: NEW   REC: AGAIN"
+                                      : "HOME: METRO   PLAY: START/STOP",
                 C_DIM);
     cv_blit(0, 208);
 }
@@ -912,7 +1210,8 @@ static void speak(void)
         char t[64];
         t[0] = 0;
         tcat(t, APP_NAME ". ");
-        tcat(t, rec.page == PG_METRO ? "METRO. " : "ECHO. ");
+        tcat(t, PG_NAME[rec.page]);
+        tcat(t, ". ");
         tint(t, rec.bpm);
         tcat(t, " BPM");
         ann_say(t, 0, ANN_NOW);
@@ -955,6 +1254,13 @@ void app_frame(void)
         if (ui.running && (c / 3 != old / 3 || c < 0)) ui.redraw |= R_MAIN;   /* the playhead, the beat */
     }
     if (rec.page == PG_ECHO) echo_follow();
+    if (rec.page == PG_ENDLESS) {
+        int part = en.on ? en_part() : -1;
+        static int last_part = -1;
+        en_follow();
+        if (part != last_part) ui.redraw |= R_MAIN;
+        last_part = part;
+    }
     if ((ui.toast_until && now >= ui.toast_until) != last_toast) {
         last_toast = ui.toast_until && now >= ui.toast_until;
         ui.redraw |= R_FOOT;
@@ -995,7 +1301,18 @@ int app_expect(const char *what, int *got)
     else if (!strcmp(what, "metro_gap_taps")) {
         (void)metro_avg(1, &n);
         *got = n;
-    } else if (!strcmp(what, "lit_keys")) *got = (int)ui.lit;
+    } else if (!strcmp(what, "read")) *got = rec.read;
+    else if (!strcmp(what, "best")) *got = rec.best;
+    else if (!strcmp(what, "en_on")) *got = en.on;
+    else if (!strcmp(what, "en_over")) *got = en.over;
+    else if (!strcmp(what, "en_rounds")) *got = en.rounds;
+    else if (!strcmp(what, "en_stage")) *got = en.stage;
+    else if (!strcmp(what, "en_bpm")) *got = en.bpm;
+    else if (!strcmp(what, "en_level")) *got = en.level;
+    else if (!strcmp(what, "health")) *got = en.health;
+    else if (!strcmp(what, "en_good")) *got = en.last.good;
+    else if (!strcmp(what, "en_notes")) *got = en.last.n;
+    else if (!strcmp(what, "lit_keys")) *got = (int)ui.lit;
     else if (!strcmp(what, "saves")) *got = (int)saves;
     else return 0;
     return 1;
@@ -1019,6 +1336,7 @@ int app_host_cmd(const char *cmd, const char *a, const char *b, const char *c, c
             host_fails++;
         } else
             ui.have_pat = 1;
+        if (!ui.running) ui.es = ES_IDLE, ui.ntaps = 0;
         ui.redraw |= R_ALL;
         return 1;
     }
@@ -1033,6 +1351,18 @@ int app_host_cmd(const char *cmd, const char *a, const char *b, const char *c, c
         }
         host_itap = host_ntap;           /* armed by echo_start */
         host_armed = 1;
+        return 1;
+    }
+    if (!strcmp(cmd, "endtap")) {        /* endtap OFFSET [SKIP_ROUND]: this ENDLESS stage tapped (one round left out) */
+        int off = atoi(a), skip = b[0] ? atoi(b) : -1;
+        uint32_t k, i;
+        host_ntap = 0;
+        for (k = 0; k < EN_ROUNDS; k++)
+            for (i = 0; i < en.pat[k].n && host_ntap < RH_MAX_TAPS; i++)
+                if ((int)k != skip)
+                    host_tap[host_ntap++] = tick_at(en_resp(k))
+                                            + (uint32_t)(((int64_t)rh_onset_ms(&en.pat[k], (int)i, en.bpm) + off) * SR / 1000);
+        host_itap = 0;
         return 1;
     }
     if (!strcmp(cmd, "metrotap")) {      /* metrotap N OFFSET: the next N beats from now, tapped OFFSET ms off */
