@@ -21,6 +21,7 @@
 | 用 FM-1 管 coding agent（自製） | [Conductor](agentic/conductor.md)、[操作速查](agentic/conductor-cheatsheet.md) |
 | 用 FM-1 學摩斯電碼、跟人互傳（自製） | [用 MORSE 學摩斯](dev/morse-learn.md)、[摩斯電碼機](dev/morse.md)、[操作速查](dev/morse-cheatsheet.md)、[兩台互連](hardware/io.md#two-units) |
 | 用 FM-1 學樂理：五度圈、和弦、級數（自製） | [樂理練習機](dev/theory.md) |
+| 吉他指板、音階把位、和弦按法（自製） | [吉他指板與和弦書](dev/guitar.md) |
 | 試 Agent Deck | [Agent Deck 試用](firmware/agent-deck/index.md) |
 | 搞懂官方、社群、Hub、VIBE 的關係 | [生態是怎麼來的](ecosystem.md) |
 | 找某個 repo 或目前版本 | [資源地圖](resources.md) |
@@ -44,13 +45,14 @@
 
 ## 自製韌體 + host
 
-在 [fm1-base](dev/index.md) 上寫的。Conductor 和共用模組是 MIT；Morse 與 THEORY 的韌體是 GPL-3.0-or-later（Morse 的電腦端仍是 MIT）。每個專案是一套 FM-1 韌體，需要的話再加一個電腦端程式。
+在 [fm1-base](dev/index.md) 上寫的。Conductor 和共用模組是 MIT；Morse、THEORY 與 GUITAR 的韌體是 GPL-3.0-or-later（Morse 的電腦端仍是 MIT）。每個專案是一套 FM-1 韌體，需要的話再加一個電腦端程式。
 
 | 專案 | 是什麼 | 韌體 | 電腦端 | 狀態 |
 |---|---|---|---|---|
 | **Conductor** | coding agent 的桌上控制台：一個琴鍵一個 agent，LED 表示急不急，螢幕顯示狀態與輸出（含中文），提示音，按鈕批准 / 拒絕 / 中斷，按住說話的語音輸入，USB 或藍牙 | `firmware/conductor/` | `host/conductor/`（接 hc 與 classic Herdr 的 Python daemon） | 韌體 0.3、host 0.3.2；2026-11-17 在我的機器上用過，目前機器上換成 Morse（換回來：`just fm1-switch firmware/conductor/build/conductor.fwsc`），見[設計](agentic/conductor.md)、[速查](agentic/conductor-cheatsheet.md)、[版本紀錄](agentic/conductor-changelog.md) |
 | **Morse** | 隨身摩斯電碼機：琴鍵當電鍵（直鍵或 iambic paddle）即時解碼、練長短的 RHYTHM 頁、琴鍵當字母鍵盤和片語鍵、閃卡間隔複習（預設只用聽的，打碼卡看自己的節奏判斷）、分級測驗與手動調整進度、進度備份還原、連續收聽、靜音看燈、USB 或藍牙 MIDI 用 Vail 的格式 | `firmware/morse/` | `host/morse/`（把發的字打進電腦、電腦送字給 FM-1 播） | 韌體 0.8、host 0.8.0（`SAVE` 立刻存）；2026-11-17 到 11-18 在我的機器上，目前換成 THEORY（學習紀錄留在 `0xDA000`），見[怎麼用它學](dev/morse-learn.md)、[設計](dev/morse.md)、[速查](dev/morse-cheatsheet.md) |
 | **THEORY** | 隨身樂理練習機。v0.1 是 WHEEL：五度圈上標出調內和弦；彈和弦就說出它的名稱和在調裡的 Roman / Nashville 級數（副屬、借用、轉位）；或讓白鍵彈調內和弦，自動就近轉位；九種調式，每個調都拼對音名。0.2 加上每天一回合的閃卡（音階、調號、級數和弦、聽音級數與和弦性質）、說出你彈什麼的 CHORD 頁、五度圈熟練度圖、進度備份。0.3 加上：每種卡片的說明和照著彈的新卡、一個一個點亮而且持續發聲的作答、比較不重複的出題、絕對音感遊戲 PITCH、從 CHART 直接開練某個調、CHORD 的 LATCH 模式 | `firmware/theory/` | `host/theory/`（進度備份與還原，另有[網頁](assets/theory/progress.html)） | 韌體 0.2，2026-11-18 起在我的機器上（Morse 的進度保留，可以換回去）；0.3 已在模擬器上驗證，host 0.3.0；見[設計](dev/theory.md) |
+| **GUITAR** | 隨身吉他指板與和弦書。v0.1：NECK 在 0–12 品標出一個調的音階，整個指板或一次一個 CAGED／NPS 把位，吉他、bass、烏克麗麗、曼陀林共八種 tuning；彈一個音，指板上所有位置都圈起來。SHAPE 用搜尋產生和弦圖（手指、barre），最簡單的排第一；彈和弦就看到按法，`PLAY` strum | `firmware/guitar/` | — | 韌體 0.1，只在 simulator 與 fm1-emu 驗證過；見[設計](dev/guitar.md) |
 | `hello` | fm1-base 的 template 原樣複本，用來驗證工具鏈 | `firmware/hello/` | — | 模擬器開得起來 |
 | 共用模組 | `hostlink`（經 USB / 藍牙和電腦的 SysEx 連線）、`ledfx`（LED 動態）、`chime`（FM 提示音） | `firmware/common/` | — | Conductor 在用；Morse 用 `hostlink`、`ledfx` |
 
