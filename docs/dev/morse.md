@@ -235,7 +235,7 @@ TYPE 頁的 LIVE 對應「打一個送一個」，COMPOSE 對應「先打好再�
 
 ## 藍牙（0.5） { #bluetooth }
 
-2026-11-18 做好，host simulator 和 fm1-emu 都驗證過，16:20 刷進實機（進度保留 `[實機]`），藍牙連線還在測。
+2026-11-18 做好，host simulator 和 fm1-emu 都驗證過，16:20 刷進實機（進度保留）。同一天在實機上用藍牙連上 Mac：`morse-send`、進度備份都能用，按鍵的時間戳記和 USB 一樣準 `[實機]`。
 
 ### 能做什麼
 
@@ -274,9 +274,18 @@ USB 和藍牙都連著時：
 
 這是摩斯特有的問題：點在 20 WPM 只有 60 ms。BLE 的 connection interval 大約 7.5–15 ms，按鍵事件會晚 0–15 ms 才送到，**誤差可能達到一個點的 25%**。
 
-- **送出**：FM-1 帶了真實的時間戳記。接收端照時間戳記排，抖動就會消失；照到達時間算，就會抖。CoreMIDI 會把 BLE-MIDI 的時間戳記換成封包時間 `[調研]`，但 Chrome 的 Web MIDI 和 Vail 網頁用的是哪一個，要實測。
+- **送出（2026-11-18 實測）** `[實機]`：TYPE 頁用 20 WPM 播字（點 60 ms、劃 180 ms，FM-1 自己計時，當作標準答案）。USB 和藍牙同時連著，Mac 上用 python-rtmidi 同時錄兩個 port，每個 note 記兩種時間：到達時間（`perf_counter`），以及 CoreMIDI 的封包時間戳記（rtmidi 的 delta）。
+
+    | 46 個 mark、34 個字內停頓 | 點（60） | 劃（180） | 停頓（60） |
+    |---|---|---|---|
+    | USB，到達時間 | sd 0.1，最差 ±0.3 ms | sd 0.2，±0.8 | sd 0.1，±0.4 |
+    | 藍牙，到達時間 | sd 1.7，最差 ±5.5 ms | sd 4.6，±16 | sd 2.8，±9.5 |
+    | 藍牙，CoreMIDI 時間戳記 | sd 0.3，最差 ±1 ms | sd 0.4，±1 | sd 0.4，±1 |
+
+    **CoreMIDI 照 FM-1 送的 BLE-MIDI 時間戳記排時間，結果和 USB 一樣準**，誤差在 1 ms 以內（13-bit 時間戳記的精度就是 1 ms）。照到達時間算，最差會差 16 ms，大約是一個點的 25%，和研究時的預估相同。第一輪錄音有幾個劃只有 106–123 ms，兩種時間都一樣短，比較像是播放真的被下一個鍵打斷了，不是傳輸造成的；第二輪每個字都等播完再按，就沒有再出現。
+- **接收端用哪一種時間**：用 CoreMIDI 時間戳記的程式（python-rtmidi、DAW）不會抖。Chrome 的 Web MIDI（`MIDIMessageEvent.timeStamp`）和 Vail 網頁用的是哪一種，還沒測。
 - **收進**：FM-1 照送出端的時間解碼（見上面第 6 點）`[模擬]`，模擬器的藍牙替身沒有時間戳記，所以只驗證了程式路徑。
-- **真的抖的話**：照原本的構想，用 note 的 velocity 帶上這個 mark 的長度（10 ms 一格），收的一方用長度而不是到達時間。只有收方也是 MORSE 才有用，Vail 不懂（見 [Backlog](#backlog)）。
+- **用 velocity 帶長度的備案**：接收端照時間戳記排時就不需要。只有在接收端用到達時間、又會誤判時才考慮（見 [Backlog](#backlog)）。
 
 ### 瀏覽器
 
@@ -300,10 +309,14 @@ USB 和藍牙都連著時：
 - host simulator：藍牙替身連上後 HELLO 走 BLE；從 BLE 送 HELLO_ACK（傳輸 `1`）、`T_TEXT`（播出 E）、`T_PROG_REQ`（`T_PROG` 從 BLE 回來）；KEY 頁按鍵同時送 USB 和 BLE；從 BLE 收到的 T 解得出來；BLUETOOTH OFF 之後按鍵只走 USB，存檔、重開機後還是 OFF；藍牙不增加 store 寫入。
 - fm1-emu 兩種晶片：疊在實機 0.4 前的備份上，關掉藍牙、重開讀回 OFF、再打開，ROUND 17 的紀錄保留，開機 0 次寫入。
 
-還要在實機上做（刷機要你核准）：
-- Mac 藍牙連上，`just morse-send`、MORSE on the web、Vail 都能用；
-- **量抖動**：同一串按鍵分別走 USB 和藍牙，記下 Mac 收到的時間（CoreMIDI 封包時間和 Web MIDI 的 `timeStamp`），比較兩者的差；
-- 拔線後只用電池，連著打 10 分鐘看會不會斷。
+實機 `[實機]`（2026-11-18）：
+- Mac 用藍牙連上 `FM-1 3399`（port 叫 `FM-1 3399 Bluetooth`），拔掉 USB：`just morse-send paris` 播得出來；`just morse-backup` 走藍牙 1.7 秒，內容和走 USB 時相同。
+- 抖動：見上面的[時間準不準](#bluetooth)，CoreMIDI 時間戳記的誤差 ≤ 1 ms。
+- 拔線後 header 的 `PC` 要大約 10 秒才消失：FM-1 要等 10 秒沒收到電腦的訊息（`HOSTLINK_TIMEOUT_MS`），才判定電腦離線。
+
+還要做：
+- MORSE on the web 和 Vail 經藍牙使用，以及 Chrome 的 `timeStamp` 是不是照時間戳記；
+- 只用電池，連著打 10 分鐘看會不會斷。
 
 ## 設計
 
@@ -429,4 +442,6 @@ USB 和藍牙都連著時：
 | 項目 | 為什麼現在不做 | 什麼時候做、怎麼做 |
 |---|---|---|
 | **更多符號進閃卡**：`' ! ( ) & : ; + - _ " $ @`，以及 `<AR>` `<SK>` `<KN>` 等 prosign（2026-11-18 試用時提出） | 課程是 LCWO 的 41 字 Koch 課表，通聯和考試幾乎只用這些。這些符號很少用，prosign 在 LISTEN 的 QSO 節目和 TYPE 的片語頁裡聽得到。每個字的盒號存在大小固定的紀錄裡（`LN_N = 41`，`ln_state_t`），加字就要改存檔格式：韌體的 `REC_VER` 升到 2 並寫升級程式，備份格式（`PROG_FORMAT`、host 的 `progress.py`、網頁）也要升版，舊備份要能讀 | 等學完 41 個字。做法：在 Koch 順序之後加第 9、10 組（常用的 prosign 一組，其他符號一組），prosign 的卡片用 `<..>` 連在一起播 |
-| **用 velocity 帶 mark 的長度** | 0.5 已經照送出端的時間戳記解碼，還不知道接收端（CoreMIDI、Chrome、Vail）會不會照時間戳記排 | 實機量過抖動後再決定：如果到達時間的誤差超過一個點的 15–20%，note off 的 velocity 帶上長度（10 ms 一格），收方也是 MORSE 時用它 |
+| **用 velocity 帶 mark 的長度** | 2026-11-18 實測，CoreMIDI 照時間戳記排，誤差 ≤ 1 ms，不需要 `[實機]` | 只在 Chrome 或 Vail 被證實用到達時間、而且會誤判時才做：note off 的 velocity 帶上長度（10 ms 一格），收方也是 MORSE 時用它 |
+| **網頁直接連藍牙（Web Bluetooth）** | 現在要先在系統的「音訊 MIDI 設定」按 Connect，Web MIDI 沒辦法掃描或連接藍牙裝置 | Chrome／Edge 的 Web Bluetooth 可以直接掃描 BLE-MIDI 的 service（`03B80E5A-EDE8-4B33-A751-6CE34EC4C700`），選 `FM-1 XXXX` 後網頁自己讀寫 BLE-MIDI 封包，不用經過系統設定 `[調研]`。代價：網頁要自己實作封包和時間戳記（大約一兩百行 JS）；連線只有網頁能用（Vail 和指令列看不到）；FM-1 一次只連一台電腦；Safari 不支援 |
+| **拔線後 `PC` 馬上消失** | 現在要等 10 秒沒收到訊息才判定電腦離線 | 收到 `plat_usb_lost`，或 USB session 改變、而且電腦是從 USB 連的時，馬上判定離線 |

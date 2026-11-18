@@ -118,6 +118,7 @@ M-Flasher 在兩次寫入前各自動存了一份：`~/Documents/M-Flasher/backu
 | 2026-11-18 16:15 | 本人要求後，agent 執行 `just --yes fm1-backup-release 2026-11-18-pre-morse-0.5` | 公開 release [`backup-2026-11-18-pre-morse-0.5`](https://github.com/daviddwlee84/M-VAVE_FM-1/releases/tag/backup-2026-11-18-pre-morse-0.5)：整片 flash 備份、M-Flasher 的 JSON、學習進度 JSON；上傳後的 digest 和本機的 SHA-256 相同 |
 | 2026-11-18 16:20 | 本人執行 `fm1_install.py firmware/morse/build/morse-0.5.fwsc`（Morse 0.5 release build，`FM-1_41000500`，SHA-256 `49433190…154457`，fm1-morse `a75c29e`），機器上是 Morse 0.4 | 第一次在 `[y/N]` 輸入時 Python 報 `UnicodeDecodeError`（終端機送了非 UTF-8 的位元組，大概是輸入法），還沒寫入就結束。第二次成功：`checking the package (30 reads)` → `switching to update mode` → `the loader writes only the sectors that changed (fast install)` → `done: the FM-1 runs FM-1_41000500` |
 | 2026-11-18 16:22 | agent 執行 `fm1_install.py --info`、`just morse-backup`（唯讀） | `FM-1_41000500 [running] port: Felucca`；進度和刷機前相同（round 29、20 open、451 answered、386 right、streak 5），存成 `backups/progress/2026-11-18-after-0.5.json` |
+| 2026-11-18 16:23–16:29 | 本人在 Mac 的藍牙 MIDI 視窗連上 `FM-1 3399`、拔掉 USB；agent 執行 `just morse-send`、`just morse-backup`（唯讀），用 python-rtmidi 錄 TYPE 頁播出的按鍵時間 | 藍牙 port `FM-1 3399 Bluetooth`；`morse-send paris` 播出；進度備份走藍牙 1.7 秒，內容和走 USB 時相同。插回 USB 後兩條同時錄：照 CoreMIDI 時間戳記算，藍牙的點、劃、停頓誤差 ≤ 1 ms（和 USB 一樣），照到達時間算最差 ±16 ms。拔線後 `PC` 大約 10 秒才消失（host 逾時） |
 
 ## Phase 1 驗收
 
