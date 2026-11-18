@@ -226,6 +226,17 @@ fw-build app="hello": fw-setup fw-toolchain
     JIELI_TOOLCHAIN="$PWD/tools/jieli/toolchain" AC79_SDK="$PWD/tools/fw-AC79_AIoT_SDK" \
       uv run --locked --all-groups python "{{fm1_base}}/tools/build.py" "firmware/{{app}}"
 
+# The browser emulator (the same app in WebAssembly) into firmware/APP/build/emu/: open its index.html over http, or
+# publish that folder for a PR's "try it" link. emcc from emsdk if installed, else Docker (scripts/emcc-docker.sh).
+fw-web app="hello": fw-setup
+    #!/usr/bin/env bash
+    set -euo pipefail
+    if ! command -v emcc >/dev/null; then
+      d="$(mktemp -d)"; ln -s "$PWD/scripts/emcc-docker.sh" "$d/emcc"; export PATH="$d:$PATH"
+    fi
+    uv run --locked --all-groups python "{{fm1_base}}/tools/build.py" "firmware/{{app}}" --web
+    echo "fw-web: firmware/{{app}}/build/emu/ (python3 -m http.server -d firmware/{{app}}/build/emu, then open it)"
+
 # ---- Conductor: own agent console (firmware/conductor + host/conductor) ------
 
 # Host daemon unit tests (protocol, slot memory, action checks; no hardware, no backend).

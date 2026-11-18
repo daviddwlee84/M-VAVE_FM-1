@@ -1938,7 +1938,7 @@ static void layout(void)
     }
 }
 
-static void ring(int32_t x, int32_t y, int32_t r, int32_t oy, uint16_t c)  /* a thin circle around a label */
+static void circle_ring(int32_t x, int32_t y, int32_t r, int32_t oy, uint16_t c)  /* a thin circle around a label */
 {
     int i;
     for (i = 0; i < 48; i++) {
@@ -2003,8 +2003,8 @@ static void draw_wheel_at(int32_t oy)
     }
     if (ui.sh == SH_CHORD) {             /* the chord just played, where it sits */
         int fam = family(ui.id.c.q);
-        if (fam == 1) ring(ui.ox[th_circle_pos(ui.id.c.root)], ui.oy[th_circle_pos(ui.id.c.root)], 14, oy, C_WHITE);
-        if (fam == 2) ring(ui.ix[th_circle_pos(ui.id.c.root - 3)], ui.iy[th_circle_pos(ui.id.c.root - 3)], 12, oy, C_WHITE);
+        if (fam == 1) circle_ring(ui.ox[th_circle_pos(ui.id.c.root)], ui.oy[th_circle_pos(ui.id.c.root)], 14, oy, C_WHITE);
+        if (fam == 2) circle_ring(ui.ix[th_circle_pos(ui.id.c.root - 3)], ui.iy[th_circle_pos(ui.id.c.root - 3)], 12, oy, C_WHITE);
     }
     /* the centre: the key signature, its count and its letters */
     c = th_keysig(rec.tonic, MODES[rec.mode], sig);
@@ -2123,7 +2123,7 @@ static void draw_chart_at(int32_t oy)
         th_name(CO_TONIC[g], t);
         bg = open ? level_rgb((sum + n / 2) / (n ? n : 1)) : RGB(20, 20, 24);
         label_bg(ui.ox[pos], ui.oy[pos], oy, &FONT_B, t, open ? C_WHITE : C_DIM, bg);
-        if (g == ui.ccur) ring(ui.ox[pos], ui.oy[pos], 16, oy, C_WHITE);
+        if (g == ui.ccur) circle_ring(ui.ox[pos], ui.oy[pos], 16, oy, C_WHITE);
     }
     /* the key under the cursor: each kind of card */
     th_name(CO_TONIC[ui.ccur], t);

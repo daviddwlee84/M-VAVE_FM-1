@@ -102,6 +102,7 @@ just rhythm-emu [CHIP] # RHYTHM in fm1-emu (after `just fw-build rhythm`; `just 
 just fw-setup          # submodules + Python tools (needs `brew install libraqm`)
 just fw-test [APP]     # host simulator build + tests/basic.txt; no toolchain, no hardware
 just fw-build [APP]    # device package via JieLi toolchain in Docker (see docs/dev/ for current blockers)
+just fw-web [APP]      # browser emulator (WebAssembly) into firmware/APP/build/emu/; emcc or Docker
 
 just fm1-fetch         # download M-Flasher + SLOOP into downloads/, verify against release digests
 just fm1-find          # read-only: units in download mode / on USB MIDI
@@ -241,6 +242,13 @@ Other rules:
   `just fm1-backup-release` only when the owner asks for that specific backup,
   never as an automatic step after `fm1-backup`.
 - Commit or push only when the owner asks.
+- A pull request that changes a firmware's behaviour links a build of it the owner can try in the browser:
+  `just fw-web APP`, then publish `firmware/APP/build/emu/` (index.html with app.js, app_worklet.js, worklet.js,
+  app.wasm, parts/) as a private claude.ai artifact and put the link in the PR. Without Docker or emsdk (or the
+  Artifact tool), say so in the PR instead. The link shows that build only: republish it after new commits.
+- Something outside the repo (not a git hook here; seen 2026-11-18) amends the newest commit with the `.specstory`
+  transcripts and `.claude/plans`, so a commit's hash can change right after it is made. Record a hash (device-log, docs, commit messages) only after the hook has run: read it back with
+  `git log -1`, never from `git commit`'s own output.
 - CI builds on pull requests and deploys `main` to GitHub Pages
   (`.github/workflows/docs.yml`).
 

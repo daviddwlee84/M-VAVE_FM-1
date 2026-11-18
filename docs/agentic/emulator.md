@@ -135,3 +135,19 @@ cargo run --release -p fm1-live -- --fwsc FM-1.fwsc     # M-VAVE 原廠套件
 | 適合 | 黑箱測試、相容性、最終套件驗證 | unit test、UI 與邏輯開發 |
 
 自己寫韌體時兩者互補：host simulator 做快速回歸，fm1-emu 跑最後產出的套件。這個 repo 目前不寫韌體，所以兩個都還沒用上。
+
+## 自己的 app 的瀏覽器版（fm1-base `--web`） { #own-web }
+
+fm1-base 可以把同一個 app 編成 WebAssembly，在瀏覽器裡跑（`tools/build.py APP --web`）。它跑的是 host simulator 那一層，不是 fm1-emu 的整台機器模擬，所以適合試玩畫面和操作，不能拿來驗證 flash 或時序 `[上游]`。
+
+- **指令**：`just fw-web APP`，輸出在 `firmware/APP/build/emu/`。
+    - 有裝 emsdk 就用它的 `emcc`；沒有的話，`scripts/emcc-docker.sh` 用固定版本的 `emscripten/emsdk:3.1.74` image 代替。
+    - 用 `python3 -m http.server -d firmware/APP/build/emu` 開，按 `Switch on` 開機。
+    - 存檔放在瀏覽器的 localStorage。
+- **PR 的試玩連結**：把那個資料夾發布成私人的 claude.ai artifact，連結貼在 PR 裡。規則見 `AGENTS.md`。
+    - 第一個例子是 2026-11-18 THEORY 0.3 的 PR #5。
+    - 連結只代表當時那一版，有新的 commit 要重新發布。
+- **名稱衝突**（2026-11-18 遇過）：瀏覽器版把 app 和 `web/emu/emu_web.c` 編在同一個檔案裡。THEORY 原本有一個 `static void ring()`，和 `emu_web.c` 的全域變數 `ring` 撞名，編不過。host simulator 和實機版都沒事，只有 `--web` 會出問題，所以改名成 `circle_ring()`。
+    - app 裡全域範圍的名稱最好加上自己的前綴。
+- **讀螢幕**：頁面會去找 `reader/words.js`，`--web` 的輸出裡沒有這個檔案，所以內建的讀螢幕用不了，其他功能正常。
+
