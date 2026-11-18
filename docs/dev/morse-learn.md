@@ -102,4 +102,4 @@ FM-1 收到備份後會顯示回合數、開放幾個字、答過幾題，按 `P
 
 接上電腦後（USB，或 0.5 起的[藍牙](morse.md#bluetooth)），FM-1 在 Vail 眼中就是一個 MIDI 電鍵（[和 Vail 搭配](morse.md#vail)）。單字和呼號的抄收、QSO 模擬、和朋友互傳（Morse Mailbox、Repeater），都到 [training.vailmorse.com](https://training.vailmorse.com/) 練。MORSE 本身負責每天的字母和節奏基礎。
 
-也可以把 FM-1 當成 Mac 的摩斯鍵盤：`just morse-type`，在 KEY 頁打的字會打進目前的視窗。只想看自己打了什麼、或讓電腦送字給 FM-1 練抄收，用 [MORSE on the web](https://daviddwlee84.github.io/fm1-morse/web/) 的 Live 區塊就好，不用裝東西，也不需要 Accessibility 權限。
+也可以把 FM-1 當成 Mac 的摩斯鍵盤：`just morse-type`，在 KEY 頁打的字會打進目前的視窗。只想看自己打了什麼、或讓電腦送字給 FM-1 練抄收，用 [MORSE on the web](https://daviddwlee84.github.io/fm1-morse/web/) 的 Live 區塊就好，不用裝東西，也不需要 Accessibility 權限。網頁也會自己從按鍵的時間解碼，顯示你的字元速度、劃有幾個點長、字和字之間停了多久；*With Vail* 一節說明哪個 PRESET 讓 Vail 把字母連成詞（QSO 起）。

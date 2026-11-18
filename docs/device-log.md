@@ -122,6 +122,7 @@ M-Flasher 在兩次寫入前各自動存了一份：`~/Documents/M-Flasher/backu
 | 2026-11-18（16:29 之後） | 本人只用藍牙（沒接 USB）：Chrome 開 MORSE on the web，以及 vailmorse.com 的 Repeater | 網頁顯示 `MORSE 0.5 connected over Bluetooth`，Live 收到 FM-1 讀到的字；Vail 不用設定就收到 FM-1 的發報。拔線用電池時沒有斷線 |
 | 2026-11-18 16:55 前後 | 本人執行 `fm1_install.py firmware/morse/build/morse-0.6.fwsc`（Morse 0.6 release build，`FM-1_41000600`，SHA-256 `d65b6df5…8fd7e`，fm1-morse `60f76cf`），機器上是 Morse 0.5 | 成功：fast install，`done: the FM-1 runs FM-1_41000600`；17:02 `--info` 回答 `FM-1_41000600 [running] port: Felucca` |
 | 2026-11-18 17:00 前後 | 本人試網頁和 Vail | 網頁的 *Over Bluetooth, directly*（Web Bluetooth）配對 `FM-1 3399` 成功，Live 和 Timing 都能用；USB 和藍牙都在時網頁走 USB。Vail Decoder：20/13、20/14 字母還是分開，22/18 連成詞 |
+| 2026-11-18 17:10 前後 | 本人測 0.6 的拔線 | 用 USB 連上、`PC` 亮起後拔線，`PC` 半秒內消失；接著線時幾乎沒看到 `PC` 閃 |
 
 ## Phase 1 驗收
 
