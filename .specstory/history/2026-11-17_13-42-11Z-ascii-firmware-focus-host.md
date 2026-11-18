@@ -74048,3 +74048,1099 @@ prosign 就是把幾個字母連在一起打，中間不停頓，所以有幾個
 - `catalog.json` 的晶片欄寫 `new`，檢查頁卻寫 both chips，兩邊判斷不一致。這個欄位是從套件讀出來的，不是硬體測試。
 - 這些都補進了 `docs/firmware/hub.md` 和 `fm1-hub-listing` skill，之後上架別的韌體可以照著做。
 - 兩個社群清單的 PR（awesome-fm-1 #30、aroum #36）還沒合併。我在 memory 留了待辦，等它們有結果再補進 skill。
+
+---
+
+_**User (2026-11-18 10:31:07Z)**_
+
+This session is being continued from a previous conversation that ran out of context. The summary below covers the earlier portion of the conversation.
+
+<system-reminder>
+<tools-used-before-summary>Agent, AskUserQuestion, Bash, Edit, ExitPlanMode, Read, TaskStop, ToolSearch, WebFetch, WebSearch, Write</tools-used-before-summary>
+</system-reminder>
+Summary:
+1. Primary Request and Intent:
+   - The user said "好，開始做 0.5 藍牙". I planned and implemented MORSE 0.5 Bluetooth MIDI as a peripheral, beside USB. The BLE central role (two FM-1s) was deferred.
+   - The user then:
+     - approved commits;
+     - asked for a progress backup and a full-flash backup, both put into a GitHub release ("也可以放到release裡面暫存著");
+     - approved jitter measurement;
+     - asked that duplicates not be re-uploaded ("如果已經有了可以不用重複傳");
+     - asked for backup filenames with hour and minute.
+   - Later requests:
+     - Web Bluetooth direct pairing.
+     - "拔線後 PC 馬上消失".
+     - Web should prefer USB over BLE.
+     - A web "With Vail" section with recommended presets.
+     - Page-side decoding with WPM and gap estimation ("網頁端知道expect 以及decode兩種"; the TYPE page behaviour stays as-is).
+     - "Only show it": fetch the progress without downloading a file.
+     - Publish v0.6 ("弄完應該就可以發 v0.6了").
+   - The user asked whether anti-jitter parameters are adaptive or configurable, and whether renaming AR/KN has any benefit.
+   - Most recently the user reported:
+     - the Vail private room decodes correctly;
+     - raising WPM joins the split letters;
+     - prosigns were new knowledge to them;
+     - MORSE is live on The Firmware Hub.
+
+2. Key Technical Concepts:
+   - **fm1-base own BLE stack** (`ble_stack = "own"`):
+     - `APP_BLE_STORE` with no-op `app_ble_load` / `app_ble_save`.
+     - `APP_BLE_AT_BOOT` is evaluated before `app_init` on the device (after it in the simulator).
+     - `plat_ble_enable`, `plat_ble_connected`, `PORT_BLE`, `TO_BLE_HOST`.
+     - `ble_midi_time` → `plat_midi_in_t24()` gives the sender's time (`plat_ticks24` runs at 24 ticks per µs).
+   - **BLE SysEx path**: SysEx arrives as USB-MIDI packets with CIN 4–7 on `PORT_BLE`. The tick queues them in a ring; the main loop runs `hl_sx_packet` → `host_frame(…, HL_BLE)`.
+   - **Keying in over BLE**: each note change is its own event (a dit's down and up can arrive in one tick), timed by the timestamp.
+   - **hostlink presence**:
+     - acked transport, heartbeat;
+     - `HOSTLINK_TIMEOUT_MS` 10 s;
+     - new in 0.6: `usb_shut`, which drops a USB host after `plat_sysex_room()` has been 0 for 500 ms (the bus suspends on unplug; the session number is unchanged).
+   - **BLE-MIDI packet format**:
+     - header byte `0x80|ts_hi6`, timestamp byte `0x80|ts_lo7`, running status;
+     - SysEx across packets; 13-bit ms timestamps;
+     - service `03B80E5A-EDE8-4B33-A751-6CE34EC4C700`, characteristic `7772E5DB-3868-4112-A1A9-F2669D106BF3`.
+   - **Web Bluetooth**: `requestDevice` filtered by service, `startNotifications`, `writeValueWithoutResponse`, 20-byte packets. The clock offset is the minimum (arrival − newest timestamp in the packet).
+   - **Web decoder** (adaptive):
+     - dit estimate by EMA; a mark > 2×dit is a dah; a gap < 2×dit is inside a letter;
+     - the letter gap is tracked by EMA; a gap > 1.67× the letter gap is a word space;
+     - letters are held until both a dit and a dah have been heard (forced after 4 letters);
+     - Farnsworth overall WPM: s = 60c/(t·c + 37.2), with t = 19·(lg/3)/1000.
+   - **Farnsworth vs the Vail decoder**:
+     - 20/8 → letter gap 14.8 dits; 20/14 → 6.4 dits, still split; 22/18 → 4.8 dits, joined.
+     - Vail's public rooms mix every user's keying; a private room is clean.
+   - **Prosigns that share punctuation codes**: AR = `+`, KN = `(`, BT = `=`; Vail shows SK as `<VA>`.
+   - **Hub**: an all-green check with "tested" and "rights" ticked goes live automatically. Releases follow within hours.
+   - **Pitfall**: commit the submodule pointer before `fw-build` / `morse-release`, because fw-setup checks out the pointer.
+
+3. Files and Code Sections:
+   - **`firmware/morse` (fm1-morse) commits**:
+     - a75c29e (0.5, tag v0.5)
+     - 6737ba6 (web filename HHMM)
+     - b072f82 (Timing panel, fmhub Bluetooth)
+     - 60f76cf (0.6, tag v0.6)
+     - 759d8e0 (web decoder, With Vail, Only show it)
+     - the decoder bootstrap fix commit
+   - **`fm1.toml`**: `ble = true`, `ble_stack = "own"`, `ble_diag = false`, `ble_midi_time = true`.
+   - **`app.h`**:
+     ```c
+     #define APP_BLE_STORE
+     int morse_ble_off(void);
+     #define APP_BLE_AT_BOOT (!morse_ble_off())
+     ```
+   - **`app.c`**:
+     - `FW_MINOR 6u`.
+     - Setting helpers: `muted()` = `SET.mute & 1`; `bt_off()` = `SET.mute >> 1 & 1`; `set_valid` accepts `mute <= 3`.
+     - BLE receive ring, filled in the tick and drained in the main loop:
+       - `bx[BX_N = 256]`, `bx_w`, `bx_r`;
+       - `rx_t` and `rx_at(port, now)`: for BLE, `t = now − ago` (clamped to 500 ms back, never before the previous event);
+       - in the tick's MIDI loop, BLE SysEx is queued, and each note change is pushed immediately with `ev_push(SRC_RX, rx, rx_t)`;
+       - `prx_down` is computed after the loop.
+     - Keying out: `midi_key` sends to `TO_USB | (FM1B_BLE && !bt_off() ? TO_BLE_HOST : 0u)`.
+     - Main loop and Bluetooth glue:
+       - `ble_in()` runs in `app_frame` and `app_input_only`;
+       - no-op `app_ble_load` / `app_ble_save`;
+       - `morse_ble_off()` reads the record into a static copy;
+       - `ble_toggle()` flips `SET.mute ^= 2`, calls `plat_ble_enable`, and says BLUETOOTH ON / OFF.
+     - Settings page:
+       - item 12 BLUETOOTH, `SET_ITEMS 13u`;
+       - value: NOT IN THIS BUILD / OFF / ON (NOT CONNECTED) / ON (CONNECTED) / ON (TALKING);
+       - scrolls with `top = (sel − 11) * 14`.
+     - Header and redraws:
+       - header `BT`, grey while waiting, blue once connected;
+       - `ui.ble_was` redraws on connection changes;
+       - a host change also redraws the settings page.
+     - Simulator hooks: `ble_frame hello_ack|prog_req|text WORD` command; `expect` gains `transport` and `ble_off`.
+   - **`common/hostlink.h` / `hostlink.c`** (also `firmware/common` in the superproject, kept identical):
+     ```c
+     #define HOSTLINK_USB_GONE_MS 500u
+     uint32_t usb_shut;
+     if (h->acked && h->transport == HL_USB) {
+         if (plat_sysex_room()) h->usb_shut = 0;
+         else if (!h->usb_shut) h->usb_shut = now ? now : 1u;
+         else if (now - h->usb_shut >= HOSTLINK_USB_GONE_MS) h->acked = 0, h->usb_shut = 0;
+     } else h->usb_shut = 0;
+     ```
+   - **`firmware/common/tests/hostlink_test.c`**: stub `plat_sysex_room` (`usb_room`); tests that 0.499 s is not a drop, 0.5 s is, and room coming back restarts the wait.
+   - **`tests/basic.txt`**:
+     - HELLO vector `…00 06 00 F7`;
+     - 0.5 BLE section: HELLO over BLE, `ble_frame` frames, keying out to BLE, keying in over BLE, BLUETOOTH OFF persisting across reboot, `store_writes 15`, `shot settings_bt.png`;
+     - 0.6 section: `usb unplug` → `expect host 0`.
+   - **`web/index.html`**:
+     - Connect plus "Over Bluetooth, directly" (Web Bluetooth: `blePackets`, `bleIn`, `bleUnwrap`, offset from the newest event in each packet);
+     - `hunt()` with USB preference (`heardOn` map, 1300 ms wait);
+     - `idle()`;
+     - transport `via`;
+     - Timing panel (`timingEdge` / `timingShow`);
+     - page decoder (`CODES`, `dec`, `decEdge`, `decLetter`, `decSure`, `decRead`, `decStats`, `decReset`, a 40 ms idle interval);
+     - "With Vail" section with the presets table;
+     - "Only show it" via `readProgress(save)`;
+     - filename `fm1-morse-progress-YYYY-MM-DD-HHMM.json`.
+   - **`README.md`** (fm1-morse): Bluetooth section; screens add `settings_bt`. **`fmhub.json`**: "what" mentions Bluetooth and web backup.
+   - **`host/morse`** (0.6.0, `FIRMWARE_KNOWN (0,6)`):
+     - `protocol.transport_of`; hello vector `(0,6)`;
+     - `core.Host.transport`, logs "via";
+     - `device.sniff_port` prefers USB; `BLE_HINT`;
+     - `__main__`: `--bluetooth` (`bluetooth_window` using `conductor.blelink.open_panel`); `_connected_for_progress` tries even when the firmware version is unknown;
+     - `host/tests/test_morse.py`: 22 tests.
+   - **`Justfile`**: `morse-shots` names include `settings_bt`.
+   - **Docs**:
+     - `docs/dev/morse.md`:
+       - Bluetooth section (0.5) with how to connect, how it was built, timing tables (rtmidi and Chrome), browsers, limits, verification;
+       - Web Bluetooth subsection `#web-bluetooth`;
+       - Vail notes: Farnsworth splitting, public rooms, private-room result;
+       - the page decoder;
+       - prosign/punctuation table in `#phrases`;
+       - sizes: 0.5 173,748 B, 0.6 173,844 B, RAM 38,572 B;
+       - version rows 0.5 and 0.6; roadmap: central moves to 0.7; backlog updated;
+       - release section: listed live; v0.5 and v0.6.
+     - `docs/dev/morse-cheatsheet.md` (BLUETOOTH and PC meaning), `morse-learn.md`, `docs/index.md`, `README.md` (Firmware 0.6), `host/morse/PROTOCOL.md`.
+     - `docs/device-log.md`:
+       - pre-0.5 backups;
+       - 0.5 flash at 16:20;
+       - BLE tests 16:23–16:29;
+       - 0.6 flash around 16:55 and the tests;
+       - unplug check around 17:10;
+       - current firmware: Morse 0.6.
+     - `docs/firmware/hub.md#listing`: auto-live.
+   - **`.agents/skills/fm1-hub-listing/SKILL.md`**: auto-live outcome, releases follow, catalog chip discrepancy.
+   - **Memory** `hub-listing-skill-todo.md`: rewritten so that only the community PRs (awesome-fm-1 #30, aroum #36, both OPEN) remain pending. `MEMORY.md` line updated.
+   - **Superproject commits** (latest 4fe4198): 34cf8c2, a18100e, a9ef652, 0d88f84, 866b2a1, 33e8a9a, e924692, 175479c, 734eefd, 046746e, 9576f7e, 4fe4198. All pushed.
+
+4. Errors and fixes:
+   - **`ble_off` clashes with fm1-base `bt_own.c`** in the unity build: renamed to `bt_off()`.
+   - **`fw-test` ran the stale `morse-usb_host`** left by a `--no-ble` build: deleted it.
+   - **`morse_ble_off` overwrote `rec`** when loaded before `app_init`: it now reads into a static `rec_t r`.
+   - **The emulator ignored `OCT+`**: its button name is `OCTUP`. The emulator run also used a relative backup path: switched to an absolute one.
+   - **The settings 13th row was hidden** behind the footer: added scrolling.
+   - **The first-cut tick logic** could lose a BLE dit (down and up in one tick): each note change now pushes its own event.
+   - **The BLE clock mapping took the minimum per event**, which compressed spacing inside a packet: the offset now comes from the newest event of each packet.
+   - **`morse-backup` refused** with firmware 0.0 (another client had already acked, so only HEARTBEATs came): it now tries anyway (a18100e).
+   - **`gh release create --target a75c29e` was invalid**: created an annotated tag and used `--verify-tag`.
+   - **The `fm1-backup-release` recipe asks for confirmation**: used `just --yes`, because the owner explicitly asked for this backup to be released.
+   - **Device-log times were guessed wrong** (16:25 / 16:30) and corrected to the actual times.
+   - **The web decoder read K as U** at the start: letters are now held until a dit and a dah have both been heard.
+   - **The Vail threshold text** ("7 dits") was replaced with the measured 20/14 vs 22/18 result.
+   - **A duplicate web-progress asset** was uploaded, then deleted, per the user.
+
+5. Problem Solving:
+   - Verified on hardware (`[實機]`):
+     - 0.5 and 0.6 install by USB-MIDI fast install with progress kept (round 29, 20 open);
+     - BLE connect, send and backup;
+     - CoreMIDI and Chrome timestamps within 1 ms over BLE;
+     - Vail works over BLE;
+     - Web Bluetooth direct works;
+     - `PC` disappears within half a second of unplugging, with no flicker seen.
+   - The Hub listed MORSE automatically; `catalog.json` already shows 0.5. v0.6 was released, so the Hub should follow.
+   - One unexplained BLE recording that received nothing; later runs were fine.
+
+6. All user messages:
+   - "好，開始做 0.5 藍牙" (after `/restart`)
+   - "1. 可以 2. 幫我備份一下 （也可以放到release裡面暫存著） 3. ok"
+   - "確實網頁連著 我現在關掉了 然後也從網頁導出了一份進度backup 也許可以幫我放去release /Users/zhouhanru/Downloads/fm1-morse-progress-2026-11-18\ \(1\).json （也許之後我們backup不止日期也能把小時分鐘加到檔名） 弄好了我來刷"
+   - "如果已經有了可以不用重複傳"
+   - Pasted the 0.5 install output (first try UnicodeDecodeError, then success), "我刷好了"
+   - "連上了，USB 線也拔了 [image] 我看 BT亮藍 不過拔USB後 PC隔一陣子才消失"
+   - "機器有聽到你發的測試音"
+   - "是說未來配對藍牙MIDI這部分 能從網頁操作嗎？ 還是得從系統設定操作？ （我在TYPE裡照你指示按了一些）"
+   - "現在剛剛插上USB BT還是藍色 現在需要走USB還是藍牙？"
+   - "1. [images] 好像沒有特別看到時間戳？ https://daviddwlee84.github.io/fm1-morse/web/ 2. [image] Vail https://vailmorse.com/ 我好想沒有特別配置就能直接發信號了 3. 感覺應該不會 目前就是拔線藍牙模式 4. 好啊"
+   - Bluetooth and USB Timing results; "（目前測試 如果藍牙available 或是之前配對過 則即便USB插上了 還是會從藍牙配對？ 我手動在機器上把藍牙關掉則能直接走USB）"; Vail decoder speed and letters split; "網頁直接連藍牙（Web Bluetooth） 拔線後 PC 馬上消失 可以做"
+   - "所以PC指示燈到底是指USB還是說就算走BT連到電腦也會亮呢？（現在邏輯是什麼？）"
+   - A side-agent note about the 0.6 reflash and simulator limits, plus "我們這個設計會不會造成PC燈頻繁亮滅？"
+   - Pasted the 0.6 install output; Vail 20/13, 20/14 don't join, 22/18 does; Web Bluetooth pairing success; "Vail幾乎decode是等完全聽完才顯示 我們的好像音還沒響完就解碼出來了？有沒有作弊 哈哈"
+   - "https://daviddwlee84.github.io/fm1-morse/web/ 也許可以在網頁裡 建議 vail的網站 還有建議的配置？ 比如簡單介紹你說的幾檔配置 （然後我們是否能夠解出來WPM停頓參數等等？ 這個可以在網頁端做 TYPE頁可以先保留 這樣網頁端知道expect 以及decode兩種？） 拔線有成功 我用USB連上顯示PC馬上拔掉能夠在半秒內消失 目前幾乎沒觀察到是按說 弄完應該就可以發 v0.6了"
+   - "（另外網頁端好像直接就是Backup 能不能有一個變成fetch進度顯示 但是不下載file的功能）"
+   - "[image] 隨便測試了一下 好像也還行？ 防手抖這些參數 一般是algorithm自適應 還是可配置項？（要加到網頁端？）"
+   - "[image] 又測了一下 這次走bluetooth"
+   - "[images] AR KN 這個改了有啥好處嗎？ Vail不知道解出了什麼"
+   - "開了私人房間，Vail 解出來是對的 [image] 然後中途加快WPM 確實也能讓分開的字黏起來 不過prosign [image] 對我來說也算是新知識了 然後目前看起來已經live在 firmware hub了 [image]"
+   - Constraints in effect (AGENTS.md):
+     - Firmware write: "Only after the owner approves **that specific write in the current session**. Never pass `--yes`; the owner types M-Flasher's `yes`."
+     - Forbidden to initiate: "`m-flasher bootloader …`, `restore …`, `run-ram …`, any erase, any flash address arithmetic".
+     - "Commit or push only when the owner asks."
+     - "Never commit flash backups or credentials to git."
+     - "run `just fm1-backup-release` only when the owner asks for that specific backup."
+     - "Pushing to `main` deploys the site."
+     - "Persist data only through fm1-base's storage layer (`APP_STORE_MAP` in `app.h`). Never compute flash addresses or call erase/program directly."
+     - Treat the user's email as private.
+     - Leave other sessions' files uncommitted: `.specstory`, `.claude/plans`.
+
+7. Pending Tasks:
+   - Reply to the user's latest message (no reply has been sent for it yet):
+     - Vail private room confirmed and documented;
+     - prosign/punctuation table added to the docs;
+     - Hub auto-live recorded in `hub.md`, the skill, and morse.md; `catalog.json` already lists 0.5, and v0.6 should follow automatically.
+   - Later, only if asked:
+     - community PRs awesome-fm-1 #30 and aroum #36 are still OPEN; record the outcome when they land (memory);
+     - optional AR/KN naming (recommended not to do);
+     - TYPE sends `T_CHAR` only after playback (on offer);
+     - central (0.7) waits for a second unit.
+
+8. Current Work:
+   - I had just committed and pushed superproject 4fe4198 ("Hub: MORSE went live automatically, releases follow; Vail rooms; prosigns that share punctuation codes"). It covers:
+     - `docs/firmware/hub.md` (auto-live at UTC 2026-11-17 23:00, catalog v0.5 the same day, chip field `new` vs both chips);
+     - the fm1-hub-listing `SKILL.md`;
+     - `docs/dev/morse.md`: Vail public rooms mixing signals; the private room decoding `<KN> <AR> <VA> <BT> 73 Q S L QRS ES`; release step 6 "已上架"; the prosign table (AR `·−·−·` = `+`, KN `−·−−·` = `(`, BT `−···−` = `=`, SK `···−·−` shown as `<SK>` on the web, `*` by the FM-1 decoder, `<VA>` in Vail).
+   - The memory file was updated as well. docs-check is ok.
+
+9. Optional Next Step:
+   Send the final text reply (Traditional Chinese) to the user's last message ("開了私人房間，Vail 解出來是對的 … 不過prosign … 對我來說也算是新知識了 然後目前看起來已經live在 firmware hub了"). Summarize:
+   - the private room result and the WPM joining are recorded;
+   - the prosign table in docs explains AR/KN/BT/SK and their shared codes;
+   - the Hub went live automatically (no manual review), `catalog.json` already shows 0.5, and v0.6 will follow by itself;
+   - the two community PRs are still open and will be noted when they land;
+   - commit 4fe4198.
+   No further work unless the user asks.
+
+If you need specific details from before compaction (like exact code snippets, error messages, or content you generated), read the full transcript at: /Users/zhouhanru/.claude/projects/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/0a574306-469e-4a59-9622-5701a42aee59.jsonl
+Continue the conversation from where it left off without asking the user any further questions. Resume directly — do not acknowledge the summary, do not recap what was happening, do not preface with "I'll continue" or similar. Pick up the last task as if the break never happened.
+
+The messages after this summary are the most recent messages from before compaction, kept verbatim. The summary was written without seeing them, so something it says has not happened yet may already have happened in them.
+
+---
+
+_**User (2026-11-18 10:47:50Z)**_
+
+BTW 我看別人在 [Image #25] Firmware Hub 裡面有 play in browser 按鈕
+例如
+https://thefirmwarehub.com/firmware/rainbow/
+https://joshbartlettband-web.github.io/felucca-rainbow/webapp/try/
+
+我們是否也能有？
+
+另外我們的cheatsheet目前好像也是 只是引導到README
+可能用GitHub Page更好閱讀？
+
+（這部分也可以考慮補進skill）
+
+---
+
+_**User (2026-11-18 10:47:50Z)**_
+
+[Image: source: /private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/0a574306-469e-4a59-9622-5701a42aee59/images/25.png]
+
+---
+
+_**Agent (claude-opus-5-5 2026-11-18 10:47:56Z)**_
+
+<tool-use data-tool-type="unknown" data-tool-name="ToolSearch"><details>
+<summary>Tool use: **ToolSearch**</summary>
+
+**Input:**
+
+- max_results: `1`
+- query: `select:WebFetch`
+
+**Result:**
+
+```
+
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 10:48:04Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Inspect Hub catalog entries for rainbow and morse
+
+```bash
+cd /private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/0a574306-469e-4a59-9622-5701a42aee59/scratchpad && curl -s https://thefirmwarehub.com/catalog.json -o cat.json && python3 -I -c "
+import json;d=json.load(open('cat.json'))
+L=d if isinstance(d,list) else d.get('firmware',d.get('packages',list(d.values())[0]))
+for p in L:
+  if 'rainbow' in json.dumps(p).lower() or 'morse' in json.dumps(p).lower(): print(json.dumps(p,indent=1)[:2500])
+"; curl -s https://thefirmwarehub.com/firmware/rainbow/ | grep -oiE '.{200}(play in browser|try).{200}' | head -5
+```
+
+```text
+opolix); Del Rio by Jess Del Rio; Carnac OS by OrbVorgis; DRIFT by FBNFRTG; SIDOU by Denis Sablić; MONO2K by Iñigo Hernandez; Caravel by BonszaiMusic; MIDIMON by ignis32; ESTAMPIE by Drew Robinson; Matryoshka by glvno; Loom FM-1 by Co-oscillator; TastyWaves by marksweiss; Arctic Scream by p0larpatch; S1Vave by Andrew GG; GATOR by ivanvoid; Monohull by Mark White; PERF-1 by deamonSLINKY; J6 by JackieA
+Shell cwd was reset to /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 10:48:10Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Find rainbow/morse catalog fields and play button markup
+
+```bash
+cd /private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/0a574306-469e-4a59-9622-5701a42aee59/scratchpad && python3 -I -c "
+import json;d=json.load(open('cat.json'));print(type(d), list(d)[:10] if isinstance(d,dict) else len(d))
+def walk(o):
+  if isinstance(o,dict):
+    s=json.dumps(o).lower()
+    if ('\"slug\"' in s or '\"id\"' in s) and ('rainbow' in s[:400] or 'morse' in s[:400]) and len(s)<6000: print(json.dumps(o,indent=1)); return
+    for v in o.values(): walk(v)
+  elif isinstance(o,list):
+    for v in o: walk(v)
+walk(d)"; curl -s https://thefirmwarehub.com/firmware/rainbow/ > rb.html; grep -oiE '.{300}play in browser.{300}' rb.html | head -3
+```
+
+```text
+<class 'dict'> ['license', 'updated', 'firmwares', 'smk37', 'creators', 'stock', 'reserved']
+{
+ "id": "rainbow",
+ "kind": "other",
+ "name": "Rainbow Mode",
+ "author": "joshbartlettband-web",
+ "repo": "joshbartlettband-web/felucca-rainbow",
+ "ident": "FM-1_\\d{3,8}",
+ "what": "A music toy for little children: 63 cartoon friends, every key in tune, chords, strumming, songs to follow and an ear game, notes on a staff, a volume cap for small ears.",
+ "editor": null,
+ "play": "https://joshbartlettband-web.github.io/felucca-rainbow/webapp/try/",
+ "added": "2026-10-12",
+ "loader": null,
+ "cheat": null,
+ "install": null,
+ "card": null,
+ "color": null,
+ "vintage": false,
+ "ambient": false,
+ "fmhub": null,
+ "stars": 23,
+ "talk": null,
+ "lic": "GPL-3.0",
+ "starsDay": "2026-11-18",
+ "site": "https://joshbartlettband-web.github.io/felucca-rainbow/",
+ "version": "1.1.5-rb",
+ "date": "2026-11-17",
+ "published": "2026-11-17T19:54:05Z",
+ "pkg": "fw/rainbow-1.1.5-rb+afb04479.fwsc",
+ "product": "FM-1_911",
+ "size": 610086,
+ "sha256": "afb044796c7103640c3b74f59cf12fd92aec515fb6623df043c0794f48d7539e",
+ "release": "https://joshbartlettband-web.github.io/felucca-rainbow/",
+ "tag": null,
+ "srcref": null,
+ "mirror": null,
+ "beta": false,
+ "hid": {
+  "keyboard": false,
+  "mouse": false
+ },
+ "chip": "new",
+ "relCheck": "1.1.5-rb 2026-11-18",
+ "provCheck": "afb044796c7103640c3b74f59cf12fd92aec515fb6623df043c0794f48d7539e 2026-11-18",
+ "base": [],
+ "dinghy": false,
+ "dinghyv": 2,
+ "source": "https://github.com/joshbartlettband-web/felucca-rainbow/tree/main",
+ "installs": 772
+}
+{
+ "id": "morse",
+ "kind": "other",
+ "name": "MORSE",
+ "author": "Da-Wei Lee",
+ "repo": "daviddwlee84/fm1-morse",
+ "ident": "(?:FM-1_41000300)|FM-1_41000500",
+ "what": "Learn and use Morse code. Key on the piano keys (straight key or iambic paddles) and see what you sent, drill short and long presses, learn by sound with flash cards, listen to endless practice, type letters and CW phrases on the keys. Keying goes out over USB-MIDI or Bluetooth MIDI in the Vail\u2026",
+ "editor": "https://daviddwlee84.github.io/fm1-morse/web/",
+ "play": null,
+ "added": "2026-11-17",
+ "loader": null,
+ "cheat": "https://github.com/daviddwlee84/fm1-morse#controls",
+ "install": null,
+ "card": "fw/cards/morse-c6d90d90.w640.webp",
+ "color": "#5AC8FF",
+ "vintage": false,
+ "ambient": false,
+ "fmhub": {
+  "sha": "20a9fc17",
+  "data": {
+   "what": "Learn and use Morse code. Key on the piano keys (straight key or iambic paddles) and see what you sent, drill short and long presses, learn by sound with flash cards, listen to endless practice, type letters and CW phrases on the keys. Keying goes out over USB-MIDI or Bluetooth MIDI in the Vail\u2026",
+   "author": "Da-Wei Lee",
+   "kind": "other",
+   "editor": "https://daviddwlee84.github.io/fm1-morse/web/",
+   "cheat": "https://github.com/daviddwlee84/fm1-morse#controls",
+   "color": "#5AC8FF",
+   "image": "docs/screen.png",
+   "sounds": "none"
+  }
+ },
+ "stars": 0,
+ "talk": "https://github.com/daviddwlee84/fm1-morse/issues",
+ "lic": "GPL-3.0",
+ "starsDay": "2026-11-18",
+ "site": "https://github.com/daviddwlee84/fm1-morse",
+ "version": "0.5",
+ "date": "2026-11-18",
+ "published": "2026-11-18T08:36:46Z",
+ "pkg": "fw/morse-0.5.fwsc",
+ "product": "FM-1_41000500",
+ "size": 616003,
+ "sha256": "494331904fd9adc3efb4ba4b22c01f477b741cbfa1d498b52ed458b31d154457",
+ "release": "https://github.com/daviddwlee84/fm1-morse/releases/tag/v0.5",
+ "tag": "v0.5",
+ "srcref": null,
+ "mirror": "src/morse-0.5.tar.gz",
+ "beta": true,
+ "hid": {
+  "keyboard": false,
+  "mouse": false
+ },
+ "chip": "new",
+ "provCheck": "494331904fd9adc3efb4ba4b22c01f477b741cbfa1d498b52ed458b31d154457 2026-11-18",
+ "asset": "762600370 2026-11-18T08:36:45Z",
+ "assetPkg": "morse-[\\d.]+\\.fwsc",
+ "base": [],
+ "dinghy": false,
+ "dinghyv": 2,
+ "source": "https://github.com/daviddwlee84/fm1-morse/tree/v0.5"
+}
+Shell cwd was reset to /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 10:48:21Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Inspect Rainbow try page and list other play/cheat links
+
+```bash
+cd /private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/0a574306-469e-4a59-9622-5701a42aee59/scratchpad && curl -s https://joshbartlettband-web.github.io/felucca-rainbow/webapp/try/ > try.html; wc -c try.html; grep -oiE '(src|href)="[^"]+"' try.html | head -20; grep -oiE '.{0,120}(wasm|emscripten|emulat|fm1-emu|simulat).{0,120}' try.html | head -10; python3 -I -c "
+import json;d=json.load(open('cat.json'))
+for f in d['firmwares']:
+  if f.get('play') or f.get('cheat'): print(f['id'],'|',f.get('play'),'|',f.get('cheat'))"
+```
+
+```text
+   26374 try.html
+href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 16 16%22%3E%3Crect width=%2216%22 height=%2216%22 rx=%223%22/%3E%3Crect x=%224%22 y=%224%22 width=%228%22 height=%228%22 fill=%22%23fff%22/%3E%3C/svg%3E"
+href="https://www.gnu.org/licenses/gpl-3.0.html"
+href="https://github.com/charlesvestal/fm1-x0x"
+href="fonts/OFL.txt"
+href="../installer/"
+href="../editor/"
+href="https://github.com/hugelton/Felucca"
+ugrep: error: error at position 119
+mulat|fm1-emu|simulat)(?:[^\n\x80-\xbf][\x80-\xbf]*){0,120}
+                              exceeds complexity limits___/
+
+
+zp12 | https://play.thefirmwarehub.com/?fw=zp12n | None
+hortator | https://deadactive.github.io/hortator/ | None
+hortator-bt | https://deadactive.github.io/hortator/ | None
+jangada | https://zednaked.github.io/jangada/webapp/studio/ | None
+bubba | https://erbubar23.github.io/bubba-machine/en/ | None
+sloopdx | https://play.thefirmwarehub.com/?fw=dxsloop | None
+x0x | https://charlesvestal.github.io/fm1-x0x/emu/ | None
+x0xrmx | https://mr-roboto.github.io/fm1-x0x-rmx/emu/ | None
+fomni | https://charlesvestal.github.io/fm1-fomni/emu/ | None
+choralroot | https://quixotic7.github.io/ChoralRootFM1/emu/ | None
+obervave | https://play.thefirmwarehub.com/?fw=obervave | None
+shineon | https://play.thefirmwarehub.com/?fw=shineon | None
+fimba | https://jadamsowers.github.io/fm1-fimba/ | None
+jiant | https://play.thefirmwarehub.com/?fw=jiant | None
+maku | https://okumurari2.github.io/maku/ | None
+rainbow | https://joshbartlettband-web.github.io/felucca-rainbow/webapp/try/ | None
+amb | https://charlesvestal.github.io/fm1-amb/emu/ | None
+ctl | https://charlesvestal.github.io/fm1-ctl/emu/ | None
+winampfm | https://hericdk.github.io/winampFM/sim/ | None
+polly | https://charlesvestal.github.io/fm1-polly/emu/ | None
+etch | None | https://sikkenworks.github.io/ETCH/CHEAT-SHEET.html
+tribe | https://apiel.github.io/fm1-tribe/#emulator | None
+duell | https://oscillr.github.io/DUELL/emu/ | https://oscillr.github.io/DUELL/cheatsheet/
+skiff | https://illuminus5.github.io/skiff/try/ | None
+felucca8 | https://joakimeriksson.github.io/fm1-emu/?fw=argo | https://raw.githubusercontent.com/echoe/argo_fm1/refs/heads/main/docs/pics/cheatsheet.png
+pigeon | https://theshrimpblimp.com/pigeon/webapp/emu/ | None
+cs1 | https://twochannels.github.io/CS-1/emu/ | None
+hyp1 | https://rustypawz.github.io/fm1-HYP1/emu/ | None
+bocjuhn | https://ianp06.github.io/bocjuhn/ | https://github.com/IanP06/bocjuhn/blob/codex/living-rc6/docs/RC10.md
+aisling | https://stephencummins.github.io/fm1-aisling/emu/ | https://stephencummins.github.io/fm1-aisling/cheat/
+demake | https://inigohernandez.github.io/demake-synth/ | https://inigohernandez.github.io/demake-synth/manual.html
+coralflower | https://ficusficusov.github.io/CoralFlower/play/ | None
+vector37 | https://genkigenki.github.io/smk37/vector37-sim/ | None
+mc1 | https://dspaudio.github.io/mc-1/ | None
+beetle | https://sikkenworks.github.io/BEETLE/ | None
+min1 | https://reytian.github.io/fm1-min1/emu/ | None
+purplemonkey | https://quixotic7.github.io/PurpleMonkeyFM1/ | None
+gammawave | https://fvalente.github.io/GammaWave-FM1/ | None
+tuna | https://delirioux.github.io/tuna/try/ | https://github.com/delirioux/tuna/blob/main/docs/CHEATSHEET.md
+frodhes | https://leonardomirabal.github.io/frodhes/ | None
+fomajam | https://konsumer.js.org/fomajam/ | None
+kawa | https://guizmoh.github.io/Kawa-Tracker-Fm1/emulator/ | https://guizmoh.github.io/Kawa-Tracker-Fm1/docs/cheatsheet.html
+nmsfm | https://hericdk.github.io/nomanskyFM/sim/ | None
+fm1quest | https://fm1.quest/sim/ | None
+grimm | https://grimmbient.github.io/grimm/ | https://grimmbient.github.io/grimm/GRIMM-V2.0-manual.pdf
+cutador | https://cut-a-dor.sugarypixie10.chatgpt.site/ | None
+mutable | https://kidbee85-beep.github.io/mutable-dreams/Mutable-Dreams-2.0.html | None
+fm1gm | https://jartificer.github.io/fm1-gm/ | None
+bunker | https://bunker-evolved.sugarypixie10.chatgpt.site/simulator/ | None
+morpheus | https://benbadio.github.io/morpheus-fm1/ | None
+fmini | https://ruppert.github.io/fmini-1/emu/ | None
+dub | https://sbegueria.github.io/fm1-dub/emu/ | None
+fmel | https://antonioaltea.github.io/fmel-1/ | None
+zen | https://aceyprime.github.io/zen-1/emu/ | None
+golana | https://gadlele.github.io/Golana/try/ | None
+niagara | https://evanyerburgh.github.io/niagara-drift/ | None
+chipbox | https://ihavenocluewhatimdoing.com/chipbox/play/ | https://ihavenocluewhatimdoing.com/chipbox/cheatsheet/
+loom | https://charlesvestal.github.io/fm1-loom/emu/ | None
+monk | https://charlesvestal.github.io/fm1-monk/emu/ | None
+flyfish | https://delirioux.github.io/flyfish/try/ | https://github.com/delirioux/flyfish/blob/main/docs/CHEATSHEET.md
+hera | https://benbadio.github.io/hera-fm1/ | None
+frasil | https://frasilsynth.com/play/ | https://frasilsynth.com/cheatsheet
+tessera | https://rastapopolix.github.io/tessera/webapp/sim/ | https://rastapopolix.github.io/tessera/cheatsheet/tessera-cheatsheet.pdf
+carnac | https://owenkirby.github.io/carnac-os/play/ | https://owenkirby.github.io/carnac-os/guide/
+drift | https://www.fbnfrtg.de/tools/fm1/drift/webplayer/ | None
+sidou | https://dsablic.github.io/sidou/ | https://dsablic.github.io/sidou/cheatsheet.html
+mono2k | https://inigohernandez.github.io/mono2k/ | None
+caravel | https://bonszaimusic.github.io/caravel/emulator/ | None
+makohai | https://delirioux.github.io/makohai/try/ | https://github.com/delirioux/makohai/blob/main/docs/CHEATSHEET.md
+estampie | https://fm-1.drewr.dev/estampie/webapp/emu/ | None
+fizz | https://quixotic7.github.io/FIZZ/ | None
+matryoshka | https://matryoshka.lol/#emu | None
+loomfm1 | https://co-oscillator.github.io/Loom-FM-1/ | None
+tastywaves | https://marksweiss.github.io/tastywaves/ | None
+arctic | https://polarpatch.github.io/Arctic-scream-FM-1/ | https://polarpatch.github.io/Arctic-scream-FM-1/cheatsheet.html
+s1vave | https://andrewgg.one/s1vave/sim/ | None
+perf1 | https://deamonslinky.github.io/PERF-1/emu/ | https://deamonslinky.github.io/PERF-1/manual/PERF-1-quick-manual.pdf
+guitchordi | https://stoogs.github.io/guitchordi/emu/ | https://stoogs.github.io/guitchordi/manual/Guitchordi-Cheatsheet-A4.pdf
+ravel | https://de-pattern.github.io/Ravel_FM1/ | None
+berlinan | https://jiripisa.github.io/fm1-berlinan/emu/ | None
+mnm1 | https://galfaroth.github.io/mnm1/ | None
+mope1 | https://slothpallas.github.io/mope-1/play/ | None
+kitten | https://blackkittendevices.github.io/Kitten-Synths/play/?fw=kittensynths&mhz=60&latency=0.25 | None
+nauclerus | https://mr-roboto.github.io/nauclerus/#play | None
+ptfm | https://hitosu.github.io/ptfm/emulator/ | None
+spellbox | https://pjac1810.github.io/spellbox/ | None
+dungeontracker | https://bourbonwx.github.io/Dungeon-Tracker/webapp/emulator/ | https://github.com/BourbonWX/Dungeon-Tracker/blob/main/Dungeon%20Tracker%201.5%20%E2%80%94%20Quick%20Start.pdf
+nachtfahrt | https://fartypants.github.io/fm1-nachtfahrt/emu/ | None
+daurade | https://delirioux.github.io/daurade/try/ | https://github.com/delirioux/daurade/blob/main/docs/CHEATSHEET.md
+kwasub | https://guizmoh.github.io/K-WASUB_Firmware_for_FM1/emulator/index.html | https://guizmoh.github.io/K-WASUB_Firmware_for_FM1/cheatsheet.html
+sill | https://delirioux.github.io/sill/try/ | https://github.com/delirioux/sill/blob/main/docs/CHEATSHEET.md
+smileyface | https://ihavenocluewhatimdoing.com/smileyface/play/ | https://ihavenocluewhatimdoing.com/smileyface/cheatsheet/
+vesper | https://fatcatstudios-hub.github.io/vesper-fm1/play/ | https://fatcatstudios-hub.github.io/vesper-fm1/cheatsheet.html
+penumbra | https://madmooneyham.github.io/Penumbra/emu/ | https://madmooneyham.github.io/Penumbra/cheatsheet/
+xmod | https://kotmorderca.github.io/XMOD/sim/ | https://github.com/KotMorderca/XMOD#controls
+sidj | https://thomasj.github.io/fm1-sidj/emu/ | https://thomasj.github.io/fm1-sidj/#play
+hawkchua | https://plieuw.github.io/hawk-chua/webapp/try/ | None
+bb1 | https://thebigbeat.app/fm1/emulator/ | https://thebigbeat.app/fm1/guide/
+karma | https://eatyourgreensstudio-dotcom.github.io/karma-fm1/emu/ | https://eatyourgreensstudio-dotcom.github.io/karma-fm1/emu/cheatsheet.html
+lsdjburrito | https://dreamsofbacon.github.io/lsdj-burrito/#emulator-sec | None
+fm1dock | https://joakimeriksson.github.io/fm1-dock/#emulator | None
+fm1sid | https://joakimeriksson.github.io/fm1-emu/fm1-sid/ | None
+dark1 | https://sparky480v.github.io/Dark-1/play/ | None
+fm1trax | https://jartificer.github.io/fm1-trax/ | None
+wanderer | None | https://github.com/spinnicholas/lvm-wanderer-fm1/blob/main/docs/QUICK_START_1.4.md
+rupture | https://sikkenworks.github.io/RUPTURE/emu/web | https://sikkenworks.github.io/RUPTURE/#cheatsheet
+amenity | https://ejtb76.github.io/amenity/emu/ | None
+arcturus | None | https://github.com/zeptosecond-dsp/Arcturus-S6/blob/main/docs/QUICKSTART.md
+kittenrack | https://blackkittendevices.github.io/kitten-rack/play.html | None
+blop | https://osr-experiment.github.io/OSR-1/emu/ | None
+clatter | https://clatter-pocket.allmyfriendsaresynths.com/demo/ | https://github.com/clickysteve/clatter-pocket/blob/main/docs/POCKET-CONTROLS.md
+choppah | https://profikid.github.io/fm1-break-choppah/emu/ | https://profikid.github.io/fm1-break-choppah/manual/
+veffbox | https://galfaroth.github.io/veffbox/emu/ | https://galfaroth.github.io/veffbox/#guide
+b3organ | https://r-jeb.github.io/setBfree-fm1/play/ | https://r-jeb.github.io/setBfree-fm1/#controls
+elixir | https://dmajka.github.io/elixir/try/ | https://dmajka.github.io/elixir/cheatsheet.pdf
+dx747 | https://esbenvb.github.io/fm1-dx747/#device | None
+atlatl | https://likst4.github.io/skiff-atlatl/emu/ | https://github.com/LIkst4/skiff-atlatl/blob/atlatl-dev/docs/PERFORMANCE.md
+coqui | https://saulofilho.github.io/coqui-fm1/emu/ | None
+artihive | https://khavld.github.io/ARTIHIVE/ | https://github.com/KHAVld/ARTIHIVE/blob/ARTIHIVE/docs/artihive-2.0.4-manual-en.pdf
+cultbox | https://beatcult.github.io/CULTBOX/ | https://cult-box.netlify.app/
+piterfly | https://piotrwozniak.github.io/piterfly/webapp/editor/?mock=1 | https://piotrwozniak.github.io/piterfly/webapp/changes/
+sardine | https://delirioux.github.io/sardine/try/ | https://github.com/delirioux/sardine/blob/main/docs/CHEATSHEET.md
+atek303 | https://animatek.github.io/FM1-Animatek/atek303/play/ | https://animatek.github.io/FM1-Animatek/atek303/cheatsheet/
+drumlab | https://ihavenocluewhatimdoing.com/drumlab/play/ | https://ihavenocluewhatimdoing.com/drumlab/cheatsheet/
+mvance | https://bk40-home.github.io/M-vance/sim/ | https://bk40-home.github.io/M-vance/cheatsheet.html
+patchwerk | https://mattkuebrich.com/patchwerk/ | https://mattkuebrich.com/patchwerk/cheatsheet.html
+remotefm1 | None | https://github.com/Quixotic7/RemoteFM1#using-it
+rhythmer | https://jazzyrhythmer.github.io/rhythmer/#play | https://jazzyrhythmer.github.io/rhythmer/downloads/Rhythmer-Manual-v0.1.2-dev1.pdf
+mikufm | https://michaelaperry.github.io/MIKU-FM1/fm1-emu/ | https://github.com/MichaelAPerry/MIKU-FM1/blob/main/docs/CONTROLS.md
+echofield | https://philip-bos.github.io/echofield-fm1/emulator/ | None
+ombak | https://madmooneyham.github.io/Ombak/emu/ | https://madmooneyham.github.io/Ombak/cheatsheet/
+xenolith | None | https://github.com/CaptainChronosis/XENOLITH/blob/main/docs/OPERATOR_MANUAL.md
+hungrytravis | None | https://raw.githubusercontent.com/adamcharleswilsonmusic-code/Hungry-Travis/main/Hungry-Travis-Quick-Start.pdf
+fmfam | https://davidamomusic.github.io/fm-fam/fam/docs/play/ | https://davidamomusic.github.io/fm-fam/fam/docs/FM-FAM-cheatsheet.pdf
+jamtrack | https://philip-bos.github.io/jamtrack-fm1/emulator/ | https://philip-bos.github.io/jamtrack-fm1/#guide
+quartet | https://joakimeriksson.github.io/fm1-emu/?fw=quartet&mhz=60 | https://mammothcheese.github.io/quartet/
+rambeaver | None | https://github.com/adamcharleswilsonmusic-code/RAMBEAVER/releases/download/v745/rambeaver-quick-start.pdf
+mpyre | https://historyofsky.github.io/m-pyre/emu/ | https://historyofsky.github.io/m-pyre/cheatsheet/
+assid | https://altessproduction.github.io/ASS-ID_FM1/play/ | https://github.com/altessproduction/ASS-ID_FM1/blob/main/README-DRUMS.md
+sloopdub | https://altessproduction.github.io/sloop-dub-fm1/dub/ | None
+satie1 | https://ockm-studio.github.io/SATIE-1/ | None
+guru600 | https://guru-600.com/jouer/ | https://github.com/MarcGoudy/guru-600/releases/latest/download/Guru-600-User-guide.pdf
+playa | None | https://github.com/juan-ms2lab/playa/blob/playa/docs/PLAYA-MANUAL.md
+trumpagotchi | None | https://github.com/adamcharleswilsonmusic-code/Trumpagotchi/releases/download/v1.0.0/trumpagotchi-quick-start.pdf
+krisjangle | https://doohinkus.github.io/kris-jangle/emu/ | https://doohinkus.github.io/kris-jangle/manual/
+cord | https://chasedeanda.github.io/cord-fm1/play/ | https://github.com/chasedeanda/cord-fm1#make-your-first-loop
+pocketband | None | https://github.com/elpabl0/pocketband/blob/main/GUIDE.md
+mightyarp | https://nickculbertson.github.io/FM1-Mighty-Arp/emu/ | https://nickculbertson.github.io/FM1-Mighty-Arp/manual/
+dubbox | https://altessproduction.github.io/DUB-BOX-FM1/dub/ | None
+deepfield | https://deepfield.fog.baby/emu/ | https://deepfield.fog.baby/cheatsheet/
+splitmilk | https://joakimeriksson.github.io/fm1-emu/?fw=splitmilk&mhz=60 | None
+argo | https://joakimeriksson.github.io/fm1-emu/?fw=argo | https://raw.githubusercontent.com/echoe/argo_fm1/refs/heads/main/docs/pics/cheatsheet.png
+kriechstrom | https://fm1-emulator.atst.tools/?firmware=kriechstrom | https://xforsa.github.io/kriechstrom/manual/en.html#cheat
+paperlagoon | https://hacha.github.io/paperlagoon/emu/ | https://hacha.github.io/paperlagoon/manual/
+tack | https://oikoaudio.com/tack/fm1/try/ | https://oikoaudio.com/manuals/tack-fm1/cheat-sheet/
+manifold | https://stets43.github.io/Manifold/emu/ | https://stets43.github.io/Manifold/manual/
+loafbreaker | https://flexor-r.github.io/loaf-breaker/emu/ | https://flexor-r.github.io/loaf-breaker/manual/#start-in-five-minutes
+fm1midimania | https://shan-sherif.github.io/fm-1-midi-mania/webapp/studio/ | https://github.com/shan-sherif/fm-1-midi-mania#quick-start
+fm1yoga | https://michamilz.github.io/fm1-yoga/emu/ | None
+hadal1 | https://sparky480v.github.io/hadal-1/emu/ | https://github.com/sparky480v/hadal-1#readme
+agtdeck | https://kevinelliott.github.io/fm-1-agent-deck/play/?fw=agtdeck&script=demo.txt | https://kevinelliott.github.io/fm-1-agent-deck/cheatsheet.html
+clavioline | https://joakimeriksson.github.io/fm1-emu/?fw=clavioline | https://mammothcheese.github.io/clavioline/
+rhytmsec1 | https://joakimeriksson.github.io/fm1-emu/?package=https://hamperj.github.io/rhytm-sec-1/rhytm-sec-1.fwsc&name=RHYTM-SEC-1&mhz=60 | https://hamperj.github.io/rhytm-sec-1/cheatsheet.html
+rakt | https://chasedeanda.github.io/rakt-fm1/play/ | None
+lrry | https://oscillr.github.io/LRRY/emu/ | https://oscillr.github.io/LRRY/cheatsheet/
+manta | https://delirioux.github.io/manta/try/ | https://github.com/delirioux/manta/blob/main/docs/CHEATSHEET.md
+adrift | https://romainguy.github.io/adrift/#play | https://romainguy.github.io/adrift/#controls
+drumtonic | https://fc79.github.io/drumtonic/#try | https://github.com/fc79/drumtonic/blob/main/docs/DRUMTONIC.md
+arpwav09 | https://wav0902.github.io/wav-fm1/ | None
+atlatltheatltuner | https://www.jasonscheirer.com/atl-atl/emu/ | None
+minigrain | None | https://github.com/eldontyrellcorp/Mini-Grain#the-panel
+mvsynth2 | https://bk40-home.github.io/M-Vsynth2/sim/ | https://bk40-home.github.io/M-Vsynth2/cheatsheet.html
+trapstationos | None | https://github.com/sog-maker/trapstation-os/raw/main/docs/cheatsheet/Trapstation-Cheat-Sheet.pdf
+astra | https://michaelaperry.github.io/ASTRA-FM-1/fm1-emu/?mhz=240 | https://github.com/MichaelAPerry/ASTRA-FM-1/blob/main/docs/QUICKSTART.md
+glitch | https://saulofilho.github.io/glitch/emu/ | None
+quartz | https://f0nski.github.io/quartz/emu/ | https://f0nski.github.io/quartz/manual/
+juicy | None | https://github.com/DanielGilbert/Juicy#readme
+fmlarynx | https://ejtb76.github.io/FMLarynx/emu/ | None
+fm1chimeravocal | https://shan-sherif.github.io/fm-1-chimera-vocal/studio/ | https://shan-sherif.github.io/fm-1-chimera-vocal/manual/
+orgigs | https://orgelbobo.github.io/orgigs/try/ | https://orgelbobo.github.io/orgigs/docs/OrGigs_FM-1_At_a_glance.pdf
+dabke | https://studiomorphik.com/dabke/emu/ | https://studiomorphik.com/dabke/manual/
+obssynthfm1 | https://orianbsilva.github.io/obssynth-fm1/ | https://orianbsilva.github.io/obssynth-fm1/#manual
+evilgenius | https://quixotic7.github.io/evilgenius/try/ | None
+nccnovationcircuitcompan | https://fenderberg.github.io/fm1-nc-companion/webapp/try/ | https://fenderberg.github.io/fm1-nc-companion/cheatsheet/
+bluesbox | https://joakimeriksson.github.io/fm1-emu/?package=https://provostprovost.github.io/blues/bluesbox.fwsc&name=BLUES%20BOX&mhz=60 | https://provostprovost.github.io/blues/
+conductor | https://joakimeriksson.github.io/fm1-emu/?fw=conductor | https://mammothcheese.github.io/conductor/
+aetherfm1 | https://grimmbient.github.io/grimm/ | https://grimmbient.github.io/grimm/GRIMM-V2.0-manual.pdf
+quantumgammawave | https://guillel51.github.io/Quantum-GammaWave/emulator/ | https://github.com/Guillel51/Quantum-GammaWave#readme
+yehnah | https://mello-d.github.io/yehnah/ | None
+cursedos | None | https://github.com/cursedsound-music/CS_FM1/blob/main/docs/GUIDE.md#cheat-sheet
+stallion | None | https://eberonltd.github.io/stallion-fm1/cheat-sheet.html
+vnl1 | https://samoltz.com/fm1-vnl/emu/ | https://samoltz.com/fm1-vnl/manual/
+moss1 | https://theowecker.github.io/fm1-moss/emu/ | https://theowecker.github.io/fm1-moss/manual/
+fmkick | https://davidamomusic.github.io/fm-kick/kick/docs/play/ | https://davidamomusic.github.io/fm-kick/kick/docs/FM-KICK-cheatsheet.pdf
+morse | None | https://github.com/daviddwlee84/fm1-morse#controls
+darkfunkdurcalsynt | https://drophlex.github.io/dark-funk-durcal-synt-fm1/web/DarkFunkDurcalSynt.html | https://drophlex.github.io/dark-funk-durcal-synt-fm1/manual/DarkFunkDurcal-Manual-EN.pdf
+andromeda | https://drophlex.github.io/ANDROMEDA/ | https://github.com/drophlex/ANDROMEDAFM1/blob/main/manual/ANDROMEDA-FM1-Manual-EN.pdf
+samsara | https://tomorrowsman.github.io/fm1-samsara/emu/ | None
+fm1tonic | https://luigirossi-music.github.io/fm1-tonic/emu/ | https://luigirossi-music.github.io/fm1-tonic/emu/downloads/FM1-Tonic-cheat-sheet.pdf
+dp3oyb | https://dp3oyb.github.io/DP3OYB/try/ | https://github.com/DP3OYB/DP3OYB#controls
+sy1 | https://fenderberg.github.io/fm1-sy1/emu/ | https://fenderberg.github.io/fm1-sy1/manual/
+Shell cwd was reset to /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 10:48:34Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Inspect how fm1-emu web and Hub player resolve firmware
+
+`cd /private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/0a574306-469e-4a59-9622-5701a42aee59/scratchpad && mkdir -p emu && cd emu && curl -s https://joakimeriksson.github.io/fm1-emu/ -o index.html; grep -oE '(src|href)="[^"]+"' index.html | head; grep -oE '.{0,150}(package|fw=|searchParams|get\(.fw.).{0,150}' index.html | head -20; curl -s "https://play.thefirmwarehub.com/?fw=morse" -o play.html; wc -c play.html; grep -oE '.{0,150}(searchParams|catalog|fwsc).{0,150}' play.html | head`
+
+```text
+href="data:,"
+href="style.css?v=741e724"
+href="./"
+href="https://github.com/joakimeriksson/fm1-emu/releases/tag/v0.5.1"
+href="smk37/"
+href="#firmwares"
+href="#guide"
+href="#plugin"
+href="https://github.com/joakimeriksson/fm1-emu#readme"
+href="https://github.com/joakimeriksson/fm1-emu"
+ugrep: error: error at position 172
+\n\x80-\xbf][\x80-\xbf]*){0,150}
+   exceeds complexity limits___/
+
+
+   22776 play.html
+ugrep: error: error at position 105
+og|fwsc)(?:[^\n\x80-\xbf][\x80-\xbf]*){0,150}
+                exceeds complexity limits___/
+Shell cwd was reset to /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 10:48:38Z)**_
+
+Still looking into how the existing web emulators (fm1-emu, play.thefirmwarehub.com) load a firmware. That decides how we can add Play in browser.
+
+_**Agent (claude-opus-5-5 2026-11-18 10:48:41Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Search emulator pages for URL parameter handling
+
+```bash
+cd /private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/0a574306-469e-4a59-9622-5701a42aee59/scratchpad/emu && python3 -I - <<'EOF'
+import re
+for f in ['index.html','play.html']:
+    s=open(f,encoding='utf-8',errors='replace').read()
+    print('==',f)
+    for m in re.finditer(r'package|searchParams|\?fw=|catalog|\.fwsc|<script[^>]*src="[^"]+"',s):
+        print(' ',s[max(0,m.start()-120):m.end()+120].replace('\n',' '))
+EOF
+```
+
+```text
+== index.html
+  d="theme" aria-label="Panel color theme"></select></label>         <div class="row">           <label class="file">Open .fwsc… <input type="file" id="open"></label>           <label class="file" title="A DX7 32-voice bank for M-VAVE's firmware">
+  contain saved flash and community firmware. For M-VAVE firmware, the             recipient must open their own matching .fwsc first. Browse saved firmwares to reopen             older versions or local files. Clearing browser data removes local 
+  <p class="rel-lead"><b>fm1-live comes for Windows</b>, <b>Polly's band and Melodee's factory sounds</b> play from their packages alone, the emulator can be <b>the newer FM-1 with its other flash chip</b>, and the page lists <b>202 firmwares</b>, r
+  obs and audio, and runs the FM-1's           firmwares on it unchanged, in WebAssembly in your browser: the same update packages you would install on a           real one.</p>         <ol class="steps">           <li><b>Pick a firmware</b>Felucca,
+  ver does not let other           pages fetch it. Bring your own copy.</p>         <ol>           <li>Download <code>FM-1.fwsc</code> from <a href="https://yms-file-store.oss-cn-hongkong.aliyuncs.com/software/firmware/FM-1.fwsc">M-VAVE</a>.</li> 
+  Download <code>FM-1.fwsc</code> from <a href="https://yms-file-store.oss-cn-hongkong.aliyuncs.com/software/firmware/FM-1.fwsc">M-VAVE</a>.</li>           <li>Choose “M-VAVE stock firmware”, then click <b>Open .fwsc…</b>, or drop the file on the 
+  uncs.com/software/firmware/FM-1.fwsc">M-VAVE</a>.</li>           <li>Choose “M-VAVE stock firmware”, then click <b>Open .fwsc…</b>, or drop the file on the synth.</li>           <li>Press Start. This browser keeps the copy for your next visit; o
+  >Patches</h3>         <p>On a real FM-1 the patches live in a part of the flash that updates never write, so the update package has           none. Here it starts with a small bank of the emulator's own (<code>EMU E.PNO</code>, <code>EMU BASS</cod
+   a plain MIDI note-on.</li>           <li><b>M-VAVE's patches:</b> the factory bank of a real unit is not in the update package, so the emulator             starts with its own small bank.</li>         </ul>       </section>        <section id="ho
+  status line to see how many           regions it has compiled.</p>         <p>Each firmware boots from its whole update package (<code>.fwsc</code>), downloaded from the author’s site           on first use and kept with its saved flash. “Check fo
+  see how many           regions it has compiled.</p>         <p>Each firmware boots from its whole update package (<code>.fwsc</code>), downloaded from the author’s site           on first use and kept with its saved flash. “Check for firmware up
+         on first use and kept with its saved flash. “Check for firmware updates” fetches a new copy; a changed           package starts a separate save so an update cannot overwrite an older version’s patches. Packages are unpacked by the page's ow
+  lder version’s patches. Packages are unpacked by the page's own unpacker, <code>fwsc.js</code>; Felucca's GPL           package code (<code>fm1pkg.js</code>) stays out of the page.</p>         <p>The whole story, from recovering an undocumented CP
+  ch               plays the firmwares in a window with audio and MIDI in.</li>             <li>Links keep a setup: <code>?fw=x0x&amp;mhz=120</code> picks the firmware and the clock;               <code>?package=URL&amp;name=Name</code> plays a p
+          <li>Links keep a setup: <code>?fw=x0x&amp;mhz=120</code> picks the firmware and the clock;               <code>?package=URL&amp;name=Name</code> plays a package from another site (https, with CORS on);               <code>?jit=0</code> tur
+  =x0x&amp;mhz=120</code> picks the firmware and the clock;               <code>?package=URL&amp;name=Name</code> plays a package from another site (https, with CORS on);               <code>?jit=0</code> turns the JIT off; <code>?ahead=0</code> sto
+  st follows           <a href="https://thefirmwarehub.com/">the FM-1 Firmware Hub</a> (thanks to zvenson for opening its packages to           other pages) and <a href="https://fm1-editor.com/firmware/">fm1-editor.com/firmware</a>.</p>         <p>B
+  : "film" });   f.allow = "autoplay; encrypted-media; picture-in-picture; fullscreen";   a.replaceWith(f); }); </script> <script type="module" src="main.js?v=741e724"></script> </body> </html> 
+== play.html
+  the same code goes onto the device.</p>   <button type="button" id="help-close" class="close">Close</button> </dialog>  <script type="module" src="js/host.js?v=20261115103642"></script> </body> </html>
+Shell cwd was reset to /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 10:48:48Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Check how fm1-emu builds its firmware list from the Hub
+
+```bash
+cd /private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/0a574306-469e-4a59-9622-5701a42aee59/scratchpad/emu && curl -s "https://joakimeriksson.github.io/fm1-emu/main.js?v=741e724" -o main.js; wc -c main.js; python3 -I - <<'EOF'
+import re
+s=open('main.js',encoding='utf-8',errors='replace').read()
+for m in re.finditer(r'thefirmwarehub|catalog|get\("fw"\)|get\(.package.\)',s):
+    print(s[max(0,m.start()-200):m.end()+250].replace('\n',' '));print('---')
+EOF
+```
+
+```text
+   60838 main.js
+, the pointer and keyboard input, the firmware and clock pickers, and the audio graph // that runs the emulator. Every firmware boots from its whole update package (.fwsc), unpacked // in the wasm: a catalog entry's fetched from its author's site, or one opened from this // computer (M-VAVE's own: their server does not let other pages fetch it). import { fetchPackage, hubNewcomers, hubCardUrl } from "./fwsc.js?v=741e724"; import { SaveStore, packageHash
+---
+ "./tryout.js?v=741e724";  const CLOCKS = [60, 80, 100, 120, 160, 200, 240]; // The device this page is for: the FM-1 (index.html) or the SMK-37 (smk37/index.html, <html // data-device="smk37">): its catalog, words and panel. A package says which board it runs on, and // the panel follows it (an SMK-37 package opened on the FM-1 page gets the SMK-37's). const DEVICE = document.documentElement.dataset.device === "smk37" ? "smk37" : "fm1"; const DEV = DEV
+---
+search); const stored = (k) => { try { return localStorage.getItem(k); } catch { return null; } }; const store = (k, v) => { try { localStorage.setItem(k, v); } catch { /* private mode */ } };  const catalog = await (await fetch("firmwares.json?v=741e724")).json(); // The Hub's firmwares not in the file yet, listed last as not yet run here (none when the Hub // does not answer in time; the read goes on for the package fallback). The SMK-37's list is its
+---
+when the Hub // does not answer in time; the read goes on for the package fallback). The SMK-37's list is its own. let hubWait; const newcomers = DEVICE === "fm1"   ? await Promise.race([hubNewcomers(catalog), new Promise((ok) => { hubWait = setTimeout(() => ok([]), 3000); })]).finally(() => clearTimeout(hubWait))   : []; catalog.firmwares.push(...newcomers); const byId = new Map(catalog.firmwares.map((f) => [f.id, f])); // the FM-1 Firmware Hub's ids t
+---
+it; const newcomers = DEVICE === "fm1"   ? await Promise.race([hubNewcomers(catalog), new Promise((ok) => { hubWait = setTimeout(() => ok([]), 3000); })]).finally(() => clearTimeout(hubWait))   : []; catalog.firmwares.push(...newcomers); const byId = new Map(catalog.firmwares.map((f) => [f.id, f])); // the FM-1 Firmware Hub's ids too, where they differ (its cards link here with ?fw=<its id>) for (const f of catalog.firmwares) if (f.hub && !byId.has(f.hu
+---
+ce([hubNewcomers(catalog), new Promise((ok) => { hubWait = setTimeout(() => ok([]), 3000); })]).finally(() => clearTimeout(hubWait))   : []; catalog.firmwares.push(...newcomers); const byId = new Map(catalog.firmwares.map((f) => [f.id, f])); // the FM-1 Firmware Hub's ids too, where they differ (its cards link here with ?fw=<its id>) for (const f of catalog.firmwares) if (f.hub && !byId.has(f.hub)) byId.set(f.hub, f); // ?embed=1: only the device and it
+---
+mwares.push(...newcomers); const byId = new Map(catalog.firmwares.map((f) => [f.id, f])); // the FM-1 Firmware Hub's ids too, where they differ (its cards link here with ?fw=<its id>) for (const f of catalog.firmwares) if (f.hub && !byId.has(f.hub)) byId.set(f.hub, f); // ?embed=1: only the device and its controls, for a window on another site (the inline script in // <head> set data-embed before the first paint; style.css hides the rest). It does not c
+---
+ "p25q80"; // ?package=URL: a package on another site (https), for a page that lists firmware this one does not // (mutant.cloud's "Try", other hubs, older versions); &name= names it. It plays like a catalog entry, // its saved flash kept by its package as every firmware's is, and is not added to the list for later. const linked = linkedFirmware(params); if (linked) byId.set(linked.id, linked); let fw = linked || byId.get(params.get("fw")) || byId.get(s
+---
+ kept by its package as every firmware's is, and is not added to the list for later. const linked = linkedFirmware(params); if (linked) byId.set(linked.id, linked); let fw = linked || byId.get(params.get("fw")) || byId.get(stored(DEV.key + "fw")) || byId.get(catalog.default) || catalog.firmwares[0]; // ?flash= / ?script=: a try-out of that firmware (web/tryout.js), from this site's own files: a session of its // own (this browser's saved flash neither loa
+---
+ed to the list for later. const linked = linkedFirmware(params); if (linked) byId.set(linked.id, linked); let fw = linked || byId.get(params.get("fw")) || byId.get(stored(DEV.key + "fw")) || byId.get(catalog.default) || catalog.firmwares[0]; // ?flash= / ?script=: a try-out of that firmware (web/tryout.js), from this site's own files: a session of its // own (this browser's saved flash neither loaded nor saved), started at once where the browser lets it
+---
+ater. const linked = linkedFirmware(params); if (linked) byId.set(linked.id, linked); let fw = linked || byId.get(params.get("fw")) || byId.get(stored(DEV.key + "fw")) || byId.get(catalog.default) || catalog.firmwares[0]; // ?flash= / ?script=: a try-out of that firmware (web/tryout.js), from this site's own files: a session of its // own (this browser's saved flash neither loaded nor saved), started at once where the browser lets it play let tryOut = n
+---
+n;   try { window.parent.postMessage({ source: "fm1-emu", type: "tryout", state, text }, location.origin); } catch { /* not ours */ } } function linkedFirmware(q) {   let url;   try { url = new URL(q.get("package")); } catch { return null; }   if (url.protocol !== "https:") return null;   const raw = url.pathname.split("/").pop() || url.host;   let file = raw;   try { file = decodeURIComponent(raw); } catch { /* a malformed escape: the name as written */ }   f
+---
+ataset.board = b ? "smk37" : "fm1";   down.fill(0);   encClicks.fill(0); } setBoard(DEV.board);  // ---------------------------------------------------------------- firmware and clock for (const f of catalog.firmwares) if (!f.untested) fwSel.add(new Option(`${f.name} ${f.version}`, f.id)); if (newcomers.length) {   const group = document.createElement("optgroup");   group.label = "New on the Hub, not yet run here";   for (const f of newcomers) group.app
+---
+ner("change", () => {     const i = names.indexOf(themeSel.value);     if (i >= 0) ui.panel_theme(i);     store(DEV.key + "theme", themeSel.value);   }); }  // the guide's firmware list, one card per catalog entry; "Play" picks it like the select does const NO_NOTE = "MIDI: no sound from a plain note-on"; const MIDI_NOTES = {   mvave: "MIDI: channel 2 in the emulator (not yet checked on a real FM-1)",   felucca: "MIDI: its parts play on channels 1–4",  
+---
+ew Map(); const hubCard = (f) => hubCardUrl(f.hub); const UNTESTED = "New on the Hub: not yet run in the emulator, so it may not work here"; // the FM-1 page: which entries have an SMK-37 build (that catalog names them) const twins = new Map(); if (DEVICE === "fm1") {   try {     for (const s of (await (await fetch("smk37/firmwares.json?v=741e724")).json()).firmwares) if (s.fm1) twins.set(s.fm1, s.id);   } catch { /* (no SMK-37 catalog next to this page
+---
+= new Map(); if (DEVICE === "fm1") {   try {     for (const s of (await (await fetch("smk37/firmwares.json?v=741e724")).json()).firmwares) if (s.fm1) twins.set(s.fm1, s.id);   } catch { /* (no SMK-37 catalog next to this page: no links) */ } } {   const el = (tag, cls, ...kids) => {     const e = document.createElement(tag);     if (cls) e.className = cls;     e.append(...kids);     return e;   };   const link = (href, text) => Object.assign(document.cr
+---
+..kids);     return e;   };   const link = (href, text) => Object.assign(document.createElement("a"), { href, textContent: text });   const list = document.getElementById("fwlist");   for (const f of catalog.firmwares) {     const play = el("button", "", "Play");     play.type = "button";     play.setAttribute("aria-label", `Play ${f.name}`);     play.addEventListener("click", () => {       if (fw.id !== f.id) {         fwSel.value = f.id;         fwSel
+---
+(kept) {     const got = { bytes: kept.package, url: kept.url };     packages.set(f.id, got);     return got;   }   if (f.byo) {     // Migration: old versions stored only uploaded stock packages, by catalog ID.     let bytes;     try { bytes = await saveStore.get("packages", f.id); } catch (error) { saveFailure(error); }     if (!bytes) throw new NeedFile();     const got = { bytes, url: null };     packages.set(f.id, got);     return got;   }   const 
+---
+y("local"); if (keptLocal) {   localFw = { id: "local", name: keptLocal.name, version: "", bytes: keptLocal.package };   fwSel.add(new Option(`${localFw.name} (your file)`, "local"), 0);   if (params.get("fw") === "local" || (!params.has("fw") && stored(DEV.key + "fw") === "local")) { fw = localFw; fwSel.value = "local"; } } for (const f of catalog.firmwares.filter(f => f.byo)) {   try { await packageOf(f); } catch { /* user has not opened a stock package
+---
+${localFw.name} (your file)`, "local"), 0);   if (params.get("fw") === "local" || (!params.has("fw") && stored(DEV.key + "fw") === "local")) { fw = localFw; fwSel.value = "local"; } } for (const f of catalog.firmwares.filter(f => f.byo)) {   try { await packageOf(f); } catch { /* user has not opened a stock package yet */ } } let bank = null;                           // a DX7 32-voice bank for the stock firmware, or null  let loadedUrl = null;         
+---
+ a drop on the panel. With M-VAVE's entry // chosen, or a file named like theirs, it is that entry's copy and is kept for next time. async function openLocal(file) {   if (!file) return;   const mv = catalog.firmwares.find((f) => f.byo);   if (mv && (fw.byo || DEV.stockFile.test(file.name))) {     const bytes = new Uint8Array(await file.arrayBuffer());     packages.set(mv.id, { bytes, url: null });     fw = mv;     fwSel.value = mv.id;     if (!EMBED) s
+---
+its reply. // Frequent quiet autosaves remain the durable fallback. addEventListener("pagehide", () => {   if (running) flushRunning().catch(saveFailure); });  // Saved hashes remain accessible after catalog updates and subsequent local-file imports. const savedVersions = document.getElementById("saved-versions"); document.getElementById("browse-saves").addEventListener("click", action(async () => {   const records = new Map((await saveStore.list()).map
+---
+Shell cwd was reset to /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 10:48:57Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Check existing Hub notes, fmhub.json, and fm1-morse web/docs layout
+
+`grep -n -iE 'play|cheat|fmhub.json' docs/firmware/hub.md .agents/skills/fm1-hub-listing/SKILL.md | head -40; cat firmware/morse/fmhub.json; ls firmware/morse/web firmware/morse/docs; grep -n -iE 'cheat' firmware/morse/README.md | head`
+
+```text
+docs/firmware/hub.md:69:| **[remotefm1.com](https://remotefm1.com/)（FM-1 Player）** | **播放器**：用上面兩者，再加上自己的原生執行方式與「把實機當面板」 | Quixotic7 |
+docs/firmware/hub.md:71:FM-1 Player 的頁面自己寫明：韌體清單來自 Firmware Hub 的即時目錄（我看到時列了 243 個）；帶圓點的韌體以 `.rfm1` 原生執行（韌體的原始碼編成 WebAssembly）；其餘每一個都能用 fm1-emu 模擬執行，套件從 Hub 指向的位置抓。`[上游]`
+docs/firmware/hub.md:73:所以來源確實是 Hub，模擬的部分是 fm1-emu。Hub 自己的 Try、Agent Deck 的線上展示頁、我本機的 `just emu-run` 用的也都是 fm1-emu。差別在 FM-1 Player 多了原生核心（比較快、延遲低）以及搭配 [RemoteFM1](remotefm1/index.md) 把實機當面板。
+docs/firmware/hub.md:89:  - repo 根目錄要有 `fmhub.json`。
+docs/firmware/hub.md:91:- **`fmhub.json`**：只允許 9 個欄位（`what`、`author`、`kinds`、`play`、`editor`、`cheat`、`image`、`color`、`sounds`，外加 `smk37`），多一個欄位整個檔案就不採用。新韌體至少要有：
+docs/firmware/hub.md:97:- **Hub 讀的是 `fmhub.json`**：fm1-base build 出來的 `firmware.json`，在 Hub 的文件裡完全沒提到。
+docs/firmware/hub.md:98:- **一個 repo 一張卡**：圖片路徑、`fmhub.json` 都以 repo 根目錄為準，所以要上架的韌體應該放在獨立 repo（見[自製韌體環境](../dev/index.md)）。
+docs/firmware/hub.md:109:| fm1-emu、RemoteFM1 的 FM-1 Player、[FMDB](https://stanleygurvich.github.io/FMDB_FM1_FirmwareDatabase/) | — | 自動跟著 Hub 的目錄，或自己爬 GitHub | 不用送 |
+docs/firmware/hub.md:119:  - 「Your name, as it should appear」最好和 `fmhub.json` 的 `author` 一致，卡片的「By:」用的是後者。
+docs/firmware/hub.md:125:  3. `fmhub.json` 的欄位；
+docs/firmware/hub.md:134:- **進度**：Morse 照這份清單準備，2026-11-18 完成三項實機測試、發布 v0.3 release、通過 identity 和 `fmhub.json` 檢查，接著送審，也對 awesome-fm-1 和 aroum 各開了一個 PR。過程見 [Morse](../dev/morse.md#release)。這套流程整理成 repo 的 agent skill `fm1-hub-listing`（`.agents/skills/`）。
+.agents/skills/fm1-hub-listing/SKILL.md:3:description: 'Get an own M-VAVE FM-1 firmware (fm1-base) listed on The Firmware Hub and the community lists: its own repository with LICENSE and fmhub.json, a free FM-1_ identity, a release with the .fwsc, the three hardware tests over the USB-MIDI update, the submission form, then awesome-fm-1 and aroum/fm1-custom-fw. Use when the owner wants to publish, release or list a firmware from this repo (firmware/<app>), or asks what the Hub needs. Every firmware write, restore and public step needs the owner, per AGENTS.md.'
+.agents/skills/fm1-hub-listing/SKILL.md:37:5. `fmhub.json` in the repository root, default branch. No file, no listing.
+.agents/skills/fm1-hub-listing/SKILL.md:41:The Hub reads `fmhub.json`, not fm1-base's `firmware.json` (attach the latter to releases anyway; RemoteFM1 and
+.agents/skills/fm1-hub-listing/SKILL.md:81:### 4. fmhub.json
+.agents/skills/fm1-hub-listing/SKILL.md:83:Only these fields: `what`, `author`, `kinds`, `play`, `editor`, `cheat`, `image`, `color`, `sounds` (and `smk37`).
+.agents/skills/fm1-hub-listing/SKILL.md:92:- `python3 -m json.tool fmhub.json`, then the owner runs the KB's "Check your file" (https://thefirmwarehub.com/kb/).
+.agents/skills/fm1-hub-listing/SKILL.md:148:fmhub.json, sounds, release, identity, update loader, flash chip. All green means "waiting for Sven": the maintainer
+.agents/skills/fm1-hub-listing/SKILL.md:152:After listing: new versions are new releases; card changes are fmhub.json edits (live within three hours). MORSE v0.5,
+.agents/skills/fm1-hub-listing/SKILL.md:163:| fm1-emu, RemoteFM1 player, FMDB | — | follow the Hub or crawl GitHub: nothing to send |
+{
+  "what": "Learn and use Morse code. Key on the piano keys (straight key or iambic paddles) and see what you sent, drill short and long presses, learn by sound with flash cards, listen to endless practice, type letters and CW phrases on the keys. Keying goes out over USB-MIDI or Bluetooth MIDI in the Vail format; back up your progress from a web page.",
+  "author": "Da-Wei Lee",
+  "kinds": [
+    "other"
+  ],
+  "editor": "https://daviddwlee84.github.io/fm1-morse/web/",
+  "cheat": "https://github.com/daviddwlee84/fm1-morse#controls",
+  "image": "docs/screen.png",
+  "color": "#5AC8FF",
+  "sounds": "none"
+}
+firmware/morse/web:
+words
+index.html
+progress.html
+
+firmware/morse/docs:
+screens
+screen.png
+62:[cheatsheet](https://daviddwlee84.github.io/M-VAVE_FM-1/dev/morse-cheatsheet/).
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 10:49:11Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Look at README sections and web page styling
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/firmware/morse && grep -n '^#' README.md; awk '/^## Controls/,/^## [^C]/' README.md | wc -l; head -40 web/index.html | grep -iE 'style|<title|--' | head; wc -l ../../docs/dev/morse-cheatsheet.md`
+
+```text
+1:# MORSE for the M-VAVE FM-1
+13:## What it does
+34:## Controls
+64:## Learning with MORSE
+83:## Bluetooth
+101:## Your progress: back up and restore
+117:## Screens
+135:## Install
+147:## Other firmwares' data
+156:## Build
+183:## License
+      31
+<!-- SPDX-License-Identifier: GPL-3.0-or-later -->
+<!-- MORSE for the M-VAVE FM-1: back up and restore the learning progress over Web MIDI (firmware 0.4 and later).
+     "Progress"); the JSON file is the same as `morse backup` writes. -->
+<title>MORSE on the web</title>
+<style>
+  :root { --bg: #f6f6f3; --fg: #1b1b1f; --dim: #6b6b73; --card: #ffffff; --line: #dcdcd6; --accent: #0a72c2;
+          --ok: #1f8f4e; --bad: #c0392b; --l0: #e9d6d6; --l1: #e8b9a0; --l2: #eccb7c; --l3: #d9d77a; --l4: #a7d78f;
+          --l5: #6fd39a; --closed: #ececea; }
+    :root { --bg: #111114; --fg: #ececf0; --dim: #9a9aa6; --card: #1b1b20; --line: #2c2c34; --accent: #5ab4ff;
+            --ok: #50dc78; --bad: #f0463c; --l0: #462828; --l1: #8c3c28; --l2: #be781e; --l3: #aaaa28;
+     157 ../../docs/dev/morse-cheatsheet.md
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 10:49:36Z)**_
+
+<tool-use data-tool-type="write" data-tool-name="Write"><details>
+<summary>Tool use: **Write**</summary>
+
+````markdown
+# MORSE：Hub 卡片的「Play in browser」與 cheatsheet 頁面
+
+## Context 背景
+
+Hub 上很多韌體有 ▶ Play in browser 按鈕（例：Rainbow），MORSE 沒有。MORSE 的 cheatsheet 現在連到 README 的 `#controls`，只有 31 行，讀起來不方便。
+
+查過的事實：
+- Hub 的 `catalog.json` 裡，按鈕來自 `play` 欄位，cheatsheet 來自 `cheat`。兩者都可以寫在 `fmhub.json`（允許的 9 個欄位裡就有 `play`）。MORSE 目前是 `play: null`，`cheat` 指向 README。
+- 大多數韌體的 `play` 指向 **fm1-emu 的網頁版**（WebAssembly，跑的就是 `.fwsc` 本身）：
+  - 直接連：`https://joakimeriksson.github.io/fm1-emu/?fw=<hub id>`，例如 conductor、argo、clavioline。fm1-emu 會讀 Hub 的目錄，把 Hub 新上架的韌體列為 newcomers，所以 `?fw=morse` 應該能直接找到，而且會跟著 Hub 的最新版（0.5 → 0.6）。
+  - 包成自己的頁面：Rainbow、Skiff、Tuna 等都做了 `/try/`。fm1-emu 的 `?embed=1` 只顯示機器本身，專門給別的網站用 iframe 嵌入。
+- 本機的 `just emu-run` 已經在 fm1-emu 上跑過 MORSE `[模擬]`，可以開機。
+
+## 做法
+
+### 1. Try 頁：`fm1-morse/web/try/index.html`（新檔）
+
+- iframe 嵌入 `https://joakimeriksson.github.io/fm1-emu/?fw=morse&embed=1`，版本跟著 Hub，不用自己放 `.fwsc`。
+- 旁邊放一小段「先試這些」：
+  - 開機後按哪幾個鍵進 KEY 頁打一個字；
+  - LISTEN 頁怎麼聽；
+  - 電腦鍵盤怎麼對應琴鍵（照 fm1-emu 自己的說明連過去，不自己猜）。
+- 寫明限制：
+  - 模擬器沒有藍牙；
+  - 進度存在這個瀏覽器裡，不是實機；
+  - 要接 Vail 或備份進度得用實機，連到 `../`（MORSE on the web）。
+- 視覺跟 `web/index.html` 一致，沿用同一套 `:root` 色票和深色模式。
+- 加一個「直接開 fm1-emu 全頁」的連結，iframe 不能用時可以改點它。
+
+### 2. Cheatsheet 頁：`fm1-morse/web/cheatsheet.html`（新檔，英文）
+
+- 內容從 `docs/dev/morse-cheatsheet.md`（157 行中文，比 README 完整）翻成英文，因為 Hub 的讀者大多看英文：
+  - 每一頁的按鍵（KEY、LEARN、LISTEN、TYPE、SETTINGS）；
+  - header 的符號（`BT`、`PC`）；
+  - 設定項目；
+  - prosign 表。
+- 單頁、可列印成 A4（`@media print`），深色模式和 `web/index.html` 一樣。
+- README `## Controls` 保留精簡版，加一行連到這頁。中文的 `morse-cheatsheet.md` 保留，頂端加一行連到英文版。
+
+### 3. `fmhub.json`
+
+```json
+"play":  "https://daviddwlee84.github.io/fm1-morse/web/try/",
+"cheat": "https://daviddwlee84.github.io/fm1-morse/web/cheatsheet.html"
+```
+
+另外：
+- `web/index.html` 的頁首加兩個連結：Try in the browser、Cheatsheet。
+- Hub 會在約 3 小時內讀到 `fmhub.json` 的修改，不用重新送審。
+
+### 4. 文件與 skill
+
+- `.agents/skills/fm1-hub-listing/SKILL.md` 的 fmhub.json 一節補上：
+  - `play` 的兩種做法：直接連 `fm1-emu/?fw=<hub id>`，或用自己的 `/try/` 頁 iframe 嵌入 `&embed=1`；
+  - 別的網站的 package 用 `?package=URL&name=…`，但需要 https 加 CORS，GitHub release 的檔案不行，GitHub Pages 可以；
+  - `cheat` 最好指向一個 GitHub Pages 的單頁，不要只指向 README 的錨點。
+- `docs/firmware/hub.md`：同樣的事實寫成中文，標 `[上游]`（fm1-emu 頁面寫的參數），以及上線後的結果。
+- `docs/dev/morse.md` 的 release 一節：記錄 play 和 cheat 上線。
+
+## Verification 驗證
+
+1. 本機用 `python3 -m http.server` 開 `web/try/` 和 `web/cheatsheet.html`，用 playwright-cli 截圖：
+   - iframe 裡 MORSE 能開機，畫面出現 MORSE 主選單；
+   - cheatsheet 在亮色、深色和列印預覽下都正常；
+   - 手機寬度沒有橫向捲動。
+2. 確認 `?fw=morse` 在 fm1-emu 上真的解析到 MORSE（未登錄的話會落到預設韌體）。如果不行，改用 `?package=` 加上一個有 CORS 的位置，並先回報給你。
+3. `python3 -m json.tool fmhub.json`；之後由你在 Hub KB 跑 "Check your file"。
+4. `just docs-check`。
+5. commit 和 push（fm1-morse 和 superproject 的 pointer）都等你說。push fm1-morse 之後 GitHub Pages 才會上線，Hub 也才會讀到新的 `fmhub.json`。
+
+````
+
+```text
+The file /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/.claude/plans/squishy-riding-flute.md has been updated successfully. (file state is current in your context — no need to Read it back)
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 10:49:39Z)**_
+
+<tool-use data-tool-type="unknown" data-tool-name="ToolSearch"><details>
+<summary>Tool use: **ToolSearch**</summary>
+
+**Input:**
+
+- max_results: `1`
+- query: `select:ExitPlanMode`
+
+**Result:**
+
+```
+
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 10:49:46Z)**_
+
+<think><details><summary>Thought Process</summary>
+兩種做法都已經規劃好：Hub 的「Play in browser」會連到 fm1-emu 網頁版並開啟對應韌體，Cheatsheet 則會翻成英文單頁供 A4 列印，兩者都會補進 skill 與 hub.md。我接下來會用瀏覽器實際確認 `?fw=morse` 能正常開啟。
+
+</details></think>
+
+_**Agent (claude-opus-5-5 2026-11-18 10:49:46Z)**_
+
+<tool-use data-tool-type="generic" data-tool-name="ExitPlanMode"><details>
+<summary>Tool use: **ExitPlanMode**</summary>
+
+**Input:**
+
+- plan: `# MORSE：Hub 卡片的「Play in browser」與 cheatsheet 頁面
+
+## Context 背景
+
+Hub 上很多韌體有 ▶ Play in browser 按鈕（例：Rainbow），MORSE 沒有。MORSE 的 cheatsheet 現在連到 README 的 `#controls`，只有 31 行，讀起來不方便。
+
+查過的事實：
+- Hub 的 `catalog.json` 裡，按鈕來自 `play` 欄位，cheatsheet 來自 `cheat`。兩者都可以寫在 `fmhub.json`（允許的 9 個欄位裡就有 `play`）。MORSE 目前是 `play: null`，`cheat` 指向 README。
+- 大多數韌體的 `play` 指向 **fm1-emu 的網頁版**（WebAssembly，跑的就是 `.fwsc` 本身）：
+  - 直接連：`https://joakimeriksson.github.io/fm1-emu/?fw=<hub id>`，例如 conductor、argo、clavioline。fm1-emu 會讀 Hub 的目錄，把 Hub 新上架的韌體列為 newcomers，所以 `?fw=morse` 應該能直接找到，而且會跟著 Hub 的最新版（0.5 → 0.6）。
+  - 包成自己的頁面：Rainbow、Skiff、Tuna 等都做了 `/try/`。fm1-emu 的 `?embed=1` 只顯示機器本身，專門給別的網站用 iframe 嵌入。
+- 本機的 `just emu-run` 已經在 fm1-emu 上跑過 MORSE `[模擬]`，可以開機。
+
+## 做法
+
+### 1. Try 頁：`fm1-morse/web/try/index.html`（新檔）
+
+- iframe 嵌入 `https://joakimeriksson.github.io/fm1-emu/?fw=morse&embed=1`，版本跟著 Hub，不用自己放 `.fwsc`。
+- 旁邊放一小段「先試這些」：
+  - 開機後按哪幾個鍵進 KEY 頁打一個字；
+  - LISTEN 頁怎麼聽；
+  - 電腦鍵盤怎麼對應琴鍵（照 fm1-emu 自己的說明連過去，不自己猜）。
+- 寫明限制：
+  - 模擬器沒有藍牙；
+  - 進度存在這個瀏覽器裡，不是實機；
+  - 要接 Vail 或備份進度得用實機，連到 `../`（MORSE on the web）。
+- 視覺跟 `web/index.html` 一致，沿用同一套 `:root` 色票和深色模式。
+- 加一個「直接開 fm1-emu 全頁」的連結，iframe 不能用時可以改點它。
+
+### 2. Cheatsheet 頁：`fm1-morse/web/cheatsheet.html`（新檔，英文）
+
+- 內容從 `docs/dev/morse-cheatsheet.md`（157 行中文，比 README 完整）翻成英文，因為 Hub 的讀者大多看英文：
+  - 每一頁的按鍵（KEY、LEARN、LISTEN、TYPE、SETTINGS）；
+  - header 的符號（`BT`、`PC`）；
+  - 設定項目；
+  - prosign 表。
+- 單頁、可列印成 A4（`@media print`），深色模式和 `web/index.html` 一樣。
+- README `## Controls` 保留精簡版，加一行連到這頁。中文的 `morse-cheatsheet.md` 保留，頂端加一行連到英文版。
+
+### 3. `fmhub.json`
+
+```json
+"play":  "https://daviddwlee84.github.io/fm1-morse/web/try/",
+"cheat": "https://daviddwlee84.github.io/fm1-morse/web/cheatsheet.html"
+```
+
+另外：
+- `web/index.html` 的頁首加兩個連結：Try in the browser、Cheatsheet。
+- Hub 會在約 3 小時內讀到 `fmhub.json` 的修改，不用重新送審。
+
+### 4. 文件與 skill
+
+- `.agents/skills/fm1-hub-listing/SKILL.md` 的 fmhub.json 一節補上：
+  - `play` 的兩種做法：直接連 `fm1-emu/?fw=<hub id>`，或用自己的 `/try/` 頁 iframe 嵌入 `&embed=1`；
+  - 別的網站的 package 用 `?package=URL&name=…`，但需要 https 加 CORS，GitHub release 的檔案不行，GitHub Pages 可以；
+  - `cheat` 最好指向一個 GitHub Pages 的單頁，不要只指向 README 的錨點。
+- `docs/firmware/hub.md`：同樣的事實寫成中文，標 `[上游]`（fm1-emu 頁面寫的參數），以及上線後的結果。
+- `docs/dev/morse.md` 的 release 一節：記錄 play 和 cheat 上線。
+
+## Verification 驗證
+
+1. 本機用 `python3 -m http.server` 開 `web/try/` 和 `web/cheatsheet.html`，用 playwright-cli 截圖：
+   - iframe 裡 MORSE 能開機，畫面出現 MORSE 主選單；
+   - cheatsheet 在亮色、深色和列印預覽下都正常；
+   - 手機寬度沒有橫向捲動。
+2. 確認 `?fw=morse` 在 fm1-emu 上真的解析到 MORSE（未登錄的話會落到預設韌體）。如果不行，改用 `?package=` 加上一個有 CORS 的位置，並先回報給你。
+3. `python3 -m json.tool fmhub.json`；之後由你在 Hub KB 跑 "Check your file"。
+4. `just docs-check`。
+5. commit 和 push（fm1-morse 和 superproject 的 pointer）都等你說。push fm1-morse 之後 GitHub Pages 才會上線，Hub 也才會讀到新的 `fmhub.json`。
+`
+- planFilePath: `/Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/.claude/plans/squishy-riding-flute.md`
+
+</details></tool-use>
