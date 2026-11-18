@@ -302,7 +302,8 @@ MORSE on the web 的 *Over Bluetooth, directly*（2026-11-18 加入，韌體 0.5
 - 網頁自己讀寫 BLE-MIDI 封包：SysEx 切成 20 byte 的封包送出（不知道協商到的 MTU，用最小的）；收進時把跨封包的 SysEx 和 note 組回來，每個事件用 13-bit 的 BLE-MIDI 時間戳記換算成網頁的時間（每個封包裡最新的那個事件最接近送出的時刻，取最小的延遲當兩個時鐘的差）。Timing 區照樣能用。
 - 這條連線只有網頁能用，Vail 和指令列看不到；要給 Vail 用就用 *Connect*（經過系統的藍牙 MIDI）。
 - macOS 上系統已經用藍牙 MIDI 連著時，Chrome 會不會共用那條連線還沒試 `[調研]`。
-- 封包的切法和解法用 node 測過（20 byte 以內、跨封包的 SysEx、running status、同一個封包裡兩個 note 的間隔、13-bit 時間戳記進位），還沒在實機上試。
+- 封包的切法和解法用 node 測過（20 byte 以內、跨封包的 SysEx、running status、同一個封包裡兩個 note 的間隔、13-bit 時間戳記進位）。
+- **實機** `[實機]`（2026-11-18，韌體 0.6）：Chrome 的配對視窗列出 `FM-1 3399`，Pair 之後狀態寫 `MORSE 0.6 connected over Bluetooth`，Live 收到 TYPE 頁的字和片語。Timing（22 WPM，點 54 ms、劃 162 ms）：照網頁換算的 BLE-MIDI 時間戳記，sd 0.4–0.5 ms；照通知到達的時間，sd 18–20 ms，比經過 CoreMIDI 的到達時間（sd 約 3）抖得多，所以這條路一定要用時間戳記。
 
 ### 瀏覽器
 
@@ -335,7 +336,8 @@ MORSE on the web 的 *Over Bluetooth, directly*（2026-11-18 加入，韌體 0.5
 
 - **MORSE on the web**（Chrome）經藍牙連上，狀態寫 `MORSE 0.5 connected over Bluetooth`，Live 顯示 FM-1 讀到的字。
 - **Vail**（vailmorse.com 的 Repeater）：只用藍牙連著，不用任何設定，FM-1 的 KEY 頁發報就出現在 Vail 上。Decoder 房間解得出 TYPE 頁播的字和片語，速度顯示 19.9 WPM。
-- **Vail 的 Decoder 每個字母都分開**：這是 Farnsworth 間隔造成的，不是 Vail 的問題。START（20/8）時字和字之間要停 890 ms，以 20 WPM 的點（60 ms）來算是 15 個點，超過字間的 7 個點，所以 Vail 把每個字母都當成一個詞。BUILDING（20/13）停 435 ms（約 7 個點），剛好在界線上；QSO（22/18）大約 4 個點，就會連成詞。要給別人聽時，把 `K2` 調到和字元速度一樣（或選 FAST）。
+- **Vail 的 Decoder 每個字母都分開**：這是 Farnsworth 間隔造成的，不是 Vail 的問題。START（20/8）時字和字之間要停 890 ms，以 20 WPM 的點（60 ms）來算是 15 個點，超過字間的 7 個點，所以 Vail 把每個字母都當成一個詞。BUILDING（20/13）停 435 ms（約 7 個點），剛好在界線上；QSO（22/18）大約 4 個點，就會連成詞。實測 `[實機]`：20/13、20/14 還是分開，22/18 就連起來了。要給別人聽時，選 QSO 或 FAST，或把 `K2` 調到接近字元速度。
+- **網頁比 Vail 早出字，不是作弊，但也不是解碼**：TYPE 頁按下鍵時，FM-1 就把那個字（`T_CHAR`）送給電腦，然後才開始播，所以網頁上的字比聲音早出現。Vail 是從按鍵的時間自己解碼，要等字間的停頓才知道一個字結束。KEY 頁送的才是 FM-1 解出來的字，也要等字間的停頓。
 - 拔掉 USB 只用電池，用藍牙連續使用一段時間，沒有斷線（還沒正式計時）。
 
 - **USB 和藍牙都連著時**：0.5 的網頁用先聽到 HELLO 的那條路，常常是藍牙；本人在 FM-1 上關掉藍牙，網頁才改走 USB `[實機]`。網頁（2026-11-18 起）改成兩條都有時用 USB：聽到藍牙的 HELLO 後再等 1.3 秒，看 USB 有沒有。限制：已經有程式從藍牙回應 FM-1 的話，FM-1 只在藍牙上送 HEARTBEAT，USB 那邊沒有聲音，要等那個程式關掉 10 秒後才會兩邊都送 HELLO。
@@ -422,7 +424,7 @@ MORSE on the web 的 *Over Bluetooth, directly*（2026-11-18 加入，韌體 0.5
 | 版本 | 日期 | 要刷機 | 內容 |
 |---|---|---|---|
 | 韌體 0.1、host 0.1.0 | 2026-11-17 | 是（22:54 刷入，`c3b5cd6`） | 第一版：KEY、TYPE、PRACTICE、CHART、SETTINGS，兩種學習方式，Vail 格式的 MIDI，host 的 `type`／`send`／`listen`。原本規劃分成 0.1（核心）和 0.2（閃卡），因為一起做完、都還沒刷，合併成 0.1 |
-| 韌體 0.6、host 0.6.0 | 2026-11-18 | 是（還沒刷） | 拔線後 `PC` 在 0.5 秒內消失（hostlink：USB 收不了 SysEx 就判定電腦離開，`firmware/common` 同步）；網頁：*Over Bluetooth, directly*（[Web Bluetooth](#web-bluetooth)）、USB 和藍牙都在時用 USB、*Timing* 區、備份檔名加上時分 |
+| 韌體 0.6、host 0.6.0 | 2026-11-18 | 是（17:00 前用 USB-MIDI 裝 release build `FM-1_41000600`，fm1-morse `60f76cf`） | 拔線後 `PC` 在 0.5 秒內消失（hostlink：USB 收不了 SysEx 就判定電腦離開，`firmware/common` 同步）；網頁：*Over Bluetooth, directly*（[Web Bluetooth](#web-bluetooth)）、USB 和藍牙都在時用 USB、*Timing* 區、備份檔名加上時分 |
 | 韌體 0.5、host 0.5.0 | 2026-11-18 | 是（16:20 用 USB-MIDI 裝 release build `FM-1_41000500`，fm1-morse `a75c29e`，release [v0.5](https://github.com/daviddwlee84/fm1-morse/releases/tag/v0.5)） | [藍牙](#bluetooth)：fm1-base own stack 的 BLE-MIDI peripheral，和 USB 同時用；SETTINGS 加 BLUETOOTH 開關（存在紀錄裡，格式不變）；header 顯示 `BT`；SETTINGS 頁可以捲動；收訊按鍵照送出端的時間解碼；host 印出走哪條路、兩條都有時優先 USB、`--bluetooth` 打開 Mac 的藍牙 MIDI 視窗；網頁顯示走哪條路 |
 | 韌體 0.4、host 0.4.0 | 2026-11-18 | 是（05:20 用 USB-MIDI 裝 release build `FM-1_41000400`，fm1-morse `323d79b`） | 實機回饋（ROUND 14 還停在第一組）：打碼卡改用答案自己的節奏判斷（[判定](#judging)），手速跨卡延續，評級和 SHOULD／YOU 對照圖，ALMOST；SET 頁的 JUDGING 可以切回 STRICT；CHART 編輯、分級測驗、開始畫面列出擋住下一組的字，SOUND 模式下新字和答案可以按 `SEQ` 偷看點劃，弱卡在同一回合重複出現、熟字只在有空位時補，[手動修改都要按 PLAY 確認](#progress)；進度的[備份與還原](#backup)（`T_PROG_*`、host 的 `backup`／`restore`、網頁）。藍牙順延到 0.5 |
 | 韌體 0.3 release（`FM-1_41000300`） | 2026-11-18 | 是（Hub 測試時用 USB-MIDI 裝過三次） | fm1-morse 的第一個 release [v0.3](https://github.com/daviddwlee84/fm1-morse/releases/tag/v0.3)：identity 改成 `FM-1_41`，授權改成 GPL-3.0-or-later，程式和 0.3 相同 |
