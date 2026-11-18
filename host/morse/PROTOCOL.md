@@ -98,7 +98,7 @@ The same bytes are in `host/morse/protocol.py` (`VECTORS`) and in
 
 | Name | Bytes |
 |---|---|
-| hello (firmware 0.7, USB) | `F0 7D 4D 4F 01 41 01 00 07 00 F7` |
+| hello (firmware 0.8, USB) | `F0 7D 4D 4F 01 41 01 00 08 00 F7` |
 | hello_ack | `F0 7D 4D 4F 01 01 01 F7` |
 | char_k | `F0 7D 4D 4F 01 43 4B F7` |
 | text_cq | `F0 7D 4D 4F 01 02 43 51 F7` |

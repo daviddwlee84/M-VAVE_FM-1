@@ -395,6 +395,7 @@ MORSE on the web 的 *Over Bluetooth, directly*（2026-11-18 加入，韌體 0.5
 | 0.5（藍牙，release） | 173,748 B | 38,572 / 98,304 B |
 | 0.6（release） | 173,844 B | 38,572 / 98,304 B |
 | 0.7（release） | 174,408 B | 38,588 / 98,304 B |
+| 0.8（開發版） | 174,536 B | 38,588 / 98,304 B |
 
 上限是 581,564 B；RAM code 5,576 / 32,768 B（0.5）；套件 616,003 B，開發版 identity `FM-1_4100`。0.5 開了 own BLE stack（peripheral），多 35.7 KB；之後加 central 大約再多 13–22 KB（fm1-base 的數字），仍然很寬裕。
 
@@ -435,6 +436,9 @@ MORSE on the web 的 *Over Bluetooth, directly*（2026-11-18 加入，韌體 0.5
 | 0.5 刷進實機 | `fm1_install.py`（USB-MIDI，fast install） | 成功；ROUND 29、開放 20 個字的紀錄保留 `[實機]` |
 | 0.7：START PAGE、0.6 紀錄升級進 MENU、格式 2 匯出、格式 1 和 2 載入（HOME 不變、PLAY 換進度和設定）、不合法的 `flags` 回到預設 | `just fw-test morse` | 全過 `[模擬]` |
 | 0.7：host 的格式 2、設定的名字、只給 0.7 送設定 | `just morse-test` | 25 項全過；網頁的程式碼用 node 跑，位元組和 host 向量相同 |
+| 0.8：`SAVE` 立刻存、沒存就斷電會不見、沒東西要存時的提示 | `just fw-test morse` | 全過 `[模擬]` |
+| 0.8：K1 改速度、按 `SAVE`、0.5 秒後關機重開 | fm1-emu `uc25hq80`、`p25q80` | 按下就寫（4 次 erase／program），重開讀回 21 WPM `[模擬]` |
+| 0.7 刷進實機 | `fm1_install.py`（USB-MIDI，fast install） | 成功；開機進 MENU，ROUND 30 保留，START PAGE 改了關機再開照設定 `[實機]` |
 | 0.7：改 START PAGE、重開讀回；疊在刷 THEORY 前的實機備份上 | fm1-emu `uc25hq80`、`p25q80` | 開機進 MENU，ROUND 30 保留，開機 0 次寫入；改成 KEY 後重開進 KEY `[模擬]` |
 | 0.5：疊在實機 0.4 前的備份上，BLUETOOTH 關、重開讀回、再開 | `emu_rehearse.py` + fm1-emu `uc25hq80`、`p25q80` | ROUND 17 的紀錄保留；改設定時存一筆紀錄（4 次 erase／program），開機 0 次 `[模擬]` |
 
@@ -445,7 +449,8 @@ MORSE on the web 的 *Over Bluetooth, directly*（2026-11-18 加入，韌體 0.5
 | 版本 | 日期 | 要刷機 | 內容 |
 |---|---|---|---|
 | 韌體 0.1、host 0.1.0 | 2026-11-17 | 是（22:54 刷入，`c3b5cd6`） | 第一版：KEY、TYPE、PRACTICE、CHART、SETTINGS，兩種學習方式，Vail 格式的 MIDI，host 的 `type`／`send`／`listen`。原本規劃分成 0.1（核心）和 0.2（閃卡），因為一起做完、都還沒刷，合併成 0.1 |
-| 韌體 0.7、host 0.7.0 | 2026-11-18 | 是（還沒刷；release [v0.7](https://github.com/daviddwlee84/fm1-morse/releases/tag/v0.7)，`FM-1_41000700`，fm1-morse `52b048e`） | 開機頁：SETTINGS 加 **START PAGE**（MENU、PRACTICE、LISTEN、KEY、RHYTHM、TYPE、CHART），預設 MENU（0.6 以前直接進 PRACTICE）；存在設定的 `flags`（原本叫 `mute`）bit 2–4，紀錄格式不變。[備份格式 2](#backup)：進度後面接 12 bytes 的設定，JSON 的 `version` 2 多一個 `settings`，載入時設定一起還原；舊的格式 1 照樣能載入，給 0.6 以前的韌體時 host 和網頁自動退回格式 1。SETTINGS 只畫完整的列（第 14 列不會被頁尾切一半）。網頁：Hub 的 [Try 頁](#release)（fm1-emu 嵌入）和英文 [cheatsheet](https://daviddwlee84.github.io/fm1-morse/web/cheatsheet.html) |
+| 韌體 0.8、host 0.8.0 | 2026-11-18 | 是（還沒刷） | `SAVE` 鍵：設定立刻存，不用等最後一次改動後的 3 秒（實機回饋：在 SETTINGS 改完馬上關機，改動沒存到）；有還沒存的設定時，`SAVE` 燈亮、header 頁名後面多一個琥珀色 `*`，自動存或按 `SAVE` 後消失；沒東西要存時按 `SAVE` 顯示 `ALL SAVED`；CHART 編輯時 `SAVE` 和 `PLAY`／`REC` 一樣問 SAVE CHANGES? |
+| 韌體 0.7、host 0.7.0 | 2026-11-18 | 是（19:45 前後用 USB-MIDI 裝 release build，實機確認；release [v0.7](https://github.com/daviddwlee84/fm1-morse/releases/tag/v0.7)，`FM-1_41000700`，fm1-morse `52b048e`） | 開機頁：SETTINGS 加 **START PAGE**（MENU、PRACTICE、LISTEN、KEY、RHYTHM、TYPE、CHART），預設 MENU（0.6 以前直接進 PRACTICE）；存在設定的 `flags`（原本叫 `mute`）bit 2–4，紀錄格式不變。[備份格式 2](#backup)：進度後面接 12 bytes 的設定，JSON 的 `version` 2 多一個 `settings`，載入時設定一起還原；舊的格式 1 照樣能載入，給 0.6 以前的韌體時 host 和網頁自動退回格式 1。SETTINGS 只畫完整的列（第 14 列不會被頁尾切一半）。網頁：Hub 的 [Try 頁](#release)（fm1-emu 嵌入）和英文 [cheatsheet](https://daviddwlee84.github.io/fm1-morse/web/cheatsheet.html) |
 | 韌體 0.6、host 0.6.0 | 2026-11-18 | 是（17:00 前用 USB-MIDI 裝 release build `FM-1_41000600`，fm1-morse `60f76cf`，release [v0.6](https://github.com/daviddwlee84/fm1-morse/releases/tag/v0.6)） | 拔線後 `PC` 在 0.5 秒內消失（hostlink：USB 收不了 SysEx 就判定電腦離開，`firmware/common` 同步），實機確認，接著線時沒看到閃 `[實機]`；網頁：*Over Bluetooth, directly*（[Web Bluetooth](#web-bluetooth)）、USB 和藍牙都在時用 USB、*Timing* 區、自己的解碼器（字元速度、劃長、停頓幾個點、整體 WPM）、*With Vail* 和 PRESET 的說明、*Only show it*（只讀進度不存檔）、備份檔名加上時分 |
 | 韌體 0.5、host 0.5.0 | 2026-11-18 | 是（16:20 用 USB-MIDI 裝 release build `FM-1_41000500`，fm1-morse `a75c29e`，release [v0.5](https://github.com/daviddwlee84/fm1-morse/releases/tag/v0.5)） | [藍牙](#bluetooth)：fm1-base own stack 的 BLE-MIDI peripheral，和 USB 同時用；SETTINGS 加 BLUETOOTH 開關（存在紀錄裡，格式不變）；header 顯示 `BT`；SETTINGS 頁可以捲動；收訊按鍵照送出端的時間解碼；host 印出走哪條路、兩條都有時優先 USB、`--bluetooth` 打開 Mac 的藍牙 MIDI 視窗；網頁顯示走哪條路 |
 | 韌體 0.4、host 0.4.0 | 2026-11-18 | 是（05:20 用 USB-MIDI 裝 release build `FM-1_41000400`，fm1-morse `323d79b`） | 實機回饋（ROUND 14 還停在第一組）：打碼卡改用答案自己的節奏判斷（[判定](#judging)），手速跨卡延續，評級和 SHOULD／YOU 對照圖，ALMOST；SET 頁的 JUDGING 可以切回 STRICT；CHART 編輯、分級測驗、開始畫面列出擋住下一組的字，SOUND 模式下新字和答案可以按 `SEQ` 偷看點劃，弱卡在同一回合重複出現、熟字只在有空位時補，[手動修改都要按 PLAY 確認](#progress)；進度的[備份與還原](#backup)（`T_PROG_*`、host 的 `backup`／`restore`、網頁）。藍牙順延到 0.5 |
@@ -486,8 +491,9 @@ MORSE on the web 的 *Over Bluetooth, directly*（2026-11-18 加入，韌體 0.5
 | 版本 | 內容 |
 |---|---|
 | 0.5 | [藍牙](#bluetooth) peripheral：Mac、iPad、手機上的 Vail 和 MORSE on the web 走藍牙。已做好，等實機驗證和量抖動 |
-| 0.7 | 開機頁（START PAGE）、備份帶設定（格式 2）。已做好，等刷機 |
-| 0.8 | 兩台 FM-1 互打：`ble_central`，一台掃描、選另一台、連上。等有第二台 |
+| 0.7 | 開機頁（START PAGE）、備份帶設定（格式 2）。2026-11-18 刷進實機 |
+| 0.8 | `SAVE` 鍵立刻存、沒存的設定有標示。已做好，等刷機 |
+| 0.9 | 兩台 FM-1 互打：`ble_central`，一台掃描、選另一台、連上。等有第二台 |
 | 之後 | host 送日期，讓間隔複習改成天數；USB-C 直連（見[接口與連線](../hardware/io.md#two-units)） |
 
 ### Backlog { #backlog }

@@ -1,6 +1,6 @@
 # 摩斯電碼機操作速查
 
-韌體 0.7（0.3 以前沒有的操作標了「0.4」，藍牙是「0.5」，開機頁是「0.7」；0.1 和 0.2 的差別見文末）。英文版、可以印成 A4 的單頁：[MORSE cheatsheet](https://daviddwlee84.github.io/fm1-morse/web/cheatsheet.html)（Hub 卡片的 cheatsheet 連到這裡）；沒有 FM-1 也能[在瀏覽器裡試](https://daviddwlee84.github.io/fm1-morse/web/try/)。學習的步驟見[用 MORSE 學摩斯](morse-learn.md)。設計與原理見[摩斯電碼機](morse.md)。
+韌體 0.8（0.3 以前沒有的操作標了「0.4」，藍牙是「0.5」，開機頁是「0.7」，`SAVE` 是「0.8」；0.1 和 0.2 的差別見文末）。英文版、可以印成 A4 的單頁：[MORSE cheatsheet](https://daviddwlee84.github.io/fm1-morse/web/cheatsheet.html)（Hub 卡片的 cheatsheet 連到這裡）；沒有 FM-1 也能[在瀏覽器裡試](https://daviddwlee84.github.io/fm1-morse/web/try/)。學習的步驟見[用 MORSE 學摩斯](morse-learn.md)。設計與原理見[摩斯電碼機](morse.md)。
 
 ## 任何頁面
 
@@ -8,6 +8,7 @@
 |---|---|
 | `HOME` | 叫出選單；在選單裡再按一次回到上一頁。0.7 起開機先進選單（SETTINGS 的 START PAGE 可以改），這時按 `HOME` 進 PRACTICE |
 | `ALGO` 旋鈕 | 直接換頁 |
+| `SAVE` | 0.8：設定立刻存。沒按的話，最後一次改動 3 秒後才自動存，這之前關機改動就沒了。有還沒存的設定時 `SAVE` 燈亮、頁名後面有琥珀色 `*` |
 | `FX` | 聲音開／關。關掉時 `FX` 燈亮，改看琴鍵燈和畫面上的燈號 |
 | `K1` | 聽的速度：字元 5–40 WPM（預設 20） |
 | `K2` | 間隔（Farnsworth）：字和字之間拉開，5 到字元速度（預設 8） |
