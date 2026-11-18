@@ -75722,3 +75722,7069 @@ age: 6554
 Shell cwd was reset to /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1
 ```
 </details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 11:01:38Z)**_
+
+<tool-use data-tool-type="write" data-tool-name="Edit"><details>
+<summary>Tool use: **Edit**</summary>
+
+```text
+The file /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/.claude/plans/squishy-riding-flute.md has been updated successfully. (file state is current in your context — no need to Read it back)
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 11:01:41Z)**_
+
+<tool-use data-tool-type="write" data-tool-name="Edit"><details>
+<summary>Tool use: **Edit**</summary>
+
+```text
+The file /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/.claude/plans/squishy-riding-flute.md has been updated successfully. (file state is current in your context — no need to Read it back)
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 11:06:32Z)**_
+
+<tool-use data-tool-type="generic" data-tool-name="ExitPlanMode"><details>
+<summary>Tool use: **ExitPlanMode**</summary>
+
+```text
+The user doesn't want to proceed with this tool use. The tool use was rejected (eg. if it was a file edit, the new_string was NOT written to the file). To tell you how to proceed, the user said:
+是說 我們目前的App首頁是 Practice 也許我們可以改成把首頁選項加入可選的設置 然後 default是Menu 導出時也能保留此配置？
+
+Note: The user's next message may contain a correction or preference. Pay close attention — if they explain what went wrong or how they'd prefer you to work, consider saving that to memory for future sessions.
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 11:06:38Z)**_
+
+加一個「開機頁」設定是合理的。我先看 MORSE 現在開機時進哪一頁、設定存在哪裡，以及備份有沒有包含設定。
+
+_**Agent (claude-opus-5-5 2026-11-18 11:06:39Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Find settings struct, pages, and boot page in MORSE
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/firmware/morse && grep -n -E 'typedef struct|set_t|SET_ITEMS|set_valid|PG_[A-Z]+|ui\.page *=|page = PG|REC_VER|rec_t|STORE_MAP' app.c app.h | head -80`
+
+```text
+app.h:18:/* the settings and the flash cards' progress, one record (app.c rec_t), at 0xDA000: away from the 0xFC000 settings
+app.h:21:#define APP_STORE_MAP {0xDC000u, 0xDA000u}
+app.c:44:#define REC_VER 1u                       /* 0.2 kept 0.1's layout: its spare bytes became look, send, prog */
+app.c:48:typedef struct {
+app.c:65:} set_t;
+app.c:66:typedef struct {
+app.c:69:    set_t set;
+app.c:71:} rec_t;
+app.c:72:static rec_t rec;
+app.c:104:static int set_valid(const set_t *s)
+app.c:118:    rec.ver = REC_VER;
+app.c:127:enum { PG_MENU, PG_PRACTICE, PG_LISTEN, PG_KEY, PG_RHYTHM, PG_TYPE, PG_CHART, PG_SET, PG_N };
+app.c:138:typedef struct {
+app.c:180:typedef struct {
+app.c:202:    uint32_t rec_t;                      /* TYPE: REC went down at (0: up, or its hold already cleared the line) */
+app.c:615:        if (ui.page == PG_KEY) {
+app.c:624:    if (ui.page == PG_KEY) {
+app.c:630:    } else if (ui.page == PG_PRACTICE && c != ' ')
+app.c:672:                if (ui.page == PG_RHYTHM)
+app.c:685:        if (e.src == SRC_OWN && (visual() || kview() != KV_TEXT || ui.page == PG_PRACTICE))
+app.c:770:    static rec_t r;
+app.c:771:    if (plat_store_load(OBJ_MORSE, &r, sizeof r) != (int)sizeof r || r.magic != REC_MAGIC || r.ver != REC_VER
+app.c:790:    key_input = !pg.ask && (ui.page == PG_KEY || ui.page == PG_RHYTHM
+app.c:791:                            || (ui.page == PG_PRACTICE && pr.ps == PS_CARD && pr.answer_ok));
+app.c:792:    own_midi = ui.page == PG_KEY;
+app.c:793:    ptx_midi = ui.page == PG_TYPE;
+app.c:801:    if (ui.page == PG_PRACTICE && p != PG_PRACTICE)
+app.c:803:    if (ui.page == PG_LISTEN && p != PG_LISTEN)
+app.c:805:    if (ui.page == PG_TYPE && p != PG_TYPE)
+app.c:807:    if (p != PG_MENU)
+app.c:809:    ui.page = (uint8_t)(p % PG_N);
+app.c:810:    ui.sel = (uint8_t)(ui.page == PG_MENU && ui.back ? ui.back - 1u : 0u);
+app.c:851:    return ui.page == PG_PRACTICE && pr.ps == PS_CARD && c && card_key(c) && pr.answer_ok;
+app.c:1600:    if (ui.page == PG_TYPE)
+app.c:1602:    else if (ui.page == PG_PRACTICE && pr.ps == PS_CARD) {
+app.c:1610:    } else if (ui.page == PG_PRACTICE && pr.ps == PS_RESULT)
+app.c:1618:    case PG_PRACTICE:
+app.c:1628:    case PG_LISTEN:
+app.c:1634:    case PG_TYPE:
+app.c:1637:    case PG_CHART:
+app.c:1640:    case PG_RHYTHM:
+app.c:1645:    case PG_MENU:
+app.c:1657:    case PG_MENU:
+app.c:1660:    case PG_PRACTICE:
+app.c:1671:    case PG_LISTEN:
+app.c:1674:    case PG_TYPE:
+app.c:1679:    case PG_CHART:
+app.c:1682:    case PG_SET:
+app.c:1690:#define SET_ITEMS 13u
+app.c:1696:    case PG_MENU:
+app.c:1697:        ui.sel = (uint8_t)wrap(ui.sel, d, PG_N - 1u);
+app.c:1699:    case PG_PRACTICE:
+app.c:1709:    case PG_LISTEN:
+app.c:1715:    case PG_RHYTHM:
+app.c:1720:    case PG_CHART:
+app.c:1723:    case PG_SET:
+app.c:1724:        ui.sel = (uint8_t)wrap(ui.sel, d, SET_ITEMS);
+app.c:1846:static const char *const SET_NAME[SET_ITEMS] = {"PRESET", "HEAR SPEED", "SPACING", "SEND SPEED", "PITCH",    "KEYER",
+app.c:1917:        if (pg.edit && ui.page == PG_CHART) {   /* CHART's edit takes these */
+app.c:1937:        case B_HOME: set_page(ui.page == PG_MENU ? ui.back : PG_MENU); break;
+app.c:1942:            if (ui.page == PG_KEY)
+app.c:1944:            else if (ui.page == PG_TYPE)
+app.c:1946:            else if (ui.page == PG_LISTEN)
+app.c:1948:            else if (ui.page == PG_PRACTICE && !visual()) {   /* a peek at the code: a new letter, an answer */
+app.c:1962:            if (ui.page == PG_TYPE)
+app.c:1963:                ui.rec_t = plat_ms() | 1u;
+app.c:1964:            else if (ui.page == PG_CHART)   /* CHART: edit the progress */
+app.c:1969:            if (ui.page == PG_KEY && k == B_OCTDN) {
+app.c:1974:            } else if (ui.page == PG_TYPE) {   /* the next page of keys: letters, signs, phrases */
+app.c:1977:            } else if (ui.page == PG_SET)
+app.c:1983:    if (ui.rec_t && ui.page == PG_TYPE) {
+app.c:1988:            ui.rec_t = 0;
+app.c:1990:        } else if ((int32_t)(plat_ms() - ui.rec_t) >= 600) {   /* held: the whole line */
+app.c:1993:            ui.rec_t = 0;
+app.c:1999:        ui.rec_t = 0;
+app.c:2000:    if (pg.sel_t && pg.edit && ui.page == PG_CHART) {   /* SEL in the edit: hear it; held 2 s: all back to new */
+app.c:2014:        if (pg.edit && ui.page == PG_CHART)
+app.c:2017:            set_page(wrap(ui.page, e > 0 ? 1 : -1, PG_N));
+app.c:2019:    if (pg.edit && ui.page == PG_CHART) {   /* the edit's knobs: K1 the letter's level, K2 the groups open */
+app.c:2063:    if (ui.page == PG_PRACTICE && pr.ps == PS_CARD && c && ln_choose(c->type)) {
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 11:06:44Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Read settings struct, validation, boot page, and settings rendering
+
+`sed -n 40,126p app.c; grep -n -E 'set_page\(PG_|ui.page = |ui.back' app.c | head -20; sed -n 1840,1915p app.c`
+
+```text
+#endif
+
+/* ---------------------------------------------------------------- settings --- */
+#define REC_MAGIC 0x4D4F5231u            /* "MOR1"; another magic, or a record that does not make sense: defaults */
+#define REC_VER 1u                       /* 0.2 kept 0.1's layout: its spare bytes became look, send, prog */
+enum { LM_SOUND, LM_VISUAL };            /* how to learn: by sound (recommended), by sight */
+enum { KV_TEXT, KV_CODE, KV_TIMING, KV_N };   /* the KEY page's view */
+enum { TL_ALPHA, TL_PIANO, TL_KOCH, TL_N };   /* the TYPE page's letters on the keys */
+typedef struct {
+    uint8_t wpm;                         /* hearing: character speed 5..40 */
+    uint8_t eff;                         /* hearing: effective speed (Farnsworth) 5..wpm */
+    uint8_t keyer;                       /* MO_STRAIGHT, MO_IAMBIC_A, MO_IAMBIC_B */
+    uint8_t swap;                        /* paddles: 0 left half dit, 1 left half dah */
+    uint8_t mute;                        /* bit 0 the sound off (the lights keep the rhythm), bit 1 Bluetooth off
+                                          * (0.5; a 0.4 record has it 0: on) */
+    uint8_t cards;                       /* per round 10..30 */
+    uint8_t learn;                       /* LM_* */
+    uint8_t look;                        /* bits 0-1 KEY's view (KV_*), bit 2 TYPE's keys show the code, bits 3-4
+                                          * TYPE's layout (TL_*), bit 5 LISTEN hides the text, bit 6 TYPE composes
+                                          * (a line sent with PLAY) instead of sending each key, bit 7 PRACTICE
+                                          * judges keyed answers strictly (by the send speed, as 0.3 did) */
+    uint16_t pitch;                      /* Hz 300..1200 */
+    uint8_t send;                        /* sending: the keyer's speed and where the decoder starts, 5..40 (0 in
+                                          * a 0.1 record: the default) */
+    uint8_t prog;                        /* LISTEN's program (LP_*) */
+} set_t;
+typedef struct {
+    uint32_t magic;
+    uint16_t ver, size;
+    set_t set;
+    ln_state_t ln;
+} rec_t;
+static rec_t rec;
+#define SET (rec.set)
+#define SEND_DEFAULT 10u                 /* a beginner's hand: a 120 ms dit (the START preset) */
+
+static uint32_t kview(void) { return SET.look & 3u; }
+static uint32_t tlabel(void) { return SET.look >> 2 & 1u; }
+static uint32_t tlayout(void) { return SET.look >> 3 & 3u; }
+static uint32_t lhide(void) { return SET.look >> 5 & 1u; }
+static uint32_t tcompose(void) { return SET.look >> 6 & 1u; }
+static uint32_t strict(void) { return SET.look >> 7 & 1u; }
+static uint32_t muted(void) { return SET.mute & 1u; }
+static uint32_t bt_off(void) { return SET.mute >> 1 & 1u; }
+static void look_set(uint32_t shift, uint32_t mask, uint32_t v)
+{
+    SET.look = (uint8_t)((SET.look & ~(mask << shift)) | (v & mask) << shift);
+}
+
+static void set_defaults(void)          /* the START preset: Koch's characters at 20, gaps stretched to 8 (Farnsworth) */
+{
+    SET.wpm = 20;
+    SET.eff = 8;
+    SET.keyer = MO_STRAIGHT;
+    SET.swap = 0;
+    SET.mute = 0;
+    SET.cards = 20;
+    SET.learn = LM_SOUND;
+    SET.look = 0;
+    SET.pitch = 600;
+    SET.send = SEND_DEFAULT;
+    SET.prog = LP_KOCH;
+}
+
+static int set_valid(const set_t *s)
+{
+    return s->wpm >= 5u && s->wpm <= 40u && s->eff >= 5u && s->eff <= s->wpm && s->keyer < MO_NKEYER && s->swap <= 1u
+           && s->mute <= 3u && s->cards >= 10u && s->cards <= 30u && s->learn <= LM_VISUAL && s->pitch >= 300u
+           && s->pitch <= 1200u && (s->look & 3u) < KV_N && (s->look >> 3 & 3u) < TL_N
+           && s->send >= 5u && s->send <= 40u && s->prog < LP_N;
+}
+
+static uint32_t saves;                   /* records written since boot */
+static uint32_t dirty_at;                /* a setting changed at (0: saved) */
+
+static void rec_save(void)
+{
+    rec.magic = REC_MAGIC;
+    rec.ver = REC_VER;
+    rec.size = (uint16_t)sizeof rec;
+    if (plat_store_save(OBJ_MORSE, &rec, sizeof rec) == 0)
+        saves++;
+    dirty_at = 0;
+}
+
+/* ------------------------------------------------------------------- state --- */
+enum { SRC_OWN, SRC_RX, SRC_N };         /* what this FM-1 sends; what it receives (MIDI in, the host's text) */
+808:        ui.back = (uint8_t)p;
+809:    ui.page = (uint8_t)(p % PG_N);
+810:    ui.sel = (uint8_t)(ui.page == PG_MENU && ui.back ? ui.back - 1u : 0u);
+1937:        case B_HOME: set_page(ui.page == PG_MENU ? ui.back : PG_MENU); break;
+3117:    ui.page = PG_PRACTICE;               /* straight into today's practice */
+3118:    ui.back = PG_PRACTICE;
+    SET.send = PRESET[i].send;
+    set_changed();
+    app_say(PRESET[i].name, PRESET[i].what);
+}
+
+/* the settings page: SELECT moves, OCT- / OCT+ (or SEL) change */
+static const char *const SET_NAME[SET_ITEMS] = {"PRESET", "HEAR SPEED", "SPACING", "SEND SPEED", "PITCH",    "KEYER",
+                                                "PADDLES", "SOUND",     "CARDS",   "LEARN BY",   "JUDGING",
+                                                "TYPE KEYS", "BLUETOOTH"};
+static void settings_step(int32_t d)
+{
+    switch (ui.sel) {
+    case 0: preset_step(d); break;
+    case 1: speed(d); break;
+    case 2: spacing(d); break;
+    case 3: send_speed(d); break;
+    case 4: pitch(d); break;
+    case 5:
+        SET.keyer = (uint8_t)wrap(SET.keyer, d, MO_NKEYER);
+        set_changed();
+        break;
+    case 6:
+        SET.swap = (uint8_t)!SET.swap;
+        set_changed();
+        break;
+    case 7: mute_toggle(); break;
+    case 8:
+        SET.cards = (uint8_t)clamp((int32_t)SET.cards + d * 5, 10, 30);
+        set_changed();
+        break;
+    case 9:
+        SET.learn = (uint8_t)!SET.learn;
+        set_changed();
+        if (visual())
+            app_say("TIP", "SOUND FIRST IS FASTER LATER");
+        break;
+    case 10:
+        look_set(7, 1u, !strict());
+        look_changed();
+        app_say(strict() ? "STRICT" : "BY RHYTHM", strict() ? "AT THE SEND SPEED" : "ANY SPEED, 1:3");
+        break;
+    case 11:
+        look_set(3, 3u, wrap(tlayout(), d, TL_N));
+        look_changed();
+        break;
+    case 12: ble_toggle(); break;
+    default:
+        break;
+    }
+}
+
+static void input(void)
+{
+    uint32_t keys = plat_keys(), btn = plat_buttons(), k;
+    int32_t e;
+    if (pg.ask) {                        /* a question: PLAY yes, HOME no, nothing else */
+        for (k = 0; k < NB; k++)
+            if ((btn >> k & 1u) && !(ui.btn >> k & 1u)) {
+                if (k == B_PLAY)
+                    ask_yes();
+                else if (k == B_HOME)
+                    ask_no();
+            }
+        for (k = 0; k < NE; k++)
+            (void)plat_enc(k);
+        if (btn != ui.btn)
+            ui.redraw |= R_FOOT;
+        ui.keys = keys;
+        ui.btn = btn;
+        return;
+    }
+    for (k = 0; k < NKEYS; k++)
+        if ((keys >> k & 1u) && !(ui.keys >> k & 1u))
+            page_key(k);
+    for (k = 0; k < NB; k++) {
+        if (!(btn >> k & 1u) || (ui.btn >> k & 1u))
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 11:06:54Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Check record load, backup contents, and boot code
+
+`sed -n 760,790p app.c; grep -n -iE 'settings|"set"|set_t|mute' ../../host/morse/PROTOCOL.md | head -20; grep -n -E 'T_PROG' app.c | head; sed -n 3105,3125p app.c`
+
+```text
+int app_ble_save(const struct plat_ble_rec *r)
+{
+    (void)r;
+    return 0;
+}
+#endif
+
+/* APP_BLE_AT_BOOT: the device asks before app_init, so it reads the record itself, into its own copy */
+int morse_ble_off(void)
+{
+    static rec_t r;
+    if (plat_store_load(OBJ_MORSE, &r, sizeof r) != (int)sizeof r || r.magic != REC_MAGIC || r.ver != REC_VER
+        || r.size != sizeof r || r.set.mute > 3u)
+        return 0;
+    return r.set.mute >> 1 & 1;
+}
+
+static void ble_toggle(void)
+{
+    SET.mute ^= 2u;
+    set_changed();
+#if FM1B_BLE
+    plat_ble_enable(!bt_off());
+#endif
+    app_say("BLUETOOTH", bt_off() ? "OFF" : "ON");
+}
+
+/* ------------------------------------------------------------- the pages --- */
+static void inputs_for_page(void)        /* who the keys and MIDI belong to on this page */
+{
+    key_input = !pg.ask && (ui.page == PG_KEY || ui.page == PG_RHYTHM
+20:enum { T_HELLO_ACK = 0x01, T_TEXT, T_STOP, T_PROG_REQ, T_PROG_LOAD };   /* PROG: firmware 0.4 and later */
+21:enum { T_HELLO = 0x41, T_HEARTBEAT, T_CHAR, T_PROG, T_PROG_DONE };
+28:enum { PD_LOADED, PD_DECLINED, PD_BAD };   /* T_PROG_DONE's answer to a load */
+723:    case T_PROG_REQ:                     /* the progress, out (nothing changes here) */
+727:    case T_PROG_LOAD:
+1104:    hl_send(&link, T_PROG_DONE, b, 1);
+1218:    if (hl_send(&link, T_PROG, f, k) == 0 && ++prog.tx_i >= PROG_FRAMES)
+3352:            f[n++] = T_PROG_REQ;
+        set_defaults();
+        ln_init(&rec.ln);
+    }
+    mo_keyer_init(&keyer, SET.keyer, mo_dit_ms(SET.send));
+    mo_player_init(&ptx, mo_dit_ms(SET.wpm), mo_gap_ms(SET.wpm, SET.eff));
+    mo_player_init(&prx, mo_dit_ms(SET.wpm), mo_gap_ms(SET.wpm, SET.eff));
+#ifdef PLAT_HOST
+    mo_player_init(&host_hand, mo_dit_ms(SET.send), mo_dit_ms(SET.send));
+#endif
+    tone_stop();
+    timing_apply();
+    hl_init(&link, 0x4D, 0x4F, MO_VER);
+    ui.page = PG_PRACTICE;               /* straight into today's practice */
+    ui.back = PG_PRACTICE;
+    pr.ps = PS_START;
+    rhythm_hint();
+}
+
+void app_ui_init(void)
+{
+    lcd_fill(0, 0, 240, 240, C_BLACK);
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 11:07:00Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Check what the progress backup carries
+
+`sed -n 3090,3106p app.c; sed -n 1190,1220p app.c; grep -n -iE 'settings|set\b|"set"' ../../host/morse/PROTOCOL.md | head; grep -n -E 'PROG_FRAMES|prog_bytes|ln_state_t' app.c learn.h 2>/dev/null | head`
+
+```text
+    ev_w = ev_r = 0;
+    rx_t = plat_ms();
+#if FM1B_BLE
+    bx_w = bx_r = 0;
+    zero(&ble_rx, sizeof ble_rx);
+#endif
+    own_down = ptx_down = prx_down = rx_midi = rx_down = midi_down = 0;
+    key_input = own_midi = ptx_midi = 0;
+    saves = 0;
+    dirty_at = 0;
+    if (plat_store_load(OBJ_MORSE, &rec, sizeof rec) == (int)sizeof rec && rec.set.send == 0u)
+        rec.set.send = SEND_DEFAULT;     /* a 0.1 record: it had no send speed */
+    if (rec.magic != REC_MAGIC || rec.ver != REC_VER || rec.size != sizeof rec || !set_valid(&rec.set)
+        || !ln_valid(&rec.ln)) {
+        zero(&rec, sizeof rec);
+        set_defaults();
+        ln_init(&rec.ln);
+            out[k++] = in[i + j] & 0x7Fu;
+    }
+    return k;
+}
+
+static uint32_t unpack7(const uint8_t *in, uint32_t n, uint8_t *out, uint32_t max)
+{
+    uint32_t i = 0, j, k = 0;
+    while (i < n) {
+        uint8_t hi = in[i++];
+        for (j = 0; j < 7u && i < n && k < max; j++)
+            out[k++] = (uint8_t)(in[i++] | ((hi >> j) & 1u) << 7);
+    }
+    return k;
+}
+
+static void prog_pump(void)              /* the backup out, a frame each main-loop pass while the USB takes them */
+{
+    uint8_t b[PROG_N], f[2u + PROG_CHUNK + PROG_CHUNK / 7u + 1u];
+    uint32_t off, m, k;
+    if (!prog.tx_on)
+        return;
+    prog_fill(b);
+    off = prog.tx_i * PROG_CHUNK;
+    m = PROG_N - off < PROG_CHUNK ? PROG_N - off : PROG_CHUNK;
+    f[0] = prog.tx_i;
+    f[1] = (uint8_t)PROG_FRAMES;
+    k = 2u + pack7(b + off, m, f + 2);
+    if (hl_send(&link, T_PROG, f, k) == 0 && ++prog.tx_i >= PROG_FRAMES)
+        prog.tx_on = 0;
+}
+app.c:27:#define PROG_FRAMES ((PROG_N + PROG_CHUNK - 1u) / PROG_CHUNK)
+app.c:70:    ln_state_t ln;
+app.c:240:    ln_state_t draft;                    /* CHART's copy; ASK_LOAD's backup */
+app.c:246:    uint8_t buf[PROG_FRAMES * PROG_CHUNK];
+app.c:1037:static ln_state_t *chart_state(void) { return pg.edit ? &pg.draft : &rec.ln; }
+app.c:1068:    ln_state_t *s = &pg.draft;
+app.c:1216:    f[1] = (uint8_t)PROG_FRAMES;
+app.c:1218:    if (hl_send(&link, T_PROG, f, k) == 0 && ++prog.tx_i >= PROG_FRAMES)
+app.c:1226:    if (len < 3u || d[1] != PROG_FRAMES || d[0] >= PROG_FRAMES) {
+app.c:1240:    if (prog.rx_next < PROG_FRAMES)
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 11:07:04Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Read backup layout and protocol description
+
+`sed -n 18,30p app.c; grep -n -A25 'static void prog_fill' app.c | head -40; grep -n -B2 -A20 'T_PROG\b\|progress' ../../host/morse/PROTOCOL.md | sed -n 1,60p`
+
+```text
+/* ---------------------------------------------------------------- protocol --- */
+#define MO_VER 1u
+enum { T_HELLO_ACK = 0x01, T_TEXT, T_STOP, T_PROG_REQ, T_PROG_LOAD };   /* PROG: firmware 0.4 and later */
+enum { T_HELLO = 0x41, T_HEARTBEAT, T_CHAR, T_PROG, T_PROG_DONE };
+/* a progress backup on the wire: a format byte, ln_blob's bytes, a CRC-16/CCITT of both; cut into chunks of
+ * PROG_CHUNK bytes, each frame <index> <count> and the chunk with its high bits gathered (8 bytes for each 7) */
+#define PROG_FORMAT 1u
+#define PROG_N (1u + LN_BLOB_N + 2u)
+#define PROG_CHUNK 49u
+#define PROG_FRAMES ((PROG_N + PROG_CHUNK - 1u) / PROG_CHUNK)
+enum { PD_LOADED, PD_DECLINED, PD_BAD };   /* T_PROG_DONE's answer to a load */
+/* Vail's MIDI keying (vail-adapter docs/MIDI_INTEGRATION_SPEC.md): channel 1, note 0 a timed key-down */
+#define MIDI_KEY_ON (0x09u | 0x90u << 8 | 0x00u << 16 | 0x7Fu << 24)
+1170:static void prog_fill(uint8_t *b)        /* PROG_N bytes: the format, the record, the CRC */
+1171-{
+1172-    uint16_t c;
+1173-    b[0] = PROG_FORMAT;
+1174-    ln_blob(&rec.ln, b + 1);
+1175-    c = crc16(b, 1u + LN_BLOB_N);
+1176-    b[1u + LN_BLOB_N] = (uint8_t)c;
+1177-    b[2u + LN_BLOB_N] = (uint8_t)(c >> 8);
+1178-}
+1179-
+1180-static uint32_t pack7(const uint8_t *in, uint32_t n, uint8_t *out)   /* each 7 bytes: their high bits, then them */
+1181-{
+1182-    uint32_t i, j, k = 0;
+1183-    for (i = 0; i < n; i += 7u) {
+1184-        uint32_t m = n - i < 7u ? n - i : 7u;
+1185-        uint8_t hi = 0;
+1186-        for (j = 0; j < m; j++)
+1187-            hi |= (uint8_t)((in[i + j] >> 7) << j);
+1188-        out[k++] = hi;
+1189-        for (j = 0; j < m; j++)
+1190-            out[k++] = in[i + j] & 0x7Fu;
+1191-    }
+1192-    return k;
+1193-}
+1194-
+1195-static uint32_t unpack7(const uint8_t *in, uint32_t n, uint8_t *out, uint32_t max)
+40-| `41` | HELLO | `ver`, firmware major, minor, transport (0 USB, 1 BLE). Once a second until a HELLO_ACK |
+41-| `42` | HEARTBEAT | `ver`, transport. Once a second after a HELLO_ACK |
+42:| `44` | PROG | firmware 0.4+: a chunk of the progress, the answer to PROG_REQ (see Progress) |
+43-| `45` | PROG_DONE | firmware 0.4+: the answer to a PROG_LOAD: `00` loaded, `01` declined on the device, `02` refused (a chunk missing or out of turn, CRC, contents) |
+44-| `43` | CHAR | ASCII: what the device read from the key (KEY page), or what was typed (TYPE page: a letter, or from firmware 0.2 a phrase such as `<SK> `, several characters in one frame; in COMPOSE mode the whole line when it is sent). `20` (space) ends a word; `*` is a pattern that is no character |
+45-
+46-### Host → device
+47-
+48-| Type | Name | Payload |
+49-|---|---|---|
+50-| `01` | HELLO_ACK | `ver`. The answer to HELLO **and to every HEARTBEAT**: the device counts the host as gone 10 s after its last frame |
+51-| `02` | TEXT | ASCII, at most 60 characters: played as received, at the device's hearing speed. Characters without a code are skipped. From firmware 0.2, characters between `<` and `>` are run together as one prosign (`<SK>` is `...-.-`) |
+52-| `03` | STOP | stop playing the received text |
+53:| `04` | PROG_REQ | firmware 0.4+: send the progress. Nothing changes on the device |
+54:| `05` | PROG_LOAD | firmware 0.4+: a chunk of progress to load. Once all have come and check out, the device shows what it got and asks its owner (`PLAY` yes, `HOME` no), then answers PROG_DONE |
+55-
+56-CHAR is sent only while the host counts as present (it answered within 10 s).
+57-
+58-## Progress
+59-
+60:Firmware 0.4 and later; `host/morse/progress.py`, and the same code in fm1-morse `web/index.html` (MORSE on the web, which also shows CHAR and sends TEXT / STOP).
+61-
+62-The record: a format byte (`01`), then `learn.c`'s `ln_blob`, 259 bytes little-endian with no padding (round u16,
+63-streak u16, open u8, answered u32, right u32, then for each of the 41 characters in Koch order its recognise and
+64-send boxes, u8 each, then for each its two last-answered rounds, u16 each, `FFFF` never), then a CRC-16/CCITT-FALSE
+65-(poly `1021`, init `FFFF`) of the 260 bytes before it, low byte first: 262 bytes.
+66-
+67-On the wire it is cut into chunks of 49 bytes: 6 frames, each `<index> <count = 06>` and the chunk 7-bit packed (for
+68-each 7 bytes, a byte of their high bits, bit j for byte j, then the 7 bytes' low 7 bits). The device sends one frame
+69-per main-loop pass; the host sends them about 30 ms apart. A load must come in order from index 0; a gap starts it
+70-over and is answered `02`.
+71-
+72:The file (`morse backup`): JSON, `"format": "fm1-morse-progress"`, `"version": 1`, the round, streak, open,
+73-answered and right, and for each character `recognise`, `send` (0..5), `last_recognise`, `last_send` (a round or
+74-`null`). Both the host and the device refuse a record that does not make sense (open outside 5..41, a box over 5, an
+75-answer after the current round, more right than answered).
+76-
+77-## Shared vectors
+78-
+79-The same bytes are in `host/morse/protocol.py` (`VECTORS`) and in
+80-`firmware/morse/tests/basic.txt`; `host/tests/test_morse.py` checks they match.
+81-
+82-| Name | Bytes |
+83-|---|---|
+84-| hello (firmware 0.4, USB) | `F0 7D 4D 4F 01 41 01 00 04 00 F7` |
+85-| hello_ack | `F0 7D 4D 4F 01 01 01 F7` |
+86-| char_k | `F0 7D 4D 4F 01 43 4B F7` |
+87-| text_cq | `F0 7D 4D 4F 01 02 43 51 F7` |
+88-| stop | `F0 7D 4D 4F 01 03 F7` |
+89-| prog_req | `F0 7D 4D 4F 01 04 F7` |
+90:| prog_fresh_0, prog_fresh_5, prog_load_0..5 | in `progress.py` `VECTORS`: a fresh record's first and last chunk as sent, and the sample backup loaded |
+91-
+92-## Versions
+93-
+94-The protocol byte changes only for an incompatible change. A new frame type is gated on
+95-the firmware version the HELLO reports.
+96-
+97-Firmware 0.5 adds no frame: the same frames go over Bluetooth, and replies go back by the
+98-transport the host's HELLO_ACK came on. The transport byte of HELLO / HEARTBEAT says which one
+99-(the host logs it, prefers USB when it hears both, and the web page shows it).
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 11:07:26Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Read device restore validation and host/web format handling
+
+`sed -n 1222,1262p app.c; grep -n -E 'PROG_FORMAT|format' ../../host/morse/progress.py | head; grep -n -E 'PROG_FORMAT|format' web/index.html | head`
+
+```text
+static void prog_in(const uint8_t *d, uint32_t len)   /* a chunk of a backup to load */
+{
+    uint32_t i, off;
+    uint16_t c;
+    if (len < 3u || d[1] != PROG_FRAMES || d[0] >= PROG_FRAMES) {
+        prog_done(PD_BAD);
+        return;
+    }
+    if (d[0] == 0u)
+        prog.rx_next = 0;
+    if (d[0] != prog.rx_next) {          /* one missed: start again */
+        prog.rx_next = 0;
+        prog_done(PD_BAD);
+        return;
+    }
+    off = d[0] * PROG_CHUNK;
+    (void)unpack7(d + 2, len - 2u, prog.buf + off, PROG_N - off < PROG_CHUNK ? PROG_N - off : PROG_CHUNK);
+    prog.rx_next++;
+    if (prog.rx_next < PROG_FRAMES)
+        return;
+    prog.rx_next = 0;
+    c = crc16(prog.buf, 1u + LN_BLOB_N);
+    if (pg.ask && pg.ask != ASK_LOAD) {  /* another question is up: answer that first */
+        prog_done(PD_DECLINED);
+        return;
+    }
+    if (pg.edit)
+        chart_edit_off("EDIT DROPPED");
+    i = prog.buf[0] == PROG_FORMAT && prog.buf[1u + LN_BLOB_N] == (uint8_t)c
+        && prog.buf[2u + LN_BLOB_N] == (uint8_t)(c >> 8) && ln_unblob(&pg.draft, prog.buf + 1);
+    if (!i) {
+        prog_done(PD_BAD);
+        app_say("BACKUP REFUSED", "IT DOES NOT CHECK OUT");
+        return;
+    }
+    pg.ask = ASK_LOAD;
+    inputs_for_page();
+    ui.redraw |= R_ALL;
+}
+
+/* ----------------------------------------------------------------- listen --- */
+4:On the wire (PROTOCOL.md, "Progress"): a format byte, the record (firmware/morse/learn.c
+159:            raise ProgressError(f"format {w[0]}, this host knows {FORMAT}")
+168:        "format": JSON_FORMAT,
+187:    if d.get("format") != JSON_FORMAT:
+212:  return JSON.stringify({ format: "fm1-morse-progress", version: 1, firmware: firmware ? firmware.join(".") : null,
+217:  if (d.format !== "fm1-morse-progress") throw Error("not a MORSE progress file");
+475:      if (w[0] !== FORMAT) throw Error(`format ${w[0]}`);
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 11:07:33Z)**_
+
+<think><details><summary>Thought Process</summary>
+我已看完 MORSE 的設定記錄與備份格式，接下來會把開機頁加入計畫；目前備份只含學習進度，而 `set_t` 的 `mute` 欄位還有空位可放開機頁。
+
+</details></think>
+
+_**Agent (claude-opus-5-5 2026-11-18 11:08:13Z)**_
+
+<tool-use data-tool-type="write" data-tool-name="Write"><details>
+<summary>Tool use: **Write**</summary>
+
+````markdown
+# MORSE 0.7：開機頁設定、備份帶設定、Hub 的 Play in browser 與 cheatsheet
+
+## Context 背景
+
+你提了三件事：
+1. Hub 卡片要有 ▶ Play in browser（像 Rainbow）。
+2. cheatsheet 不要只連到 README。
+3. 開機不要直接進 PRACTICE。改成在 SETTINGS 選開機頁，預設 MENU，而且匯出備份時這個設定也要保留。
+
+第 3 項順便讓 Try 頁更好用：第一次在模擬器裡打開的人，會先看到選單。
+
+## A. 韌體 0.7（fm1-morse submodule）
+
+### A1. 開機頁 START PAGE
+
+現況：`app_init` 寫死 `ui.page = PG_PRACTICE; ui.back = PG_PRACTICE`（`app.c:3117`）。
+
+**存在哪裡**：`SET.mute` 的 bit 2–4（3 bit 可以放 0..7）。值就是頁面的 enum：`PG_MENU = 0`，`PG_PRACTICE`、`PG_LISTEN`、`PG_KEY`、`PG_RHYTHM`、`PG_TYPE`、`PG_CHART` 依序往下，不含 `PG_SET`。
+- 記錄的版面（`REC_VER 1`）不變，0.6 的存檔可以直接讀。
+- 舊存檔的這幾個 bit 都是 0，升級後**開機會進 MENU**，正好就是你要的預設值。
+- 欄位改名：`mute` 改成 `flags`，註解寫清楚每個 bit。新增 `start_pg()` helper，寫法跟 `muted()` / `bt_off()` 一樣。
+
+**驗證規則**：
+- `set_valid` 和 `morse_ble_off` 原本檢查 `mute <= 3`，改成：bit 5–7 必須是 0，而且開機頁的值合法。
+- **降版的注意事項**：0.6 只接受 `mute <= 3`。開機頁不是 MENU 的存檔裝回 0.6，整筆記錄會被重設，**進度也會跟著消失**。
+  - 開機頁是 MENU 時，記錄和 0.6 的完全相同，降版沒有問題。
+  - 這一點寫進 README 和 morse.md：降版前先備份，或先把開機頁改回 MENU。
+
+**設定頁**：
+- 新增第 14 項 START PAGE，`SET_ITEMS` 改成 14。
+- 選項依序是 MENU、PRACTICE、LISTEN、KEY、RHYTHM、TYPE、CHART，OCT-/OCT+ 循環切換，`set_changed()` 照常延遲存檔。
+- 選單捲動照 BLUETOOTH 那一項的做法調整。
+
+**開機**：`ui.page = ui.back = start_pg()`。
+- 開機頁是 MENU 時，`ui.back` 設成 PRACTICE。這樣按 HOME 會回到 PRACTICE，選單的游標也停在第一項。
+- `pr.ps = PS_START` 照舊。
+
+### A2. 備份格式 2：進度加上設定
+
+現況：`prog_fill` 只放 format `01`、`ln_blob`（259 B）和 CRC，總共 262 B，切成 6 個 frame（`app.c:1170`、`prog_in` 在 `:1222`）。
+
+**格式 2**：format `02`、`ln_blob`、**設定 13 B**、CRC。
+- 設定 13 B 是逐欄寫出的 little-endian，不用 `memcpy` struct，避開 padding。
+- 總共 275 B，還是 6 個 frame（6 × 49 = 294）。`PROG_FRAMES` 不變。
+
+**送出**：一律送格式 2。
+
+**接收**：
+- 先看第一個 byte。`01` 照舊只載入進度；`02` 先驗 CRC，再檢查 `set_valid`。
+- 確認畫面寫 `PROGRESS + SETTINGS`。按 PLAY 同意之後，套用設定，跟開機時一樣重新初始化：
+  - keyer、player、`timing_apply`；
+  - `plat_ble_enable`；
+  - 存檔一次。
+- 抽一個 `settings_apply()`，給 `app_init` 和載入共用。
+
+**版本**：
+- `FW_MINOR` 改成 7。
+- 協定不加新的 frame type，只多一個 format，改由 HELLO 回報的版本決定：只有 ≥ 0.7 的韌體才收得到格式 2。
+- roadmap 原本的 0.7（central）順延成 0.8。
+
+### A3. `tests/basic.txt`
+
+- 全新開機進 MENU。
+- 0.6 的存檔（`mute = 0` 或 `2`）開機也進 MENU，BT 狀態保留。
+- START PAGE 改成 KEY，`store_writes` 加 1，重開機後進 KEY。
+- 新增 `shot settings_start.png`。
+- 設成 KEY 之後 PROG_REQ 送出的備份是格式 2；寫一組新向量 `prog_v2_*`。
+- 格式 1 的舊向量 `prog_load_*` 還能載入，設定不變。
+- 格式 2 載入、按 PLAY 同意之後，設定（開機頁、WPM）跟著換，按 HOME 拒絕就不變。
+- `mute` 不合法（bit 5 是 1）的存檔回到預設值。
+- HELLO 向量改成 `…00 07 00 F7`。
+
+## B. host 與網頁
+
+**`host/morse/progress.py`**（0.7.0，`FIRMWARE_KNOWN (0,7)`）：
+- 解析格式 1 和 2。JSON 改成 `"version": 2`，多一個 `"settings"` 物件，欄位有名字：
+  - `hear_wpm`、`spacing_wpm`、`send_wpm`、`pitch_hz`；
+  - `keyer`、`paddles_swapped`、`sound`、`bluetooth`；
+  - `cards`、`learn_by`、`judging`、`type_layout`、`key_view`、`start_page`；
+  - `look` 的其他 bit 也照樣列出來。
+- 還原時看韌體版本：≥ 0.7 送格式 2；0.4–0.6，或檔案沒有 settings，就送格式 1，只還原進度，並印一行說明。
+- `version: 1` 的舊檔照樣能讀。
+- 同一份向量寫進 `VECTORS` 和 `test_morse.py`。
+
+**`web/index.html`**：
+- 同樣支援格式 1 和 2，也同樣依版本降級。
+- 「Only show it」多顯示一張設定表。
+- 頁首加兩個連結：Try in the browser、Cheatsheet。
+
+**`PROTOCOL.md`**：寫進格式 2 的位元組版面、JSON `version` 2，以及降級規則。
+
+## C. Hub：Play in browser 與 cheatsheet
+
+**已經查到的事實**：
+- Hub 卡片的按鈕來自 `fmhub.json` 的 `play`，cheatsheet 來自 `cheat`。
+- 大多數韌體的 `play` 指向 fm1-emu 網頁版。fm1-emu 讀 Hub 的 `catalog.json`，所以 `?fw=morse` 可以直接找到 MORSE，版本跟著 Hub。
+- **你遇到的 404**：我用全新的 headless Chromium 開了 5 次。
+  - 第 1 次重現了 `fw/morse-0.3.fwsc: 404`。
+  - 後面 4 次都抓到 `morse-0.5.fwsc`，開機進 PRACTICE ROUND 1，100 MHz 是 3.5 倍即時。
+  - 原因：fm1-emu 自己的清單還沒收錄 MORSE，套件網址直接取自 Hub 的目錄。拿到 0.3 時期的舊目錄快取，就會去抓已經刪掉的檔案。fm1-emu 的備援也查同一份目錄，所以救不回來。
+  - 這是暫時性的，重新整理通常就好；v0.6、v0.7 換版時可能又會短暫出現。
+  - 不用 `?package=` 釘死某個 Hub 檔案，因為換版後會永久 404；GitHub release 的檔案也沒有 CORS。
+
+**C1. `web/try/index.html`（新檔）**：
+- iframe 嵌入 `https://joakimeriksson.github.io/fm1-emu/?fw=morse&embed=1`。
+- 「先試這些」：開機後在 MENU 選 KEY 打字、LISTEN 聽，電腦鍵盤的對應連到 fm1-emu 的說明。
+- 限制：模擬器沒有藍牙，進度只存在這個瀏覽器；要接 Vail 和備份請用實機（連到 `../`）。
+- 一個「重新載入」按鈕：用 cache-busting 重新載入 iframe，處理上面的 404。另外放一個 fm1-emu 全頁的連結。
+- 色票和深色模式沿用 `web/index.html` 的 `:root`。
+
+**C2. `web/cheatsheet.html`（新檔，英文）**：
+- 從 `docs/dev/morse-cheatsheet.md`（中文，比 README 完整）翻譯：各頁按鍵、header 的 `BT` / `PC`、全部 14 個設定（含 START PAGE）、prosign 表。
+- 單頁，`@media print` 可以印成 A4。
+- README `## Controls` 加一行連到這頁；中文 cheatsheet 頂端連到英文版，並補上 START PAGE。
+
+**C3. `fmhub.json`**：
+```json
+"play":  "https://daviddwlee84.github.io/fm1-morse/web/try/",
+"cheat": "https://daviddwlee84.github.io/fm1-morse/web/cheatsheet.html"
+```
+
+**C4. skill 和文件**：
+- `fm1-hub-listing` SKILL.md 補上：
+  - `play` 的兩種做法：`fm1-emu/?fw=<hub id>`，或自己的 `/try/` 頁加 `&embed=1`；
+  - `?package=` 需要 https 加 CORS，GitHub Pages 可以，release 檔案不行；
+  - 新上架的韌體會因為目錄快取短暫 404；
+  - `cheat` 最好指向 GitHub Pages 單頁。
+- `docs/firmware/hub.md`：寫中文版，標 `[上游]`，實測結果標 `[模擬]`。
+- `docs/dev/morse.md`：
+  - 新增 0.7 版本列，大小和 RAM 用 build 出來的數字；
+  - roadmap 的 central 改成 0.8；
+  - 備份格式 2 和降版注意事項；
+  - release 一節記錄 play 和 cheat 上線。
+- 其他：`morse-cheatsheet.md`、`morse-learn.md`（開機進 MENU）、README（Firmware 0.7）、`docs/index.md`；`Justfile` 的 `morse-shots` 加 `settings_start`。
+
+## Verification 驗證
+
+1. `just morse-unit`、`just fw-test morse`、`just morse-test` 全部通過。
+2. 先 commit submodule pointer，再跑 `just fw-build morse`，記錄大小。fm1-emu 在 `uc25hq80` 和 `p25q80` 上各跑一次：開機進 MENU、改 START PAGE、存檔、重開機、讀回 `[模擬]`。
+3. 本機 `http.server` 開 try 頁和 cheatsheet，用 Playwright（快取裡的 Chromium）截圖：iframe 裡 MORSE 開機；cheatsheet 在亮色、深色和手機寬度下都正常。
+4. `python3 -m json.tool fmhub.json`；`just docs-check`。
+5. **實機**：刷 0.7 是韌體寫入，要你核准，由你輸入 `yes`。
+   - 進度要保留，開機進 MENU。
+   - 網頁備份出來是 version 2、含設定。
+   - 把 START PAGE 設成 KEY 後還原舊的 0.6 備份：進度回來，設定不變。
+   - 結果寫進 `device-log.md`。
+6. commit、push、v0.7 release 都等你說。push fm1-morse 之後，Pages 和 Hub（大約 3 小時）才會更新。
+
+````
+
+```text
+The file /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/.claude/plans/squishy-riding-flute.md has been updated successfully. (file state is current in your context — no need to Read it back)
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 11:09:11Z)**_
+
+<tool-use data-tool-type="generic" data-tool-name="ExitPlanMode"><details>
+<summary>Tool use: **ExitPlanMode**</summary>
+
+````text
+User has approved your plan. You can now start coding. Start with updating your todo list if applicable
+
+Your plan has been saved to: /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/.claude/plans/squishy-riding-flute.md
+You can refer back to it if needed during implementation.
+
+## Approved Plan:
+# MORSE 0.7：開機頁設定、備份帶設定、Hub 的 Play in browser 與 cheatsheet
+
+## Context 背景
+
+你提了三件事：
+1. Hub 卡片要有 ▶ Play in browser（像 Rainbow）。
+2. cheatsheet 不要只連到 README。
+3. 開機不要直接進 PRACTICE。改成在 SETTINGS 選開機頁，預設 MENU，而且匯出備份時這個設定也要保留。
+
+第 3 項順便讓 Try 頁更好用：第一次在模擬器裡打開的人，會先看到選單。
+
+## A. 韌體 0.7（fm1-morse submodule）
+
+### A1. 開機頁 START PAGE
+
+現況：`app_init` 寫死 `ui.page = PG_PRACTICE; ui.back = PG_PRACTICE`（`app.c:3117`）。
+
+**存在哪裡**：`SET.mute` 的 bit 2–4（3 bit 可以放 0..7）。值就是頁面的 enum：`PG_MENU = 0`，`PG_PRACTICE`、`PG_LISTEN`、`PG_KEY`、`PG_RHYTHM`、`PG_TYPE`、`PG_CHART` 依序往下，不含 `PG_SET`。
+- 記錄的版面（`REC_VER 1`）不變，0.6 的存檔可以直接讀。
+- 舊存檔的這幾個 bit 都是 0，升級後**開機會進 MENU**，正好就是你要的預設值。
+- 欄位改名：`mute` 改成 `flags`，註解寫清楚每個 bit。新增 `start_pg()` helper，寫法跟 `muted()` / `bt_off()` 一樣。
+
+**驗證規則**：
+- `set_valid` 和 `morse_ble_off` 原本檢查 `mute <= 3`，改成：bit 5–7 必須是 0，而且開機頁的值合法。
+- **降版的注意事項**：0.6 只接受 `mute <= 3`。開機頁不是 MENU 的存檔裝回 0.6，整筆記錄會被重設，**進度也會跟著消失**。
+  - 開機頁是 MENU 時，記錄和 0.6 的完全相同，降版沒有問題。
+  - 這一點寫進 README 和 morse.md：降版前先備份，或先把開機頁改回 MENU。
+
+**設定頁**：
+- 新增第 14 項 START PAGE，`SET_ITEMS` 改成 14。
+- 選項依序是 MENU、PRACTICE、LISTEN、KEY、RHYTHM、TYPE、CHART，OCT-/OCT+ 循環切換，`set_changed()` 照常延遲存檔。
+- 選單捲動照 BLUETOOTH 那一項的做法調整。
+
+**開機**：`ui.page = ui.back = start_pg()`。
+- 開機頁是 MENU 時，`ui.back` 設成 PRACTICE。這樣按 HOME 會回到 PRACTICE，選單的游標也停在第一項。
+- `pr.ps = PS_START` 照舊。
+
+### A2. 備份格式 2：進度加上設定
+
+現況：`prog_fill` 只放 format `01`、`ln_blob`（259 B）和 CRC，總共 262 B，切成 6 個 frame（`app.c:1170`、`prog_in` 在 `:1222`）。
+
+**格式 2**：format `02`、`ln_blob`、**設定 13 B**、CRC。
+- 設定 13 B 是逐欄寫出的 little-endian，不用 `memcpy` struct，避開 padding。
+- 總共 275 B，還是 6 個 frame（6 × 49 = 294）。`PROG_FRAMES` 不變。
+
+**送出**：一律送格式 2。
+
+**接收**：
+- 先看第一個 byte。`01` 照舊只載入進度；`02` 先驗 CRC，再檢查 `set_valid`。
+- 確認畫面寫 `PROGRESS + SETTINGS`。按 PLAY 同意之後，套用設定，跟開機時一樣重新初始化：
+  - keyer、player、`timing_apply`；
+  - `plat_ble_enable`；
+  - 存檔一次。
+- 抽一個 `settings_apply()`，給 `app_init` 和載入共用。
+
+**版本**：
+- `FW_MINOR` 改成 7。
+- 協定不加新的 frame type，只多一個 format，改由 HELLO 回報的版本決定：只有 ≥ 0.7 的韌體才收得到格式 2。
+- roadmap 原本的 0.7（central）順延成 0.8。
+
+### A3. `tests/basic.txt`
+
+- 全新開機進 MENU。
+- 0.6 的存檔（`mute = 0` 或 `2`）開機也進 MENU，BT 狀態保留。
+- START PAGE 改成 KEY，`store_writes` 加 1，重開機後進 KEY。
+- 新增 `shot settings_start.png`。
+- 設成 KEY 之後 PROG_REQ 送出的備份是格式 2；寫一組新向量 `prog_v2_*`。
+- 格式 1 的舊向量 `prog_load_*` 還能載入，設定不變。
+- 格式 2 載入、按 PLAY 同意之後，設定（開機頁、WPM）跟著換，按 HOME 拒絕就不變。
+- `mute` 不合法（bit 5 是 1）的存檔回到預設值。
+- HELLO 向量改成 `…00 07 00 F7`。
+
+## B. host 與網頁
+
+**`host/morse/progress.py`**（0.7.0，`FIRMWARE_KNOWN (0,7)`）：
+- 解析格式 1 和 2。JSON 改成 `"version": 2`，多一個 `"settings"` 物件，欄位有名字：
+  - `hear_wpm`、`spacing_wpm`、`send_wpm`、`pitch_hz`；
+  - `keyer`、`paddles_swapped`、`sound`、`bluetooth`；
+  - `cards`、`learn_by`、`judging`、`type_layout`、`key_view`、`start_page`；
+  - `look` 的其他 bit 也照樣列出來。
+- 還原時看韌體版本：≥ 0.7 送格式 2；0.4–0.6，或檔案沒有 settings，就送格式 1，只還原進度，並印一行說明。
+- `version: 1` 的舊檔照樣能讀。
+- 同一份向量寫進 `VECTORS` 和 `test_morse.py`。
+
+**`web/index.html`**：
+- 同樣支援格式 1 和 2，也同樣依版本降級。
+- 「Only show it」多顯示一張設定表。
+- 頁首加兩個連結：Try in the browser、Cheatsheet。
+
+**`PROTOCOL.md`**：寫進格式 2 的位元組版面、JSON `version` 2，以及降級規則。
+
+## C. Hub：Play in browser 與 cheatsheet
+
+**已經查到的事實**：
+- Hub 卡片的按鈕來自 `fmhub.json` 的 `play`，cheatsheet 來自 `cheat`。
+- 大多數韌體的 `play` 指向 fm1-emu 網頁版。fm1-emu 讀 Hub 的 `catalog.json`，所以 `?fw=morse` 可以直接找到 MORSE，版本跟著 Hub。
+- **你遇到的 404**：我用全新的 headless Chromium 開了 5 次。
+  - 第 1 次重現了 `fw/morse-0.3.fwsc: 404`。
+  - 後面 4 次都抓到 `morse-0.5.fwsc`，開機進 PRACTICE ROUND 1，100 MHz 是 3.5 倍即時。
+  - 原因：fm1-emu 自己的清單還沒收錄 MORSE，套件網址直接取自 Hub 的目錄。拿到 0.3 時期的舊目錄快取，就會去抓已經刪掉的檔案。fm1-emu 的備援也查同一份目錄，所以救不回來。
+  - 這是暫時性的，重新整理通常就好；v0.6、v0.7 換版時可能又會短暫出現。
+  - 不用 `?package=` 釘死某個 Hub 檔案，因為換版後會永久 404；GitHub release 的檔案也沒有 CORS。
+
+**C1. `web/try/index.html`（新檔）**：
+- iframe 嵌入 `https://joakimeriksson.github.io/fm1-emu/?fw=morse&embed=1`。
+- 「先試這些」：開機後在 MENU 選 KEY 打字、LISTEN 聽，電腦鍵盤的對應連到 fm1-emu 的說明。
+- 限制：模擬器沒有藍牙，進度只存在這個瀏覽器；要接 Vail 和備份請用實機（連到 `../`）。
+- 一個「重新載入」按鈕：用 cache-busting 重新載入 iframe，處理上面的 404。另外放一個 fm1-emu 全頁的連結。
+- 色票和深色模式沿用 `web/index.html` 的 `:root`。
+
+**C2. `web/cheatsheet.html`（新檔，英文）**：
+- 從 `docs/dev/morse-cheatsheet.md`（中文，比 README 完整）翻譯：各頁按鍵、header 的 `BT` / `PC`、全部 14 個設定（含 START PAGE）、prosign 表。
+- 單頁，`@media print` 可以印成 A4。
+- README `## Controls` 加一行連到這頁；中文 cheatsheet 頂端連到英文版，並補上 START PAGE。
+
+**C3. `fmhub.json`**：
+```json
+"play":  "https://daviddwlee84.github.io/fm1-morse/web/try/",
+"cheat": "https://daviddwlee84.github.io/fm1-morse/web/cheatsheet.html"
+```
+
+**C4. skill 和文件**：
+- `fm1-hub-listing` SKILL.md 補上：
+  - `play` 的兩種做法：`fm1-emu/?fw=<hub id>`，或自己的 `/try/` 頁加 `&embed=1`；
+  - `?package=` 需要 https 加 CORS，GitHub Pages 可以，release 檔案不行；
+  - 新上架的韌體會因為目錄快取短暫 404；
+  - `cheat` 最好指向 GitHub Pages 單頁。
+- `docs/firmware/hub.md`：寫中文版，標 `[上游]`，實測結果標 `[模擬]`。
+- `docs/dev/morse.md`：
+  - 新增 0.7 版本列，大小和 RAM 用 build 出來的數字；
+  - roadmap 的 central 改成 0.8；
+  - 備份格式 2 和降版注意事項；
+  - release 一節記錄 play 和 cheat 上線。
+- 其他：`morse-cheatsheet.md`、`morse-learn.md`（開機進 MENU）、README（Firmware 0.7）、`docs/index.md`；`Justfile` 的 `morse-shots` 加 `settings_start`。
+
+## Verification 驗證
+
+1. `just morse-unit`、`just fw-test morse`、`just morse-test` 全部通過。
+2. 先 commit submodule pointer，再跑 `just fw-build morse`，記錄大小。fm1-emu 在 `uc25hq80` 和 `p25q80` 上各跑一次：開機進 MENU、改 START PAGE、存檔、重開機、讀回 `[模擬]`。
+3. 本機 `http.server` 開 try 頁和 cheatsheet，用 Playwright（快取裡的 Chromium）截圖：iframe 裡 MORSE 開機；cheatsheet 在亮色、深色和手機寬度下都正常。
+4. `python3 -m json.tool fmhub.json`；`just docs-check`。
+5. **實機**：刷 0.7 是韌體寫入，要你核准，由你輸入 `yes`。
+   - 進度要保留，開機進 MENU。
+   - 網頁備份出來是 version 2、含設定。
+   - 把 START PAGE 設成 KEY 後還原舊的 0.6 備份：進度回來，設定不變。
+   - 結果寫進 `device-log.md`。
+6. commit、push、v0.7 release 都等你說。push fm1-morse 之後，Pages 和 Hub（大約 3 小時）才會更新。
+````
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 11:09:17Z)**_
+
+開始實作，先改韌體。
+
+_**Agent (claude-opus-5-5 2026-11-18 11:09:19Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Find mute usages, page names, ask-load handling
+
+`grep -n -E 'SET\.mute|\.mute|muted\(\)|PG_NAME|MENU_NAME|"PRACTICE"|top = |sel - 11|ASK_LOAD|settings_value|set_value' app.c | head -60`
+
+```text
+82:static uint32_t muted(void) { return SET.mute & 1u; }
+83:static uint32_t bt_off(void) { return SET.mute >> 1 & 1u; }
+95:    SET.mute = 0;
+235:enum { ASK_NONE, ASK_SAVE, ASK_LOAD, ASK_PLACE };
+240:    ln_state_t draft;                    /* CHART's copy; ASK_LOAD's backup */
+375:    tone_mute((int)muted());
+772:        || r.size != sizeof r || r.set.mute > 3u)
+774:    return r.set.mute >> 1 & 1;
+779:    SET.mute ^= 2u;
+911:    uint32_t flags = (muted() ? LN_MUTED : 0u) | (visual() ? LN_VISUAL : 0u);
+1117:    case ASK_LOAD:
+1145:    case ASK_LOAD:
+1244:    if (pg.ask && pg.ask != ASK_LOAD) {  /* another question is up: answer that first */
+1257:    pg.ask = ASK_LOAD;
+1807:    SET.mute ^= 1u;
+1809:    app_say("SOUND", muted() ? "OFF: WATCH THE LIGHTS" : "ON");
+2061:    if (muted())
+2118:    static const char *const PAGE[PG_N] = {"MENU", "PRACTICE", "LISTEN", "KEY", "RHYTHM", "TYPE", "CHART", "SETTINGS"};
+2142:        if (muted()) {
+2651:            text_c(120, 128 - oy, &FONT_XS, muted() ? "watch it, then a key" : "listen, then any key", C_DIM);
+2841:    int32_t top = ui.sel > 11u ? (int32_t)(ui.sel - 11u) * 14 : 0;   /* twelve rows fit: scrolled for the rest */
+2870:        case 7: text_cat(t, muted() ? "OFF (LIGHTS)" : "ON"); break;
+2887:    static const char *const NAME[PG_N - 1] = {"PRACTICE", "LISTEN", "KEY", "RHYTHM", "TYPE", "CHART", "SETTINGS"};
+2943:        text_c(120, 84 - oy, &FONT_XS, pg.ask == ASK_LOAD ? "replaces the progress here" : "the progress as edited",
+3188:        *got = (int)muted();
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 11:09:23Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Read ask handling and settings/ask rendering
+
+`sed -n 1105,1168p app.c; sed -n 2835,2960p app.c`
+
+```text
+}
+
+static void ask_yes(void)
+{
+    uint32_t n;
+    char a[24];
+    switch (pg.ask) {
+    case ASK_SAVE:
+        rec.ln = pg.draft;
+        rec_save();
+        chart_edit_off("SAVED");
+        break;
+    case ASK_LOAD:
+        if (pr.active || pr.ps != PS_START)
+            practice_leave();
+        rec.ln = pg.draft;
+        rec_save();
+        app_say("PROGRESS LOADED", "");
+        prog_done(PD_LOADED);
+        break;
+    case ASK_PLACE:
+        n = ln_place_apply(&rec.ln, &pr.r);
+        rec_save();
+        a[0] = 0;
+        int_cat(a, (int32_t)n);
+        text_cat(a, " MARKED KNOWN");
+        app_say(a, "");
+        break;
+    default:
+        break;
+    }
+    pg.ask = ASK_NONE;
+    inputs_for_page();
+    ui.redraw |= R_ALL;
+}
+
+static void ask_no(void)
+{
+    switch (pg.ask) {
+    case ASK_SAVE: chart_edit_off("NOT SAVED"); break;
+    case ASK_LOAD:
+        app_say("NOT LOADED", "");
+        prog_done(PD_DECLINED);
+        break;
+    case ASK_PLACE: app_say("NOTHING CHANGED", ""); break;
+    default: break;
+    }
+    pg.ask = ASK_NONE;
+    inputs_for_page();
+    ui.redraw |= R_ALL;
+}
+
+/* -------------------------------------------------------- progress backup --- */
+static uint16_t crc16(const uint8_t *p, uint32_t n)   /* CRC-16/CCITT-FALSE */
+{
+    uint16_t c = 0xFFFFu;
+    uint32_t k;
+    while (n--) {
+        c ^= (uint16_t)(*p++ << 8);
+        for (k = 0; k < 8u; k++)
+            c = (uint16_t)(c & 0x8000u ? (c << 1) ^ 0x1021u : c << 1);
+    }
+    return c;
+}
+static void set_at(int32_t oy)
+{
+    static const char *const KEYER[MO_NKEYER] = {"STRAIGHT", "IAMBIC A", "IAMBIC B"};
+    static const char *const LAYOUT[TL_N] = {"A-P WHITE, Q-Z BLACK", "A-Z LEFT TO RIGHT", "KOCH ORDER"};
+    char t[32];
+    uint32_t i;
+    int32_t top = ui.sel > 11u ? (int32_t)(ui.sel - 11u) * 14 : 0;   /* twelve rows fit: scrolled for the rest */
+    for (i = 0; i < SET_ITEMS; i++) {
+        int32_t y = 1 + (int32_t)i * 14 - oy - top;
+        if (i == ui.sel)
+            cv_rect(0, y - 1, 240, 14, C_LINE);
+        cv_text(8, y, &FONT_XS, SET_NAME[i], C_GRAY);
+        t[0] = 0;
+        switch (i) {
+        case 0: {
+            int p = preset_now();
+            text_cat(t, p < 0 ? "CUSTOM" : PRESET[p].name);
+            if (p == 0)
+                text_cat(t, " (TO BEGIN)");
+            break;
+        }
+        case 1:
+        case 3:
+            int_cat(t, i == 3 ? SET.send : SET.wpm);
+            text_cat(t, " WPM  DIT ");
+            int_cat(t, (int32_t)mo_dit_ms(i == 3 ? SET.send : SET.wpm));
+            text_cat(t, " MS");
+            break;
+        case 2:
+            int_cat(t, SET.eff);
+            text_cat(t, SET.eff < SET.wpm ? " WPM (FARNSWORTH)" : " WPM");
+            break;
+        case 4: int_cat(t, SET.pitch); text_cat(t, " HZ"); break;
+        case 5: text_cat(t, KEYER[SET.keyer]); break;
+        case 6: text_cat(t, SET.swap ? "LEFT DAH" : "LEFT DIT"); break;
+        case 7: text_cat(t, muted() ? "OFF (LIGHTS)" : "ON"); break;
+        case 8: int_cat(t, SET.cards); text_cat(t, " A ROUND"); break;
+        case 9: text_cat(t, visual() ? "SIGHT" : "SOUND (BEST)"); break;
+        case 10: text_cat(t, strict() ? "STRICT (SEND SPEED)" : "BY RHYTHM (EASY)"); break;
+        case 11: text_cat(t, LAYOUT[tlayout()]); break;
+        case 12:
+            text_cat(t, !FM1B_BLE ? "NOT IN THIS BUILD" : bt_off() ? "OFF" : !plat_ble_connected() ? "ON (NOT CONNECTED)"
+                        : hl_host(&link, plat_ms()) && link.transport == HL_BLE ? "ON (TALKING)" : "ON (CONNECTED)");
+            break;
+        default: break;
+        }
+        cv_text(96, y, &FONT_XS, t, i == ui.sel ? C_WHITE : C_RX);
+    }
+}
+
+static void menu_at(int32_t oy)
+{
+    static const char *const NAME[PG_N - 1] = {"PRACTICE", "LISTEN", "KEY", "RHYTHM", "TYPE", "CHART", "SETTINGS"};
+    static const char *const WHAT[PG_N - 1] = {"flash cards",    "play on and on",   "send, it reads you",
+                                               "short and long", "keys are letters", "how far you are",
+                                               "speeds, keyer, ..."};
+    uint32_t i;
+    for (i = 0; i < PG_N - 1u; i++) {
+        int32_t y = 4 + (int32_t)i * 24 - oy;
+        if (i == ui.sel)
+            cv_rect(0, y - 3, 240, 23, C_LINE);
+        cv_text(12, y, &FONT_B, NAME[i], i == ui.sel ? C_WHITE : C_GRAY);
+        cv_text(112, y + 2, &FONT_XS, WHAT[i], C_DIM);
+    }
+}
+
+#define MAIN_H 176
+static void main_area(void (*fn)(int32_t oy))
+{
+    cv_begin(240, MAIN_H / 2, C_BLACK);
+    fn(0);
+    cv_blit(0, 32);
+    cv_begin(240, MAIN_H / 2, C_BLACK);
+    fn(MAIN_H / 2);
+    cv_blit(0, 32 + MAIN_H / 2);
+}
+
+static void ask_at(int32_t oy)           /* a question about the progress */
+{
+    static const char *const Q[4] = {"", "SAVE CHANGES?", "LOAD THIS BACKUP?", "MARK THESE KNOWN?"};
+    const ln_state_t *s = pg.ask == ASK_PLACE ? &rec.ln : &pg.draft;
+    char t[48];
+    uint32_t i, k = 0;
+    cv_rect(8, 8 - oy, 224, 150, RGB(24, 24, 30));
+    text_c(120, 18 - oy, &FONT_B, Q[pg.ask], C_WHITE);
+    t[0] = 0;
+    if (pg.ask == ASK_PLACE) {
+        for (i = 0; i < LN_N && k < 12u; i++)
+            if (pr.r.known[i / 32u] >> (i % 32u) & 1u) {
+                char c2[3] = {ln_char(i), ' ', 0};
+                text_cat(t, c2);
+                k++;
+            }
+        text_c(120, 48 - oy, &FONT_B, t, C_OK);
+        text_c(120, 74 - oy, &FONT_XS, "whole groups right open", C_GRAY);
+    } else {
+        text_cat(t, "ROUND ");
+        int_cat(t, s->round);
+        text_cat(t, "  ");
+        int_cat(t, s->open);
+        text_cat(t, " OPEN");
+        text_c(120, 48 - oy, &FONT_XS, t, C_GRAY);
+        t[0] = 0;
+        int_cat(t, (int32_t)s->answered);
+        text_cat(t, " ANSWERED, ");
+        int_cat(t, (int32_t)s->right);
+        text_cat(t, " RIGHT");
+        text_c(120, 66 - oy, &FONT_XS, t, C_GRAY);
+        text_c(120, 84 - oy, &FONT_XS, pg.ask == ASK_LOAD ? "replaces the progress here" : "the progress as edited",
+               C_DIM);
+    }
+    text_c(70, 116 - oy, &FONT_B, "PLAY: YES", C_OK);
+    text_c(176, 116 - oy, &FONT_B, "HOME: NO", C_BAD);
+}
+
+static void draw_main(void)
+{
+    if (pg.ask) {
+        main_area(ask_at);
+        return;
+    }
+    switch (ui.page) {
+    case PG_KEY: key_page(); break;
+    case PG_TYPE: type_page(); break;
+    case PG_PRACTICE: main_area(practice_at); break;
+    case PG_LISTEN: main_area(listen_at); break;
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 11:09:31Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+List remaining mute references and expect keys
+
+`grep -n 'mute' app.c | grep -v -E 'muted\(\)|tone_mute|mute_toggle|LN_MUTED' ; sed -n 3150,3260p app.c | grep -n -E 'strcmp|"[a-z_]+"' | head -60`
+
+```text
+53:    uint8_t mute;                        /* bit 0 the sound off (the lights keep the rhythm), bit 1 Bluetooth off
+82:static uint32_t muted(void) { return SET.mute & 1u; }
+83:static uint32_t bt_off(void) { return SET.mute >> 1 & 1u; }
+95:    SET.mute = 0;
+107:           && s->mute <= 3u && s->cards >= 10u && s->cards <= 30u && s->learn <= LM_VISUAL && s->pitch >= 300u
+772:        || r.size != sizeof r || r.set.mute > 3u)
+774:    return r.set.mute >> 1 & 1;
+779:    SET.mute ^= 2u;
+817:static int card_sounds(const ln_card_t *c)   /* its prompt is played (or flashed, muted) */
+1807:    SET.mute ^= 1u;
+2067:        for (k = 0; k < NKEYS; k++)      /* the lamp: every key lights with the keying (the way to read it muted) */
+3017:            s = "PLAY start  SELECT round/test  FX mute";
+3187:    else if (!strcmp(what, "mute"))
+36:    if (!strcmp(what, "page"))
+38:    else if (!strcmp(what, "mute"))
+40:    else if (!strcmp(what, "ble_off"))
+42:    else if (!strcmp(what, "wpm"))
+44:    else if (!strcmp(what, "eff"))
+46:    else if (!strcmp(what, "send"))
+48:    else if (!strcmp(what, "pitch"))
+50:    else if (!strcmp(what, "keyer"))
+52:    else if (!strcmp(what, "learn"))
+54:    else if (!strcmp(what, "preset"))
+56:    else if (!strcmp(what, "kview"))
+58:    else if (!strcmp(what, "tlabel"))
+60:    else if (!strcmp(what, "tlayout"))
+62:    else if (!strcmp(what, "tcompose"))
+64:    else if (!strcmp(what, "tpage"))
+66:    else if (!strcmp(what, "line_len"))
+68:    else if (!strcmp(what, "host"))
+70:    else if (!strcmp(what, "transport"))
+72:    else if (!strcmp(what, "ps"))
+74:    else if (!strcmp(what, "card"))
+76:    else if (!strcmp(what, "cards"))
+78:    else if (!strcmp(what, "type"))
+80:    else if (!strcmp(what, "right"))
+82:    else if (!strcmp(what, "ok"))
+84:    else if (!strcmp(what, "miss"))
+86:    else if (!strcmp(what, "round"))
+88:    else if (!strcmp(what, "open"))
+90:    else if (!strcmp(what, "streak"))
+92:    else if (!strcmp(what, "answered"))
+94:    else if (!strcmp(what, "saves"))
+96:    else if (!strcmp(what, "key_input"))
+98:    else if (!strcmp(what, "tx"))
+100:    else if (!strcmp(what, "rx"))
+102:    else if (!strcmp(what, "playing"))
+104:    else if (!strcmp(what, "tim_rows"))
+106:    else if (!strcmp(what, "rh_n"))
+108:    else if (!strcmp(what, "rh_sets"))
+110:    else if (!strcmp(what, "rh_clean"))
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 11:09:33Z)**_
+
+Now the field rename and the start-page storage:
+
+_**Agent (claude-opus-5-5 2026-11-18 11:09:35Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Rename the mute settings field to flags
+
+`sed -i '' -e 's/SET\.mute/SET.flags/g' -e 's/r\.set\.mute/r.set.flags/g' -e 's/s->mute <= 3u/flags_valid(s->flags)/' app.c && grep -n -E 'flags' app.c | head -20`
+
+```text
+82:static uint32_t muted(void) { return SET.flags & 1u; }
+83:static uint32_t bt_off(void) { return SET.flags >> 1 & 1u; }
+95:    SET.flags = 0;
+107:           && flags_valid(s->flags) && s->cards >= 10u && s->cards <= 30u && s->learn <= LM_VISUAL && s->pitch >= 300u
+772:        || r.size != sizeof r || r.set.flags > 3u)
+774:    return r.set.flags >> 1 & 1;
+779:    SET.flags ^= 2u;
+911:    uint32_t flags = (muted() ? LN_MUTED : 0u) | (visual() ? LN_VISUAL : 0u);
+917:        flags |= LN_PLACE;
+919:    ln_build(&rec.ln, &pr.r, SET.cards, flags, plat_ms() * 2654435761u + rec.ln.round);
+1807:    SET.flags ^= 1u;
+[This command modified 1 file you've previously read: app.c. Call Read before editing.]
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 11:09:45Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Add start page bits, helper and validation
+
+```bash
+python3 - <<'EOF'
+import re
+p='app.c'; s=open(p).read()
+old="""    uint8_t mute;                        /* bit 0 the sound off (the lights keep the rhythm), bit 1 Bluetooth off
+                                          * (0.5; a 0.4 record has it 0: on) */"""
+assert old in s
+s=s.replace(old,"""    uint8_t flags;                       /* bit 0 the sound off (the lights keep the rhythm), bit 1 Bluetooth off
+                                          * (0.5; a 0.4 record has it 0: on), bits 2-4 the page it starts on
+                                          * (0.7: a PG_* below PG_SET; 0, MENU, in an older record), bits 5-7 0.
+                                          * Named mute before 0.7; 0.6 takes only 0..3, so a start page other than
+                                          * MENU makes 0.6 start over (progress too) */""")
+old="""static uint32_t bt_off(void) { return SET.flags >> 1 & 1u; }"""
+s=s.replace(old,old+"""
+#define START_N 7u                       /* start pages: PG_MENU .. PG_CHART (the enum below; SETTINGS is not one) */
+static uint32_t start_pg(void) { return SET.flags >> 2 & 7u; }
+static int flags_valid(uint32_t f) { return f < 0x20u && (f >> 2 & 7u) < START_N; }""")
+s=s.replace("|| r.size != sizeof r || r.set.flags > 3u)","|| r.size != sizeof r || !flags_valid(r.set.flags))")
+open(p,'w').write(s)
+EOF
+grep -n 'enum { PG_MENU' app.c
+```
+
+```text
+133:enum { PG_MENU, PG_PRACTICE, PG_LISTEN, PG_KEY, PG_RHYTHM, PG_TYPE, PG_CHART, PG_SET, PG_N };
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 11:09:56Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Add START PAGE settings item
+
+```bash
+python3 - <<'EOF'
+p='app.c'; s=open(p).read()
+a="enum { PG_MENU, PG_PRACTICE, PG_LISTEN, PG_KEY, PG_RHYTHM, PG_TYPE, PG_CHART, PG_SET, PG_N };"
+s=s.replace(a,a+"\ntypedef char start_n_is_pg_set[PG_SET == START_N ? 1 : -1];")
+s=s.replace("#define SET_ITEMS 13u","#define SET_ITEMS 14u")
+s=s.replace('''                                                "TYPE KEYS", "BLUETOOTH"};''','''                                                "TYPE KEYS", "BLUETOOTH", "START PAGE"};''')
+s=s.replace('''    case 12: ble_toggle(); break;
+    default:''','''    case 12: ble_toggle(); break;
+    case 13:
+        SET.flags = (uint8_t)((SET.flags & ~0x1Cu) | wrap(start_pg(), d, START_N) << 2);
+        set_changed();
+        break;
+    default:''')
+s=s.replace('''                        : hl_host(&link, plat_ms()) && link.transport == HL_BLE ? "ON (TALKING)" : "ON (CONNECTED)");
+            break;
+        default: break;''','''                        : hl_host(&link, plat_ms()) && link.transport == HL_BLE ? "ON (TALKING)" : "ON (CONNECTED)");
+            break;
+        case 13: text_cat(t, PAGE_NAME[start_pg()]); break;
+        default: break;''')
+open(p,'w').write(s)
+EOF
+grep -n 'static const char \*const PAGE\[PG_N\]' app.c; grep -n -B3 -A3 'wrap(uint' app.c | head; grep -n 'static.*wrap(' app.c
+```
+
+```text
+2129:    static const char *const PAGE[PG_N] = {"MENU", "PRACTICE", "LISTEN", "KEY", "RHYTHM", "TYPE", "CHART", "SETTINGS"};
+321-    int_cat(b, (int32_t)(note / 12u) - 1);
+322-}
+323-
+324:static uint32_t wrap(uint32_t v, int32_t d, uint32_t n)
+325-{
+326-    return (uint32_t)(((int32_t)v + d % (int32_t)n + (int32_t)n) % (int32_t)n);
+327-}
+324:static uint32_t wrap(uint32_t v, int32_t d, uint32_t n)
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 11:10:02Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Move page names to file scope
+
+```bash
+python3 - <<'EOF'
+p='app.c'; s=open(p).read()
+loc='    static const char *const PAGE[PG_N] = {"MENU", "PRACTICE", "LISTEN", "KEY", "RHYTHM", "TYPE", "CHART", "SETTINGS"};\n'
+assert loc in s
+s=s.replace(loc,'')
+a="typedef char start_n_is_pg_set[PG_SET == START_N ? 1 : -1];"
+s=s.replace(a,a+'\nstatic const char *const PAGE_NAME[PG_N] = {"MENU", "PRACTICE", "LISTEN", "KEY", "RHYTHM", "TYPE", "CHART", "SETTINGS"};')
+open(p,'w').write(s)
+EOF
+grep -n 'PAGE\[' app.c
+```
+
+```text
+2137:        cv_text(8, 7, &FONT_B, ui.page == PG_CHART && pg.edit ? (pg.dirty ? "EDIT *" : "EDIT") : PAGE[ui.page],
+2352:    static const char *const PAGE[3] = {"LETTERS", "DIGITS + SIGNS", "PHRASES"};
+2373:        int32_t x = cv_text(4, ly, &FONT_T, PAGE[ui.tpage], C_GRAY);
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 11:10:06Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Fix header page name and view app_init
+
+`sed -i '' '2137s/: PAGE\[ui.page\]/: PAGE_NAME[ui.page]/' app.c && sed -n 3098,3140p app.c`
+
+```text
+    zero(&rh, sizeof rh);
+    zero(txt, sizeof txt);
+    zero(dsrc, sizeof dsrc);
+    zero(&applied, sizeof applied);
+    ev_w = ev_r = 0;
+    rx_t = plat_ms();
+#if FM1B_BLE
+    bx_w = bx_r = 0;
+    zero(&ble_rx, sizeof ble_rx);
+#endif
+    own_down = ptx_down = prx_down = rx_midi = rx_down = midi_down = 0;
+    key_input = own_midi = ptx_midi = 0;
+    saves = 0;
+    dirty_at = 0;
+    if (plat_store_load(OBJ_MORSE, &rec, sizeof rec) == (int)sizeof rec && rec.set.send == 0u)
+        rec.set.send = SEND_DEFAULT;     /* a 0.1 record: it had no send speed */
+    if (rec.magic != REC_MAGIC || rec.ver != REC_VER || rec.size != sizeof rec || !set_valid(&rec.set)
+        || !ln_valid(&rec.ln)) {
+        zero(&rec, sizeof rec);
+        set_defaults();
+        ln_init(&rec.ln);
+    }
+    mo_keyer_init(&keyer, SET.keyer, mo_dit_ms(SET.send));
+    mo_player_init(&ptx, mo_dit_ms(SET.wpm), mo_gap_ms(SET.wpm, SET.eff));
+    mo_player_init(&prx, mo_dit_ms(SET.wpm), mo_gap_ms(SET.wpm, SET.eff));
+#ifdef PLAT_HOST
+    mo_player_init(&host_hand, mo_dit_ms(SET.send), mo_dit_ms(SET.send));
+#endif
+    tone_stop();
+    timing_apply();
+    hl_init(&link, 0x4D, 0x4F, MO_VER);
+    ui.page = PG_PRACTICE;               /* straight into today's practice */
+    ui.back = PG_PRACTICE;
+    pr.ps = PS_START;
+    rhythm_hint();
+}
+
+void app_ui_init(void)
+{
+    lcd_fill(0, 0, 240, 240, C_BLACK);
+    ui.redraw = R_ALL;
+}
+[This command modified 1 file you've previously read: app.c. Call Read before editing.]
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 11:10:11Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+See how runtime setting changes are applied
+
+`grep -n -A14 '^static void set_changed' app.c; grep -n -B2 -A12 '^static void preset_step' app.c | head -30; grep -n -A8 '^static void timing_apply' app.c`
+
+```text
+386:static void set_changed(void)
+387-{
+388-    timing_apply();
+389-    dirty_at = plat_ms() | 1u;
+390-    ui.redraw |= R_ALL;
+391-}
+392-
+393-static void look_changed(void)          /* a view changed: saved like a setting, nothing retimed */
+394-{
+395-    dirty_at = plat_ms() | 1u;
+396-    ui.redraw |= R_ALL;
+397-}
+398-
+399-static void play(mo_player_t *p, const char *s)   /* main loop: queue text on a player */
+400-{
+1840-}
+1841-
+1842:static void preset_step(int32_t d)
+1843-{
+1844-    int p = preset_now();
+1845-    uint32_t i = p < 0 ? (d > 0 ? 0u : NPRESET - 1u) : wrap((uint32_t)p, d, NPRESET);
+1846-    SET.wpm = PRESET[i].wpm;
+1847-    SET.eff = PRESET[i].eff;
+1848-    SET.send = PRESET[i].send;
+1849-    set_changed();
+1850-    app_say(PRESET[i].name, PRESET[i].what);
+1851-}
+1852-
+1853-/* the settings page: SELECT moves, OCT- / OCT+ (or SEL) change */
+1854-static const char *const SET_NAME[SET_ITEMS] = {"PRESET", "HEAR SPEED", "SPACING", "SEND SPEED", "PITCH",    "KEYER",
+363:static void timing_apply(void)
+364-{
+365-    uint32_t dit = mo_dit_ms(SET.wpm), gap = mo_gap_ms(SET.wpm, SET.eff), sdit = mo_dit_ms(SET.send);
+366-    uint32_t f = plat_lock();
+367-    keyer.mode = SET.keyer;
+368-    keyer.dit = sdit;
+369-    ptx.dit = prx.dit = dit;
+370-    ptx.gap = prx.gap = gap;
+371-#ifdef PLAT_HOST
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 11:10:17Z)**_
+
+開機頁設定已經放進設定頁。接著改開機邏輯和備份格式 2。
+
+_**Agent (claude-opus-5-5 2026-11-18 11:10:19Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Read set_page to see page-entry side effects
+
+`grep -n -A28 '^static void set_page' app.c; grep -n 'inputs_for_page()' app.c | head -3; grep -n -A12 '^void app_ui_init\|^int app_frame\|^void app_frame' app.c | head -30`
+
+```text
+807:static void set_page(uint32_t p)
+808-{
+809-    if (ui.page == PG_PRACTICE && p != PG_PRACTICE)
+810-        practice_leave();
+811-    if (ui.page == PG_LISTEN && p != PG_LISTEN)
+812-        listen_stop();
+813-    if (ui.page == PG_TYPE && p != PG_TYPE)
+814-        play_stop(&ptx);
+815-    if (p != PG_MENU)
+816-        ui.back = (uint8_t)p;
+817-    ui.page = (uint8_t)(p % PG_N);
+818-    ui.sel = (uint8_t)(ui.page == PG_MENU && ui.back ? ui.back - 1u : 0u);
+819-    inputs_for_page();
+820-    ui.redraw |= R_ALL;
+821-}
+822-
+823-/* -------------------------------------------------------------- practice --- */
+824-static int card_key(const ln_card_t *c) { return c->type == CARD_HEAR_KEY || c->type == CARD_SEE_KEY; }
+825-static int card_sounds(const ln_card_t *c)   /* its prompt is played (or flashed, muted) */
+826-{
+827-    return c->type == CARD_NEW || c->type == CARD_HEAR_CHOOSE || c->type == CARD_HEAR_KEY
+828-           || c->type == CARD_LIGHT_CHOOSE;
+829-}
+830-
+831-static void own_reset(void)              /* the decoder for a keyed answer, at the send speed */
+832-{
+833-    mo_dec_init(&dsrc[SRC_OWN].dec, mo_dit_ms(SET.send), mo_dit_ms(SET.send));
+834-}
+835-
+819:    inputs_for_page();
+902:        inputs_for_page();
+913:    inputs_for_page();
+3135:void app_ui_init(void)
+3136-{
+3137-    lcd_fill(0, 0, 240, 240, C_BLACK);
+3138-    ui.redraw = R_ALL;
+3139-}
+3140-
+3141:void app_frame(void)
+3142-{
+3143-    static const uint8_t HELLO[3] = {MO_VER, FW_MAJOR, FW_MINOR};
+3144-    static uint32_t last_msg;
+3145-    uint32_t now = plat_ms();
+3146-    uint8_t host, lamp, pat;
+3147-    input();
+3148-#if FM1B_BLE
+3149-    ble_in();
+3150-#endif
+3151-    read_events();
+3152-    if (ui.page == PG_PRACTICE)
+3153-        practice_step(now);
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 11:10:27Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Boot into the chosen start page
+
+```bash
+python3 - <<'EOF'
+p='app.c'; s=open(p).read()
+old='''    ui.page = PG_PRACTICE;               /* straight into today's practice */
+    ui.back = PG_PRACTICE;
+    pr.ps = PS_START;
+    rhythm_hint();'''
+assert old in s
+s=s.replace(old,'''    ui.page = (uint8_t)start_pg();       /* SETTINGS > START PAGE: MENU unless chosen (0.6 and before: PRACTICE) */
+    ui.back = (uint8_t)(ui.page == PG_MENU ? PG_PRACTICE : ui.page);
+    ui.sel = (uint8_t)(ui.page == PG_MENU ? ui.back - 1u : 0u);
+    pr.ps = PS_START;
+    rhythm_hint();
+    inputs_for_page();''')
+open(p,'w').write(s)
+EOF
+grep -n -E 'LN_BLOB_N|prog\.buf|PROG_N' app.c learn.h | head -30
+```
+
+```text
+learn.h:96:/* the record as bytes for a backup (LN_BLOB_N, little-endian, no padding) and back; ln_unblob returns 1 when it
+learn.h:98:#define LN_BLOB_N (2u + 2u + 1u + 4u + 4u + LN_N * LN_NDIR + LN_N * LN_NDIR * 2u)
+app.c:25:#define PROG_N (1u + LN_BLOB_N + 2u)
+app.c:27:#define PROG_FRAMES ((PROG_N + PROG_CHUNK - 1u) / PROG_CHUNK)
+app.c:1178:static void prog_fill(uint8_t *b)        /* PROG_N bytes: the format, the record, the CRC */
+app.c:1183:    c = crc16(b, 1u + LN_BLOB_N);
+app.c:1184:    b[1u + LN_BLOB_N] = (uint8_t)c;
+app.c:1185:    b[2u + LN_BLOB_N] = (uint8_t)(c >> 8);
+app.c:1216:    uint8_t b[PROG_N], f[2u + PROG_CHUNK + PROG_CHUNK / 7u + 1u];
+app.c:1222:    m = PROG_N - off < PROG_CHUNK ? PROG_N - off : PROG_CHUNK;
+app.c:1246:    (void)unpack7(d + 2, len - 2u, prog.buf + off, PROG_N - off < PROG_CHUNK ? PROG_N - off : PROG_CHUNK);
+app.c:1251:    c = crc16(prog.buf, 1u + LN_BLOB_N);
+app.c:1258:    i = prog.buf[0] == PROG_FORMAT && prog.buf[1u + LN_BLOB_N] == (uint8_t)c
+app.c:1259:        && prog.buf[2u + LN_BLOB_N] == (uint8_t)(c >> 8) && ln_unblob(&pg.draft, prog.buf + 1);
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 11:10:38Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+View protocol defines and pg struct
+
+`sed -n 18,30p app.c; sed -n 236,256p app.c`
+
+```text
+/* ---------------------------------------------------------------- protocol --- */
+#define MO_VER 1u
+enum { T_HELLO_ACK = 0x01, T_TEXT, T_STOP, T_PROG_REQ, T_PROG_LOAD };   /* PROG: firmware 0.4 and later */
+enum { T_HELLO = 0x41, T_HEARTBEAT, T_CHAR, T_PROG, T_PROG_DONE };
+/* a progress backup on the wire: a format byte, ln_blob's bytes, a CRC-16/CCITT of both; cut into chunks of
+ * PROG_CHUNK bytes, each frame <index> <count> and the chunk with its high bits gathered (8 bytes for each 7) */
+#define PROG_FORMAT 1u
+#define PROG_N (1u + LN_BLOB_N + 2u)
+#define PROG_CHUNK 49u
+#define PROG_FRAMES ((PROG_N + PROG_CHUNK - 1u) / PROG_CHUNK)
+enum { PD_LOADED, PD_DECLINED, PD_BAD };   /* T_PROG_DONE's answer to a load */
+/* Vail's MIDI keying (vail-adapter docs/MIDI_INTEGRATION_SPEC.md): channel 1, note 0 a timed key-down */
+#define MIDI_KEY_ON (0x09u | 0x90u << 8 | 0x00u << 16 | 0x7Fu << 24)
+    uint32_t a_up;                       /* the last mark ended at */
+    char read[4];                        /* what the decoder read meanwhile */
+    mo_judge_t j;
+} pr;
+
+/* a question on the screen that only PLAY (yes) or HOME (no) answers: changes to the progress never happen by a
+ * stray key */
+enum { ASK_NONE, ASK_SAVE, ASK_LOAD, ASK_PLACE };
+static struct {
+    uint8_t ask;
+    uint8_t edit, dirty;                 /* CHART: editing a copy, changed */
+    uint32_t sel_t;                      /* CHART edit: SEL went down at (held: reset), 0 up */
+    ln_state_t draft;                    /* CHART's copy; ASK_LOAD's backup */
+} pg;
+
+static struct {                          /* a progress backup going out, coming in */
+    uint8_t tx_on, tx_i;
+    uint8_t rx_next;                     /* the chunk expected next */
+    uint8_t buf[PROG_FRAMES * PROG_CHUNK];
+} prog;
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 11:10:59Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Implement backup format 2 with settings
+
+```bash
+python3 - <<'EOF'
+p='app.c'; s=open(p).read()
+def rep(old,new):
+    global s
+    assert old in s, old[:60]
+    s=s.replace(old,new)
+rep('''/* a progress backup on the wire: a format byte, ln_blob's bytes, a CRC-16/CCITT of both; cut into chunks of
+ * PROG_CHUNK bytes, each frame <index> <count> and the chunk with its high bits gathered (8 bytes for each 7) */
+#define PROG_FORMAT 1u
+#define PROG_N (1u + LN_BLOB_N + 2u)
+#define PROG_CHUNK 49u
+#define PROG_FRAMES ((PROG_N + PROG_CHUNK - 1u) / PROG_CHUNK)''','''/* a progress backup on the wire: a format byte, ln_blob's bytes, (format 2, firmware 0.7) the settings' PROG_SET_N
+ * bytes, a CRC-16/CCITT of all before it; cut into chunks of PROG_CHUNK bytes, each frame <index> <count> and the
+ * chunk with its high bits gathered (8 bytes for each 7). Both formats are 6 frames; 0.7 sends 2 and loads either */
+#define PROG_FORMAT 2u
+#define PROG_SET_N 12u                   /* set_blob: wpm eff keyer swap flags cards learn look pitch(u16 LE) send prog */
+#define PROG_N1 (1u + LN_BLOB_N + 2u)
+#define PROG_N (1u + LN_BLOB_N + PROG_SET_N + 2u)
+#define PROG_CHUNK 49u
+#define PROG_FRAMES ((PROG_N + PROG_CHUNK - 1u) / PROG_CHUNK)
+typedef char prog_formats_same_frames[(PROG_N1 + PROG_CHUNK - 1u) / PROG_CHUNK == PROG_FRAMES ? 1 : -1];''')
+rep('''    ln_state_t draft;                    /* CHART's copy; ASK_LOAD's backup */
+} pg;''','''    ln_state_t draft;                    /* CHART's copy; ASK_LOAD's backup */
+    uint8_t draft_has_set;               /* ASK_LOAD: the backup carries settings (format 2) */
+    set_t draft_set;
+} pg;''')
+rep('''static void prog_fill(uint8_t *b)        /* PROG_N bytes: the format, the record, the CRC */
+{
+    uint16_t c;
+    b[0] = PROG_FORMAT;
+    ln_blob(&rec.ln, b + 1);
+    c = crc16(b, 1u + LN_BLOB_N);
+    b[1u + LN_BLOB_N] = (uint8_t)c;
+    b[2u + LN_BLOB_N] = (uint8_t)(c >> 8);
+}''','''static void set_blob(const set_t *t, uint8_t *b)   /* PROG_SET_N bytes, field by field (no padding) */
+{
+    b[0] = t->wpm;
+    b[1] = t->eff;
+    b[2] = t->keyer;
+    b[3] = t->swap;
+    b[4] = t->flags;
+    b[5] = t->cards;
+    b[6] = t->learn;
+    b[7] = t->look;
+    b[8] = (uint8_t)t->pitch;
+    b[9] = (uint8_t)(t->pitch >> 8);
+    b[10] = t->send;
+    b[11] = t->prog;
+}
+
+static int set_unblob(set_t *t, const uint8_t *b)   /* 1 when the settings make sense */
+{
+    zero(t, sizeof *t);
+    t->wpm = b[0];
+    t->eff = b[1];
+    t->keyer = b[2];
+    t->swap = b[3];
+    t->flags = b[4];
+    t->cards = b[5];
+    t->learn = b[6];
+    t->look = b[7];
+    t->pitch = (uint16_t)(b[8] | b[9] << 8);
+    t->send = b[10];
+    t->prog = b[11];
+    return set_valid(t);
+}
+
+static void prog_fill(uint8_t *b)        /* PROG_N bytes: the format, the record, the settings, the CRC */
+{
+    uint16_t c;
+    b[0] = PROG_FORMAT;
+    ln_blob(&rec.ln, b + 1);
+    set_blob(&SET, b + 1u + LN_BLOB_N);
+    c = crc16(b, PROG_N - 2u);
+    b[PROG_N - 2u] = (uint8_t)c;
+    b[PROG_N - 1u] = (uint8_t)(c >> 8);
+}''')
+rep('''    c = crc16(prog.buf, 1u + LN_BLOB_N);
+    if (pg.ask''','''    n = prog.buf[0] == 1u ? PROG_N1 : PROG_N;   /* format 1 (0.4-0.6): the progress alone */
+    c = crc16(prog.buf, n - 2u);
+    if (pg.ask''')
+rep('''    i = prog.buf[0] == PROG_FORMAT && prog.buf[1u + LN_BLOB_N] == (uint8_t)c
+        && prog.buf[2u + LN_BLOB_N] == (uint8_t)(c >> 8) && ln_unblob(&pg.draft, prog.buf + 1);''','''    pg.draft_has_set = prog.buf[0] == PROG_FORMAT;
+    i = (prog.buf[0] == 1u || prog.buf[0] == PROG_FORMAT) && prog.buf[n - 2u] == (uint8_t)c
+        && prog.buf[n - 1u] == (uint8_t)(c >> 8) && ln_unblob(&pg.draft, prog.buf + 1)
+        && (!pg.draft_has_set || set_unblob(&pg.draft_set, prog.buf + 1u + LN_BLOB_N));''')
+rep('''static void prog_in(const uint8_t *d, uint32_t len)   /* a chunk of a backup to load */
+{
+    uint32_t i, off;''','''static void prog_in(const uint8_t *d, uint32_t len)   /* a chunk of a backup to load */
+{
+    uint32_t i, off, n;''')
+rep('''        rec.ln = pg.draft;
+        rec_save();
+        app_say("PROGRESS LOADED", "");''','''        rec.ln = pg.draft;
+        if (pg.draft_has_set) {          /* the settings too: retimed now, START PAGE from the next start */
+            SET = pg.draft_set;
+            timing_apply();
+#if FM1B_BLE
+            plat_ble_enable(!bt_off());
+#endif
+        }
+        rec_save();
+        app_say(pg.draft_has_set ? "LOADED" : "PROGRESS LOADED", pg.draft_has_set ? "PROGRESS + SETTINGS" : "");''')
+rep('''pg.ask == ASK_LOAD ? "replaces the progress here" : "the progress as edited",''','''pg.ask != ASK_LOAD ? "the progress as edited"
+               : pg.draft_has_set ? "replaces the progress + settings" : "replaces the progress here",''')
+open(p,'w').write(s)
+EOF
+grep -n 'set_valid\|static void zero\|^static.*zero(' app.c | head
+```
+
+```text
+114:static int set_valid(const set_t *s)
+267:static void zero(void *p, uint32_t n)
+1221:    return set_valid(t);
+3165:    if (rec.magic != REC_MAGIC || rec.ver != REC_VER || rec.size != sizeof rec || !set_valid(&rec.set)
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 11:11:08Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Bump firmware minor and run simulator tests
+
+`grep -n 'FW_MINOR' app.c | head -3 && sed -i '' 's/#define FW_MINOR 6u/#define FW_MINOR 7u/' app.c && grep -n 'define FW_MINOR' app.c && cd ../.. && just fw-test morse 2>&1 | tail -25`
+
+```text
+16:#define FW_MINOR 6u
+3196:    static const uint8_t HELLO[3] = {MO_VER, FW_MAJOR, FW_MINOR};
+16:#define FW_MINOR 7u
+  out F0 7D 4D -> BLE
+  out 4F 01 42 -> BLE
+  out 01 01 F7 -> BLE
+  out F0 7D 4D -> BLE
+  out 4F 01 42 -> BLE
+  out 01 01 F7 -> BLE
+  out F0 7D 4D -> BLE
+  out 4F 01 42 -> BLE
+  out 01 01 F7 -> BLE
+  out F0 7D 4D -> BLE
+  out 4F 01 42 -> BLE
+  out 01 01 F7 -> BLE
+  out F0 7D 4D -> BLE
+  out 4F 01 42 -> BLE
+  out 01 01 F7 -> BLE
+FAIL expect_out USB 90 00 7F: not sent
+  ok not out 90 00 7F -> BLE
+FAIL line 936: not said "BLUETOOTH ON" (since the last check: nothing
+)
+  ok ble_off == 0
+  ok host == 1
+  ok transport == 0
+  ok host == 0
+host: 251313 ms simulated, 1736 blits, render 0.0% of real time (host CPU), EXPECTATIONS FAILED
+error: recipe `fw-test` failed with exit code 1
+[This command modified 1 file you've previously read: firmware/morse/app.c. Call Read before editing.]
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 11:11:12Z)**_
+
+Compiles; now the test script needs to follow the new boot page. Let me see all failures.
+
+_**Agent (claude-opus-5-5 2026-11-18 11:11:18Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+List simulator test failures
+
+`just fw-test morse 2>&1 | grep -E '^FAIL' | head -40; just fw-test morse 2>&1 | grep -c '^FAIL'`
+
+```text
+FAIL expect page == 1, got 0
+FAIL expect_sysex: not sent (11 bytes)
+FAIL expect_sysex: not sent (65 bytes)
+FAIL expect_sysex: not sent (29 bytes)
+FAIL expect page == 0, got 1
+FAIL expect page == 3, got 1
+FAIL expect_out USB 90 00 7F: not sent
+FAIL expect_out USB 80 00 00: not sent
+FAIL expect_sysex: not sent (8 bytes)
+FAIL expect kview == 1, got 0
+FAIL expect kview == 2, got 0
+FAIL expect page == 7, got 5
+FAIL expect keyer == 2, got 0
+FAIL expect page == 3, got 1
+FAIL expect page == 7, got 5
+FAIL expect keyer == 1, got 0
+FAIL expect preset == 0, got -1
+FAIL expect wpm == 20, got 22
+FAIL expect send == 10, got 11
+FAIL line 198: not said "START" (since the last check: nothing
+FAIL expect preset == 1, got -1
+FAIL expect eff == 13, got 8
+FAIL expect send == 13, got 11
+FAIL line 204: not said "BUILDING" (since the last check: nothing
+FAIL expect preset == 0, got -1
+FAIL expect page == 4, got 2
+FAIL expect rh_sets == 1, got 0
+FAIL expect rh_clean == 1, got 0
+FAIL expect rh_hint == 7, got 0
+FAIL expect rh_sets == 1, got 0
+FAIL expect rh_hint == 1, got 0
+FAIL expect rh_sugg == 5, got 0
+FAIL expect rh_hint == 2, got 0
+FAIL expect page == 5, got 3
+FAIL expect_sysex: not sent (8 bytes)
+FAIL expect tpage == 2, got 1
+FAIL expect line_len == 6, got 0
+FAIL expect playing == 1, got 0
+FAIL expect line_len == 5, got 0
+FAIL expect tlabel == 1, got 0
+103
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 11:11:24Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+View test start and reboot points
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/firmware/morse && head -40 tests/basic.txt; grep -n -E '^(reboot|restart|power|boot|reset)' tests/basic.txt | head -30; grep -n -E 'expect page' tests/basic.txt | head -5`
+
+```text
+# Morse in the host simulator: just fw-test morse
+# The SysEx below are the shared vectors in host/morse/protocol.py (VECTORS); keep them in step.
+# Pages: 0 MENU, 1 PRACTICE, 2 LISTEN, 3 KEY, 4 RHYTHM, 5 TYPE, 6 CHART, 7 SETTINGS. The menu lists them from
+# PRACTICE (0) and opens on the page you came from.
+wait 600
+shot boot.png
+expect page 1
+expect ps 0
+expect wpm 20
+expect eff 8
+expect send 10
+expect preset 0
+expect mute 0
+expect learn 0
+expect store_writes 0
+
+# ---- the host: HELLO once a second until it answers (version 1, firmware 0.6, transport USB) ("hello")
+sysex_out
+wait 1100
+expect_sysex F0 7D 4D 4F 01 41 01 00 06 00 F7
+expect host 0
+# HELLO_ACK ("hello_ack")
+sysex F0 7D 4D 4F 01 01 01 F7
+wait 30
+expect host 1
+
+# ---- the progress out, firmware 0.4 ("prog_req"): a fresh record in six chunks ("prog_fresh_0", "prog_fresh_5",
+# host/morse/progress.py VECTORS); nothing changes on the FM-1
+sysex F0 7D 4D 4F 01 04 F7
+wait 300
+expect_sysex F0 7D 4D 4F 01 44 00 06 00 01 00 00 00 00 05 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 F7
+expect_sysex F0 7D 4D 4F 01 44 05 06 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 05 7F 51 16 F7
+expect store_writes 0
+
+# ---- the menu: HOME, SELECT to KEY, SEL
+tap HOME
+wait 30
+expect page 0
+shot menu.png
+turn SELECT 2
+499:reboot
+840:reboot
+909:reboot
+7:expect page 1
+38:expect page 0
+43:expect page 3
+145:expect page 7
+156:expect page 3
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 11:11:33Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+View reboot sections and prog vectors in the test
+
+`for l in 499 840 909; do sed -n "$((l-3)),$((l+12))p" tests/basic.txt; echo -----; done; grep -n 'prog_load\|44 0[0-5] 06\|45 0' tests/basic.txt | head -30`
+
+```text
+shot done.png
+
+# ---- it all comes back after a power cycle
+reboot
+wait 600
+expect round 1
+expect answered 7
+expect ps 0
+expect send 10
+expect preset 0
+expect tlayout 1
+
+# ---- muted, by sound: the lamp's rhythm instead of sound
+tap FX
+wait 30
+expect mute 1
+-----
+wait 50
+expect ask 0
+expect_sysex F0 7D 4D 4F 01 45 02 F7
+reboot
+wait 600
+expect open 15
+expect round 7
+
+# ---- 0.5: Bluetooth. A computer connects over it: HELLO goes out there too (its first packet F0 7D 4D, CIN 4)
+expect ble_off 0
+wait 1000
+expect store_writes 15
+out
+ble connect
+wait 1100
+expect_out BLE F0 7D 4D
+-----
+expect ble_off 1
+expect mute 0
+wait 3500
+reboot
+wait 600
+expect ble_off 1
+expect mute 0
+tap HOME
+wait 30
+turn SELECT 2
+tap SEL
+wait 30
+expect page 3
+out
+key 0 down
+wait 20
+-----
+31:expect_sysex F0 7D 4D 4F 01 44 00 06 00 01 00 00 00 00 05 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 F7
+32:expect_sysex F0 7D 4D 4F 01 44 05 06 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 05 7F 51 16 F7
+809:# ---- a backup in: six chunks ("prog_load_0" .. "prog_load_5"), loaded only after PLAY on the FM-1
+832:expect_sysex F0 7D 4D 4F 01 45 00 F7
+839:expect_sysex F0 7D 4D 4F 01 45 02 F7
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 11:11:41Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Find where boot.png and menu.png are used
+
+`grep -n -E 'boot\.png|menu\.png' README.md ../../Justfile ../../docs -r | head`
+
+```text
+README.md:123:| ![menu](docs/screens/menu.png) menu | ![start](docs/screens/boot.png) PRACTICE: start | ![new](docs/screens/card_new.png) a new letter |
+../../docs/dev/morse-learn.md:7:![PRACTICE 的開始畫面](https://raw.githubusercontent.com/daviddwlee84/fm1-morse/main/docs/screens/boot.png){ width="240" }
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 11:11:44Z)**_
+
+boot.png is captioned as PRACTICE's start, so I'll keep it showing PRACTICE.
+
+_**Agent (claude-opus-5-5 2026-11-18 11:11:50Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Adapt tests to MENU boot and add start expect
+
+```bash
+python3 - <<'EOF'
+p='tests/basic.txt'; s=open(p).read()
+def rep(old,new,count=1):
+    global s
+    assert s.count(old)>=1, old[:70]
+    s=s.replace(old,new,count)
+rep('''wait 600
+shot boot.png
+expect page 1
+expect ps 0''','''wait 600
+# 0.7: it starts on SETTINGS > START PAGE, MENU unless chosen; the menu's cursor on PRACTICE, where HOME goes
+expect page 0
+expect start 0
+tap HOME
+wait 30
+expect page 1
+shot boot.png
+expect ps 0''')
+rep('''expect learn 0
+expect store_writes 0
+''','''expect learn 0
+expect store_writes 0
+''')
+rep("version 1, firmware 0.6, transport USB","version 1, firmware 0.7, transport USB")
+rep("expect_sysex F0 7D 4D 4F 01 41 01 00 06 00 F7","expect_sysex F0 7D 4D 4F 01 41 01 00 07 00 F7")
+rep('''# ---- it all comes back after a power cycle
+reboot
+wait 600
+expect round 1''','''# ---- it all comes back after a power cycle (on the menu: START PAGE is MENU)
+reboot
+wait 600
+expect page 0
+tap HOME
+wait 30
+expect page 1
+expect round 1''')
+rep('''expect ble_off 1
+expect mute 0
+tap HOME
+wait 30
+turn SELECT 2''','''expect ble_off 1
+expect mute 0
+expect page 0
+turn SELECT 2''')
+open(p,'w').write(s)
+EOF
+grep -n '"mute"' app.c; sed -n "$(grep -n '"mute"' app.c | cut -d: -f1),+3p" app.c
+```
+
+```text
+3252:    else if (!strcmp(what, "mute"))
+    else if (!strcmp(what, "mute"))
+        *got = (int)muted();
+    else if (!strcmp(what, "ble_off"))
+        *got = (int)bt_off();
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 11:11:58Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Add start expect hook and rerun tests
+
+```bash
+python3 - <<'EOF'
+p='app.c'; s=open(p).read()
+old='''    else if (!strcmp(what, "ble_off"))
+        *got = (int)bt_off();'''
+assert old in s
+s=s.replace(old,old+'''
+    else if (!strcmp(what, "start"))
+        *got = (int)start_pg();''')
+open(p,'w').write(s)
+EOF
+cd ../.. && just fw-test morse 2>&1 | grep -E '^FAIL' | head -20
+```
+
+```text
+FAIL expect_sysex: not sent (65 bytes)
+FAIL expect_sysex: not sent (29 bytes)
+FAIL expect page == 3, got 1
+FAIL expect_out USB 90 00 7F: not sent
+FAIL expect_out BLE 90 00 7F: not sent
+FAIL expect_out BLE 80 00 00: not sent
+FAIL expect page == 7, got 5
+FAIL line 914: not said "BLUETOOTH OFF" (since the last check: START HEAR 20/8 SEND 10
+FAIL expect ble_off == 1, got 0
+FAIL expect ble_off == 1, got 0
+FAIL line 944: not said "BLUETOOTH ON" (since the last check: BLUETOOTH OFF
+FAIL expect ble_off == 0, got 1
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 11:12:03Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+View BLE section of the test
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/firmware/morse && sed -n 850,950p tests/basic.txt`
+
+```text
+wait 600
+expect open 15
+expect round 7
+
+# ---- 0.5: Bluetooth. A computer connects over it: HELLO goes out there too (its first packet F0 7D 4D, CIN 4)
+expect ble_off 0
+wait 1000
+expect store_writes 15
+out
+ble connect
+wait 1100
+expect_out BLE F0 7D 4D
+expect_out BLE 4F 01 41
+# its answer over Bluetooth: the host is there, replies go back the same way
+ble_frame hello_ack
+wait 30
+expect host 1
+expect transport 1
+# the host's text over Bluetooth, played as received
+clear_text
+ble_frame text E
+wait 1500
+expect_text rx E
+# the progress out over Bluetooth (T_PROG 44)
+out
+ble_frame prog_req
+wait 600
+expect_out BLE 4F 01 44
+expect store_writes 15
+# KEY: own keying goes out over USB and Bluetooth
+tap HOME
+wait 30
+turn SELECT 2
+tap SEL
+wait 30
+expect page 3
+out
+key 0 down
+wait 20
+expect_out USB 90 00 7F
+expect_out BLE 90 00 7F
+wait 100
+key 0 up
+wait 30
+expect_out BLE 80 00 00
+wait 800
+# keying in over Bluetooth: a T (-)
+clear_text
+midi BLE 90 00 7F
+wait 180
+midi BLE 80 00 00
+wait 2000
+expect_text rx T
+# SETTINGS > BLUETOOTH: off, kept across a power cycle; then the keying stays off Bluetooth
+tap HOME
+wait 30
+turn SELECT 4
+tap SEL
+wait 30
+expect page 7
+turn SELECT 12
+shot settings_bt.png
+tap OCT+
+wait 30
+said BLUETOOTH OFF
+expect ble_off 1
+expect mute 0
+wait 3500
+reboot
+wait 600
+expect ble_off 1
+expect mute 0
+expect page 0
+turn SELECT 2
+tap SEL
+wait 30
+expect page 3
+out
+key 0 down
+wait 20
+expect_out USB 90 00 7F
+expect_no_out BLE 90 00 7F
+wait 100
+key 0 up
+wait 800
+# and on again
+tap HOME
+wait 30
+turn SELECT 4
+tap SEL
+wait 30
+turn SELECT 12
+tap OCT+
+wait 30
+said BLUETOOTH ON
+expect ble_off 0
+
+# ---- 0.6: the cable out: a host on USB is gone at once (in the device, 0.5 s after USB shuts), not 10 s later
+ble disconnect
+wait 1100
+sysex F0 7D 4D 4F 01 01 01 F7
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 11:12:11Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Fix post-reboot page and read host progress module
+
+```bash
+python3 - <<'EOF'
+p='tests/basic.txt'; s=open(p).read()
+old='''wait 600
+expect open 15
+expect round 7
+'''
+assert s.count(old)==1
+s=s.replace(old,old+'''tap HOME
+wait 30
+expect page 1
+''')
+open(p,'w').write(s)
+EOF
+cat ../../host/morse/progress.py
+```
+
+```text
+"""A Morse firmware's learning progress (firmware 0.4 and later): the bytes on the wire, and a
+JSON file a person can read and edit.
+
+On the wire (PROTOCOL.md, "Progress"): a format byte, the record (firmware/morse/learn.c
+``ln_blob``: little-endian, no padding), a CRC-16/CCITT-FALSE of both; cut into chunks of 49
+bytes, each sent as ``<index> <count>`` and the chunk with its high bits gathered in front of
+each 7 bytes. The device takes a backup only after its owner presses PLAY on it.
+"""
+
+from __future__ import annotations
+
+import json
+from dataclasses import dataclass, field
+
+from . import protocol as P
+
+ORDER = "KMURESNAPTLWI.JZ=FOY,VG5/Q92H38B?47C1D60X"  # learn.c LN_ORDER (LCWO's Koch order)
+N = len(ORDER)
+GROUP = 5
+TOP = 5
+NEVER = 0xFFFF
+FORMAT = 1
+BLOB_N = 2 + 2 + 1 + 4 + 4 + N * 2 + N * 2 * 2
+WIRE_N = 1 + BLOB_N + 2
+CHUNK = 49
+FRAMES = (WIRE_N + CHUNK - 1) // CHUNK
+JSON_FORMAT = "fm1-morse-progress"
+
+
+class ProgressError(ValueError):
+    pass
+
+
+@dataclass
+class Progress:
+    round: int = 0
+    streak: int = 0
+    open: int = GROUP
+    answered: int = 0
+    right: int = 0
+    # per character in ORDER: [recognise, send] boxes 0..5, and the round each was last answered (None: never)
+    box: list[list[int]] = field(default_factory=lambda: [[0, 0] for _ in range(N)])
+    last: list[list[int | None]] = field(default_factory=lambda: [[None, None] for _ in range(N)])
+
+    def check(self) -> None:
+        """What the firmware's ln_valid checks, so a file it would refuse is refused here first."""
+        if not GROUP <= self.open <= N:
+            raise ProgressError(f"open must be {GROUP}..{N}, not {self.open}")
+        if self.right > self.answered:
+            raise ProgressError("right is more than answered")
+        if not (0 <= self.round <= 0xFFFF and 0 <= self.streak <= 0xFFFF):
+            raise ProgressError("round and streak are 0..65535")
+        for i, (b, l) in enumerate(zip(self.box, self.last)):
+            for d in (0, 1):
+                if not 0 <= b[d] <= TOP:
+                    raise ProgressError(f"{ORDER[i]}: box {b[d]} is not 0..{TOP}")
+                if l[d] is not None and not 0 <= l[d] <= self.round:
+                    raise ProgressError(f"{ORDER[i]}: last answered in round {l[d]}, after round {self.round}")
+
+    def level(self, i: int) -> int:
+        return (self.box[i][0] + self.box[i][1]) // 2
+
+
+def crc16(b: bytes) -> int:
+    c = 0xFFFF
+    for x in b:
+        c ^= x << 8
+        for _ in range(8):
+            c = ((c << 1) ^ 0x1021) if c & 0x8000 else c << 1
+            c &= 0xFFFF
+    return c
+
+
+def blob(p: Progress) -> bytes:
+    p.check()
+    out = bytearray()
+    out += p.round.to_bytes(2, "little") + p.streak.to_bytes(2, "little") + bytes([p.open])
+    out += p.answered.to_bytes(4, "little") + p.right.to_bytes(4, "little")
+    for b in p.box:
+        out += bytes(b)
+    for l in p.last:
+        for v in l:
+            out += (NEVER if v is None else v).to_bytes(2, "little")
+    assert len(out) == BLOB_N
+    return bytes(out)
+
+
+def unblob(b: bytes) -> Progress:
+    if len(b) != BLOB_N:
+        raise ProgressError(f"{len(b)} bytes, not {BLOB_N}")
+    g = lambda o, n: int.from_bytes(b[o:o + n], "little")  # noqa: E731
+    p = Progress(round=g(0, 2), streak=g(2, 2), open=b[4], answered=g(5, 4), right=g(9, 4))
+    o = 13
+    p.box = [[b[o + 2 * i], b[o + 2 * i + 1]] for i in range(N)]
+    o += 2 * N
+    p.last = []
+    for i in range(N):
+        pair = [g(o + 4 * i, 2), g(o + 4 * i + 2, 2)]
+        p.last.append([None if v == NEVER else v for v in pair])
+    p.check()
+    return p
+
+
+def pack7(b: bytes) -> bytes:
+    out = bytearray()
+    for i in range(0, len(b), 7):
+        part = b[i:i + 7]
+        out.append(sum(((x >> 7) & 1) << j for j, x in enumerate(part)))
+        out += bytes(x & 0x7F for x in part)
+    return bytes(out)
+
+
+def unpack7(b: bytes) -> bytes:
+    out = bytearray()
+    i = 0
+    while i < len(b):
+        hi = b[i]
+        i += 1
+        for j in range(7):
+            if i >= len(b):
+                break
+            out.append(b[i] | ((hi >> j) & 1) << 7)
+            i += 1
+    return bytes(out)
+
+
+def wire(p: Progress) -> bytes:
+    body = bytes([FORMAT]) + blob(p)
+    c = crc16(body)
+    return body + bytes([c & 0xFF, c >> 8])
+
+
+def frames(p: Progress, type_: int = P.T_PROG_LOAD) -> list[bytes]:
+    w = wire(p)
+    return [P.frame(type_, bytes([i, FRAMES]) + pack7(w[i * CHUNK:(i + 1) * CHUNK])) for i in range(FRAMES)]
+
+
+class Assembler:
+    """T_PROG frames from the device, in order, into a Progress."""
+
+    def __init__(self):
+        self.buf = bytearray()
+        self.next = 0
+
+    def feed(self, payload: bytes) -> Progress | None:
+        if len(payload) < 3 or payload[1] != FRAMES:
+            raise ProgressError("not a progress frame this host knows")
+        i = payload[0]
+        if i == 0:
+            self.buf, self.next = bytearray(), 0
+        if i != self.next:
+            raise ProgressError(f"chunk {i} came, {self.next} was due")
+        self.buf += unpack7(payload[2:])
+        self.next += 1
+        if self.next < FRAMES:
+            return None
+        w = bytes(self.buf[:WIRE_N])
+        if w[0] != FORMAT:
+            raise ProgressError(f"format {w[0]}, this host knows {FORMAT}")
+        if crc16(w[:-2]) != w[-2] | w[-1] << 8:
+            raise ProgressError("CRC mismatch")
+        return unblob(w[1:-2])
+
+
+# ---- the file
+def to_json(p: Progress, firmware: tuple[int, int] | None = None) -> str:
+    d = {
+        "format": JSON_FORMAT,
+        "version": 1,
+        "firmware": f"{firmware[0]}.{firmware[1]}" if firmware else None,
+        "round": p.round,
+        "streak": p.streak,
+        "open": p.open,
+        "answered": p.answered,
+        "right": p.right,
+        "chars": {
+            ORDER[i]: {"recognise": p.box[i][0], "send": p.box[i][1],
+                       "last_recognise": p.last[i][0], "last_send": p.last[i][1]}
+            for i in range(N)
+        },
+    }
+    return json.dumps(d, indent=1) + "\n"
+
+
+def from_json(text: str) -> Progress:
+    d = json.loads(text)
+    if d.get("format") != JSON_FORMAT:
+        raise ProgressError(f"not a {JSON_FORMAT} file")
+    if d.get("version") != 1:
+        raise ProgressError(f"file version {d.get('version')}, this host knows 1")
+    p = Progress(round=int(d["round"]), streak=int(d.get("streak", 0)), open=int(d["open"]),
+                 answered=int(d.get("answered", 0)), right=int(d.get("right", 0)))
+    chars = d.get("chars", {})
+    for c in chars:
+        if c not in ORDER:
+            raise ProgressError(f"{c!r} is not in the course")
+    for i, c in enumerate(ORDER):
+        e = chars.get(c, {})
+        p.box[i] = [int(e.get("recognise", 0)), int(e.get("send", 0))]
+        p.last[i] = [e.get("last_recognise"), e.get("last_send")]
+    p.check()
+    return p
+
+
+def summary(p: Progress) -> str:
+    learnt = sum(1 for i in range(p.open) if p.box[i][0] >= 2 and p.box[i][1] >= 1)
+    return (f"round {p.round}, {p.open} open ({ORDER[:p.open]}), {learnt} past the line, "
+            f"{p.answered} answered, {p.right} right, streak {p.streak}")
+
+
+def sample() -> Progress:
+    """The backup the tests load (firmware/morse/tests/basic.txt sends these frames)."""
+    p = Progress(round=7, streak=2, open=15, answered=100, right=90)
+    for i in range(15):
+        p.box[i] = [3, 2]
+        p.last[i] = [6, 6]
+    return p
+
+
+# shared with firmware/morse/tests/basic.txt: a fresh record's first and last chunk as the device sends them,
+# and the sample backup to load
+VECTORS = {
+    "prog_fresh_0": P.hexs(frames(Progress(), P.T_PROG)[0]),
+    "prog_fresh_5": P.hexs(frames(Progress(), P.T_PROG)[5]),
+    **{f"prog_load_{i}": P.hexs(f) for i, f in enumerate(frames(sample()))},
+}
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 11:12:22Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Find LP enum and host callers of progress
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1 && grep -n 'enum.*LP_' firmware/morse/*.c firmware/morse/*.h | head; grep -n 'MO_NKEYER\|MO_STRAIGHT' firmware/morse/morse.h | head -3; grep -n -E 'progress\.|frames\(|Assembler|from_json|to_json|FIRMWARE_KNOWN' host/morse/*.py | grep -v '^host/morse/progress.py' `
+
+```text
+firmware/morse/content.h:10:enum { LP_KOCH, LP_WORDS, LP_QSO, LP_ABBR, LP_TEXT, LP_N };
+49:enum { MO_STRAIGHT, MO_IAMBIC_A, MO_IAMBIC_B, MO_NKEYER };
+host/morse/__main__.py:146:    text = G.to_json(p, host.firmware)
+host/morse/__main__.py:158:        p = G.from_json(f.read())
+host/morse/core.py:9:from . import FIRMWARE_KNOWN
+host/morse/core.py:24:        self._asm: G.Assembler | None = None
+host/morse/core.py:42:                    newer = fw > FIRMWARE_KNOWN
+host/morse/core.py:88:        self.progress, self.prog_error, self._asm = None, None, G.Assembler()
+host/morse/core.py:102:        for f in G.frames(p):
+host/morse/device.py:118:        self._asm = G.Assembler()
+host/morse/device.py:147:            for f in G.frames(self.progress, P.T_PROG):
+host/morse/device.py:181:    from . import FIRMWARE_KNOWN
+host/morse/device.py:183:    return FIRMWARE_KNOWN
+host/morse/__init__.py:5:FIRMWARE_KNOWN = (0, 6)  # the newest firmware (major, minor) this host was written against
+host/morse/protocol.py:21:T_PROG_REQ = 0x04  # firmware 0.4 and later: send the progress (progress.py)
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 11:12:26Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Read host restore and simulator code
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/host/morse && sed -n 80,115p core.py; sed -n 110,160p device.py; sed -n 135,175p __main__.py`
+
+```text
+        for f in self.link.poll(timeout):
+            self.on_frame(f)
+
+    def can_backup(self) -> bool:
+        return self.firmware is not None and self.firmware >= P.PROG_FIRMWARE
+
+    def backup(self, timeout: float = 5.0) -> G.Progress:
+        """The FM-1's progress (nothing changes on it)."""
+        self.progress, self.prog_error, self._asm = None, None, G.Assembler()
+        self.link.send(P.prog_req())
+        end = time.time() + timeout
+        while time.time() < end and self.progress is None and self.prog_error is None:
+            self.pump(0.1)
+        if self.prog_error:
+            raise G.ProgressError(self.prog_error)
+        if self.progress is None:
+            raise TimeoutError("the FM-1 sent no progress")
+        return self.progress
+
+    def restore(self, p: G.Progress, timeout: float = 120.0, gap: float = 0.03) -> int:
+        """Send p; the FM-1 asks its owner (PLAY yes, HOME no). Returns P.PD_* (TimeoutError if no answer)."""
+        self.prog_done = None
+        for f in G.frames(p):
+            self.link.send(f)
+            self.pump(gap)
+        end = time.time() + timeout
+        while time.time() < end and self.prog_done is None:
+            self.pump(0.1)
+        if self.prog_done is None:
+            raise TimeoutError("no answer from the FM-1 (nobody pressed PLAY or HOME?)")
+        return self.prog_done
+        self.name = "simulated FM-1"
+        self.beat = beat
+        self.acked = False
+        self._last = 0.0
+        from . import progress as G
+
+        self.progress = G.Progress()      # what it has learnt
+        self.owner_says = P.PD_LOADED     # the owner's answer when a backup comes in (PLAY / HOME)
+        self._asm = G.Assembler()
+        self.q.put(P.device_hello(*_firmware()))
+        if lines is None:
+            threading.Thread(target=self._read_stdin, daemon=True).start()
+        else:
+            for line in lines:
+                self._feed(line)
+
+    def _feed(self, line: str) -> None:
+        for ch in P.clean_text(line):
+            self.q.put(P.device_char(ch))
+        self.q.put(P.device_char(" "))
+
+    def _read_stdin(self) -> None:
+        for line in sys.stdin:
+            self._feed(line)
+
+    def send(self, frame: bytes) -> None:
+        self.sent.append(frame)
+        m = P.parse(frame)
+        if m and m.type == P.T_HELLO_ACK:
+            self.acked = True
+        elif m and m.type == P.T_TEXT:
+            print(f"[FM-1 plays] {m.payload.decode('ascii')}", file=self.out, flush=True)
+        elif m and m.type == P.T_STOP:
+            print("[FM-1 stops]", file=self.out, flush=True)
+        elif m and m.type == P.T_PROG_REQ:
+            from . import progress as G
+
+            for f in G.frames(self.progress, P.T_PROG):
+                self.q.put(f)
+        elif m and m.type == P.T_PROG_LOAD:
+            from . import progress as G
+
+            try:
+                p = self._asm.feed(m.payload)
+            except G.ProgressError:
+                self.q.put(P.frame(P.T_PROG_DONE, bytes([P.PD_BAD])))
+                return
+            if p is not None:
+                if self.owner_says == P.PD_LOADED:
+                    self.progress = p
+                self.q.put(P.frame(P.T_PROG_DONE, bytes([self.owner_says])))
+        raise RuntimeError(f"firmware {fw[0]}.{fw[1]} has no progress backup; it came in "
+                           f"{P.PROG_FIRMWARE[0]}.{P.PROG_FIRMWARE[1]}")
+    return link, host
+
+
+def cmd_backup(args) -> int:
+    link, host = _connected_for_progress(args)
+    try:
+        p = host.backup()
+    finally:
+        link.close()
+    text = G.to_json(p, host.firmware)
+    if args.file == "-":
+        sys.stdout.write(text)
+    else:
+        with open(args.file, "w") as f:
+            f.write(text)
+        log(f"saved: {G.summary(p)}")
+    return 0
+
+
+def cmd_restore(args) -> int:
+    with open(args.file) as f:
+        p = G.from_json(f.read())
+    log(f"from the file: {G.summary(p)}")
+    link, host = _connected_for_progress(args)
+    try:
+        log("sent: press PLAY on the FM-1 to load it, HOME to keep what is there")
+        r = host.restore(p)
+    finally:
+        link.close()
+    if r == P.PD_LOADED:
+        log("loaded")
+        return 0
+    log("not loaded: " + ("declined on the FM-1" if r == P.PD_DECLINED else "the FM-1 refused it (damaged?)"))
+    return 1
+
+
+def main(argv: list[str] | None = None) -> int:
+    ap = argparse.ArgumentParser(prog="morse", description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    ap.add_argument("--port", help="MIDI port name (part of it); default: one named MORSE, or one saying HELLO")
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 11:12:30Z)**_
+
+韌體已經改完：開機頁和備份格式 2 都做好，simulator 也能編譯。現在改 host 的 `progress.py`，讓它讀寫格式 2，再用它產生測試向量。
+
+_**Agent (claude-opus-5-5 2026-11-18 11:13:09Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Add settings and format 2 to host progress module
+
+```bash
+python3 - <<'EOF'
+p='progress.py'; s=open(p).read()
+def rep(old,new):
+    global s
+    assert old in s, old[:60]
+    s=s.replace(old,new)
+rep('''"""A Morse firmware's learning progress (firmware 0.4 and later): the bytes on the wire, and a
+JSON file a person can read and edit.
+
+On the wire (PROTOCOL.md, "Progress"): a format byte, the record (firmware/morse/learn.c
+``ln_blob``: little-endian, no padding), a CRC-16/CCITT-FALSE of both; cut into chunks of 49
+bytes, each sent as ``<index> <count>`` and the chunk with its high bits gathered in front of
+each 7 bytes. The device takes a backup only after its owner presses PLAY on it.
+"""''','''"""A Morse firmware's learning progress (firmware 0.4 and later) and, from firmware 0.7, its
+settings: the bytes on the wire, and a JSON file a person can read and edit.
+
+On the wire (PROTOCOL.md, "Progress"): a format byte, the record (firmware/morse/learn.c
+``ln_blob``: little-endian, no padding), in format 2 (firmware 0.7) the settings' 12 bytes, a
+CRC-16/CCITT-FALSE of all before it; cut into chunks of 49 bytes, each sent as ``<index> <count>``
+and the chunk with its high bits gathered in front of each 7 bytes. Both formats are 6 chunks.
+The device takes a backup only after its owner presses PLAY on it.
+"""''')
+rep('''FORMAT = 1
+BLOB_N = 2 + 2 + 1 + 4 + 4 + N * 2 + N * 2 * 2
+WIRE_N = 1 + BLOB_N + 2
+CHUNK = 49
+FRAMES = (WIRE_N + CHUNK - 1) // CHUNK
+JSON_FORMAT = "fm1-morse-progress"''','''FORMAT = 2                 # what firmware 0.7 sends; 1 (the progress alone) is what 0.4-0.6 send and take
+SETTINGS_FIRMWARE = (0, 7)
+BLOB_N = 2 + 2 + 1 + 4 + 4 + N * 2 + N * 2 * 2
+SET_N = 12
+WIRE_N = {1: 1 + BLOB_N + 2, 2: 1 + BLOB_N + SET_N + 2}
+CHUNK = 49
+FRAMES = (WIRE_N[2] + CHUNK - 1) // CHUNK
+assert FRAMES == (WIRE_N[1] + CHUNK - 1) // CHUNK
+JSON_FORMAT = "fm1-morse-progress"
+JSON_VERSION = 2           # 2 adds "settings"; 1 (host 0.4-0.6) is read too
+
+# the settings' names in the file, and their values (firmware/morse/app.c set_t and its enums)
+KEYERS = ["straight", "iambic_a", "iambic_b"]
+PAGES = ["menu", "practice", "listen", "key", "rhythm", "type", "chart"]   # START PAGE: PG_MENU .. PG_CHART
+KEY_VIEWS = ["text", "code", "timing"]
+TYPE_LAYOUTS = ["white_black", "a_to_z", "koch"]
+LISTEN_PROGRAMS = ["koch", "words", "qso", "abbreviations", "text"]       # content.h LP_*''')
+rep('''class ProgressError(ValueError):
+    pass
+''','''class ProgressError(ValueError):
+    pass
+
+
+@dataclass
+class Settings:
+    """firmware/morse/app.c set_t, field by field (set_blob's order)."""
+    wpm: int = 20
+    eff: int = 8
+    keyer: int = 0
+    swap: int = 0
+    flags: int = 0             # bit 0 sound off, bit 1 Bluetooth off, bits 2-4 the start page
+    cards: int = 20
+    learn: int = 0
+    look: int = 0              # bits 0-1 KEY view, 2 TYPE shows code, 3-4 TYPE layout, 5 LISTEN hides text,
+    pitch: int = 600           # 6 TYPE composes, 7 strict judging
+    send: int = 10
+    prog: int = 0
+
+    def check(self) -> None:
+        """What the firmware's set_valid checks."""
+        ok = (5 <= self.wpm <= 40 and 5 <= self.eff <= self.wpm and 0 <= self.keyer < len(KEYERS)
+              and self.swap in (0, 1) and 0 <= self.flags < 0x20 and (self.flags >> 2 & 7) < len(PAGES)
+              and 10 <= self.cards <= 30 and self.learn in (0, 1) and 300 <= self.pitch <= 1200
+              and 0 <= self.look <= 0xFF and (self.look & 3) < len(KEY_VIEWS) and (self.look >> 3 & 3) < len(TYPE_LAYOUTS)
+              and 5 <= self.send <= 40 and 0 <= self.prog < len(LISTEN_PROGRAMS))
+        if not ok:
+            raise ProgressError(f"settings the firmware would refuse: {self}")
+
+    def blob(self) -> bytes:
+        self.check()
+        return bytes([self.wpm, self.eff, self.keyer, self.swap, self.flags, self.cards, self.learn, self.look,
+                      self.pitch & 0xFF, self.pitch >> 8, self.send, self.prog])
+
+    @classmethod
+    def unblob(cls, b: bytes) -> "Settings":
+        if len(b) != SET_N:
+            raise ProgressError(f"{len(b)} settings bytes, not {SET_N}")
+        s = cls(wpm=b[0], eff=b[1], keyer=b[2], swap=b[3], flags=b[4], cards=b[5], learn=b[6], look=b[7],
+                pitch=b[8] | b[9] << 8, send=b[10], prog=b[11])
+        s.check()
+        return s
+
+    def to_dict(self) -> dict:
+        bit = lambda v, n: bool(v >> n & 1)  # noqa: E731
+        return {
+            "hear_wpm": self.wpm, "spacing_wpm": self.eff, "send_wpm": self.send, "pitch_hz": self.pitch,
+            "keyer": KEYERS[self.keyer], "paddles": "left_dah" if self.swap else "left_dit",
+            "sound": not bit(self.flags, 0), "bluetooth": not bit(self.flags, 1),
+            "start_page": PAGES[self.flags >> 2 & 7], "cards": self.cards,
+            "learn_by": "sight" if self.learn else "sound", "judging": "strict" if bit(self.look, 7) else "rhythm",
+            "key_view": KEY_VIEWS[self.look & 3], "type_layout": TYPE_LAYOUTS[self.look >> 3 & 3],
+            "type_shows_code": bit(self.look, 2), "type_composes": bit(self.look, 6),
+            "listen_hides_text": bit(self.look, 5), "listen_program": LISTEN_PROGRAMS[self.prog],
+        }
+
+    @classmethod
+    def from_dict(cls, d: dict) -> "Settings":
+        dflt = cls().to_dict()
+        unknown = set(d) - set(dflt)
+        if unknown:
+            raise ProgressError(f"unknown settings: {', '.join(sorted(unknown))}")
+        v = {**dflt, **d}
+
+        def pick(name, names):
+            if v[name] not in names:
+                raise ProgressError(f"{name} must be one of {', '.join(names)}, not {v[name]!r}")
+            return names.index(v[name])
+
+        s = cls(wpm=int(v["hear_wpm"]), eff=int(v["spacing_wpm"]), send=int(v["send_wpm"]), pitch=int(v["pitch_hz"]),
+                keyer=pick("keyer", KEYERS), swap=pick("paddles", ["left_dit", "left_dah"]),
+                flags=(0 if v["sound"] else 1) | (0 if v["bluetooth"] else 2) | pick("start_page", PAGES) << 2,
+                cards=int(v["cards"]), learn=pick("learn_by", ["sound", "sight"]),
+                look=pick("key_view", KEY_VIEWS) | bool(v["type_shows_code"]) << 2 | pick("type_layout", TYPE_LAYOUTS) << 3
+                | bool(v["listen_hides_text"]) << 5 | bool(v["type_composes"]) << 6
+                | (pick("judging", ["rhythm", "strict"])) << 7,
+                prog=pick("listen_program", LISTEN_PROGRAMS))
+        s.check()
+        return s
+''')
+rep('''    last: list[list[int | None]] = field(default_factory=lambda: [[None, None] for _ in range(N)])
+''','''    last: list[list[int | None]] = field(default_factory=lambda: [[None, None] for _ in range(N)])
+    settings: Settings | None = None   # firmware 0.7 sends them; None: a backup from 0.4-0.6
+''')
+rep('''def wire(p: Progress) -> bytes:
+    body = bytes([FORMAT]) + blob(p)
+    c = crc16(body)
+    return body + bytes([c & 0xFF, c >> 8])
+
+
+def frames(p: Progress, type_: int = P.T_PROG_LOAD) -> list[bytes]:
+    w = wire(p)
+    return [P.frame(type_, bytes([i, FRAMES]) + pack7(w[i * CHUNK:(i + 1) * CHUNK])) for i in range(FRAMES)]''','''def wire(p: Progress, fmt: int | None = None) -> bytes:
+    """Format 2 when p has settings (unless fmt=1 asks for the progress alone), else 1."""
+    if fmt is None:
+        fmt = 2 if p.settings is not None else 1
+    if fmt == 2 and p.settings is None:
+        raise ProgressError("format 2 needs settings")
+    body = bytes([fmt]) + blob(p) + (p.settings.blob() if fmt == 2 else b"")
+    c = crc16(body)
+    return body + bytes([c & 0xFF, c >> 8])
+
+
+def format_for(p: Progress, firmware: tuple[int, int] | None) -> int:
+    """What to send a device: format 2 only to firmware 0.7 and later, and only with settings."""
+    return 2 if p.settings is not None and firmware is not None and firmware >= SETTINGS_FIRMWARE else 1
+
+
+def frames(p: Progress, type_: int = P.T_PROG_LOAD, fmt: int | None = None) -> list[bytes]:
+    w = wire(p, fmt)
+    return [P.frame(type_, bytes([i, FRAMES]) + pack7(w[i * CHUNK:(i + 1) * CHUNK])) for i in range(FRAMES)]''')
+rep('''        w = bytes(self.buf[:WIRE_N])
+        if w[0] != FORMAT:
+            raise ProgressError(f"format {w[0]}, this host knows {FORMAT}")
+        if crc16(w[:-2]) != w[-2] | w[-1] << 8:
+            raise ProgressError("CRC mismatch")
+        return unblob(w[1:-2])''','''        fmt = self.buf[0] if self.buf else None
+        if fmt not in WIRE_N:
+            raise ProgressError(f"format {fmt}, this host knows 1 and 2")
+        w = bytes(self.buf[:WIRE_N[fmt]])
+        if crc16(w[:-2]) != w[-2] | w[-1] << 8:
+            raise ProgressError("CRC mismatch")
+        p = unblob(w[1:1 + BLOB_N])
+        if fmt == 2:
+            p.settings = Settings.unblob(w[1 + BLOB_N:-2])
+        return p''')
+rep('''        "version": 1,
+        "firmware": f"{firmware[0]}.{firmware[1]}" if firmware else None,''','''        "version": JSON_VERSION,
+        "firmware": f"{firmware[0]}.{firmware[1]}" if firmware else None,''')
+rep('''            for i in range(N)
+        },
+    }
+    return json.dumps(d, indent=1) + "\\n"''','''            for i in range(N)
+        },
+    }
+    if p.settings is not None:
+        d["settings"] = p.settings.to_dict()
+    return json.dumps(d, indent=1) + "\\n"''')
+rep('''    if d.get("version") != 1:
+        raise ProgressError(f"file version {d.get('version')}, this host knows 1")''','''    if d.get("version") not in (1, JSON_VERSION):
+        raise ProgressError(f"file version {d.get('version')}, this host knows 1 and {JSON_VERSION}")''')
+rep('''        p.last[i] = [e.get("last_recognise"), e.get("last_send")]
+    p.check()
+    return p''','''        p.last[i] = [e.get("last_recognise"), e.get("last_send")]
+    if d.get("settings") is not None:
+        p.settings = Settings.from_dict(d["settings"])
+    p.check()
+    return p''')
+rep('''    return (f"round {p.round}, {p.open} open ({ORDER[:p.open]}), {learnt} past the line, "
+            f"{p.answered} answered, {p.right} right, streak {p.streak}")''','''    s = (f"round {p.round}, {p.open} open ({ORDER[:p.open]}), {learnt} past the line, "
+         f"{p.answered} answered, {p.right} right, streak {p.streak}")
+    if p.settings is not None:
+        t = p.settings.to_dict()
+        s += f"; settings: hear {t['hear_wpm']}/{t['spacing_wpm']}, send {t['send_wpm']}, start page {t['start_page']}"
+    return s''')
+rep('''# shared with firmware/morse/tests/basic.txt: a fresh record's first and last chunk as the device sends them,
+# and the sample backup to load
+VECTORS = {
+    "prog_fresh_0": P.hexs(frames(Progress(), P.T_PROG)[0]),
+    "prog_fresh_5": P.hexs(frames(Progress(), P.T_PROG)[5]),
+    **{f"prog_load_{i}": P.hexs(f) for i, f in enumerate(frames(sample()))},
+}''','''def sample_v2() -> Progress:
+    """The sample with settings (format 2): IAMBIC B at 25/25, send 18, starting on KEY."""
+    p = sample()
+    p.settings = Settings(wpm=25, eff=25, keyer=2, send=18, flags=3 << 2)
+    return p
+
+
+# shared with firmware/morse/tests/basic.txt: a fresh record's first and last chunk as firmware 0.7 sends them
+# (format 2, the default settings), the sample backup to load as 0.4-0.6 took it (format 1), and with settings
+VECTORS = {
+    "prog_fresh_0": P.hexs(frames(Progress(settings=Settings()), P.T_PROG)[0]),
+    "prog_fresh_5": P.hexs(frames(Progress(settings=Settings()), P.T_PROG)[5]),
+    **{f"prog_load_{i}": P.hexs(f) for i, f in enumerate(frames(sample()))},
+    **{f"prog_v2_{i}": P.hexs(f) for i, f in enumerate(frames(sample_v2()))},
+}''')
+open(p,'w').write(s)
+EOF
+cd .. && python3 -c "
+from morse import progress as G
+for k,v in G.VECTORS.items():
+  if k.startswith('prog_fresh') or k.startswith('prog_v2'): print(k, v)
+"
+```
+
+```text
+prog_fresh_0 F0 7D 4D 4F 01 44 00 06 00 02 00 00 00 00 05 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 F7
+prog_fresh_5 F0 7D 4D 4F 01 44 05 06 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 01 7F 14 08 00 00 00 14 00 00 00 58 02 0A 00 52 00 23 F7
+prog_v2_0 F0 7D 4D 4F 01 05 00 06 00 02 07 00 02 00 0F 64 00 00 00 00 5A 00 00 00 00 03 02 03 02 03 02 03 00 02 03 02 03 02 03 02 00 03 02 03 02 03 02 03 00 02 03 02 03 02 03 02 00 03 02 00 00 00 00 00 F7
+prog_v2_1 F0 7D 4D 4F 01 05 01 06 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 06 00 F7
+prog_v2_2 F0 7D 4D 4F 01 05 02 06 00 06 00 06 00 06 00 06 00 00 06 00 06 00 06 00 00 06 00 06 00 06 00 06 00 00 06 00 06 00 06 00 00 06 00 06 00 06 00 06 00 00 06 00 06 00 06 00 00 06 00 06 00 06 00 06 F7
+prog_v2_3 F0 7D 4D 4F 01 05 03 06 00 00 06 00 06 00 06 00 7C 06 00 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F F7
+prog_v2_4 F0 7D 4D 4F 01 05 04 06 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F F7
+prog_v2_5 F0 7D 4D 4F 01 05 05 06 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 7F 01 7F 19 19 02 00 0C 14 00 00 00 58 02 12 00 19 01 27 F7
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 11:13:15Z)**_
+
+Host 已經能產生格式 2 的向量。接著更新韌體測試，加上開機頁和格式 2 的測試段落。
+
+_**Agent (claude-opus-5-5 2026-11-18 11:13:28Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Update fresh vectors and add start page and format 2 tests
+
+```bash
+cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1 && python3 - <<'EOF'
+import sys; sys.path.insert(0,'host')
+from morse import progress as G
+V=G.VECTORS
+p='firmware/morse/tests/basic.txt'; s=open(p).read()
+def rep(old,new):
+    global s
+    assert old in s, old[:70]
+    s=s.replace(old,new)
+rep('''# ---- the progress out, firmware 0.4 ("prog_req"): a fresh record in six chunks ("prog_fresh_0", "prog_fresh_5",
+# host/morse/progress.py VECTORS); nothing changes on the FM-1''','''# ---- the progress out, firmware 0.4 ("prog_req"): a fresh record in six chunks ("prog_fresh_0", "prog_fresh_5",
+# host/morse/progress.py VECTORS); from 0.7 format 2, the settings after it; nothing changes on the FM-1''')
+old_lines=[l for l in s.splitlines() if l.startswith('expect_sysex F0 7D 4D 4F 01 44 00 06') or l.startswith('expect_sysex F0 7D 4D 4F 01 44 05 06')]
+assert len(old_lines)==2, old_lines
+rep(old_lines[0], 'expect_sysex '+V['prog_fresh_0'])
+rep(old_lines[1], 'expect_sysex '+V['prog_fresh_5'])
+v2='\n'.join('sysex '+V[f'prog_v2_{i}']+'\nwait 40' for i in range(6))
+rep('''said BLUETOOTH ON
+expect ble_off 0
+''','''said BLUETOOTH ON
+expect ble_off 0
+
+# ---- 0.7: SETTINGS > START PAGE (the 14th row): the page it starts on, saved like a setting
+turn SELECT 1
+wait 30
+tap OCT+
+wait 30
+tap OCT+
+wait 30
+tap OCT+
+wait 30
+expect start 3
+shot settings_start.png
+tap OCT-
+wait 30
+expect start 2
+tap OCT+
+wait 30
+wait 3500
+expect store_writes 18
+reboot
+wait 600
+expect page 3
+expect start 3
+expect ble_off 0
+# HOME from a start page that is not MENU: the menu, its cursor on that page
+tap HOME
+wait 30
+expect page 0
+tap HOME
+wait 30
+expect page 3
+
+# ---- 0.7: a backup with settings (format 2, "prog_v2_0" .. "prog_v2_5"): IAMBIC B at 25/25, send 18, START PAGE
+# KEY; HOME keeps all of it as it is
+sysex_out
+'''+v2+'''
+wait 100
+expect ask 2
+tap HOME
+wait 50
+expect ask 0
+expect_sysex F0 7D 4D 4F 01 45 01 F7
+expect wpm 22
+expect keyer 0
+# START PAGE MENU, then the same backup, PLAY: the progress and the settings
+tap HOME
+wait 30
+turn SELECT 4
+tap SEL
+wait 30
+expect page 7
+turn SELECT -1
+wait 30
+tap OCT-
+wait 30
+tap OCT-
+wait 30
+tap OCT-
+wait 30
+expect start 0
+'''+v2+'''
+wait 100
+expect ask 2
+shot load_settings.png
+tap PLAY
+wait 50
+expect ask 0
+expect_sysex F0 7D 4D 4F 01 45 00 F7
+said LOADED
+expect round 7
+expect open 15
+expect wpm 25
+expect eff 25
+expect send 18
+expect keyer 2
+expect start 3
+wait 3500
+reboot
+wait 600
+expect page 3
+expect keyer 2
+''')
+open(p,'w').write(s)
+EOF
+just fw-test morse 2>&1 | grep -E '^FAIL|EXPECTATIONS|passed' | head -20
+```
+
+```text
+FAIL expect store_writes == 18, got 17
+FAIL expect wpm == 22, got 20
+host: 262545 ms simulated, 2219 blits, render 0.0% of real time (host CPU), EXPECTATIONS FAILED
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 11:13:33Z)**_
+
+Only my guessed counts were off (17 writes, wpm 20 before the load); fixing them:
+
+_**Agent (claude-opus-5-5 2026-11-18 11:13:38Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Fix expected counts and rerun simulator test
+
+`sed -i '' -e 's/^expect store_writes 18$/expect store_writes 17/' -e '/^expect_sysex F0 7D 4D 4F 01 45 01 F7$/{n;s/^expect wpm 22$/expect wpm 20/;}' firmware/morse/tests/basic.txt && just fw-test morse 2>&1 | grep -E '^FAIL|EXPECTATIONS|host:' | head`
+
+```text
+host: 262545 ms simulated, 2219 blits, render 0.0% of real time (host CPU)
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 11:13:42Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Locate the new simulator screenshots
+
+`ls -t firmware/morse/build*/**/*.png 2>/dev/null | head; find firmware/morse -name 'settings_start.png' -o -name 'load_settings.png' | head`
+
+```text
+firmware/morse/build/host/card_hear.png
+firmware/morse/build/host/card_hear_key.png
+firmware/morse/build/host/card_new.png
+firmware/morse/build/host/card_new_peek.png
+firmware/morse/build/host/card_see_key.png
+firmware/morse/build/host/chart.png
+firmware/morse/build/host/chart_edit.png
+firmware/morse/build/host/chart_save.png
+firmware/morse/build/host/done.png
+firmware/morse/build/host/done_keyed.png
+firmware/morse/build/host/settings_start.png
+firmware/morse/build/host/load_settings.png
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 11:13:46Z)**_
+
+<tool-use data-tool-type="read" data-tool-name="Read"><details>
+<summary>Tool use: **Read**</summary>
+ `./firmware/morse/build/host/settings_start.png`
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 11:13:47Z)**_
+
+<tool-use data-tool-type="read" data-tool-name="Read"><details>
+<summary>Tool use: **Read**</summary>
+ `./firmware/morse/build/host/load_settings.png`
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 11:13:54Z)**_
+
+The settings screenshot still shows the earlier BLUETOOTH ON message in the header, so I'll take the shot after that message clears.
+
+_**Agent (claude-opus-5-5 2026-11-18 11:13:59Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Move screenshot after messages clear and rerun
+
+```bash
+python3 - <<'EOF'
+p='firmware/morse/tests/basic.txt'; s=open(p).read()
+s=s.replace('''expect start 3
+shot settings_start.png
+tap OCT-''','''expect start 3
+tap OCT-''',1)
+s=s.replace('''wait 3500
+expect store_writes 17''','''wait 3500
+shot settings_start.png
+expect store_writes 17''',1)
+s=s.replace('''expect start 0
+sysex F0''','''expect start 0
+wait 2500
+sysex F0''',1)
+open(p,'w').write(s)
+EOF
+just fw-test morse 2>&1 | grep -E '^FAIL|EXPECTATIONS|host:'
+```
+
+```text
+host: 265045 ms simulated, 2220 blits, render 0.0% of real time (host CPU)
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 11:14:02Z)**_
+
+<tool-use data-tool-type="read" data-tool-name="Read"><details>
+<summary>Tool use: **Read**</summary>
+ `./firmware/morse/build/host/settings_start.png`
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 11:14:08Z)**_
+
+韌體測試全部通過。接著改 host 的還原流程、版本號和測試。
+
+_**Agent (claude-opus-5-5 2026-11-18 11:14:09Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Find version references in host
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/host && cat morse/__init__.py; grep -n -E '0, 6|0\.6|06 00 F7|\(0,6\)' morse/*.py tests/test_morse.py | head -20; sed -n 170,190p morse/device.py`
+
+```text
+"""Morse host: the computer's side of firmware/morse. Types what the FM-1 reads into the
+computer, and sends text for the FM-1 to play. MIT."""
+
+__version__ = "0.6.0"
+FIRMWARE_KNOWN = (0, 6)  # the newest firmware (major, minor) this host was written against
+morse/__init__.py:4:__version__ = "0.6.0"
+morse/__init__.py:5:FIRMWARE_KNOWN = (0, 6)  # the newest firmware (major, minor) this host was written against
+morse/progress.py:23:FORMAT = 2                 # what firmware 0.7 sends; 1 (the progress alone) is what 0.4-0.6 send and take
+morse/progress.py:32:JSON_VERSION = 2           # 2 adds "settings"; 1 (host 0.4-0.6) is read too
+morse/progress.py:133:    settings: Settings | None = None   # firmware 0.7 sends them; None: a backup from 0.4-0.6
+morse/progress.py:340:# (format 2, the default settings), the sample backup to load as 0.4-0.6 took it (format 1), and with settings
+tests/test_morse.py:63:    assert host.firmware == (0, 6)
+morse/protocol.py:153:    "hello": (device_hello(0, 6), "F0 7D 4D 4F 01 41 01 00 06 00 F7"),
+            while True:
+                out.append(self.q.get_nowait())
+        except queue.Empty:
+            pass
+        return out
+
+    def close(self) -> None:
+        pass
+
+
+def _firmware() -> tuple[int, int]:
+    from . import FIRMWARE_KNOWN
+
+    return FIRMWARE_KNOWN
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 11:14:19Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Bump host version and route settings by firmware
+
+```bash
+python3 - <<'EOF'
+def edit(p, pairs):
+    s=open(p).read()
+    for a,b in pairs:
+        assert a in s, (p,a[:60]); s=s.replace(a,b)
+    open(p,'w').write(s)
+edit('morse/__init__.py',[('__version__ = "0.6.0"','__version__ = "0.7.0"'),('FIRMWARE_KNOWN = (0, 6)','FIRMWARE_KNOWN = (0, 7)')])
+edit('morse/protocol.py',[('"hello": (device_hello(0, 6), "F0 7D 4D 4F 01 41 01 00 06 00 F7"),','"hello": (device_hello(0, 7), "F0 7D 4D 4F 01 41 01 00 07 00 F7"),')])
+edit('tests/test_morse.py',[('assert host.firmware == (0, 6)','assert host.firmware == (0, 7)')])
+edit('morse/core.py',[('''        """Send p; the FM-1 asks its owner (PLAY yes, HOME no). Returns P.PD_* (TimeoutError if no answer)."""
+        self.prog_done = None
+        for f in G.frames(p):''','''        """Send p; the FM-1 asks its owner (PLAY yes, HOME no). Returns P.PD_* (TimeoutError if no answer).
+        p's settings go only to firmware 0.7 and later (format 2); older firmware gets the progress alone."""
+        self.prog_done = None
+        for f in G.frames(p, fmt=G.format_for(p, self.firmware)):''')])
+edit('morse/device.py',[('''        self.progress = G.Progress()      # what it has learnt''','''        self.progress = G.Progress(settings=G.Settings())   # what it has learnt, and its settings (0.7)'''),
+('''            for f in G.frames(self.progress, P.T_PROG):''','''            for f in G.frames(self.progress, P.T_PROG, fmt=G.format_for(self.progress, _firmware())):''')])
+edit('morse/__main__.py',[('''    log(f"from the file: {G.summary(p)}")
+    link, host = _connected_for_progress(args)
+    try:''','''    log(f"from the file: {G.summary(p)}")
+    link, host = _connected_for_progress(args)
+    if p.settings is not None and G.format_for(p, host.firmware) == 1:
+        fw = host.firmware
+        log(f"firmware {fw[0]}.{fw[1] if fw else '?'} takes no settings (0.7 and later do): the progress alone")
+    try:''')])
+EOF
+grep -n 'fw\[0\]' morse/__main__.py | head -3
+```
+
+```text
+135:        raise RuntimeError(f"firmware {fw[0]}.{fw[1]} has no progress backup; it came in "
+163:        log(f"firmware {fw[0]}.{fw[1] if fw else '?'} takes no settings (0.7 and later do): the progress alone")
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 11:14:26Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Fix firmware string and read progress tests
+
+```bash
+python3 - <<'EOF'
+p='morse/__main__.py'; s=open(p).read()
+a='''        fw = host.firmware
+        log(f"firmware {fw[0]}.{fw[1] if fw else '?'} takes no settings (0.7 and later do): the progress alone")'''
+b='''        fw = f"{host.firmware[0]}.{host.firmware[1]}" if host.firmware else "unknown"
+        log(f"firmware {fw} takes no settings (0.7 and later do): the progress alone")'''
+assert a in s; s=s.replace(a,b); open(p,'w').write(s)
+EOF
+grep -n 'def test' tests/test_morse.py | head -40; grep -n -B2 -A22 'def test.*prog\|def test.*backup\|def test.*json' tests/test_morse.py | head -80
+```
+
+```text
+15:def test_shared_vectors(name):
+20:def test_vectors_are_in_the_firmware_test():
+28:def test_not_ours_and_wrong_version():
+34:def test_clean_text():
+41:def test_text_is_cut_and_7bit():
+51:def test_char_round_trip():
+56:def test_host_answers_hello_and_types():
+69:def test_host_upper_and_unknown_dropped():
+79:def test_heartbeat_is_answered():
+87:def test_send_text():
+101:def test_progress_vectors_are_in_the_firmware_test():
+109:def test_progress_wire_round_trip():
+120:def test_progress_refuses_damage():
+132:def test_progress_json_round_trip_and_checks():
+143:def test_backup_and_restore_against_the_simulator():
+159:def test_transport_from_hello_and_heartbeat():
+167:def test_host_says_bluetooth():
+99-
+100-
+101:def test_progress_vectors_are_in_the_firmware_test():
+102-    from pathlib import Path
+103-
+104-    script = (Path(__file__).parents[2] / "firmware/morse/tests/basic.txt").read_text()
+105-    for name, hexed in G.VECTORS.items():
+106-        assert hexed in script, f"{name} not in basic.txt"
+107-
+108-
+109:def test_progress_wire_round_trip():
+110-    p = G.sample()
+111-    assert len(G.blob(p)) == G.BLOB_N == 259
+112-    asm = G.Assembler()
+113-    got = None
+114-    for f in G.frames(p, P.T_PROG):
+115-        got = asm.feed(P.parse(f).payload)
+116-    assert got == p
+117-    assert G.unpack7(G.pack7(bytes(range(256)))) == bytes(range(256))
+118-
+119-
+120:def test_progress_refuses_damage():
+121-    fr = G.frames(G.sample(), P.T_PROG)
+122-    bad = bytearray(fr[-1])
+123-    bad[-3] ^= 1  # inside the CRC
+124-    asm = G.Assembler()
+125-    with pytest.raises(G.ProgressError):
+126-        for f in fr[:-1] + [bytes(bad)]:
+127-            asm.feed(P.parse(f).payload)
+128-    with pytest.raises(G.ProgressError):
+129-        G.Assembler().feed(P.parse(fr[1]).payload)  # out of turn
+130-
+131-
+132:def test_progress_json_round_trip_and_checks():
+133-    p = G.sample()
+134-    assert G.from_json(G.to_json(p, (0, 4))) == p
+135-    d = G.to_json(p).replace('"open": 15', '"open": 3')
+136-    with pytest.raises(G.ProgressError):
+137-        G.from_json(d)
+138-    with pytest.raises(G.ProgressError):
+139-        G.from_json('{"format": "something else"}')
+140-    assert "15 open" in G.summary(p)
+141-
+142-
+143:def test_backup_and_restore_against_the_simulator():
+144-    link = SimLink(lines=[], out=io.StringIO(), beat=0.01)
+145-    host = Host(link)
+146-    host.pump(0.05)
+147-    assert host.can_backup()
+148-    assert host.backup(timeout=2) == G.Progress()
+149-    assert host.restore(G.sample(), timeout=2, gap=0) == P.PD_LOADED
+150-    assert link.progress == G.sample()
+151-    assert host.backup(timeout=2) == G.sample()
+152-    link.owner_says = P.PD_DECLINED
+153-    p = G.sample()
+154-    p.round = 9
+155-    assert host.restore(p, timeout=2, gap=0) == P.PD_DECLINED
+156-    assert link.progress.round == 7
+157-
+158-
+159-def test_transport_from_hello_and_heartbeat():
+160-    hello_ble = P.parse(P.device_hello(0, 5, P.TR_BLE))
+161-    assert P.transport_of(hello_ble) == P.TR_BLE
+162-    assert P.transport_of(P.parse(P.device_heartbeat(P.TR_BLE))) == P.TR_BLE
+163-    assert P.transport_of(P.parse(P.device_hello(0, 4))) == P.TR_USB
+164-    assert P.transport_of(P.parse(P.device_char("E"))) == P.TR_USB
+165-
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 11:14:40Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Add host tests for format 2 and settings, run them
+
+```bash
+python3 - <<'EOF'
+p='tests/test_morse.py'; s=open(p).read()
+a='    assert host.backup(timeout=2) == G.Progress()\n'
+assert a in s
+s=s.replace(a,'    assert host.backup(timeout=2) == G.Progress(settings=G.Settings())\n')
+a='''def test_backup_and_restore_against_the_simulator():'''
+s=s.replace(a,'''def test_progress_with_settings_format_2():
+    p = G.sample_v2()
+    w = G.wire(p)
+    assert w[0] == 2 and len(w) == G.WIRE_N[2] == 274
+    assert len(G.wire(p, fmt=1)) == G.WIRE_N[1] == 262   # the progress alone, for firmware 0.4-0.6
+    asm = G.Assembler()
+    got = None
+    for f in G.frames(p, P.T_PROG):
+        got = asm.feed(P.parse(f).payload)
+    assert got == p and got.settings.flags >> 2 == 3
+    asm = G.Assembler()
+    for f in G.frames(G.sample(), P.T_PROG):         # format 1 still read
+        got = asm.feed(P.parse(f).payload)
+    assert got == G.sample() and got.settings is None
+
+
+def test_settings_in_the_file():
+    p = G.sample_v2()
+    text = G.to_json(p, (0, 7))
+    d = json.loads(text)
+    assert d["version"] == 2
+    assert d["settings"]["start_page"] == "key" and d["settings"]["keyer"] == "iambic_b"
+    assert d["settings"]["hear_wpm"] == 25 and d["settings"]["sound"] is True
+    assert G.from_json(text) == p
+    v1 = json.loads(G.to_json(G.sample()))
+    v1["version"] = 1
+    assert G.from_json(json.dumps(v1)) == G.sample()   # a host 0.4-0.6 file
+    d["settings"]["start_page"] = "settings"
+    with pytest.raises(G.ProgressError):
+        G.from_json(json.dumps(d))
+    d["settings"] = {"hear_wpm": 50}
+    with pytest.raises(G.ProgressError):
+        G.from_json(json.dumps(d))
+    d["settings"] = {"colour": "blue"}
+    with pytest.raises(G.ProgressError):
+        G.from_json(json.dumps(d))
+    assert "start page key" in G.summary(p)
+
+
+def test_settings_go_only_to_firmware_0_7():
+    p = G.sample_v2()
+    assert G.format_for(p, (0, 7)) == 2
+    assert G.format_for(p, (0, 6)) == 1
+    assert G.format_for(p, None) == 1
+    assert G.format_for(G.sample(), (0, 7)) == 1
+    for raw in (bytes([4, 8, 0, 0, 0, 20, 0, 0, 0x58, 2, 10, 0]),          # hear speed under 5
+                bytes([20, 8, 0, 0, 0x20, 20, 0, 0, 0x58, 2, 10, 0]),      # flags bit 5
+                bytes([20, 8, 0, 0, 7 << 2, 20, 0, 0, 0x58, 2, 10, 0])):   # start page SETTINGS
+        with pytest.raises(G.ProgressError):
+            G.Settings.unblob(raw)
+
+
+def test_backup_and_restore_against_the_simulator():''')
+if 'import json' not in s:
+    s=s.replace('import io\n','import io\nimport json\n',1)
+open(p,'w').write(s)
+EOF
+head -12 tests/test_morse.py; cd .. && just morse-test 2>&1 | tail -5
+```
+
+```text
+"""host/morse: the protocol's shared vectors (firmware/morse/tests/basic.txt has the same bytes),
+text cleaning, and the host's answers, against the simulated FM-1."""
+
+import io
+import json
+
+import pytest
+
+from morse import protocol as P
+from morse.core import Host
+from morse.device import SimLink
+from morse.typer import PrintTyper
+uv run --locked --all-groups pytest -q host/tests/test_morse.py
+.........................                                                [100%]
+25 passed in 0.06s
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 11:14:45Z)**_
+
+host 測試全部通過（25 項）。接著改網頁的備份和還原。
+
+_**Agent (claude-opus-5-5 2026-11-18 11:14:47Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Find progress code in web page
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/firmware/morse && grep -n -E 'FORMAT|BLOB_N|WIRE_N|FRAMES|function (toJson|fromJson|wire|unblob|blob|readProgress|restore|progFrames|showProgress|render)|firmware\b|const fw|fwv|version' web/index.html | head -60`
+
+```text
+3:<!-- MORSE for the M-VAVE FM-1: back up and restore the learning progress over Web MIDI (firmware 0.4 and later).
+149:const BLOB_N = 2 + 2 + 1 + 4 + 4 + N * 2 + N * 4, WIRE_N = 1 + BLOB_N + 2, CHUNK = 49;
+150:const FRAMES = Math.ceil(WIRE_N / CHUNK), FORMAT = 1;
+155:let out = null, inp = null, firmware = null, asm = null, onDone = null, picked = null;
+177:function check(p) {   // what the firmware's ln_valid checks
+187:function blob(p) {
+194:function unblob(b) {
+203:  const body = [FORMAT, ...blob(check(p))], c = crc16(body), w = [...body, c & 0xFF, c >> 8];
+205:  for (let i = 0; i < FRAMES; i++) f.push(frame(T_PROG_LOAD, [i, FRAMES, ...pack7(w.slice(i * CHUNK, (i + 1) * CHUNK))]));
+212:  return JSON.stringify({ format: "fm1-morse-progress", version: 1, firmware: firmware ? firmware.join(".") : null,
+218:  if (d.version !== 1) throw Error(`file version ${d.version}, this page knows 1`);
+389:    if (type === T_HELLO && pl.length >= 3) firmware = [pl[1], pl[2]];
+398:  const old = firmware && (firmware[0] === 0 && firmware[1] < 4);
+399:  status((firmware ? `MORSE ${firmware.join(".")} connected` : "MORSE connected") + (via ? ` over ${via}` : "")
+408:// no guide: macOS keeps the name of the firmware it first saw on that USB device ("Felucca", "FM-1", ...).
+417:  out = inp = null; firmware = null; via = null;
+463:function readProgress(save) {
+468:    if (pl[1] !== FRAMES || pl[0] !== next) { asm = null; clearTimeout(timer); status("a chunk went missing: try again", "bad"); return; }
+471:    if (next < FRAMES) return;
+474:      const w = buf.slice(0, WIRE_N);
+475:      if (w[0] !== FORMAT) throw Error(`format ${w[0]}`);
+476:      if (crc16(w.slice(0, -2)) !== (w[WIRE_N - 2] | w[WIRE_N - 1] << 8)) throw Error("CRC mismatch");
+582:    hunting = setTimeout(() => { if (direct === dev && !firmware && !via) status("connected, but MORSE said nothing: is it MORSE 0.5 or later?", "bad"); }, 3000);
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 11:14:53Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Read web progress JS
+
+`sed -n 140,240p web/index.html; sed -n 455,560p web/index.html`
+
+```text
+  <p class="dim">Source and licence (GPL-3.0-or-later):
+    <a href="https://github.com/daviddwlee84/fm1-morse">github.com/daviddwlee84/fm1-morse</a>.
+    Without a browser: <code>morse backup FILE</code> / <code>morse restore FILE</code> from the host in
+    <a href="https://github.com/daviddwlee84/M-VAVE_FM-1/tree/main/host/morse">M-VAVE_FM-1</a>.</p>
+</main>
+<script>
+"use strict";
+const ORDER = "KMURESNAPTLWI.JZ=FOY,VG5/Q92H38B?47C1D60X", N = ORDER.length, GROUP = 5, TOP = 5, NEVER = 0xFFFF;
+const BLOB_N = 2 + 2 + 1 + 4 + 4 + N * 2 + N * 4, WIRE_N = 1 + BLOB_N + 2, CHUNK = 49;
+const FRAMES = Math.ceil(WIRE_N / CHUNK), FORMAT = 1;
+const HEAD = [0x7D, 0x4D, 0x4F], VER = 1;
+const T_HELLO_ACK = 0x01, T_PROG_REQ = 0x04, T_PROG_LOAD = 0x05;
+const T_HELLO = 0x41, T_HEARTBEAT = 0x42, T_PROG = 0x44, T_PROG_DONE = 0x45;
+const $ = id => document.getElementById(id);
+let out = null, inp = null, firmware = null, asm = null, onDone = null, picked = null;
+
+function status(text, cls) { $("status").textContent = text; $("status").className = cls || ""; }
+
+function crc16(b) {
+  let c = 0xFFFF;
+  for (const x of b) { c ^= x << 8; for (let k = 0; k < 8; k++) c = ((c & 0x8000) ? (c << 1) ^ 0x1021 : c << 1) & 0xFFFF; }
+  return c;
+}
+function pack7(b) {
+  const o = [];
+  for (let i = 0; i < b.length; i += 7) {
+    const part = b.slice(i, i + 7);
+    o.push(part.reduce((h, x, j) => h | ((x >> 7) & 1) << j, 0), ...part.map(x => x & 0x7F));
+  }
+  return o;
+}
+function unpack7(b) {
+  const o = [];
+  for (let i = 0; i < b.length;) { const hi = b[i++]; for (let j = 0; j < 7 && i < b.length; j++) o.push(b[i++] | ((hi >> j) & 1) << 7); }
+  return o;
+}
+function check(p) {   // what the firmware's ln_valid checks
+  if (!(p.open >= GROUP && p.open <= N)) throw Error(`open must be ${GROUP}..${N}`);
+  if (p.right > p.answered) throw Error("right is more than answered");
+  for (let i = 0; i < N; i++) for (let d = 0; d < 2; d++) {
+    if (!(p.box[i][d] >= 0 && p.box[i][d] <= TOP)) throw Error(`${ORDER[i]}: a box is not 0..${TOP}`);
+    const l = p.last[i][d];
+    if (l !== null && !(l >= 0 && l <= p.round)) throw Error(`${ORDER[i]}: answered after round ${p.round}`);
+  }
+  return p;
+}
+function blob(p) {
+  const b = [], put = (v, n) => { for (let k = 0; k < n; k++) b.push((v >>> (8 * k)) & 0xFF); };
+  put(p.round, 2); put(p.streak, 2); put(p.open, 1); put(p.answered, 4); put(p.right, 4);
+  for (const x of p.box) b.push(x[0], x[1]);
+  for (const x of p.last) { put(x[0] === null ? NEVER : x[0], 2); put(x[1] === null ? NEVER : x[1], 2); }
+  return b;
+}
+function unblob(b) {
+  let o = 0; const get = n => { let v = 0; for (let k = 0; k < n; k++) v += b[o++] * 2 ** (8 * k); return v; };
+  const p = { round: get(2), streak: get(2), open: get(1), answered: get(4), right: get(4), box: [], last: [] };
+  for (let i = 0; i < N; i++) p.box.push([b[o++], b[o++]]);
+  for (let i = 0; i < N; i++) { const a = get(2), c = get(2); p.last.push([a === NEVER ? null : a, c === NEVER ? null : c]); }
+  return check(p);
+}
+function frame(type, payload) { return [0xF0, ...HEAD, VER, type, ...payload, 0xF7]; }
+function frames(p) {
+  const body = [FORMAT, ...blob(check(p))], c = crc16(body), w = [...body, c & 0xFF, c >> 8];
+  const f = [];
+  for (let i = 0; i < FRAMES; i++) f.push(frame(T_PROG_LOAD, [i, FRAMES, ...pack7(w.slice(i * CHUNK, (i + 1) * CHUNK))]));
+  return f;
+}
+function toJSON(p) {
+  const chars = {};
+  ORDER.split("").forEach((c, i) => chars[c] = { recognise: p.box[i][0], send: p.box[i][1],
+    last_recognise: p.last[i][0], last_send: p.last[i][1] });
+  return JSON.stringify({ format: "fm1-morse-progress", version: 1, firmware: firmware ? firmware.join(".") : null,
+    round: p.round, streak: p.streak, open: p.open, answered: p.answered, right: p.right, chars }, null, 1) + "\n";
+}
+function fromJSON(text) {
+  const d = JSON.parse(text);
+  if (d.format !== "fm1-morse-progress") throw Error("not a MORSE progress file");
+  if (d.version !== 1) throw Error(`file version ${d.version}, this page knows 1`);
+  const p = { round: +d.round, streak: +(d.streak || 0), open: +d.open, answered: +(d.answered || 0),
+              right: +(d.right || 0), box: [], last: [] };
+  for (const c of Object.keys(d.chars || {})) if (!ORDER.includes(c)) throw Error(`${c} is not in the course`);
+  for (const c of ORDER) { const e = (d.chars || {})[c] || {};
+    p.box.push([+(e.recognise || 0), +(e.send || 0)]);
+    p.last.push([e.last_recognise ?? null, e.last_send ?? null]); }
+  return check(p);
+}
+function show(p, title) {
+  $("view").hidden = false;
+  $("view-title").textContent = title;
+  const learnt = p.box.slice(0, p.open).filter(b => b[0] >= 2 && b[1] >= 1).length;
+  $("summary").textContent = `Round ${p.round} · ${p.open} letters open · ${learnt} past the line · ` +
+    `${p.answered} answered, ${p.right} right · streak ${p.streak}`;
+  const ch = $("chart"); ch.innerHTML = "";
+  ORDER.split("").forEach((c, i) => { const d = document.createElement("div"); d.textContent = c;
+    d.style.background = i < p.open ? `var(--l${Math.floor((p.box[i][0] + p.box[i][1]) / 2)})` : "var(--closed)";
+    if (i >= p.open) d.style.color = "var(--dim)"; ch.appendChild(d); });
+}
+
+// ---- live: what the FM-1 reads (T_CHAR), and text for it to play (T_TEXT, T_STOP); the host's protocol.py
+const T_TEXT = 0x02, T_STOP = 0x03, T_CHAR = 0x43, TEXT_MAX = 60;
+  try {
+    midi = midi || await navigator.requestMIDIAccess({ sysex: true });
+    midi.onstatechange = e => { if (e.port.state === "connected" && !inp && !direct) hunt(); };   // plugged in, restarted
+    if (direct) bleDrop();
+    hunt();
+  } catch (err) { status(`MIDI not available: ${err.message}`, "bad"); }
+};
+
+function readProgress(save) {
+  let buf = [], next = 0;
+  status("reading…", "dim");
+  const timer = setTimeout(() => { asm = null; status("the FM-1 sent nothing back (MORSE 0.4 or later?)", "bad"); }, via === "Bluetooth" ? 15000 : 5000);
+  asm = pl => {
+    if (pl[1] !== FRAMES || pl[0] !== next) { asm = null; clearTimeout(timer); status("a chunk went missing: try again", "bad"); return; }
+    if (pl[0] === 0) buf = [];
+    buf.push(...unpack7(pl.slice(2))); next++;
+    if (next < FRAMES) return;
+    asm = null; clearTimeout(timer);
+    try {
+      const w = buf.slice(0, WIRE_N);
+      if (w[0] !== FORMAT) throw Error(`format ${w[0]}`);
+      if (crc16(w.slice(0, -2)) !== (w[WIRE_N - 2] | w[WIRE_N - 1] << 8)) throw Error("CRC mismatch");
+      const p = unblob(w.slice(1, -2));
+      if (!save) { show(p, "On the FM-1 now"); ready(); return; }
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(new Blob([toJSON(p)], { type: "application/json" }));
+      const t = new Date(), p2 = n => String(n).padStart(2, "0");
+      const at = `${t.getFullYear()}-${p2(t.getMonth() + 1)}-${p2(t.getDate())}-${p2(t.getHours())}${p2(t.getMinutes())}`;
+      a.download = `fm1-morse-progress-${at}.json`;   // local time, not UTC's: two backups a day do not collide
+      a.click();
+      show(p, "On the FM-1 (saved)");
+      ready();
+    } catch (err) { status(`refused: ${err.message}`, "bad"); }
+  };
+  out.send(frame(T_PROG_REQ, []));
+}
+$("backup").onclick = () => readProgress(true);
+$("peek").onclick = () => readProgress(false);
+
+$("file").onchange = async () => {
+  const f = $("file").files[0]; if (!f) return;
+  try { picked = fromJSON(await f.text()); show(picked, `In ${f.name}`); $("restore-note").className = "dim"; }
+  catch (err) { picked = null; $("restore-note").textContent = `That file will not load: ${err.message}`; $("restore-note").className = "bad"; }
+  if (out) ready();
+};
+
+$("restore").onclick = async () => {
+  if (!picked) return;
+  $("restore").disabled = true;
+  status("sent: press PLAY on the FM-1 to load it, HOME to keep what is there", "dim");
+  onDone = code => {
+    onDone = null;
+    status(code === 0 ? "loaded on the FM-1" : code === 1 ? "not loaded: declined on the FM-1" : "the FM-1 refused it", code === 0 ? "ok" : "bad");
+    ready();
+  };
+  for (const f of frames(picked)) { out.send(f); await new Promise(r => setTimeout(r, 30)); }
+};
+
+// ---- Bluetooth, directly (Web Bluetooth): BLE-MIDI packets on the MIDI service's one characteristic, no system setup.
+// Frames out as SysEx over 20-byte packets; in, SysEx and notes put back together, each timed by its BLE-MIDI
+// timestamp (13-bit ms, the FM-1's clock) mapped onto this page's clock.
+const BLE_SVC = "03b80e5a-ede8-4b33-a751-6ce34ec4c700", BLE_IO = "7772e5db-3868-4112-a1a9-f2669d106bf3", BLE_PKT = 20;
+let bleQ = Promise.resolve(), bleSx = null, bleRun = 0, bleOff = null;
+function dataLen(s) { const h = s & 0xF0; return h === 0xC0 || h === 0xD0 || s === 0xF1 || s === 0xF3 ? 1 : h < 0xF0 || s === 0xF2 ? 2 : 0; }
+function blePackets(f) {   // one SysEx frame (F0 .. F7) into BLE-MIDI packets
+  const t = Math.floor(performance.now()) & 0x1FFF, hi = 0x80 | (t >> 7 & 0x3F), lo = 0x80 | (t & 0x7F), pk = [];
+  let p = [hi, lo, 0xF0];
+  for (const b of f.slice(1, -1)) { if (p.length >= BLE_PKT) { pk.push(p); p = [hi]; } p.push(b); }
+  if (p.length + 2 > BLE_PKT) { pk.push(p); p = [hi]; }
+  p.push(lo, 0xF7); pk.push(p);
+  return pk;
+}
+function bleUnwrap(ts, arrived) {   // the FM-1's 13-bit ms, unwrapped near where this page's clock says it should be
+  const k = Math.round((arrived - (bleOff ?? arrived - ts) - ts) / 8192);
+  return k * 8192 + ts;
+}
+function bleIn(p, arrived) {
+  if (!(p[0] & 0x80)) return;
+  let hi = p[0] & 0x3F, lastLo = -1, ts = 0, i = 1;
+  const got = [], emit = m => got.push([m, ts]);
+  const stamp = lo => { if (lastLo >= 0 && lo < lastLo) hi = (hi + 1) & 0x3F; lastLo = lo; ts = hi << 7 | lo; };
+  if (bleSx) while (i < p.length && p[i] < 0x80) bleSx.push(p[i++]);   // a SysEx going on from the last packet
+  while (i < p.length) {
+    if (p[i] & 0x80) { stamp(p[i++] & 0x7F); if (i >= p.length) break; }
+    let s = p[i];
+    if (s === 0xF7 && bleSx) { bleSx.push(0xF7); emit(bleSx); bleSx = null; i++; continue; }
+    if (s < 0x80) { s = bleRun; if (!s) break; } else i++;   // running status
+    if (s === 0xF0) { bleSx = [0xF0]; while (i < p.length && p[i] < 0x80) bleSx.push(p[i++]); continue; }
+    if (s >= 0xF8) continue;   // real time
+    const n = dataLen(s);
+    if (i + n > p.length) break;
+    if (s < 0xF0) bleRun = s;
+    emit([s, ...p.slice(i, i + n)]);
+    i += n;
+  }
+  if (!got.length) return;
+  // the packet came when its newest event was sent, or later: the smallest such lag is the offset between the clocks
+  const newest = bleUnwrap(got[got.length - 1][1], arrived);
+  if (bleOff === null || arrived - newest < bleOff) bleOff = arrived - newest;
+  for (const [m, t] of got) onMessage({ data: Uint8Array.from(m), timeStamp: bleUnwrap(t, arrived) + bleOff });
+}
+function bleDrop() {
+  const d = direct; direct = null;
+  if (d && d.gatt.connected) d.gatt.disconnect();
+}
+$("connect-ble").onclick = async () => {
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 11:15:00Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Find view section and header in web HTML
+
+`grep -n -E 'id="(view|view-title|summary|chart|restore-note|restore|peek|backup)"|<header|<h1|<nav|class="links"' web/index.html; sed -n 40,75p web/index.html`
+
+```text
+56:  <h1>MORSE on the web</h1>
+101:    <div class="row"><button id="backup" disabled>Download the progress</button>
+102:      <button class="ghost" id="peek" disabled>Only show it</button></div>
+110:      <button id="restore" disabled>Send it to the FM-1</button></div>
+111:    <p id="restore-note" class="dim">The FM-1 shows what it got and asks: press <b>PLAY</b> on it to load, <b>HOME</b> to keep what is there.</p>
+135:  <section id="view" hidden>
+136:    <h2 id="view-title">The progress</h2>
+137:    <div id="summary" class="dim"></div>
+138:    <div class="chart" id="chart"></div>
+  td, th { text-align: left; padding: 5px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { color: var(--dim); font-weight: 600; }
+  #lamp { width: 14px; height: 14px; border-radius: 50%; background: var(--line); display: inline-block; vertical-align: middle; }
+  #lamp.on { background: var(--accent); box-shadow: 0 0 8px var(--accent); }
+  input[type=text] { font: inherit; padding: 8px 10px; border-radius: 8px; border: 1px solid var(--line);
+                     background: var(--bg); color: var(--fg); flex: 1; min-width: 0; text-transform: uppercase; }
+  .ok { color: var(--ok); } .bad { color: var(--bad); } .dim { color: var(--dim); }
+  .chart { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; margin-top: 10px; max-width: 420px; }
+  .chart div { text-align: center; padding: 6px 0; border-radius: 5px; font-weight: 700; font-family: ui-monospace, monospace; }
+  .row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+  code { font-family: ui-monospace, monospace; font-size: .92em; }
+  ol { padding-left: 1.2em; margin: 6px 0; }
+</style>
+</head>
+<body>
+<main>
+  <h1>MORSE on the web</h1>
+  <p class="lead">See what your FM-1 reads, send it text to copy, and back up what it has learnt in MORSE.
+    Chrome or Edge on a computer, the FM-1 running MORSE (backups: 0.4 or later) on USB, or on Bluetooth with 0.5.
+    Nothing to install.</p>
+
+  <section>
+    <h2>1. Connect</h2>
+    <div class="row"><button id="connect">Connect to the FM-1</button>
+      <button class="ghost" id="connect-ble" hidden>Over Bluetooth, directly</button>
+      <span id="status" class="dim">not connected</span></div>
+    <p class="dim"><b>Connect</b> finds it on USB, or on Bluetooth once the computer has connected it (on a Mac: Audio
+      MIDI Setup, Window, Show MIDI Studio, the Bluetooth button). With both, USB is used. The browser asks to use MIDI
+      devices with system exclusive messages: allow it.</p>
+    <p class="dim" id="ble-note" hidden><b>Over Bluetooth, directly</b> (MORSE 0.5 or later): the browser finds the FM-1
+      itself, no system setting (Web Bluetooth). Pick <i>FM-1 XXXX</i> in the list. Only this page talks to it then:
+      Vail and other programs need <b>Connect</b>.</p>
+  </section>
+
+  <section>
+    <h2>2. Live</h2>
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 11:15:06Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Read backup/restore section HTML
+
+`sed -n 96,112p web/index.html`
+
+```text
+    </details>
+  </section>
+
+  <section>
+    <h2>3. Back up</h2>
+    <div class="row"><button id="backup" disabled>Download the progress</button>
+      <button class="ghost" id="peek" disabled>Only show it</button></div>
+    <p class="dim">Nothing changes on the FM-1. The file is plain JSON: every letter's two boxes (0..5), the rounds.
+      <b>Only show it</b> reads the progress into the chart below without saving a file.</p>
+  </section>
+
+  <section>
+    <h2>4. Restore</h2>
+    <div class="row"><label class="file" id="pick">Choose a backup file<input type="file" id="file" accept=".json,application/json"></label>
+      <button id="restore" disabled>Send it to the FM-1</button></div>
+    <p id="restore-note" class="dim">The FM-1 shows what it got and asks: press <b>PLAY</b> on it to load, <b>HOME</b> to keep what is there.</p>
+  </section>
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 11:15:08Z)**_
+
+Now the web page edits:
+
+_**Agent (claude-opus-5-5 2026-11-18 11:15:38Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Add settings and format 2 to the web page
+
+```bash
+python3 - <<'EOF'
+p='web/index.html'; s=open(p).read()
+def rep(old,new):
+    global s
+    assert old in s, old[:70]
+    s=s.replace(old,new)
+rep('''  <p class="lead">See what your FM-1 reads, send it text to copy, and back up what it has learnt in MORSE.
+    Chrome or Edge on a computer, the FM-1 running MORSE (backups: 0.4 or later) on USB, or on Bluetooth with 0.5.
+    Nothing to install.</p>''','''  <p class="lead">See what your FM-1 reads, send it text to copy, and back up what it has learnt in MORSE.
+    Chrome or Edge on a computer, the FM-1 running MORSE (backups: 0.4 or later) on USB, or on Bluetooth with 0.5.
+    Nothing to install.</p>
+  <p class="row"><a href="try/">No FM-1 at hand? Try MORSE in the browser</a> <span class="dim">·</span>
+    <a href="cheatsheet.html">Cheatsheet: every page and button</a></p>''')
+rep('''    <div class="row"><button id="backup" disabled>Download the progress</button>
+      <button class="ghost" id="peek" disabled>Only show it</button></div>
+    <p class="dim">Nothing changes on the FM-1. The file is plain JSON: every letter's two boxes (0..5), the rounds.
+      <b>Only show it</b> reads the progress into the chart below without saving a file.</p>''','''    <div class="row"><button id="backup" disabled>Download the progress</button>
+      <button class="ghost" id="peek" disabled>Only show it</button></div>
+    <p class="dim">Nothing changes on the FM-1. The file is plain JSON: every letter's two boxes (0..5), the rounds,
+      and from MORSE 0.7 the settings (speeds, keyer, start page, ...).
+      <b>Only show it</b> reads it into the chart below without saving a file.</p>''')
+rep('''    <p id="restore-note" class="dim">The FM-1 shows what it got and asks: press <b>PLAY</b> on it to load, <b>HOME</b> to keep what is there.</p>''','''    <p id="restore-note" class="dim">The FM-1 shows what it got and asks: press <b>PLAY</b> on it to load, <b>HOME</b> to keep what is there.
+      A file with settings loads them too on MORSE 0.7 or later; older MORSE takes the progress alone.</p>''')
+rep('''    <div class="chart" id="chart"></div>''','''    <div class="chart" id="chart"></div>
+    <table id="settings" hidden><tbody></tbody></table>''')
+rep('''const BLOB_N = 2 + 2 + 1 + 4 + 4 + N * 2 + N * 4, WIRE_N = 1 + BLOB_N + 2, CHUNK = 49;
+const FRAMES = Math.ceil(WIRE_N / CHUNK), FORMAT = 1;''','''// format 1 (MORSE 0.4-0.6): the progress; format 2 (0.7): the settings' 12 bytes after it. Both are 6 chunks.
+const BLOB_N = 2 + 2 + 1 + 4 + 4 + N * 2 + N * 4, SET_N = 12, WIRE_N = { 1: 1 + BLOB_N + 2, 2: 1 + BLOB_N + SET_N + 2 };
+const CHUNK = 49, FRAMES = Math.ceil(WIRE_N[2] / CHUNK);
+// the settings' names in the file (host/morse/progress.py Settings, firmware/morse/app.c set_t)
+const KEYERS = ["straight", "iambic_a", "iambic_b"], PAGES = ["menu", "practice", "listen", "key", "rhythm", "type", "chart"];
+const KEY_VIEWS = ["text", "code", "timing"], TYPE_LAYOUTS = ["white_black", "a_to_z", "koch"];
+const LISTEN_PROGRAMS = ["koch", "words", "qso", "abbreviations", "text"];
+const SET_DEFAULT = { wpm: 20, eff: 8, keyer: 0, swap: 0, flags: 0, cards: 20, learn: 0, look: 0, pitch: 600, send: 10, prog: 0 };''')
+rep('''function frame(type, payload) { return [0xF0, ...HEAD, VER, type, ...payload, 0xF7]; }
+function frames(p) {
+  const body = [FORMAT, ...blob(check(p))], c = crc16(body), w = [...body, c & 0xFF, c >> 8];''','''function setCheck(s) {   // what the firmware's set_valid checks
+  const ok = s.wpm >= 5 && s.wpm <= 40 && s.eff >= 5 && s.eff <= s.wpm && s.keyer < KEYERS.length && s.swap <= 1
+    && s.flags < 0x20 && (s.flags >> 2 & 7) < PAGES.length && s.cards >= 10 && s.cards <= 30 && s.learn <= 1
+    && s.pitch >= 300 && s.pitch <= 1200 && s.look <= 0xFF && (s.look & 3) < KEY_VIEWS.length
+    && (s.look >> 3 & 3) < TYPE_LAYOUTS.length && s.send >= 5 && s.send <= 40 && s.prog < LISTEN_PROGRAMS.length;
+  if (!ok) throw Error("settings MORSE would refuse");
+  return s;
+}
+function setBlob(s) { setCheck(s); return [s.wpm, s.eff, s.keyer, s.swap, s.flags, s.cards, s.learn, s.look, s.pitch & 0xFF, s.pitch >> 8, s.send, s.prog]; }
+function setUnblob(b) {
+  return setCheck({ wpm: b[0], eff: b[1], keyer: b[2], swap: b[3], flags: b[4], cards: b[5], learn: b[6], look: b[7],
+                    pitch: b[8] | b[9] << 8, send: b[10], prog: b[11] });
+}
+function setToDict(s) {
+  const bit = (v, n) => !!(v >> n & 1);
+  return { hear_wpm: s.wpm, spacing_wpm: s.eff, send_wpm: s.send, pitch_hz: s.pitch, keyer: KEYERS[s.keyer],
+    paddles: s.swap ? "left_dah" : "left_dit", sound: !bit(s.flags, 0), bluetooth: !bit(s.flags, 1),
+    start_page: PAGES[s.flags >> 2 & 7], cards: s.cards, learn_by: s.learn ? "sight" : "sound",
+    judging: bit(s.look, 7) ? "strict" : "rhythm", key_view: KEY_VIEWS[s.look & 3], type_layout: TYPE_LAYOUTS[s.look >> 3 & 3],
+    type_shows_code: bit(s.look, 2), type_composes: bit(s.look, 6), listen_hides_text: bit(s.look, 5),
+    listen_program: LISTEN_PROGRAMS[s.prog] };
+}
+function setFromDict(d) {
+  const dflt = setToDict(SET_DEFAULT);
+  for (const k of Object.keys(d)) if (!(k in dflt)) throw Error(`unknown setting ${k}`);
+  const v = { ...dflt, ...d };
+  const pick = (k, names) => { const i = names.indexOf(v[k]); if (i < 0) throw Error(`${k} must be one of ${names.join(", ")}`); return i; };
+  return setCheck({ wpm: +v.hear_wpm, eff: +v.spacing_wpm, send: +v.send_wpm, pitch: +v.pitch_hz,
+    keyer: pick("keyer", KEYERS), swap: pick("paddles", ["left_dit", "left_dah"]),
+    flags: (v.sound ? 0 : 1) | (v.bluetooth ? 0 : 2) | pick("start_page", PAGES) << 2, cards: +v.cards,
+    learn: pick("learn_by", ["sound", "sight"]),
+    look: pick("key_view", KEY_VIEWS) | (v.type_shows_code ? 4 : 0) | pick("type_layout", TYPE_LAYOUTS) << 3
+      | (v.listen_hides_text ? 32 : 0) | (v.type_composes ? 64 : 0) | pick("judging", ["rhythm", "strict"]) << 7,
+    prog: pick("listen_program", LISTEN_PROGRAMS) });
+}
+function frame(type, payload) { return [0xF0, ...HEAD, VER, type, ...payload, 0xF7]; }
+function frames(p) {   // settings only to MORSE 0.7 and later (format 2); older takes the progress alone (format 1)
+  const two = p.settings && firmware && (firmware[0] > 0 || firmware[1] >= 7);
+  const body = two ? [2, ...blob(check(p)), ...setBlob(p.settings)] : [1, ...blob(check(p))];
+  const c = crc16(body), w = [...body, c & 0xFF, c >> 8];''')
+rep('''  return JSON.stringify({ format: "fm1-morse-progress", version: 1, firmware: firmware ? firmware.join(".") : null,
+    round: p.round, streak: p.streak, open: p.open, answered: p.answered, right: p.right, chars }, null, 1) + "\\n";''','''  const d = { format: "fm1-morse-progress", version: 2, firmware: firmware ? firmware.join(".") : null,
+    round: p.round, streak: p.streak, open: p.open, answered: p.answered, right: p.right, chars };
+  if (p.settings) d.settings = setToDict(p.settings);
+  return JSON.stringify(d, null, 1) + "\\n";''')
+rep('''  if (d.version !== 1) throw Error(`file version ${d.version}, this page knows 1`);''','''  if (d.version !== 1 && d.version !== 2) throw Error(`file version ${d.version}, this page knows 1 and 2`);''')
+rep('''    p.last.push([e.last_recognise ?? null, e.last_send ?? null]); }
+  return check(p);''','''    p.last.push([e.last_recognise ?? null, e.last_send ?? null]); }
+  if (d.settings) p.settings = setFromDict(d.settings);
+  return check(p);''')
+rep('''    if (i >= p.open) d.style.color = "var(--dim)"; ch.appendChild(d); });
+}''','''    if (i >= p.open) d.style.color = "var(--dim)"; ch.appendChild(d); });
+  const st = $("settings"), tb = st.querySelector("tbody"); tb.innerHTML = "";
+  st.hidden = !p.settings;
+  if (p.settings) for (const [k, v] of Object.entries(setToDict(p.settings))) {
+    const tr = tb.insertRow(); tr.insertCell().textContent = k.replace(/_/g, " ");
+    tr.insertCell().textContent = typeof v === "boolean" ? (v ? "on" : "off") : String(v).replace(/_/g, " ");
+    tr.cells[0].className = "dim";
+  }
+}''')
+rep('''      const w = buf.slice(0, WIRE_N);
+      if (w[0] !== FORMAT) throw Error(`format ${w[0]}`);
+      if (crc16(w.slice(0, -2)) !== (w[WIRE_N - 2] | w[WIRE_N - 1] << 8)) throw Error("CRC mismatch");
+      const p = unblob(w.slice(1, -2));''','''      const n = WIRE_N[buf[0]];
+      if (!n) throw Error(`format ${buf[0]}`);
+      const w = buf.slice(0, n);
+      if (crc16(w.slice(0, -2)) !== (w[n - 2] | w[n - 1] << 8)) throw Error("CRC mismatch");
+      const p = unblob(w.slice(1, 1 + BLOB_N));
+      if (buf[0] === 2) p.settings = setUnblob(w.slice(1 + BLOB_N, -2));''')
+open(p,'w').write(s)
+EOF
+grep -n 'FORMAT\|WIRE_N\b' web/index.html | grep -v 'WIRE_N\[' | head
+```
+
+```text
+155:const BLOB_N = 2 + 2 + 1 + 4 + 4 + N * 2 + N * 4, SET_N = 12, WIRE_N = { 1: 1 + BLOB_N + 2, 2: 1 + BLOB_N + SET_N + 2 };
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 11:15:45Z)**_
+
+Checking the page's JS against the Python vectors in Node:
+
+_**Agent (claude-opus-5-5 2026-11-18 11:15:58Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Verify web JS matches host vectors in Node
+
+```bash
+cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1 && python3 -c "
+import sys,json; sys.path.insert(0,'host')
+from morse import progress as G
+print(json.dumps({'v2':G.VECTORS, 'json2':G.to_json(G.sample_v2(),(0,7)), 'json1':G.to_json(G.sample())}))" > /private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/0a574306-469e-4a59-9622-5701a42aee59/scratchpad/vec.json && cat > /private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/0a574306-469e-4a59-9622-5701a42aee59/scratchpad/webtest.mjs <<'EOF'
+import fs from 'fs'; import vm from 'vm';
+const [html, vecf] = process.argv.slice(2);
+const src = fs.readFileSync(html, 'utf8').match(/<script>([\s\S]*?)<\/script>/)[1];
+const V = JSON.parse(fs.readFileSync(vecf, 'utf8'));
+const dummy = () => new Proxy(function () {}, { get: (t, k) => k === Symbol.toPrimitive ? () => '' : (k in t ? t[k] : dummy()), set: () => true, apply: () => dummy() });
+const ctx = { console, setTimeout, clearTimeout, setInterval: () => 0, performance, URL, Blob, navigator: {}, window: {}, location: { search: '' },
+  document: { getElementById: () => dummy(), createElement: () => dummy(), querySelector: () => dummy(), querySelectorAll: () => [], addEventListener() {} },
+  localStorage: { getItem: () => null, setItem() {} } };
+vm.createContext(ctx);
+vm.runInContext(src + `
+;globalThis.T = { frames, fromJSON, toJSON, unblob, setUnblob, crc16, unpack7, BLOB_N, WIRE_N, setFw: f => firmware = f };`, ctx);
+const T = ctx.T, hex = a => a.map(x => x.toString(16).toUpperCase().padStart(2, '0')).join(' ');
+const p2 = T.fromJSON(V.json2);
+T.setFw([0, 7]);
+let f = T.frames(p2); for (let i = 0; i < 6; i++) if (hex(f[i]) !== V.v2[`prog_v2_${i}`]) throw Error('v2 frame ' + i);
+T.setFw([0, 6]);
+f = T.frames(p2); for (let i = 0; i < 6; i++) if (hex(f[i]) !== V.v2[`prog_load_${i}`]) throw Error('v1 downgrade frame ' + i);
+const p1 = T.fromJSON(V.json1); T.setFw([0, 7]);
+f = T.frames(p1); for (let i = 0; i < 6; i++) if (hex(f[i]) !== V.v2[`prog_load_${i}`]) throw Error('v1 frame ' + i);
+// round trip of the JSON
+const back = JSON.parse(T.toJSON(p2)), want = JSON.parse(V.json2);
+delete back.firmware; delete want.firmware;
+if (JSON.stringify(back) !== JSON.stringify(want)) throw Error('json differs\n' + JSON.stringify(back.settings) + '\n' + JSON.stringify(want.settings));
+console.log('web progress: format 1 and 2 match host vectors; JSON round trip same as host');
+EOF
+node /private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/0a574306-469e-4a59-9622-5701a42aee59/scratchpad/webtest.mjs firmware/morse/web/index.html /private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/0a574306-469e-4a59-9622-5701a42aee59/scratchpad/vec.json
+```
+
+```text
+web progress: format 1 and 2 match host vectors; JSON round trip same as host
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 11:16:05Z)**_
+
+網頁的格式 1 和格式 2 都和 host 的向量一致。接著做 Try 頁和英文 cheatsheet，先讀中文 cheatsheet。
+
+_**Agent (claude-opus-5-5 2026-11-18 11:16:06Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Read Chinese cheatsheet and README controls
+
+`cat docs/dev/morse-cheatsheet.md; sed -n 34,64p firmware/morse/README.md`
+
+````text
+# 摩斯電碼機操作速查
+
+韌體 0.6（0.3 以前沒有的操作標了「0.4」，藍牙是「0.5」；0.1 和 0.2 的差別見文末）。學習的步驟見[用 MORSE 學摩斯](morse-learn.md)。設計與原理見[摩斯電碼機](morse.md)。
+
+## 任何頁面
+
+| 控制 | 作用 |
+|---|---|
+| `HOME` | 叫出選單；在選單裡再按一次回到上一頁 |
+| `ALGO` 旋鈕 | 直接換頁 |
+| `FX` | 聲音開／關。關掉時 `FX` 燈亮，改看琴鍵燈和畫面上的燈號 |
+| `K1` | 聽的速度：字元 5–40 WPM（預設 20） |
+| `K2` | 間隔（Farnsworth）：字和字之間拉開，5 到字元速度（預設 8） |
+| `K3` | 音高 300–1200 Hz（預設 600）。收到的訊號高一個大三度 |
+| `K4` | 發報速度 5–40 WPM（預設 10）：keyer 的節奏、KEY 頁解碼器的起點、RHYTHM 的目標（0.4 起 PRACTICE 的打碼卡不看它） |
+| `MASTER` | 音量 |
+
+轉速度時畫面上方會顯示它的意思，例如「SEND 10 WPM DIT 120MS DAH 360MS」。設定改完 3 秒後自動存。不知道怎麼設的話，到 SETTINGS 選 PRESET，見[速度](morse.md#speed)。
+
+## PRACTICE（閃卡）
+
+| 控制 | 作用 |
+|---|---|
+| `PLAY` | 開始一回合；題目播完後再按是重播 |
+| `SELECT`（開始畫面） | 0.4：切換「一回合」和「TEST 分級測驗」（下兩組各考一次，答對的可以標成已會） |
+| `E4` `F4` `G4` `A4` | 四選一的題目：四個亮燈的鍵對應畫面上四個選項（由左到右） |
+| `SELECT` + `SEL` | 也可以轉 `SELECT` 選、按 `SEL` 確定（閃爍的是目前選的） |
+| 琴鍵（電鍵） | 「打出來」的題目：畫面出現 `your turn` 後照設定的 keyer 打。0.4 起看你自己的節奏（劃約 3 個點長），快慢都可以 |
+| `SEL` | 打的題目不會：算錯，顯示答案 |
+| 任一琴鍵 | 新字：看完聽完，下一張；答案畫面：不等，直接下一張 |
+| `PLAY`（新字） | 再聽一次（沒聽清楚時） |
+| `SEQ` | 0.4，SOUND 模式：新字和答案畫面偷看點劃，換卡就藏回去。「聽了選」的題目不能看 |
+| `HOME` | 離開，已答的部分會存 |
+
+0.4 打碼卡的結果頁：`RIGHT`／`ALMOST`／`NO`、評級（GREAT／GOOD／CLOSE／OFF 和分數）、`READ AS` 解碼器讀成的字、SHOULD（標準節奏）對 YOU（你按的）的長短條，判反的那一下是紅色，下面一行是要改什麼。ALMOST 不升盒也不歸零，回合最後再問一次。開始畫面的 `NEXT GROUP WAITS ON` 是擋住下一組的字。判定細節見[打碼卡怎麼判](morse.md#judging)。
+
+## LISTEN（收聽）
+
+| 控制 | 作用 |
+|---|---|
+| `PLAY` | 開始／停止 |
+| `SELECT` | 換節目：KOCH GROUPS、WORDS、QSO、ABBREVIATIONS、SAYINGS |
+| `SEQ` | 顯示／隱藏正在播的字（隱藏時這一行播完才顯示） |
+| `SEL` | 隱藏時偷看這一行 |
+
+## KEY（自由發報）
+
+| 控制 | 作用 |
+|---|---|
+| 琴鍵 | 直鍵：任一鍵。iambic：左半邊 F3–F4 是 dit，右半邊 F#4–G5 是 dah（SETTINGS 可對調） |
+| `SEQ` | 換顯示：TEXT（字）→ CODE（每個字下面是你打的點劃）→ TIMING（每一下照長短畫成條） |
+| `OCT-` | 清掉畫面上的字 |
+
+白字是自己發的，琥珀色是收到的（MIDI 或電腦送來的文字）。上方顯示解碼器聽到的速度、dah:dit 比例（標準 3.0）和字內停頓（GAP，標準 1.0）；偏離太多時變成琥珀色。TIMING 檢視最上面的灰條是目標 dit 和 dah 的長度，紅線是會把一個字切成兩個的長停頓。接著電腦時，按鍵會經 USB 送出（Vail 格式），解出的字也會送給 host。
+
+## RHYTHM（練長短）
+
+| 控制 | 作用 |
+|---|---|
+| 琴鍵 | 照目標打 |
+| `SELECT` | 換練習：DITS、DAHS、DIT DAH、SOS、FREE |
+| `PLAY` | 重來（清掉統計） |
+| `K4` | 改目標速度 |
+
+框是目標長度，條是你按的長度：綠是好、黃是偏了、紅是變成另一種了。下面的提示看最近 16 下。
+
+## TYPE（字母鍵盤）
+
+| 控制 | 作用 |
+|---|---|
+| `OCT-` / `OCT+` | 翻頁：字母 → 數字和符號 → 片語 |
+| `REC` | 刪最後一個字；按住 0.6 秒清空整行 |
+| `PLAY` | 播出整行；正在播時按是停止 |
+| `SEL` | LIVE（按一個字就播出、送出）／COMPOSE（打字時不出聲，`PLAY` 才送整行） |
+| `SEQ` | 鍵上顯示點劃（查表用）。0.3 起打開時鍵盤會變高、上方只留一行，碼和字母都看得到 |
+
+預設排列（SETTINGS 的 TYPE KEYS 可改成「A–Z 由左到右」或「Koch 順序」）：
+
+| 頁 | 白鍵 | 黑鍵 |
+|---|---|---|
+| 字母 | A B C D E F G H I J K L M N O P | Q R S T U V W X Y Z，最右邊是空白 |
+| 數字和符號 | `1 2 3 4 5 6 7 8 9 0 . , ? / = +` | `- ( ) ' " : ; @ ! & $` |
+| 片語 | CQ DE K `<KN>` `<AR>` `<SK>` `<BT>` 73 TU RST 5NN QTH NAME OP UR ES | GM GE FB R QRZ? QSL `<BK>` HW? PSE AGN QRS |
+
+片語的意思會顯示在畫面上，也列在[片語表](morse.md#phrases)。
+
+## CHART（字表）
+
+| 控制 | 作用 |
+|---|---|
+| `SELECT` | 移動 |
+| `PLAY` / `SEL` | 聽這個字 |
+| `REC` | 0.4：進入 EDIT（改的是副本，標題顯示 `EDIT *`） |
+
+EDIT 裡（0.4）：
+
+| 控制 | 作用 |
+|---|---|
+| `OCT-` / `OCT+`、`K1` | 這個字的等級 0–5；0 是「忘了」，會重新當新字出現 |
+| `K2` | 開放的組數 ±1 |
+| `FX` | 全部退一盒（生疏時） |
+| 按住 `SEL` 2 秒 | 全部歸零 |
+| `PLAY` / `REC` | 問「SAVE CHANGES?」：再按 `PLAY` 存，`HOME` 不存 |
+
+任何改進度的問題（SAVE CHANGES?、MARK THESE KNOWN?、LOAD THIS BACKUP?）都只認 `PLAY`（是）和 `HOME`（否），其他鍵沒作用。
+
+顏色：深紅是剛學、黃是一半、綠是熟了（兩張卡盒號的平均）；幾乎全黑的格子是還沒開的字。
+
+## SETTINGS
+
+`SELECT` 選項目，`OCT-` / `OCT+`（或 `SEL`）改值。
+
+| 項目 | 值 |
+|---|---|
+| PRESET | START、BUILDING、QSO、FAST；速度和這幾組都不同時顯示 CUSTOM |
+| HEAR SPEED | 聽的字元速度（同 K1） |
+| SPACING | 間隔（同 K2） |
+| SEND SPEED | 發報速度（同 K4） |
+| PITCH | 音高 |
+| KEYER | STRAIGHT、IAMBIC A、IAMBIC B |
+| PADDLES | LEFT DIT（左 dit 右 dah）或 LEFT DAH |
+| SOUND | ON 或 OFF（看燈） |
+| CARDS | 每回合 10–30 張 |
+| LEARN BY | SOUND（預設，建議）或 SIGHT（顯示點劃）。原因見[先用聽的](morse.md#by-sound) |
+| JUDGING | 0.4：BY RHYTHM（預設，看自己的長短比例）或 STRICT（照發報速度，0.3 的判法） |
+| TYPE KEYS | TYPE 頁的排列 |
+| BLUETOOTH | 0.5：ON（預設）或 OFF，關機後保留。旁邊會寫 NOT CONNECTED、CONNECTED，或 TALKING（電腦端程式或網頁正透過藍牙連著）。項目超過一頁，往下轉會捲動 |
+
+畫面右上角：`PC` 代表有會回應 MORSE 的程式連著（`morse` 指令列或 MORSE on the web，USB 或藍牙都算；Vail 只收按鍵、不回應，所以不會亮），0.6 起拔線後半秒內消失、走藍牙的在藍牙斷線時消失，其他情況是 10 秒沒消息才消失；`BT`（0.5）灰色代表藍牙開著、等電腦連上，藍色代表已經連上；`MUTE` 代表靜音。
+
+## 燈
+
+| 燈 | 意思 |
+|---|---|
+| 所有琴鍵全亮／半亮 | 自己在發／收到訊號（靜音時就看這個） |
+| 四個琴鍵亮、一個閃 | 四選一的選項，閃的是 `SELECT` 選中的 |
+| `FX` 亮 | 靜音 |
+| `PLAY` 綠 | 電腦端程式連著 |
+
+## 電腦端
+
+```sh
+just morse-type            # 解出的字打進 Mac 目前的視窗（要 Accessibility 權限）
+just morse-type --dry-run  # 只印出來
+just morse-send cq cq de fm1 k   # FM-1 當成收到的播出來（"73 <SK>" 這樣的 prosign 0.2 起可以）
+just morse-backup progress.json  # 0.4：學習進度存成 JSON（FM-1 上什麼都不變）
+just morse-restore progress.json # 0.4：載回去；FM-1 會先問，按 PLAY 才載入
+PYTHONPATH=host uv run python -m morse --bluetooth send cq   # 0.5：先打開 Mac 的藍牙 MIDI 視窗，等 FM-1 連上
+```
+
+0.5 起不接線也行：Mac 的「音訊 MIDI 設定」→ 顯示 MIDI 工作室 → 藍牙 → `FM-1 XXXX` 的 Connect。FM-1 重開後要再按一次（見[藍牙](morse.md#bluetooth)）。
+
+不想裝 Python 的話，用 Chrome 或 Edge 開 [MORSE on the web](https://daviddwlee84.github.io/fm1-morse/web/)：看 FM-1 讀到的字、送字給它播、備份和還原，都不用安裝。
+
+## 0.1 和 0.2 的差別
+
+0.1 只有一個速度（K1、K2），沒有 LISTEN、RHYTHM 和 PRESET。TYPE 頁要按住 `OCT-` 才是數字和符號，`OCT+` 是刪字，沒有清空，`PLAY` 也停不下來。
+## Controls
+
+| Control | Anywhere |
+|---|---|
+| `HOME` | the menu (again: back) |
+| `ALGO` | the next page |
+| `FX` | sound on / off (off: read the key lights) |
+| `K1`, `K2` | hearing speed, and the spacing between letters (Farnsworth) |
+| `K3` | pitch |
+| `K4` | sending speed: the keyer, the decoder's start, the RHYTHM target |
+| `MASTER` | volume |
+
+| Page | Controls |
+|---|---|
+| PRACTICE | `PLAY` start / again (a new letter too); `SEQ` a peek at the code of a new letter or an answer (learning by sound); `SELECT` on the start page: a round or a placement test; `E4` `F4` `G4` `A4` (lit) pick one of four, or `SELECT` + `SEL`; key the cards that ask for it; `SEL` don't know |
+| LISTEN | `PLAY` start / stop; `SELECT` program; `SEQ` show / hide; `SEL` peek |
+| KEY | `SEQ` view (text, code, timing); `OCT-` clear |
+| RHYTHM | `SELECT` drill; `PLAY` start again |
+| TYPE | `OCT-` / `OCT+` page (letters, digits and signs, phrases); `REC` delete, held: clear; `PLAY` play / stop; `SEL` live / compose; `SEQ` the code on the keys |
+| CHART | `SELECT` move; `PLAY` hear it; `REC` edit: `OCT-` / `OCT+` or `K1` the letter's level (0 = new again), `K2` groups open, `FX` all one box back, `SEL` held 2 s all reset; `PLAY` or `REC` then asks *SAVE CHANGES?* (`PLAY` yes, `HOME` no) |
+| SETTINGS | `SELECT` item; `OCT-` / `OCT+` change. PRESET sets the speeds together: START (hear 20/8, send 10), BUILDING, QSO, FAST. JUDGING: by rhythm (default) or strict (the decoder at the send speed, as up to 0.3) |
+
+Any question on the screen about your progress (save an edit, mark what a test found, load a
+backup) is answered only by `PLAY` (yes) or `HOME` (no); every other key is ignored while it asks.
+
+A longer guide (Traditional Chinese):
+[learning with MORSE](https://daviddwlee84.github.io/M-VAVE_FM-1/dev/morse-learn/),
+[design](https://daviddwlee84.github.io/M-VAVE_FM-1/dev/morse/),
+[cheatsheet](https://daviddwlee84.github.io/M-VAVE_FM-1/dev/morse-cheatsheet/).
+
+## Learning with MORSE
+````
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 11:16:13Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Find fm1-emu keyboard mapping notes
+
+```bash
+cd /private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/0a574306-469e-4a59-9622-5701a42aee59/scratchpad/emu && python3 -I - <<'EOF'
+import re,html
+s=open('index.html',encoding='utf-8').read()
+i=s.find('id="guide"')
+t=re.sub(r'<[^>]+>',' ',s[i:i+9000]); t=html.unescape(re.sub(r'\s+',' ',t))
+for k in ['keyboard','Keyboard','computer keys','Z X','mouse','embed']:
+    for m in re.finditer(k,t): print('..',t[max(0,m.start()-200):m.start()+300]); break
+EOF
+```
+
+```text
+.. e when you start it. The firmware list says what each one does. Press Start A browser only plays sound after a click. Changing the firmware or the clock later reboots the synth. Play Use the computer keyboard, the mouse or a touch screen, or a MIDI keyboard ( MIDI in ). The status line shows the clock, how much faster than real time the emulator runs the firmware on this device, and the load on the audio thread. Playing Computer keyboard W C♯4 E D♯4 T F♯4 Y G♯4 U A♯4 O C♯5 P D♯5 A C4 S D4 D E4 F
+.. rt it. The firmware list says what each one does. Press Start A browser only plays sound after a click. Changing the firmware or the clock later reboots the synth. Play Use the computer keyboard, the mouse or a touch screen, or a MIDI keyboard ( MIDI in ). The status line shows the clock, how much faster than real time the emulator runs the firmware on this device, and the load on the audio thread. Playing Computer keyboard W C♯4 E D♯4 T F♯4 Y G♯4 U A♯4 O C♯5 P D♯5 A C4 S D4 D E4 F F4 G G4 H A4
+Shell cwd was reset to /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 11:16:19Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Read web page head and styles
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/firmware/morse && sed -n 1,39p web/index.html`
+
+```text
+<!doctype html>
+<!-- SPDX-License-Identifier: GPL-3.0-or-later -->
+<!-- MORSE for the M-VAVE FM-1: back up and restore the learning progress over Web MIDI (firmware 0.4 and later).
+     The protocol is the one in host/morse/progress.py of github.com/daviddwlee84/M-VAVE_FM-1 (PROTOCOL.md,
+     "Progress"); the JSON file is the same as `morse backup` writes. -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MORSE on the web</title>
+<style>
+  :root { --bg: #f6f6f3; --fg: #1b1b1f; --dim: #6b6b73; --card: #ffffff; --line: #dcdcd6; --accent: #0a72c2;
+          --ok: #1f8f4e; --bad: #c0392b; --l0: #e9d6d6; --l1: #e8b9a0; --l2: #eccb7c; --l3: #d9d77a; --l4: #a7d78f;
+          --l5: #6fd39a; --closed: #ececea; }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg: #111114; --fg: #ececf0; --dim: #9a9aa6; --card: #1b1b20; --line: #2c2c34; --accent: #5ab4ff;
+            --ok: #50dc78; --bad: #f0463c; --l0: #462828; --l1: #8c3c28; --l2: #be781e; --l3: #aaaa28;
+            --l4: #5ab446; --l5: #3cd278; --closed: #18181c; }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--fg); font: 16px/1.5 system-ui, sans-serif; }
+  main { max-width: 760px; margin: 0 auto; padding: 24px 16px 48px; }
+  h1 { font-size: 1.6rem; margin: 0 0 4px; }
+  p.lead { color: var(--dim); margin: 0 0 20px; }
+  section { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 16px; margin: 14px 0; }
+  h2 { font-size: 1.05rem; margin: 0 0 8px; }
+  button, label.file { font: inherit; padding: 8px 14px; border-radius: 8px; border: 1px solid var(--accent);
+                       background: var(--accent); color: #fff; cursor: pointer; display: inline-block; }
+  button:disabled { opacity: .45; cursor: default; }
+  button.ghost { background: transparent; color: var(--accent); }
+  input[type=file] { display: none; }
+  #status { font-weight: 600; }
+  #heard { min-height: 4.5em; max-height: 12em; overflow-y: auto; padding: 10px; border-radius: 8px;
+           background: var(--bg); border: 1px solid var(--line); font: 1.15rem/1.5 ui-monospace, monospace;
+           white-space: pre-wrap; word-break: break-word; }
+  #decoded { min-height: 3em; max-height: 9em; overflow-y: auto; padding: 10px; border-radius: 8px;
+             background: var(--bg); border: 1px dashed var(--line); font: 1.05rem/1.5 ui-monospace, monospace;
+             white-space: pre-wrap; word-break: break-word; }
+  table { border-collapse: collapse; width: 100%; margin: 8px 0; font-size: .95em; }
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 11:16:45Z)**_
+
+<tool-use data-tool-type="write" data-tool-name="Write"><details>
+<summary>Tool use: **Write**</summary>
+
+```html
+<!doctype html>
+<!-- SPDX-License-Identifier: GPL-3.0-or-later -->
+<!-- MORSE for the M-VAVE FM-1, tried in the browser: fm1-emu (github.com/joakimeriksson/fm1-emu) runs the release
+     package itself in WebAssembly. ?fw=morse is the package The Firmware Hub lists now, so this page follows each
+     release without a copy of its own; &embed=1 shows only the synth and its controls. -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Try MORSE</title>
+<style>
+  :root { --bg: #f6f6f3; --fg: #1b1b1f; --dim: #6b6b73; --card: #ffffff; --line: #dcdcd6; --accent: #0a72c2; }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg: #111114; --fg: #ececf0; --dim: #9a9aa6; --card: #1b1b20; --line: #2c2c34; --accent: #5ab4ff; }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--fg); font: 16px/1.5 system-ui, sans-serif; }
+  main { max-width: 1120px; margin: 0 auto; padding: 24px 16px 48px; }
+  h1 { font-size: 1.6rem; margin: 0 0 4px; }
+  p.lead { color: var(--dim); margin: 0 0 16px; }
+  a { color: var(--accent); }
+  section { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 16px; margin: 14px 0; }
+  h2 { font-size: 1.05rem; margin: 0 0 8px; }
+  .emu { width: 100%; aspect-ratio: 1300 / 1000; border: 0; border-radius: 10px; background: #1b1b20; display: block; }
+  .row { display: flex; gap: 10px 16px; flex-wrap: wrap; align-items: center; margin: 10px 0 0; }
+  button { font: inherit; padding: 6px 12px; border-radius: 8px; border: 1px solid var(--accent);
+           background: transparent; color: var(--accent); cursor: pointer; }
+  .dim { color: var(--dim); }
+  .cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 0 14px; }
+  ol, ul { padding-left: 1.2em; margin: 6px 0; }
+  li { margin: 3px 0; }
+  code, kbd { font-family: ui-monospace, monospace; font-size: .92em; }
+  kbd { border: 1px solid var(--line); border-bottom-width: 2px; border-radius: 4px; padding: 0 4px; background: var(--bg); }
+</style>
+</head>
+<body>
+<main>
+  <h1>Try MORSE</h1>
+  <p class="lead">MORSE on an FM-1 in your browser: the same firmware you would install, run by the
+    <a href="https://github.com/joakimeriksson/fm1-emu">fm1-emu</a> emulator. Press <b>Start</b> on the screen, then
+    click the synth once so it hears your keyboard. Back to <a href="../">MORSE on the web</a> ·
+    <a href="../cheatsheet.html">cheatsheet</a> · <a href="https://github.com/daviddwlee84/fm1-morse">source</a>.</p>
+
+  <iframe class="emu" id="emu" title="MORSE in the FM-1 emulator" allow="autoplay; midi"
+          src="https://joakimeriksson.github.io/fm1-emu/?fw=morse&amp;embed=1"></iframe>
+  <div class="row">
+    <button id="reload" type="button">Reload the emulator</button>
+    <a id="full" href="https://joakimeriksson.github.io/fm1-emu/?fw=morse">Open it full page</a>
+    <span class="dim">Says <code>morse-….fwsc: 404</code>? A new release has just replaced the package; reload.</span>
+  </div>
+
+  <div class="cols">
+    <section>
+      <h2>Things to try</h2>
+      <ol>
+        <li><b>Send.</b> It starts on the menu. Turn <b>SELECT</b> to KEY, press <b>SEL</b>, and key on the piano
+          keys: short presses are dits, long ones dahs. It writes what it read.</li>
+        <li><b>Hear.</b> <b>HOME</b>, then LISTEN, <b>PLAY</b>: endless practice at 20 WPM with the gaps
+          stretched (Farnsworth). <b>SELECT</b> changes the program: Koch groups, words, a QSO.</li>
+        <li><b>Learn.</b> PRACTICE, <b>PLAY</b>: flash cards by sound, five letters first (K M U R E).</li>
+        <li><b>Type.</b> TYPE: every key is a letter, digit or CW phrase; it plays them.</li>
+        <li><b>Set up.</b> SETTINGS, the last row: START PAGE, the page it starts on.</li>
+      </ol>
+    </section>
+    <section>
+      <h2>Keys on the computer</h2>
+      <ul>
+        <li>The piano keys: <kbd>A</kbd> <kbd>S</kbd> <kbd>D</kbd> <kbd>F</kbd> <kbd>G</kbd> <kbd>H</kbd> … are white
+          keys from C4, <kbd>W</kbd> <kbd>E</kbd> <kbd>T</kbd> … the black ones. Any of them is a straight key.</li>
+        <li>Buttons and knobs: click or drag them on the panel.</li>
+        <li>The emulator's own <a href="https://joakimeriksson.github.io/fm1-emu/#guide">guide</a> has the whole map
+          and MIDI in.</li>
+      </ul>
+      <h2>Here, not on an FM-1</h2>
+      <ul>
+        <li>No Bluetooth, and no MIDI out to <a href="https://vailmorse.com/">Vail</a>: on a real FM-1 the keying goes
+          out over USB-MIDI or Bluetooth MIDI.</li>
+        <li>What it learns is kept in this browser, not on a device. Back-ups of a real FM-1's progress are on
+          <a href="../">MORSE on the web</a>.</li>
+        <li>Timing follows your computer: a slow one makes the keying less even than the real thing.</li>
+      </ul>
+    </section>
+  </div>
+</main>
+<script>
+"use strict";
+const SRC = "https://joakimeriksson.github.io/fm1-emu/?fw=morse&embed=1";
+document.getElementById("reload").onclick = () => {   // a new address: neither the frame nor its catalog read is reused
+  document.getElementById("emu").src = `${SRC}&t=${Date.now()}`;
+};
+</script>
+</body>
+</html>
+
+```
+
+```text
+File created successfully at: /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/firmware/morse/web/try/index.html (file state is current in your context — no need to Read it back)
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 11:16:54Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Correct the reload wording on the try page
+
+```bash
+python3 - <<'EOF'
+p='web/try/index.html'; s=open(p).read()
+s=s.replace('''<span class="dim">Says <code>morse-….fwsc: 404</code>? A new release has just replaced the package; reload.</span>''','''<span class="dim">Says <code>morse-….fwsc: 404</code>? A new release has just replaced the package: reload,
+      or try again in ten minutes.</span>''')
+s=s.replace('''document.getElementById("reload").onclick = () => {   // a new address: neither the frame nor its catalog read is reused''','''document.getElementById("reload").onclick = () => {   // the frame loaded again (its catalog read may still be cached)''')
+open(p,'w').write(s)
+EOF
+echo ok
+```
+
+```text
+ok
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 11:16:58Z)**_
+
+Try 頁做好了。接著寫英文 cheatsheet。
+
+_**Agent (claude-opus-5-5 2026-11-18 11:17:47Z)**_
+
+<tool-use data-tool-type="write" data-tool-name="Write"><details>
+<summary>Tool use: **Write**</summary>
+
+```html
+<!doctype html>
+<!-- SPDX-License-Identifier: GPL-3.0-or-later -->
+<!-- MORSE for the M-VAVE FM-1: every page and button on one sheet, printable. The Traditional Chinese one is
+     docs/dev/morse-cheatsheet.md in github.com/daviddwlee84/M-VAVE_FM-1; keep the two in step. -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MORSE Cheatsheet</title>
+<style>
+  :root { --bg: #f6f6f3; --fg: #1b1b1f; --dim: #6b6b73; --card: #ffffff; --line: #dcdcd6; --accent: #0a72c2; }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg: #111114; --fg: #ececf0; --dim: #9a9aa6; --card: #1b1b20; --line: #2c2c34; --accent: #5ab4ff; }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--fg); font: 15px/1.45 system-ui, sans-serif; }
+  main { max-width: 1120px; margin: 0 auto; padding: 24px 16px 48px; }
+  h1 { font-size: 1.6rem; margin: 0 0 4px; }
+  p.lead { color: var(--dim); margin: 0 0 16px; }
+  a { color: var(--accent); }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(330px, 1fr)); gap: 12px; align-items: start; }
+  section { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; break-inside: avoid; }
+  section.wide { grid-column: 1 / -1; }
+  h2 { font-size: 1rem; margin: 0 0 6px; letter-spacing: .02em; }
+  table { border-collapse: collapse; width: 100%; font-size: .93em; }
+  td, th { text-align: left; padding: 3px 6px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { color: var(--dim); font-weight: 600; }
+  td:first-child { white-space: nowrap; }
+  code, kbd { font-family: ui-monospace, monospace; font-size: .92em; }
+  kbd { border: 1px solid var(--line); border-bottom-width: 2px; border-radius: 4px; padding: 0 4px; background: var(--bg);
+        white-space: nowrap; }
+  p { margin: 6px 0; }
+  .dim { color: var(--dim); }
+  .table-scroll { overflow-x: auto; }
+  @media print {
+    :root { --bg: #fff; --fg: #000; --dim: #444; --card: #fff; --line: #bbb; --accent: #000; }
+    body { font-size: 9.5pt; }
+    main { max-width: none; padding: 0; }
+    .noprint { display: none; }
+    .grid { grid-template-columns: 1fr 1fr; gap: 6px; }
+    section { padding: 6px 8px; border-radius: 4px; }
+    a { text-decoration: none; }
+    @page { size: A4; margin: 10mm; }
+  }
+</style>
+</head>
+<body>
+<main>
+  <h1>MORSE cheatsheet</h1>
+  <p class="lead">Firmware 0.7, every page and button. Learn on the device, key on its piano keys, read what you sent.
+    <span class="noprint"><a href="./">MORSE on the web</a> · <a href="try/">try it in the browser</a> ·
+    <a href="https://github.com/daviddwlee84/fm1-morse">source and install</a> ·
+    <a href="javascript:print()">print</a></span></p>
+
+  <div class="grid">
+    <section>
+      <h2>Anywhere</h2>
+      <table>
+        <tr><td><kbd>HOME</kbd></td><td>the menu; on the menu, back where you were</td></tr>
+        <tr><td><kbd>ALGO</kbd> knob</td><td>the next or previous page</td></tr>
+        <tr><td><kbd>FX</kbd></td><td>sound on / off; off, <kbd>FX</kbd> lights and you read the key lights</td></tr>
+        <tr><td><kbd>K1</kbd></td><td>hearing speed: characters at 5–40 WPM (20)</td></tr>
+        <tr><td><kbd>K2</kbd></td><td>spacing (Farnsworth): letters and words pulled apart, 5 up to the hearing speed (8)</td></tr>
+        <tr><td><kbd>K3</kbd></td><td>pitch 300–1200 Hz (600); what it receives sounds a major third higher</td></tr>
+        <tr><td><kbd>K4</kbd></td><td>sending speed 5–40 WPM (10): the keyer, where KEY's decoder starts, RHYTHM's target</td></tr>
+        <tr><td><kbd>MASTER</kbd></td><td>volume</td></tr>
+      </table>
+      <p class="dim">Turning a speed shows what it means (SEND 10 WPM DIT 120MS DAH 360MS). Settings save themselves
+        3 s after the last change. Not sure? SETTINGS &gt; PRESET.</p>
+    </section>
+
+    <section>
+      <h2>PRACTICE: flash cards</h2>
+      <table>
+        <tr><td><kbd>PLAY</kbd></td><td>start a round; after the prompt, hear it again</td></tr>
+        <tr><td><kbd>SELECT</kbd></td><td>on the start page: a round, or TEST (a placement test: the next two groups once each, what you get right can be marked known)</td></tr>
+        <tr><td><kbd>E4</kbd> <kbd>F4</kbd> <kbd>G4</kbd> <kbd>A4</kbd></td><td>pick one of four: the four lit keys are the choices on the screen, left to right</td></tr>
+        <tr><td><kbd>SELECT</kbd> + <kbd>SEL</kbd></td><td>or turn to a choice (it blinks) and press SEL</td></tr>
+        <tr><td>piano keys</td><td>cards that ask you to key it: when <i>your turn</i> shows, key with the keyer you set; judged by your own rhythm (a dah about three dits), any speed</td></tr>
+        <tr><td><kbd>SEL</kbd></td><td>on a keyed card: don't know (counted wrong, the answer shows)</td></tr>
+        <tr><td>any piano key</td><td>a new letter: next card once seen and heard; an answer: go on without waiting</td></tr>
+        <tr><td><kbd>SEQ</kbd></td><td>learning by sound: a peek at the code of a new letter or an answer (hidden again on the next card; never on hear-and-choose)</td></tr>
+        <tr><td><kbd>HOME</kbd></td><td>leave; what you answered is kept</td></tr>
+      </table>
+      <p class="dim">A keyed card's result: RIGHT / ALMOST / NO, a grade, READ AS (what the decoder read), and
+        SHOULD (the standard rhythm) over YOU (what you pressed), the mark that flipped in red. ALMOST neither moves
+        the card up nor back to the start; it comes again at the end of the round. NEXT GROUP WAITS ON: the letters
+        holding back the next group.</p>
+    </section>
+
+    <section>
+      <h2>LISTEN: endless practice</h2>
+      <table>
+        <tr><td><kbd>PLAY</kbd></td><td>start / stop</td></tr>
+        <tr><td><kbd>SELECT</kbd></td><td>program: KOCH GROUPS, WORDS, QSO, ABBREVIATIONS, SAYINGS</td></tr>
+        <tr><td><kbd>SEQ</kbd></td><td>show / hide the text being played (hidden, a line shows once it has played)</td></tr>
+        <tr><td><kbd>SEL</kbd></td><td>hidden: a peek at this line</td></tr>
+      </table>
+    </section>
+
+    <section>
+      <h2>KEY: send, it reads you</h2>
+      <table>
+        <tr><td>piano keys</td><td>straight key: any key. Iambic: the left half (F3–F4) dit, the right half (F♯4–G5) dah; SETTINGS &gt; PADDLES swaps them</td></tr>
+        <tr><td><kbd>SEQ</kbd></td><td>view: TEXT → CODE (your dits and dahs under each letter) → TIMING (every mark drawn to length)</td></tr>
+        <tr><td><kbd>OCT-</kbd></td><td>clear the screen</td></tr>
+      </table>
+      <p class="dim">White is what you sent, amber what came in (MIDI, or text from the computer). The top line: the
+        speed the decoder hears, the dah:dit ratio (3.0 is standard) and the gap inside a letter (1.0); amber when far
+        off. TIMING: the grey bars are the target dit and dah, a red line a pause long enough to split a letter in two.
+        With a computer connected, the keying goes out over USB-MIDI or Bluetooth MIDI in the
+        <a href="https://vailmorse.com/">Vail</a> format.</p>
+    </section>
+
+    <section>
+      <h2>RHYTHM: short and long</h2>
+      <table>
+        <tr><td>piano keys</td><td>key to the target</td></tr>
+        <tr><td><kbd>SELECT</kbd></td><td>drill: DITS, DAHS, DIT DAH, SOS, FREE</td></tr>
+        <tr><td><kbd>PLAY</kbd></td><td>start again (the counts cleared)</td></tr>
+        <tr><td><kbd>K4</kbd></td><td>the target speed</td></tr>
+      </table>
+      <p class="dim">The frame is the target length, the bar what you pressed: green good, yellow off, red the other
+        kind. The tip below looks at the last 16 marks.</p>
+    </section>
+
+    <section>
+      <h2>TYPE: the keys are letters</h2>
+      <table>
+        <tr><td><kbd>OCT-</kbd> / <kbd>OCT+</kbd></td><td>page: letters → digits and signs → phrases</td></tr>
+        <tr><td><kbd>REC</kbd></td><td>delete the last character; held 0.6 s, the whole line</td></tr>
+        <tr><td><kbd>PLAY</kbd></td><td>play the line; while playing, stop</td></tr>
+        <tr><td><kbd>SEL</kbd></td><td>LIVE (each key plays and goes out) / COMPOSE (silent until PLAY sends the line)</td></tr>
+        <tr><td><kbd>SEQ</kbd></td><td>the code on the keys (a lookup table)</td></tr>
+      </table>
+      <div class="table-scroll"><table>
+        <tr><th>page</th><th>white keys</th><th>black keys</th></tr>
+        <tr><td>letters</td><td>A–P</td><td>Q–Z, then space</td></tr>
+        <tr><td>signs</td><td><code>1–9 0 . , ? / = +</code></td><td><code>- ( ) ' " : ; @ ! &amp; $</code></td></tr>
+        <tr><td>phrases</td><td>CQ DE K &lt;KN&gt; &lt;AR&gt; &lt;SK&gt; &lt;BT&gt; 73 TU RST 5NN QTH NAME OP UR ES</td><td>GM GE FB R QRZ? QSL &lt;BK&gt; HW? PSE AGN QRS</td></tr>
+      </table></div>
+      <p class="dim">SETTINGS &gt; TYPE KEYS changes the layout: A–Z left to right, or Koch order. A phrase's meaning
+        shows on the screen.</p>
+    </section>
+
+    <section>
+      <h2>CHART: how far you are</h2>
+      <table>
+        <tr><td><kbd>SELECT</kbd></td><td>move</td></tr>
+        <tr><td><kbd>PLAY</kbd> / <kbd>SEL</kbd></td><td>hear this letter</td></tr>
+        <tr><td><kbd>REC</kbd></td><td>EDIT (a copy: the title says <code>EDIT *</code> once changed)</td></tr>
+      </table>
+      <p><b>In EDIT</b></p>
+      <table>
+        <tr><td><kbd>OCT-</kbd> / <kbd>OCT+</kbd>, <kbd>K1</kbd></td><td>this letter's level 0–5; 0 is forgotten: it comes again as new</td></tr>
+        <tr><td><kbd>K2</kbd></td><td>groups open ±1</td></tr>
+        <tr><td><kbd>FX</kbd></td><td>everything one box back (rusty)</td></tr>
+        <tr><td><kbd>SEL</kbd> held 2 s</td><td>everything back to new</td></tr>
+        <tr><td><kbd>PLAY</kbd> / <kbd>REC</kbd></td><td>asks SAVE CHANGES?</td></tr>
+      </table>
+      <p class="dim">Colours: dark red just learnt, yellow halfway, green known; nearly black, not open yet.</p>
+    </section>
+
+    <section>
+      <h2>SETTINGS</h2>
+      <p class="dim"><kbd>SELECT</kbd> the item, <kbd>OCT-</kbd> / <kbd>OCT+</kbd> (or <kbd>SEL</kbd>) the value.
+        The list scrolls past the screen.</p>
+      <table>
+        <tr><td>PRESET</td><td>START (hear 20/8, send 10), BUILDING, QSO, FAST; CUSTOM when the speeds match none</td></tr>
+        <tr><td>HEAR SPEED</td><td>as <kbd>K1</kbd></td></tr>
+        <tr><td>SPACING</td><td>as <kbd>K2</kbd></td></tr>
+        <tr><td>SEND SPEED</td><td>as <kbd>K4</kbd></td></tr>
+        <tr><td>PITCH</td><td>as <kbd>K3</kbd></td></tr>
+        <tr><td>KEYER</td><td>STRAIGHT, IAMBIC A, IAMBIC B</td></tr>
+        <tr><td>PADDLES</td><td>LEFT DIT (left dit, right dah) or LEFT DAH</td></tr>
+        <tr><td>SOUND</td><td>ON, or OFF (the lights)</td></tr>
+        <tr><td>CARDS</td><td>10–30 a round</td></tr>
+        <tr><td>LEARN BY</td><td>SOUND (best) or SIGHT (the code shows)</td></tr>
+        <tr><td>JUDGING</td><td>BY RHYTHM (your own ratio) or STRICT (at the send speed)</td></tr>
+        <tr><td>TYPE KEYS</td><td>TYPE's layout</td></tr>
+        <tr><td>BLUETOOTH</td><td>ON or OFF, kept; beside it NOT CONNECTED, CONNECTED, or TALKING (a MORSE program or page on Bluetooth)</td></tr>
+        <tr><td>START PAGE</td><td>0.7: the page it starts on: MENU (default), PRACTICE, LISTEN, KEY, RHYTHM, TYPE, CHART</td></tr>
+      </table>
+    </section>
+
+    <section>
+      <h2>On the screen and the lights</h2>
+      <table>
+        <tr><td><code>PC</code></td><td>a program that answers MORSE is connected (the <code>morse</code> host or MORSE on the web, USB or Bluetooth). Vail only listens, so it does not light it</td></tr>
+        <tr><td><code>BT</code></td><td>grey: Bluetooth on, waiting; blue: connected</td></tr>
+        <tr><td><code>MUTE</code></td><td>the sound is off</td></tr>
+        <tr><td>all keys lit / half lit</td><td>you are sending / a signal is coming in</td></tr>
+        <tr><td>four keys lit, one blinking</td><td>pick one of four; the blinking one is SELECT's</td></tr>
+        <tr><td><kbd>PLAY</kbd> green</td><td>a program on the computer is connected</td></tr>
+      </table>
+      <p class="dim">Questions that change your progress (SAVE CHANGES?, MARK THESE KNOWN?, LOAD THIS BACKUP?) take
+        only <kbd>PLAY</kbd> (yes) and <kbd>HOME</kbd> (no).</p>
+    </section>
+
+    <section>
+      <h2>Prosigns</h2>
+      <p class="dim">Letters run together with no gap. Some share a punctuation sign's code, so decoders name them
+        differently.</p>
+      <table>
+        <tr><th>prosign</th><th>code</th><th>means</th><th>also</th></tr>
+        <tr><td>&lt;AR&gt;</td><td><code>·−·−·</code></td><td>end of message</td><td><code>+</code></td></tr>
+        <tr><td>&lt;KN&gt;</td><td><code>−·−−·</code></td><td>over, only you</td><td><code>(</code></td></tr>
+        <tr><td>&lt;BT&gt;</td><td><code>−···−</code></td><td>new paragraph, pause</td><td><code>=</code></td></tr>
+        <tr><td>&lt;SK&gt;</td><td><code>···−·−</code></td><td>end of contact</td><td>Vail: &lt;VA&gt;; the FM-1's decoder: <code>*</code></td></tr>
+        <tr><td>&lt;BK&gt;</td><td><code>−···−·−</code></td><td>break, back to you</td><td></td></tr>
+      </table>
+    </section>
+
+    <section class="wide">
+      <h2>With a computer</h2>
+      <p><a href="./">MORSE on the web</a> (Chrome or Edge, nothing to install): see what the FM-1 reads, send it
+        text to play, back up and restore your progress and, from 0.7, your settings. Over USB, or Bluetooth MIDI
+        (0.5+: on a Mac, Audio MIDI Setup → Show MIDI Studio → Bluetooth → Connect <i>FM-1 XXXX</i>, again after the
+        FM-1 restarts), or the page's own <i>Over Bluetooth, directly</i>.
+        <a href="https://vailmorse.com/">Vail</a> takes the keying as it is. The Python host
+        (<code>morse type</code>, <code>morse send</code>, <code>morse backup</code> / <code>restore</code>) is in
+        <a href="https://github.com/daviddwlee84/M-VAVE_FM-1/tree/main/host/morse">M-VAVE_FM-1</a>.</p>
+    </section>
+  </div>
+</main>
+</body>
+</html>
+
+```
+
+```text
+File created successfully at: /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/firmware/morse/web/cheatsheet.html (file state is current in your context — no need to Read it back)
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 11:17:53Z)**_
+
+Cheatsheet 寫好了。用本機 server 和 Playwright 截圖檢查兩頁。
+
+_**Agent (claude-opus-5-5 2026-11-18 11:18:21Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Screenshot cheatsheet, try and index pages locally
+
+```bash
+(python3 -m http.server 8765 --bind 127.0.0.1 >/dev/null 2>&1 &) ; sleep 0.1; SP=/private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/0a574306-469e-4a59-9622-5701a42aee59/scratchpad; cat > $SP/pages.mjs <<'EOF'
+import { createRequire } from 'module';
+const require = createRequire('/Users/zhouhanru/.local/share/mise/installs/node/24.13.0/lib/node_modules/@playwright/cli/node_modules/');
+const { chromium } = require('playwright-core');
+const [exe, out] = process.argv.slice(2);
+const b = await chromium.launch({ executablePath: exe });
+for (const [name, url, w, h, scheme] of [
+  ['cheat_light', 'http://127.0.0.1:8765/web/cheatsheet.html', 1200, 900, 'light'],
+  ['cheat_dark_phone', 'http://127.0.0.1:8765/web/cheatsheet.html', 390, 844, 'dark'],
+  ['try_light', 'http://127.0.0.1:8765/web/try/', 1200, 1000, 'light'],
+  ['try_phone', 'http://127.0.0.1:8765/web/try/', 390, 844, 'dark'],
+  ['index_top', 'http://127.0.0.1:8765/web/', 1000, 500, 'light']]) {
+  const p = await b.newPage({ viewport: { width: w, height: h }, colorScheme: scheme });
+  p.on('pageerror', e => console.log(name, 'PAGEERROR', e.message));
+  await p.goto(url, { waitUntil: 'load' });
+  await p.waitForTimeout(name.startsWith('try') ? 6000 : 500);
+  const sw = await p.evaluate(() => [document.documentElement.scrollWidth, innerWidth]);
+  console.log(name, 'scrollWidth/innerWidth', sw);
+  await p.screenshot({ path: `${out}/${name}.png`, fullPage: !name.startsWith('try') && name !== 'index_top' });
+  await p.close();
+}
+const p = await b.newPage(); await p.goto('http://127.0.0.1:8765/web/cheatsheet.html');
+await p.pdf({ path: `${out}/cheat.pdf`, format: 'A4' }); console.log('pdf ok');
+await b.close();
+EOF
+node $SP/pages.mjs "$HOME/Library/Caches/ms-playwright/chromium-1255/chrome-mac-arm64/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing" $SP
+```
+
+```text
+cheat_light scrollWidth/innerWidth [ 1200, 1200 ]
+cheat_dark_phone scrollWidth/innerWidth [ 390, 390 ]
+try_light scrollWidth/innerWidth [ 1200, 1200 ]
+try_phone scrollWidth/innerWidth [ 390, 390 ]
+index_top scrollWidth/innerWidth [ 1000, 1000 ]
+pdf ok
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 11:18:26Z)**_
+
+<tool-use data-tool-type="read" data-tool-name="Read"><details>
+<summary>Tool use: **Read**</summary>
+ `/private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/0a574306-469e-4a59-9622-5701a42aee59/scratchpad/try_light.png`
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 11:18:27Z)**_
+
+<tool-use data-tool-type="read" data-tool-name="Read"><details>
+<summary>Tool use: **Read**</summary>
+ `/private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/0a574306-469e-4a59-9622-5701a42aee59/scratchpad/cheat_light.png`
+</details></tool-use>
+
+---
+
+_**User (2026-11-18 11:18:27Z)**_
+
+[Image: original 1200x3002, displayed at 799x2000. Multiply coordinates by 1.50 to map to original image.]
+
+---
+
+_**Agent (claude-opus-5-5 2026-11-18 11:18:33Z)**_
+
+Both pages render fine with no horizontal scroll. The try page's iframe cuts off the bottom of the emulator controls slightly, so I'm making it a little taller. Then fmhub.json, README, and the docs.
+
+_**Agent (claude-opus-5-5 2026-11-18 11:18:37Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Update fmhub.json play/cheat and check README version spots
+
+```bash
+sed -i '' 's#aspect-ratio: 1300 / 1000;#aspect-ratio: 1300 / 1060;#' web/try/index.html && python3 - <<'EOF'
+import json
+p='fmhub.json'; d=json.load(open(p))
+new={}
+for k,v in d.items():
+    new[k]=v
+    if k=='kinds': new['play']="https://daviddwlee84.github.io/fm1-morse/web/try/"
+new['cheat']="https://daviddwlee84.github.io/fm1-morse/web/cheatsheet.html"
+new['what']=new['what'].replace("back up your progress from a web page.","back up your progress and settings from a web page.")
+assert len(new['what'])<=300, len(new['what'])
+json.dump(new,open(p,'w'),indent=2,ensure_ascii=False); open(p,'a').write('\n')
+print(open(p).read())
+EOF
+grep -n -E '0\.6|Firmware 0|settings_bt|downgrade|Bluetooth' README.md | head -20
+```
+
+```text
+Traceback (most recent call last):
+  File "<stdin>", line 9, in <module>
+AssertionError: 355
+9:text to copy, back up and restore your progress. Chrome or Edge, the FM-1 on USB or Bluetooth, nothing to install.
+28:Keying goes out and comes in over USB-MIDI or Bluetooth MIDI as note 0 on channel 1, the
+83:## Bluetooth
+85:MORSE 0.5 is also a Bluetooth MIDI device (fm1-base's own stack), beside USB: Vail, MORSE on the
+89:- **Mac**: Audio MIDI Setup, *Window > Show MIDI Studio*, the Bluetooth button, *Connect* next to
+94:- One computer at a time. With USB and Bluetooth both connected, the host and the web page talk over
+96:- Keying sent over Bluetooth carries real BLE-MIDI timestamps, and keying received is decoded by the
+99:- Nothing of Bluetooth's is written to the flash (no pairing to keep).
+107:- In Chrome or Edge, over USB or (0.5) Bluetooth: [MORSE on the web](https://daviddwlee84.github.io/fm1-morse/web/)
+133:| ![settings](docs/screens/settings.png) SETTINGS | ![bluetooth](docs/screens/settings_bt.png) SETTINGS: BLUETOOTH, connected | |
+153:outside its own firmware area (nothing for Bluetooth), and does not touch the global settings at `0xFC000`. (An update to
+[This command modified 1 file you've previously read: web/try/index.html. Call Read before editing.]
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 11:18:45Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Add play and cheat to fmhub.json, read README parts
+
+```bash
+python3 - <<'EOF'
+import json
+p='fmhub.json'; d=json.load(open(p))
+new={}
+for k,v in d.items():
+    new[k]=v
+    if k=='kinds': new['play']="https://daviddwlee84.github.io/fm1-morse/web/try/"
+new['cheat']="https://daviddwlee84.github.io/fm1-morse/web/cheatsheet.html"
+json.dump(new,open(p,'w'),indent=2,ensure_ascii=False); open(p,'a').write('\n')
+EOF
+python3 -m json.tool fmhub.json >/dev/null && cat fmhub.json; sed -n 1,12p README.md; sed -n 100,135p README.md
+```
+
+```text
+{
+  "what": "Learn and use Morse code. Key on the piano keys (straight key or iambic paddles) and see what you sent, drill short and long presses, learn by sound with flash cards, listen to endless practice, type letters and CW phrases on the keys. Keying goes out over USB-MIDI or Bluetooth MIDI in the Vail format; back up your progress from a web page.",
+  "author": "Da-Wei Lee",
+  "kinds": [
+    "other"
+  ],
+  "play": "https://daviddwlee84.github.io/fm1-morse/web/try/",
+  "editor": "https://daviddwlee84.github.io/fm1-morse/web/",
+  "cheat": "https://daviddwlee84.github.io/fm1-morse/web/cheatsheet.html",
+  "image": "docs/screen.png",
+  "color": "#5AC8FF",
+  "sounds": "none"
+}
+# MORSE for the M-VAVE FM-1
+
+A pocket Morse code machine for the [M-VAVE FM-1](https://www.m-vave.com/), built on
+[fm1-base](https://github.com/charlesvestal/fm1-base). Key on the piano keys and read what you
+sent, drill short and long presses, learn the code by sound with flash cards, listen to endless
+practice, type letters and CW phrases on the keys. GPL-3.0-or-later.
+
+**[MORSE on the web](https://daviddwlee84.github.io/fm1-morse/web/)**: see what your FM-1 reads, send it
+text to copy, back up and restore your progress. Chrome or Edge, the FM-1 on USB or Bluetooth, nothing to install.
+
+![MORSE on the FM-1](docs/screen.png)
+
+
+## Your progress: back up and restore
+
+The progress lives on the FM-1 at `0xDA000` (below). Another firmware may keep it or overwrite it
+(SLOOP 2.8.5 kept it in our test; going back to stock V15 does not), so back it up before
+switching. MORSE 0.4 and later:
+
+- In Chrome or Edge, over USB or (0.5) Bluetooth: [MORSE on the web](https://daviddwlee84.github.io/fm1-morse/web/)
+  (or `web/index.html` from this repository, opened from your disk): *Download the progress*,
+  later *Send it to the FM-1*.
+- Or on the command line with the host from
+  [M-VAVE_FM-1](https://github.com/daviddwlee84/M-VAVE_FM-1): `morse backup FILE.json`,
+  `morse restore FILE.json`.
+
+The file is plain JSON, every letter's two boxes (0-5) and the rounds, and can be edited. The FM-1
+shows what it received and loads it only after `PLAY`.
+
+## Screens
+
+From fm1-base's host simulator (`tests/basic.txt`), twice the size.
+
+| | | |
+|---|---|---|
+| ![menu](docs/screens/menu.png) menu | ![start](docs/screens/boot.png) PRACTICE: start | ![new](docs/screens/card_new.png) a new letter |
+| ![peek](docs/screens/card_new_peek.png) `SEQ`: a peek at its code | | |
+| ![hear and choose](docs/screens/card_hear.png) hear, pick one of four | ![key it](docs/screens/card_see_key.png) see it, key it | ![key what you hear](docs/screens/card_hear_key.png) hear it, key it back |
+| ![right](docs/screens/result_keyed.png) a keyed answer: right | ![wrong](docs/screens/result_keyed_wrong.png) wrong: SHOULD over YOU | ![almost](docs/screens/result_almost.png) almost |
+| ![done](docs/screens/done.png) a round done | ![test](docs/screens/practice_test.png) placement test | ![placement](docs/screens/placement_ask.png) mark what you knew |
+| ![listen](docs/screens/listen.png) LISTEN | ![listen hidden](docs/screens/listen_hidden.png) LISTEN, hidden | ![key](docs/screens/key.png) KEY: text |
+| ![key code](docs/screens/key_code.png) KEY: code | ![key timing](docs/screens/key_timing.png) KEY: timing | ![rhythm](docs/screens/rhythm.png) RHYTHM |
+| ![rhythm good](docs/screens/rhythm_good.png) RHYTHM: even | ![rhythm dahs](docs/screens/rhythm_dahs.png) RHYTHM: dahs short | ![type](docs/screens/type.png) TYPE: letters |
+| ![type code](docs/screens/type_code.png) TYPE: the code on the keys | ![phrases](docs/screens/type_phrases.png) TYPE: phrases | ![chart](docs/screens/chart.png) CHART |
+| ![chart edit](docs/screens/chart_edit.png) CHART: edit | ![save](docs/screens/chart_save.png) save? | ![load](docs/screens/load_ask.png) a backup to load |
+| ![settings](docs/screens/settings.png) SETTINGS | ![bluetooth](docs/screens/settings_bt.png) SETTINGS: BLUETOOTH, connected | |
+
+## Install
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 11:18:56Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Update README for try page, cheatsheet and settings backup
+
+```bash
+python3 - <<'EOF'
+p='README.md'; s=open(p).read()
+def rep(a,b):
+    global s
+    assert a in s, a[:60]; s=s.replace(a,b)
+rep('''**[MORSE on the web](https://daviddwlee84.github.io/fm1-morse/web/)**: see what your FM-1 reads, send it
+text to copy, back up and restore your progress. Chrome or Edge, the FM-1 on USB or Bluetooth, nothing to install.''','''**[MORSE on the web](https://daviddwlee84.github.io/fm1-morse/web/)**: see what your FM-1 reads, send it
+text to copy, back up and restore your progress. Chrome or Edge, the FM-1 on USB or Bluetooth, nothing to install.
+No FM-1 at hand? **[Try it in the browser](https://daviddwlee84.github.io/fm1-morse/web/try/)** (the
+[fm1-emu](https://github.com/joakimeriksson/fm1-emu) emulator). Every page and button on one sheet:
+**[cheatsheet](https://daviddwlee84.github.io/fm1-morse/web/cheatsheet.html)**.''')
+rep('''The file is plain JSON, every letter's two boxes (0-5) and the rounds, and can be edited. The FM-1
+shows what it received and loads it only after `PLAY`.''','''The file is plain JSON, every letter's two boxes (0-5) and the rounds, and can be edited. From 0.7 it
+holds the settings too (speeds, keyer, START PAGE, ...), and loading it onto 0.7 or later restores them;
+an older MORSE, or an older file, takes the progress alone. The FM-1 shows what it received and loads
+it only after `PLAY`.
+
+Going back from 0.7 to an older MORSE: set SETTINGS > START PAGE to MENU first (or back up). 0.6 and
+before do not know the start page and would start over, progress included.''')
+rep('''| ![settings](docs/screens/settings.png) SETTINGS | ![bluetooth](docs/screens/settings_bt.png) SETTINGS: BLUETOOTH, connected | |''','''| ![settings](docs/screens/settings.png) SETTINGS | ![bluetooth](docs/screens/settings_bt.png) SETTINGS: BLUETOOTH, connected | ![start page](docs/screens/settings_start.png) SETTINGS: START PAGE |
+| ![load settings](docs/screens/load_settings.png) a backup with settings | | |''')
+open(p,'w').write(s)
+EOF
+sed -n 34,37p README.md; grep -n -A3 'A longer guide' README.md
+```
+
+```text
+([`host/morse`](https://github.com/daviddwlee84/M-VAVE_FM-1/tree/main/host/morse)) types what you
+send into the computer and sends text for the FM-1 to play.
+
+## Controls
+62:A longer guide (Traditional Chinese):
+63-[learning with MORSE](https://daviddwlee84.github.io/M-VAVE_FM-1/dev/morse-learn/),
+64-[design](https://daviddwlee84.github.io/M-VAVE_FM-1/dev/morse/),
+65-[cheatsheet](https://daviddwlee84.github.io/M-VAVE_FM-1/dev/morse-cheatsheet/).
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 11:19:03Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Note start page and cheatsheet in README controls
+
+```bash
+python3 - <<'EOF'
+p='README.md'; s=open(p).read()
+a='''## Controls
+'''
+s=s.replace(a,a+'''
+The whole set on one printable page: **[cheatsheet](https://daviddwlee84.github.io/fm1-morse/web/cheatsheet.html)**.
+MORSE starts on the menu (SETTINGS > START PAGE picks another page; up to 0.6 it started on PRACTICE).
+''',1)
+s=s.replace('''| SETTINGS | `SELECT` item; `OCT-` / `OCT+` change. PRESET''','''| SETTINGS | `SELECT` item; `OCT-` / `OCT+` change. START PAGE: the page it starts on (MENU by default). PRESET''')
+open(p,'w').write(s)
+EOF
+grep -n 'START PAGE' README.md | head; grep -n 'settings_bt' ../../Justfile
+```
+
+```text
+40:MORSE starts on the menu (SETTINGS > START PAGE picks another page; up to 0.6 it started on PRACTICE).
+60:| SETTINGS | `SELECT` item; `OCT-` / `OCT+` change. START PAGE: the page it starts on (MENU by default). PRESET sets the speeds together: START (hear 20/8, send 10), BUILDING, QSO, FAST. JUDGING: by rhythm (default) or strict (the decoder at the send speed, as up to 0.3) |
+121:holds the settings too (speeds, keyer, START PAGE, ...), and loading it onto 0.7 or later restores them;
+125:Going back from 0.7 to an older MORSE: set SETTINGS > START PAGE to MENU first (or back up). 0.6 and
+144:| ![settings](docs/screens/settings.png) SETTINGS | ![bluetooth](docs/screens/settings_bt.png) SETTINGS: BLUETOOTH, connected | ![start page](docs/screens/settings_start.png) SETTINGS: START PAGE |
+323:    rhythm_dahs type type_code type_phrases chart chart_edit chart_save load_ask settings settings_bt""".split()
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 11:19:12Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Add new screens to morse-shots and regenerate
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1 && sed -i '' 's/chart_save load_ask settings settings_bt"""/chart_save load_ask settings settings_bt settings_start load_settings"""/' Justfile && sed -n 315,335p Justfile && just morse-shots 2>&1 | tail -3 && git -C firmware/morse status --short`
+
+```text
+    set -euo pipefail
+    uv run --locked --all-groups python - <<'PY'
+    from pathlib import Path
+    from PIL import Image
+    src, dst = Path("firmware/morse/build/host"), Path("firmware/morse/docs/screens")
+    dst.mkdir(parents=True, exist_ok=True)
+    names = """menu boot card_new card_new_peek card_hear card_see_key card_hear_key result_right result_keyed result_keyed_wrong
+    result_almost done practice_test placement_ask listen listen_hidden key key_code key_timing rhythm rhythm_good
+    rhythm_dahs type type_code type_phrases chart chart_edit chart_save load_ask settings settings_bt settings_start load_settings""".split()
+    for n in names:
+        im = Image.open(src / f"{n}.png").convert("RGB")
+        im.resize((im.width * 2, im.height * 2), Image.NEAREST).save(dst / f"{n}.png", optimize=True)
+    print(f"{len(names)} screens in {dst}")
+    PY
+
+# ---- theory: a music theory trainer, so far its platform-free core (firmware/theory, docs/dev/theory.md) ----
+
+# theory.c on this computer: spelling, scales, keys, chords, Roman numerals, naming a chord, voicing, and
+# music21's spellings (tests/vectors.h). Strict flags: the core must build in fm1-base (no double, no libc).
+theory-unit:
+    #!/usr/bin/env bash
+host: 265045 ms simulated, 2220 blits, render 0.0% of real time (host CPU)
+screenshots and audio: firmware/morse/build/host/
+33 screens in firmware/morse/docs/screens
+ M README.md
+ M app.c
+ M docs/screens/card_hear.png
+ M docs/screens/chart_edit.png
+ M docs/screens/listen.png
+ M docs/screens/listen_hidden.png
+ M docs/screens/result_right.png
+ M docs/screens/settings_bt.png
+ M fmhub.json
+ M tests/basic.txt
+ M web/index.html
+?? docs/screens/load_settings.png
+?? docs/screens/settings_start.png
+?? web/cheatsheet.html
+?? web/try/
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 11:19:16Z)**_
+
+Several existing screenshots changed too. Checking what differs:
+
+_**Agent (claude-opus-5-5 2026-11-18 11:19:20Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Compare changed screenshots with the committed ones
+
+```bash
+cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/firmware/morse && SP=/private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/0a574306-469e-4a59-9622-5701a42aee59/scratchpad && for n in settings_bt listen card_hear; do git show HEAD:docs/screens/$n.png > $SP/old_$n.png; done; cd ../.. && uv run --locked --all-groups python -c "
+from PIL import Image, ImageChops
+import sys
+sp='$SP'
+for n in ['settings_bt','listen','card_hear','chart_edit','result_right','listen_hidden']:
+    import subprocess
+    old=Image.open(subprocess.run(['true'])and f'{sp}/old_{n}.png' if n in ['settings_bt','listen','card_hear'] else f'{sp}/old_{n}.png').convert('RGB') if n in ['settings_bt','listen','card_hear'] else None
+    if old is None: continue
+    new=Image.open(f'firmware/morse/docs/screens/{n}.png').convert('RGB')
+    print(n, ImageChops.difference(old,new).getbbox())
+"
+```
+
+```text
+settings_bt (16, 408, 246, 416)
+listen (8, 78, 440, 408)
+card_hear (176, 266, 428, 298)
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 11:19:27Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Make side-by-side comparison images
+
+```bash
+SP=/private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/0a574306-469e-4a59-9622-5701a42aee59/scratchpad && uv run --locked --all-groups python -c "
+from PIL import Image
+sp='$SP'
+for n in ['listen','settings_bt']:
+    a=Image.open(f'{sp}/old_{n}.png'); b=Image.open(f'firmware/morse/docs/screens/{n}.png')
+    c=Image.new('RGB',(a.width*2+10,a.height),'white'); c.paste(a,(0,0)); c.paste(b,(a.width+10,0)); c.save(f'{sp}/cmp_{n}.png')
+"
+```
+
+```text
+(Bash completed with no output)
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 11:19:31Z)**_
+
+<tool-use data-tool-type="read" data-tool-name="Read"><details>
+<summary>Tool use: **Read**</summary>
+ `/private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/0a574306-469e-4a59-9622-5701a42aee59/scratchpad/cmp_listen.png`
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 11:19:32Z)**_
+
+<tool-use data-tool-type="read" data-tool-name="Read"><details>
+<summary>Tool use: **Read**</summary>
+ `/private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/0a574306-469e-4a59-9622-5701a42aee59/scratchpad/cmp_settings_bt.png`
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 11:19:41Z)**_
+
+The scroll window cuts row 14 (START PAGE) in half under the footer when BLUETOOTH is selected. I'll skip drawing rows that don't fit completely:
+
+_**Agent (claude-opus-5-5 2026-11-18 11:19:44Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Draw only whole rows in the settings list
+
+```bash
+cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/firmware/morse && python3 - <<'EOF'
+p='app.c'; s=open(p).read()
+a='''    for (i = 0; i < SET_ITEMS; i++) {
+        int32_t y = 1 + (int32_t)i * 14 - oy - top;
+        if (i == ui.sel)'''
+assert a in s
+s=s.replace(a,'''    for (i = 0; i < SET_ITEMS; i++) {
+        int32_t y = 1 + (int32_t)i * 14 - oy - top;
+        if (y + oy < 0 || y + oy + 13 > MAIN_H)   /* only whole rows */
+            continue;
+        if (i == ui.sel)''')
+open(p,'w').write(s)
+EOF
+grep -n '#define MAIN_H' app.c; grep -n '^static void set_at' app.c
+```
+
+```text
+2965:#define MAIN_H 176
+2896:static void set_at(int32_t oy)
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 11:19:54Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Move MAIN_H before use and regenerate screens
+
+```bash
+python3 - <<'EOF'
+p='app.c'; s=open(p).read()
+s=s.replace('#define MAIN_H 176\n','',1)
+s=s.replace('static void set_at(int32_t oy)\n','#define MAIN_H 176                      /* the page between the header and the footer */\nstatic void set_at(int32_t oy)\n',1)
+open(p,'w').write(s)
+EOF
+cd ../.. && just morse-shots 2>&1 | grep -E 'FAIL|screens|EXPECT'
+```
+
+```text
+screenshots and audio: firmware/morse/build/host/
+33 screens in firmware/morse/docs/screens
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 11:19:59Z)**_
+
+<tool-use data-tool-type="read" data-tool-name="Read"><details>
+<summary>Tool use: **Read**</summary>
+ `./firmware/morse/docs/screens/settings_bt.png`
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 11:20:03Z)**_
+
+Fixed. Next, PROTOCOL.md and the docs.
+
+_**Agent (claude-opus-5-5 2026-11-18 11:20:18Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Document backup format 2 in PROTOCOL.md
+
+```bash
+python3 - <<'EOF'
+p='host/morse/PROTOCOL.md'; s=open(p).read()
+def rep(a,b):
+    global s
+    assert a in s, a[:60]; s=s.replace(a,b)
+rep('''The record: a format byte (`01`), then `learn.c`'s `ln_blob`, 259 bytes little-endian with no padding (round u16,
+streak u16, open u8, answered u32, right u32, then for each of the 41 characters in Koch order its recognise and
+send boxes, u8 each, then for each its two last-answered rounds, u16 each, `FFFF` never), then a CRC-16/CCITT-FALSE
+(poly `1021`, init `FFFF`) of the 260 bytes before it, low byte first: 262 bytes.''','''The record: a format byte, then `learn.c`'s `ln_blob`, 259 bytes little-endian with no padding (round u16,
+streak u16, open u8, answered u32, right u32, then for each of the 41 characters in Koch order its recognise and
+send boxes, u8 each, then for each its two last-answered rounds, u16 each, `FFFF` never), then in format 2 the
+settings, then a CRC-16/CCITT-FALSE (poly `1021`, init `FFFF`) of every byte before it, low byte first.
+
+| Format | Firmware | Bytes |
+|---|---|---|
+| `01` | 0.4-0.6 send and take it; 0.7 takes it (the progress alone, its settings left as they are) | 1 + 259 + 2 = 262 |
+| `02` | 0.7 sends it and takes it | 1 + 259 + 12 + 2 = 274 |
+
+The settings in format 2, 12 bytes (`app.c` `set_blob`, its `set_t`): hearing WPM, spacing (Farnsworth) WPM, keyer
+(0 straight, 1 iambic A, 2 iambic B), paddles swapped, flags (bit 0 sound off, bit 1 Bluetooth off, bits 2-4 the
+start page: 0 MENU, 1 PRACTICE, 2 LISTEN, 3 KEY, 4 RHYTHM, 5 TYPE, 6 CHART; bits 5-7 zero), cards a round, learn by
+(0 sound, 1 sight), look (bits 0-1 KEY's view, 2 TYPE shows the code, 3-4 TYPE's layout, 5 LISTEN hides the text,
+6 TYPE composes, 7 strict judging), pitch u16 Hz, sending WPM, LISTEN's program. The device refuses settings its
+`set_valid` would not keep. A host sends format 2 only to firmware 0.7 and later (from the HELLO), and format 1 to
+older firmware or for a file without settings.''')
+rep('''On the wire it is cut into chunks of 49 bytes: 6 frames,''','''On the wire it is cut into chunks of 49 bytes: 6 frames in either format,''')
+rep('''The file (`morse backup`): JSON, `"format": "fm1-morse-progress"`, `"version": 1`, the round, streak, open,
+answered and right, and for each character `recognise`, `send` (0..5), `last_recognise`, `last_send` (a round or
+`null`).''','''The file (`morse backup`): JSON, `"format": "fm1-morse-progress"`, `"version": 2` (host 0.7; 1 before, still
+read), the round, streak, open, answered and right, for each character `recognise`, `send` (0..5),
+`last_recognise`, `last_send` (a round or `null`), and from firmware 0.7 `"settings"` with named values
+(`hear_wpm`, `spacing_wpm`, `send_wpm`, `pitch_hz`, `keyer`, `paddles`, `sound`, `bluetooth`, `start_page`, `cards`,
+`learn_by`, `judging`, `key_view`, `type_layout`, `type_shows_code`, `type_composes`, `listen_hides_text`,
+`listen_program`; `progress.py` `Settings.to_dict`). Missing settings take their defaults; an unknown one is
+refused.''')
+rep('''| hello (firmware 0.4, USB) |''','''| hello (firmware 0.7, USB) |''') if '| hello (firmware 0.4, USB) |' in s else None
+rep('''| prog_fresh_0, prog_fresh_5, prog_load_0..5 | in `progress.py` `VECTORS`: a fresh record's first and last chunk as sent, and the sample backup loaded |''','''| prog_fresh_0, prog_fresh_5, prog_load_0..5, prog_v2_0..5 | in `progress.py` `VECTORS`: a fresh record's first and last chunk as firmware 0.7 sends them (format 2), the sample backup loaded in format 1, and with settings in format 2 |''')
+rep('''(the host logs it, prefers USB when it hears both, and the web page shows it).''','''(the host logs it, prefers USB when it hears both, and the web page shows it).
+
+Firmware 0.7 adds no frame either: PROG and PROG_LOAD carry format 2 (the settings after the progress), and still
+take format 1 in.''')
+open(p,'w').write(s)
+EOF
+grep -n 'hello (firmware' host/morse/PROTOCOL.md; grep -n '41 01 00 0' host/morse/PROTOCOL.md
+```
+
+```text
+101:| hello (firmware 0.7, USB) | `F0 7D 4D 4F 01 41 01 00 04 00 F7` |
+101:| hello (firmware 0.7, USB) | `F0 7D 4D 4F 01 41 01 00 04 00 F7` |
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 11:20:23Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Fix hello vector and find 0.6 references in morse.md
+
+`sed -i '' 's/| hello (firmware 0.7, USB) | `F0 7D 4D 4F 01 41 01 00 04 00 F7` |/| hello (firmware 0.7, USB) | `F0 7D 4D 4F 01 41 01 00 07 00 F7` |/' host/morse/PROTOCOL.md && grep -n -E '0\.6' docs/dev/morse.md | head -40`
+
+```text
+302:    | 藍牙，網頁收到的時間 | 60.4，sd 3.1 | 180.6，sd 3.2 | 59.9，sd 2.5 |
+318:- **實機** `[實機]`（2026-11-18，韌體 0.6）：Chrome 的配對視窗列出 `FM-1 3399`，Pair 之後狀態寫 `MORSE 0.6 connected over Bluetooth`，Live 收到 TYPE 頁的字和片語。Timing（22 WPM，點 54 ms、劃 162 ms）：照網頁換算的 BLE-MIDI 時間戳記，sd 0.4–0.5 ms；照通知到達的時間，sd 18–20 ms，比經過 CoreMIDI 的到達時間（sd 約 3）抖得多，所以這條路一定要用時間戳記。
+345:- 0.5 拔線後 header 的 `PC` 要大約 10 秒才消失：FM-1 要等 10 秒沒收到電腦的訊息（`HOSTLINK_TIMEOUT_MS`），才判定電腦離線。0.6 改成 USB 連續 0.5 秒收不了 SysEx（拔線後匯流排 suspend，`plat_sysex_room()` 是 0；USB session 的號碼不會變，所以原本的檢查抓不到）就判定離線，2026-11-18 實機確認：接上 USB、`PC` 亮起後拔線，半秒內消失，接著線時幾乎沒看到閃 `[實機]`。判斷本身有單元測試（`just fw-common-test`：停 0.499 秒不算、0.5 秒算、中間恢復就重新計時）；模擬器的 `usb unplug` 把 session 歸零，走的是原本的檢查，所以拔線後真的會 suspend 這件事要在實機上確認。
+347:    **會不會常常閃**：`plat_sysex_room()` 是 0 的情況只有四種：沒有 USB 設定、匯流排 suspend（拔線、Mac 系統睡眠）、正在串流一個 frame（MORSE 不用），以及送出的 ring 滿了。電腦接著時，macOS 的 USB-MIDI driver 每毫秒都會讀 IN endpoint，就算沒有程式開著 port 也一樣，所以 ring 只會滿幾毫秒（例如送備份的 6 個 frame）。要連續 0.5 秒都是 0，只有拔線、Mac 睡眠，或電腦卡住不讀。真的掉了，FM-1 下一秒就送 HELLO，程式回應後 `PC` 又會亮起來。刷 0.6 後要在實機上看：拔線時 `PC` 會不會馬上消失，接著線時會不會閃。
+392:| 0.6（release） | 173,844 B | 38,572 / 98,304 B |
+440:| 韌體 0.6、host 0.6.0 | 2026-11-18 | 是（17:00 前用 USB-MIDI 裝 release build `FM-1_41000600`，fm1-morse `60f76cf`，release [v0.6](https://github.com/daviddwlee84/fm1-morse/releases/tag/v0.6)） | 拔線後 `PC` 在 0.5 秒內消失（hostlink：USB 收不了 SysEx 就判定電腦離開，`firmware/common` 同步），實機確認，接著線時沒看到閃 `[實機]`；網頁：*Over Bluetooth, directly*（[Web Bluetooth](#web-bluetooth)）、USB 和藍牙都在時用 USB、*Timing* 區、自己的解碼器（字元速度、劃長、停頓幾個點、整體 WPM）、*With Vail* 和 PRESET 的說明、*Only show it*（只讀進度不存檔）、備份檔名加上時分 |
+469:7. 新版本：2026-11-18 發布 [v0.6](https://github.com/daviddwlee84/fm1-morse/releases/tag/v0.6)（tag 在 `60f76cf`，`morse-0.6.fwsc` SHA-256 `d65b6df5…8fd7e`，刷進實機的那份，digest 相符）。之前同一天發了 [v0.5](https://github.com/daviddwlee84/fm1-morse/releases/tag/v0.5)（tag 在 `a75c29e`，0.4 沒有單獨發 release），附 `morse-0.5.fwsc`（SHA-256 `49433190…154457`，就是刷進實機的那份，GitHub 的 asset digest 相符）和 `firmware.json`。Hub 會跟著 GitHub 的最新 release。`fmhub.json` 的說明加上藍牙。
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 11:20:29Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+View morse.md structure, sizes and version table
+
+`sed -n 380,400p docs/dev/morse.md; sed -n 405,470p docs/dev/morse.md | grep -n -E '^#|^\| 版本|0\.7|central|roadmap|Roadmap|^\| 韌體' ; grep -n -E '^## |^### ' docs/dev/morse.md`
+
+```text
+### 大小 { #size }
+
+`just fw-build morse`（2026-11-17）：
+
+| 版本 | app | `.data+.bss` |
+|---|---|---|
+| 0.1 | 109,508 B | 27,180 / 98,304 B |
+| 0.2 | 127,712 B | 28,444 / 98,304 B |
+| 0.3 | 127,880 B | 28,444 / 98,304 B |
+| 0.4 | 138,076 B（release） | 29,084 / 98,304 B |
+| 0.5（藍牙，release） | 173,748 B | 38,572 / 98,304 B |
+| 0.6（release） | 173,844 B | 38,572 / 98,304 B |
+
+上限是 581,564 B；RAM code 5,576 / 32,768 B（0.5）；套件 616,003 B，開發版 identity `FM-1_4100`。0.5 開了 own BLE stack（peripheral），多 35.7 KB；之後加 central 大約再多 13–22 KB（fm1-base 的數字），仍然很寬裕。
+
+## 驗證
+
+| 項目 | 指令 | 結果 |
+|---|---|---|
+| 碼表、時序、解碼器、keyer、閃卡規則 | `just morse-unit` | 251 項全過 |
+29:## 版本紀錄
+33:| 版本 | 日期 | 要刷機 | 內容 |
+35:| 韌體 0.1、host 0.1.0 | 2026-11-17 | 是（22:54 刷入，`c3b5cd6`） | 第一版：KEY、TYPE、PRACTICE、CHART、SETTINGS，兩種學習方式，Vail 格式的 MIDI，host 的 `type`／`send`／`listen`。原本規劃分成 0.1（核心）和 0.2（閃卡），因為一起做完、都還沒刷，合併成 0.1 |
+36:| 韌體 0.6、host 0.6.0 | 2026-11-18 | 是（17:00 前用 USB-MIDI 裝 release build `FM-1_41000600`，fm1-morse `60f76cf`，release [v0.6](https://github.com/daviddwlee84/fm1-morse/releases/tag/v0.6)） | 拔線後 `PC` 在 0.5 秒內消失（hostlink：USB 收不了 SysEx 就判定電腦離開，`firmware/common` 同步），實機確認，接著線時沒看到閃 `[實機]`；網頁：*Over Bluetooth, directly*（[Web Bluetooth](#web-bluetooth)）、USB 和藍牙都在時用 USB、*Timing* 區、自己的解碼器（字元速度、劃長、停頓幾個點、整體 WPM）、*With Vail* 和 PRESET 的說明、*Only show it*（只讀進度不存檔）、備份檔名加上時分 |
+37:| 韌體 0.5、host 0.5.0 | 2026-11-18 | 是（16:20 用 USB-MIDI 裝 release build `FM-1_41000500`，fm1-morse `a75c29e`，release [v0.5](https://github.com/daviddwlee84/fm1-morse/releases/tag/v0.5)） | [藍牙](#bluetooth)：fm1-base own stack 的 BLE-MIDI peripheral，和 USB 同時用；SETTINGS 加 BLUETOOTH 開關（存在紀錄裡，格式不變）；header 顯示 `BT`；SETTINGS 頁可以捲動；收訊按鍵照送出端的時間解碼；host 印出走哪條路、兩條都有時優先 USB、`--bluetooth` 打開 Mac 的藍牙 MIDI 視窗；網頁顯示走哪條路 |
+38:| 韌體 0.4、host 0.4.0 | 2026-11-18 | 是（05:20 用 USB-MIDI 裝 release build `FM-1_41000400`，fm1-morse `323d79b`） | 實機回饋（ROUND 14 還停在第一組）：打碼卡改用答案自己的節奏判斷（[判定](#judging)），手速跨卡延續，評級和 SHOULD／YOU 對照圖，ALMOST；SET 頁的 JUDGING 可以切回 STRICT；CHART 編輯、分級測驗、開始畫面列出擋住下一組的字，SOUND 模式下新字和答案可以按 `SEQ` 偷看點劃，弱卡在同一回合重複出現、熟字只在有空位時補，[手動修改都要按 PLAY 確認](#progress)；進度的[備份與還原](#backup)（`T_PROG_*`、host 的 `backup`／`restore`、網頁）。藍牙順延到 0.5 |
+39:| 韌體 0.3 release（`FM-1_41000300`） | 2026-11-18 | 是（Hub 測試時用 USB-MIDI 裝過三次） | fm1-morse 的第一個 release [v0.3](https://github.com/daviddwlee84/fm1-morse/releases/tag/v0.3)：identity 改成 `FM-1_41`，授權改成 GPL-3.0-or-later，程式和 0.3 相同 |
+40:| 韌體 0.3、host 0.3.0 | 2026-11-18 | 是（02:12 刷入，`02b0ea2`） | TYPE 打開鍵上點劃時，鍵盤從 86 px 拉高到 126 px、上方輸入行縮成一行，黑鍵和白鍵都同時放得下碼和字母（0.2 黑鍵只剩碼、白鍵的碼壓到字母，數字頁的 `0` 放不下）。藍牙順延到 0.4 |
+41:| 韌體 0.2、host 0.2.0 | 2026-11-18 | 是（00:14 刷入，`54ff440`） | 實機試用後的回饋：發報速度和聽的速度分開（K4），PRESET 推薦組合，轉速度時顯示 dit／dah 毫秒；KEY 頁 TEXT／CODE／TIMING 三種顯示；RHYTHM 頁（練長短、提示、建議速度）；LISTEN 頁（連續播放五種節目）；TYPE 頁翻三頁（字母、數字符號、片語）、三種排列、鍵上點劃、LIVE／COMPOSE、`PLAY` 可停止、`REC` 刪字和清空；prosign `<SK>`；解碼器遇到長短差 2 倍時回頭修正；靜音和改音高不再重設解碼器。藍牙順延到 0.3 |
+43:## 獨立 repo 和上架 { #release }
+7:## 有沒有人做過 { #prior-art }
+17:## 功能
+33:## 速度：WPM 是什麼、該設多少 { #speed }
+69:## 學習：閃卡和間隔複習
+83:### 打碼卡怎麼判 { #judging }
+101:### 先用聽的：學習方式設定 { #by-sound }
+121:### 進度：跳過、退回、歸零 { #progress }
+134:### 備份與還原 { #backup }
+149:## 練長短：RHYTHM 頁 { #rhythm }
+163:## 收聽：LISTEN 頁 { #listen }
+179:## 片語、prosign 和實際的用法 { #phrases }
+218:## 和 Vail 搭配 { #vail }
+227:## 電腦端（host）
+241:## 兩台互傳
+247:## 藍牙（0.5） { #bluetooth }
+251:### 能做什麼
+261:### 怎麼連
+273:### 怎麼做的
+284:### 時間準不準
+309:### 網頁直接連藍牙（Web Bluetooth） { #web-bluetooth }
+320:### 瀏覽器
+328:### 已知的限制
+336:### 驗證
+358:## 設計
+360:### 時序
+368:### 存檔 { #flash }
+381:### 大小 { #size }
+396:## 驗證
+433:## 版本紀錄
+447:## 獨立 repo 和上架 { #release }
+471:## 路線圖 { #roadmap }
+479:### Backlog { #backlog }
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 11:20:34Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Read backup, flash, verification, release and roadmap sections
+
+`sed -n 134,148p docs/dev/morse.md; sed -n 368,380p docs/dev/morse.md; sed -n 396,432p docs/dev/morse.md; sed -n 447,500p docs/dev/morse.md`
+
+```text
+### 備份與還原 { #backup }
+
+進度存在 FM-1 的 `0xDA000`（見[存檔](#flash)）。換韌體時不一定保得住：2026-11-18 實測從 SLOOP 2.8.5 切回來時還在，刷回原廠 V15 就沒了 `[實機]`。換韌體前先備份。0.4 起有兩種方式：
+
+| 方式 | 怎麼做 |
+|---|---|
+| 網頁（Chrome、Edge） | [MORSE on the web](https://daviddwlee84.github.io/fm1-morse/web/)（fm1-morse 的 `web/index.html`，舊網址 `web/progress.html` 會轉過去）：Connect、Download the progress；還原時選檔案、Send it to the FM-1 |
+| 指令列 | `just morse-backup FILE.json`、`just morse-restore FILE.json` |
+
+檔案是 JSON，列出每個字兩個方向的盒號（0–5）和最後作答的回合，可以手改。FM-1 收到後先檢查 CRC 和內容是否合理，再顯示回合數、開放幾個字、答過幾題，按 `PLAY` 才載入。協定見 [`host/morse/PROTOCOL.md`](https://github.com/daviddwlee84/M-VAVE_FM-1/blob/main/host/morse/PROTOCOL.md) 的 Progress 一節。
+
+- **USB 或藍牙**：0.4 只能走 USB；0.5 也能走[藍牙](#bluetooth)，網頁會顯示走哪一條。網頁找機器時不看 port 名稱，而是看哪個 port 在送 HELLO，因為 macOS 會沿用這個 USB 裝置第一次接上時的名字（這台叫 `Felucca`）`[實機]`；藍牙的 port 叫 `FM-1 XXXX`。走藍牙時，網頁等備份回來的時間從 5 秒放寬到 15 秒。
+- **入口**：fm1-morse README 的最上面，以及 Hub 卡片：`fmhub.json` 的 `editor` 欄位（「a web editor for its sounds or settings」`[上游]`）2026-11-18 填了這個網址。
+- **Live**（2026-11-18 加入，不需要新韌體）：網頁顯示 FM-1 讀到的字（`T_CHAR`，在 KEY 頁發報或在 TYPE 頁打字）和按鍵燈號（note 0），也能送字給 FM-1 播（`T_TEXT`、`T_STOP`），等於網頁版的 `morse-send`，加上只顯示、不打進系統的 `morse-type`。網頁會回應 HELLO，所以 FM-1 會顯示 `PC`。送字在實機上試過 `[實機]`。
+
+### 存檔 { #flash }
+
+一筆紀錄（設定 + 學習進度，約 280 bytes）放在 `0xDA000`–`0xDBFFF`，透過 fm1-base 的 storage 層存（A/B 兩份、CRC）。在回合結束或離開、改設定 3 秒後才寫。不碰 SLOOP、Agent Deck、CTL-1 共用的 `0xFC000`。這台機器所有備份的 `0xDA000`–`0xDBFFF` 都是空的。
+
+0.2 沿用 0.1 的紀錄格式：0.1 留下的空位改放 KEY／TYPE／LISTEN 的顯示選項、發報速度、LISTEN 的節目。從 0.1 升級時設定和進度都保留，發報速度從 0 補成預設的 10（fm1-emu 兩種晶片驗證過 `[模擬]`）。
+
+預演 `[模擬]`：把 `firmware/morse/build/morse.fwsc` 疊在 `backups/2026-11-17-2052-pre-conductor/` 上開機、改一個設定、玩完一回合：
+
+| | sector |
+|---|---|
+| 安裝（和目前機上的 Conductor 不同的部分） | `0x04000`–`0x1EFFF`，27 個；套件映像範圍是 `0x04000`–`0x92FFF` |
+| 執行時寫入 | `0xDA000`–`0xDBFFF`，只有這 2 個 |
+
+## 驗證
+
+| 項目 | 指令 | 結果 |
+|---|---|---|
+| 碼表、時序、解碼器、keyer、閃卡規則 | `just morse-unit` | 251 項全過 |
+| 整個 app（發報、收報、Vail 位元組、host 協定、靜音、iambic B、TYPE、三回合閃卡含真的按鍵作答、重開機讀回） | `just fw-test morse` | 全過 |
+| host 協定、和韌體共用的測試向量 | `just morse-test` | 全過 |
+| 實機套件 | `just fw-build morse` | build 自帶檢查全過 |
+| 兩種晶片：改設定、玩一回合、重開讀回 | fm1-emu `uc25hq80`、`p25q80` | 都讀回「ROUND 2」和改過的設定 `[模擬]` |
+| USB MIDI 的實際位元組 | fm1-emu `--usb` 的 trace | 按 K 送出 `90 00 7F`／`80 00 00`、`T_CHAR 'K'`；收到 host 的 `T_TEXT` 會顯示 `[模擬]` |
+| host 接模擬器的虛擬 USB 線 | `just morse-emu` + `just morse-send` | 找到 `MORSE FM-1 (emu)`、收到 HELLO、送出文字 `[模擬]` |
+| Vail 網頁 | — | 還沒測 |
+| 刷進實機 | `just fm1-switch firmware/morse/build/morse.fwsc` | 寫入 30 個 sector（`0x04000`–`0x21FFF`），和預演一致 `[實機]` |
+| 實機和電腦連線 | `python -m morse send`、監聽 script | port 名稱沿用 `Felucca`，host 依協定找到；HELLO、HELLO_ACK、`T_TEXT`、`T_CHAR` 都正常 `[實機]` |
+| 實機 KEY 頁 | 本人直鍵發報 | 解碼正確；按鍵以 Vail 格式送出，長度是手打的真實值 `[實機]` |
+| 實機 TYPE 頁 | 本人按字 | `T_CHAR` 即時送出；播放 dit 60 ms、Farnsworth 字間 652 ms，和設計一致；K1 調速生效 `[實機]` |
+| 實機 PRACTICE | 本人玩了一回合 | 本人回饋「還可以」`[實機]` |
+| 實機靜音、iambic | — | 還沒在實機上確認 |
+| 0.2：解碼器重讀、prosign、LISTEN 的內容 | `just morse-unit` | 2932 項全過（大部分是逐行檢查產生的節目都播得出來） |
+| 0.2：整個 app（三種 KEY 檢視、RHYTHM 三種提示、TYPE 翻頁、片語、COMPOSE、停止、REC 清空、排列方式、LISTEN、PRESET、K4、升級後重開讀回、四回合閃卡） | `just fw-test morse` | 全過 |
+| 0.2：從 0.1 的紀錄升級、改設定、重開讀回 | fm1-emu `uc25hq80`、`p25q80` | 設定和進度保留，發報速度補成 10，改過的值重開後讀回 `[模擬]` |
+| 0.2：疊在實機 0.1 的備份上 | `emu_rehearse.py` + fm1-emu | 真正的學習紀錄（ROUND 4、聽 15/14）升級後保留 `[模擬]` |
+| 0.2 刷進實機 | `just fm1-switch firmware/morse/build/morse.fwsc` | 寫入 32 個 sector（`0x04000`–`0x23FFF`），和預演一致；HELLO 回報 0.2，`<SK>` 送出 `[實機]` |
+| 0.2 升級後的進度 | 本人看 PRACTICE 頁 | 還是 ROUND 4：刷機只改寫韌體區，`0xDA000` 的紀錄留著 `[實機]` |
+| 0.2 新頁面 | 本人試用 RHYTHM、KEY 顯示、TYPE、LISTEN、PRESET | 「感覺都還不錯」；TYPE 鍵上點劃在黑鍵擠掉字母 → 0.3 修 `[實機]` |
+| 0.3：TYPE 鍵上點劃、從 0.2 升級、存檔重開讀回 | `just fw-test morse`、fm1-emu 兩種晶片 | 全過；字母頁和數字頁的碼與字母都放得下 `[模擬]` |
+| 0.4：判定、評級、ALMOST、手動編輯、分級測驗、備份格式 | `just morse-unit` | 3016 項全過（例如：M 用 180/180 ms 判對、5 WPM 的手回答 20 WPM 的題目判對、K 打成 −·· 判錯） |
+| 0.4：整個 app（SEND 10 時用 20 WPM 的手速答 M、T 判對，STRICT 判錯；錯的對照圖；ALMOST；CHART 編輯取消／存檔／按住歸零；確認時其他鍵無效；分級測驗；備份匯出向量、載入要按 PLAY、缺片拒收；重開讀回） | `just fw-test morse` | 全過 |
+| 0.4：host 和網頁的備份格式 | `just morse-test`；網頁的程式碼用 node 跑 | host 56 項全過；網頁產生的位元組和 host 的向量相同 |
+| 0.4 刷進實機 | `fm1_install.py`（USB-MIDI，fast install） | 成功；ROUND 16、開放 10 個字的紀錄保留 `[實機]` |
+| 0.4 的備份：指令列和網頁 | `just morse-backup`；Chromium 開 `web/progress.html` | 兩者下載的內容相同；網頁要用「誰在送 HELLO」找 port，因為 macOS 把這台叫 `Felucca` `[實機]` |
+| 0.4：疊在實機 0.2 紀錄的備份上、改設定、重開讀回 | `emu_rehearse.py` + fm1-emu `uc25hq80`、`p25q80` | ROUND 5 的紀錄保留，改過的速度重開後讀回 `[模擬]` |
+| 0.5：藍牙替身上的 HELLO、HELLO_ACK、`T_TEXT`、`T_PROG`、按鍵送出和收進、BLUETOOTH 開關存檔重開、store 寫入不變 | `just fw-test morse` | 全過；`--no-ble` 的 build 也編得過、除了藍牙那段都通過 `[模擬]` |
+| 0.5：host 的傳輸判斷 | `just morse-test` | 22 項全過 |
+| 0.5 刷進實機 | `fm1_install.py`（USB-MIDI，fast install） | 成功；ROUND 29、開放 20 個字的紀錄保留 `[實機]` |
+| 0.5：疊在實機 0.4 前的備份上，BLUETOOTH 關、重開讀回、再開 | `emu_rehearse.py` + fm1-emu `uc25hq80`、`p25q80` | ROUND 17 的紀錄保留；改設定時存一筆紀錄（4 次 erase／program），開機 0 次 `[模擬]` |
+
+## 獨立 repo 和上架 { #release }
+
+2026-11-18 為了上架 [The Firmware Hub](../firmware/hub.md#listing)，韌體搬到 [daviddwlee84/fm1-morse](https://github.com/daviddwlee84/fm1-morse)（用 `git subtree split` 保留歷史），在本 repo 以 submodule 引回 `firmware/morse`。
+
+- **授權**：2026-11-18 從 MIT 改成 GPL-3.0-or-later，讓拿去改的人分享出來的版本也要開源。fm1-base 的 MPL-2.0 和 `common/` 的 MIT 都可以併入 GPL 作品；SLOOP 就是 GPL-3.0 加 felucca-bsp 的前例。之後的藍牙用 fm1-base 自己的 stack，不會連結 JieLi 的閉源函式庫，所以避開了 GPL 不能連結閉源庫的問題。`57ea786` 以前的版本以 MIT 公開，仍可依 MIT 使用。套件內容不受影響（改授權前後的 `.fwsc` 完全相同）。
+- **新 repo 的內容**：根目錄有 GPL-3.0 `LICENSE`、`fmhub.json`（`kinds: other`、`sounds: none`，卡片圖是 `docs/screen.png`）、英文 README（含 Hub 要求說明的「其他韌體的資料」）、鎖定版本的 fm1-base submodule，以及自帶一份 `common/`（hostlink、ledfx）。
+- **identity 前綴改成 `FM-1_41`**：原本的 `FM-1_13` 和 Hub 上 FM-1 Midi-Mania 的 `FM-1_137` 開頭相同。目錄裡沒有任何 `FM-1_41x`，但送審前仍要用 Hub 的 #check 確認。開發版是 `FM-1_4100`，release 版是 `FM-1_41` 加 XXYYZZ（0.3 是 `FM-1_41000300`）。存檔位置不變，進度會保留。
+- **build**：在本 repo 用 `third_party/fm1-base` build（`just fw-test morse`、`just morse-release 0.3`）。子 repo 裡的那份 fm1-base 是給它單獨 build 用的，`fw-setup` 不會去抓。
+- **改程式的流程**：在 `firmware/morse` 裡 commit 並推到 fm1-morse，再到本 repo commit 新的 submodule 指標。**要先 commit 指標，再 build**：`just fw-build`、`just morse-release` 都會先跑 `fw-setup`，而它的 `git submodule update` 會把 `firmware/morse` 切回本 repo 記錄的 commit（detached HEAD）。2026-11-18 就因為這樣，build 出來的 0.4 套件裡是舊的出題邏輯，在模擬器裡看到第一回合只有 6 張卡才發現。
+
+上架還要做的：
+
+1. 在實機上走 USB-MIDI 更新路徑測三件事：從 Morse 換到別的韌體（2026-11-18 通過，Morse 0.3 → SLOOP）、從別的韌體裝 Morse（2026-11-18 通過，SLOOP → Morse release 0.3 `FM-1_41000300`）、從原廠 V15 裝 Morse（2026-11-18 通過，015 → Morse release，fast install）。三項都在新晶片 `0xB36014` 的機器上做。
+2. 發一個附 `morse-0.3.fwsc` 的 GitHub release：2026-11-18 發布 [v0.3](https://github.com/daviddwlee84/fm1-morse/releases/tag/v0.3)（tag 在 `748402f`），附 `morse-0.3.fwsc`（SHA-256 `1c563fda…c0f1b3`，GitHub 的 asset digest 相符）和 `firmware.json`。
+3. 用 #check 確認 identity：2026-11-18 本人確認 `FM-1_41000300` 是空的；KB 的「Check your file」讀得到 `fmhub.json`，回報 Fine，卡片圖 240×240、169 KB。
+4. 送審：2026-11-18 本人用 Hub 的送審表單送出（Hub 的紀錄是 UTC 2026-11-17 19:03）。自動檢查 8 項全過（原始碼、`LICENSE`、`fmhub.json`、sounds、release、identity、update loader、兩種晶片），狀態是 waiting for Sven，等維護者審核。
+5. 社群清單：2026-11-18 送了兩個最熱門的清單，都是一筆一個 PR。
+    - [awesome-fm-1 #30](https://github.com/cicloid/awesome-fm-1/pull/30)（93 stars，放 *Not a synth* 段）
+    - [aroum/fm1-custom-fw #36](https://github.com/aroum/fm1-custom-fw/pull/36)（424 stars，放 1.1.4 的第 126 筆，和 CTL-1、MIDIMON 同段）
+
+    fm1-emu、RemoteFM1、FMDB 會自動跟著 Hub 或 GitHub，不用送。fm1-editor.com 等 Hub 上架後看它會不會自己出現。整套流程整理成 repo 的 skill `fm1-hub-listing`。
+6. **已上架**：Hub 在 UTC 2026-11-17 23:00 自動上架，8 項全綠，沒有等人工審核（[Hub 上的 MORSE](https://thefirmwarehub.com/firmware/morse/)，細節見 [Hub](../firmware/hub.md#listing)）`[實機]`。兩個社群清單的 PR 到 2026-11-18 都還沒合併。
+7. 新版本：2026-11-18 發布 [v0.6](https://github.com/daviddwlee84/fm1-morse/releases/tag/v0.6)（tag 在 `60f76cf`，`morse-0.6.fwsc` SHA-256 `d65b6df5…8fd7e`，刷進實機的那份，digest 相符）。之前同一天發了 [v0.5](https://github.com/daviddwlee84/fm1-morse/releases/tag/v0.5)（tag 在 `a75c29e`，0.4 沒有單獨發 release），附 `morse-0.5.fwsc`（SHA-256 `49433190…154457`，就是刷進實機的那份，GitHub 的 asset digest 相符）和 `firmware.json`。Hub 會跟著 GitHub 的最新 release。`fmhub.json` 的說明加上藍牙。
+
+## 路線圖 { #roadmap }
+
+| 版本 | 內容 |
+|---|---|
+| 0.5 | [藍牙](#bluetooth) peripheral：Mac、iPad、手機上的 Vail 和 MORSE on the web 走藍牙。已做好，等實機驗證和量抖動 |
+| 0.7 | 兩台 FM-1 互打：`ble_central`，一台掃描、選另一台、連上。等有第二台 |
+| 之後 | host 送日期，讓間隔複習改成天數；USB-C 直連（見[接口與連線](../hardware/io.md#two-units)） |
+
+### Backlog { #backlog }
+
+想做、但目前刻意不做的，連同理由記在這裡，免得忘記。
+
+| 項目 | 為什麼現在不做 | 什麼時候做、怎麼做 |
+|---|---|---|
+| **更多符號進閃卡**：`' ! ( ) & : ; + - _ " $ @`，以及 `<AR>` `<SK>` `<KN>` 等 prosign（2026-11-18 試用時提出） | 課程是 LCWO 的 41 字 Koch 課表，通聯和考試幾乎只用這些。這些符號很少用，prosign 在 LISTEN 的 QSO 節目和 TYPE 的片語頁裡聽得到。每個字的盒號存在大小固定的紀錄裡（`LN_N = 41`，`ln_state_t`），加字就要改存檔格式：韌體的 `REC_VER` 升到 2 並寫升級程式，備份格式（`PROG_FORMAT`、host 的 `progress.py`、網頁）也要升版，舊備份要能讀 | 等學完 41 個字。做法：在 Koch 順序之後加第 9、10 組（常用的 prosign 一組，其他符號一組），prosign 的卡片用 `<..>` 連在一起播 |
+| **用 velocity 帶 mark 的長度** | 2026-11-18 實測，CoreMIDI 照時間戳記排，誤差 ≤ 1 ms，不需要 `[實機]` | 只在 Chrome 或 Vail 被證實用到達時間、而且會誤判時才做：note off 的 velocity 帶上長度（10 ms 一格），收方也是 MORSE 時用它 |
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 11:20:41Z)**_
+
+Next is `fw-build`. First I'll check that the submodule HEAD matches the pointer recorded in the superproject, so `fw-setup` won't switch away from my working tree:
+
+_**Agent (claude-opus-5-5 2026-11-18 11:20:43Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Compare submodule HEAD with recorded pointer
+
+`git ls-tree HEAD firmware/morse; git -C firmware/morse rev-parse HEAD; git -C firmware/morse log --oneline -3; grep -n -A12 '^fw-setup' Justfile | head -20`
+
+```text
+160000 commit a7a90a38043607cbc34055ad9b9743389699d499	firmware/morse
+a7a90a38043607cbc34055ad9b9743389699d499
+a7a90a3 web decoder: hold the first letters until a dit and a dah are both heard (K was read as U)
+759d8e0 web: its own decoder (speed, dah ratio, gaps, overall WPM), With Vail and the presets, Only show it
+60f76cf 0.6: a USB host is gone at once when the cable comes out; the web page connects over Bluetooth directly
+191:fw-setup:
+192-    git submodule update --init --recursive third_party/fm1-base
+193-    git submodule update --init firmware/morse
+194-    uv sync --locked --all-groups
+195-
+196-# Build an app's host simulator (no toolchain needed) and run its test script.
+197-fw-test app="hello": fw-setup
+198-    #!/usr/bin/env bash
+199-    set -euo pipefail
+200-    uv run --locked --all-groups python "{{fm1_base}}/tools/build.py" "firmware/{{app}}" --host
+201-    bin=$(ls firmware/{{app}}/build/host/*_host)
+202-    cd "firmware/{{app}}" && "build/host/$(basename "$bin")" tests/basic.txt build/host
+203-    echo "screenshots and audio: firmware/{{app}}/build/host/"
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 11:20:48Z)**_
+
+The pointer equals HEAD, so building doesn't need a commit. Running unit tests and the device build:
+
+_**Agent (claude-opus-5-5 2026-11-18 11:20:56Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Run unit tests and build the device package
+
+`just morse-unit 2>&1 | tail -2; just fw-common-test 2>&1 | tail -2; just fw-build morse 2>&1 | tail -15`
+
+```text
+3074 checks, 0 failed
+lpc: ok
+adpcm: ok
+words: 10 own + 51 common -> /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/firmware/morse/web/words/d25d9228e2.json (1319 B)
+loader: image 14896 B at 0x1c0a800, bss end 0x1c15b20
+loader: ota.bin 12847 B
+  ok    .ram_text: 1738 insns, no calls
+  ok    no 64-bit multiply inlined beside a load
+  ok    own Bluetooth stack: nothing of JieLi's linked, the radio's ramp in RAM
+  ok    no soft-double routines (single-precision FPU only)
+  ok    image 174404 B; RAM code .ram_text 5576 B of 32768; RAM .data+.bss 38588 B of 98304; pool 69384 B of 344064
+  ok    register access: felucca-bsp only (device/, include/ and the app clean)
+parts    Bluetooth MIDI, USB audio in, USB audio out, the screen reader  (not built in: Bluetooth MIDI devices, Bluetooth audio, USB MIDI host, USB disk mode, WiFi, the second core, velocity, pressure, screen mirroring, backup and restore, a resource region)
+app      /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/firmware/morse/build/morse.bin  174404 B
+loader   /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/firmware/morse/build/loader/ota.bin  12847 B
+package  /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/firmware/morse/build/morse.fwsc  616003 B, identity FM-1_4100
+build    6D5376C5  (FM1B_BUILD: the build a crash record names, fm1_remote.py crashes)
+about    /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/firmware/morse/build/firmware.json  (for firmware hubs)
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 11:21:01Z)**_
+
+Build OK: 174,404 B, RAM 38,588 B. Next, fm1-emu on both chips. Checking how the emulator runs scripted inputs:
+
+_**Agent (claude-opus-5-5 2026-11-18 11:21:03Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Find emulator tooling and scripted input usage
+
+`ls tools/ tools/fm1-emu | head; ls scripts/ | head -20; grep -rn 'OCTUP' scripts/ docs/dev/morse.md 2>/dev/null | head -5`
+
+```text
+tools/:
+emu-state
+fm1-emu
+fw-AC79_AIoT_SDK
+jieli
+
+tools/fm1-emu:
+fm1-emu
+fm1-live
+README.txt
+check-docs-site.py
+emu_rehearse.py
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 11:21:08Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Read rehearse script and emulator options
+
+`sed -n 1,60p scripts/emu_rehearse.py; tools/fm1-emu/fm1-emu --help 2>&1 | head -60`
+
+```text
+#!/usr/bin/env python3
+"""Build an emulator flash image that rehearses installing a firmware over a real backup.
+
+M-Flasher writes a package's image and leaves the rest of the flash as it was (for
+SLOOP, Agent Deck and CTL-1 on my unit: 0x04000-0x92FFF). This does the same on a
+copy: take a full-flash backup, lay the package's image over it, and write the result
+as an fm1-live --flash file. Booting it in the emulator shows how the new firmware
+reacts to the data the old one left behind, without touching the unit.
+
+Limits: the package image is taken as the contiguous run from 0x04000 in what the
+emulator lays down; whether M-Flasher writes exactly that range for a given
+package is only known from its own plan. The emulator is not the hardware.
+
+usage: emu_rehearse.py PRISTINE.flash BACKUP.bin OUT.flash
+  PRISTINE.flash  what fm1-live writes for the package on an empty flash
+"""
+import sys
+
+FW_START = 0x04000
+SECTOR = 4096
+BLANK = b"\xff" * SECTOR
+
+
+def main():
+    pristine = open(sys.argv[1], "rb").read()
+    backup = open(sys.argv[2], "rb").read()
+    if len(pristine) != len(backup) or len(backup) != 1 << 20:
+        sys.exit("both images must be 1 MiB")
+    # the package's image: the contiguous run from the start of the firmware area
+    # (0x92FFF for most firmwares, further for larger ones such as ChoralRoot)
+    end = FW_START
+    while end < len(pristine) and pristine[end:end + SECTOR] != BLANK:
+        end += SECTOR
+    image = backup[:FW_START] + pristine[FW_START:end] + backup[end:]
+    open(sys.argv[3], "wb").write(image)
+    lost = [a for a in range(0x93000, end, SECTOR) if backup[a:a + SECTOR] != BLANK]
+    print(f"package image 0x{FW_START:05X}-0x{end - 1:05X} laid over the backup")
+    if lost:
+        print("it covers data the installed firmware had stored at:", ", ".join(f"0x{a:05X}" for a in lost))
+
+
+if __name__ == "__main__":
+    main()
+usage: fm1-emu --bin APP.bin | --fwsc FIRMWARE.fwsc [options]
+run:   [--flash DECRYPTED.bin] [--raw-flash CHIP.bin] [--syx BANK.syx] [--entry 0x02000000]
+       [--steps N (5000000)] [--ms MS] [--ram BYTES (1048576, at most 4194304)] [--quiet]
+       [--flaky-core1 RATE [--seed N]] [--cpu1-survives (a fault on core 1 stops it alone; cpu0 goes on)]
+       [--flash-chip p25q80|uc25hq80 (the FM-1's flash part: the stock Puya, or the newer units')]
+input: [--keys 'T[-T2]:PLAY,T:n7,T:k12,T:enc0:+3,T:pot:512,T:midi:903c64'] (times in ms;
+        the SMK-37's buttons by their printed names too: T:PATCH, T:SEQPLAY)
+out:   [--wav OUT.wav] [--snap MS,MS (work/lcd_MS.bmp)] [--dump ADDR N (N words at the end)]
+debug: [--trace K (the first K instructions)]
+       [--break-pc ADDR (registers at each hit)] [--watch ADDR (each change of a word)]
+tools: --list IMAGE START END | --describe OBJDUMP | --check-decode FILE | --sem-run FILE
+       | --exec-check OBJDUMP IMAGE | --coverage | --version | --help
+(addresses in hex)
+env:   FM1_BREAK_MAX=N (8)        stop reporting --break-pc after N hits
+       FM1_BREAK_PCS=ADDR,ADDR    more breakpoints
+       FM1_TRACE_RANGE=FROM:TO    trace every instruction from step FROM to TO
+       FM1_HIST_TOP=N (12)        lines of the class histogram
+       FM1_LIST_END=ADDR:LEN,...  list memory as it is after the run
+       FM1_IRQ_TRACE, FM1_DUAL_TRACE, FM1_FLASH_TRACE, FM1_LCD_TRACE, FM1_AUDIO_TRACE,
+       FM1_GPIO_TRACE, FM1_TRACE  logs
+       FM1_FWSC_XIP=FILE          save a package's XIP window; FM1_FWSC_DIR lists its directory
+       FM1_SUPERVISOR_START       start in supervisor mode (the old single stack)
+       FM1_NO_RAM_BLOCKS          RAM code a step at a time (the reference)
+       FM1_LCD_TIMED              the LCD's transfers take their time at the SPI clock, as on an FM-1
+                                  (also with FM1_STRICT; FM1_LCD_INSTANT turns it off; default: at once)
+a bare-metal program ends its run by jumping outside every code region (else it runs to --steps)
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 11:21:15Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Check emulator flash persistence options
+
+`grep -n -i -E 'raw-flash|--flash|persist|save' tools/fm1-emu/README.txt | head -20; tools/fm1-emu/fm1-live --help 2>&1 | head -40`
+
+```text
+usage: fm1-live --fwsc FIRMWARE.fwsc   (a firmware package: a community firmware, or M-VAVE's own)
+       fm1-live --fw ID | --fw list    (the page's list, in a checkout: node tools/fetch_firmwares.mjs)
+       fm1-live --bin XIP.bin [--entry 0x02000120]
+options: [--mhz 240] [--syx BANK.syx] [--midi all|none|NAME] [--midi-ch N] [--flash FILE] [--usb]
+         [--latency MS] (12 on Windows, else 50)
+                                 audio queued ahead of the device to start with; it grows by itself
+                                 on underruns and back down after 10 s without one, no lower
+                                 than a level that underran
+         [--buffer FRAMES]       the audio device's buffer, if it takes one
+         [--exclusive]           Windows: the output in WASAPI exclusive mode, the device's shortest
+                                 period (lowest latency; other programs can't play on it meanwhile)
+         [--flash-chip p25q80|uc25hq80]
+                                 the FM-1's flash part: the stock Puya P25Q80 (85 60 14), or the
+                                 UC25HQ80 (B3 60 14) of units sold since autumn 2026
+         [--flaky-core1 RATE [--seed N]] [--cpu1-survives] [--version] [--help]
+headless: --bench MS   run MS emulated ms as fast as it goes, report the speed
+          --shot MS    run MS ms, then write the panel to work/panel.ppm
+          --record DIR with --shot: a PPM frame every 16 ms (62.5 fps) as DIR/000000.ppm…, and the audio
+                       from boot as DIR/audio.raw (44118 Hz stereo s16le; silence until the DMA starts)
+          --record -   the frames as one PPM stream on stdout (tools/bench_video.sh pipes it into ffmpeg),
+                       audio.raw in work/; the run's reports go to stderr then
+          --lcd-only   --shot, --record: the 240x240 LCD alone (work/lcd.ppm), not the panel
+env: FM1_BENCH_KEYS='T:PLAY,T:PLAY^,T:C4@100,T:e0:+3,T:pot:512,T:mHEX'  scripted input (--bench, --shot;
+                         times in ms; ^ releases, @VEL the velocity, eN an encoder's clicks, mHEX: MIDI
+                         bytes into the DIN jack; @FILE: the script from a file)
+     FM1_BENCH_WAV=FILE    --bench: the audio (44.1 kHz stereo s16le, no header)
+     FM1_BENCH_PANEL=FILE  --bench: the panel at the end (PPM)
+     FM1_BENCH_FRAMES=DIR[,MS]  --bench: a film: the panel every MS ms (40) as DIR/000000.ppm..., and
+                           DIR/audio.raw from the boot (tools/film.py turns them into a video)
+     FM1_DUMPRAM=FILE      --bench, --shot: the 1 MiB of RAM at the end
+     FM1_BENCH_JSON=FILE   --bench: the speed as JSON
+     FM1_BENCH_NOKEYS, FM1_WARMUP_MS=N (1000), FM1_BENCH_THREAD, FM1_BENCH_TRACE, FM1_BENCH_PCS,
+     FM1_BENCH_ROUTES      --bench: no default keys, the steady-speed start, a thread, checkpoints, profiles
+     FM1_KEY_AT, FM1_KEY_UP, FM1_NO_PLAY, FM1_NO_SKIP, FM1_SKIP_FROM, FM1_DUMP=ADDR  --shot
+     FM1_NO_JIT            the interpreter (byte-identical, slower); FM1_NO_BLOCKS: a step at a time
+     FM1_NO_LOOPSKIP       run polling loops round by round instead of skipping them (byte-identical, slower)
+     FM1_FLASH_CUT=N       cut the power half way through the Nth flash erase / program (--flash keeps what is left)
+     FM1_USB_SEND='MS:HEX;…'  --shot --usb: MIDI messages over USB at those times (@PATH: from a file); FM1_USB_TRACE: the bus
+     FM1_USB_SIE_NS=N      --usb: each SIE register access takes N ns (default 1000)
+     FM1_USB_WAV=FILE      --usb, --bench / --shot: record the USB audio as a computer would (s16le, no header);
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 11:21:23Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Find encoder indexes and past emulator usage
+
+`grep -n -E 'plat_enc\(|E_SEL|ENC_' firmware/morse/app.c | head; grep -rn -E 'enc|ENC' third_party/fm1-base/include/plat.h | head -10; grep -n -i -E 'fm1-live|FM1_BENCH_KEYS|--shot' docs/device-log.md docs/dev/morse.md | head`
+
+```text
+1966:            (void)plat_enc(k);
+2073:    if ((e = plat_enc(EN_SELECT)) != 0)
+2075:    if ((e = plat_enc(EN_ALGO)) != 0) {
+2082:        if ((e = plat_enc(EN_K1)) != 0)
+2084:        if ((e = plat_enc(EN_K2)) != 0)
+2086:        (void)plat_enc(EN_K3);
+2087:        (void)plat_enc(EN_K4);
+2089:    if ((e = plat_enc(EN_K1)) != 0)
+2091:    if ((e = plat_enc(EN_K2)) != 0)
+2093:    if ((e = plat_enc(EN_K3)) != 0)
+third_party/fm1-base/include/plat.h:7: * what lets the whole app — UI, sequencer, engines — run and be tested on a Mac.
+third_party/fm1-base/include/plat.h:63:int32_t plat_enc(int role);            /* detents since the last call, + = clockwise; EN_* */
+third_party/fm1-base/include/plat.h:119:                                        * does. A sequencer keeps room for the note-offs it owes before it sends a
+third_party/fm1-base/include/plat.h:201:    uint8_t bonded;                    /* ltk / rand / ediv are its bond: the link is encrypted with them */
+third_party/fm1-base/include/plat.h:219:                                        * no MIDI found, the pairing failed, the encryption refused, the GATT failed, it
+third_party/fm1-base/include/plat.h:281:enum { PLAT_BTA_LOST_NONE, PLAT_BTA_LOST_LINK, PLAT_BTA_LOST_PAIRING, PLAT_BTA_LOST_ENCRYPTION, PLAT_BTA_LOST_SETUP,
+third_party/fm1-base/include/plat.h:285:int32_t plat_bta_latency_us(void);     /* what the stream adds on the FM-1's side (its queue), us; -1: not streaming.
+third_party/fm1-base/include/plat.h:436:void plat_host_patience(uint32_t try_ms, uint32_t total_ms);   /* each try's wait (default 5000) and the whole
+third_party/fm1-base/include/plat.h:504: * a span is the unsigned difference of two reads */
+third_party/fm1-base/include/plat.h:606: *   APP_TICK        void app_tick(void)           1 kHz, in the timer interrupt (a clock, a sequencer)
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 11:21:31Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Find the emulator commands used earlier in this session
+
+`grep -o 'FM1_BENCH_KEYS=[^"\\]*' /Users/zhouhanru/.claude/projects/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/0a574306-469e-4a59-9622-5701a42aee59.jsonl | sort -u | head -5; grep -o 'fm1-live [^"\\]*--shot[^"\\]*' /Users/zhouhanru/.claude/projects/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/0a574306-469e-4a59-9622-5701a42aee59.jsonl | sort -u | head -5`
+
+```text
+FM1_BENCH_KEYS=
+FM1_BENCH_KEYS='2500:e2:+1'
+FM1_BENCH_KEYS='2500:e2:+1' ../fm1-emu/fm1-live --fwsc 
+FM1_BENCH_KEYS='2500:e2:+2'
+FM1_BENCH_KEYS='2500:e2:+2' ../fm1-emu/fm1-live --fwsc 
+fm1-live --fwsc ../../firmware/morse/build/$f --flash-chip uc25hq80 --flash t.flash --midi none --shot 4000 --lcd-only >/dev/null 2>&1; cp work/lcd.ppm /private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/0a574306-469e-4a59-9622-5701a42aee59/scratchpad/$f.ppm; done; cd ../.. && uv run --locked --all-groups python -c 
+fm1-live --fwsc ../../firmware/morse/build/morse-0.4.fwsc --flash-chip uc25hq80 --flash fresh.flash --midi none --shot 4000 --lcd-only >/dev/null 2>&1; cp work/lcd.ppm /private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/0a574306-469e-4a59-9622-5701a42aee59/scratchpad/fresh.ppm && cd ../.. && uv run --locked --all-groups python -c 
+fm1-live --fwsc ../../firmware/morse/build/morse-0.4.fwsc --flash-chip uc25hq80 --flash fresh2.flash --midi none --shot 4000 --lcd-only 2>&1 | tail -3
+fm1-live --fwsc ../../firmware/morse/build/morse.fwsc --flash-chip uc25hq80 --flash rehearse-hw03.flash --midi none --shot 2500 --lcd-only 2>&1 | grep -iE
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 11:21:37Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+List earlier scripted key sequences
+
+`grep -o "FM1_BENCH_KEYS='[^']*'" /Users/zhouhanru/.claude/projects/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/0a574306-469e-4a59-9622-5701a42aee59.jsonl | sort -u | head -20`
+
+```text
+FM1_BENCH_KEYS='2500:e2:+1'
+FM1_BENCH_KEYS='2500:e2:+2'
+FM1_BENCH_KEYS='T:PLAY,T:PLAY^,T:C4@100,T:e0:+3,T:pot:512,T:mHEX'
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 11:21:44Z)**_
+
+fm1-emu 正在兩種晶片上驗證開機頁設定。我先試出 SELECT 旋鈕在模擬器裡是第幾號：
+
+_**Agent (claude-opus-5-5 2026-11-18 11:21:53Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Probe which emulator encoder is SELECT
+
+```bash
+cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/tools/emu-state && SP=/private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/0a574306-469e-4a59-9622-5701a42aee59/scratchpad && for e in e0 e1 e3; do rm -f probe.flash; FM1_BENCH_KEYS="2500:e2:-1,3000:$e:-1" ../fm1-emu/fm1-live --fwsc ../../firmware/morse/build/morse.fwsc --flash-chip uc25hq80 --flash probe.flash --midi none --shot 3600 --lcd-only >/dev/null 2>&1; cp work/lcd.ppm $SP/probe_$e.ppm; done; cd ../.. && uv run --locked --all-groups python -c "
+from PIL import Image
+sp='$SP'
+ims=[Image.open(f'{sp}/probe_{e}.ppm') for e in ['e0','e1','e3']]
+c=Image.new('RGB',(240*3+20,240),'white')
+for i,im in enumerate(ims): c.paste(im,(i*250,0))
+c.save(f'{sp}/probe.png')"
+```
+
+```text
+(Bash completed with no output)
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 11:21:57Z)**_
+
+<tool-use data-tool-type="read" data-tool-name="Read"><details>
+<summary>Tool use: **Read**</summary>
+ `/private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/0a574306-469e-4a59-9622-5701a42aee59/scratchpad/probe.png`
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 11:22:05Z)**_
+
+e0 是 SELECT，e1 是 ALGO。接著在兩種晶片上各跑一次：把 START PAGE 改成 KEY、存檔，再重開機讀回。
+
+_**Agent (claude-opus-5-5 2026-11-18 11:22:20Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Set START PAGE to KEY, save, reboot on both chips
+
+```bash
+cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/tools/emu-state && SP=/private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/0a574306-469e-4a59-9622-5701a42aee59/scratchpad && for chip in uc25hq80 p25q80; do rm -f sp_$chip.flash; FM1_BENCH_KEYS="2500:e1:-1,3000:e0:-1,3300:OCTUP,3350:OCTUP^,3600:OCTUP,3650:OCTUP^,3900:OCTUP,3950:OCTUP^" ../fm1-emu/fm1-live --fwsc ../../firmware/morse/build/morse.fwsc --flash-chip $chip --flash $PWD/sp_$chip.flash --midi none --shot 8500 --lcd-only 2>&1 | grep -iE 'flash|erase|program|write' | head -3; cp work/lcd.ppm $SP/sp1_$chip.ppm; ../fm1-emu/fm1-live --fwsc ../../firmware/morse/build/morse.fwsc --flash-chip $chip --flash $PWD/sp_$chip.flash --midi none --shot 3000 --lcd-only 2>&1 | grep -iE 'flash|erase|program|write' | head -3; cp work/lcd.ppm $SP/sp2_$chip.ppm; done; cd ../.. && uv run --locked --all-groups python -c "
+from PIL import Image
+sp='$SP'
+names=['sp1_uc25hq80','sp2_uc25hq80','sp1_p25q80','sp2_p25q80']
+c=Image.new('RGB',(250*4,240),'white')
+for i,n in enumerate(names): c.paste(Image.open(f'{sp}/{n}.ppm'),(i*250,0))
+c.save(f'{sp}/startpage_emu.png')"
+```
+
+```text
+flash: 4 erases / programs
+flash: 0 erases / programs
+flash: 4 erases / programs
+flash: 0 erases / programs
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 11:22:26Z)**_
+
+<tool-use data-tool-type="read" data-tool-name="Read"><details>
+<summary>Tool use: **Read**</summary>
+ `/private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/0a574306-469e-4a59-9622-5701a42aee59/scratchpad/startpage_emu.png`
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 11:22:33Z)**_
+
+兩種晶片都過了 `[模擬]`：改完存檔一次（4 次 erase/program），重開機直接進 KEY，開機本身沒有寫入。接著驗證 0.6 存檔升級到 0.7 的情況：
+
+_**Agent (claude-opus-5-5 2026-11-18 11:22:34Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+List built packages and backups
+
+`ls firmware/morse/build/*.fwsc; ls backups/ | tail -5`
+
+```text
+firmware/morse/build/morse-0.3.fwsc
+firmware/morse/build/morse-0.4.fwsc
+firmware/morse/build/morse-0.5.fwsc
+firmware/morse/build/morse-0.6.fwsc
+firmware/morse/build/morse.fwsc
+2026-11-18-pre-morse-0.3
+2026-11-18-pre-morse-0.4
+2026-11-18-pre-morse-0.5
+2026-11-18-pre-theory-0.1
+progress
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 11:22:40Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Check device log for current firmware and theory backup
+
+`grep -n -E '目前|Current|current|theory|THEORY' docs/device-log.md | head -20; ls backups/2026-11-18-pre-theory-0.1`
+
+```text
+3:這台 FM-1 目前的狀態與操作歷史。任何對實機的操作，做之前先讀這頁，做完更新這頁。這頁的內容都是 `[實機]`。
+13:| 目前韌體 | **THEORY 0.1 dev build（`FM-1_4900`，只有 USB）**（2026-11-18 19:00 前後從 Morse 0.6 用 USB-MIDI 更新；Morse 的學習紀錄留在 `0xDA000`，裝回 `morse-0.6.fwsc` 就會讀到）。之前是 Morse 0.6 release build（`FM-1_41000600`，藍牙；2026-11-18 從 0.4 → 0.5（16:20）→ 0.6 用 USB-MIDI 更新，學習紀錄保留；macOS 上的 USB MIDI port 名稱仍是 `Felucca`）。0.3 release 是 Hub 測試 3 從原廠 015 裝的，進度當時從 ROUND 1 重新開始。之前依序是原廠 015 → SLOOP 2.8.5 → Agent Deck 0.7 → SLOOP 2.8.5 → CTL-1 1.0.3 → ChoralRoot 0.41 → Conductor 0.1 → 0.2 → 0.3 → Morse 0.1 → 0.2 → 0.3 → SLOOP 2.8.5 → Morse 0.3 release → 原廠 015（還原）→ Morse 0.3 release → Morse 0.4 → Morse 0.5 → Morse 0.6 → THEORY 0.1 |
+51:| 2026-11-18 18:56 | 刷 THEORY 0.1（dev build）之前的 Morse 0.6 release（`FM-1_41000600`，`0xDA000` 有學習紀錄，`0xD8000`–`0xD9FFF` 是空的） | `backups/2026-11-18-pre-theory-0.1/fm1-20261118-185652.bin` + `.json` | `5b62a3daeed2f23c7198f4f0cf56f02aaf432355727d78e6f1e8586beed879ea` | 尚未上傳 |
+127:| 2026-11-18 18:55 前後 | agent 執行 `fm1_install.py --info`、`just morse-backup`（唯讀，刷 THEORY 0.1 前） | `FM-1_41000600 [running] port: Felucca`。進度 JSON 兩次都沒存到：host 在 `Felucca` 上等不到 HELLO（大概有別的程式連著 FM-1）。學習紀錄在下一列的整片備份裡（`0xDA000`） |
+128:| 2026-11-18 18:56 | agent 執行 `just fm1-download-mode`、`fm1-info`、`fm1-backup pre-theory-0.1`、`fm1-restart`、`fm1_install.py --info`（刷 THEORY 0.1 前的 preflight） | bootloader stock、firmware `FM-1 410`、flash `0xB36014`；備份 SHA-256 `5b62a3da…879ea`；重開回 Morse 0.6（`FM-1_41000600 [running]`）。fm1-emu 兩種晶片上把 THEORY 0.1 dev build（SHA-256 `0d86cc42…41ebcd`）疊在這份備份上預演：開機 0 次寫入，存檔只寫 `0xD8000`，`0xDA000` 的 Morse 紀錄和 `0xFC000` 都沒變 `[模擬]` |
+129:| 2026-11-18 19:00 前後 | 本人執行 `fm1_install.py firmware/theory/build/theory.fwsc`（THEORY 0.1 dev build，`FM-1_4900`，SHA-256 `0d86cc42…41ebcd`，從 `c7a7084` 上未 commit 的工作目錄 build），機器上是 Morse 0.6 | 成功：`checking the package (30 reads)` → `switching to update mode` → `the loader writes only the sectors that changed (fast install)` → `done: the FM-1 runs FM-1_4900`。本人試用：「好像還可以」。19:02 agent 想用 `--info` 再確認時，FM-1 已不在 USB 上（沒有任何 MIDI input），所以以安裝程式最後的回報為準 |
+fm1-20261118-185652.bin
+fm1-20261118-185652.json
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 11:22:48Z)**_
+
+實機現在跑的是 THEORY（另一個 session 刷的），但刷 THEORY 前的整片備份裡有真正的 0.6 紀錄。我把 0.7 疊在那份備份上預演：
+
+_**Agent (claude-opus-5-5 2026-11-18 11:23:00Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Rehearse 0.7 over the real pre-theory backup on both chips
+
+```bash
+cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/tools/emu-state && SP=/private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/0a574306-469e-4a59-9622-5701a42aee59/scratchpad && B=$PWD/../../backups/2026-11-18-pre-theory-0.1/fm1-20261118-185652.bin && shasum -a 256 $B | cut -c1-16 && for chip in uc25hq80 p25q80; do rm -f pristine07_$chip.flash; ../fm1-emu/fm1-live --fwsc ../../firmware/morse/build/morse.fwsc --flash-chip $chip --flash $PWD/pristine07_$chip.flash --midi none --shot 300 --lcd-only >/dev/null 2>&1; python3 ../../scripts/emu_rehearse.py pristine07_$chip.flash $B reh07_$chip.flash; cp reh07_$chip.flash reh07_${chip}_before.flash; ../fm1-emu/fm1-live --fwsc ../../firmware/morse/build/morse.fwsc --flash-chip $chip --flash $PWD/reh07_$chip.flash --midi none --shot 3000 --lcd-only 2>&1 | grep -E 'flash:'; cp work/lcd.ppm $SP/reh_menu_$chip.ppm; FM1_BENCH_KEYS="2500:HOME,2550:HOME^" ../fm1-emu/fm1-live --fwsc ../../firmware/morse/build/morse.fwsc --flash-chip $chip --flash $PWD/reh07_$chip.flash --midi none --shot 3200 --lcd-only 2>&1 | grep -E 'flash:'; cp work/lcd.ppm $SP/reh_prac_$chip.ppm; cmp -l reh07_${chip}_before.flash reh07_$chip.flash | wc -l; done; cd ../.. && uv run --locked --all-groups python -c "
+from PIL import Image
+sp='$SP'
+names=['reh_menu_uc25hq80','reh_prac_uc25hq80','reh_menu_p25q80','reh_prac_p25q80']
+c=Image.new('RGB',(250*4,240),'white')
+for i,n in enumerate(names): c.paste(Image.open(f'{sp}/{n}.ppm'),(i*250,0))
+c.save(f'{sp}/rehearse07.png')"
+```
+
+```text
+5b62a3daeed2f23c
+package image 0x04000-0x92FFF laid over the backup
+flash: 0 erases / programs
+flash: 0 erases / programs
+       0
+package image 0x04000-0x92FFF laid over the backup
+flash: 0 erases / programs
+flash: 0 erases / programs
+       0
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 11:23:07Z)**_
+
+<tool-use data-tool-type="read" data-tool-name="Read"><details>
+<summary>Tool use: **Read**</summary>
+ `/private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/0a574306-469e-4a59-9622-5701a42aee59/scratchpad/rehearse07.png`
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 11:23:25Z)**_
+
+預演裡進度保留了（ROUND 30），但沒有任何按鍵的那次開機也進了 PRACTICE，不是 MENU，和預期不符。我直接看備份裡那筆紀錄的 flags：
+
+_**Agent (claude-opus-5-5 2026-11-18 11:23:28Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Inspect the real MORSE record's settings bytes
+
+```bash
+python3 - <<'EOF'
+b=open('backups/2026-11-18-pre-theory-0.1/fm1-20261118-185652.bin','rb').read()
+import struct
+i=0
+while True:
+    i=b.find(bytes.fromhex('31524f4d'),i)
+    if i<0: break
+    ver,size=struct.unpack_from('<HH',b,i+4)
+    st=b[i+8:i+8+14]
+    print(hex(i),'ver',ver,'size',size,'set',st.hex(' '))
+    i+=4
+EOF
+```
+
+```text
+0xda100 ver 1 size 280 set 14 06 00 00 00 14 00 00 58 02 14 00 1d 00
+0xdb100 ver 1 size 280 set 18 18 00 00 00 14 00 00 58 02 14 00 1d 00
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 11:23:39Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Search for forced PRACTICE and rerun one boot
+
+`grep -n -E 'set_page\(PG_PRACTICE|ui\.page = PG_PRACTICE|ui\.page = \(uint8_t\)PG' firmware/morse/app.c; cd tools/emu-state && rm -f t.flash; cp reh07_uc25hq80_before.flash t.flash; ../fm1-emu/fm1-live --fwsc ../../firmware/morse/build/morse.fwsc --flash-chip uc25hq80 --flash $PWD/t.flash --midi none --shot 2200 --lcd-only 2>&1 | tail -3; cp work/lcd.ppm /private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/0a574306-469e-4a59-9622-5701a42aee59/scratchpad/t1.ppm; ls -la work/lcd.ppm`
+
+```text
+LED on-fractions: 0:0.003 1:0.003 2:0.003 3:0.003 4:0.003 5:0.003 6:0.003 7:0.003 8:0.003 9:0.003 10:0.003 11:0.003 13:0.003 14:0.003 15:0.003 16:0.003 17:0.003 18:0.003 19:0.003 20:0.003 21:0.003 22:0.003 23:0.003 24:0.003 25:0.003 26:0.003 27:0.003 28:0.003 29:0.003 30:0.003 31:0.003 32:0.003 33:0.003 34:0.003 35:0.003 36:0.003 37:0.003 38:0.003 39:0.003 40:0.003
+work/lcd.ppm at 2200 ms; LEDs lit: []; audio peak over the last 0.5 s: 0
+flash: 0 erases / programs
+.rw-r--r--@ 173k zhouhanru 18 Nov 19:23 work/lcd.ppm
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 11:23:45Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Convert the boot snapshot to PNG
+
+```bash
+cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1 && uv run --locked --all-groups python -c "
+from PIL import Image; Image.open('/private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/0a574306-469e-4a59-9622-5701a42aee59/scratchpad/t1.ppm').save('/private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/0a574306-469e-4a59-9622-5701a42aee59/scratchpad/t1.png')"
+```
+
+```text
+(Bash completed with no output)
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 11:23:49Z)**_
+
+<tool-use data-tool-type="read" data-tool-name="Read"><details>
+<summary>Tool use: **Read**</summary>
+ `/private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/0a574306-469e-4a59-9622-5701a42aee59/scratchpad/t1.png`
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 11:23:57Z)**_
+
+開機時沒有寫入，紀錄本身也正確，所以我先確認模擬器跑的到底是不是 0.7：直接進 SETTINGS 看有沒有 START PAGE 那一列。
+
+_**Agent (claude-opus-5-5 2026-11-18 11:24:02Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Check for the START PAGE row in the rehearsed flash
+
+```bash
+cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/tools/emu-state && cp reh07_uc25hq80_before.flash t.flash && FM1_BENCH_KEYS="2500:e1:-1,3000:e0:-1" ../fm1-emu/fm1-live --fwsc ../../firmware/morse/build/morse.fwsc --flash-chip uc25hq80 --flash $PWD/t.flash --midi none --shot 3500 --lcd-only >/dev/null 2>&1; cd ../.. && uv run --locked --all-groups python -c "
+from PIL import Image; Image.open('tools/emu-state/work/lcd.ppm').save('/private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/0a574306-469e-4a59-9622-5701a42aee59/scratchpad/t2.png')"
+```
+
+```text
+(Bash completed with no output)
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 11:24:08Z)**_
+
+<tool-use data-tool-type="read" data-tool-name="Read"><details>
+<summary>Tool use: **Read**</summary>
+ `/private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/0a574306-469e-4a59-9622-5701a42aee59/scratchpad/t2.png`
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 11:24:19Z)**_
+
+SETTINGS 裡確實有 START PAGE，值是 MENU。而且 e1（ALGO）-1 跳到了 SETTINGS，代表在 2500 ms 時它其實在 MENU。我懷疑 `--shot` 在沒給按鍵時會自動按 PLAY：
+
+_**Agent (claude-opus-5-5 2026-11-18 11:24:24Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Boot without the emulator's automatic PLAY press
+
+```bash
+cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/tools/emu-state && cp reh07_uc25hq80_before.flash t.flash && FM1_NO_PLAY=1 ../fm1-emu/fm1-live --fwsc ../../firmware/morse/build/morse.fwsc --flash-chip uc25hq80 --flash $PWD/t.flash --midi none --shot 3000 --lcd-only >/dev/null 2>&1; cd ../.. && uv run --locked --all-groups python -c "
+from PIL import Image; Image.open('tools/emu-state/work/lcd.ppm').save('/private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/0a574306-469e-4a59-9622-5701a42aee59/scratchpad/t3.png')"; grep -i -n -B2 -A4 'NO_PLAY' tools/fm1-emu/README.txt | head -20
+```
+
+```text
+(Bash completed with no output)
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 11:24:29Z)**_
+
+<tool-use data-tool-type="read" data-tool-name="Read"><details>
+<summary>Tool use: **Read**</summary>
+ `/private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/0a574306-469e-4a59-9622-5701a42aee59/scratchpad/t3.png`
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 11:24:36Z)**_
+
+<think><details><summary>Thought Process</summary>
+確認できた：`--shot` は按鍵が無指定だと自動で PLAY を押し、MENU で PLAY を押すと PRACTICE が開く。自動按鍵を切った状態で実際の 0.6 の記録から起動すると MENU になり、進行も保持される。続けて p25q80 でも同じ確認をする。
+
+</details></think>
+
+_**Agent (claude-opus-5-5 2026-11-18 11:24:40Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Confirm MENU boot over the real record on p25q80
+
+```bash
+cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/tools/emu-state && cp reh07_p25q80_before.flash t.flash && FM1_NO_PLAY=1 ../fm1-emu/fm1-live --fwsc ../../firmware/morse/build/morse.fwsc --flash-chip p25q80 --flash $PWD/t.flash --midi none --shot 3000 --lcd-only 2>&1 | grep flash:; python3 -c "
+d=open('work/lcd.ppm','rb').read(); print(len(d))"; cd ../.. && uv run --locked --all-groups python -c "
+from PIL import Image; Image.open('tools/emu-state/work/lcd.ppm').crop((0,0,240,30)).save('/private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/0a574306-469e-4a59-9622-5701a42aee59/scratchpad/t4.png')"; rm -f tools/emu-state/t.flash tools/emu-state/probe.flash
+```
+
+```text
+flash: 0 erases / programs
+172815
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 11:24:45Z)**_
+
+<tool-use data-tool-type="read" data-tool-name="Read"><details>
+<summary>Tool use: **Read**</summary>
+ `/private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/0a574306-469e-4a59-9622-5701a42aee59/scratchpad/t4.png`
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 11:24:54Z)**_
+
+模擬器驗證完成。接著更新文件，先找出需要改的地方：
+
+_**Agent (claude-opus-5-5 2026-11-18 11:24:55Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Find doc spots mentioning versions, boot page, Hub play
+
+`grep -n -E 'PRACTICE|開機|0\.6' docs/dev/morse-learn.md | head -20; grep -n -E 'Morse|MORSE|morse' README.md docs/index.md | grep -E '0\.[0-9]' | head; grep -n -iE 'play|cheat' docs/firmware/hub.md | head -20`
+
+```text
+7:![PRACTICE 的開始畫面](https://raw.githubusercontent.com/daviddwlee84/fm1-morse/main/docs/screens/boot.png){ width="240" }
+18:1. 開機後直接進 PRACTICE。到 SETTINGS 確認 **PRESET 是 START**：字元用 20 WPM 播，字和字之間拉開到 8 WPM（Farnsworth）；發報速度是 10 WPM。
+22:## 每天：PRACTICE 一回合
+69:| 已經認得一些字 | PRACTICE 開始畫面轉 `SELECT` 選 **TEST**：下兩組 10 個字各考一次，答對的可以標成已會；整組答對就開那一組 |
+README.md:28:| **Conductor** | The FM-1 as a desk console for coding agents: one agent per key, urgency on the key LEDs, state and output on the screen (Chinese included), chimes, approve / deny / interrupt from the buttons, push-to-talk dictation, USB or Bluetooth | [`firmware/conductor/`](firmware/conductor/) | [`host/conductor/`](host/conductor/) (Python daemon for [herdr-core](https://github.com/herdrdev/herdr-core) `hc` and classic Herdr) | Firmware 0.3, host 0.3.2; ran on my unit 2026-11-17, now switched to Morse |
+README.md:29:| **Morse** | A pocket Morse code machine: key on the piano keys (straight key or iambic paddles) and read what you sent, type letters on the keys and hear them, flash cards with spaced repetition (by sound by default; keyed answers judged by their own rhythm), a placement test, progress you can edit, back up and restore, silent mode with the lights, USB or Bluetooth MIDI in the Vail adapter's format | [`firmware/morse/`](firmware/morse/) | [`host/morse/`](host/morse/) (types what you key into the computer; sends text for the FM-1 to play) | Firmware 0.6 (Bluetooth), host 0.6.0; on my unit 2026-11-17 to 2026-11-18, now switched to THEORY (its progress stays at `0xDA000`); [learning with it](docs/dev/morse-learn.md) |
+docs/index.md:51:| **Conductor** | coding agent 的桌上控制台：一個琴鍵一個 agent，LED 表示急不急，螢幕顯示狀態與輸出（含中文），提示音，按鈕批准 / 拒絕 / 中斷，按住說話的語音輸入，USB 或藍牙 | `firmware/conductor/` | `host/conductor/`（接 hc 與 classic Herdr 的 Python daemon） | 韌體 0.3、host 0.3.2；2026-11-17 在我的機器上用過，目前機器上換成 Morse（換回來：`just fm1-switch firmware/conductor/build/conductor.fwsc`），見[設計](agentic/conductor.md)、[速查](agentic/conductor-cheatsheet.md)、[版本紀錄](agentic/conductor-changelog.md) |
+docs/index.md:52:| **Morse** | 隨身摩斯電碼機：琴鍵當電鍵（直鍵或 iambic paddle）即時解碼、練長短的 RHYTHM 頁、琴鍵當字母鍵盤和片語鍵、閃卡間隔複習（預設只用聽的，打碼卡看自己的節奏判斷）、分級測驗與手動調整進度、進度備份還原、連續收聽、靜音看燈、USB 或藍牙 MIDI 用 Vail 的格式 | `firmware/morse/` | `host/morse/`（把發的字打進電腦、電腦送字給 FM-1 播） | 韌體 0.6、host 0.6.0（藍牙）；2026-11-17 到 11-18 在我的機器上，目前換成 THEORY（學習紀錄留在 `0xDA000`），見[怎麼用它學](dev/morse-learn.md)、[設計](dev/morse.md)、[速查](dev/morse-cheatsheet.md) |
+69:| **[remotefm1.com](https://remotefm1.com/)（FM-1 Player）** | **播放器**：用上面兩者，再加上自己的原生執行方式與「把實機當面板」 | Quixotic7 |
+71:FM-1 Player 的頁面自己寫明：韌體清單來自 Firmware Hub 的即時目錄（我看到時列了 243 個）；帶圓點的韌體以 `.rfm1` 原生執行（韌體的原始碼編成 WebAssembly）；其餘每一個都能用 fm1-emu 模擬執行，套件從 Hub 指向的位置抓。`[上游]`
+73:所以來源確實是 Hub，模擬的部分是 fm1-emu。Hub 自己的 Try、Agent Deck 的線上展示頁、我本機的 `just emu-run` 用的也都是 fm1-emu。差別在 FM-1 Player 多了原生核心（比較快、延遲低）以及搭配 [RemoteFM1](remotefm1/index.md) 把實機當面板。
+91:- **`fmhub.json`**：只允許 9 個欄位（`what`、`author`、`kinds`、`play`、`editor`、`cheat`、`image`、`color`、`sounds`，外加 `smk37`），多一個欄位整個檔案就不採用。新韌體至少要有：
+109:| fm1-emu、RemoteFM1 的 FM-1 Player、[FMDB](https://stanleygurvich.github.io/FMDB_FM1_FirmwareDatabase/) | — | 自動跟著 Hub 的目錄，或自己爬 GitHub | 不用送 |
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 11:24:59Z)**_
+
+Now the docs edits — morse.md first:
+
+_**Agent (claude-opus-5-5 2026-11-18 11:25:22Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Document 0.7 in morse.md
+
+```bash
+python3 - <<'EOF'
+p='docs/dev/morse.md'; s=open(p).read()
+def rep(a,b):
+    global s
+    assert a in s, a[:70]; s=s.replace(a,b,1)
+# version row
+rep('''| 韌體 0.6、host 0.6.0 | 2026-11-18 |''','''| 韌體 0.7、host 0.7.0 | 2026-11-18 | 是（還沒刷） | 開機頁：SETTINGS 加 **START PAGE**（MENU、PRACTICE、LISTEN、KEY、RHYTHM、TYPE、CHART），預設 MENU（0.6 以前直接進 PRACTICE）；存在設定的 `flags`（原本叫 `mute`）bit 2–4，紀錄格式不變。[備份格式 2](#backup)：進度後面接 12 bytes 的設定，JSON 的 `version` 2 多一個 `settings`，載入時設定一起還原；舊的格式 1 照樣能載入，給 0.6 以前的韌體時 host 和網頁自動退回格式 1。SETTINGS 只畫完整的列（第 14 列不會被頁尾切一半）。網頁：Hub 的 [Try 頁](#release)（fm1-emu 嵌入）和英文 [cheatsheet](https://daviddwlee84.github.io/fm1-morse/web/cheatsheet.html) |
+| 韌體 0.6、host 0.6.0 | 2026-11-18 |''')
+# backup section
+rep('''檔案是 JSON，列出每個字兩個方向的盒號（0–5）和最後作答的回合，可以手改。''','''檔案是 JSON，列出每個字兩個方向的盒號（0–5）和最後作答的回合，可以手改。0.7 起也包含設定（`settings`：速度、keyer、START PAGE 等，用名字寫，例如 `"start_page": "key"`），載入時一起還原，確認畫面會寫 `replaces the progress + settings`。''')
+rep('''- **USB 或藍牙**：0.4 只能走 USB；''','''- **格式 1 和 2（0.7）**：線上的格式 2 在進度後面多 12 bytes 的設定，兩種都是 6 個 frame。0.7 送格式 2、兩種都收；格式 1 只換進度，設定不動。host 和網頁從 HELLO 看韌體版本，給 0.4–0.6 時自動送格式 1（只還原進度）。舊的 `version: 1` 檔案照樣能讀。網頁的程式碼用 node 跑過，產生的位元組和 host 的向量相同。
+- **降版**：0.6 以前只認 `flags`（舊名 `mute`）0–3。START PAGE 不是 MENU 時裝回 0.6，整筆紀錄會被當成壞的而重設，進度也會不見。要降版先把 START PAGE 改回 MENU，或先備份。
+- **USB 或藍牙**：0.4 只能走 USB；''')
+# flash section
+rep('''0.2 沿用 0.1 的紀錄格式：''','''0.7 也沒改格式：設定的 `mute` 改名 `flags`，原本只用 bit 0（靜音）和 bit 1（藍牙關），bit 2–4 放 START PAGE（0 是 MENU，所以舊紀錄升級後開機進 MENU）。用 fm1-emu 把 0.7 疊在 2026-11-18 刷 THEORY 前的整片備份上（實機上真正的 0.6 紀錄，ROUND 30），兩種晶片都是：開機進 MENU、進度保留、開機 0 次寫入；改 START PAGE 存一次（4 次 erase／program），重開直接進 KEY `[模擬]`。注意 `fm1-live --shot` 沒給按鍵時會自己按一下 `PLAY`，在 MENU 上就會打開 PRACTICE，要加 `FM1_NO_PLAY=1` 才看得到開機頁。
+
+0.2 沿用 0.1 的紀錄格式：''')
+# size
+rep('''| 0.6（release） | 173,844 B | 38,572 / 98,304 B |''','''| 0.6（release） | 173,844 B | 38,572 / 98,304 B |
+| 0.7（開發版） | 174,404 B | 38,588 / 98,304 B |''')
+# verification
+rep('''| 0.5：疊在實機 0.4 前的備份上，BLUETOOTH 關、重開讀回、再開 |''','''| 0.7：START PAGE、0.6 紀錄升級進 MENU、格式 2 匯出、格式 1 和 2 載入（HOME 不變、PLAY 換進度和設定）、不合法的 `flags` 回到預設 | `just fw-test morse` | 全過 `[模擬]` |
+| 0.7：host 的格式 2、設定的名字、只給 0.7 送設定 | `just morse-test` | 25 項全過；網頁的程式碼用 node 跑，位元組和 host 向量相同 |
+| 0.7：改 START PAGE、重開讀回；疊在刷 THEORY 前的實機備份上 | fm1-emu `uc25hq80`、`p25q80` | 開機進 MENU，ROUND 30 保留，開機 0 次寫入；改成 KEY 後重開進 KEY `[模擬]` |
+| 0.5：疊在實機 0.4 前的備份上，BLUETOOTH 關、重開讀回、再開 |''')
+# release step 8
+rep('''Hub 會跟著 GitHub 的最新 release。`fmhub.json` 的說明加上藍牙。''','''Hub 會跟著 GitHub 的最新 release。`fmhub.json` 的說明加上藍牙。
+8. **Play in browser 和 cheatsheet**（2026-11-18，fm1-morse 的 GitHub Pages）：
+    - `fmhub.json` 的 `play` 指向 [`web/try/`](https://daviddwlee84.github.io/fm1-morse/web/try/)。這頁用 iframe 嵌入 fm1-emu 的 `?fw=morse&embed=1`，旁邊寫先試什麼和限制（沒有藍牙、沒有 MIDI 送到 Vail、進度存在瀏覽器）。`?fw=morse` 是 Hub 目前列的套件，所以每次 release 都會自動跟上，不用自己放 `.fwsc`。
+    - `cheat` 從 README 的 `#controls` 改成英文單頁 [`web/cheatsheet.html`](https://daviddwlee84.github.io/fm1-morse/web/cheatsheet.html)，內容翻自[中文速查](morse-cheatsheet.md)，可以印成 A4。
+    - 換版時的 404 見 [Hub](../firmware/hub.md#play)。''')
+# roadmap
+rep('''| 0.7 | 兩台 FM-1 互打：`ble_central`，一台掃描、選另一台、連上。等有第二台 |''','''| 0.7 | 開機頁（START PAGE）、備份帶設定（格式 2）。已做好，等刷機 |
+| 0.8 | 兩台 FM-1 互打：`ble_central`，一台掃描、選另一台、連上。等有第二台 |''')
+open(p,'w').write(s)
+EOF
+grep -n '0\.7\b' docs/dev/morse.md | head -20
+```
+
+```text
+143:檔案是 JSON，列出每個字兩個方向的盒號（0–5）和最後作答的回合，可以手改。0.7 起也包含設定（`settings`：速度、keyer、START PAGE 等，用名字寫，例如 `"start_page": "key"`），載入時一起還原，確認畫面會寫 `replaces the progress + settings`。FM-1 收到後先檢查 CRC 和內容是否合理，再顯示回合數、開放幾個字、答過幾題，按 `PLAY` 才載入。協定見 [`host/morse/PROTOCOL.md`](https://github.com/daviddwlee84/M-VAVE_FM-1/blob/main/host/morse/PROTOCOL.md) 的 Progress 一節。
+145:- **格式 1 和 2（0.7）**：線上的格式 2 在進度後面多 12 bytes 的設定，兩種都是 6 個 frame。0.7 送格式 2、兩種都收；格式 1 只換進度，設定不動。host 和網頁從 HELLO 看韌體版本，給 0.4–0.6 時自動送格式 1（只還原進度）。舊的 `version: 1` 檔案照樣能讀。網頁的程式碼用 node 跑過，產生的位元組和 host 的向量相同。
+374:0.7 也沒改格式：設定的 `mute` 改名 `flags`，原本只用 bit 0（靜音）和 bit 1（藍牙關），bit 2–4 放 START PAGE（0 是 MENU，所以舊紀錄升級後開機進 MENU）。用 fm1-emu 把 0.7 疊在 2026-11-18 刷 THEORY 前的整片備份上（實機上真正的 0.6 紀錄，ROUND 30），兩種晶片都是：開機進 MENU、進度保留、開機 0 次寫入；改 START PAGE 存一次（4 次 erase／program），重開直接進 KEY `[模擬]`。注意 `fm1-live --shot` 沒給按鍵時會自己按一下 `PLAY`，在 MENU 上就會打開 PRACTICE，要加 `FM1_NO_PLAY=1` 才看得到開機頁。
+397:| 0.7（開發版） | 174,404 B | 38,588 / 98,304 B |
+436:| 0.7：START PAGE、0.6 紀錄升級進 MENU、格式 2 匯出、格式 1 和 2 載入（HOME 不變、PLAY 換進度和設定）、不合法的 `flags` 回到預設 | `just fw-test morse` | 全過 `[模擬]` |
+437:| 0.7：host 的格式 2、設定的名字、只給 0.7 送設定 | `just morse-test` | 25 項全過；網頁的程式碼用 node 跑，位元組和 host 向量相同 |
+438:| 0.7：改 START PAGE、重開讀回；疊在刷 THEORY 前的實機備份上 | fm1-emu `uc25hq80`、`p25q80` | 開機進 MENU，ROUND 30 保留，開機 0 次寫入；改成 KEY 後重開進 KEY `[模擬]` |
+448:| 韌體 0.7、host 0.7.0 | 2026-11-18 | 是（還沒刷） | 開機頁：SETTINGS 加 **START PAGE**（MENU、PRACTICE、LISTEN、KEY、RHYTHM、TYPE、CHART），預設 MENU（0.6 以前直接進 PRACTICE）；存在設定的 `flags`（原本叫 `mute`）bit 2–4，紀錄格式不變。[備份格式 2](#backup)：進度後面接 12 bytes 的設定，JSON 的 `version` 2 多一個 `settings`，載入時設定一起還原；舊的格式 1 照樣能載入，給 0.6 以前的韌體時 host 和網頁自動退回格式 1。SETTINGS 只畫完整的列（第 14 列不會被頁尾切一半）。網頁：Hub 的 [Try 頁](#release)（fm1-emu 嵌入）和英文 [cheatsheet](https://daviddwlee84.github.io/fm1-morse/web/cheatsheet.html) |
+489:| 0.7 | 開機頁（START PAGE）、備份帶設定（格式 2）。已做好，等刷機 |
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 11:25:28Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Find stale references to central in 0.7
+
+`grep -rn -E 'central.{0,30}0\.7|0\.7.{0,30}central|0\.7 再|留到 0\.7' docs/ README.md | head`
+
+```text
+(Bash completed with no output)
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 11:25:44Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Update cheatsheet, learn, README and index for 0.7
+
+```bash
+grep -rn -E '0\.7' docs/dev/morse.md | grep -v -E '^(143|145|374|397|436|437|438|448|489):' | head; python3 - <<'EOF'
+def edit(p, pairs):
+    s=open(p).read()
+    for a,b in pairs:
+        assert a in s, (p,a[:60]); s=s.replace(a,b,1)
+    open(p,'w').write(s)
+edit('docs/dev/morse-cheatsheet.md',[
+('''韌體 0.6（0.3 以前沒有的操作標了「0.4」，藍牙是「0.5」；0.1 和 0.2 的差別見文末）。''','''韌體 0.7（0.3 以前沒有的操作標了「0.4」，藍牙是「0.5」，開機頁是「0.7」；0.1 和 0.2 的差別見文末）。英文版、可以印成 A4 的單頁：[MORSE cheatsheet](https://daviddwlee84.github.io/fm1-morse/web/cheatsheet.html)（Hub 卡片的 cheatsheet 連到這裡）；沒有 FM-1 也能[在瀏覽器裡試](https://daviddwlee84.github.io/fm1-morse/web/try/)。'''),
+('''| `HOME` | 叫出選單；在選單裡再按一次回到上一頁 |''','''| `HOME` | 叫出選單；在選單裡再按一次回到上一頁。0.7 起開機先進選單（SETTINGS 的 START PAGE 可以改），這時按 `HOME` 進 PRACTICE |'''),
+('''| BLUETOOTH | 0.5：ON（預設）或 OFF，關機後保留。旁邊會寫 NOT CONNECTED、CONNECTED，或 TALKING（電腦端程式或網頁正透過藍牙連著）。項目超過一頁，往下轉會捲動 |''','''| BLUETOOTH | 0.5：ON（預設）或 OFF，關機後保留。旁邊會寫 NOT CONNECTED、CONNECTED，或 TALKING（電腦端程式或網頁正透過藍牙連著）。項目超過一頁，往下轉會捲動 |
+| START PAGE | 0.7：開機進哪一頁：MENU（預設）、PRACTICE、LISTEN、KEY、RHYTHM、TYPE、CHART。0.6 以前固定進 PRACTICE。不是 MENU 時不要直接降回 0.6（見[備份與還原](morse.md#backup)） |'''),
+('''just morse-backup progress.json  # 0.4：學習進度存成 JSON（FM-1 上什麼都不變）
+just morse-restore progress.json # 0.4：載回去；FM-1 會先問，按 PLAY 才載入''','''just morse-backup progress.json  # 0.4：學習進度存成 JSON（FM-1 上什麼都不變）；0.7 起連設定一起
+just morse-restore progress.json # 0.4：載回去；FM-1 會先問，按 PLAY 才載入；檔案有設定、韌體 0.7 以上時設定也換'''),
+])
+edit('docs/dev/morse-learn.md',[('''1. 開機後直接進 PRACTICE。到 SETTINGS''','''1. 開機先進選單（0.7；0.6 以前直接進 PRACTICE），按 `HOME` 或選 PRACTICE 進去。想一開機就練，到 SETTINGS 把 START PAGE 改成 PRACTICE。到 SETTINGS''')])
+edit('README.md',[('Firmware 0.6 (Bluetooth), host 0.6.0; on my unit','Firmware 0.7 (start page, settings in backups; not flashed yet), host 0.7.0; 0.6 (Bluetooth) on my unit')])
+edit('docs/index.md',[('韌體 0.6、host 0.6.0（藍牙）；2026-11-17 到 11-18 在我的機器上','韌體 0.7、host 0.7.0（開機頁、備份帶設定，還沒刷）；0.6（藍牙）2026-11-17 到 11-18 在我的機器上')])
+EOF
+sed -n 84,100p docs/firmware/hub.md
+```
+
+```text
+docs/dev/morse.md:143:檔案是 JSON，列出每個字兩個方向的盒號（0–5）和最後作答的回合，可以手改。0.7 起也包含設定（`settings`：速度、keyer、START PAGE 等，用名字寫，例如 `"start_page": "key"`），載入時一起還原，確認畫面會寫 `replaces the progress + settings`。FM-1 收到後先檢查 CRC 和內容是否合理，再顯示回合數、開放幾個字、答過幾題，按 `PLAY` 才載入。協定見 [`host/morse/PROTOCOL.md`](https://github.com/daviddwlee84/M-VAVE_FM-1/blob/main/host/morse/PROTOCOL.md) 的 Progress 一節。
+docs/dev/morse.md:145:- **格式 1 和 2（0.7）**：線上的格式 2 在進度後面多 12 bytes 的設定，兩種都是 6 個 frame。0.7 送格式 2、兩種都收；格式 1 只換進度，設定不動。host 和網頁從 HELLO 看韌體版本，給 0.4–0.6 時自動送格式 1（只還原進度）。舊的 `version: 1` 檔案照樣能讀。網頁的程式碼用 node 跑過，產生的位元組和 host 的向量相同。
+docs/dev/morse.md:374:0.7 也沒改格式：設定的 `mute` 改名 `flags`，原本只用 bit 0（靜音）和 bit 1（藍牙關），bit 2–4 放 START PAGE（0 是 MENU，所以舊紀錄升級後開機進 MENU）。用 fm1-emu 把 0.7 疊在 2026-11-18 刷 THEORY 前的整片備份上（實機上真正的 0.6 紀錄，ROUND 30），兩種晶片都是：開機進 MENU、進度保留、開機 0 次寫入；改 START PAGE 存一次（4 次 erase／program），重開直接進 KEY `[模擬]`。注意 `fm1-live --shot` 沒給按鍵時會自己按一下 `PLAY`，在 MENU 上就會打開 PRACTICE，要加 `FM1_NO_PLAY=1` 才看得到開機頁。
+docs/dev/morse.md:397:| 0.7（開發版） | 174,404 B | 38,588 / 98,304 B |
+docs/dev/morse.md:436:| 0.7：START PAGE、0.6 紀錄升級進 MENU、格式 2 匯出、格式 1 和 2 載入（HOME 不變、PLAY 換進度和設定）、不合法的 `flags` 回到預設 | `just fw-test morse` | 全過 `[模擬]` |
+docs/dev/morse.md:437:| 0.7：host 的格式 2、設定的名字、只給 0.7 送設定 | `just morse-test` | 25 項全過；網頁的程式碼用 node 跑，位元組和 host 向量相同 |
+docs/dev/morse.md:438:| 0.7：改 START PAGE、重開讀回；疊在刷 THEORY 前的實機備份上 | fm1-emu `uc25hq80`、`p25q80` | 開機進 MENU，ROUND 30 保留，開機 0 次寫入；改成 KEY 後重開進 KEY `[模擬]` |
+docs/dev/morse.md:448:| 韌體 0.7、host 0.7.0 | 2026-11-18 | 是（還沒刷） | 開機頁：SETTINGS 加 **START PAGE**（MENU、PRACTICE、LISTEN、KEY、RHYTHM、TYPE、CHART），預設 MENU（0.6 以前直接進 PRACTICE）；存在設定的 `flags`（原本叫 `mute`）bit 2–4，紀錄格式不變。[備份格式 2](#backup)：進度後面接 12 bytes 的設定，JSON 的 `version` 2 多一個 `settings`，載入時設定一起還原；舊的格式 1 照樣能載入，給 0.6 以前的韌體時 host 和網頁自動退回格式 1。SETTINGS 只畫完整的列（第 14 列不會被頁尾切一半）。網頁：Hub 的 [Try 頁](#release)（fm1-emu 嵌入）和英文 [cheatsheet](https://daviddwlee84.github.io/fm1-morse/web/cheatsheet.html) |
+docs/dev/morse.md:489:| 0.7 | 開機頁（START PAGE）、備份帶設定（格式 2）。已做好，等刷機 |
+- **六個必要條件**：
+  - 開源：source 在 tag 上可以瀏覽，repo 根目錄要有 `LICENSE`。
+  - GitHub release 附上 `.fwsc`。
+  - identity 要是自己的：送出前用 [#check](https://thefirmwarehub.com/submit/#check) 檢查。
+  - 套件裡要有 update loader。
+  - repo 根目錄要有 `fmhub.json`。
+  - **在實機上測過**："'It builds' or 'it runs in the emulator' is not enough"。要測的有：從原廠 V15 安裝、從另一個韌體安裝、從自己的韌體再裝別的韌體、USB 回應自己的 `FM-1_` identity、刻意中斷一次寫入再繼續；如果會覆寫或讀不了別人的 project，要在 README 寫明。
+- **`fmhub.json`**：只允許 9 個欄位（`what`、`author`、`kinds`、`play`、`editor`、`cheat`、`image`、`color`、`sounds`，外加 `smk37`），多一個欄位整個檔案就不採用。新韌體至少要有：
+  - `what`：英文，20–300 字元，不能有連結。
+  - `kinds`：synth / groove / drums / chords / tracker / other 擇一。
+  - `image`：repo 裡的正方形圖，240–1024 px、≤ 300 KB。
+- **晶片欄**（new / old / any）由 Hub 自己從套件讀出來，作者不用申報。同樣用 fm1-base 的 CTL-1 被標為 new。
+- **收什麼**：KB 寫「It makes music… Games and tools without sound are not listed」，但 AGTDECK、MIDIMON 都以 `other` 上架了。
+- **Hub 讀的是 `fmhub.json`**：fm1-base build 出來的 `firmware.json`，在 Hub 的文件裡完全沒提到。
+- **一個 repo 一張卡**：圖片路徑、`fmhub.json` 都以 repo 根目錄為準，所以要上架的韌體應該放在獨立 repo（見[自製韌體環境](../dev/index.md)）。
+
+### 社群清單 { #lists }
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 11:25:51Z)**_
+
+I noticed the Hub's limit for `what` is 20–300 characters. Ours is about 350, which is why the catalog cuts it off at "Vail…". I'll shorten it, then add the Play-in-browser notes to hub.md.
+
+_**Agent (claude-opus-5-5 2026-11-18 11:26:07Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Shorten fmhub what and add Play section to hub.md
+
+```bash
+python3 - <<'EOF'
+import json
+p='firmware/morse/fmhub.json'; d=json.load(open(p))
+w="Learn and use Morse code: key on the piano keys (straight key or iambic paddles) and read what you sent, drill short and long presses, learn by sound with flash cards, hear endless practice, type letters and CW phrases. Keying goes out over USB or Bluetooth MIDI in the Vail format."
+print(len(w)); assert 20<=len(w)<=300 and 'http' not in w
+d['what']=w
+json.dump(d,open(p,'w'),indent=2,ensure_ascii=False); open(p,'a').write('\n')
+p='docs/firmware/hub.md'; s=open(p).read()
+a='''- **一個 repo 一張卡**：圖片路徑、`fmhub.json` 都以 repo 根目錄為準，所以要上架的韌體應該放在獨立 repo（見[自製韌體環境](../dev/index.md)）。
+'''
+assert a in s
+s=s.replace(a,a+'''
+### Play in browser 和 cheatsheet { #play }
+
+Hub 卡片上的 ▶ Play in browser 按鈕來自 `fmhub.json` 的 `play`，cheatsheet 連結來自 `cheat`，兩者都是網址。2026-11-18 從 `catalog.json` 看，有 `play` 的韌體大多連到 [fm1-emu](https://joakimeriksson.github.io/fm1-emu/) 網頁版，只有少數是自己寫的模擬器 `[上游]`。fm1-emu 的頁面寫明了幾種網址參數 `[上游]`：
+
+| 參數 | 作用 |
+|---|---|
+| `?fw=<id>` | 選韌體，id 用 Hub 的 id 也可以。fm1-emu 讀 Hub 的 `catalog.json`，Hub 新上架、它的清單還沒收的韌體也找得到（標成 not yet run here），套件從 Hub 抓 |
+| `&mhz=` | 時脈，例如 `?fw=x0x&mhz=120` |
+| `?package=URL&name=` | 播別的網站上的套件，要 https，而且那個網站要開 CORS。GitHub Pages 有開（`access-control-allow-origin: *`），GitHub release 的檔案沒有 |
+| `&embed=1` | 只顯示機器和它的控制項，給別的網站用 iframe 嵌入 |
+
+兩種做法：
+
+- **直接連**：`play` 填 `https://joakimeriksson.github.io/fm1-emu/?fw=<hub id>`，例如 conductor（別人的同名韌體）、argo、clavioline。
+- **自己的 Try 頁**：自己的 GitHub Pages 放一頁，iframe 嵌入 `?fw=<id>&embed=1`，旁邊寫先試什麼、模擬器做不到什麼（例如藍牙）。Rainbow、Skiff、Tuna 和 MORSE 都是這樣。MORSE 的在 [`web/try/`](https://daviddwlee84.github.io/fm1-morse/web/try/)。
+
+**換版時會短暫 404**：Hub 換新版時會刪掉舊套件。如果瀏覽器或 CDN 給 fm1-emu 的是舊的 `catalog.json`（`max-age=600`），它就會去抓已經不在的檔案，例如 `MORSE: https://thefirmwarehub.com/fw/morse-0.3.fwsc: 404`。fm1-emu 抓不到時，會改抓 Hub 目錄裡現在列的那個套件，但查的還是同一份舊目錄，所以救不回來。2026-11-18 本人遇到一次；我用全新的 headless Chromium 開了 5 次，第 1 次重現，後 4 次都抓到 `morse-0.5.fwsc` 並開機 `[模擬]`。重新整理通常就好。等 fm1-emu 的維護者把韌體收進它自己的清單，情況會穩定一點。
+
+`?package=` 不適合拿來釘死 Hub 的檔案：換版後舊檔被刪，連結就會一直是 404。
+
+**cheatsheet**：指到 README 的錨點也可以，例如 `#controls`，但 GitHub Pages 上的單頁比較好讀，也能列印。很多韌體這樣做，例如 DUELL、Aisling、Penumbra。MORSE 的在 [`web/cheatsheet.html`](https://daviddwlee84.github.io/fm1-morse/web/cheatsheet.html)。
+
+**`what` 超過 300 字元**：Hub 不會退件，但卡片會截斷。MORSE 原本的說明約 350 字元，在目錄裡被切在「Vail…」，2026-11-18 縮到 300 字元以內。
+''')
+open(p,'w').write(s)
+EOF
+grep -n -A12 '### 4. fmhub.json' .agents/skills/fm1-hub-listing/SKILL.md
+```
+
+```text
+282
+81:### 4. fmhub.json
+82-
+83-Only these fields: `what`, `author`, `kinds`, `play`, `editor`, `cheat`, `image`, `color`, `sounds` (and `smk37`).
+84-Any other field makes the whole file unused.
+85-
+86-- `what`: English, plain, 20-300 characters, no links, no `<>{}` or backticks.
+87-- `author` (2-60 characters): the name on the card's "By:". Keep it the same as the form's "Your name".
+88-- `kinds`: an array, first entry counts: synth, groove, drums, chords, tracker, other.
+89-- `image`: a repo path; square, 240-1024 px, PNG/WebP/JPEG, at most 300 KB (a 240 x 240 simulator `shot` works).
+90-- `sounds`: ask the owner; never guess. `"none"` only if every sound is generated in code and the repo holds no
+91-  `.wav`, `.syx`, `.sf2` or sample arrays.
+92-- `python3 -m json.tool fmhub.json`, then the owner runs the KB's "Check your file" (https://thefirmwarehub.com/kb/).
+93-
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 11:26:21Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Add play/cheat guidance to the hub-listing skill, check docs
+
+```bash
+python3 - <<'EOF'
+p='.agents/skills/fm1-hub-listing/SKILL.md'; s=open(p).read()
+a='''- `what`: English, plain, 20-300 characters, no links, no `<>{}` or backticks.'''
+assert a in s
+s=s.replace(a,'''- `what`: English, plain, 20-300 characters, no links, no `<>{}` or backticks. Longer is not refused but the card
+  cuts it (MORSE's 350 ended at "Vail…"): count it.''')
+a='''- `python3 -m json.tool fmhub.json`, then the owner runs the KB's "Check your file" (https://thefirmwarehub.com/kb/).
+'''
+assert a in s
+s=s.replace(a,a+'''- `play` (the card's "Play in browser"): a URL. Most point at fm1-emu's web build, which plays the release package
+  itself and reads the Hub's catalog, so a listed firmware is found by its Hub id with no copy of the package:
+  - direct: `https://joakimeriksson.github.io/fm1-emu/?fw=<hub id>` (`&mhz=` sets the clock);
+  - better: an own `web/try/` page on the repo's GitHub Pages with an iframe of `…/fm1-emu/?fw=<hub id>&embed=1`
+    (only the synth), a few things to try, what the emulator cannot do (Bluetooth, MIDI out), a reload button and a
+    full-page link. MORSE: `firmware/morse/web/try/index.html`.
+  - `?package=URL&name=` plays a package from elsewhere, but needs https with CORS: GitHub Pages yes, release
+    assets no. Do not pin a Hub file with it: the Hub deletes the old package on each release.
+  - Before listing there is no Hub id yet: add `play` after the Hub lists the firmware (a card edit, live within
+    three hours). Check it in a fresh browser: right after a release fm1-emu can fetch the package a stale cached
+    catalog names and say `<NAME>: https://thefirmwarehub.com/fw/<id>-<old>.fwsc: 404`; reloading (or ten
+    minutes, the catalog's `max-age=600`) fixes it. Note `fm1-live --shot` presses PLAY by itself unless given keys
+    or `FM1_NO_PLAY=1`.
+- `cheat`: a URL. A README anchor works, a GitHub Pages single page (printable, `@media print`) reads better.
+  MORSE: `web/cheatsheet.html`, translated from the KB's Chinese cheatsheet; keep the two in step.
+''')
+open(p,'w').write(s)
+EOF
+just docs-check 2>&1 | tail -4
+```
+
+```text
+No issues found
+Build finished in 0.37s
+uv run --locked --all-groups python scripts/check-docs-site.py
+{"status": "ok", "pages": 50, "llm_pages": 50, "deployed": false}
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 11:26:31Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Stop test server, rerun host tests, list changes
+
+`pkill -f 'http.server 8765' ; cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1 && just morse-test 2>&1 | tail -1 && git status --short | grep -v -E '\.specstory|\.claude/plans|theory|flash-map|docs/dev/index.md|docs/dev/theory.md|AGENTS.md' ; git -C firmware/morse status --short`
+
+```text
+25 passed in 0.04s
+ M .agents/skills/fm1-hub-listing/SKILL.md
+ M Justfile
+ M README.md
+ M docs/dev/morse-cheatsheet.md
+ M docs/dev/morse-learn.md
+ M docs/dev/morse.md
+ M docs/firmware/hub.md
+ M docs/index.md
+ m firmware/morse
+ M host/morse/PROTOCOL.md
+ M host/morse/__init__.py
+ M host/morse/__main__.py
+ M host/morse/core.py
+ M host/morse/device.py
+ M host/morse/progress.py
+ M host/morse/protocol.py
+ M host/tests/test_morse.py
+ M README.md
+ M app.c
+ M docs/screens/card_hear.png
+ M docs/screens/chart_edit.png
+ M docs/screens/listen.png
+ M docs/screens/listen_hidden.png
+ M docs/screens/result_right.png
+ M docs/screens/settings.png
+ M fmhub.json
+ M tests/basic.txt
+ M web/index.html
+?? docs/screens/load_settings.png
+?? docs/screens/settings_start.png
+?? web/cheatsheet.html
+?? web/try/
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 11:26:49Z)**_
+
+三件事都做完了，沒有 commit，也沒有刷機。Hub 的按鈕要等 fm1-morse push 上去之後才會出現。
+
+**Play in browser 為什麼不能用**
+- 你看到的 404，是 fm1-emu 拿到一份舊的 Hub 目錄，去抓 Hub 已經刪掉的 0.3 套件。fm1-emu 的備援查的是同一份舊目錄，所以救不回來。
+- 我在全新的瀏覽器裡開了 5 次：第 1 次也是 404，後 4 次都正常開出 MORSE 0.5。所以 `?fw=morse` 本身沒問題，只是 Hub 換版本後的短時間內會出錯，重新整理通常就好。
+
+**Play in browser 和 cheatsheet**
+- 新增 `web/try/` 頁：嵌入 fm1-emu，旁邊寫「先試這些」和模擬器做不到的事（沒有藍牙、不能接 Vail、進度只存在瀏覽器裡），另外有重新載入按鈕和全頁連結。
+- 新增 `web/cheatsheet.html`：從中文速查翻成英文，一頁看完，可以印成 A4。
+- `fmhub.json` 加上 `play` 和 `cheat` 兩個連結。
+- Hub 規定說明文字最多 300 字元，我們原本約 350，卡片上被切在「Vail…」，所以我縮短到 282 字元。
+
+**韌體 0.7：開機頁**
+- SETTINGS 新增第 14 項 START PAGE，預設 MENU，也可以選 PRACTICE、LISTEN、KEY、RHYTHM、TYPE、CHART。
+- 這個設定存進原本記錄裡沒用到的 bit，記錄格式不變。0.6 的存檔升級後會開在 MENU。
+- **降版要注意**：START PAGE 不是 MENU 的話，裝回 0.6 會被當成壞掉的存檔，進度跟著重設。所以降版前先改回 MENU，或先備份。這點已經寫進 README 和文件。
+- 順手修了一個顯示問題：設定變成 14 項後，最後一列會被頁尾切掉一半，現在只畫完整的列。
+
+**備份連設定一起保留**
+- 新的備份格式在進度後面多帶 12 bytes 的設定，JSON 檔多一個 `settings`，欄位用看得懂的名字，例如 `"start_page": "key"`。
+- 載入時裝置會寫 `replaces the progress + settings`，按 PLAY 才一起換。
+- 舊的備份檔照樣能載入，只換進度。韌體是 0.6 以前時，host 和網頁會自動改送舊格式，只還原進度。
+- 網頁的「Only show it」會多顯示一張設定表。
+
+**驗證**
+- `fw-test`、`morse-unit`、`morse-test`（25 項）全部通過；網頁的程式碼用 Node 跑過，產生的資料和 host 的測試向量完全一致。
+- 裝置版 build：174,404 B，RAM 38,588 B。
+- fm1-emu 兩種晶片都測過 `[模擬]`：
+  - 把 START PAGE 改成 KEY 並存檔，重開機會直接進 KEY。
+  - 0.7 疊在刷 THEORY 前那份整片備份上，用的是實機真正的 0.6 存檔：開機進 MENU，ROUND 30 還在，開機沒有寫入 flash。
+
+**改到的文件**
+- `docs/dev/morse.md`：0.7 版本列、備份格式、降版注意、release 第 8 步、roadmap（兩台互打順延到 0.8）。
+- `docs/firmware/hub.md` 新增 `#play` 一節：fm1-emu 的網址參數、兩種做法、這次的 404。
+- `fm1-hub-listing` skill 補上 `play`、`cheat` 和 300 字元限制。
+- 另外也更新了：中文速查、`morse-learn.md`、`PROTOCOL.md`、`README.md`、`docs/index.md`。
+
+**接下來等你決定**
+1. commit 和 push。superproject 的 `Justfile` 裡也有 THEORY session 還沒 commit 的改動，commit 時我只會挑我改的部分。
+2. 發 v0.7 release。
+3. 刷 0.7。實機現在是 THEORY，刷之前照規定做完整的 preflight。
+
+---
+
+_**User (2026-11-18 11:32:47Z)**_
+
+好 commit push 然後發 v0.7
+
+---
+
+_**Agent (claude-opus-5-5 2026-11-18 11:32:56Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Check branch, Justfile diff, and v0.6 release format
+
+`git -C firmware/morse branch --show-current; git -C firmware/morse log --oneline -3 --format='%s' ; git diff Justfile | head -60; gh release view v0.6 -R daviddwlee84/fm1-morse --json assets,body,name -q '.name, .body, (.assets[]|.name)'`
+
+```text
+main
+web decoder: hold the first letters until a dit and a dah are both heard (K was read as U)
+web: its own decoder (speed, dah ratio, gaps, overall WPM), With Vail and the presets, Only show it
+0.6: a USB host is gone at once when the cable comes out; the web page connects over Bluetooth directly
+diff --git a/Justfile b/Justfile
+index 81fda9b..89e342d 100644
+--- a/Justfile
++++ b/Justfile
+@@ -320,7 +320,7 @@ morse-shots: (fw-test "morse")
+     dst.mkdir(parents=True, exist_ok=True)
+     names = """menu boot card_new card_new_peek card_hear card_see_key card_hear_key result_right result_keyed result_keyed_wrong
+     result_almost done practice_test placement_ask listen listen_hidden key key_code key_timing rhythm rhythm_good
+-    rhythm_dahs type type_code type_phrases chart chart_edit chart_save load_ask settings settings_bt""".split()
++    rhythm_dahs type type_code type_phrases chart chart_edit chart_save load_ask settings settings_bt settings_start load_settings""".split()
+     for n in names:
+         im = Image.open(src / f"{n}.png").convert("RGB")
+         im.resize((im.width * 2, im.height * 2), Image.NEAREST).save(dst / f"{n}.png", optimize=True)
+MORSE 0.6
+MORSE 0.6: the computer's sign goes as soon as the cable comes out, and the web page talks to the FM-1 over Bluetooth by itself.
+
+**Firmware**
+- `PC` in the header (a program answering MORSE: the host or MORSE on the web) now goes within half a second of pulling the USB cable, instead of after 10 s: the FM-1 treats a USB bus that takes no data for 0.5 s as gone.
+
+**[MORSE on the web](https://daviddwlee84.github.io/fm1-morse/web/)** (no reflash needed for these)
+- *Over Bluetooth, directly*: Chrome or Edge finds the FM-1 itself (Web Bluetooth), no system Bluetooth MIDI setup.
+- With the FM-1 on USB and Bluetooth MIDI both, USB is used.
+- A decoder of its own beside what the FM-1 reads: the character speed, dah length, gaps in dits and the overall (Farnsworth) speed, from the keying's time stamps alone.
+- *Timing*: each press and gap by time stamp and by arrival (Bluetooth: within 0.5 ms by time stamp).
+- *With Vail*: how to use the FM-1 as Vail's key, and which presets Vail's decoder reads as words.
+- *Only show it* reads the progress without saving a file; backups are named to the minute.
+
+| | |
+|---|---|
+| Package | `morse-0.6.fwsc` |
+| Identity | `FM-1_41000600` |
+| SHA-256 | `d65b6df5570aa632be51c6b99256fab9388ae25035ffc979609871623ec8fd7e` |
+| Flash chips | saves and updates on `856014` and `B36014` (both in fm1-emu; `B36014` on hardware) |
+| Licence | GPL-3.0-or-later (fm1-base MPL-2.0, `common/` MIT) |
+
+Tested on an FM-1 with the newer flash chip (`B36014`): installed over MORSE 0.5 with the USB-MIDI update (fast install), the learning progress kept; `PC` gone within half a second of unplugging, and no flicker seen with the cable in; the web page over Bluetooth directly, with Live and Timing. Same settings and progress record as 0.3-0.5.
+
+Back up your flash, and your progress, before installing.
+
+firmware.json
+morse-0.6.fwsc
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 11:33:12Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Commit and push fm1-morse 0.7
+
+```bash
+cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/firmware/morse && git add -A && git commit -q -F - <<'EOF'
+0.7: a start page, settings in backups; Try in the browser and a cheatsheet page
+
+- SETTINGS > START PAGE (MENU by default; PRACTICE, LISTEN, KEY, RHYTHM, TYPE, CHART):
+  bits 2-4 of the settings' flags byte (was mute), so the record keeps its layout and
+  a 0.6 record starts on MENU. The settings list draws only whole rows.
+- Progress backup format 2: the settings' 12 bytes after the progress, still six frames.
+  0.7 sends 2 and loads 1 or 2; loading 2 asks "replaces the progress + settings".
+- Web: reads and writes format 2 (JSON version 2 with named "settings"), sends format 1
+  to MORSE 0.4-0.6, shows the settings with Only show it; links to the new pages.
+- web/try/: fm1-emu embedded (?fw=morse&embed=1), what to try, its limits.
+- web/cheatsheet.html: every page and button, printable; fmhub.json play and cheat,
+  and its "what" under the Hub's 300 characters.
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+EOF
+git push -q origin main && git log --oneline -1
+```
+
+```text
+52b048e 0.7: a start page, settings in backups; Try in the browser and a cheatsheet page
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 11:33:17Z)**_
+
+Now the superproject: only my files plus the pointer.
+
+_**Agent (claude-opus-5-5 2026-11-18 11:33:46Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Commit and push superproject changes
+
+```bash
+cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1 && git add firmware/morse .agents/skills/fm1-hub-listing/SKILL.md Justfile README.md docs/dev/morse-cheatsheet.md docs/dev/morse-learn.md docs/dev/morse.md docs/firmware/hub.md docs/index.md host/morse host/tests/test_morse.py && git diff --cached --stat && git commit -q -F - <<'EOF'
+morse 0.7: start page, settings in backups (format 2), Try page and cheatsheet on the Hub
+
+- firmware/morse -> 52b048e: SETTINGS > START PAGE (MENU by default), backup format 2
+  with the settings, web/try/ (fm1-emu embedded) and web/cheatsheet.html; fmhub.json
+  play and cheat.
+- host 0.7.0: progress.py reads formats 1 and 2, JSON version 2 with named settings,
+  sends settings only to firmware 0.7+; PROTOCOL.md; tests.
+- docs: morse 0.7 (verified in the simulator and fm1-emu over the real 0.6 record,
+  not flashed yet), Hub "Play in browser" (fm1-emu parameters, the 404 after a
+  release), the hub-listing skill.
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+EOF
+git push -q && git log --oneline -1
+```
+
+```text
+ .agents/skills/fm1-hub-listing/SKILL.md |  18 +++-
+ Justfile                                |   2 +-
+ README.md                               |   2 +-
+ docs/dev/morse-cheatsheet.md            |   9 +-
+ docs/dev/morse-learn.md                 |   2 +-
+ docs/dev/morse.md                       |  18 +++-
+ docs/firmware/hub.md                    |  24 +++++
+ docs/index.md                           |   2 +-
+ firmware/morse                          |   2 +-
+ host/morse/PROTOCOL.md                  |  38 +++++--
+ host/morse/__init__.py                  |   4 +-
+ host/morse/__main__.py                  |   3 +
+ host/morse/core.py                      |   5 +-
+ host/morse/device.py                    |   4 +-
+ host/morse/progress.py                  | 170 +++++++++++++++++++++++++++-----
+ host/morse/protocol.py                  |   2 +-
+ host/tests/test_morse.py                |  57 ++++++++++-
+ 17 files changed, 307 insertions(+), 55 deletions(-)
+9fee574 morse 0.7: start page, settings in backups (format 2), Try page and cheatsheet on the Hub
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 11:33:50Z)**_
+
+Both pushed. Building the release package:
+
+_**Agent (claude-opus-5-5 2026-11-18 11:33:57Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Build the 0.7 release package
+
+`just morse-release 0.7 2>&1 | tail -6 && git -C firmware/morse rev-parse --short HEAD && ls -la firmware/morse/build/morse-0.7.fwsc && shasum -a 256 firmware/morse/build/morse-0.7.fwsc`
+
+```text
+parts    Bluetooth MIDI, USB audio in, USB audio out, the screen reader  (not built in: Bluetooth MIDI devices, Bluetooth audio, USB MIDI host, USB disk mode, WiFi, the second core, velocity, pressure, screen mirroring, backup and restore, a resource region)
+app      /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/firmware/morse/build/morse.bin  174408 B
+loader   /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/firmware/morse/build/loader/ota.bin  12847 B
+package  /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/firmware/morse/build/morse-0.7.fwsc  616003 B, identity FM-1_41000700
+build    6556D261  (FM1B_BUILD: the build a crash record names, fm1_remote.py crashes)
+about    /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/firmware/morse/build/firmware.json  (for firmware hubs)
+52b048e
+.rw-r--r--@ 616k zhouhanru 18 Nov 19:33 firmware/morse/build/morse-0.7.fwsc
+c15541d5d10627949bf95b116e60daba9f49738ca5fd1de7d0460bb5aaa45e3d  firmware/morse/build/morse-0.7.fwsc
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 11:34:04Z)**_
+
+Booting the release package itself on both chips once:
+
+_**Agent (claude-opus-5-5 2026-11-18 11:34:11Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Boot release package over real backup on both chips
+
+```bash
+cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/tools/emu-state && for chip in uc25hq80 p25q80; do cp reh07_${chip}_before.flash r.flash; FM1_NO_PLAY=1 ../fm1-emu/fm1-live --fwsc ../../firmware/morse/build/morse-0.7.fwsc --flash-chip $chip --flash $PWD/r.flash --midi none --shot 3000 --lcd-only 2>&1 | grep flash:; cp work/lcd.ppm /private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/0a574306-469e-4a59-9622-5701a42aee59/scratchpad/rel_$chip.ppm; done; rm -f r.flash; cd ../.. && uv run --locked --all-groups python -c "
+from PIL import Image
+sp='/private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/0a574306-469e-4a59-9622-5701a42aee59/scratchpad'
+c=Image.new('RGB',(490,240),'white')
+for i,ch in enumerate(['uc25hq80','p25q80']): c.paste(Image.open(f'{sp}/rel_{ch}.ppm'),(i*250,0))
+c.save(f'{sp}/rel.png')"
+```
+
+```text
+flash: 0 erases / programs
+flash: 0 erases / programs
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 11:34:17Z)**_
+
+<tool-use data-tool-type="read" data-tool-name="Read"><details>
+<summary>Tool use: **Read**</summary>
+ `/private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/0a574306-469e-4a59-9622-5701a42aee59/scratchpad/rel.png`
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 11:34:21Z)**_
+
+Good. Creating the tag and release:
+
+_**Agent (claude-opus-5-5 2026-11-18 11:34:43Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Tag v0.7 and publish the GitHub release
+
+```bash
+cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/firmware/morse && git tag -a v0.7 52b048e -m "MORSE 0.7" && git push -q origin v0.7 && cat > /private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/0a574306-469e-4a59-9622-5701a42aee59/scratchpad/notes07.md <<'EOF'
+MORSE 0.7: choose the page it starts on, and back up your settings with your progress.
+
+**Firmware**
+- SETTINGS > START PAGE: the page MORSE starts on. MENU by default (up to 0.6 it went straight into PRACTICE); PRACTICE, LISTEN, KEY, RHYTHM, TYPE or CHART if you like.
+- Backups carry the settings too (speeds, keyer, paddles, start page, ...). Loading one shows *replaces the progress + settings* and changes both after `PLAY`. Backups from 0.4-0.6 still load (the progress alone).
+- The settings list shows only whole rows.
+
+**[MORSE on the web](https://daviddwlee84.github.io/fm1-morse/web/)**
+- Backups are JSON version 2 with a readable `settings` block; *Only show it* lists them. Sending a backup to MORSE 0.4-0.6 sends the progress alone.
+- **[Try MORSE in the browser](https://daviddwlee84.github.io/fm1-morse/web/try/)** without an FM-1 (the [fm1-emu](https://github.com/joakimeriksson/fm1-emu) emulator), and a printable **[cheatsheet](https://daviddwlee84.github.io/fm1-morse/web/cheatsheet.html)** of every page and button.
+
+| | |
+|---|---|
+| Package | `morse-0.7.fwsc` |
+| Identity | `FM-1_41000700` |
+| SHA-256 | `c15541d5d10627949bf95b116e60daba9f49738ca5fd1de7d0460bb5aaa45e3d` |
+| Flash chips | saves and updates on `856014` and `B36014` (fm1-emu); earlier versions on `B36014` hardware |
+| Licence | GPL-3.0-or-later (fm1-base MPL-2.0, `common/` MIT) |
+
+Same record as 0.3-0.6: a 0.6 record keeps its progress and starts on MENU (checked in fm1-emu on both flash chips over a full-flash backup of a real FM-1 running 0.6). Not yet installed on hardware.
+
+**Going back to 0.6 or earlier**: set START PAGE to MENU first. Older versions do not know the start page and would start over, progress included.
+
+Back up your flash, and your progress, before installing.
+EOF
+gh release create v0.7 -R daviddwlee84/fm1-morse --verify-tag --title "MORSE 0.7" --notes-file /private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/0a574306-469e-4a59-9622-5701a42aee59/scratchpad/notes07.md build/morse-0.7.fwsc build/firmware.json && gh release view v0.7 -R daviddwlee84/fm1-morse --json assets -q '.assets[]|.name+" "+.digest'
+```
+
+```text
+https://github.com/daviddwlee84/fm1-morse/releases/tag/v0.7
+firmware.json sha256:296479f46067ef674b7a5c1cdad4653b31edd4a023badb762f8412beffe02b91
+morse-0.7.fwsc sha256:c15541d5d10627949bf95b116e60daba9f49738ca5fd1de7d0460bb5aaa45e3d
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 11:34:49Z)**_
+
+Digest 相符。接著確認 GitHub Pages 上線，再把 release 記進文件：
+
+_**Agent (claude-opus-5-5 2026-11-18 11:34:52Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Check the new pages are live on GitHub Pages
+
+`for u in web/try/ web/cheatsheet.html; do curl -s -o /dev/null -w "%{http_code} $u\n" https://daviddwlee84.github.io/fm1-morse/$u; done; curl -s https://daviddwlee84.github.io/fm1-morse/web/ | grep -c 'cheatsheet.html'`
+
+```text
+200 web/try/
+200 web/cheatsheet.html
+1
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 11:35:25Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Record the v0.7 release in docs, commit and push
+
+```bash
+cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1 && python3 - <<'EOF'
+p='docs/dev/morse.md'; s=open(p).read()
+def rep(a,b):
+    global s
+    assert a in s, a[:60]; s=s.replace(a,b,1)
+rep('''| 韌體 0.7、host 0.7.0 | 2026-11-18 | 是（還沒刷） |''','''| 韌體 0.7、host 0.7.0 | 2026-11-18 | 是（還沒刷；release [v0.7](https://github.com/daviddwlee84/fm1-morse/releases/tag/v0.7)，`FM-1_41000700`，fm1-morse `52b048e`） |''')
+rep('''7. 新版本：2026-11-18 發布 [v0.6]''','''7. 新版本：2026-11-18 發布 [v0.7](https://github.com/daviddwlee84/fm1-morse/releases/tag/v0.7)（tag 在 `52b048e`，`morse-0.7.fwsc` SHA-256 `c15541d5…aa45e3d`，GitHub 的 asset digest 相符；release 套件在 fm1-emu 兩種晶片上疊實機 0.6 的備份開機進 MENU `[模擬]`，還沒刷進實機）。再之前同一天發布 [v0.6]''')
+rep('''| 0.7（開發版） | 174,404 B | 38,588 / 98,304 B |''','''| 0.7（release） | 174,408 B | 38,588 / 98,304 B |''')
+open(p,'w').write(s)
+EOF
+just docs-check 2>&1 | tail -1 && git add docs/dev/morse.md && git commit -q -m "morse: v0.7 released (52b048e, morse-0.7.fwsc c15541d5)
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>" && git push -q && git log --oneline -1
+```
+
+```text
+{"status": "ok", "pages": 50, "llm_pages": 50, "deployed": false}
+b815636 morse: v0.7 released (52b048e, morse-0.7.fwsc c15541d5)
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 11:35:36Z)**_
+
+兩個 repo 都已經 commit 並 push，v0.7 也發布了。
+
+- **fm1-morse**：`52b048e`，tag `v0.7`。
+  - Release：https://github.com/daviddwlee84/fm1-morse/releases/tag/v0.7
+  - 附檔是 `morse-0.7.fwsc`（identity `FM-1_41000700`，SHA-256 `c15541d5…aa45e3d`，和 GitHub 上的 digest 相符）和 `firmware.json`。
+  - 發布前，我用 fm1-emu 在兩種晶片上開過這個 release 套件，疊在實機 0.6 的備份上：開機進 MENU，ROUND 30 還在，開機沒有寫入 flash `[模擬]`。
+  - release 說明也寫了降版注意：裝回 0.6 以前要先把 START PAGE 改回 MENU。
+- **superproject**：
+  - `9fee574` 是 0.7 的主要 commit：submodule 指標、host 0.7.0、文件和 skill。
+  - `b815636` 把 v0.7 的 release 資訊記進 `docs/dev/morse.md`。
+  - THEORY session 那些還沒 commit 的檔案，以及 `.specstory`、`.claude/plans`，都沒有動。
+- **GitHub Pages 已經上線**：[Try 頁](https://daviddwlee84.github.io/fm1-morse/web/try/) 和 [cheatsheet](https://daviddwlee84.github.io/fm1-morse/web/cheatsheet.html) 都回 200。
+- **Hub 還沒更新**：大約 3 小時內會讀到新的 `fmhub.json`（Play 按鈕、cheatsheet 連結、縮短後的說明）和 v0.7 套件。剛換版的那段時間，Play 可能又會短暫出現 404，重新整理就好。
+
+0.7 還沒刷進實機，機器上現在是 THEORY。要刷的話，跟我說，我會先跑完整的 preflight。
+
+---
+
+_**User (2026-11-18 11:35:50Z)**_
+
+好，刷 0.7 吧
+
+---
+
+_**Agent (claude-opus-5-5 2026-11-18 11:35:59Z)**_
+
+先跑 preflight。我會：
+
+- 先確認機器的狀態（只讀）；
+- 切到 download mode 做一份新的整片備份（只是切模式，不寫入）；
+- 做完再請你執行安裝。
+
+_**Agent (claude-opus-5-5 2026-11-18 11:36:01Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Locate the USB-MIDI installer used before
+
+`grep -rn 'fm1_install.py' docs/device-log.md | tail -2; find . -name fm1_install.py -not -path './vendor/*' 2>/dev/null | head -3`
+
+```text
+docs/device-log.md:128:| 2026-11-18 18:56 | agent 執行 `just fm1-download-mode`、`fm1-info`、`fm1-backup pre-theory-0.1`、`fm1-restart`、`fm1_install.py --info`（刷 THEORY 0.1 前的 preflight） | bootloader stock、firmware `FM-1 410`、flash `0xB36014`；備份 SHA-256 `5b62a3da…879ea`；重開回 Morse 0.6（`FM-1_41000600 [running]`）。fm1-emu 兩種晶片上把 THEORY 0.1 dev build（SHA-256 `0d86cc42…41ebcd`）疊在這份備份上預演：開機 0 次寫入，存檔只寫 `0xD8000`，`0xDA000` 的 Morse 紀錄和 `0xFC000` 都沒變 `[模擬]` |
+docs/device-log.md:129:| 2026-11-18 19:00 前後 | 本人執行 `fm1_install.py firmware/theory/build/theory.fwsc`（THEORY 0.1 dev build，`FM-1_4900`，SHA-256 `0d86cc42…41ebcd`，從 `c7a7084` 上未 commit 的工作目錄 build），機器上是 Morse 0.6 | 成功：`checking the package (30 reads)` → `switching to update mode` → `the loader writes only the sectors that changed (fast install)` → `done: the FM-1 runs FM-1_4900`。本人試用：「好像還可以」。19:02 agent 想用 `--info` 再確認時，FM-1 已不在 USB 上（沒有任何 MIDI input），所以以安裝程式最後的回報為準 |
+./third_party/fm1-base/tools/fm1_install.py
+./third_party/fm1-base/bsp/tools/fm1_install.py
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 11:36:06Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Read-only check of what the FM-1 runs now
+
+`uv run --locked --all-groups python third_party/fm1-base/tools/fm1_install.py --info 2>&1 | tail -8; just fm1-find 2>&1 | tail -5`
+
+```text
+error: FM-1 not found (USB data cable? another app using it?)
+  MIDI inputs: (none)
+"/Applications/M-Flasher.app/Contents/MacOS/M-Flasher" find
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 11:36:13Z)**_
+
+FM-1 不在 USB 上：系統裡沒有任何 MIDI input，M-Flasher 也找不到它。19:02 那次也是這樣。
+
+麻煩你：
+1. 用 USB **資料線**直接接上電腦，不要經過 hub；
+2. 確認 FM-1 已開機，畫面上是 THEORY。
+
+接好後跟我說，我會：
+- 確認它跑的是 THEORY；
+- 切到 download mode，做一份刷機前的整片備份，記進 `docs/device-log.md`；
+- 用 fm1-emu 把 0.7 疊在這份備份上預演，確認 `0xDA000` 的 MORSE 進度還在。
+
+全部確認後，我會把 preflight 的結果和安裝指令給你，由你自己執行安裝。
+
+---
+
+_**User (2026-11-18 11:36:36Z)**_
+
+接好了，THEORY 開著
+
+---
+
+_**Agent (claude-opus-5-5 2026-11-18 11:36:42Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Read-only check of the running firmware
+
+`uv run --locked --all-groups python third_party/fm1-base/tools/fm1_install.py --info 2>&1 | tail -6`
+
+```text
+FM-1_4900  [running]  port: Felucca
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 11:36:47Z)**_
+
+Confirmed it's running THEORY (`FM-1_4900`). Switching it to download mode now (a mode switch, not a write) to take the backup:
+
+_**Agent (claude-opus-5-5 2026-11-18 11:37:39Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Switch to download mode and read device info
+
+`just fm1-download-mode 2>&1 | tail -4; sleep 0; just fm1-info 2>&1 | tail -12`
+
+```text
+"/Applications/M-Flasher.app/Contents/MacOS/M-Flasher" download-mode
+Sent the Felucca the download-mode message over USB MIDI; waiting for it
+In download mode: usb:2-4	WL82 UBOOT1.00 (USB bus 2, device 4)
+Read in 1.3 s (806 KB/s)
+Checked: the chip's CRC32 of the flash matches the read
+  model       FM-1
+  bootloader  stock (M-VAVE)
+  firmware    FM-1 490
+  app         OK
+  chip key    0x980F
+  flash       0xB36014
+  unit id     55227286a0cb022a
+  loader      M-Flasher 1.3, CPU at 96 MHz
+    - the firmware uses the FM-1 flash layout
+    - flash chip 0xB36014 (new)
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 11:38:23Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Take a full-flash backup before Morse 0.7
+
+`just fm1-backup pre-morse-0.7 2>&1 | tail -6; ls backups/*pre-morse-0.7*/; shasum -a 256 backups/*pre-morse-0.7*/*.bin`
+
+```text
+  loader      M-Flasher 1.3, CPU at 96 MHz
+    - the firmware uses the FM-1 flash layout
+    - flash chip 0xB36014 (new)
+Backup saved: backups/2026-11-18-pre-morse-0.7/fm1-20261118-193823.bin
+4c3d061d886c58271e26bf05822ba9f6ff957ce551a95d338d93a05cd1712e85  backups/2026-11-18-pre-morse-0.7/fm1-20261118-193823.bin
+Record this in docs/device-log.md and keep a copy off this machine.
+fm1-20261118-193823.bin
+fm1-20261118-193823.json
+4c3d061d886c58271e26bf05822ba9f6ff957ce551a95d338d93a05cd1712e85  backups/2026-11-18-pre-morse-0.7/fm1-20261118-193823.bin
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 11:38:28Z)**_
+
+Backup done. Switching back to normal mode, then rehearsing over this backup:
+
+_**Agent (claude-opus-5-5 2026-11-18 11:38:47Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Restart unit, inspect backup, rehearse 0.7 over it
+
+```bash
+just fm1-restart 2>&1 | tail -2; python3 - <<'EOF'
+b=open('backups/2026-11-18-pre-morse-0.7/fm1-20261118-193823.bin','rb').read()
+import struct
+i=0
+while (i:=b.find(bytes.fromhex('31524f4d'),i))>=0:
+    print('MORSE rec',hex(i),b[i+8:i+20].hex(' ')); i+=4
+old=open('backups/2026-11-18-pre-theory-0.1/fm1-20261118-185652.bin','rb').read()
+diff=sorted({a//4096*4096 for a in range(0,len(b),4096) if b[a:a+4096]!=old[a:a+4096]})
+print('sectors changed since pre-theory:', len(diff), [hex(x) for x in diff if x>=0x93000])
+EOF
+cd tools/emu-state && B=$PWD/../../backups/2026-11-18-pre-morse-0.7/fm1-20261118-193823.bin; for chip in uc25hq80 p25q80; do rm -f p.flash; ../fm1-emu/fm1-live --fwsc ../../firmware/morse/build/morse-0.7.fwsc --flash-chip $chip --flash $PWD/p.flash --midi none --shot 300 --lcd-only >/dev/null 2>&1; python3 ../../scripts/emu_rehearse.py p.flash $B r.flash; cp r.flash r0.flash; FM1_NO_PLAY=1 ../fm1-emu/fm1-live --fwsc ../../firmware/morse/build/morse-0.7.fwsc --flash-chip $chip --flash $PWD/r.flash --midi none --shot 3000 --lcd-only 2>&1 | grep flash:; cp work/lcd.ppm /private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/0a574306-469e-4a59-9622-5701a42aee59/scratchpad/pre07_$chip.ppm; FM1_BENCH_KEYS="2500:HOME,2550:HOME^" ../fm1-emu/fm1-live --fwsc ../../firmware/morse/build/morse-0.7.fwsc --flash-chip $chip --flash $PWD/r.flash --midi none --shot 3200 --lcd-only >/dev/null 2>&1; cp work/lcd.ppm /private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/0a574306-469e-4a59-9622-5701a42aee59/scratchpad/pre07p_$chip.ppm; python3 -c "
+a=open('r0.flash','rb').read(); b=open('r.flash','rb').read(); print('$chip sectors written:', sorted({hex(i//4096*4096) for i in range(len(a)) if a[i]!=b[i]}))"; done; rm -f p.flash r.flash r0.flash
+```
+
+```text
+Sent the restart (a 34-byte program at 0x01C28000); waiting for the unit to reset
+Running: the Felucca is on USB MIDI
+MORSE rec 0xda100 14 06 00 00 00 14 00 00 58 02 14 00
+MORSE rec 0xdb100 18 18 00 00 00 14 00 00 58 02 14 00
+sectors changed since pre-theory: 45 ['0xd8000', '0xd9000']
+package image 0x04000-0x92FFF laid over the backup
+flash: 0 erases / programs
+uc25hq80 sectors written: []
+package image 0x04000-0x92FFF laid over the backup
+flash: 0 erases / programs
+p25q80 sectors written: []
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 11:38:55Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Combine rehearsal screenshots
+
+```bash
+cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1 && uv run --locked --all-groups python -c "
+from PIL import Image
+sp='/private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/0a574306-469e-4a59-9622-5701a42aee59/scratchpad'
+n=['pre07_uc25hq80','pre07p_uc25hq80','pre07_p25q80','pre07p_p25q80']
+c=Image.new('RGB',(1000,240),'white')
+for i,x in enumerate(n): c.paste(Image.open(f'{sp}/{x}.ppm'),(i*250,0))
+c.save(f'{sp}/pre07.png')"
+```
+
+```text
+(Bash completed with no output)
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 11:39:06Z)**_
+
+<tool-use data-tool-type="read" data-tool-name="Read"><details>
+<summary>Tool use: **Read**</summary>
+ `/private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/0a574306-469e-4a59-9622-5701a42aee59/scratchpad/pre07.png`
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 11:39:11Z)**_
+
+Rehearsal passes. Recording the backup and these operations in the device log:
+
+_**Agent (claude-opus-5-5 2026-11-18 11:39:12Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Find insertion points in device log
+
+`grep -n '2026-11-18 18:56 | 刷 THEORY' docs/device-log.md; grep -n '2026-11-18 19:00 前後 | 本人執行' docs/device-log.md`
+
+```text
+51:| 2026-11-18 18:56 | 刷 THEORY 0.1（dev build）之前的 Morse 0.6 release（`FM-1_41000600`，`0xDA000` 有學習紀錄，`0xD8000`–`0xD9FFF` 是空的） | `backups/2026-11-18-pre-theory-0.1/fm1-20261118-185652.bin` + `.json` | `5b62a3daeed2f23c7198f4f0cf56f02aaf432355727d78e6f1e8586beed879ea` | 尚未上傳 |
+129:| 2026-11-18 19:00 前後 | 本人執行 `fm1_install.py firmware/theory/build/theory.fwsc`（THEORY 0.1 dev build，`FM-1_4900`，SHA-256 `0d86cc42…41ebcd`，從 `c7a7084` 上未 commit 的工作目錄 build），機器上是 Morse 0.6 | 成功：`checking the package (30 reads)` → `switching to update mode` → `the loader writes only the sectors that changed (fast install)` → `done: the FM-1 runs FM-1_4900`。本人試用：「好像還可以」。19:02 agent 想用 `--info` 再確認時，FM-1 已不在 USB 上（沒有任何 MIDI input），所以以安裝程式最後的回報為準 |
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 11:39:23Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Record backup and preflight in device log; view installer help
+
+```bash
+python3 - <<'EOF'
+p='docs/device-log.md'; L=open(p).read().split('\n')
+i=next(k for k,l in enumerate(L) if l.startswith('| 2026-11-18 18:56 | 刷 THEORY'))
+L.insert(i+1,'| 2026-11-18 19:38 | 刷 Morse 0.7 之前的 THEORY 0.1 dev build（`FM-1_4900`；`0xDA000` 是 Morse 0.6 的學習紀錄 ROUND 30，`0xD8000`–`0xD9FFF` 是 THEORY 的存檔） | `backups/2026-11-18-pre-morse-0.7/fm1-20261118-193823.bin` + `.json` | `4c3d061d886c58271e26bf05822ba9f6ff957ce551a95d338d93a05cd1712e85` | 尚未上傳 |')
+j=next(k for k,l in enumerate(L) if l.startswith('| 2026-11-18 19:00 前後 | 本人執行 `fm1_install.py firmware/theory'))
+L.insert(j+1,'| 2026-11-18 19:37–19:40 | agent 執行 `fm1_install.py --info`、`just fm1-download-mode`、`fm1-info`、`fm1-backup pre-morse-0.7`、`fm1-restart`（刷 Morse 0.7 前的 preflight） | `FM-1_4900 [running] port: Felucca`（19:02 不在 USB 上，是線沒接好；本人重接後就在）；bootloader stock、firmware `FM-1 490`、flash `0xB36014`；備份 SHA-256 `4c3d061d…712e85`，和刷 THEORY 前的備份相比，`0x93000` 以上只有 `0xD8000`、`0xD9000` 不同（THEORY 的存檔），`0xDA000` 的 Morse 紀錄沒變；重開回 THEORY。fm1-emu 兩種晶片上把 `morse-0.7.fwsc`（release，SHA-256 `c15541d5…aa45e3d`）疊在這份備份上預演：開機進 MENU、ROUND 30 保留、開機和進 PRACTICE 都是 0 次寫入 `[模擬]` |')
+open(p,'w').write('\n'.join(L))
+EOF
+uv run --locked --all-groups python third_party/fm1-base/tools/fm1_install.py --help 2>&1 | head -15
+```
+
+```text
+usage: fm1_install.py [-h] [--info] [--port NAME] [--yes] [--force]
+                      [--classic] [--resources FILE] [--no-resources]
+                      [package]
+
+Install a Felucca package (.fwsc) on an FM-1 over USB-MIDI.
+
+The same update as the web installer (web/fm1ota.js): step 1, the
+running firmware reads parts of the package and starts the update loader;
+step 2, the loader reads the whole package and writes it. In both steps the
+device asks (SysEx read requests on the logical image) and we answer. Then
+the FM-1 restarts and the installed identity is checked.
+
+Step 2 is the fast install when the loader can (felucca-bsp loader/ldr_core.c,
+LDR_FAST_CHUNK): before the upgrade command we say cmd 0x31 [1, 4096]; a
+loader that answers it reads a table of flash.bin's 4 KiB sectors (CRC16,
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 11:39:35Z)**_
+
+preflight 全部通過，可以刷了。
+
+| | 結果 |
+|---|---|
+| 1. 整片備份 | `backups/2026-11-18-pre-morse-0.7/fm1-20261118-193823.bin`，SHA-256 `4c3d061d886c58271e26bf05822ba9f6ff957ce551a95d338d93a05cd1712e85`，已記進 `docs/device-log.md`。和刷 THEORY 前那份比，只有 THEORY 自己的存檔區 `0xD8000`–`0xD9FFF` 不同；`0xDA000` 的 MORSE 進度（ROUND 30）沒變。 |
+| 2. flash 晶片 | `0xB36014`（新晶片）。MORSE 0.3–0.6 都在這台上裝過、用過。 |
+| 3. 套件 | 自己 build 的 release `morse-0.7.fwsc`（`FM-1_41000700`），SHA-256 `c15541d5…aa45e3d`，和 GitHub release 的 asset digest 相符。 |
+| 4. 會改什麼 | 目前是 THEORY 0.1 dev（`FM-1_4900`），bootloader 是原廠。安裝只改寫韌體區 `0x04000`–`0x92FFF`。MORSE 的進度和 THEORY 的存檔都保留。 |
+| 預演 `[模擬]` | fm1-emu 兩種晶片上把套件疊在這份備份上開機：進 MENU、ROUND 30 還在、開機沒有寫入 flash。 |
+
+機器已經切回一般模式，畫面是 THEORY。在這裡輸入下面這行執行安裝，和之前一樣走 USB-MIDI fast install：
+
+```
+! uv run --locked --all-groups python third_party/fm1-base/tools/fm1_install.py firmware/morse/build/morse-0.7.fwsc
+```
+
+裝好後請看一下：
+- 開機是不是停在 **MENU**；
+- 按 `HOME` 進 PRACTICE，確認還是 **ROUND 30**；
+- 想試的話，到 SETTINGS 最下面把 START PAGE 改掉，關機再開看看。
+
+把輸出貼給我，我會記進 `device-log.md`。之後也可以用網頁備份一次，看設定有沒有跟著存下來。
+
+---
+
+_**User (2026-11-18 11:42:21Z)**_
+
+```
+
+
+<pasted_content id="cc4a">
+❯ uv run --locked --all-groups python third_party/fm1-base/tools/fm1_install.py firmware/morse/build/morse-0.7.fwsc
+package: FM-1_41000700  (firmware/morse/build/morse-0.7.fwsc)
+device:  FM-1_4900  (Felucca)
+Install? Do not unplug the FM-1 while writing. [y/N] y
+starting the update on FM-1_4900
+checking the package (30 reads)
+switching to update mode
+writing   0%
+the loader writes only the sectors that changed (fast install)
+writing 100%
+restarting
+done: the FM-1 runs FM-1_41000700
+</pasted_content id="cc4a">
+
+```
+
+都符合預期 關機再開機也是 （然後我觀察 保存setting的話需要從setting轉出其他頁面就會自動保存 如果只在setting頁改了直接關會無效 以及 SAVE鍵並沒有特殊作用）
+
+---
+
+_**Agent (claude-opus-5-5 2026-11-18 11:42:26Z)**_
+
+刷成功。你說設定要離開 SETTINGS 頁才會存，我先看存檔的邏輯：
+
+_**Agent (claude-opus-5-5 2026-11-18 11:42:28Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Find when dirty settings get saved
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/firmware/morse && grep -n 'dirty_at' app.c | head; grep -n -B3 -A8 'dirty_at && ' app.c | head -30; grep -n 'B_SAVE' app.c | head`
+
+```text
+123:static uint32_t dirty_at;                /* a setting changed at (0: saved) */
+132:    dirty_at = 0;
+395:    dirty_at = plat_ms() | 1u;
+401:    dirty_at = plat_ms() | 1u;
+3164:    dirty_at = 0;
+3238:    if (dirty_at && (int32_t)(now - dirty_at) > 3000)   /* settings saved once the knobs rest */
+3235-        ui.pat_was = pat;
+3236-        ui.redraw |= R_MAIN;
+3237-    }
+3238:    if (dirty_at && (int32_t)(now - dirty_at) > 3000)   /* settings saved once the knobs rest */
+3239-        rec_save();
+3240-    lights(now);
+3241-    ann_tick(now);
+3242-    if (ui.redraw)
+3243-        draw(now);
+3244-}
+3245-
+3246-/* --------------------------------------------------------- host simulator --- */
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 11:42:43Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Record the 0.7 install in device log
+
+```bash
+cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1 && python3 - <<'EOF'
+p='docs/device-log.md'; s=open(p).read()
+a='| 目前韌體 | **THEORY 0.1 dev build（`FM-1_4900`，只有 USB）**（2026-11-18 19:00 前後從 Morse 0.6 用 USB-MIDI 更新；Morse 的學習紀錄留在 `0xDA000`，裝回 `morse-0.6.fwsc` 就會讀到）。之前是 Morse 0.6 release build'
+assert a in s
+s=s.replace(a,'| 目前韌體 | **Morse 0.7 release build（`FM-1_41000700`，藍牙）**（2026-11-18 19:45 前後從 THEORY 0.1 用 USB-MIDI 更新（fast install），學習紀錄 ROUND 30 保留，開機進 MENU；THEORY 的存檔留在 `0xD8000`）。之前是 THEORY 0.1 dev build（`FM-1_4900`，只有 USB，2026-11-18 19:00 前後從 Morse 0.6 更新）。再之前是 Morse 0.6 release build',1)
+s=s.replace('→ Morse 0.4 → Morse 0.5 → Morse 0.6 → THEORY 0.1 |','→ Morse 0.4 → Morse 0.5 → Morse 0.6 → THEORY 0.1 → Morse 0.7 |',1)
+L=s.split('\n')
+j=next(k for k,l in enumerate(L) if l.startswith('| 2026-11-18 19:37–19:40 | agent 執行'))
+L.insert(j+1,'| 2026-11-18 19:45 前後 | 本人執行 `fm1_install.py firmware/morse/build/morse-0.7.fwsc`（release `FM-1_41000700`，SHA-256 `c15541d5…aa45e3d`，fm1-morse `52b048e`），機器上是 THEORY 0.1 | 成功：`checking the package (30 reads)` → `switching to update mode` → `the loader writes only the sectors that changed (fast install)` → `done: the FM-1 runs FM-1_41000700`。本人確認：開機進 MENU、進度還在，START PAGE 改了之後關機再開也照設定。觀察：在 SETTINGS 改完馬上關機不會存（設定在最後一次改動 3 秒後才寫入），`SAVE` 鍵沒有作用 |')
+open(p,'w').write('\n'.join(L))
+EOF
+grep -c 'Morse 0.7' docs/device-log.md
+```
+
+```text
+3
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 11:42:53Z)**_
+
+0.7 已經刷進實機，記錄也寫進了 `docs/device-log.md`，包括目前韌體、安裝過程和你的觀察。
+
+**設定為什麼沒存到**
+
+設定不是離開 SETTINGS 頁才存，而是**最後一次改動的 3 秒後**自動存，不管停在哪一頁。之所以延後，是為了轉旋鈕時不要每一格都寫一次 flash。
+
+- 停在 SETTINGS 頁、等超過 3 秒再關機，一樣會存。模擬器測試就是這樣做的：改完不離開，等 3.5 秒、重開，設定在。
+- 你看到「轉出去才存」，應該是轉到別頁加上關機，剛好超過 3 秒；直接關機則是在 3 秒內就斷電了。
+- 斷電前韌體沒有機會再存，所以這 3 秒內關機，這次的改動就沒了。
+
+**SAVE 鍵**：MORSE 確實沒有用到它。
+
+要改善的話，我建議 0.8：
+- 按 `SAVE` 立刻存，畫面顯示 `SAVED`；
+- 還沒存的時候，header 顯示一個小記號，讓人知道先別關機。
+
+改動很小，要做的話跟我說。
+
+`docs/device-log.md` 的改動還沒 commit。
+
+---
+
+_**User (2026-11-18 11:43:47Z)**_
+
+好，做 0.8 的 SAVE 鍵，順便 commit device-log & related plan & chat history
+
+---
+
+_**Agent (claude-opus-5-5 2026-11-18 11:43:58Z)**_
+
+先把 device-log、plan 和 chat history commit 掉，再做 0.8。
+
+_**Agent (claude-opus-5-5 2026-11-18 11:43:59Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Show working tree status
+
+`git status --short`
+
+```text
+ M .claude/plans/firmware-morse-concurrent-crane.md
+ M .claude/plans/squishy-riding-flute.md
+ M .specstory/history/2026-11-17_13-42-11Z-ascii-firmware-focus-host.md
+ M .specstory/history/2026-11-18_07-29-47Z-at-firmware-morse-at.md
+ M .specstory/statistics.json
+ M docs/device-log.md
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 11:44:05Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+See how chat history was committed before
+
+`git show --stat --format='%an %s' 0d977a1 | head -12; git diff --stat`
+
+```text
+Da-Wei Lee chore: backup chat history and plan
+
+ .claude/plans/squishy-riding-flute.md              |   245 +-
+ ...26-11-17_13-42-11Z-ascii-firmware-focus-host.md | 11882 +++++++++++++++++++
+ ...1\346\217\233---Google-Gemini-20261118-1536.md" |   120 +
+ .specstory/statistics.json                         |    19 +-
+ 4 files changed, 12108 insertions(+), 158 deletions(-)
+ .claude/plans/firmware-morse-concurrent-crane.md   |   287 +-
+ .claude/plans/squishy-riding-flute.md              |   206 +-
+ ...26-11-17_13-42-11Z-ascii-firmware-focus-host.md |  7023 +++++++++
+ .../2026-11-18_07-29-47Z-at-firmware-morse-at.md   | 15521 +++++++++++++++++++
+ .specstory/statistics.json                         |    20 +-
+ docs/device-log.md                                 |     5 +-
+ 6 files changed, 22859 insertions(+), 203 deletions(-)
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-18 11:44:10Z)**_
+
+The owner's earlier commit included every plan and history file, so I'll do the same. Quick scan for anything that looks like a credential first:
+
+_**Agent (claude-opus-5-5 2026-11-18 11:44:12Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Scan staged history for credential patterns
+
+`git diff -U0 -- .specstory .claude/plans | grep -E '^\+' | grep -n -E 'ghp_[A-Za-z0-9]{20,}|github_pat_|sk-[A-Za-z0-9]{20,}|AKIA[0-9A-Z]{16}|BEGIN (RSA|OPENSSH) PRIVATE|xox[bp]-' | head`
+
+```text
+(Bash completed with no output)
+```
+</details></tool-use>
