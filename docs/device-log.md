@@ -10,7 +10,7 @@
 | Flash 晶片 / JEDEC ID | **`0xB36014` (new)**，UCUN UC25HQ80，1 MiB |
 | Bootloader | stock (M-VAVE) |
 | 出廠韌體版本 | FM-1 015 (stock)，firmware check OK |
-| 目前韌體 | **Morse 0.4 release build（`FM-1_41000400`）**（2026-11-18 05:20 從 Morse 0.3 release 用 USB-MIDI 更新，學習紀錄保留；macOS 上的 MIDI port 名稱仍是 `Felucca`）。0.3 release 是 Hub 測試 3 從原廠 015 裝的，進度當時從 ROUND 1 重新開始。之前依序是原廠 015 → SLOOP 2.8.5 → Agent Deck 0.7 → SLOOP 2.8.5 → CTL-1 1.0.3 → ChoralRoot 0.41 → Conductor 0.1 → 0.2 → 0.3 → Morse 0.1 → 0.2 → 0.3 → SLOOP 2.8.5 → Morse 0.3 release → 原廠 015（還原）→ Morse 0.3 release → Morse 0.4 |
+| 目前韌體 | **Morse 0.5 release build（`FM-1_41000500`，藍牙）**（2026-11-18 16:20 從 Morse 0.4 用 USB-MIDI 更新，學習紀錄保留；macOS 上的 USB MIDI port 名稱仍是 `Felucca`）。0.3 release 是 Hub 測試 3 從原廠 015 裝的，進度當時從 ROUND 1 重新開始。之前依序是原廠 015 → SLOOP 2.8.5 → Agent Deck 0.7 → SLOOP 2.8.5 → CTL-1 1.0.3 → ChoralRoot 0.41 → Conductor 0.1 → 0.2 → 0.3 → Morse 0.1 → 0.2 → 0.3 → SLOOP 2.8.5 → Morse 0.3 release → 原廠 015（還原）→ Morse 0.3 release → Morse 0.4 → Morse 0.5 |
 | SLOOP 的曲子 | **已不在機器上**（`0x97000` 被 ChoralRoot 的韌體蓋掉）。完整保存在 `2026-11-17-0341-pre-ctl-1.0.3` 備份裡；回 SLOOP 要在 M-Flasher GUI 還原那份備份 |
 | m-bootloader | 未安裝 |
 | 主機 | macOS，M-Flasher 0.12.1 |
@@ -116,6 +116,8 @@ M-Flasher 在兩次寫入前各自動存了一份：`~/Documents/M-Flasher/backu
 | 2026-11-18 16:11 | agent 執行 `just morse-backup`（唯讀，刷 Morse 0.5 前） | `round 29, 20 open (KMURESNAPTLWI.JZ=FOY), 15 past the line, 451 answered, 386 right, streak 5`，存成 `backups/progress/2026-11-18-pre-0.5.json`。FM-1 已經和另一個程式連著（只送 HEARTBEAT、不送 HELLO），host 0.5.0 原本因為不知道韌體版本而拒絕備份，改成照樣嘗試 |
 | 2026-11-18 16:12 | agent 執行 `just fm1-download-mode`、`fm1-backup pre-morse-0.5`、`fm1-restart`（刷 Morse 0.5 前的 preflight） | flash `0xB36014`；備份 SHA-256 `d8f8889e…a0d44`；重開回 Morse 0.4。fm1-emu 兩種晶片上把 0.5 release build 疊在這份備份上預演：讀到 ROUND 30、開放 20 個字，0 次寫入 `[模擬]` |
 | 2026-11-18 16:15 | 本人要求後，agent 執行 `just --yes fm1-backup-release 2026-11-18-pre-morse-0.5` | 公開 release [`backup-2026-11-18-pre-morse-0.5`](https://github.com/daviddwlee84/M-VAVE_FM-1/releases/tag/backup-2026-11-18-pre-morse-0.5)：整片 flash 備份、M-Flasher 的 JSON、學習進度 JSON；上傳後的 digest 和本機的 SHA-256 相同 |
+| 2026-11-18 16:20 | 本人執行 `fm1_install.py firmware/morse/build/morse-0.5.fwsc`（Morse 0.5 release build，`FM-1_41000500`，SHA-256 `49433190…154457`，fm1-morse `a75c29e`），機器上是 Morse 0.4 | 第一次在 `[y/N]` 輸入時 Python 報 `UnicodeDecodeError`（終端機送了非 UTF-8 的位元組，大概是輸入法），還沒寫入就結束。第二次成功：`checking the package (30 reads)` → `switching to update mode` → `the loader writes only the sectors that changed (fast install)` → `done: the FM-1 runs FM-1_41000500` |
+| 2026-11-18 16:22 | agent 執行 `fm1_install.py --info`、`just morse-backup`（唯讀） | `FM-1_41000500 [running] port: Felucca`；進度和刷機前相同（round 29、20 open、451 answered、386 right、streak 5），存成 `backups/progress/2026-11-18-after-0.5.json` |
 
 ## Phase 1 驗收
 

@@ -48,7 +48,7 @@
 | 專案 | 是什麼 | 韌體 | 電腦端 | 狀態 |
 |---|---|---|---|---|
 | **Conductor** | coding agent 的桌上控制台：一個琴鍵一個 agent，LED 表示急不急，螢幕顯示狀態與輸出（含中文），提示音，按鈕批准 / 拒絕 / 中斷，按住說話的語音輸入，USB 或藍牙 | `firmware/conductor/` | `host/conductor/`（接 hc 與 classic Herdr 的 Python daemon） | 韌體 0.3、host 0.3.2；2026-11-17 在我的機器上用過，目前機器上換成 Morse（換回來：`just fm1-switch firmware/conductor/build/conductor.fwsc`），見[設計](agentic/conductor.md)、[速查](agentic/conductor-cheatsheet.md)、[版本紀錄](agentic/conductor-changelog.md) |
-| **Morse** | 隨身摩斯電碼機：琴鍵當電鍵（直鍵或 iambic paddle）即時解碼、練長短的 RHYTHM 頁、琴鍵當字母鍵盤和片語鍵、閃卡間隔複習（預設只用聽的，打碼卡看自己的節奏判斷）、分級測驗與手動調整進度、進度備份還原、連續收聽、靜音看燈、USB 或藍牙 MIDI 用 Vail 的格式 | `firmware/morse/` | `host/morse/`（把發的字打進電腦、電腦送字給 FM-1 播） | 韌體 0.4、host 0.4.0（0.5 加藍牙，還沒刷）；2026-11-17 起在我的機器上，見[怎麼用它學](dev/morse-learn.md)、[設計](dev/morse.md)、[速查](dev/morse-cheatsheet.md) |
+| **Morse** | 隨身摩斯電碼機：琴鍵當電鍵（直鍵或 iambic paddle）即時解碼、練長短的 RHYTHM 頁、琴鍵當字母鍵盤和片語鍵、閃卡間隔複習（預設只用聽的，打碼卡看自己的節奏判斷）、分級測驗與手動調整進度、進度備份還原、連續收聽、靜音看燈、USB 或藍牙 MIDI 用 Vail 的格式 | `firmware/morse/` | `host/morse/`（把發的字打進電腦、電腦送字給 FM-1 播） | 韌體 0.5、host 0.5.0（藍牙）；2026-11-17 起在我的機器上，見[怎麼用它學](dev/morse-learn.md)、[設計](dev/morse.md)、[速查](dev/morse-cheatsheet.md) |
 | `hello` | fm1-base 的 template 原樣複本，用來驗證工具鏈 | `firmware/hello/` | — | 模擬器開得起來 |
 | 共用模組 | `hostlink`（經 USB / 藍牙和電腦的 SysEx 連線）、`ledfx`（LED 動態）、`chime`（FM 提示音） | `firmware/common/` | — | Conductor 在用；Morse 用 `hostlink`、`ledfx` |
 

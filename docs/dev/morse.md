@@ -235,7 +235,7 @@ TYPE 頁的 LIVE 對應「打一個送一個」，COMPOSE 對應「先打好再�
 
 ## 藍牙（0.5） { #bluetooth }
 
-2026-11-18 做好，host simulator 和 fm1-emu 都驗證過，**還沒刷進實機**。
+2026-11-18 做好，host simulator 和 fm1-emu 都驗證過，16:20 刷進實機（進度保留 `[實機]`），藍牙連線還在測。
 
 ### 能做什麼
 
@@ -376,6 +376,7 @@ USB 和藍牙都連著時：
 | 0.4：疊在實機 0.2 紀錄的備份上、改設定、重開讀回 | `emu_rehearse.py` + fm1-emu `uc25hq80`、`p25q80` | ROUND 5 的紀錄保留，改過的速度重開後讀回 `[模擬]` |
 | 0.5：藍牙替身上的 HELLO、HELLO_ACK、`T_TEXT`、`T_PROG`、按鍵送出和收進、BLUETOOTH 開關存檔重開、store 寫入不變 | `just fw-test morse` | 全過；`--no-ble` 的 build 也編得過、除了藍牙那段都通過 `[模擬]` |
 | 0.5：host 的傳輸判斷 | `just morse-test` | 22 項全過 |
+| 0.5 刷進實機 | `fm1_install.py`（USB-MIDI，fast install） | 成功；ROUND 29、開放 20 個字的紀錄保留 `[實機]` |
 | 0.5：疊在實機 0.4 前的備份上，BLUETOOTH 關、重開讀回、再開 | `emu_rehearse.py` + fm1-emu `uc25hq80`、`p25q80` | ROUND 17 的紀錄保留；改設定時存一筆紀錄（4 次 erase／program），開機 0 次 `[模擬]` |
 
 ## 版本紀錄
@@ -385,7 +386,7 @@ USB 和藍牙都連著時：
 | 版本 | 日期 | 要刷機 | 內容 |
 |---|---|---|---|
 | 韌體 0.1、host 0.1.0 | 2026-11-17 | 是（22:54 刷入，`c3b5cd6`） | 第一版：KEY、TYPE、PRACTICE、CHART、SETTINGS，兩種學習方式，Vail 格式的 MIDI，host 的 `type`／`send`／`listen`。原本規劃分成 0.1（核心）和 0.2（閃卡），因為一起做完、都還沒刷，合併成 0.1 |
-| 韌體 0.5、host 0.5.0 | 2026-11-18 | 是（還沒刷） | [藍牙](#bluetooth)：fm1-base own stack 的 BLE-MIDI peripheral，和 USB 同時用；SETTINGS 加 BLUETOOTH 開關（存在紀錄裡，格式不變）；header 顯示 `BT`；SETTINGS 頁可以捲動；收訊按鍵照送出端的時間解碼；host 印出走哪條路、兩條都有時優先 USB、`--bluetooth` 打開 Mac 的藍牙 MIDI 視窗；網頁顯示走哪條路 |
+| 韌體 0.5、host 0.5.0 | 2026-11-18 | 是（16:20 用 USB-MIDI 裝 release build `FM-1_41000500`，fm1-morse `a75c29e`） | [藍牙](#bluetooth)：fm1-base own stack 的 BLE-MIDI peripheral，和 USB 同時用；SETTINGS 加 BLUETOOTH 開關（存在紀錄裡，格式不變）；header 顯示 `BT`；SETTINGS 頁可以捲動；收訊按鍵照送出端的時間解碼；host 印出走哪條路、兩條都有時優先 USB、`--bluetooth` 打開 Mac 的藍牙 MIDI 視窗；網頁顯示走哪條路 |
 | 韌體 0.4、host 0.4.0 | 2026-11-18 | 是（05:20 用 USB-MIDI 裝 release build `FM-1_41000400`，fm1-morse `323d79b`） | 實機回饋（ROUND 14 還停在第一組）：打碼卡改用答案自己的節奏判斷（[判定](#judging)），手速跨卡延續，評級和 SHOULD／YOU 對照圖，ALMOST；SET 頁的 JUDGING 可以切回 STRICT；CHART 編輯、分級測驗、開始畫面列出擋住下一組的字，SOUND 模式下新字和答案可以按 `SEQ` 偷看點劃，弱卡在同一回合重複出現、熟字只在有空位時補，[手動修改都要按 PLAY 確認](#progress)；進度的[備份與還原](#backup)（`T_PROG_*`、host 的 `backup`／`restore`、網頁）。藍牙順延到 0.5 |
 | 韌體 0.3 release（`FM-1_41000300`） | 2026-11-18 | 是（Hub 測試時用 USB-MIDI 裝過三次） | fm1-morse 的第一個 release [v0.3](https://github.com/daviddwlee84/fm1-morse/releases/tag/v0.3)：identity 改成 `FM-1_41`，授權改成 GPL-3.0-or-later，程式和 0.3 相同 |
 | 韌體 0.3、host 0.3.0 | 2026-11-18 | 是（02:12 刷入，`02b0ea2`） | TYPE 打開鍵上點劃時，鍵盤從 86 px 拉高到 126 px、上方輸入行縮成一行，黑鍵和白鍵都同時放得下碼和字母（0.2 黑鍵只剩碼、白鍵的碼壓到字母，數字頁的 `0` 放不下）。藍牙順延到 0.4 |
