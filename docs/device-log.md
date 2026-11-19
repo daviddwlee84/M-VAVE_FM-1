@@ -56,6 +56,7 @@ M-Flasher 在兩次寫入前各自動存了一份：`~/Documents/M-Flasher/backu
 | 2026-11-18 22:56 | 重刷 THEORY 0.3（commit `5ff3530`）之前的 THEORY 0.3（commit `a0a14e9`） | `backups/2026-11-18-pre-theory-0.3b/fm1-20261118-225644.bin` + `.json`；閃卡進度另存 `backups/progress/theory-2026-11-18-pre-0.3b.json` | `e382d5b321129973d9019f69f755d0fdf4f1b40c66950b1995262c0da1fbda7e` | 尚未上傳 |
 | 2026-11-20 03:01 | 刷 METRONOME 0.1（PR #10）之前的 THEORY 0.3 dev build（`FM-1_4900`，commit `5ff3530`；`0xD6000` 閃卡進度 round 1、`0xD8000` 設定、`0xDA000` Morse 的紀錄；`0xCE000`–`0xD5FFF` 和 `0xFC000` 是空的） | `backups/2026-11-20-pre-metronome-0.1/fm1-20261120-030135.bin` + `.json`；閃卡進度另存 `backups/progress/theory-2026-11-20-pre-metronome.json` | `b09767c3a3054ebde7008b74f225caacb1b116566554f54330f80e11d119b0d0` | 尚未上傳 |
 | 2026-11-20 03:48 | 刷 METRONOME 0.2（PR #11）之前的 METRONOME 0.1（`FM-1_5900`；`0xCE000` 有本人存的歌單：CLASSIC 頁、第 1 首 76 BPM、BEAT 4；`0xD6000`/`0xD8000` THEORY、`0xDA000` Morse 都還在） | `backups/2026-11-20-pre-metronome-0.2/fm1-20261120-034820.bin` + `.json` | `d0e71df601aa0dc45f35da981472046f8403f61e985e51312c11c76252ce2071` | 尚未上傳 |
+| 2026-11-20 04:35 | 刷 METRONOME 0.3 release（PR #13）之前的 METRONOME 0.2（`FM-1_5900`；`0xCE000` 的歌單：1 首、141 BPM、GRID） | `backups/2026-11-20-pre-metronome-0.3/fm1-20261120-043501.bin` + `.json` | `ff4e57291943aa167642a02c395232b7837fda7e46abf1cc99a174cc966bd9ab` | 尚未上傳 |
 
 ## 下載的檔案
 
@@ -147,6 +148,7 @@ M-Flasher 在兩次寫入前各自動存了一份：`~/Documents/M-Flasher/backu
 | 2026-11-20 03:05 前後 | 本人執行 `fm1_install.py downloads/metronome-pr10/metronome.fwsc`（METRONOME 0.1 dev build，`FM-1_5900`，SHA-256 `698e08b1…bec75c6fd`），機器上是 THEORY 0.3 | 成功。03:10 agent 用 `fm1_install.py --info` 確認 `FM-1_5900 [running] port: Felucca`。本人試用：「感覺效果不錯」 |
 | 2026-11-20 03:48 | 刷 METRONOME 0.2 前的 preflight。agent 執行：`just fm1-download-mode`、`fm1-info`、`fm1-backup pre-metronome-0.2`、`fm1-verify-backups`、`fm1-restart` | `info`：bootloader stock、firmware `FM-1 590`、app OK、flash `0xB36014`。備份 SHA-256 `d0e71df6…252ce2071`。重開回 METRONOME 0.1。package 是 PR #11 的 build（SHA-256 `831b3fa5…f9d614c`，和 `previews/pr-11` 相同）。疊在這份備份上預演，兩種晶片開機 0 次寫入，歌單照舊；存檔只寫 `0xCF000` `[模擬]` |
 | 2026-11-20 04:00 前後 | 本人執行 `fm1_install.py firmware/metronome/build/metronome.fwsc`（METRONOME 0.2 dev build，`FM-1_5900`，SHA-256 `831b3fa5…f9d614c`），機器上是 0.1 | 成功。agent 用 `--info` 確認 `FM-1_5900 [running]`（0.1 與 0.2 的 identity 相同，`--info` 分不出版本，以本人回報為準）。本人試用後同意 merge PR #11 |
+| 2026-11-20 04:35 | 刷 METRONOME 0.3 release 前的 preflight。agent 執行：`just fm1-download-mode`、`fm1-info`、`fm1-backup pre-metronome-0.3`、`fm1-restart`、`fm1-verify-backups` | `info`：bootloader stock、firmware `FM-1 590`、app OK、flash `0xB36014`。備份 SHA-256 `ff4e5729…66bd9ab`。重開回 METRONOME 0.2。package 是 `metronome-0.3.fwsc`（`FM-1_59000300`，SHA-256 `b1163655…6e925a54`，和 fm1-metronome 的 `web/try/metronome.fwsc` 相同）。疊在這份備份上預演，兩種晶片開機 0 次寫入；經虛擬 USB 讀出的歌單是 1 首、141 BPM、GRID `[模擬]` |
 
 ## Phase 1 驗收
 
