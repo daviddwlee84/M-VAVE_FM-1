@@ -207,6 +207,7 @@ fm1_base := "third_party/fm1-base"
 fw-setup:
     git submodule update --init --recursive third_party/fm1-base
     git submodule update --init firmware/morse
+    git submodule update --init firmware/metronome
     uv sync --locked --all-groups
 
 # Build an app's host simulator (no toolchain needed) and run its test script.

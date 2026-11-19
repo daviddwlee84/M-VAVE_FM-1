@@ -4,3 +4,6 @@
 [submodule "firmware/morse"]
 	path = firmware/morse
 	url = https://github.com/daviddwlee84/fm1-morse.git
+[submodule "firmware/metronome"]
+	path = firmware/metronome
+	url = https://github.com/daviddwlee84/fm1-metronome.git

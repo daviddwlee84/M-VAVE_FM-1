@@ -2,10 +2,10 @@
 
 給現場用的節拍器：一首歌一個白鍵，存好每首歌的速度、拍號、節奏型與音色，演出時按一下就換歌。另外有一頁在琴鍵上點出節奏型（亮度就是輕重音），以及仿照經典 rhythm watch 的四層混音頁。
 
-**狀態（2026-11-20）：** v0.2（速度術語、拍號 preset、全部清空、防誤觸）在 host simulator、device build 與 fm1-emu 兩種晶片驗證過 `[模擬]`，2026-11-20 刷進實機，本人試用 OK `[實機]`，見 [v0.2](#v02)。v0.1 在 host simulator、device build、fm1-emu 兩種晶片與疊在備份上的預演都驗證過 `[模擬]`，2026-11-20 刷進實機，本人試用「感覺效果不錯」`[實機]`。見 [v0.1 驗證](#v01-verify)。
+**狀態（2026-11-20）：** v0.3（歌單經 USB 匯出／匯入、網頁歌單編輯器、獨立 repo）在 host simulator、device build 與 fm1-emu 兩種晶片驗證過 `[模擬]`，還沒刷進實機，見 [v0.3](#v03)。v0.2（速度術語、拍號 preset、全部清空、防誤觸）在 host simulator、device build 與 fm1-emu 兩種晶片驗證過 `[模擬]`，2026-11-20 刷進實機，本人試用 OK `[實機]`，見 [v0.2](#v02)。v0.1 在 host simulator、device build、fm1-emu 兩種晶片與疊在備份上的預演都驗證過 `[模擬]`，2026-11-20 刷進實機，本人試用「感覺效果不錯」`[實機]`。見 [v0.1 驗證](#v01-verify)。
 
-- 韌體在 `firmware/metronome/`，GPL-3.0-or-later，名稱 METRONOME。click 的合成與 transport 沿用 [RHYTHM](rhythm.md)。
-- 識別碼 `FM-1_59`（開發版 `FM-1_5900`，release 0.2 是 `FM-1_59000200`）：2026-11-19 對照 Hub 的 catalog 沒人用 `[上游]`；2026-11-20 再把 catalog 裡 269 個韌體的 `ident`（是 regex）拿來比對 `FM-1_5900`、`FM-1_59000100`、`FM-1_59000200`，除了萬用的 `FM-1_\d{3,8}` 都沒有符合 `[上游]`。Hub 的 [identity 檢查](https://thefirmwarehub.com/submit/#check) 要的是**韌體回報的完整數字**，3 到 8 位：只打 `FM-1_59` 會顯示「An identity is FM-1_ and 3 to 8 digits」，那是格式不對，不是被佔用。上 Hub 前用完整的 release identity 再查一次。
+- 韌體在獨立的 repo [fm1-metronome](https://github.com/daviddwlee84/fm1-metronome)（2026-11-20 從這裡的 `firmware/metronome/` 用 `git subtree split` 拆出去，歷史保留），這裡以 submodule 掛在 `firmware/metronome/`，用 `third_party/fm1-base` build。GPL-3.0-or-later，名稱 METRONOME。網頁在它的 GitHub Pages：[歌單編輯器](https://daviddwlee84.github.io/fm1-metronome/web/)、[cheatsheet](https://daviddwlee84.github.io/fm1-metronome/web/cheatsheet.html)、[try](https://daviddwlee84.github.io/fm1-metronome/web/try/)。click 的合成與 transport 沿用 [RHYTHM](rhythm.md)。
+- 識別碼 `FM-1_59`（開發版 `FM-1_5900`，release 0.3 是 `FM-1_59000300`）：2026-11-19 對照 Hub 的 catalog 沒人用 `[上游]`；2026-11-20 再把 catalog 裡 269 個韌體的 `ident`（是 regex）拿來比對 `FM-1_5900`、`FM-1_59000100`、`FM-1_59000200`，除了萬用的 `FM-1_\d{3,8}` 都沒有符合 `[上游]`。Hub 的 [identity 檢查](https://thefirmwarehub.com/submit/#check) 要的是**韌體回報的完整數字**，3 到 8 位：只打 `FM-1_59` 會顯示「An identity is FM-1_ and 3 to 8 digits」，那是格式不對，不是被佔用。上 Hub 前用完整的 release identity 再查一次。
 - 設定與 16 首歌存在 `0xCE000`（`APP_STORE_MAP {0xDC000, 0xCE000}`）。`0xD0000` 到 `0xDE000` 都被自製 app 與面板校正用掉了，見 [flash 配置](../hardware/flash-map.md)。這台機器 2026-11-20 的備份裡 `0xCE000` 是空的 `[實機]`。
 - 為什麼另做一個韌體，不放進 RHYTHM：本人 2026-11-19 決定。RHYTHM 是練習機，這個是上台用的工具，開機就要是歌單。
 
@@ -219,11 +219,60 @@ record 的格式沒變（`REC_VER 1`），v0.1 存的歌直接沿用。
 | 實機 | 2026-11-20 本人用 `fm1_install.py` 從 0.1 更新，試用後同意 merge `[實機]` |
 | 疊在實機備份上預演 | 2026-11-20，備份 `pre-metronome-0.2`（METRONOME 0.1 用過一陣子，SHA-256 `d0e71df6…252ce2071`），兩種晶片：開機 0 次寫入，本人存的狀態原樣（CLASSIC 頁、第 1 首 76 BPM、BEAT 4，顯示 `ANDANTE`）；存一次檔只寫 `0xCF000`（METRONOME 的存檔區 `0xCE000`–`0xCFFFF` 兩個 sector 輪流寫），THEORY 的 `0xD6000`、`0xD8000` 與 Morse 的 `0xDA000` 不變 `[模擬]` |
 
+## v0.3：歌單到電腦、網頁編輯器、獨立 repo { #v03 }
+
+本人 2026-11-20 的需求：像 Morse 一樣有自己的 repo 和 GitHub Page，網頁上排好歌單再匯入機器，cheatsheet 寫進使用邏輯，有 play 頁方便之後上 Hub。本人要求一次做完再發 release。
+
+### 協定 { #protocol }
+
+照 THEORY 進度備份的做法（[THEORY](theory.md)，同一套 hostlink、pack7、CRC-16）：
+
+- frame：`F0 7D 4D 54 <ver=1> <type> <payload> F7`（`MT`），payload 每個 byte 都是 7-bit。
+- 機器 → 電腦：HELLO `41`（protocol、韌體 major、minor、transport）、HEARTBEAT `42`、SET `44`（第幾片、共幾片、pack7 後的資料）、SET_DONE `45`（0 載入、1 拒絕、2 資料壞了）。
+- 電腦 → 機器：HELLO_ACK `01`、SET_REQ `04`、SET_LOAD `05`（格式同 SET）。
+- `46` / `06` 保留給之後的即時連線（[見下](#live)）。
+- 紀錄 454 B：格式 1、目前的歌、換歌時機、頁，16 首歌各 28 B（逐欄位寫，不是直接倒 struct），CRC-16/CCITT-FALSE（低位元組在前）。切成 10 片、每片 49 B。
+- 收到完整的歌單後畫面問 `LOAD THIS SETLIST?`、顯示幾首歌；`PLAY` 載入（播放中會先停）並存檔，`HOME` 不載入，其他鍵都不理。CRC 或數值不對就直接拒絕，不會問。
+
+### 電腦端與網頁 { #web }
+
+| 位置（fm1-metronome） | 內容 |
+|---|---|
+| `host/fm1_metronome/` | Python：`backup FILE` / `restore FILE`。在這裡用 `just metro-backup` / `just metro-restore`。認機器靠 HELLO，不靠 port 名稱 |
+| `web/index.html` | 歌單編輯器：16 首歌、速度（術語跳段、tap）、GRID 的格子與拍號 preset、CLASSIC 的四層，WebAudio 試聽（照 `metro.c` 的 tick 與 `app.c` 的音色），存檔、開檔、從機器讀、送進機器。編輯和試聽不用接機器；按 *Connect* 才要 MIDI 權限。不支援 Web MIDI 的瀏覽器（Safari、iPhone、iPad）會明講要改用 Chrome 或 Edge |
+| `web/setlist.js` | 網頁的協定、紀錄、JSON、速度術語、拍號 preset，瀏覽器和 node 都能載入 |
+| `web/cheatsheet.html` | 可列印，開頭是[使用邏輯](#how)的圖 |
+| `web/try/` | fm1-emu 的 iframe；package 是這個網站上的 release 複本（`web/try/metronome.fwsc`，GitHub Pages 有 CORS）。Hub 上架後改成 `?fw=<hub id>` |
+
+JSON 檔：`{"app": "METRONOME", "kind": "setlist", "format": 1, "active": 5, "switch": "now", "page": "set", "songs": [{"key": 1, "bpm": 96, "mode": "grid", "sound": "wood", "grid": {"beats": 3, "div": 2, "steps": "AgNgNg"}, "classic": {"accent_every": 4, "quarter": 7, ...}}]}`。只寫有存的歌；steps 用 `. g N A`。手寫只要給 `key` 和 `bpm`，其他用預設。
+
+### v0.3 驗證 { #v03-verify }
+
+| 項目 | 結果 |
+|---|---|
+| `just metro-unit` | 2,319 個檢查全過（沒變） |
+| `just fw-test metronome` | 全部 `ok`：開機送 HELLO；SET_REQ 送出 10 片，和 Python 算的逐 byte 相同；三首歌的 SET_LOAD → 問 → `HOME` 回 `45 01` 不載入 → 再送 → `PLAY` 回 `45 00`，載入、存檔、重開機還在；CRC 壞掉的回 `45 02` 不問 |
+| `just metro-test` | pytest 8 個、node 29 個檢查：韌體劇本裡的 frame、Python 和網頁三方一致，網頁寫出的 JSON 和 Python 的逐 byte 相同 |
+| fm1-emu，虛擬 USB 線 | 兩種晶片，`FM1_USB_SEND` 送 frame、`FM1_BENCH_KEYS` 按 `PLAY`，headless：備份 10 片；還原三首歌回 `45 00`、寫 4 次；重開機再備份，讀回的和送出的相同 `[模擬]` |
+| release 0.3 | `just metro-release 0.3`：package 616,003 B，identity `FM-1_59000300`，SHA-256 `b1163655d81dea885906cf4dbf926abce43f649a779313b3ca7078346e925a54`；拆成 submodule 後重新 build，SHA 相同 |
+| 疊在實機備份上預演 | release 0.3 疊在 `pre-metronome-0.2`（0.1 存的歌）上，兩種晶片開機 0 次寫入；經虛擬 USB 讀出本人的 4 首歌（76、122、115、110 BPM，第 1 首 CLASSIC、BEAT 4）`[模擬]` |
+| 網頁 | Playwright（Chromium）：編輯、拍號 preset、改一格後 preset 名稱消失、播放游標、CLASSIC、手機寬度 390 px 沒有橫向捲動、沒有 JS 錯誤。try 頁在 GitHub Pages 上按 Start 跑的是 METRONOME 0.3。本機 http 伺服器上 fm1-emu 讀不到 package（https 頁面擋 http 的 mixed content），會退回內建的 Felucca，要在 https 上測 |
+| 實機 | 還沒做：刷 release 0.3，再用網頁讀出、改、送回 |
+
+### 即時連線（之後） { #live }
+
+本人 2026-11-20 提到：網頁和機器即時互動，機器靜音、網頁出聲，或網頁畫指揮動畫。設計方向：
+
+- 不要每拍送一個 MIDI 訊息。USB 有幾 ms 的抖動，藍牙 MIDI 常見 10–30 ms，而且會成批到達。
+- 用同步時鐘：機器只在開始、停止、換歌、改速度時送 STATE（`46`：這首歌的設定、BPM、目前的 tick 與它在機器上的時間），網頁用自己的 audio clock 推算之後每一拍。剩下的只有一個固定延遲，網頁上用一個「對拍」滑桿或拍手校正。
+- METRONOME 目前是 `ble = false`。延遲要在實機上量過才定案。指揮動畫、角色這些在網頁上做比在 240×240 的螢幕上容易，也不佔韌體 flash。
+
 ## 之後 { #next }
 
 - 畫面主題：擺錘之外，指揮棒的拍子圖形、可愛的角色。先量一張圖要多少 flash 再決定（[CORD](https://github.com/chasedeanda/cord-fm1) 證明放得下圖）。
 - 更多音色、swing。
-- 匯出／匯入歌單：照 [Morse](morse.md) 的備份做法，歌單存成 JSON。之後可以做一個網頁，在電腦上排好歌單再匯入機器。
+- 即時連線與網頁上的動畫，見[上面](#live)。
+- 上 The Firmware Hub：照 `fm1-hub-listing` skill 的三個硬體測試（從原廠 V15 裝、從別的韌體裝、從它裝別的），再送表單；上架後 try 頁改用 `?fw=<hub id>`。
 - 每首歌的名字（要先想好怎麼輸入文字）：本人 2026-11-20 說放到很後面。曲目順序表演者自己記得，演完用[全部清空](#clear-all)。
 - 實機上校正延遲：tap tempo 只看按鍵間隔，不受延遲影響；要比較 click 與 LED 有沒有對齊。
 - 和 [RHYTHM](rhythm.md) 共用 click 與 transport（抽到 `firmware/common/`）。
