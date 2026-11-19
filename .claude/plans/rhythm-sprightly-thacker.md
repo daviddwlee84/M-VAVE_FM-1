@@ -1,132 +1,55 @@
-# RHYTHM v0.3: PULSE, JUDGE, TERMS
+# RHYTHM v0.3: PULSE, JUDGE, QUIZ — PR with an fm1-emu preview link
 
 ## Context
 
-The owner asked (2026-11-19) whether RHYTHM has a "conductor trainer": set a tempo, then tap blind for N bars and see
-accuracy, in two difficulties (a count-in you can hear first / nothing but the BPM number); a Whiplash-style "were you
-rushing or dragging?" listening test; and a theory quiz on Italian tempo markings and their BPM.
+RHYTHM 0.3 (PULSE, JUDGE, QUIZ; commit `45031f6` on `claude/rhythm-metronome-practice-lytzzu`) is built and passes
+`rhythm-unit` and `fw-test rhythm` in the host simulator only. The owner (2026-11-19) asked: open the PR and put the
+fw-preview link on it. Per AGENTS.md "Publishing and git", a firmware PR follows `.github/pull_request_template.md`:
+1. Try it (fm1-emu link from `just fw-preview APP pr-N`), 2. Screens, 3. Before the unit, 4. On the unit.
 
-Today RHYTHM (firmware/rhythm, v0.2, not on the unit yet) has METRO / ECHO / ENDLESS. The only blind-tap thing is
-METRO's gap click (N bars on, N bars off, mean ms). None of the three asks exist. Owner decisions:
+`fw-preview` needs a real device package (`firmware/rhythm/build/rhythm.fwsc`) from `just fw-build rhythm`, which has
+not run yet. `docs/dev/index.md#linux` says a device build works in this cloud Linux container without Docker
+(DRUMS 0.1 was built that way), with gitee.com unreachable for the AC79 SDK, fixed by `just fw-sdk-from PKG`.
 
-- New pages in RHYTHM v0.3 (not a new firmware). `HOME` cycles METRO → ECHO → ENDLESS → PULSE → JUDGE → TERMS.
-- JUDGE has all three question types: TEMPO, FEEL, DRIFT, each an adaptive staircase that ends in a threshold.
-- Tempo-term BPM table follows the **English Wikipedia** "Basic tempo markings" list (fetched 2026-11-19); the
-  zh-tw page's numbers differ and are noted in the docs.
+## Steps
 
-## Design
-
-### 1. PULSE (blind tapping, conductor trainer)
-
-Controls (when stopped): `K2` mode **GUIDED / COLD**; `K3` blind bars 2, 4, 8, 16; `K1` meter as elsewhere;
-`SELECT`/`OCT±` BPM; `K4` LAT (shared). `SEL` (GUIDED only) count-in bars 1 / 2 / 4. `PLAY` start/stop.
-
-- **GUIDED**: count-in bars clicked (tap along if you like, not scored), then the click stops and you tap every beat
-  for the blind bars. Reference grid = the count-in's grid continued (absolute phase known).
-- **COLD**: silent. Screen shows only the BPM. Your first tap is beat 1 (sets phase); tap bars × bpb beats. Reference
-  grid anchored at the first tap.
-- Ends after the last expected beat + half a beat (or `PLAY`).
-- After the end, an optional one-bar "reveal" click at the true tempo continuing from your last expected beat, so you
-  hear where it should have been (on by default; `REC` replays it).
-
-Result screen metrics (platform-free, in `rhythm.c` as `rh_pulse_*`):
-- per-beat error vs grid (ms), matched nearest-beat (each tap ≤ one beat, missed / extra counted, reusing the DP
-  alignment idea of `rh_score`, on a grid of plain quarter onsets — can likely just build a pattern of `q`s and call
-  `rh_score` directly for grades, GOOD count, missed/extra, mean, score);
-- **tempo**: least-squares slope of tap time vs beat index → your BPM and its error in % (for COLD this is the main
-  number); **drift**: error at the end minus at the start from the fit, ms/bar; **jitter**: SD of the inter-tap
-  intervals (ms) and of residuals from the fit;
-- **histogram** of errors (e.g. 9 bins of ±GOOD/… up to ±150 ms, plus under/over), drawn as bars; **drift plot**:
-  error per beat as dots over time with the fit line; colours as ECHO (`C_GOOD/C_OK/C_BAD`).
-- hint: RUSHING (tempo > +2 %), DRAGGING (< −2 %), DRIFTING, UNSTEADY (jitter high), GOOD — thresholds as named
-  constants, "to be tuned on the unit" like v0.1.
-- best (lowest |tempo %| with ≥ 90 % beats answered) per mode saved.
-
-Float math only (device has no 64-bit divide; follow `q8_mul`/`smp_ms` pattern in app.c).
-
-### 2. JUDGE (Whiplash: faster/slower, rushing/dragging)
-
-`K2` type **TEMPO / FEEL / DRIFT**; `SELECT`/`OCT±` base BPM; `SEL` "RANDOM BPM" on/off (base ± 15 % each trial so
-you can't memorise). `PLAY` start a run, `REC` hear the trial again. Answer: any key in the **lower half** of the
-keyboard = SLOWER / DRAGGING, **upper half** = FASTER / RUSHING (both choices shown on screen at the left/right).
-
-- **TEMPO**: 2 bars clicks at T, 1 beat gap, 2 bars at T·(1±d). d starts 8 %.
-- **FEEL**: steady soft click at T for 2 bars + a snare-ish voice (the existing note voice) playing quarters (later:
-  a simple rock pattern) every hit offset by ±d ms. d starts 60 ms. Count-in bar first so the click is established.
-- **DRIFT**: 4 bars where the beat interval changes multiplicatively by (1±d/n) each beat (accel/rit), ending at
-  T·(1±d). d starts 10 %.
-- Staircase: 2-down / 1-up on d, step ×0.7 down / ×1.4 up (geometric), floor/ceiling per type; run ends after 8
-  reversals or 40 trials; threshold = geometric mean of the last 6 reversals (≈ 70.7 % correct point). Screen: the
-  trial's question, right/wrong flash + LED, d now, reversals, a little staircase plot after the run.
-- Saved: best (smallest) threshold per type.
-- Platform-free part in `rhythm.c`: `rh_stair_t` (init, answer, done, threshold) and the onset generator for each type
-  (sample times of every click/hit for given T, d, sign), so both are unit-tested on the host.
-
-### 3. TERMS (tempo markings quiz)
-
-Table `rh_terms[]` in `rhythm.c` from en.wikipedia "Tempo › Basic tempo markings" (2026-11-19): Larghissimo ≤24,
-Grave 24–40, Largo 40–66, Larghetto 44–66, Lento 40–60, Adagio 44–66, Adagietto 46–80, Andante 56–108, Andantino
-80–108, Moderato 108–120, Allegretto 112–120, Allegro moderato 116–120, Allegro 120–156, Vivace 156–176, Presto
-168–200, Prestissimo ≥200 (plus Chinese gloss kept in docs only; the LCD font is ASCII). Change terms (accelerando,
-ritardando, rallentando, a tempo, più/meno mosso, ritenuto, stretto, rubato, allargando, tempo primo) as a second
-deck with English meanings.
-
-`K2` question type:
-- **TERM → BPM**: shows "ANDANTE", 4 BPM ranges/values; pick the one inside the range.
-- **BPM → TERM**: shows "132 BPM", 4 terms.
-- **HEAR**: clicks at a BPM drawn from one term's range (BPM not shown), 4 terms.
-- **CHANGE**: "rit." → 4 meanings (or the reverse).
-
-Distractor rule (ranges overlap!): a distractor term must have a range that does **not** contain the asked BPM; for
-TERM → BPM a distractor value must lie outside the asked term's range. Unit-tested over every term and BPM.
-`K3` level: 1 = the 7 core terms (Largo, Adagio, Andante, Moderato, Allegro, Vivace, Presto), 2 = all 16, 3 = + the
-change terms. Answer with 4 white keys (C D E F of the lowest octave, coloured by LED); correct/wrong flash, then
-next. Scoring: session streak and accuracy; per-term miss counts weight the draw (missed terms come back 3× as
-often) — simple, no Leitner (THEORY's `srs.c` can be reused later if wanted).
-
-### Settings record
-
-`REC_VER` 2, larger `rec_t`: add `pulse_mode, pulse_bars, pulse_count, judge_type, judge_rand, terms_type,
-terms_level`, best PULSE % ×2, best JUDGE thresholds ×3 (uint16, in 0.1 % / ms), TERMS best streak. `rec_valid`
-accepts v1 (old size) and migrates it (copy fields, new ones default) — check how `plat_store_load` reports size in
-`third_party/fm1-base` before writing it. Same `0xD2000` object; still one sector, no new flash area.
-`PG_N` 6, `rec.page < PG_N`.
-
-## Files
-
-- `firmware/rhythm/rhythm.h`, `rhythm.c`: pulse analysis (fit, histogram, hint), staircase, JUDGE onset generator,
-  terms table and question maker with distractor rule.
-- `firmware/rhythm/app.c`: three pages (state machines like `echo_*` / `en_*`, events through the existing
-  `tr_go_at` / `event_at` / `sound` path — JUDGE's non-grid times need an explicit sample-time event list rather than
-  ticks: add a small `ev_smp[]` queue consumed in `app_render`), drawing (`draw_pulse`, `draw_judge`, `draw_terms`),
-  input mapping, LEDs, record v2, host checks/commands. Bump `FW_MINOR` 3. Split into `pulse.c`-style files only if
-  app.c gets unwieldy (already 1.4k lines; prefer `app_pulse.c`, `app_judge.c`, `app_terms.c` sharing a small
-  internal header if fm1.toml/build allows extra sources — check `third_party/fm1-base/tools/build.py`).
-- `firmware/rhythm/tests/rhythm_test.c`: fit/histogram on synthetic taps (exact tempo, +3 %, linear drift, jitter),
-  staircase converges on a simulated listener with a known threshold, JUDGE onsets (TEMPO ratio, FEEL offset, DRIFT
-  ends at T·(1±d)), terms distractors never correct for all terms × BPM.
-- `firmware/rhythm/tests/basic.txt`: new host commands `pulsetap OFFSET [DRIFT_MS_PER_BEAT] [SKIP]`,
-  `judgeanswer right|wrong|faster|slower`, `termsanswer right|wrong`, expects (`pulse_bpm_x10`, `pulse_jitter`,
-  `judge_d`, `judge_done`, `terms_correct` …), screenshots of each page and result.
-- `firmware/rhythm/fm1.toml`: description mentions the new pages; `words.tsv` if new spoken words are used.
-- `docs/dev/rhythm.md`: v0.3 section (controls table extended, the three pages, metrics, staircase, terms table with
-  source + zh-tw differences noted, `[模擬]` verification); `AGENTS.md` layout row for RHYTHM; README/docs index if
-  they list RHYTHM features.
+1. **Toolchain** (one-time, ~1.2 GB into git-ignored `tools/`):
+   - `just` via `uv tool install rust-just` (not installed here); `libraqm-dev`, `libasound2-dev` via apt if
+     `uv sync --all-groups` still cannot build Pillow (it failed earlier; the host build ran with system
+     `python3` instead — fall back to that for `build.py` if uv stays broken).
+   - JieLi toolchain: `third_party/fm1-base/tools/get_toolchain.sh tools/jieli` (pkgman.jieliapp.com is reachable).
+   - AC79 SDK's three files: `git fetch origin previews`, take our own `pr-13/metronome.fwsc` (fm1-base package) into
+     a fresh dir under `downloads/`, then `python3 -I scripts/ac79_sdk_from_fwsc.py downloads/<dir>/metronome.fwsc`
+     (it writes them only if their SHA-256 match `SDK_SHA256` in build.py).
+2. **Device build**: `JIELI_TOOLCHAIN=tools/jieli/toolchain AC79_SDK=tools/fw-AC79_AIoT_SDK python3
+   third_party/fm1-base/tools/build.py firmware/rhythm`. Record package size, app size, RAM `.data+.bss`, the
+   build's own checks (no soft-double, no 64-bit multiply beside a load), identity `FM-1_5400`, SHA-256.
+   If it fails (e.g. a `static` name clashing with `device/*.c`, 64-bit division), fix in `app.c`/`rhythm.c`, re-run
+   `rhythm-unit` and `fw-test rhythm`, commit.
+3. **Open the PR** (GitHub MCP `create_pull_request`, base `main`, head the branch), title
+   `RHYTHM 0.3: PULSE, JUDGE and QUIZ`, body from the template; its number N gives the slot.
+4. **Preview**: `just fw-preview rhythm pr-N` (or the recipe's commands by hand if `just` is missing) — PUBLISHES the
+   .fwsc to the `previews` branch (one force-with-lease commit, keeps the other slots). Link:
+   `https://joakimeriksson.github.io/fm1-emu/?package=https://raw.githubusercontent.com/daviddwlee84/M-VAVE_FM-1/previews/pr-N/rhythm.fwsc&name=rhythm&chip=uc25hq80`.
+5. **Fill the PR body** (update_pull_request):
+   - What changes for the player: the three pages in a few lines.
+   - 1. Try it: the link (+ a `chip=p25q80` variant).
+   - 2. Screens: commit a few simulator shots (pulse_steady, pulse_rushing, judge_done, judge_feel, quiz_term_bpm,
+     quiz_bpm_term_feed, quiz_meter) into `docs/assets/rhythm/` and reference them by raw GitHub URL; or list them as
+     in `firmware/rhythm/build/host/` if committing images is not wanted (default: commit, small PNGs, docs can use them).
+   - 3. Checklist: fw-test 189, rhythm-unit 474,693, fw-build numbers + SHA-256 ticked; fm1-emu on both chips and the
+     rehearsal over the latest backup left unticked (fm1-emu is a macOS binary and the backups are on the owner's Mac);
+     stored data: record v1 → v2, kept (simulator test).
+   - 4. On the unit: the steps table from `docs/dev/rhythm.md#v03-verify`.
+   - Footer: the Claude Code attribution lines.
+6. **Docs**: add the device build result (date, size, SHA-256, `[模擬]` not applicable — build facts) to
+   `docs/dev/rhythm.md` v0.3 verification; `just docs-check` (via `uv run --only-group docs`); commit and push.
+   Re-run `fw-preview rhythm pr-N` after that commit only if firmware code changed.
+7. Ask the owner whether to watch the PR (subscribe_pr_activity).
 
 ## Verification
 
-1. `just rhythm-unit` (strict C99) passes, including the new tests.
-2. `just fw-test rhythm`: all old expects still pass (v0.2 behaviour unchanged), new ones pass; look at the shots.
-3. v1 record → v2 migration check in the simulator (save with v1 layout, boot, settings kept).
-4. Device build (`just fw-build rhythm`) and fm1-emu on `uc25hq80` and `p25q80` with save/restart/reload need the
-   owner's Mac (JieLi toolchain/Docker); list them as owner steps in the docs and the PR, with
-   `just emu-rehearse` over the latest backup to confirm only `0xD2000` is written.
-5. `just docs-check`. Commit on `claude/rhythm-metronome-practice-lytzzu`, push; no PR unless asked.
-
-## Changed during implementation
-
-- The owner added "hear the time signature" mid-way: TERMS became **QUIZ** with a fifth type, METER
-  (3/4, 4/4, 6/8, 5/4 at level 1; + 7/8, 9/8; 2/4 vs 4/4 and 6/8 vs 12/8 left out as not tellable by ear).
-- Staircase: 10 reversals (not 8), checked against a simulated listener with a graded psychometric function.
-- PULSE ends as soon as the last beat is tapped (by your own pulse), else waits while taps keep coming, so a
-  dragging run is not cut short.
+- `build.py` device build exits 0 and prints its checks ok; `rhythm.fwsc` exists.
+- `git ls-tree origin/previews` shows `pr-N/rhythm.fwsc` next to the existing slots (main/theory, pr-7, pr-12, pr-13).
+- `curl -sI` the raw.githubusercontent URL returns 200.
+- PR page shows the template sections filled and the link.

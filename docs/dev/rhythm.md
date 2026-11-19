@@ -332,12 +332,26 @@ simulator 的劇本有幾個 app 自己的指令：`pattern q_ee_r_q` 指定 ECH
     - 重開機後 0.3 的設定與最佳紀錄還在；寫一個 v1 的 record 再開機，BPM、ENDLESS 的 BEST 照舊，新欄位是預設值。
 - 截圖在 `firmware/rhythm/build/host/`：`pulse_*.png`、`judge_*.png`、`quiz_*.png`。
 
+畫面（simulator 截圖）：
+
+| | | |
+|---|---|---|
+| ![PULSE 準時](../assets/rhythm/pulse_steady.png) | ![PULSE 快 3 %](../assets/rhythm/pulse_rushing.png) | ![PULSE COLD](../assets/rhythm/pulse_cold.png) |
+| ![JUDGE 作答](../assets/rhythm/judge_ask.png) | ![JUDGE 結果](../assets/rhythm/judge_done.png) | ![JUDGE FEEL](../assets/rhythm/judge_feel.png) |
+| ![QUIZ TERM>BPM](../assets/rhythm/quiz_term_bpm.png) | ![QUIZ BPM>TERM 答錯](../assets/rhythm/quiz_bpm_term_feed.png) | ![QUIZ METER](../assets/rhythm/quiz_meter_feed.png) |
+
+**device build**（2026-11-19，雲端的 Linux 容器，不用 Docker，見[在 Linux 上 build](index.md#linux)；SDK 的三個檔案從 `previews` 分支上自己的 `pr-12/drums.fwsc` 取出，雜湊相符）：
+
+- 可以 link，build 的檢查全部 ok：沒有 64-bit 乘法在 load 旁邊、沒有 soft-double。
+- app 120,964 B；RAM `.data+.bss` 42,628 / 98,304 B（0.2 是 41,008）；`.ram_text` 5,100 / 32,768 B。
+- 套件 616,003 B，identity `FM-1_5400`。這個 build 的 SHA-256 記在 PR 裡，下一個 commit 之後會變。
+- 第一次 build 被擋下來：`fm1.toml` 的 `description` 最多 600 字元，改短了。
+
 **還沒做的（要在本人的 Mac 上）**：
 
-1. `just fw-build rhythm`：0.3 只用 32-bit 整數與 float，`rhythm.c` 沒有 64-bit 運算，但要 link 過才算數。
-2. `just emu-run` 在 `uc25hq80` 與 `p25q80`：每一頁跑一輪，改設定、等 3 秒存檔、重開、設定還在。
-3. `just emu-rehearse` 疊在最新的備份上：存檔只寫 `0xD2000`。
-4. 實機（要本人逐次同意）：
+1. `just emu-run` 在 `uc25hq80` 與 `p25q80`：每一頁跑一輪，改設定、等 3 秒存檔、重開、設定還在。
+2. `just emu-rehearse` 疊在最新的備份上：存檔只寫 `0xD2000`。
+3. 實機（要本人逐次同意）：
 
 | 步驟 | 應該看到 |
 |---|---|
