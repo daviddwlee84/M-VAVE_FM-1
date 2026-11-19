@@ -1,6 +1,7 @@
 # DRUMS in the host simulator: just fw-test drums (screenshots and audio in firmware/drums/build/host/)
 # Defaults: ROCK 8 at 110 BPM (a bar 2.18 s), 808, FILL AT PHRASE, phrase 4, AUTO FILL on.
-# part: 0 MAIN A, 1 MAIN B, 2 FILL A, 3 FILL B, 4 ENDING; state: 0 stopped, 1 playing, 2 ending; fill_at: 0 NOW, 1 BAR, 2 PHRASE
+# part: 0-3 MAIN A-D, 4-7 their fills, 8 tom fill, 9 two-bar fill, 10 intro, 11 break, 12 stop-time, 13 ending
+# state: 0 stopped, 1 playing, 2 ending; fill_at: 0 NOW, 1 BAR, 2 PHRASE; fill_len: 0 1/2, 1 one bar, 2 two bars
 wait 600
 shot boot.png
 expect styles 10
@@ -42,7 +43,7 @@ expect part 0
 shot fill_queued.png
 wait 5200
 expect bar 3
-expect part 2
+expect part 4
 shot fill.png
 wait 2300
 expect part 0
@@ -58,7 +59,7 @@ key 1 up
 wait 30
 expect req_fill 1
 wait 2300
-expect part 2
+expect part 4
 
 # ---- MAIN B (G3) with AUTO FILL: the fill, then B from its bar 1
 wait 2300
@@ -67,7 +68,7 @@ key 2 down
 wait 30
 key 2 up
 wait 2300
-expect part 2
+expect part 4
 wait 2300
 expect sec 1
 expect part 1
@@ -81,23 +82,23 @@ key 1 down
 wait 30
 key 1 up
 wait 30
-expect part 3
+expect part 5
 
 # ---- hold REC: a transition, then MAIN A when let go
 wait 2300
 press REC
 wait 700
 expect hold 1
-expect part 3
+expect part 5
 shot transition.png
 wait 2300
-expect part 3
+expect part 5
 release REC
 wait 30
 expect hold 0
 wait 2300
-expect sec 0
-expect part 0
+expect sec 2
+expect part 2
 
 # ---- the pads (F4 kick, G4 snare) and SEL + a pad mutes that drum
 key 12 down
@@ -164,6 +165,143 @@ wait 800
 release PLAY
 expect running 0
 
+# ==== v0.2 ====
+# ---- A3 when stopped: start in MAIN C; B3 (FILL AT NOW, AUTO FILL on): C's fill now, then MAIN D
+key 4 down
+wait 30
+key 4 up
+wait 30
+expect running 1
+expect sec 2
+expect part 2
+wait 1000
+key 6 down
+wait 30
+key 6 up
+wait 30
+expect part 6
+wait 2400
+expect sec 3
+expect part 3
+shot main_d.png
+
+# ---- FILL AT NEXT BAR; G#3: the short fill (its second half), A#3: the tom fill
+turn K3 1
+expect fill_at 1
+key 3 down
+wait 30
+key 3 up
+wait 30
+expect req_fill 1
+wait 2200
+expect part 7
+expect fill_from 8
+shot fill_half.png
+wait 2300
+key 5 down
+wait 30
+key 5 up
+wait 2300
+expect part 8
+shot fill_tom.png
+
+# ---- C4: a break next bar; D#4: stop-time
+wait 2300
+key 7 down
+wait 30
+key 7 up
+wait 30
+expect req_break 1
+wait 2300
+expect part 11
+shot break.png
+wait 2300
+key 10 down
+wait 30
+key 10 up
+wait 2300
+expect part 12
+shot stop_time.png
+
+# ---- C#4 held: a transition, let go: the next MAIN (D -> A)
+wait 2300
+key 8 down
+wait 600
+expect hold 1
+wait 2300
+key 8 up
+wait 30
+expect hold 0
+wait 2300
+expect sec 0
+
+# ---- FILL LEN 2 bars (ALGORITHM), FILL AT PHRASE: a fill asked now lands on the phrase's last two bars
+turn ALGO 1
+expect fill_len 2
+turn K3 1
+expect fill_at 2
+key 1 down
+wait 30
+key 1 up
+wait 30
+expect req_fill 1
+
+# ---- the MIX page: HOME, a pad picks its lane (F4: kick), K1 its level
+tap HOME
+expect page 1
+key 12 down
+wait 20
+key 12 up
+wait 30
+expect mix_sel 0
+turn K1 -3
+expect level_K 5
+key 14 down
+wait 20
+key 14 up
+wait 30
+expect mix_sel 1
+turn K1 2
+expect level_S 10
+shot mix.png
+tap HOME
+expect page 0
+wait 6000
+expect part 9
+expect part_bar 1
+shot fill_two.png
+
+# ---- RUSTY, the recorded kit
+turn PRESET 1
+expect kit 2
+wait 2400
+peakreset
+wav rusty.wav
+wait 2400
+expect peak_db_min -30
+wavstop
+shot rusty.png
+
+# ---- D4 when stopped: the intro, then MAIN A
+press PLAY
+wait 800
+release PLAY
+expect running 0
+key 9 down
+wait 30
+key 9 up
+wait 30
+expect running 1
+expect part 10
+shot intro.png
+wait 5200
+expect part 0
+expect sec 0
+press PLAY
+wait 800
+release PLAY
+expect running 0
+
 # ---- settings kept: swing, phrase, AUTO FILL off; saved 3 s after, read back after a restart
 turn K2 8
 expect swing 8
@@ -175,9 +313,12 @@ wait 3500
 reboot
 wait 600
 expect style 2
-expect kit 1
 expect swing 8
 expect phrase 8
 expect auto_fill 0
-expect fill_at 0
+expect fill_at 2
+expect fill_len 2
+expect kit 2
+expect level_K 5
+expect level_S 10
 shot settings.png

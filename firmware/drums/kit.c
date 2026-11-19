@@ -1,10 +1,12 @@
 /* SPDX-License-Identifier: GPL-3.0-or-later */
-/* kit: DRUMS' synthesised drums (see kit.h). */
+/* kit: DRUMS' drums (see kit.h): synthesised, and RUSTY's recorded ones (samples.h, IMA ADPCM). */
 #include "kit.h"
 #include "groove.h"
 #include "fastmath.h"
+#include "adpcm.c"
+#include "samples.h"
 
-enum { KT_TONE, KT_CLAP, KT_METAL, KT_NOISE, KT_BELL };
+enum { KT_TONE, KT_CLAP, KT_METAL, KT_NOISE, KT_BELL, KT_SAMPLE };
 
 typedef struct {
     uint8_t type;
@@ -48,8 +50,23 @@ static const kit_param_t KITS[KIT_N][GV_LANES] = {
       { KT_BELL, 560.0f, 840.0f, 0.0f, 120.0f, 1.0f, 0.0f, 0.0f, 2800.0f, 0.5f, 0.32f },       /* cowbell */
       { KT_NOISE, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 70.0f, 1.0f, 7000.0f, 0.0f, 0.28f },           /* shaker */
     },
+    { /* RUSTY: Big Rusty Drums' recordings (samples.h); clap, cowbell and shaker are STUDIO's */
+      { KT_SAMPLE, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.00f },              /* kick */
+      { KT_SAMPLE, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.85f },              /* snare */
+      { KT_SAMPLE, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.55f },              /* rim */
+      { KT_CLAP, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 150.0f, 1.0f, 1500.0f, 0.7f, 0.70f },           /* clap */
+      { KT_SAMPLE, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.45f },              /* hat */
+      { KT_SAMPLE, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.40f },              /* open hat */
+      { KT_SAMPLE, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.55f },              /* ride */
+      { KT_SAMPLE, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.75f },              /* crash */
+      { KT_SAMPLE, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.75f },              /* tom hi */
+      { KT_SAMPLE, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.75f },              /* tom mid */
+      { KT_SAMPLE, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.78f },              /* tom lo */
+      { KT_BELL, 560.0f, 840.0f, 0.0f, 120.0f, 1.0f, 0.0f, 0.0f, 2800.0f, 0.5f, 0.32f },       /* cowbell */
+      { KT_NOISE, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 70.0f, 1.0f, 7000.0f, 0.0f, 0.28f },           /* shaker */
+    },
 };
-static const char *const KIT_NAME[KIT_N] = { "808", "STUDIO" };
+static const char *const KIT_NAME[KIT_N] = { "808", "STUDIO", "RUSTY" };
 static const float METAL[6] = { 1.0f, 1.4826f, 1.8003f, 2.5460f, 2.6303f, 3.8967f };   /* the 808's six */
 
 typedef struct {
@@ -61,9 +78,32 @@ typedef struct {
     float lo, bd, bf, bq;                /* state-variable band-pass */
     float mph[6], minc[6];
     uint32_t t, burst;
+    adpcm_t ad;                          /* KT_SAMPLE: the recording, 22.05 kHz, doubled by a linear step */
+    int16_t buf[32];
+    uint8_t bn, bi, half, ended;
+    float cur, nxt;
 } voice_t;
 
 static voice_t vo[GV_LANES];
+static float lane_gain[GV_LANES] = { 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f };
+
+void kit_set_level(int lane, float gain)
+{
+    if (lane >= 0 && lane < GV_LANES) lane_gain[lane] = gain;
+}
+
+static float smp_next(voice_t *v)        /* the recording's next sample (0 after its end) */
+{
+    if (v->bi >= v->bn) {
+        v->bn = (uint8_t)adpcm_render(&v->ad, v->buf, 32);
+        v->bi = 0;
+        if (!v->bn) {
+            v->ended = 1;
+            return 0.0f;
+        }
+    }
+    return (float)v->buf[v->bi++] * (1.0f / 32768.0f);
+}
 static float SR = 44100.0f;
 static uint32_t rng = 0x1234567u;
 
@@ -87,10 +127,10 @@ void kit_trigger(int lane, int vel, int kit)
     if (lane < 0 || lane >= GV_LANES || kit < 0 || kit >= KIT_N) return;
     p = &KITS[kit][lane];
     v = &vo[lane];
-    if (lane == L_CHH) vo[L_OHH].nd = decay(6.0f);   /* the closed hat chokes the open one */
+    if (lane == L_CHH) vo[L_OHH].nd = vo[L_OHH].td = decay(6.0f);   /* the closed hat chokes the open one */
     g = (float)(vel < 1 ? 1 : vel > 9 ? 9 : vel) / 9.0f;
     v->type = p->type;
-    v->amp = p->level * g * g;
+    v->amp = p->level * g * g * lane_gain[lane];
     v->ph = 0.0f;
     v->f = p->f0;
     v->f1 = p->f1;
@@ -118,6 +158,16 @@ void kit_trigger(int lane, int vel, int kit)
     }
     v->t = 0;
     v->burst = (uint32_t)(0.011f * SR);
+    if (p->type == KT_SAMPLE) {
+        if (!SMP[lane].p) return;
+        adpcm_begin(&v->ad, SMP[lane].p, SMP[lane].bytes, SMP[lane].samples);
+        v->bn = v->bi = 0;
+        v->half = 0;
+        v->ended = 0;
+        v->td = 1.0f;                    /* (te stays 1 unless choked) */
+        v->cur = smp_next(v);
+        v->nxt = smp_next(v);
+    }
     v->on = 1;
 }
 
@@ -203,6 +253,19 @@ void kit_render(float *out, uint32_t n)
                 v->ne *= v->nd;
                 break;
             }
+            case KT_SAMPLE:
+                if (!v->half) {
+                    s = v->cur;
+                    v->half = 1;
+                } else {
+                    s = 0.5f * (v->cur + v->nxt);
+                    v->cur = v->nxt;
+                    v->nxt = smp_next(v);
+                    v->half = 0;
+                }
+                s *= v->te;
+                v->te *= v->td;
+                break;
             case KT_BELL:
                 s = bp(v, (sq(&v->mph[0], v->minc[0]) + sq(&v->mph[1], v->minc[1])) * 0.5f) * v->te * 2.0f;
                 v->te *= v->td;
@@ -212,9 +275,11 @@ void kit_render(float *out, uint32_t n)
             v->t++;
         }
         /* done when every envelope is down */
+        if (v->type == KT_SAMPLE && v->ended) v->cur = v->nxt = 0.0f;   /* (the tail's last step is near zero) */
         if ((v->type == KT_TONE && v->te < 0.001f && v->ne < 0.001f)
             || (v->type != KT_TONE && v->type != KT_BELL && v->ne < 0.001f && v->t > 3u * v->burst)
-            || (v->type == KT_BELL && v->te < 0.001f))
+            || (v->type == KT_BELL && v->te < 0.001f)
+            || (v->type == KT_SAMPLE && ((v->ended && v->cur == 0.0f && v->nxt == 0.0f) || v->te < 0.001f)))
             v->on = 0;
     }
 }

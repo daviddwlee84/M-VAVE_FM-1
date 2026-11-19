@@ -633,7 +633,7 @@ drums-unit:
     cc -std=c99 -Wall -Wextra -pedantic -Wdouble-promotion -Wfloat-equal -Wshadow -o build/groove_test \
       firmware/drums/tests/groove_test.c
     build/groove_test
-    cc -std=c99 -Wall -Wextra -pedantic -Wdouble-promotion -Wshadow -I{{fm1_base}}/include -o build/kit_test \
+    cc -std=c99 -Wall -Wextra -pedantic -Wdouble-promotion -Wshadow -I{{fm1_base}}/include -Ifirmware/common -o build/kit_test \
       firmware/drums/tests/kit_test.c -lm
     build/kit_test | tail -1
 

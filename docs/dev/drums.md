@@ -4,7 +4,9 @@
 
 **狀態（2026-11-19）：**
 
-- **v0.1**：在 host simulator、device build 與 fm1-emu 兩種晶片驗證過 `[模擬]`，見 [v0.1](#v01) 與 [v0.1 驗證](#v01-verify)。還沒刷進實機，也還沒疊在這台機器的備份上預演。
+- **v0.1**：在 host simulator、device build 與 fm1-emu 兩種晶片驗證過 `[模擬]`，見 [v0.1](#v01) 與 [v0.1 驗證](#v01-verify)。
+- **v0.2**：MAIN C / D、更多過門與過門長度、INTRO、BREAK、stop-time、MIX 頁、sample 鼓組 RUSTY。一樣在 host simulator、device build 與 fm1-emu 兩種晶片驗證過 `[模擬]`，見 [v0.2](#v02)。
+- 兩版都還沒刷進實機，也還沒疊在這台機器的備份上預演。
 - 獨立的韌體，不是 [RHYTHM](rhythm.md) 的一頁（本人 2026-11-19 決定）。在 `firmware/drums/`，名稱暫定 DRUMS，正式名稱發布前對照 Hub 再定。
 - 授權 GPL-3.0-or-later，因為搬了 RHYTHM 的 transport。
 - 識別碼 `FM-1_58`（開發版 `FM-1_5800`）：2026-11-19 對照 Hub 的 catalog 沒人用。
@@ -66,6 +68,76 @@ PR 頁面上有 fm1-emu 網頁版的連結，打開就是這個 package，不用
 | 疊在備份上預演 | **還沒做**：雲端容器裡沒有備份。刷機前在 Mac 上跑 `just emu-rehearse firmware/drums/build/drums.fwsc backups/<最新>/<檔案>.bin` |
 
 這次的 device build 是在連不到 gitee.com 的雲端容器裡做的，SDK 的三個檔案改從別的 fm1-base package 取出並核對 SHA-256，見[開發環境](index.md#sdk-from-package)。
+
+## v0.2 { #v02 }
+
+v0.2 照[之後](#next)寫的做：一個 style 有四段 MAIN，F3–E4 的 12 個鍵全部用上，過門可以是半小節、一小節或兩小節，再加上 MIX 頁與一套用錄音做的鼓組。
+
+**F3–E4（演奏控制）：**
+
+| 鍵 | 白鍵 | 鍵 | 黑鍵 |
+|---|---|---|---|
+| F3 | `MAIN A` | F#3 | 過門（長度照 `FILL LEN`） |
+| G3 | `MAIN B` | G#3 | 短過門：只有後半小節 |
+| A3 | `MAIN C` | A#3 | tom 過門 |
+| B3 | `MAIN D` | C#4 | 按住：transition（和 `REC` 按住一樣） |
+| C4 | `BREAK`：下一小節空白，然後回來並加 crash | D#4 | stop-time：下一小節只有第一拍的 kick 與 crash |
+| D4 | 停止中：從 intro 開始（兩小節），接 `MAIN A` | | |
+| E4 | ending | | |
+
+停止中按任一個 MAIN 鍵就從那一段開始。transition 放開後依序換到下一段：A → B → C → D → A。
+
+**新的旋鈕與按鈕：**
+
+| 控制 | 作用 |
+|---|---|
+| `ALGORITHM` | `FILL LEN`：1/2 BAR、1 BAR、2 BARS（F#3、`REC` 按一下、`AUTO FILL` 都照它） |
+| `HOME` | PLAY 頁 ↔ MIX 頁 |
+| MIX 頁：pad 或 `SELECT` | 選一軌（pad 照樣發聲） |
+| MIX 頁：`K1` | 那一軌的音量 0–10，8 是鼓組原本的大小 |
+| MIX 頁：`K2`、`PRESETS` | 鼓組 |
+
+**過門長度怎麼落：**
+
+- **1/2 BAR**：前半小節照 MAIN 打，後半換成過門。`NOW` 時從下一步開始，但不早於小節中間。
+- **2 BARS**：一個跨兩小節的過門（style 的 `w`）。`PHRASE` 把它放在樂句的最後兩小節；在倒數第二小節才按就立刻開始，在最後一小節才按就改成一小節的過門。`NEXT BAR` 是接下來兩小節，`NOW` 是這小節的後段當第一小節。
+- `AUTO FILL` 換段時照 `FILL LEN`；ending 會等兩小節的過門放完。
+
+**style：** 十個 style 都有 MAIN C（多半換 ride 或更密的 hat）與 MAIN D（最滿，第一拍 crash）。沒有自己寫的過門、tom 過門、兩小節過門與 intro，用同拍號的共用版本（`groove.c` 的 `GV_GEN_*`）。
+
+![MAIN D](../assets/drums/main_d.png){ width="240" } ![短過門：後半小節](../assets/drums/fill_half.png){ width="240" } ![tom 過門](../assets/drums/fill_tom.png){ width="240" } ![BREAK](../assets/drums/break.png){ width="240" }
+
+![stop-time](../assets/drums/stop_time.png){ width="240" } ![兩小節過門的第二小節](../assets/drums/fill_two.png){ width="240" } ![MIX 頁](../assets/drums/mix.png){ width="240" } ![intro](../assets/drums/intro.png){ width="240" }
+
+### Sample 鼓組 RUSTY（實驗） { #rusty }
+
+第三套鼓組 RUSTY 用錄音：kick、snare、rim、hat、open hat、ride、crash、三個 tom 取自 Karoryfer Samples 的 [Big Rusty Drums](https://github.com/sfzinstruments/karoryfer.big-rusty-drums)（CC0-1.0，固定在 commit `f07ce00`）；clap、cowbell、shaker 仍是合成的。
+
+- `host/drums/make_samples.py` 只抓用到的檔案，每一種取一個力度層、近距離麥克風加一點 overhead，從擊打處開始、裁短並淡出，轉成 22,050 Hz 單聲道的 IMA ADPCM（`firmware/common/adpcm` 的格式），寫成 `firmware/drums/samples.h`，裡面記著每個來源檔的 SHA-256。
+- 長度：kick 0.45 s、snare 0.40 s、rim 0.16 s、hat 0.20 s、open hat 0.80 s、ride 1.0 s、crash 1.3 s、tom 0.55–0.70 s。合計 **68,873 B**。
+- 播放時把 22.05 kHz 線性內插成 44.1 kHz。
+
+| | v0.1 | v0.2（含 RUSTY） |
+|---|---|---|
+| app | 104,748 B | 180,632 B（多 75,884 B，其中 sample 68,873 B） |
+| `.data+.bss` | 38,132 B | 50,028 B（節奏型的 pool 變大） |
+| 播放時 ISR 佔的指令 `[模擬]` | 11 %（808） | 8 %（RUSTY；sample 比合成省） |
+
+結論 `[模擬]`：放得下，CPU 也不是問題。app slot 有 581,564 B，照這個做法再放 4–5 套也夠。鈸在 22 kHz 下高頻比較少，聽起來偏暗；要不要把鈸改成 32 kHz，等實機用耳機聽過再決定。
+
+### v0.2 驗證 { #v02-verify }
+
+2026-11-19，在雲端的 Linux 容器裡：
+
+| 項目 | 結果 |
+|---|---|
+| `just drums-unit` | groove 468 項、kit 156 項全過。新增：四段 MAIN 都寫了且能換、1/2 BAR 在每個 16 分音符按下時落在哪、2 BARS 在 `PHRASE` 4 / 8 / 16、`NEXT BAR`、`NOW`（含倒數兩小節內才按）、`AUTO FILL` 換段要等兩小節、ending 等兩小節過門、intro 後從 MAIN 的第 0 小節數起、BREAK 那一小節完全安靜、stop-time 只打一下、transition 依序 A → B → C → D → A；RUSTY 每一軌都會響、會結束 |
+| `just fw-test drums` | 全部 `ok`（模擬 93.9 秒）：v0.1 的檢查，加上 A3 從 MAIN C 開始、B3 帶過門換到 D、G#3 從第 8 步開始、A#3、C4、D#4、C#4 按住與放開、`ALGORITHM` 改成 2 BARS、MIX 頁選軌與改音量、RUSTY 有聲音、D4 從 intro 開始、重開後 `FILL LEN`、鼓組與音量都還在 |
+| `just fw-build drums` | 檢查全部 `ok`（沒有 soft-double）；app 180,632 B；`.data+.bss` 50,028 / 98,304 B；package 616,003 B，identity `FM-1_5800` |
+| fm1-emu `uc25hq80`、`p25q80` | MIX 頁把 kick 調到 5、換成 RUSTY、播放；重開後 kick 還是 5、鼓組還是 RUSTY；只寫 `0xD0000`；播放中 ISR 8 % `[模擬]` |
+| 疊在備份上預演 | **還沒做**（雲端容器沒有備份），同 v0.1 |
+
+模擬器裡旋鈕的編號（`FM1_BENCH_KEYS` 的 `eN`）：e0 `SELECT`、e1 `ALGORITHM`、e2–e5 `K1`–`K4`、e6 `PRESETS` `[模擬]`。
 
 ## 使用情境 { #uses }
 
@@ -229,7 +301,7 @@ fill A  crash   ....                     # 接到下一小節的第一拍
 | 版本 | 內容 |
 |---|---|
 | v0.1（2026-11-19 做完，見[上面](#v01)） | 兩套合成鼓組、約 10 個 style、`MAIN A` / `B`、過門（`NOW` / `BAR` / `PHRASE`）、tap tempo、`REC` 的三個手勢、右半邊的 pad |
-| v0.2 | 更多變化：`MAIN C` / `D` 與它們的過門、每段三種過門、半小節與兩小節的過門、`INTRO`、`BREAK`；MIX 頁、sample 實驗（見[之後](#next)） |
+| v0.2（2026-11-19 做完，見[上面](#v02)） | 更多變化：`MAIN C` / `D` 與它們的過門、短過門與 tom 過門、半小節與兩小節的過門、`INTRO`、`BREAK`、stop-time；MIX 頁、sample 鼓組 RUSTY |
 | v0.3 | 標準鼓 MIDI 輸出（GM 鼓譜、`LOCAL` 開關）、MIDI clock 進出、song mode、外接踏板的 CC |
 | v0.4 | 在機器上編輯：把 preset 複製成 USER style，用格線改；更多鼓組與 style；練習功能（靜音小節、慢慢加速，和 RHYTHM 重疊） |
 
@@ -239,7 +311,7 @@ fill A  crash   ....                     # 接到下一小節的第一拍
 
 ## 之後 { #next }
 
-本人試過 v0.1 之後（2026-11-19）問的四件事，以及打算怎麼做。都還沒有程式。
+本人試過 v0.1 之後（2026-11-19）問的四件事，以及打算怎麼做。前兩件（更多變化、過門長度）在 [v0.2](#v02) 做了，鍵的排法和下表一樣；MIDI 輸出與在機器上編輯還沒有。
 
 ### 一個 style 不只 A / B
 

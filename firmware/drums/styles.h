@@ -1,10 +1,13 @@
 /* SPDX-License-Identifier: GPL-3.0-or-later */
 /* DRUMS' built-in styles: written by hand for this firmware (no outside source).
  *
- * A line: PART LANE STEPS. PART: A, B (MAIN A, MAIN B), a, b (their fills), E (the ending). LANE: K kick, S snare,
- * R rim, C clap, H hat, O open hat, D ride, X crash, T M L toms (high, mid, low), B cowbell, Z shaker. STEPS: one a
- * step (16ths with 4 steps a beat, triplet 8ths with 3), '.' a rest, 1..9 the velocity; spaces are for the eye.
- * A style without its own fills gets the generic ones of its metre (groove.c), without an ending a kick and a crash. */
+ * A line: PART LANE STEPS. PART: A B C D (the MAINs), a b c d (their fills), t (a tom fill), w (a two-bar fill),
+ * I (the intro, one or two bars), K (a break), P (stop-time), E (the ending). LANE: K kick, S snare, R rim, C clap,
+ * H hat, O open hat, D ride, X crash, T M L toms (high, mid, low), B cowbell, Z shaker. STEPS: one a step (16ths
+ * with 4 steps a beat, triplet 8ths with 3), '.' a rest, 1..9 the velocity; spaces are for the eye. A two-bar part
+ * has twice the steps on each line. What a style leaves out comes from groove.c: C and D (and c, d) as B, the other
+ * fills and the intro the generic ones of its metre, the break an empty bar, stop-time and the ending a kick and a
+ * crash on the one. MAIN C is usually the ride or the busier hats, MAIN D the biggest. */
 #pragma once
 #include "groove.h"
 
@@ -16,7 +19,21 @@ static const gv_style_src_t DR_STYLES[] = {
       "B K 9... ..7. 9.7. ....\n"
       "B S .... 9... .... 9..5\n"
       "B D 7.5. 7.5. 7.5. 7.5.\n"
-      "B X 6... .... .... ....\n" },
+      "B X 6... .... .... ....\n"
+      "C K 9..7 ..7. 9.7. ..7.\n"
+      "C S .... 9... .... 9...\n"
+      "C O 7.7. 7.7. 7.7. 7.7.\n"
+      "D K 9... 9... 9... 9...\n"
+      "D S .... 9... .... 9...\n"
+      "D X 8... .... 7... ....\n"
+      "D D 7.7. 7.7. 7.7. 7.7.\n"
+      "c K 9... .... 9... ....\n"
+      "c S 9.7. .... 9.7. 7...\n"
+      "c T .... 9.7. .... ....\n"
+      "c L .... .... .... 9.9.\n"
+      "d K 9... 9... 9... 9...\n"
+      "d S 9.9. 9.9. 9999 9999\n"
+      "d X .... .... .... ...8\n" },
     { "POP 16", 4, 4, 100,
       "A K 9... ..7. 9... ....\n"
       "A S .... 9... .... 9...\n"
@@ -25,7 +42,16 @@ static const gv_style_src_t DR_STYLES[] = {
       "B S .... 9... .... 9...\n"
       "B C .... 7... .... 7...\n"
       "B H 7.4. 7.4. 7.4. 7...\n"
-      "B O .... .... .... ..6.\n" },
+      "B O .... .... .... ..6.\n"
+      "C K 9... ..7. 9... ..7.\n"
+      "C S .... 9... .... 9...\n"
+      "C D 7.5. 7.5. 7.5. 7.5.\n"
+      "C Z 4444 4444 4444 4444\n"
+      "D K 9..7 ..7. 9..7 ..7.\n"
+      "D S .... 9... .... 9...\n"
+      "D C .... 8... .... 8...\n"
+      "D O 7.7. 7.7. 7.7. 7.7.\n"
+      "D X 8... .... .... ....\n" },
     { "FUNK", 4, 4, 98,
       "A K 9..7 ..9. ..7. .9..\n"
       "A S .... 9..4 .4.. 9..4\n"
@@ -34,6 +60,13 @@ static const gv_style_src_t DR_STYLES[] = {
       "B S .... 9..4 .4.9 ..4.\n"
       "B H 7464 7464 7464 74..\n"
       "B O .... .... .... ..7.\n"
+      "C K 9..7 ..9. ..7. .9..\n"
+      "C S .... 9..4 .4.. 9..4\n"
+      "C B 7.5. 7.5. 7.5. 7.5.\n"
+      "C H 7464 7464 7464 7464\n"
+      "D K 9.7. ..9. .97. .9.7\n"
+      "D S ..4. 9..4 .4.9 ..49\n"
+      "D O 7.7. 7.7. 7.7. 7.7.\n"
       "a K 9... ..9. .... ....\n"
       "a S .... 9..5 .5.9 9999\n"
       "a H 7464 7464 .... ....\n" },
@@ -43,7 +76,14 @@ static const gv_style_src_t DR_STYLES[] = {
       "A H 7.5 7.5 7.5 7.5\n"
       "B K 9.. ..7 9.. ..7\n"
       "B S ... 9.4 ... 9.4\n"
-      "B D 8.6 8.6 8.6 8.6\n" },
+      "B D 8.6 8.6 8.6 8.6\n"
+      "C K 9.. ..7 9.. ..7\n"
+      "C S ... 9.. ... 9..\n"
+      "C O 7.5 7.5 7.5 7.5\n"
+      "D K 9.7 9.7 9.7 9.7\n"
+      "D S ... 9.4 ... 9.4\n"
+      "D D 9.7 9.7 9.7 9.7\n"
+      "D X 8.. ... ... ...\n" },
     { "DISCO", 4, 4, 120,
       "A K 9... 9... 9... 9...\n"
       "A S .... 9... .... 9...\n"
@@ -53,7 +93,18 @@ static const gv_style_src_t DR_STYLES[] = {
       "B S .... 9... .... 9...\n"
       "B C .... 8... .... 8...\n"
       "B Z 5353 5353 5353 5353\n"
-      "B O ..8. ..8. ..8. ..8.\n" },
+      "B O ..8. ..8. ..8. ..8.\n"
+      "C K 9... 9... 9... 9...\n"
+      "C C .... 9... .... 9...\n"
+      "C H 5555 5555 5555 5555\n"
+      "C O ..8. ..8. ..8. ..8.\n"
+      "C B ..6. .... ..6. ....\n"
+      "D K 9... 9... 9... 9...\n"
+      "D S .... 9... .... 9...\n"
+      "D C .... 9... .... 9...\n"
+      "D O ..9. ..9. ..9. ..9.\n"
+      "D Z 5353 5353 5353 5353\n"
+      "D X 8... .... .... ....\n" },
     { "HIP-HOP", 4, 4, 90,
       "A K 9... ..7. .9.. ....\n"
       "A S .... 9... .... 9...\n"
@@ -61,34 +112,72 @@ static const gv_style_src_t DR_STYLES[] = {
       "B K 9..7 ..7. .9.. ..7.\n"
       "B S .... 9... .... 9...\n"
       "B R .... .... ..6. ....\n"
-      "B H 7565 7.5. 7565 7.5.\n" },
+      "B H 7565 7.5. 7565 7.5.\n"
+      "C K 9... ..7. .9.. ....\n"
+      "C C .... 9... .... 9...\n"
+      "C H 7.5. 7.5. 7.5. 7.5.\n"
+      "C Z ..4. ..4. ..4. ..4.\n"
+      "D K 9..7 ..7. .9.7 ..7.\n"
+      "D S .... 9... .... 9...\n"
+      "D C .... 9... .... 9...\n"
+      "D H 7565 7565 7565 7565\n" },
     { "BOSSA", 4, 4, 130,
       "A K 9..7 9..7 9..7 9..7\n"
       "A R 8..8 ..8. ..8. .8..\n"
       "A Z 5353 5353 5353 5353\n"
       "B K 9..7 9..7 9..7 9..7\n"
       "B R 8..8 ..8. ..8. .8..\n"
-      "B D 7.5. 7.5. 7.5. 7.5.\n" },
+      "B D 7.5. 7.5. 7.5. 7.5.\n"
+      "C K 9..7 9..7 9..7 9..7\n"
+      "C R ..8. .8.. 8..8 ..8.\n"
+      "C H 7.5. 7.5. 7.5. 7.5.\n"
+      "D K 9..7 9..7 9..7 9..7\n"
+      "D S ..7. .7.. 7..7 ..7.\n"
+      "D D 7.7. 7.7. 7.7. 7.7.\n"
+      "D X 7... .... .... ....\n" },
     { "REGGAE", 4, 4, 76,
       "A K .... .... 9... ....\n"
       "A R .... .... 9... ....\n"
       "A H 7.5. 7.5. 7.5. 7.5.\n"
       "B K 9... 9... 9... 9...\n"
       "B R .... .... 9... ....\n"
-      "B H 7.57 7.57 7.57 7.57\n" },
+      "B H 7.57 7.57 7.57 7.57\n"
+      "C K 9... .... 9... ....\n"
+      "C S .... .... 9... ....\n"
+      "C H 7.5. 7.5. 7.5. 7.5.\n"
+      "C O ..7. .... ..7. ....\n"
+      "D K 9... 9... 9... 9...\n"
+      "D S .... 9... .... 9...\n"
+      "D H 7.57 7.57 7.57 7.57\n"
+      "D X 7... .... .... ....\n" },
     { "WALTZ 3/4", 3, 4, 120,
       "A K 9... .... ....\n"
       "A S .... 6... 6...\n"
       "A H 7.5. 7.5. 7.5.\n"
       "B K 9... .... ..6.\n"
       "B S .... 7... 7...\n"
-      "B D 7.5. 7.5. 7.5.\n" },
+      "B D 7.5. 7.5. 7.5.\n"
+      "C K 9... .... ....\n"
+      "C R .... 7... 7...\n"
+      "C D 7.5. 7.5. 7.5.\n"
+      "D K 9... .... ..7.\n"
+      "D S .... 8... 8...\n"
+      "D O 7.5. 7.5. 7.5.\n"
+      "D X 8... .... ....\n" },
     { "BALLAD 6/8", 2, 3, 56,
       "A K 9.. ...\n"
       "A S ... 9..\n"
       "A H 765 765\n"
       "B K 9.7 ...\n"
       "B S ... 9..\n"
-      "B D 765 765\n" },
+      "B D 765 765\n"
+      "C K 9.. .7.\n"
+      "C S ... 9..\n"
+      "C D 765 765\n"
+      "C R ..5 ..5\n"
+      "D K 9.7 ..7\n"
+      "D S ... 9..\n"
+      "D O 765 765\n"
+      "D X 8.. ...\n" },
 };
 #define DR_NSTYLES ((int)(sizeof DR_STYLES / sizeof DR_STYLES[0]))
