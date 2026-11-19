@@ -164,8 +164,8 @@ The form at https://thefirmwarehub.com/submit/ (fmhub.md still mentions email; t
   zvenson/fm1-build's workflow), chips tested.
 
 The result page (its address is the owner's only; changes also come by mail) runs eight checks: source, LICENSE,
-fmhub.json, sounds, release, identity, update loader, flash chip. All green means "waiting for Sven": the maintainer
-reviews listings, but a fully green check with "tested" and "rights" ticked goes live by itself: MORSE was submitted
+fmhub.json, sounds, release, identity, update loader, flash chip. All green means "waiting for Sven". As of 2026-11-20 the submit page says "Sven looks at every firmware himself – nothing goes on the hub without him" and the KB "on the test site first, then live"; releases after the first are still listed by themselves within three hours. In 2026-11, before that wording,
+a fully green check with "tested" and "rights" ticked went live by itself: MORSE was submitted
 2026-11-17 19:03 UTC, checked 19:06, and went live automatically at 23:00 ("no click of Sven's"), on the hub with the
 next sync. Fixes: push, then "Check again", or send the form again for the same repo (it updates).
 After listing: new versions are new releases; card changes are fmhub.json edits (live within three hours). MORSE v0.5,
@@ -176,8 +176,8 @@ the check page said both chips: read from the package, not tested.
 
 | List | Weight (2026-11-18) | How |
 |---|---|---|
-| [aroum/fm1-custom-fw](https://github.com/aroum/fm1-custom-fw) | 424 stars, most outside "Add ..." PRs merged | PR: a numbered table row, `**Name by Author**<br>[GitHub](url) \| ...<br>**License:** ...` and a Concept / Features cell; fm1-base tools (CTL-1, MIDIMON) sit in 1.1.4 |
-| [cicloid/awesome-fm-1](https://github.com/cicloid/awesome-fm-1) | 93 stars, outside PRs merged | PR per CONTRIBUTING.md: `- [Name](url) - Description.` one line, author and licence, one entry per PR; tools go under *Not a synth* |
+| [aroum/fm1-custom-fw](https://github.com/aroum/fm1-custom-fw) | 424 stars, most outside "Add ..." PRs merged. MORSE's #36 (2026-11-17 19:15 UTC): the maintainer folded it into its own commit `530daf5` and closed the PR with a thank-you about 22 hours later: "closed" there means taken, check the README | PR: a numbered table row, `**Name by Author**<br>[GitHub](url) \| ...<br>**License:** ...` and a Concept / Features cell; fm1-base tools (CTL-1, MIDIMON) sit in 1.1.4 |
+| [cicloid/awesome-fm-1](https://github.com/cicloid/awesome-fm-1) | 93 stars, outside PRs merged until 2026-11-12; since then none (#27-#33 open on 2026-11-20, MORSE's #30 among them, no comments): open it anyway, expect to wait | PR per CONTRIBUTING.md: `- [Name](url) - Description.` one line, author and licence, one entry per PR; tools go under *Not a synth* |
 | fm1-editor.com firmware list | 75 stars (benny-sparra/fm1-dx7-patch-importer) | an issue there, if it does not pick the Hub up by itself |
 | fm1-emu, RemoteFM1 player, FMDB | — | follow the Hub or crawl GitHub: nothing to send |
 | FM-1 Firmware Atlas, the Developers' Wiki | 0 / 5 stars; the wiki is not a firmware list | skip |

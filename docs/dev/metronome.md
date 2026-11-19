@@ -259,6 +259,12 @@ JSON 檔：`{"app": "METRONOME", "kind": "setlist", "format": 1, "active": 5, "s
 | 網頁 | Playwright（Chromium）：編輯、拍號 preset、改一格後 preset 名稱消失、播放游標、CLASSIC、手機寬度 390 px 沒有橫向捲動、沒有 JS 錯誤。try 頁在 GitHub Pages 上按 Start 跑的是 METRONOME 0.3。本機 http 伺服器上 fm1-emu 讀不到 package（https 頁面擋 http 的 mixed content），會退回內建的 Felucca，要在 https 上測 |
 | 實機 | 2026-11-20 本人用 `fm1_install.py` 從 0.2 裝 release 0.3（`--info`：`FM-1_59000300`）。Chrome 開網頁：連線、讀出機器的歌單、新增歌送回，機器跳出確認頁，`PLAY` 後套用，關機重開還在 `[實機]` |
 
+### 發佈與上架 { #release }
+
+- 2026-11-20：[fm1-metronome v0.3](https://github.com/daviddwlee84/fm1-metronome/releases/tag/v0.3) 發佈，附 `metronome-0.3.fwsc`（release asset 的 digest 是 `sha256:b1163655…6e925a54`，就是實機測過的那份）和 `firmware.json`。tag 在 `aa1d2c7`。
+- The Firmware Hub（2026-11-20 讀的規則 `[上游]`）：Sven 每個都親自看，先上測試站再上線；之後的 release 三小時內自動跟上。要用這份 release 檔在實機做三種測試，2026-11-20 都用 `fm1_install.py`（USB-MIDI，和 Hub 網頁安裝同一套）做完 `[實機]`：從 METRONOME 裝 SLOOP 2.8.5（classic install）；從 SLOOP 裝回 METRONOME（fast install，歌單在 SLOOP 期間沒被動到）；在 M-Flasher 還原原廠 015 後從原廠裝 METRONOME（fast install，預設一首 120 BPM），之後用 `metro-restore` 送回歌單。紀錄在 [device-log](../device-log.md)。
+- 社群清單：aroum/fm1-custom-fw 會放在 1.1.4 節（Morse 是 127 號，維護者用自己的 commit 收錄後關掉 PR）；awesome-fm-1 放 *Not a synth*，但那個 repo 從 2026-11-12 起沒有 merge 任何 PR。
+
 ### 即時連線（之後） { #live }
 
 本人 2026-11-20 提到：網頁和機器即時互動，機器靜音、網頁出聲，或網頁畫指揮動畫。設計方向：
