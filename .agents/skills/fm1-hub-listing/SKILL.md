@@ -66,7 +66,10 @@ git clone --branch <app>-split . /tmp/<repo> && cd /tmp/<repo> && git checkout -
   releases prefix + XXYYZZ (0.3 of `FM-1_41` is `FM-1_41000300`); USB answers the short form, `FM-1_` and three digits.
 - Pick a prefix whose three-digit short forms nobody uses. Read `https://thefirmwarehub.com/catalog.json` at most
   once a day (the Hub asks) and list the `FM-1_` numbers in it; `FM-1_13` was too close to Midi-Mania's `FM-1_137`.
-- Before submitting, the owner checks the full release identity at https://thefirmwarehub.com/submit/#check.
+- Before submitting, the owner checks the full release identity at https://thefirmwarehub.com/submit/#check. The checker
+  wants the whole number the firmware answers with, 3 to 8 digits (`FM-1_59000200`); the bare prefix (`FM-1_59`) gets
+  "An identity is FM-1_ and 3 to 8 digits", a format error, not a clash. The catalog's `ident` fields are regexes:
+  test a candidate with `re.fullmatch` against each, skipping the catch-all `FM-1_\d{3,8}`.
 - A new identity installs as a different firmware but keeps the storage (APP_STORE_MAP), so progress survives.
 
 ### 3. fm1.toml and the release build
