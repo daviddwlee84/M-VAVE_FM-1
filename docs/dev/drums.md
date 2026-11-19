@@ -229,11 +229,56 @@ fill A  crash   ....                     # 接到下一小節的第一拍
 | 版本 | 內容 |
 |---|---|
 | v0.1（2026-11-19 做完，見[上面](#v01)） | 兩套合成鼓組、約 10 個 style、`MAIN A` / `B`、過門（`NOW` / `BAR` / `PHRASE`）、tap tempo、`REC` 的三個手勢、右半邊的 pad |
-| v0.2 | `MAIN C` / `D`、`INTRO`、`ENDING`、`BREAK`、`TRANSITION`、`AUTO FILL`、MIX 頁、sample 實驗 |
-| v0.3 | song mode、MIDI clock 進出、外接踏板的 CC |
-| v0.4 | 更多鼓組與 style；練習功能（靜音小節、慢慢加速），這部分和 RHYTHM 重疊 |
+| v0.2 | 更多變化：`MAIN C` / `D` 與它們的過門、每段三種過門、半小節與兩小節的過門、`INTRO`、`BREAK`；MIX 頁、sample 實驗（見[之後](#next)） |
+| v0.3 | 標準鼓 MIDI 輸出（GM 鼓譜、`LOCAL` 開關）、MIDI clock 進出、song mode、外接踏板的 CC |
+| v0.4 | 在機器上編輯：把 preset 複製成 USER style，用格線改；更多鼓組與 style；練習功能（靜音小節、慢慢加速，和 RHYTHM 重疊） |
+
+(v0.1 已經有 `ENDING`、`TRANSITION`、`AUTO FILL`，原本排在 v0.2。)
 
 每一版照[開發環境](index.md)的流程：host simulator 的 `fw-test`；fm1-emu 兩種晶片都要做存檔、重開、讀回；疊在最新備份上預演；最後才問要不要刷。
+
+## 之後 { #next }
+
+本人試過 v0.1 之後（2026-11-19）問的四件事，以及打算怎麼做。都還沒有程式。
+
+### 一個 style 不只 A / B
+
+v0.1 的一個 style 是 MAIN A、MAIN B、各自的過門、ending 五個 part。下一步加 `MAIN C`、`MAIN D` 與它們的過門，style 的文字裡用 `C`、`D`（MAIN）和 `c`、`d`（過門）表示。沒寫 C / D 的 style 就沿用 B，所以現有的 10 個 style 不用改也能用。
+
+ending 放在 E4，就是為了把 F3–D#4 這 12 個鍵留給演奏控制。v0.1 只用了 F3、F#3、G3，其餘的打算這樣排：
+
+| 鍵 | 白鍵 | 鍵 | 黑鍵 |
+|---|---|---|---|
+| F3 | `MAIN A`（已有） | F#3 | 過門 1（已有） |
+| G3 | `MAIN B`（已有） | G#3 | 過門 2：短的，只有最後兩拍 |
+| A3 | `MAIN C` | A#3 | 過門 3：tom 下行 |
+| B3 | `MAIN D` | C#4 | `TRANSITION`（按住，和 `REC` 按住一樣） |
+| C4 | `BREAK`：一小節的停頓 | D#4 | crash 收在拍上（stop-time） |
+| D4 | `INTRO` | | |
+| E4 | `ENDING`（已有） | | |
+
+### 過門的長度
+
+v0.1 的過門一律是一小節；`NOW` 是從按下的地方放到小節結束，所以實際長度已經會變。之後再加：
+
+- **半小節**：只放過門的後兩拍，例如 4/4 的第 3、4 拍。Yamaha PSR 新一點的機種有 Half Bar Fill-in 這個選項，這點只見於使用者論壇 `[調研]`。可以是一個設定（`FILL LEN`：½、1、2 小節），也可以是 G#3 的短過門。
+- **兩小節**：漸強型的過門，`PHRASE` 模式放在樂句的最後兩小節。style 的文字裡讓一個過門跨兩小節。
+- **任意長度**：transition 已經是按住多久就放多久，放開後在那一小節結束時換段。
+
+### 標準鼓 MIDI 輸出（v0.3）
+
+把 FM-1 的聲音關掉，改用別的音源打鼓：
+
+- 每一軌照 General MIDI 的鼓譜送到第 10 channel：kick 36、rim 37、snare 38、clap 39、closed hat 42、open hat 46、crash 49、ride 51、tom 50 / 47 / 43、cowbell 56、shaker 70。力度取自節奏型的 1–9，pad 也一樣送。
+- `LOCAL` 開關：FM-1 自己的聲音開或關。
+- 送 MIDI clock（0xF8）與 start / stop。v0.1 的每拍 96 tick，正好每 4 tick 一個 clock（24 PPQN）。
+- 走 USB 時，FM-1 和另一台 USB 裝置之間要有電腦或 USB host；走 Bluetooth 要開 `ble = true`（見 [I/O](../hardware/io.md)）。
+
+### 在機器上編輯 pattern（v0.4）
+
+內建的 preset 保持唯讀，用起來和現在一樣。要改時，把一個 preset 複製成 USER style，在格線頁上改：一軌一列、一步一格，琴鍵或旋鈕放音與力度，播放中就聽得到。
+
+存檔照規則走 fm1-base 的 store（`APP_STORE_MAP`）。一個 store 物件最多 3,840 byte，一個事件 3 byte，一個 part 大約 20–60 個事件，所以一個 USER style（含 C / D 共 9 個 part）大約 1–1.5 KB，一個物件放得下兩個。要更多就在 `APP_STORE_MAP` 多加幾個物件；用哪幾格要先查 [Flash 配置](../hardware/flash-map.md)，並在刷機前預演。
 
 ## 還沒決定的事 { #open }
 
