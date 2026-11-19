@@ -34,6 +34,7 @@ experimental firmware apps under `firmware/`, built on the `fm1-base` submodule.
 | `firmware/voicelab/` | Spike app (MIT): each key says a test word with the `lpc` / `adpcm` decoders. Not for installing. Its data (`gen/`) is generated and git-ignored. Design: `docs/dev/tts.md`. |
 | `firmware/rhythm/` | RHYTHM, own rhythm trainer (GPL-3.0-or-later, identity `FM-1_54`, settings at `0xD2000`). v0.1: METRO (metronome, subdivisions, tap tempo, gap click) and ECHO (hear a bar or two, tap it back, per-onset ms error and a hint); verified in fm1-emu on both chips, not flashed yet. v0.2: one-line percussion notation, ECHO READ mode, ENDLESS (call and response without breaks, health bar, speeds up). Platform-free core `rhythm.c`. Design: `docs/dev/rhythm.md`. |
 | `firmware/drums/` | DRUMS, own live drum machine (GPL-3.0-or-later, identity `FM-1_58`, settings at `0xD0000`). v0.1: 10 styles (`styles.h`, text, one line a lane) with MAIN A/B and fills, FILL AT (NOW / NEXT BAR / PHRASE of 4, 8, 16 bars), AUTO FILL, transition and ending on REC (tap / hold / twice), 15 pads, mutes, swing, two synthesised kits (`kit.c`, at -O2). Platform-free player `groove.c`. Verified in the simulator, device build and fm1-emu on both chips; not flashed, not rehearsed over a backup. Design: `docs/dev/drums.md`. |
+| `firmware/metronome/` | METRONOME, own stage metronome (GPL-3.0-or-later, identity `FM-1_59`, settings and 16 songs at `0xCE000`). v0.1: SET (a setlist on the white keys, switch at the next bar, EDIT with tap tempo on the key), GRID (the bar's steps on the white keys, off / ghost / normal / accent as LED brightness), CLASSIC (rhythm-watch layers mixed on K1-K4, accent every BEAT). Platform-free core `metro.c`. Verified in the simulator, device build, fm1-emu on both chips and rehearsed over a backup; on the owner's unit since 2026-11-20 (over THEORY 0.3, whose records it leaves alone). Design: `docs/dev/metronome.md`. |
 | `host/conductor/` | Conductor's host daemon (Python, MIT): backends `hc`, `herdr`, `fake`. Protocol spec in `PROTOCOL.md`; tests in `host/tests/`. |
 | `host/morse/` | Morse's host (Python, MIT): types what the FM-1 reads into the Mac, sends text for it to play. Protocol in `PROTOCOL.md` (keying is Vail-format MIDI note 0). |
 | `host/voicelab/` | Listening lab (Python, MIT): renders test words with every speech option (macOS `say`, Moonshine Klatt, 386DX, LPC, ADPCM, SPELLBOX in fm1-emu) into `build/voicelab/`, scores them with Whisper. GPL engines stay in `vendor/`; generated audio is never committed. |
@@ -102,6 +103,9 @@ just rhythm-emu [CHIP] # RHYTHM in fm1-emu (after `just fw-build rhythm`; `just 
 
 just drums-unit        # firmware/drums groove.c (every FILL AT lands right) and kit.c (every drum sounds and ends)
 just drums-emu [CHIP]  # DRUMS in fm1-emu (after `just fw-build drums`; `just fw-test drums` is its simulator test)
+just metro-unit        # firmware/metronome/metro.c on this computer (every meter and division, CLASSIC layers, tap tempo)
+just metro-emu [CHIP]  # METRONOME in fm1-emu (after `just fw-build metronome`; `just fw-test metronome` is its simulator test)
+
 just fw-sdk-from PKG   # gitee.com unreachable: the 3 AC79 SDK files a USB-only build needs, from a package, hash-checked
 
 just fw-setup          # submodules + Python tools (needs `brew install libraqm`)
