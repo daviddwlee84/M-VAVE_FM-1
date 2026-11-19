@@ -16,6 +16,9 @@ ctl_version := "1.0.3"
 choralroot_tag := "v0.41"
 choralroot_pkg := "choralroot-0.41.fwsc"
 remote_version := "0.3.6"
+jamtrack_version := "0.2.3"
+polly_version := "0.6.4"
+cord_version := "1.0.3"
 # firmwares that speak (docs/dev/tts.md): listened to in the emulator only
 speak37_version := "1.0"
 spellbox_version := "0.3"
@@ -57,7 +60,7 @@ fm1-fetch:
     fetch isod89/sloop-fm1 "v{{sloop_version}}" "sloop-{{sloop_version}}.fwsc"
     fetch isod89/sloop-fm1 "v{{sloop_version}}" "sloop-editor-{{sloop_version}}.html"
 
-# Download the other firmwares I try (CTL-1, ChoralRoot, RemoteFM1) and verify them against the release digests.
+# Download the other firmwares I try (CTL-1, ChoralRoot, RemoteFM1, and the backing-band ones in docs/firmware/jam.md) and verify them against the release digests.
 fm1-fetch-more:
     #!/usr/bin/env bash
     set -euo pipefail
@@ -71,6 +74,9 @@ fm1-fetch-more:
     fetch charlesvestal/fm1-ctl "v{{ctl_version}}" "ctl-{{ctl_version}}.fwsc"
     fetch Quixotic7/ChoralRootFM1 "{{choralroot_tag}}" "{{choralroot_pkg}}"
     fetch Quixotic7/RemoteFM1 "v{{remote_version}}" "remote-{{remote_version}}.fwsc"
+    fetch Philip-Bos/jamtrack-fm1 "v{{jamtrack_version}}" "jamtrack-{{jamtrack_version}}.fwsc"
+    fetch charlesvestal/fm1-polly "v{{polly_version}}" "polly-{{polly_version}}.fwsc"
+    fetch chasedeanda/cord-fm1 "v{{cord_version}}" "cord-{{cord_version}}.fwsc"
 
 # Download the community firmwares that speak (docs/dev/tts.md) and verify them against the release digests.
 # For listening in the emulator (`just emu-run downloads/FILE`); none is planned for the unit.
