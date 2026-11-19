@@ -641,6 +641,21 @@ drums-unit:
 drums-emu chip="uc25hq80":
     just emu-run firmware/drums/build/drums.fwsc "{{chip}}"
 
+# ---- metronome: METRONOME, a stage metronome with a setlist (firmware/metronome, docs/dev/metronome.md) ----
+
+# metro.c on this computer: slots, GRID and CLASSIC timing on every meter, tap tempo.
+metro-unit:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    mkdir -p build
+    cc -std=c99 -Wall -Wextra -pedantic -Wdouble-promotion -Wfloat-equal -Wshadow -o build/metro_test \
+      firmware/metronome/tests/metro_test.c
+    build/metro_test
+
+# METRONOME in the emulator (build it first: just fw-build metronome). Its simulator test is `just fw-test metronome`.
+metro-emu chip="uc25hq80":
+    just emu-run firmware/metronome/build/metronome.fwsc "{{chip}}"
+
 # Where gitee.com cannot be reached: the three AC79 SDK files a USB-only build needs, out of an fm1-base package,
 # kept only if they match fm1-base's pinned SHA-256 (scripts/ac79_sdk_from_fwsc.py; docs/dev/index.md).
 fw-sdk-from package:

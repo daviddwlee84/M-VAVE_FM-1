@@ -98,6 +98,6 @@ ending  IV  V  I                        bars=4
 
 - 先從**方向 B** 開始（[設計](drums.md)）：範圍小、補的是現有韌體的空缺、用得到的機會也多。之後若要加 bass 與和弦，就往方向 A 長。
 - 授權：用到 THEORY 或 RHYTHM 的程式就是 GPL-3.0-or-later。
-- 識別碼：2026-11-19 對照 Hub 的 catalog，`FM-1_58`、`FM-1_59` 沒人用（`FM-1_56`、`FM-1_57` 都有人用了）。動工時再查一次。
+- 識別碼：2026-11-19 對照 Hub 的 catalog，`FM-1_58`、`FM-1_59` 沒人用（`FM-1_56`、`FM-1_57` 都有人用了）。之後 `FM-1_58` 給了 DRUMS、`FM-1_59` 給了 [METRONOME](metronome.md)，動工時要另找。
 - 存檔：`0xD0000` 是自製 app 還沒用的下一格（上面是 RHYTHM 的 `0xD2000`）。刷機前用 `just emu-rehearse` 確認是空的。
 - 流程照[開發環境](index.md)：host simulator、fm1-emu 兩種晶片、疊在最新備份上預演，最後才問要不要刷。
