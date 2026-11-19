@@ -2,12 +2,12 @@
 
 把 FM-1 變成隨身的吉他指板與和弦圖：選一個調，指板上標出音階的每個位置，可以一次只看一個把位（CAGED、3NPS）；彈一個和弦，就畫出它的按法，最簡單的排第一。靈感來自 [ChordRoot](https://chordroot.com/)，但只借想法，不抓它的資料。
 
-**狀態（2026-11-18）：v0.1（NECK + SHAPE）在 host simulator 和 fm1-emu 兩種晶片上驗證過，也疊在實機備份上預演過 `[模擬]`；還沒刷進實機。** 驗證結果見 [v0.1 驗證](#v01-verify)。v0.2 進行中（draft PR #3）：封閉和弦、power chord、SHAPE 的篩選，以及 [LEARN](#learn) 學習模式，目前只在 host simulator 與單元測試驗證過 `[模擬]`，實機套件還要在本人的 Mac 上重 build 與跑 fm1-emu。
+**狀態（2026-11-18）：v0.1（NECK + SHAPE）在 host simulator 和 fm1-emu 兩種晶片上驗證過，也疊在實機備份上預演過 `[模擬]`；還沒刷進實機。** 驗證結果見 [v0.1 驗證](#v01-verify)。v0.2（2026-11-18 合併）：封閉和弦、power chord、SHAPE 的篩選、[LEARN](#learn) 學習模式，在本人的 Mac 上 build 並用 fm1-emu 驗證過 `[模擬]`（[v0.2 驗證](#v02-verify)）。v0.3（進行中）：[MENU、SETTINGS](#menu) 與 SHAPE 的[找指法](#finder)（移調夾、音區、SIMPLE 簡化按法），只在 host simulator 與單元測試驗證過 `[模擬]`。
 
 - 韌體在 `firmware/guitar/`，GPL-3.0-or-later，名稱 GUITAR，識別碼 `FM-1_55`（開發版 `FM-1_5500`）。原本選的 `FM-1_53` 和 Hub 上 LSDJ Burrito 的 `FM-1_537…` 開頭相同（嚴格說格式不會撞，但 Morse 遇到 `FM-1_13` 對 `FM-1_137` 時也照這個原則換掉），所以改成 `FM-1_55`：2026-11-18 對照 Hub catalog（12:01 UTC 版）沒有人用 `[上游]`。上 Hub 前仍要用 #check 再查一次。
 - 和 THEORY、RHYTHM 分開，是獨立的韌體（2026-11-18 本人決定，見[設計提案](#background)）。直接 `include` THEORY 的 `theory.c`、`synth.c`、`gtext.c`，所以授權跟著 THEORY 是 GPL-3.0-or-later。
 - 設定存在 `0xD4000`（見[存檔](#flash)）。
-- 指板核心 `fret.c` 與課程 `lesson.c` 的 `just guitar-unit` 有 298,903 個檢查（v0.2），全部通過。
+- 指板核心 `fret.c` 與課程 `lesson.c` 的 `just guitar-unit` 有 335,537 個檢查（v0.3），全部通過。
 
 ## 背景 { #background }
 
@@ -17,13 +17,14 @@
 
 ## 頁面 { #pages }
 
-用 `HOME` 依序切換 NECK → SHAPE → LEARN。
+和 THEORY、Morse 一樣：轉 `ALGO` 換頁（MENU → NECK → SHAPE → LEARN → SETTINGS，正反兩個方向都可以），按 `HOME` 開 MENU、再按一次回到原本的頁（v0.3）。v0.2 以前是按 `HOME` 循環換頁。
 
 | 頁面 | 做什麼 | 版本 |
 |---|---|---|
 | **NECK** | 一個調的音階在指板 0–12 品上的所有位置；整個指板，或一次一個把位（CAGED 5 個、3NPS 7 個、五聲音階 2NPS 5 個） | v0.1 |
 | **SHAPE** | 和弦圖：手指編號、barre、空弦 ○、悶音 ×、根音標色，最簡單的按法排第一 | v0.1 |
 | **LEARN** | 按調由淺入深學和弦：認按法、按出組成音，Leitner box 排程，進度存檔 | v0.2 |
+| **MENU**、**SETTINGS** | 頁面清單；tuning、指板方向、LEARN 重來 | v0.3 |
 | BOX | 音階指法速查：5 品放大，每個點寫手指編號 | 之後 |
 | FIND | 找音練習（Leitner，項目 = 弦 × 品區） | 之後 |
 
@@ -44,8 +45,8 @@ host simulator 的截圖 `[模擬]`。左：G 大調、CAGED 的 E 把位（2–
 | 按住 `SEL` 再按一個琴鍵 | 跳到以那個音為主音的調 |
 | `K1` | 音階：THEORY 的 12 種（大調、各調式、和聲／旋律小調、大小五聲、blues） |
 | `K2` | 標示：點、音名、級數（`b3`、`#4`，相對於同主音的大調） |
-| `K3` | 把位：整個指板 → CAGED C、A、G、E、D → 3NPS 1–7（五聲音階是 2NPS 1–5；blues 沒有 NPS） |
-| `K4` | 樂器與 tuning（兩頁共用） |
+| `K3` | 把位：整個指板 → CAGED C、A、G、E、D（同時標出唱名的型：`CAGED E / DO`，見[唱名把位](#v02-positions)）→ 3NPS 1–7（五聲音階是 2NPS 1–5；blues 沒有 NPS） |
+| `K4` | 樂器與 tuning（也在 SETTINGS） |
 | `PLAY` | 把目前把位的音由低到高彈一遍，指板上跟著標出正在響的那一格（再按一次停） |
 | `OCT-` / `OCT+` | 琴鍵發聲的八度 |
 
@@ -57,7 +58,7 @@ host simulator 的截圖 `[模擬]`。左：C 的第一個按法 `x32010`，手�
 
 - **圖**：直的弦（低音弦在左），橫的品，最上面是上弦枕；按法在 5 品以上時上弦枕換成細線，左邊標起始品數。
 - **點**裡是手指編號（1 食指到 4 小指）；根音用亮色。barre 畫成一條橫槓。弦上方是 ○（空弦）或 ×（不彈）。圖下面是每根弦實際的音名。
-- **右欄**：和弦名、組成音、第幾個按法（`1 / 8`）、`OPEN` / `BARRE n` / `FRET n`、省略五音時標 `NO 5TH`；封閉和弦標出型（`E FORM`：根音在 6 弦、`A FORM`：5 弦、`D FORM`：4 弦），power chord 標根音在第幾弦（`ROOT ON 6`）；按法的文字寫法（`x32010`）；最下面是 `K3` 的篩選。
+- **右欄**：和弦名、組成音、第幾個按法（`1 / 8`）、`OPEN` / `BARRE n` / `FRET n`、省略五音時標 `NO 5TH`；沒有空弦的按法標出 CAGED 的型（v0.3 起依根音和手的最低品判斷：根音就在最低品上，6、5、4 弦分別是 `E FORM`、`A FORM`、`D FORM`；根音比最低品高 3 品，6 弦是 `G FORM`、5 弦是 `C FORM`；v0.2 只看根音在哪根弦，會把 `875558` 誤標成 E 型），power chord 標根音在第幾弦（`ROOT ON 6`）；按法的文字寫法（`x32010`）；最下面是 `K3` 的篩選。
 - 沒有空弦的按法（封閉和弦、power chord）從它自己的最低品畫起，左邊標品數，和和弦書一樣。
 
 | 操作 | 作用 |
@@ -67,11 +68,36 @@ host simulator 的截圖 `[模擬]`。左：C 的第一個按法 `x32010`，手�
 | 轉 `SELECT` | 下一個按法 |
 | `K1` | 和弦性質：常用的排前面（大、小、7、m7、maj7、sus4、sus2、5、dim、aug、m7b5、dim7、6、m6、7sus4、add9、madd9、9、maj9、m9、mMaj7、aug7、augMaj7） |
 | `K2` | 根音，一格半音（拼法跟大調一樣：Bb、F#、Db） |
-| `K3` | 要看哪些按法（v0.2）：**EASY**（全部，最簡單的排第一）、**OPEN**（有空弦的）、**BARRE**（封閉和弦：有 barre、沒有空弦）、**MOVABLE**（沒有空弦、可以整個平移的，含 power chord） |
-| `K4` | 樂器與 tuning |
+| `K3` | 要看哪些按法：**EASY**（全部，最簡單的排第一）、**OPEN**（有空弦的）、**BARRE**（封閉和弦：有 barre、沒有空弦）、**MOVABLE**（沒有空弦、可以整個平移的，含 power chord）、**SIMPLE**（v0.3，見[找指法](#finder)） |
+| `K4` | 移調夾 CAPO 0–7（v0.3；之前是 tuning，tuning 改到 NECK 的 `K4` 和 SETTINGS） |
+| `PRESET` | 音區（v0.3）：ANY、0–4 品、5–9 品、10 品以上 |
 | `PLAY` | 照這個按法的實際音高，從低音弦往上 strum |
 
 LED：NECK 亮調內的音（主音 mid、其他 glow），SHAPE 亮和弦的組成音（根音 mid）；按住的鍵 lit；`PLAY` 播放時亮綠燈。設定在最後一次操作 3 秒後存起來。
+
+### 找指法 { #finder }
+
+![SHAPE：C，移調夾在 3 品，彈 A 的按法](../assets/guitar/shape-capo.png){ width="240" } ![SHAPE：C 在 5–9 品，G 型](../assets/guitar/shape-zone.png){ width="240" } ![SHAPE：F 的 SIMPLE 按法 xx3211](../assets/guitar/shape-simple.png){ width="240" }
+
+v0.3，依 2026-11-18 本人描述的三種找指法情境設計，host simulator 的截圖 `[模擬]`。先在鍵盤上彈出和弦（SHAPE 頁會用 THEORY 的辨認器認出它，或用 `K1`、`K2` 選），再用下面三個條件縮小範圍，三者可以同時用：
+
+1. **已經決定開放或封閉，或要用移調夾**：`K3` 的 OPEN、BARRE、MOVABLE；`K4` 是移調夾（0–7 品）。夾了之後找的是「在移調夾上面彈的按法」：上弦枕畫成琥珀色代表移調夾，品數從移調夾算起，右欄寫 `CAPO 3: AS A`（夾 3 品、彈 A 的按法，響出來是 C），圖下的音名與 `PLAY` 的 strum 是實際的音高。左圖：C 夾 3 品是 `x02220`。夾 1 品的 Bb 是 A 型、夾 3 品的 Bb 是 G 型（`just guitar-unit` 有測）。
+2. **想在某個音區**：`PRESET` 選 0–4 品、5–9 品或 10 品以上，以手的最低品判斷（只用空弦的按法算 0 品）。5 品以上只列沒有空弦的按法：高把位夾雜空弦的按法很少人這樣教。中圖：C 在 5–9 品的第一個是 `875558`（G 型），E 型 `8aa988` 也在清單裡。
+3. **以簡化為主**：`K3` 的 **SIMPLE**，只彈 3–4 根相鄰的弦，不用 barre，最低的那根弦就是根音，空弦只在 4 品以內出現。這涵蓋教材常教的簡化按法：小 F `xx3211`（食指同時壓 1、2 弦，手指標成 `0 0 3 2 1 1`）、Bm `x2443x` 或 `xx4432`、高音弦的三和弦、七和弦的 shell voicing（根音、3 度、7 度）。power chord 本來就在 `K1` 的 `5`。右圖：F 的 SIMPLE 第一個就是 `xx3211`。
+
+單元測試對 12 個根音 × 大、小、7、m7、maj7 檢查：SIMPLE 的每個按法都符合上面的定義；每個音區都至少有一個按法，而且都在那個音區裡。
+
+### MENU 與 SETTINGS { #menu }
+
+![MENU](../assets/guitar/menu.png){ width="240" } ![SETTINGS](../assets/guitar/settings.png){ width="240" } ![NECK：低音弦在上](../assets/guitar/neck-flip.png){ width="240" }
+
+v0.3，比照 THEORY：`HOME` 開 MENU，`SELECT` 選頁、`PLAY` 或 `SEL` 打開；在 MENU 再按 `HOME` 回到原本的頁。SETTINGS 用 `SELECT` 選列，`K1` 或按 `SEL` 改：
+
+| 列 | 作用 |
+|---|---|
+| TUNING | 樂器與 tuning（和 NECK 的 `K4` 同一個設定） |
+| NECK VIEW | `HIGH ON TOP`（和 tab 一樣，預設）或 `LOW ON TOP`（低音弦在上，像低頭看自己的琴） |
+| RESET LEARN | 按 `SEL` 後顯示 `PLAY: YES`，再按 `PLAY` 才清除 LEARN 進度，回到第 1 階段 |
 
 ### LEARN { #learn }
 
@@ -146,7 +172,7 @@ F 和 Bm 在前面的階段先學簡易版，第 6 階段再多一張完整封�
 
 ## 存檔 { #flash }
 
-設定是一筆 `rec_t`（`GT01`；v0.1 是 24 bytes 的 `ver 1`，v0.2 是 60 bytes 的 `ver 2`，後面多了 LEARN 的進度：每個和弦的 box、開放到第幾階段、完成幾回合），透過 fm1-base 的 store（`APP_STORE_MAP {0xDC000, 0xD4000}`）存在 `0xD4000`。讀到 v0.1 的 24 bytes 記錄時保留原本的設定，LEARN 進度從頭開始。LEARN 在每一回合結束時存一次；回合中途的答案在 20 秒沒有新答案時存（一回合不會存 8 次，關機也最多掉最後 20 秒的答案）；換頁時也會跟著設定存。store 是 A/B 兩個 sector 輪流寫，所以連續存兩次會看到 `0xD4000` 和 `0xD5000` 都改了，兩個都在 GUITAR 自己的範圍內。選這裡是因為：`0xD6000` 是 THEORY 0.2 的閃卡進度、`0xD8000` 是 THEORY 的設定、`0xDA000` 是 Morse、`0xDC000` 是面板校正，而 `0xFC000` 是 SLOOP、Agent Deck、CTL-1 共用的設定區。
+設定是一筆 `rec_t`（`GT01`；v0.1 是 24 bytes 的 `ver 1`，v0.2 是 60 bytes 的 `ver 2`，後面多了 LEARN 的進度：每個和弦的 box、開放到第幾階段、完成幾回合；v0.3 是 `ver 3`，大小不變，原本保留的 bytes 改放移調夾、音區與 NECK VIEW，頁碼因為 MENU 排在第 0 頁而加 1。讀到 `ver 1`、`ver 2` 的記錄時會自動換算），透過 fm1-base 的 store（`APP_STORE_MAP {0xDC000, 0xD4000}`）存在 `0xD4000`。讀到 v0.1 的 24 bytes 記錄時保留原本的設定，LEARN 進度從頭開始。LEARN 在每一回合結束時存一次；回合中途的答案在 20 秒沒有新答案時存（一回合不會存 8 次，關機也最多掉最後 20 秒的答案）；換頁時也會跟著設定存。store 是 A/B 兩個 sector 輪流寫，所以連續存兩次會看到 `0xD4000` 和 `0xD5000` 都改了，兩個都在 GUITAR 自己的範圍內。選這裡是因為：`0xD6000` 是 THEORY 0.2 的閃卡進度、`0xD8000` 是 THEORY 的設定、`0xDA000` 是 Morse、`0xDC000` 是面板校正，而 `0xFC000` 是 SLOOP、Agent Deck、CTL-1 共用的設定區。
 
 疊在 `2026-11-18-pre-theory-0.2` 備份上預演（兩種晶片，`[模擬]`）：開機 0 次寫入；存檔只改 `0xD4000` 一個 sector；`0xD6000`、`0xD8000`（THEORY）、`0xDA000`（Morse）、`0xFC000` 都和備份相同。備份本身的 `0xD4000`–`0xD5FFF` 全是 `0xFF`。這份備份是裝 THEORY 0.2 之前做的，THEORY 0.2 的閃卡進度在 `0xD6000`，GUITAR 不碰那裡。
 
@@ -177,6 +203,18 @@ F 和 Bm 在前面的階段先學簡易版，第 6 階段再多一張完整封�
 | fm1-emu 兩種晶片 | `HOME` 兩次進 LEARN（`WHICH IS F?`）、`SELECT` 選錯、`PLAY` 顯示 `NO: F` 並框出 F、`PLAY` 下一題、回 NECK：存 2 次，每次 3 次寫入；重開 0 次寫入 |
 | 疊在 `2026-11-18-pre-theory-0.2` 備份上 | 開機 0 次寫入；存檔只改 `0xD4000` 與 `0xD5000`（A/B 輪流）；`0xD6000`、`0xD8000`、`0xDA000`、`0xFC000` 都和備份相同 |
 
+## v0.3 驗證 { #v03-verify }
+
+2026-11-18，全部 `[模擬]`，在本人的 Mac 上跑（commit `9da94f1`）。
+
+| 項目 | 結果 |
+|---|---|
+| `just guitar-unit` | 335,537 個檢查全部通過 |
+| `just fw-test guitar` | 全部 ok |
+| `just fw-build guitar` | app 136,516 B（槽 581,564 B），RAM `.data+.bss` 29,936 / 98,304 B，`.ram_text` 5,100 / 32,768 B；沒有 soft-double，`firmware/guitar` 沒有 compiler warning；套件 `FM-1_5500`，616,003 B，SHA-256 `8d0ac4de…642b760d` |
+| fm1-emu 兩種晶片 | `HOME` 開 MENU、再按回 NECK，`ALGO` 到 SHAPE，`K4` 夾 3 品：存 1 次（3 次寫入），進出 MENU 不寫；重開 0 次寫入，讀回 SHAPE 頁、capo 3、`CAPO 3: AS A`、`x02220` |
+| 疊在 `pre-theory-0.3b` 備份上，兩種晶片 | 開機 0 次寫入；存檔只改 `0xD4000`；THEORY（`0xD6000`、`0xD8000`、`0xD9000`）、Morse（`0xDA000`、`0xDB000`）、`0xFC000` 都和備份相同 |
+
 ## v0.2 計畫 { #v02 }
 
 2026-11-18 本人試用 v0.1 的回饋：「體驗不錯」；想要封閉和弦、power chord、不同把位（參考 [learning-guitar 的音階頁](https://marsishandsome.github.io/learning-guitar/01_Basic/01_Guitar_Scale.html)），以及像 THEORY、MORSE 那樣的學習模式：按調由淺入深學和弦，C 調先學、G 調多學一個、再往下到 F 調，新手按不好封閉和弦時也有開放和弦可用。
@@ -193,11 +231,27 @@ F 和 Bm 在前面的階段先學簡易版，第 6 階段再多一張完整封�
 
 ### 2. 更多把位：Do、Re、Mi、Sol、La 型 { #v02-positions }
 
-那個頁面教五種「型」（Do 型、Re 型、Mi 型、Sol 型、La 型，另外還有高把位的 Mi 型），以及怎麼把兩個型接起來。它們和 CAGED 是同一組五個把位，只是用唱名來命名。頁面的圖沒有文字說明，所以**每個型對應哪個 CAGED 形狀還沒對照過** `[調研]`。v0.2 的做法：
+**狀態：命名已完成**；CONNECT、BOX 指法還沒做。
 
-- NECK 的 `K3` 把位清單加上唱名的命名（設定可以選 CAGED 或唱名），名稱依照實際對照的結果決定（要先看那幾張圖，或請本人確認）。
-- **CONNECT**：一次顯示相鄰的兩個把位，重疊的音用另一個顏色，練換把。
-- 每個把位的手指編號（原本規劃的 BOX 頁）：5 品放大，點裡寫 1–4。
+中文吉他教材常用唱名幫五個把位命名（Mi 型、Sol 型、La 型、Do 型、Re 型，另外還有高把位的 Mi 型），它們就是 CAGED 的五個把位。2026-11-18 本人貼了教材的 C 大調／A 小調指板圖（[learning-guitar 的音階頁](https://marsishandsome.github.io/learning-guitar/01_Basic/01_Guitar_Scale.html)用的是同一套圖），逐格對照 `fret.c` 的 C 大調 CAGED 把位：
+
+| 唱名型 | CAGED | C 大調的品位 | 對照結果 |
+|---|---|---|---|
+| Mi 型 | C | 0–3（12 品以上是「高把位 Mi 型」） | 每根弦的格子都和圖一樣 |
+| Sol 型 | A | 2–5 | 對應；圖上最高的 E 弦沒有第 1 品的 F，`fret.c` 有（補空隙的那一格） |
+| La 型 | G | 4–8 | 對應 |
+| Do 型 | E | 7–10 | 每根弦的格子都和圖一樣 |
+| Re 型 | D | 9–13 | 對應；圖上 6 弦和 1 弦用小指伸到 13 品（F），`fret.c` 的 D 窗只到 12 品，改在 8 品補 A 弦和 1 弦的音 |
+
+名稱是用**關係大調**的級數取的：A 小調和 C 大調用同一組名字，跟圖上的「C major - A minor」一樣。命名的規則大致是：6 弦上那個級數的音落在這個把位裡（Mi 型的 6 弦從 E 開始；Do 型的 6 弦是 B、C、D，C 在 8 品）。`just guitar-unit` 對 12 個大調、每個型都檢查這一點。
+
+NECK 的 `K3` 現在顯示 `CAGED E / DO` 這種兩個名字並列的寫法，不另外加設定。
+
+還沒做的：
+
+- **CONNECT**：一次顯示相鄰的兩個把位，重疊的音用另一個顏色，練換把（圖上的「Sol 型 → La 型」、「Do 型 → Re 型」、「La 型 → Do 型」）。
+- **BOX 指法**：5 品放大，每個點寫手指編號（教材的格子圖）。
+- 教材的 G 大調長音階：每根弦用 1、2、4 指，沿著指板一路往上換把。這和 3NPS 很接近，可以當成 NPS 的另一種排法。
 
 ### 3. 學習模式 LEARN { #v02-learn }
 
@@ -232,11 +286,11 @@ F 和 Bm 在前面的階段先學簡易版，第 6 階段再多一張完整封�
 ### 4. 順序
 
 1. Power chord 與 `K3` 篩選（小改動，先做）。
-2. 唱名把位命名、CONNECT、BOX 指法（先確認五個型與 CAGED 的對應）。
+2. 唱名把位命名（完成）；CONNECT、BOX 指法之後。
 3. LEARN：卡片 1 和 2、Leitner、進度存檔（完成）；課綱 TSV 與網頁匯入之後。
 4. 卡片 3、換和弦練習（等 RHYTHM 的節拍器穩定）。
 
-**待本人決定**：課綱第 1 階段要不要先教 Em、Am（兩、三指，最容易），還是照提案先教 C 調的 I–IV–V–vi；F 在第 1 階段用小 F 還是延後到第 2 階段。
+**本人決定**（2026-11-18）：第 1 階段照提案教 C、G、Am、小 F（流行歌常見的和弦進行就能彈），第 2 階段再補 Em 等。
 
 ## 之後 { #next }
 

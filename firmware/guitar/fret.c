@@ -15,6 +15,9 @@ const fr_tuning_t fr_tunings[FR_NTUNINGS] = {
 };
 
 const char fr_caged_name[5] = { 'C', 'A', 'G', 'E', 'D' };
+/* the same five as Chinese guitar books name them, by the parent major's degree near the low string's first note
+ * (2026-11-18, checked against the owner's C major book diagrams: Mi = C, Sol = A, La = G, Do = E, Re = D) */
+const char *const fr_solfege_name[5] = { "MI", "SOL", "LA", "DO", "RE" };
 
 /* where each CAGED window starts (the index finger's fret), counted from the parent major's tonic on string 0:
  * in C on a standard guitar the C shape is frets 0-3, A 2-5 (3 + ...), G 5-8, E 7-10, D 9-12 */
@@ -173,6 +176,7 @@ typedef struct {
     fr_shape_t *out;
     int max, n;
     int filter;                          /* FR_F_*: only these are kept */
+    int zone;                            /* FR_Z_* */
 } fr_search_t;
 
 /* fingers: with no barre, one per fretted note, from the lowest fret up (the lower string first at the same fret).
@@ -202,6 +206,17 @@ static int fr_fingers(const fr_tuning_t *t, fr_shape_t *sh)
         for (s = from; s <= to; s++)
             if (sh->fret[s] == lo) sh->finger[s] = 1;
         k = 1;
+    }
+    else if (from >= 0 && to > from) {   /* a mini barre: the index across the top strings at lo (F xx3211) */
+        int top = -1, ok = 1;
+        for (s = 0; s < n; s++)
+            if (sh->fret[s] >= 0) top = s;
+        for (s = from; s <= to; s++)
+            if (sh->fret[s] != lo) ok = 0;
+        if (ok && to == top) {
+            for (s = from; s <= to; s++) sh->finger[s] = 1;
+            k = 1;
+        }
     }
     for (f = lo; f && f <= hi; f++)
         for (s = 0; s < n; s++)
@@ -261,9 +276,32 @@ int fr_shape_open(const fr_shape_t *sh, int n)
     return 0;
 }
 
+int fr_zone_of(const fr_shape_t *sh, int n)
+{
+    int lo = fr_shape_lo(sh, n);
+    return lo <= 4 ? FR_Z_LOW : lo <= 9 ? FR_Z_MID : FR_Z_HIGH;
+}
+
+/* three or four strings, next to each other, no barre, the notes rising with the strings from the bass */
+static int fr_simple(const fr_tuning_t *t, const fr_shape_t *sh)
+{
+    int s, first = -1, last = -1, k = 0;
+    for (s = 0; s < t->n; s++)
+        if (sh->fret[s] >= 0) {
+            if (first < 0) first = s;
+            last = s;
+            k++;
+        }
+    if (sh->barre || k < 3 || k > 4 || last - first + 1 != k) return 0;
+    if (fr_shape_open(sh, t->n) && fr_shape_hi(sh, t->n) > 4) return 0;   /* open strings only near the nut */
+    return t->reentrant || fr_shape_root_string(t, sh) == first;  /* the bass on the lowest string played: no open
+                                                                  * string ringing under a shape high on the neck */
+}
+
 static int fr_passes(const fr_tuning_t *t, const fr_shape_t *sh, int filter)
 {
     switch (filter) {
+    case FR_F_SIMPLE: return fr_simple(t, sh);
     case FR_F_OPEN: return fr_shape_open(sh, t->n);
     case FR_F_BARRE: return sh->barre && !fr_shape_open(sh, t->n);   /* a closed chord: no open string */
     case FR_F_MOVABLE: return !fr_shape_open(sh, t->n);
@@ -277,6 +315,8 @@ static void fr_keep(fr_search_t *q, const fr_shape_t *sh)
     const fr_tuning_t *t = q->t;
     int i, j, s;
     if (!fr_passes(t, sh, q->filter)) return;
+    if (q->zone != FR_Z_ANY && fr_zone_of(sh, t->n) != q->zone) return;
+    if (q->zone > FR_Z_LOW && fr_shape_open(sh, t->n)) return;     /* up the neck: closed shapes, no open string */
     for (i = 0; i < q->n; i++)
         if (fr_same(&q->out[i], sh->fret, t->n)) return;
     for (i = 0; i < q->n; i++) {
@@ -300,6 +340,7 @@ static void fr_leaf(fr_search_t *q)
     const fr_tuning_t *t = q->t;
     fr_shape_t sh;
     int s, have = 0, sounding = 0, lowest = 999, low_pc = -1, minimum = t->n >= 6 ? t->n - 2 : t->n - 1;
+    if (q->filter == FR_F_SIMPLE) minimum = 3;     /* a part of the chord: three or four strings */
     for (s = 0; s < t->n; s++) {
         int p;
         if (q->fret[s] < 0) continue;
@@ -390,6 +431,18 @@ int fr_shape_root_string(const fr_tuning_t *t, const fr_shape_t *sh)
 
 int fr_shapes_filter(const fr_tuning_t *t, th_chord_t c, int filter, fr_shape_t *out, int max)
 {
+    return fr_shapes_find(t, c, filter, FR_Z_ANY, out, max);
+}
+
+void fr_capo(const fr_tuning_t *t, int c, fr_tuning_t *out)
+{
+    int s;
+    *out = *t;
+    for (s = 0; s < t->n; s++) out->open[s] = (uint8_t)(t->open[s] + c);
+}
+
+int fr_shapes_find(const fr_tuning_t *t, th_chord_t c, int filter, int zone, fr_shape_t *out, int max)
+{
     fr_search_t q;
     int8_t f[TH_TONES_MAX];
     const th_qual_t *qu = &th_quals[c.q];
@@ -408,9 +461,10 @@ int fr_shapes_filter(const fr_tuning_t *t, th_chord_t c, int filter, fr_shape_t 
     q.max = max > FR_SHAPES_MAX ? FR_SHAPES_MAX : max;
     q.n = 0;
     q.filter = filter;
+    q.zone = zone;
     if (c.q == TH_5) fr_power(&q);         /* a power chord is its own shapes only */
     else
-        for (q.b = 1; q.b <= 12; q.b++) fr_search(&q, 0);
+        for (q.b = 1; q.b <= (zone == FR_Z_HIGH ? 15 : 12); q.b++) fr_search(&q, 0);
     return q.n;
 }
 
