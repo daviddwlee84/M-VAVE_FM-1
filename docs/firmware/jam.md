@@ -41,10 +41,13 @@ Yamaha PSR 這類 arranger keyboard 的伴奏（style）分成幾種段落：
 | 音色 | 37 種音色、10 套鼓（drum samples 是 CC0） | Sonivox EAS 的 General MIDI；也能當 16 軌 GM 音源 | FM 與 virtual analog 八組 bank |
 | 外部同步 | MIDI clock in、STOP / CONTINUE、loop pedal 的 CC | MIDI in（USB、TRS），可以用自己的 clock 帶 arranger | 沒寫 |
 | 新晶片（Hub 標示） | 認得 | 認得 | 認得 |
+| 在瀏覽器裡試玩 | [模擬器](https://philip-bos.github.io/jamtrack-fm1/emulator/) | [模擬器](https://charlesvestal.github.io/fm1-polly/emu/) | [模擬器](https://chasedeanda.github.io/cord-fm1/play/) |
 
 另外幾個也有伴奏成分，但重點不同 `[上游]`：[Pocket Band](https://github.com/elpabl0/pocketband)（在 16 個曲風小鎮的地圖上選點，寫出四人編制的草稿）、[PERF-1](https://github.com/deamonSLINKY/PERF-1)（19 個曲風自己演奏，有 Jam 頁）、[HERA](https://github.com/benbadio/hera-fm1)（Roland J-6 式的 100 組和弦，只認舊晶片）、[COQUÍ](https://github.com/saulofilho/coqui-fm1)（拉丁節奏，跟著你按住的和弦彈 montuno）、[Blop](https://github.com/OSR-Experiment/OSR-1)（一指和弦加 bass 與鼓，只認舊晶片）。
 
 ### 本人試玩的感想（2026-11-19） { #impressions }
+
+三個都是在作者放的網頁模擬器上玩的，不是實機 `[模擬]`：[CORD](https://chasedeanda.github.io/cord-fm1/play/)、[JAMTRACK](https://philip-bos.github.io/jamtrack-fm1/emulator/)、[Polly](https://charlesvestal.github.io/fm1-polly/emu/)。
 
 - **JAMTRACK**：會把建議彈的音 highlight 出來，尤其是調內的音和和弦組成音。對剛開始 jam 的人很有幫助。
 - **Polly**：很靈活。也有和 THEORY 一樣的和弦偵測，可以很快錄下一個和弦進行。

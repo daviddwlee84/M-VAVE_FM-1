@@ -85,42 +85,18 @@ ending  IV  V  I                        bars=4
 
 ## 方向 B：live 鼓機 { #drums }
 
-只做鼓。比完整的伴奏機簡單很多，又剛好補上現有韌體的空缺：FM-1 上的鼓機大多是 step sequencer，偏 live 的 RHYTM-SEC-1 用的是產生出來的 pattern，沒有固定的段落（見[韌體頁](../firmware/jam.md#drums)）。
+只做鼓。比完整的伴奏機簡單很多，又剛好補上現有韌體的空缺：FM-1 上的鼓機大多是 step sequencer，偏 live 的 RHYTM-SEC-1 用的是產生出來的 pattern，沒有固定的段落（見[韌體頁](../firmware/jam.md#drums)）。專用的話，CPU 與程式空間都可以給鼓，操作也直覺：選曲風、選鼓組、按 `PLAY`。輸出接 mixer，任何樂器都能一起玩。
 
-**為什麼專用會比較好：**
+主要的想法：
 
-- 不用和弦引擎和 solo 音色，CPU 與程式空間都給鼓：voice 可以多、可以用 sample、pattern 可以塞很多。
-- 用起來直覺：選曲風、選鼓組、按 `PLAY`。
-- 本人的使用情境：給 MODX、吉他或任何樂器當鼓手，FM-1 就是一顆 BeatBuddy。
+- 一個按鈕照 BeatBuddy 的方式用：按一下過門、按住換段、按兩下結束。
+- 新的一點：過門可以設定成等到 4 / 8 / 16 小節樂句的最後一小節才放。
 
-**操作的想法（草稿）：**
-
-| 控制 | 作用 |
-|---|---|
-| `SELECT` | 曲風 / 節奏型（rock 8beat、funk、shuffle、bossa、6/8……） |
-| `PRESET` | 鼓組（acoustic、brush、808、909、lo-fi……），和曲風分開選 |
-| `PLAY` | 開始（先放 intro，可以關）；演奏中再按：放 ending 然後停 |
-| 一個「BeatBuddy 鈕」 | 按一下：過門；按住：transition，放開後進下一個變化；按兩下：ending |
-| 白鍵（一部分） | 直接選 `MAIN A`–`D`，換的時候依 `AUTO FILL` 加過門 |
-| 黑鍵 | 不同的過門（短、長、只有 tom、crash 收尾） |
-| 其他琴鍵 | 現場加打：crash、clap、cowbell、tom，可以設定要不要對齊拍子 |
-| `REC` | tap tempo |
-| `K1`–`K4` | BPM、swing、密度（加減 ghost note 與 hi-hat）、humanize |
-| 設定 | 樂句長度（4 / 8 / 16 小節）：開了之後，按過門會等到這個樂句的最後一小節才放，這是 PSR 和 BeatBuddy 都沒有的 |
-
-**可以重用的：** RHYTHM 的 transport、tap tempo 與 `rhythm.c` 的 tick 格線（每拍 12 tick），`firmware/common/ledfx`（拍子燈、排隊中的過門閃燈），`firmware/common/adpcm`（如果用 sample）。RHYTHM 本身也可以加一個「跟著鼓練」的模式，兩者的界線之後再定。
-
-**鼓聲與 pattern 的來源：**
-
-- 合成鼓聲（kick 用正弦掃頻、snare 用噪音加音高、hat 用濾過的噪音）：程式小，授權單純。
-- sample：比較像真的鼓，但要自己錄或找授權合適的，例如 JAMTRACK 用的是 CC0。
-- pattern 自己寫，或取自 Google Magenta 的 Groove MIDI Dataset。這個資料集是 CC BY 4.0，Polly 就是用它，要標出處。
-
-**和 MODX 一起用：** FM-1 送 MIDI clock 讓 MODX 跟著跑。MODX 和 FM-1 都是 USB device，中間要有電腦或 USB host；FM-1 的 TRS 只有 MIDI IN（見 [I/O](../hardware/io.md)）。
+完整設計在 [Live 鼓機（設計）](drums.md)（2026-11-19）。
 
 ## 如果哪天要做 { #later }
 
-- 先從**方向 B** 開始：範圍小、補的是現有韌體的空缺、用得到的機會也多。之後若要加 bass 與和弦，就往方向 A 長。
+- 先從**方向 B** 開始（[設計](drums.md)）：範圍小、補的是現有韌體的空缺、用得到的機會也多。之後若要加 bass 與和弦，就往方向 A 長。
 - 授權：用到 THEORY 或 RHYTHM 的程式就是 GPL-3.0-or-later。
 - 識別碼：2026-11-19 對照 Hub 的 catalog，`FM-1_58`、`FM-1_59` 沒人用（`FM-1_56`、`FM-1_57` 都有人用了）。動工時再查一次。
 - 存檔：`0xD0000` 是自製 app 還沒用的下一格（上面是 RHYTHM 的 `0xD2000`）。刷機前用 `just emu-rehearse` 確認是空的。
