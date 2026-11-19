@@ -1,51 +1,77 @@
-# 伴奏機 JAM（構想）
+# 伴奏機與 live 鼓機（探索）
 
-把 FM-1 變成口袋版的 arranger：選一個調、一個 style，按 `PLAY` 就有鼓、bass、和弦，你在上面 solo。和 Yamaha PSR 一樣，style 有 `MAIN A`–`D` 四種變化，可以有前奏、尾奏，也可以叫它**在這一段的最後一小節放過門**再換段。一首歌由幾個段落組成，每段有自己的和弦進行。
+想要的是「挑一個調、挑一個節奏型就開始玩」，而且像 Yamaha PSR 那樣，可以說「這一段結尾給我一個過門」。這一頁整理市售產品怎麼做這件事，以及在 FM-1 上自己做的兩個方向：完整的伴奏機（JAM），或只做鼓的 live 鼓機。FM-1 上已經有的韌體在[伴奏與 live 鼓機類韌體](../firmware/jam.md)。
 
-現成韌體的比較在[伴奏類韌體](../firmware/jam.md)。那裡的結論是：JAMTRACK 有 solo 音色和「這一輪結尾的過門」，Polly 有段落、前奏與尾奏，但兩個都沒有 MAIN A–D，也沒有「這一段第幾小節放過門」。這一頁是補上這些的設計。
+**狀態（2026-11-19）：** 只是探索，沒有程式，也沒有排進度。試過 JAMTRACK、Polly、CORD 之後，本人決定自己的 JAM **先放著**：現成的已經能玩，差的部分還不值得現在做。這一頁留著，等哪天想做時從這裡開始。
 
-**狀態（2026-11-19）：** 構想，還沒有程式。
+## 市售產品怎麼做 { #products }
 
-- 韌體預定放在 `firmware/jam/`，名稱暫定 JAM。Hub 上已經有 JAMTRACK，正式名稱發布前再定。
-- 授權 GPL-3.0-or-later，因為要用 [THEORY](theory.md) 的 `theory.c`、`synth.c` 與 [RHYTHM](rhythm.md) 的 `rhythm.c`。
-- 識別碼暫定 `FM-1_58`：2026-11-19 對照 Hub 的 catalog 沒人用，也沒有別人的 pattern 吃到它（`FM-1_56`、`FM-1_57` 都有人用）。發布前再查一次。
-- 設定與自己的歌存在 `0xD0000`（`APP_STORE_MAP {0xDC000, 0xD0000}`）。上面一格 `0xD2000` 是 RHYTHM，`0xD4000` 是 GUITAR。這一格在最新的備份裡是不是空的，**刷機前要用 `just emu-rehearse` 確認**。
-- THEORY 原本排在 v0.6 的 GROOVE（FM-1 彈 bass 和鼓，你彈和弦）改由 JAM 來做。THEORY 的[和弦進行目錄](theory.md#content)兩邊共用。
+除了標 `[上游]` 的以外，下面的資料來自第三方轉載的使用手冊、評測與零售商頁面 `[調研]`，沒有對照原廠 PDF。各型號的細節不一樣。
 
-## 用起來是什麼樣子 { #play }
+### Arranger keyboard：Yamaha PSR / Genos
 
-1. 開機停在 PLAY 頁：畫面中間是現在的和弦，下面是這一段的和弦進行與 playhead，角落是 style、MAIN、BPM、調。
-2. `SELECT` 選 style，按住 `SEL` 再按一個琴鍵選調，`PRESET` 選一首內建的歌（或「只有一個進行」的 jam）。
-3. `PLAY`：有設 intro 就先放前奏，然後進 `MAIN A`。
-4. 琴鍵全部拿來 solo；`ALGO` 換 solo 音色，`OCT-` / `OCT+` 移八度。琴鍵燈顯示這個和弦的和弦音（亮）與音階（暗）。
-5. 按 `FILL`：**這一段的最後一小節**放過門，然後進下一段。快到段尾才按，就從按下的那一拍放到小節結束（PSR 的做法）。
-6. 按 `MAIN B`：同樣在段尾（或小節尾，看設定）放過門，然後換成 B。
-7. 再按 `PLAY`：放尾奏，放完停。
+- 一個 style 有 `MAIN A`–`D` 四種變化、四個 fill-in、一個 `BREAK`，另外有 `INTRO` 與 `ENDING`。這是 [PSR-SX900 / SX700 手冊](https://www.manualowl.com/m/Yamaha/PSR-SX900/Manual/521161?page=59)寫的。
+- `AUTO FILL IN` 開著時，演奏中按 `MAIN A`–`D` 任一個，先放過門再進那一段；`BREAK` 是一小節，放完回 MAIN。
+- 據 [Tyros 的手冊](https://www.manualslib.com/manual/196986/Yamaha-Tyros.html?page=34)，按下現在這一段的 MAIN 鈕，會放一個過門再回到同一段。
+- `INTRO` 只放一次，再交給你選好的 MAIN；`ENDING` 放一次就停。
+- `SYNC START`：左手在伴奏區一按就開始。`ACMP`：左手的和弦被辨識出來，伴奏跟著轉。
+- 小一點的型號（PSR-E 系列）只有一個 `MAIN/AUTO FILL` 鈕，在 A、B 之間切換。新一點的機種還有 Half Bar Fill-in 選項。這兩點只見於[論壇](https://forum.psrtutorial.com/index.php?msg=529781)。
+- 舊型號的說明：[PSR-1100](https://www.manualsdir.com/manuals/230092/yamaha-1100.html?page=69)、[PSR-E433](https://www.manualowl.com/m/Yamaha/PSR-E433/Manual/288825?page=41)、[PSR-A300](https://www.manualowl.com/m/Yamaha/PSR-A300/Manual/152648?page=54)。
 
-### 段落與過門的時間規則 { #timing }
+所以「在這段結尾放過門」的做法是：在想換段的那一小節按一下 MAIN。過門的長度是一小節（或半小節），**什麼時候放由你按的時間決定**，機器不知道你的段落有幾小節。Korg Pa、Roland E-X / BK 系列也是同樣的架構，這裡沒有逐一查。
 
-播放的位置用 RHYTHM 的 transport 計：每拍 12 tick（`RH_TPB`），樣本精確。所有「要求」都先記下來，到下一個邊界才生效：
+### 口袋 arranger：Yamaha QY70
 
-| 要求 | 什麼時候生效 | 過門 |
-|---|---|---|
-| `FILL`（段尾） | 這一段這一輪的最後一小節 | 放這個 MAIN 的 fill，接著下一段 |
-| `FILL`（在最後一小節裡按） | 立刻，從現在這一拍到小節結束 | 同上 |
-| 按住 `FILL` | 立刻，到小節結束，**不換段** | 放完回原本的 MAIN |
-| `MAIN X` | 設定 `SWITCH`：`BAR`（PSR 式，下一小節換）或 `SECTION`（段尾換） | `AUTO FILL` 開的話先放 fill |
-| `NEXT`（跳下一段） | 段尾 | 依 `AUTO FILL` |
-| `ENDING` | 下一小節 | 放尾奏，然後停 |
-| `BREAK` | 下一小節，一小節的停頓 | 沒有 |
+[Polly](https://github.com/charlesvestal/fm1-polly) 就是照 QY70 做的：style 加上 Groove A / B、Intro / Fill / Ending，一首歌由多個段落組成，每段有自己的和弦進行 `[上游]`。
 
-過門的 pattern 一律寫成一小節；從中間開始時，只放從那一拍到小節尾的部分。
+### 只有鼓：Singular Sound BeatBuddy
 
-## 歌、段落與 style { #model }
+吉他手腳踩的鼓機，整套操作只靠一個踏板 `[調研]`（[BeatBuddy 使用手冊](https://manuals.online/singular-sound/drum/beatbuddy/user-manual/22trz)、[Sound On Sound 評測](https://www.soundonsound.com/reviews/singular-sound-beatbuddy)）：
 
-兩層資料，分開寫：
+| 操作 | 結果 |
+|---|---|
+| 踩一下（停止中） | 放 intro（可以關掉），接著進第一段的主節奏 |
+| 演奏中踩一下 | 過門，一小節以內；一段最多可以有 8 個 |
+| 踩住 | transition：可以好幾小節，一直循環到放開，然後在這小節結束時進下一段 |
+| 踩兩下 | outro，放完停 |
 
-- **Song**：段落的順序，每段有自己的和弦進行、長度、用哪一個 MAIN。和弦用羅馬數字寫，直接交給 `th_prog_parse`，所以換調只是改 tonic。
-- **Style**：每個 MAIN 的鼓、bass、和弦伴奏 pattern，加上每個 MAIN 的 fill、intro、ending。伴奏 pattern 不寫絕對音高，而是寫「和弦的第幾個音」（根音、三音、五音、七音、高八度、下一個和弦的經過音），播放時依現在的和弦算出音高，再用 `th_voice_near` 讓和弦移動最少。這和 PSR 用 C 大調寫 style、播放時再轉成實際和弦的道理一樣。
+一首「歌」由幾段組成，每段有主節奏、過門、transition。這正好是 FM-1 上 live 鼓機想要的樣子，而且一個按鈕就夠。
 
-一首歌的文字格式（草稿；build 時經 fm1-base 的 `gen = [...]` 轉成 C 表）：
+### 只有鼓：Boss RC-10R 與 DR-01S
+
+- **RC-10R Rhythm Loop Station**：looper 加鼓機。每個 rhythm 有 Intro、Pattern 1、Pattern 1 Fill、Pattern 2、Pattern 2 Fill、Ending。踩一下先放 intro 再進 Pattern 1，踩住換到比較熱鬧的 Pattern 2，換的時候自動加過門，演奏中踩一下也能加。超過 280 個 rhythm、16 套鼓，可以匯入自己的 SMF。資料來自[Boss 的發表消息](https://sonicstate.com/amped/2019/07/15/boss-introduces-rc-10r-rhythm-loop-station/)與[評測](https://www.pressreader.com/australia/guitarist/20200403/283064121440481)。
+- **DR-01S Rhythm Partner**：給木吉他手的節奏機，99 個 pattern。不能排 step，但可以選每個 pattern 用哪些樂器、每個樂器用哪個 variation；有 count-in 和 fade-out。過門的資料沒查到。見[Roland 的發表消息](https://www.roland.com/us/company/press_releases/2017/BOSS-INTRODUCES-DR-01S-RHYTHM-PARTNER/)。
+
+### 練習用的 app：iReal Pro
+
+和弦譜加上自動伴奏，有約 50 種 style（部分要另外買）。練習功能有：段落循環、任意移調、一直加速、自動繞調，每個和弦還會建議可以用的音階。見 [App Store 頁面](https://apps.apple.com/gb/app/ireal-pro/id298206806)。它是「練習 jam」的參考，JAMTRACK 的鍵燈提示走的也是同一個方向。
+
+### 對照：MODX
+
+本人用 MODX 頂多做到「8 小節後換一個節奏型」，沒有過門這一層。
+
+### 共通的地方
+
+| | PSR | QY70 / Polly | BeatBuddy | RC-10R | JAMTRACK |
+|---|---|---|---|---|---|
+| 變化的數量 | MAIN A–D | Groove A / B | 每首歌好幾段 | Pattern 1 / 2 | A / B |
+| 過門什麼時候放 | 按下時，放到小節尾 | 下一小節 | 按下時，一小節以內 | 換段時自動，或按下時 | 這一輪結尾 |
+| 前奏、尾奏 | 有 | 有 | 有 | 有 | 沒有 |
+| 和弦 | 左手辨識 | 和弦進行或辨識 | 不需要 | 不需要 | 寫好的級數 |
+
+沒有一個產品是「我說這段 8 小節，你自己在第 8 小節放過門」。PSR 和 BeatBuddy 都是讓你在對的時間按；RC-10R 和 JAMTRACK 是換段時自動放。
+
+## 方向 A：完整的伴奏機 JAM { #arranger }
+
+鼓、bass、和弦伴奏，加上你的 solo。和 PSR 一樣有 `MAIN A`–`D`、`INTRO`、`ENDING`、`BREAK`；一首歌由幾段組成，每段有自己的和弦進行。
+
+- **歌**：段落的順序，每段有自己的和弦進行（羅馬數字，交給 THEORY 的 `th_prog_parse`）、長度、用哪一個 MAIN。
+- **Style**：每個 MAIN 的鼓、bass、和弦伴奏 pattern，以及每個 MAIN 的 fill、intro、ending。伴奏 pattern 寫「和弦的第幾個音」，播放時依現在的和弦算出音高，再用 `th_voice_near` 讓和弦移動最少。這和 PSR 用 C 大調寫 style 的道理一樣。
+- **過門**：`FILL` 在這一段的最後一小節放；在最後一小節才按，就從按下的那一拍放到小節尾；按住是立刻放、不換段。換 MAIN 時可以設定在這一小節尾換或段尾換。
+- **提示**：琴鍵燈顯示和弦音（亮）與音階（暗），下一個和弦的根音閃，這兩點分別來自 JAMTRACK 與 CORD。
+- **之後**：`SYNC START`、分割琴鍵做和弦辨識（THEORY 的 `th_identify`，像 Polly）、MIDI 輸出。
+
+文字格式的草稿：
 
 ```text
 song    "Ballad in C"  key=C  bpm=84  style=pop8
@@ -55,89 +81,47 @@ chorus  IV  V  iii  vi  IV  V  I  I     bars=8  main=C  x2  fill=end
 ending  IV  V  I                        bars=4
 ```
 
-一個 style 的 pattern（草稿；`.` 是十六分音符的空格，數字是 velocity 等級）：
+工作量最大的是聲音（鼓、bass、和弦、solo 四組 voice 都要自己寫，fm1-base 沒有 synth）與內容（每個 style 要寫四組 MAIN 加過門）。現成的 JAMTRACK 與 Polly 已經涵蓋大部分，這是先放著的原因。THEORY 原本規劃的 GROOVE 也併到這裡。
 
-```text
-style   pop8   "Pop 8beat"  time=4/4
-main A  kick   9...  ....  9.5.  ....
-main A  snare  ....  9...  ....  9...
-main A  hat    5.3.  5.3.  5.3.  5.3.
-main A  bass   R... ..R.  5... ....      # R 根音、5 五音
-main A  comp   C... ..C.  .... C...      # C 整個和弦
-fill A  snare  ....  ....  9.7.  9799
-```
+## 方向 B：live 鼓機 { #drums }
 
-存檔裡只放自己改過的歌（段落表一首約幾十 byte，fm1-base 的一個 store 物件最多 3,840 byte）。內建的歌與 style 在程式裡。
+只做鼓。比完整的伴奏機簡單很多，又剛好補上現有韌體的空缺：FM-1 上的鼓機大多是 step sequencer，偏 live 的 RHYTM-SEC-1 用的是產生出來的 pattern，沒有固定的段落（見[韌體頁](../firmware/jam.md#drums)）。
 
-## 聲音 { #voices }
+**為什麼專用會比較好：**
 
-fm1-base 沒有 synth，聲音都要自己在 `app_render` 裡算（44.1 kHz、每塊 256 frame）。分四組，各自有固定的 voice 數，不互相搶：
+- 不用和弦引擎和 solo 音色，CPU 與程式空間都給鼓：voice 可以多、可以用 sample、pattern 可以塞很多。
+- 用起來直覺：選曲風、選鼓組、按 `PLAY`。
+- 本人的使用情境：給 MODX、吉他或任何樂器當鼓手，FM-1 就是一顆 BeatBuddy。
 
-| 組 | 做法 | 來源 |
-|---|---|---|
-| 鼓 | kick（正弦掃頻）、snare（噪音加音高）、hat（濾過的噪音或 FM 金屬聲）、clap、tom、rim，共 6 voice | 新寫 `drum.c` |
-| bass | 單音，FM 或鋸齒波加濾波 | 新寫，參考 `synth.c` |
-| 和弦伴奏 | THEORY 的 2-operator FM 電鋼，8 voice | `firmware/theory/synth.c` |
-| solo | 單音 lead（帶 glide）、方波、風琴、電鋼 | 新寫 `lead.c` |
+**操作的想法（草稿）：**
 
-注意：
-
-- FM-1 的喇叭幾乎出不了低音。`synth.c` 已經替低音加了音量與亮度，bass 和 kick 也要一樣。用耳機或線路輸出時要能關掉。
-- CPU 是兩核 360 MHz、單精度 FPU，要在 fm1-emu 用 `--bench` 量 ISR 佔多少，四組一起響的時候是最壞情況。
-- 以後可以改用 sample 的鼓（JAMTRACK 是這樣做的），用 `firmware/common/adpcm` 解碼，要先看 code 空間夠不夠。
-
-## 操作（草稿） { #controls }
-
-琴鍵留給 solo，演奏的控制都在按鈕上。實際排法要在 emulator 的面板上對過按鈕位置再定。
-
-| 控制 | PLAY 頁 |
+| 控制 | 作用 |
 |---|---|
-| `PLAY` | 開始（有 intro 先放 intro）；播放中再按：尾奏後停 |
-| `REC` | tap tempo；按住：`SYNC START` 開關（v0.3） |
-| `SEQ` | 跳下一段（段尾） |
-| `ARP` | `FILL`（見[時間規則](#timing)）；按住：立刻放 |
-| `FX`、`ENV`、`LFO`、`EDIT` | `MAIN A`–`D` |
-| `GLO` | `BREAK` |
-| `SELECT` | style |
-| `PRESET` | 內建的歌 / jam |
-| `ALGO` | solo 音色 |
-| `SEL` + 琴鍵 | 調（tonic） |
-| `OCT-` / `OCT+` | solo 的八度 |
-| `K1`–`K4` | BPM、伴奏與 solo 的音量比、swing、伴奏密度 |
-| `HOME` | 換頁：PLAY → SONG（編段落）→ SETTINGS |
+| `SELECT` | 曲風 / 節奏型（rock 8beat、funk、shuffle、bossa、6/8……） |
+| `PRESET` | 鼓組（acoustic、brush、808、909、lo-fi……），和曲風分開選 |
+| `PLAY` | 開始（先放 intro，可以關）；演奏中再按：放 ending 然後停 |
+| 一個「BeatBuddy 鈕」 | 按一下：過門；按住：transition，放開後進下一個變化；按兩下：ending |
+| 白鍵（一部分） | 直接選 `MAIN A`–`D`，換的時候依 `AUTO FILL` 加過門 |
+| 黑鍵 | 不同的過門（短、長、只有 tom、crash 收尾） |
+| 其他琴鍵 | 現場加打：crash、clap、cowbell、tom，可以設定要不要對齊拍子 |
+| `REC` | tap tempo |
+| `K1`–`K4` | BPM、swing、密度（加減 ghost note 與 hi-hat）、humanize |
+| 設定 | 樂句長度（4 / 8 / 16 小節）：開了之後，按過門會等到這個樂句的最後一小節才放，這是 PSR 和 BeatBuddy 都沒有的 |
 
-SETTINGS：`AUTO FILL` 開關、`SWITCH`（`BAR` / `SECTION`）、低音補償、MIDI 輸出。
+**可以重用的：** RHYTHM 的 transport、tap tempo 與 `rhythm.c` 的 tick 格線（每拍 12 tick），`firmware/common/ledfx`（拍子燈、排隊中的過門閃燈），`firmware/common/adpcm`（如果用 sample）。RHYTHM 本身也可以加一個「跟著鼓練」的模式，兩者的界線之後再定。
 
-### 和弦辨識（v0.3） { #acmp }
+**鼓聲與 pattern 的來源：**
 
-PSR 的 ACMP：琴鍵分成兩半，低的 12 個鍵（F3–E4）彈和弦，THEORY 的 `th_identify` 認出是什麼和弦，伴奏跟著轉；高的 15 個鍵 solo。另外一個「一指」模式：只按根音是大三和弦，加按一個黑鍵是小三和弦。`SYNC START` 開著時，第一次在左半邊按下和弦就開始。
+- 合成鼓聲（kick 用正弦掃頻、snare 用噪音加音高、hat 用濾過的噪音）：程式小，授權單純。
+- sample：比較像真的鼓，但要自己錄或找授權合適的，例如 JAMTRACK 用的是 CC0。
+- pattern 自己寫，或取自 Google Magenta 的 Groove MIDI Dataset。這個資料集是 CC BY 4.0，Polly 就是用它，要標出處。
 
-## 程式結構 { #code }
+**和 MODX 一起用：** FM-1 送 MIDI clock 讓 MODX 跟著跑。MODX 和 FM-1 都是 USB device，中間要有電腦或 USB host；FM-1 的 TRS 只有 MIDI IN（見 [I/O](../hardware/io.md)）。
 
-| 檔案 | 內容 |
-|---|---|
-| `arr.c` / `arr.h` | 不碰平台的 arranger：段落、要求佇列、邊界判斷、pattern 展開成音符事件。全部可以在電腦上測（`just jam-unit`） |
-| `drum.c`、`lead.c`、bass | 聲音 |
-| `app.c` / `app.h` | 畫面、按鈕、transport（從 `firmware/rhythm/app.c` 搬過來：`tick_at`、`q8_mul`、tap tempo）、存檔 |
-| `content/*.txt` | 內建的歌與 style，build 時產生 C 表 |
-| 共用 | `../theory/theory.c`、`../theory/synth.c`、`../rhythm/rhythm.c`、`../common/ledfx`（播放中的拍子燈、排隊中的 fill 閃燈） |
+## 如果哪天要做 { #later }
 
-`arr.c` 的測試重點：任何時間點按下的 `FILL` 都落在正確的小節；`MAIN` 與 `FILL` 同時排隊時的先後；段落長度不是 4 的倍數；3/4 與 6/8；intro 只有一小節時按 `FILL`。
-
-## 進度 { #roadmap }
-
-| 版本 | 內容 |
-|---|---|
-| v0.1 | 一個調、幾個 style、內建 jam（只有一個進行）、`MAIN A` / `B`、`FILL`（段尾與立刻）、一個 solo 音色、琴鍵燈顯示和弦音 |
-| v0.2 | 歌：段落各自的和弦進行、intro、ending、`MAIN C` / `D`、`AUTO FILL`、`BREAK`、SONG 頁編段落並存檔 |
-| v0.3 | `SYNC START`、和弦辨識（分割琴鍵）、一指和弦 |
-| v0.4 | MIDI 輸出：鼓、bass、和弦、solo 分 channel，送 clock，可以接 DAW；接 MODX 要電腦或 USB host 在中間，TRS 只有 MIDI IN（見 [I/O](../hardware/io.md)） |
-
-每一版照 [開發環境](index.md) 的流程：host simulator 的 `fw-test`、fm1-emu 兩種晶片（含存檔、重開、讀回）、疊在最新備份上預演，最後才問要不要刷。
-
-## 還沒決定的事 { #open }
-
-- 正式名稱。
-- 鼓用合成還是 sample。
-- 按鈕的實際排法（上面是草稿）。
-- 內建要放哪些歌：只放和弦進行（不放旋律）就沒有版權問題；THEORY 的進行目錄（王道進行、4536251、卡農、axis、andalusian）可以直接用。
+- 先從**方向 B** 開始：範圍小、補的是現有韌體的空缺、用得到的機會也多。之後若要加 bass 與和弦，就往方向 A 長。
+- 授權：用到 THEORY 或 RHYTHM 的程式就是 GPL-3.0-or-later。
+- 識別碼：2026-11-19 對照 Hub 的 catalog，`FM-1_58`、`FM-1_59` 沒人用（`FM-1_56`、`FM-1_57` 都有人用了）。動工時再查一次。
+- 存檔：`0xD0000` 是自製 app 還沒用的下一格（上面是 RHYTHM 的 `0xD2000`）。刷機前用 `just emu-rehearse` 確認是空的。
+- 流程照[開發環境](index.md)：host simulator、fm1-emu 兩種晶片、疊在最新備份上預演，最後才問要不要刷。

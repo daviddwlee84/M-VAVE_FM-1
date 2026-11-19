@@ -1,6 +1,6 @@
-# 伴奏類韌體：挑調、挑節奏就開始玩
+# 伴奏與 live 鼓機類韌體：挑調、挑節奏就開始玩
 
-想要的是「選一個調、選一種節奏，按下去就有鼓、bass、和弦在跑，我在上面 solo」。SLOOP 也做得到，但要自己疊軌、自己排 sequence。這一頁整理 Firmware Hub 上已經把伴奏做好的韌體，並對照 Yamaha PSR 那種 arranger 的玩法。自己做一個的設計在[伴奏機 JAM（構想）](../dev/jam.md)。
+想要的是「選一個調、選一種節奏，按下去就有鼓、bass、和弦在跑，我在上面 solo」。SLOOP 也做得到，但要自己疊軌、自己排 sequence。這一頁整理 Firmware Hub 上已經把伴奏做好的韌體，並對照 Yamaha PSR 那種 arranger 的玩法。市售產品（PSR、BeatBuddy、Boss RC-10R、iReal Pro）的對照，以及自己做一個的探索，在[伴奏機與 live 鼓機（探索）](../dev/jam.md)。
 
 資料來自 Firmware Hub 的 `catalog.json` 與各專案 README（2026-11-19）`[上游]`；模擬器結果標 `[模擬]`。三個都還沒刷進實機。
 
@@ -44,13 +44,40 @@ Yamaha PSR 這類 arranger keyboard 的伴奏（style）分成幾種段落：
 
 另外幾個也有伴奏成分，但重點不同 `[上游]`：[Pocket Band](https://github.com/elpabl0/pocketband)（在 16 個曲風小鎮的地圖上選點，寫出四人編制的草稿）、[PERF-1](https://github.com/deamonSLINKY/PERF-1)（19 個曲風自己演奏，有 Jam 頁）、[HERA](https://github.com/benbadio/hera-fm1)（Roland J-6 式的 100 組和弦，只認舊晶片）、[COQUÍ](https://github.com/saulofilho/coqui-fm1)（拉丁節奏，跟著你按住的和弦彈 montuno）、[Blop](https://github.com/OSR-Experiment/OSR-1)（一指和弦加 bass 與鼓，只認舊晶片）。
 
+### 本人試玩的感想（2026-11-19） { #impressions }
+
+- **JAMTRACK**：會把建議彈的音 highlight 出來，尤其是調內的音和和弦組成音。對剛開始 jam 的人很有幫助。
+- **Polly**：很靈活。也有和 THEORY 一樣的和弦偵測，可以很快錄下一個和弦進行。
+- **CORD**：鍵盤燈亮著現在的和弦，**閃的是下一個和弦的根音**，很酷。但按鍵直接彈出和弦，沒有 solo 音色，不看說明不太知道怎麼用。`SEQ`、`ARP` 等頁的功能很多，還沒仔細看。
+
 ### 先試哪一個
 
 - **只想挑調、挑 groove 就 solo**：JAMTRACK。它也是唯一有「這一輪結尾自動放過門」和專用 solo 音色的。
 - **想照歌曲排段落**（每段自己的和弦進行、前奏、尾奏）：Polly，最接近 PSR / QY70 的 arranger。
 - **想從和弦進行出發寫歌**：CORD。
 
-PSR 的東西這三個都沒有全部做到：沒有 MAIN A–D 四種變化，也沒有可以設定「這一段播到第幾小節才放過門」。這是[自己做一個](../dev/jam.md)的理由。
+PSR 的東西這三個都沒有全部做到：沒有 MAIN A–D 四種變化，也沒有可以設定「這一段播到第幾小節才放過門」。自己做的想法在[探索頁](../dev/jam.md)，2026-11-19 決定先放著。
+
+另外兩個也是「選 style 就有整個 band」，還沒試 `[上游]`：
+
+- [RAKT](https://github.com/chasedeanda/rakt-fm1)：CORD 的作者做的，產生和弦、bass、鼓與旋律，GLO Live 頁用琴鍵 solo 某一軌、排過門與 drop。
+- [Pocket Band](https://github.com/elpabl0/pocketband)、[PERF-1](https://github.com/deamonSLINKY/PERF-1)：見上面。
+
+## 只要鼓：live 鼓機 { #drums }
+
+不要和弦、只要一個會打鼓的夥伴：選曲風、選鼓組、按下去就有 groove，想要時加一個過門。FM-1 上大多數鼓機是 step sequencer（要自己排），偏 live 的只有少數 `[上游]`：
+
+| 韌體 | 偏哪一邊 | 過門與變化 | 新晶片（Hub 標示） |
+|---|---|---|---|
+| [RHYTM-SEC-1](https://github.com/hamperj/rhytm-sec-1) | **live**：19 種 style，pattern 依曲風的機率產生、邊打邊變，加一條跟著調走的 bass | `FX` 下一小節放過門；`SAVE` 依序 breakdown → build → drop；`REC` 鎖住 pattern 不讓它變；F3–B3 開關每一軌；跟 DAW 的 MIDI clock | 認得 |
+| [Cut-A-Dor](https://github.com/kidbee85-beep/cut-a-dor-release) | 16 個節奏家族（boom bap、lo-fi、breaks），有 swing 與過門，也有 32 步的 sequencer | 有過門 | **只認舊晶片** |
+| [Amenity](https://github.com/ejtb76/amenity)、[CHOPPAH](https://github.com/profikid/fm1-break-choppah) | 經典 break（Amen 等）切片後現場演奏 | 按住白鍵 roll、build；黑鍵放單音或效果 | 認得 |
+| [COQUÍ](https://github.com/saulofilho/coqui-fm1) | 拉丁打擊樂，14 種 groove | | 認得 |
+| [Hortator](https://github.com/deadactive/hortator)、[FOMAJAM](https://github.com/konsumer/fomajam)、[X0X](https://github.com/charlesvestal/fm1-x0x) | step sequencer 型的鼓機 | 自己排 | 認得 |
+
+RHYTM-SEC-1 最接近「live 鼓機」，但它的 pattern 是產生出來的，不是固定的 intro / 段落 / 尾奏；也沒有「這段第幾小節放過門」。
+
+
 
 ## 模擬器試玩 `[模擬]` { #emu }
 

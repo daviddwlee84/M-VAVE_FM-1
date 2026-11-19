@@ -280,7 +280,7 @@ from a test. There is no auto-approve; do not add one without the owner asking.
 
 A repo-owned skill for operating the unit and an `fm1` CLI wrapper (the `Justfile` covers it for now;
 `fm1-hub-listing` covers publishing only). `fm1-emu` is a downloaded binary, not a source checkout.
-A vocabulary app is at the idea stage (`docs/dev/vocab.md`). So is JAM, an arranger (styles with MAIN A-D, fills at a section's end, songs of sections with their own progressions; `docs/dev/jam.md`, identity `FM-1_58` and store `0xD0000` proposed); it takes over THEORY's planned GROOVE page. Existing backing-band firmwares are compared in `docs/firmware/jam.md`. A deck written to the flash data area would need
+A vocabulary app is at the idea stage (`docs/dev/vocab.md`). An arranger (JAM) or a live drum machine is explored, not planned (owner put it on hold 2026-11-19): `docs/dev/jam.md` compares PSR, BeatBuddy, RC-10R and sketches both directions; THEORY's planned GROOVE page folds into it. Existing backing-band and live drum firmwares are compared in `docs/firmware/jam.md`. A deck written to the flash data area would need
 the firmware-development rule "never compute flash addresses or call erase/program directly" changed first,
 with the owner's approval; the proposed wording is in that page. THEORY (`docs/dev/theory.md`) has flash cards from 0.2; importing
 own content (progressions, melodies) is still to come and is meant to go through the store layer (`APP_STORE_MAP`), which needs

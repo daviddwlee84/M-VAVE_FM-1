@@ -93,7 +93,7 @@ GitHub stars 只代表關注度，**不是刷機安全性的證據**。
 | [386DX](https://github.com/seajaysec/386-DX-FM1-KaraokeBot/releases) | v2.0 | 2026-11-04 | 同上；引擎 [386-DX-ENGINE](https://github.com/seajaysec/386-DX-ENGINE) 固定在 `595eb7d` |
 | [Chimera Vocal](https://github.com/shan-sherif/fm-1-chimera-vocal/releases) | v0.8.0 | 2026-11-17 | 同上 |
 | [EVIL GENIUS](https://github.com/Quixotic7/evilgenius/releases) | v0.1.4 | 2026-11-17 | 同上 |
-| [JAMTRACK](https://github.com/Philip-Bos/jamtrack-fm1/releases) | v0.2.3 | 2026-11-09 | 伴奏類，只在模擬器裡試過，見[伴奏類韌體](firmware/jam.md)（2026-11-19 查核，來源是 Hub catalog） |
+| [JAMTRACK](https://github.com/Philip-Bos/jamtrack-fm1/releases) | v0.2.3 | 2026-11-09 | 伴奏類，只在模擬器裡試過，見[伴奏與 live 鼓機類韌體](firmware/jam.md)（2026-11-19 查核，來源是 Hub catalog） |
 | [Polly](https://github.com/charlesvestal/fm1-polly/releases) | v0.6.4 | 2026-11-13 | 同上 |
 | [CORD](https://github.com/chasedeanda/cord-fm1/releases) | v1.0.3 | 2026-11-09 | 同上 |
 

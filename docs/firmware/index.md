@@ -20,7 +20,7 @@ FM-1 同一時間只跑一套主要韌體，換韌體就是重刷。可以先在
 
 ## 想要伴奏的話 { #backing }
 
-挑一個調、一種節奏就開始彈，不用自己疊軌：[JAMTRACK](https://github.com/Philip-Bos/jamtrack-fm1)（backing band，有 solo 音色）、[Polly](https://github.com/charlesvestal/fm1-polly)（QY70 式 arranger，有段落、前奏、尾奏）、[CORD](https://github.com/chasedeanda/cord-fm1)（從和弦進行出發）。比較與 Yamaha PSR 的對照見[伴奏類韌體](jam.md)；自己做一個的設計在[伴奏機 JAM](../dev/jam.md)。
+挑一個調、一種節奏就開始彈，不用自己疊軌：[JAMTRACK](https://github.com/Philip-Bos/jamtrack-fm1)（backing band，有 solo 音色）、[Polly](https://github.com/charlesvestal/fm1-polly)（QY70 式 arranger，有段落、前奏、尾奏）、[CORD](https://github.com/chasedeanda/cord-fm1)（從和弦進行出發）。只要鼓、偏現場的鼓機也在同一頁。比較見[伴奏與 live 鼓機類韌體](jam.md)；市售產品（PSR、BeatBuddy、RC-10R）的對照與自己做的探索在[這一頁](../dev/jam.md)。
 
 ## 想要 looper 的話
 
