@@ -2,10 +2,10 @@
 
 給現場用的節拍器：一首歌一個白鍵，存好每首歌的速度、拍號、節奏型與音色，演出時按一下就換歌。另外有一頁在琴鍵上點出節奏型（亮度就是輕重音），以及仿照經典 rhythm watch 的四層混音頁。
 
-**狀態（2026-11-20）：** v0.1 在 host simulator、device build、fm1-emu 兩種晶片與疊在備份上的預演都驗證過 `[模擬]`，2026-11-20 刷進實機，本人試用「感覺效果不錯」`[實機]`。見 [v0.1 驗證](#v01-verify)。
+**狀態（2026-11-20）：** v0.2（速度術語、`SELECT` 加速、6/8 的寫法、全部清空）在 host simulator、device build 與 fm1-emu 兩種晶片驗證過 `[模擬]`，還沒刷進實機，見 [v0.2](#v02)。v0.1 在 host simulator、device build、fm1-emu 兩種晶片與疊在備份上的預演都驗證過 `[模擬]`，2026-11-20 刷進實機，本人試用「感覺效果不錯」`[實機]`。見 [v0.1 驗證](#v01-verify)。
 
 - 韌體在 `firmware/metronome/`，GPL-3.0-or-later，名稱 METRONOME。click 的合成與 transport 沿用 [RHYTHM](rhythm.md)。
-- 識別碼 `FM-1_59`（開發版 `FM-1_5900`）：2026-11-19 對照 Hub 的 catalog 沒人用 `[上游]`。上 Hub 前要再查一次。
+- 識別碼 `FM-1_59`（開發版 `FM-1_5900`，release 0.2 是 `FM-1_59000200`）：2026-11-19 對照 Hub 的 catalog 沒人用 `[上游]`；2026-11-20 再把 catalog 裡 269 個韌體的 `ident`（是 regex）拿來比對 `FM-1_5900`、`FM-1_59000100`、`FM-1_59000200`，除了萬用的 `FM-1_\d{3,8}` 都沒有符合 `[上游]`。Hub 的 [identity 檢查](https://thefirmwarehub.com/submit/#check) 要的是**韌體回報的完整數字**，3 到 8 位：只打 `FM-1_59` 會顯示「An identity is FM-1_ and 3 to 8 digits」，那是格式不對，不是被佔用。上 Hub 前用完整的 release identity 再查一次。
 - 設定與 16 首歌存在 `0xCE000`（`APP_STORE_MAP {0xDC000, 0xCE000}`）。`0xD0000` 到 `0xDE000` 都被自製 app 與面板校正用掉了，見 [flash 配置](../hardware/flash-map.md)。這台機器 2026-11-20 的備份裡 `0xCE000` 是空的 `[實機]`。
 - 為什麼另做一個韌體，不放進 RHYTHM：本人 2026-11-19 決定。RHYTHM 是練習機，這個是上台用的工具，開機就要是歌單。
 
@@ -30,15 +30,15 @@ GitHub 上搜 `fm1 metronome` 也沒有結果。
 |---|---|---|---|
 | `PLAY` | 開始 / 停止 | 同左 | 同左 |
 | 白鍵 | 選歌（有存的鍵半亮，播放中的全亮） | 小節裡的一個 step，按一下換一級 | tap tempo |
-| 黑鍵 | tap tempo | tap tempo | tap tempo |
+| 黑鍵 | tap tempo；**播放中、不在 EDIT 時不作用**（防誤觸，頁尾提示 `REC: EDIT`） | tap tempo | tap tempo |
 | `REC` | EDIT 開 / 關 | tap tempo | tap tempo |
-| `SEL` | EDIT 時：按住 `SEL` 再按白鍵，清掉那首歌 | 切到 CLASSIC | 切到 GRID |
-| `SELECT` | BPM ±1（30–300） | 同左 | 同左 |
+| `SEL` | EDIT 時：按住 `SEL` 再按白鍵，清掉那首歌；按住 2 秒不按鍵，問 `CLEAR ALL?`（[全部清空](#clear-all)） | 切到 CLASSIC | 切到 GRID |
+| `SELECT` | BPM ±1（30–300）；轉得快（一格不到 50 ms）一格 ±5 | 同左 | 同左 |
 | `OCT-` / `OCT+` | BPM ±5 | BPM ±5 | BEAT ±1（0–9，0 是沒有重音） |
 | `ALGO` | 音色：CLICK、WOOD、BEEP | 同左 | 同左 |
 | `K1` | 換歌的時機：NEXT BAR / NOW | 拍數 1–9 | 四分音符的音量 0–7 |
-| `K2` | | 一拍幾格：四分、8 分、3 連音、16 分 | 8 分音符的音量 |
-| `K3` | | | 3 連音的音量 |
+| `K2` | 跳到下一個[速度術語](#markings)的典型速度 | 一拍幾格：四分、8 分、3 連音、16 分 | 8 分音符的音量 |
+| `K3` | | 拍號 preset（[見下](#presets)） | 3 連音的音量 |
 | `K4` | | | 16 分音符的音量 |
 
 ### SET：歌單 { #set }
@@ -51,7 +51,29 @@ GitHub 上搜 `fm1 metronome` 也沒有結果。
     - 或用 `SELECT`、`OCT-` / `OCT+` 精確調。
     - 按住 `SEL` 再按白鍵就清掉那首。最後一首不能清。
     - 再按一次 `REC` 離開。
-- 畫面上半是 BPM、拍號與一個擺錘；下半是 16 格，每格寫歌號與 BPM。
+- 畫面上半是 BPM、速度術語、拍號與一個擺錘；下半是 16 格，每格寫歌號與 BPM。拍號的寫法兩種模式一致：GRID 是 `4/4  8THS`，3 連音寫成複拍子（`6/8`），CLASSIC 是 `BEAT 5  CLASSIC`（BEAT 0 是 `NO ACCENT  CLASSIC`）。
+
+#### 全部清空 { #clear-all }
+
+演出完要拿來排下一場：在 EDIT 裡按住 `SEL` 2 秒、中間不按琴鍵，頁尾變紅字 `CLEAR ALL?  PLAY = YES`。按 `PLAY` 才清（不會開始播），按其他鍵或 5 秒不理就取消。清完只剩第 1 首（120 BPM、4/4），播放中會停下來，換歌時機（`K1`）保留。按住 `SEL` 期間有按白鍵就是「清一首」，不會問全部清空。
+
+#### 速度術語 { #markings }
+
+BPM 旁邊顯示目前速度屬於哪個古典速度術語。[維基百科〈速度 (音樂)〉](https://zh.wikipedia.org/zh-tw/%E9%80%9F%E5%BA%A6_(%E9%9F%B3%E6%A8%82)) 的範圍會重疊（例如 Andante 76–108、Moderato 90–120）`[上游]`，畫面上只能顯示一個，所以照機械節拍器（Maelzel）刻度切成不重疊的段，60–65 補上 Larghetto。切法是自己定的：
+
+| 術語 | BPM | `K2` 跳到 |
+|---|---|---|
+| LARGHISSIMO（極緩板） | 30–39 | 35 |
+| LARGO（緩板／廣板） | 40–59 | 50 |
+| LARGHETTO（甚緩板） | 60–65 | 63 |
+| ADAGIO（柔板／慢板） | 66–75 | 70 |
+| ANDANTE（行板） | 76–107 | 92 |
+| MODERATO（中板） | 108–119 | 112 |
+| ALLEGRO（快板） | 120–167 | 132 |
+| PRESTO（急板） | 168–199 | 184 |
+| PRESTISSIMO（最急板） | 200–300 | 208 |
+
+SET 的 `K2` 每轉一格跳到上一段或下一段的典型速度。不在典型速度上時，先跳到本段的典型速度（140 往下轉是 132，再轉才是 112）。跳完可以再用 `SELECT` 細調。
 
 ### GRID：在琴鍵上點節奏型 { #grid }
 
@@ -60,6 +82,29 @@ GitHub 上搜 `fm1 metronome` 也沒有結果。
 - 播放中正在響的那一格全亮（重音的那格反過來暗一下），畫面上那一格變綠色。
 - `K1` 改拍數、`K2` 改一拍幾格時，節奏型會重設成預設（第一拍重音、其他拍一般、拍與拍之間 ghost）。
 - 不均分的節奏（附點、shuffle）在 16 分或 3 連音的格子上點。swing 旋鈕之後再做。
+- **6/8 等複拍子**：一拍分 3 格（`K2` TRIPLETS）時，拍號寫成複拍子：1 拍是 3/8、2 拍是 6/8、3 拍是 9/8、4 拍是 12/8。這時一拍是附點四分，**BPM 也是附點四分的速度**：譜上寫「八分音符 = 120」的話，要設 40。
+- 對節拍器來說，拍號的分母只決定兩件事：click 落在哪種音符上、BPM 指哪種音符。聲音上 6/8 只有兩種讀法，GRID 都已經做得到，不需要多一個「拍子單位」的設定：
+
+    | 想要的 | GRID 怎麼設 | BPM 指的是 |
+    |---|---|---|
+    | 6/8 數 2 下（快的 6/8、搖擺感） | `K1` 2、`K2` TRIPLETS（畫面寫 `6/8`） | 附點四分 |
+    | 6/8 數 6 下（慢的 6/8） | `K1` 6、`K2` QUARTERS，第 4 格按成 NORMAL 或 ACCENT | 八分（畫面會寫 `6/4`，聲音一樣） |
+    | 7/8（2+2+3） | `K1` 7、`K2` QUARTERS，第 1、3、5 格重音 | 八分 |
+
+#### 拍號 preset（`K3`） { #presets }
+
+不用懂「2/4 加 3 連音就是 6/8」：`K3` 一格換一種拍號，拍數、一拍幾格和重音一次設好。
+
+| preset | 拍數 × 格 | 重音 | BPM 指的是 |
+|---|---|---|---|
+| 2/4、3/4、4/4、5/4 | 2–5 × 1 | 第 1 拍 | 四分 |
+| 6/8 | 2 × 3 | 第 1 拍，另一拍一般，其他 ghost | 附點四分 |
+| 6/8 IN 6 | 6 × 1 | 1 重、4 一般、其他 ghost | 八分 |
+| 9/8、12/8 | 3、4 × 3 | 同 6/8 | 附點四分 |
+| 5/8 3+2 | 5 × 1 | 1 重、4 一般 | 八分 |
+| 7/8 2+2+3 | 7 × 1 | 1 重、3 和 5 一般 | 八分 |
+
+存檔裡沒有記錄「用的是哪個 preset」，畫面是比對目前的拍數、格數和每格的級數反推出來的：以八分為一拍的 preset 顯示它的名稱（`6/8 IN 6`、`7/8 2+2+3`），改過任何一格就變回一般的寫法（`6/4  QUARTERS`）。不在 preset 上的時候，`K3` 第一格會先跳到同樣大小的 preset，沒有就跳到 4/4。
 
 例：4/4 八分音符，把第 2 拍的「and」設成重音、第 3 拍關掉，就是 `A g N A . g N g`。
 
@@ -79,8 +124,12 @@ host simulator 的截圖 `[模擬]`：
 | SET（播放中） | SET: EDIT | 換歌等下一小節 |
 |---|---|---|
 | ![SET](../assets/metronome/set_playing.png) | ![EDIT](../assets/metronome/set_edit.png) | ![等下一小節](../assets/metronome/set_pending.png) |
-| **GRID**（4/4 八分） | **CLASSIC** | |
-| ![GRID](../assets/metronome/grid.png) | ![CLASSIC](../assets/metronome/classic.png) | |
+| **GRID**（4/4 八分） | **CLASSIC** | **速度術語**（`K2` 跳到 MODERATO） |
+| ![GRID](../assets/metronome/grid.png) | ![CLASSIC](../assets/metronome/classic.png) | ![速度術語](../assets/metronome/set_marking.png) |
+| **GRID 6/8** | **`K3`：6/8 IN 6** | **`K3`：7/8 2+2+3** |
+| ![6/8](../assets/metronome/grid_6_8.png) | ![6/8 IN 6](../assets/metronome/grid_6_8_in_6.png) | ![7/8](../assets/metronome/grid_7_8.png) |
+| **全部清空：問 PLAY** | | |
+| ![CLEAR ALL?](../assets/metronome/set_clear_ask.png) | | |
 
 ## 時間怎麼算 { #timing }
 
@@ -134,9 +183,36 @@ host simulator 的截圖 `[模擬]`：
 
 前三列是 2026-11-19 在雲端 Linux 容器跑的。device build 用的 SDK 三個檔案是從 JAMTRACK 0.2.3 的 package 取出、核對過 SHA-256，見[開發環境](index.md#sdk-from-package)。
 
+## v0.2 { #v02 }
+
+2026-11-20，本人試用 v0.1 之後的回饋：
+
+| 回饋 | v0.2 |
+|---|---|
+| 想看古典速度術語 | BPM 旁顯示術語，SET 的 `K2` 跳段，見[速度術語](#markings) |
+| SET 上拍號寫法不一致（`4/4 QUARTERS` 與 `CLASSIC BEAT 5`） | 兩種模式用同一種格式。GRID 與 CLASSIC 各自的拍數設計保留（本人決定：GRID 的 `K1`/`K2` 已經能表達各種拍子），GRID 頁尾補上 `K1: BEATS  K2: DIV` |
+| 要不要 6/8 | 3 連音寫成複拍子；GRID 的 `K3` 拍號 preset（6/8、6/8 IN 6、9/8、12/8、5/8、7/8 …），不懂樂理也設得出來。分母對節拍器只是標示，見 [GRID](#grid) |
+| 歌名放很後面，要能演完一次清空 | [全部清空](#clear-all) |
+| `OCT` 原本的 ±5 | 保留；`SELECT` 快轉也有 ±5 |
+| 防誤觸 | SET 播放中、不在 EDIT 時，黑鍵不 tap tempo（只顯示提示、不出聲）。EDIT 裡或停止時照舊 |
+
+record 的格式沒變（`REC_VER 1`），v0.1 存的歌直接沿用。
+
+### v0.2 驗證 { #v02-verify }
+
+| 項目 | 結果 |
+|---|---|
+| `just metro-unit` | 2,319 個檢查全過：多了每個拍號 preset 都合法、比對得回自己、改過一格就不算 preset、12/8 一小節 1 重 3 一般 8 ghost；每個 BPM 剛好屬於一段、段的邊界、典型速度在段內、`K2` 往上往下的走法與兩端 |
+| `just fw-test metronome` | 全部 `ok`：`K2` 從 120 走 132 → 184 → 132 → 112；`SELECT` 慢轉 ±1、20 ms 一格 ±5；GRID 2 拍 × 3 格顯示 6/8；`K3` 從 6/8 走到 6/8 IN 6、7/8，往下到 2/4，改過一格後從同大小的 preset 開始；全部清空：按住 `SEL` 時按了鍵不會問、按 `OCT+` 取消、5 秒取消、`PLAY` 清完剩第 1 首 120 BPM 而且沒在播，重開機後還是；SET 播放中按黑鍵 3 下 BPM 不變 |
+| `just fw-build metronome` | app 88,744 B；`.data+.bss` 25,992 / 98,304 B；沒有 soft-double；package 616,003 B，identity `FM-1_5900` |
+| fm1-emu `uc25hq80`、`p25q80` | headless：空白 flash 開機 0 次寫入；REC、`D4` tap 4 下、REC，存檔寫 4 次、只改 `0xCE000`；重開 0 次寫入、讀回。把 v0.2 疊在 v0.1 存過歌的模擬 flash 上：開機 0 次寫入，第 6 首 100 BPM 還在，顯示 `ANDANTE` `[模擬]` |
+| 疊在實機備份上預演 | 還沒做：等刷機前的 preflight 備份（裡面有本人用 v0.1 存的歌） |
+
 ## 之後 { #next }
 
 - 畫面主題：擺錘之外，指揮棒的拍子圖形、可愛的角色。先量一張圖要多少 flash 再決定（[CORD](https://github.com/chasedeanda/cord-fm1) 證明放得下圖）。
-- 更多音色、swing、每首歌的名字（要先想好怎麼輸入文字）。
+- 更多音色、swing。
+- 匯出／匯入歌單：照 [Morse](morse.md) 的備份做法，歌單存成 JSON。之後可以做一個網頁，在電腦上排好歌單再匯入機器。
+- 每首歌的名字（要先想好怎麼輸入文字）：本人 2026-11-20 說放到很後面。曲目順序表演者自己記得，演完用[全部清空](#clear-all)。
 - 實機上校正延遲：tap tempo 只看按鍵間隔，不受延遲影響；要比較 click 與 LED 有沒有對齊。
 - 和 [RHYTHM](rhythm.md) 共用 click 與 transport（抽到 `firmware/common/`）。
