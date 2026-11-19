@@ -1,13 +1,71 @@
-# Live 鼓機（設計）
+# Live 鼓機 DRUMS
 
 把 FM-1 變成一個可以帶著走的鼓手：選曲風、選鼓組、按 `PLAY` 就有 groove。想換段時，它在**樂句的最後一小節**自己放過門。3.5 mm 輸出接 mixer，不管旁邊是 MODX、吉他還是任何樂器都能一起玩。它和 Yamaha PSR、BeatBuddy、Boss RC-10R 的對照，以及為什麼先做鼓而不是整個伴奏機，見[伴奏機與 live 鼓機（探索）](jam.md)。
 
-**狀態（2026-11-19）：** 只有設計，沒有程式，也沒有排進度。
+**狀態（2026-11-19）：**
 
-- 獨立的韌體，不是 [RHYTHM](rhythm.md) 的一頁（本人 2026-11-19 決定）。預定放在 `firmware/drums/`，名稱暫定 DRUMS，正式名稱發布前對照 Hub 再定。
-- 授權 GPL-3.0-or-later，因為要搬 RHYTHM 的 transport。
-- 識別碼暫定 `FM-1_58`：2026-11-19 對照 Hub 的 catalog 沒人用。
+- **v0.1**：在 host simulator、device build 與 fm1-emu 兩種晶片驗證過 `[模擬]`，見 [v0.1](#v01) 與 [v0.1 驗證](#v01-verify)。還沒刷進實機，也還沒疊在這台機器的備份上預演。
+- 獨立的韌體，不是 [RHYTHM](rhythm.md) 的一頁（本人 2026-11-19 決定）。在 `firmware/drums/`，名稱暫定 DRUMS，正式名稱發布前對照 Hub 再定。
+- 授權 GPL-3.0-or-later，因為搬了 RHYTHM 的 transport。
+- 識別碼 `FM-1_58`（開發版 `FM-1_5800`）：2026-11-19 對照 Hub 的 catalog 沒人用。
 - 存檔在 `0xD0000`（`APP_STORE_MAP {0xDC000, 0xD0000}`），上面一格 `0xD2000` 是 RHYTHM。刷機前用 `just emu-rehearse` 確認這一格在最新的備份裡是空的。
+
+## v0.1 { #v01 }
+
+v0.1 做的是下面[設計](#model)的一部分：MAIN A / B、三種 `FILL AT`、`AUTO FILL`、transition、ending、tap tempo、`REC` 的三個手勢、右半邊的 pad、靜音、swing。還沒有：MAIN C / D、intro、break、song mode、MIX / KIT 頁、MIDI clock、sample 鼓組。
+
+**操作（實際做出來的）：**
+
+| 控制 | 作用 |
+|---|---|
+| `PLAY` | 停止中：從 `MAIN A` 開始。播放中：放 ending 後停；按住 0.7 秒：立刻停；ending 中再按：立刻停 |
+| `REC` | 停止中：tap tempo（取最後 4 下）。播放中：按一下過門（等 0.3 秒確認不是按兩下）、按住 0.45 秒 transition（放開後換到另一個 MAIN）、按兩下 ending |
+| F3 / G3 | `MAIN A` / `MAIN B`。停止中按：從那一段開始。按現在這一段：放一個過門再回來（PSR 的做法） |
+| F#3 | 過門（立刻送出，沒有按兩下的等待） |
+| E4 | ending |
+| F4–G5 | 15 個 pad，見下表 |
+| `SEL` + pad | 那一軌靜音 / 取消（只影響節奏型，pad 照樣響） |
+| `SELECT` | style：停止中連 BPM 一起換成那個 style 的；播放中下一小節換，BPM 不變 |
+| `PRESETS` | 鼓組：808、STUDIO |
+| `K1`、`OCT-` / `OCT+` | BPM ±1（30–240），播放中從下一個 tick 起換，不會跳拍 |
+| `K2` | swing：off 16 分音符往後 0–12 tick（顯示 50–75 %，66 % 是三連音的感覺） |
+| `K3` | `FILL AT`：NOW、NEXT BAR、PHRASE |
+| `K4` | 樂句長度：4、8、16 小節 |
+| `ARP` | `AUTO FILL` 開關（燈亮是開） |
+
+設定停手 3 秒後自動存。`HOME`、`SEQ`、`ALGORITHM` 在 v0.1 沒有作用，和設計草稿的分配不同：`SEQ` 原本要管 `FILL AT` 與樂句長度，現在改成 `K3`、`K4`。
+
+**Pad（F4–G5）：** kick、hat、snare、open hat、rim、ride、clap、tom 低、shaker、tom 中、cowbell、tom 高、crash、hat、snare（由左到右，黑白鍵都算）。最右邊兩個是第二個 hat 與 snare，方便兩指連打。
+
+**燈：** F3 / G3 亮的是現在這一段，閃的是排隊中的那一段；F#3 在過門時亮、排隊時閃；pad 在那一軌發聲時亮一下，靜音的那一軌不亮；`PLAY` 播放中綠燈，每小節第一拍紅燈。
+
+**10 個 style：** ROCK 8、POP 16、FUNK、SHUFFLE（三連音格）、DISCO、HIP-HOP、BOSSA、REGGAE（one drop）、WALTZ 3/4、BALLAD 6/8。每個有 MAIN A、MAIN B，過門是自己的或同拍號共用的兩種（snare 漸強、tom 下行）。ending 是第一拍的 kick 加 crash。節奏型全部是自己寫的，在 `styles.h`，一行一軌。
+
+**兩套合成鼓組：** 808（長 kick、金屬感的 hat）與 STUDIO（短而緊的 kick、噪音 hat）。每一軌一個 voice，再打一次就重來；closed hat 會切掉 open hat。
+
+![MAIN A 在第 1 小節](../assets/drums/main_a.png){ width="240" } ![過門排隊中，等樂句最後一小節](../assets/drums/fill_queued.png){ width="240" } ![第 4 小節放過門](../assets/drums/fill.png){ width="240" }
+
+![換到 MAIN B](../assets/drums/main_b.png){ width="240" } ![按住 REC：transition](../assets/drums/transition.png){ width="240" } ![按兩下 REC：ending](../assets/drums/ending.png){ width="240" }
+
+畫面：左上兩格是 MAIN A / B（藍色是過門中）；右邊是正在放什麼和「小節.拍」；中間一排是樂句，最後一格的框是 PHRASE 模式放過門的位置；下面是設定，以及排隊中的要求或靜音的軌。
+
+### 試玩
+
+PR 頁面上有 fm1-emu 網頁版的連結，打開就是這個 package，不用帳號（做法見 [模擬器](../agentic/emulator.md)）。它是瀏覽器模擬，聽起來和實機的喇叭不同。
+
+### v0.1 驗證 { #v01-verify }
+
+2026-11-19，在雲端的 Linux 容器裡：
+
+| 項目 | 結果 |
+|---|---|
+| `just drums-unit` | groove 270 項、kit 104 項全過：每種 `FILL AT` 在一小節的每個 16 分音符按下過門都落在對的小節、樂句 4 / 8 / 16、3/4 與 6/8、MAIN 與過門同時排隊、transition、ending 後靜音、swing、靜音；每個鼓組的每一軌都會響、數值有限、6 秒內結束 |
+| `just fw-test drums` | 全部 `ok`：tap tempo、PHRASE 過門在第 4 小節、NEXT BAR、AUTO FILL 換到 B、NOW、transition、pad 與靜音、播放中換 style 與鼓組、ending 後安靜（-70.9 dBFS）、按住 `PLAY` 立刻停、重開後設定還在 |
+| `just fw-build drums` | app 104,748 B；`.ram_text` 5,100 / 32,768 B；`.data+.bss` 38,132 / 98,304 B；沒有 soft-double，檢查全部 `ok`；package 616,003 B，identity `FM-1_5800` |
+| fm1-emu `uc25hq80`、`p25q80` | 兩種晶片都開機、播放（audio peak 16,007），改設定（`ARP`）後 3 秒存檔，重開讀回 `AUTO OFF`；只寫 `0xD0000` 這一個 sector；播放時 ISR 佔 11 % 的指令 `[模擬]` |
+| 疊在備份上預演 | **還沒做**：雲端容器裡沒有備份。刷機前在 Mac 上跑 `just emu-rehearse firmware/drums/build/drums.fwsc backups/<最新>/<檔案>.bin` |
+
+這次的 device build 是在連不到 gitee.com 的雲端容器裡做的，SDK 的三個檔案改從別的 fm1-base package 取出並核對 SHA-256，見[開發環境](index.md#sdk-from-package)。
 
 ## 使用情境 { #uses }
 
@@ -170,7 +228,7 @@ fill A  crash   ....                     # 接到下一小節的第一拍
 
 | 版本 | 內容 |
 |---|---|
-| v0.1 | 兩套合成鼓組、約 10 個 style、`MAIN A` / `B`、過門（`NOW` / `BAR` / `PHRASE`）、tap tempo、`REC` 的三個手勢、右半邊的 pad |
+| v0.1（2026-11-19 做完，見[上面](#v01)） | 兩套合成鼓組、約 10 個 style、`MAIN A` / `B`、過門（`NOW` / `BAR` / `PHRASE`）、tap tempo、`REC` 的三個手勢、右半邊的 pad |
 | v0.2 | `MAIN C` / `D`、`INTRO`、`ENDING`、`BREAK`、`TRANSITION`、`AUTO FILL`、MIX 頁、sample 實驗 |
 | v0.3 | song mode、MIDI clock 進出、外接踏板的 CC |
 | v0.4 | 更多鼓組與 style；練習功能（靜音小節、慢慢加速），這部分和 RHYTHM 重疊 |

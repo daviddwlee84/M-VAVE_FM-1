@@ -622,3 +622,26 @@ rhythm-unit:
 # RHYTHM in the emulator (build it first: just fw-build rhythm). Its simulator test is `just fw-test rhythm`.
 rhythm-emu chip="uc25hq80":
     just emu-run firmware/rhythm/build/rhythm.fwsc "{{chip}}"
+
+# ---- drums: DRUMS, a live drum machine (firmware/drums, docs/dev/drums.md) ----
+
+# groove.c and kit.c on this computer: the styles parse, every request lands where FILL AT says, every drum sounds and ends.
+drums-unit:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    mkdir -p build
+    cc -std=c99 -Wall -Wextra -pedantic -Wdouble-promotion -Wfloat-equal -Wshadow -o build/groove_test \
+      firmware/drums/tests/groove_test.c
+    build/groove_test
+    cc -std=c99 -Wall -Wextra -pedantic -Wdouble-promotion -Wshadow -I{{fm1_base}}/include -o build/kit_test \
+      firmware/drums/tests/kit_test.c -lm
+    build/kit_test | tail -1
+
+# DRUMS in the emulator (build it first: just fw-build drums). Its simulator test is `just fw-test drums`.
+drums-emu chip="uc25hq80":
+    just emu-run firmware/drums/build/drums.fwsc "{{chip}}"
+
+# Where gitee.com cannot be reached: the three AC79 SDK files a USB-only build needs, out of an fm1-base package,
+# kept only if they match fm1-base's pinned SHA-256 (scripts/ac79_sdk_from_fwsc.py; docs/dev/index.md).
+fw-sdk-from package:
+    python3 -I scripts/ac79_sdk_from_fwsc.py "{{package}}"
