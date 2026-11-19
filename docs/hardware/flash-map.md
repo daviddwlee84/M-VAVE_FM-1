@@ -49,6 +49,8 @@ Felucca、SLOOP、ChoralRoot 以及 Dinghy、fm1-base 系的韌體大多沿用�
 
 因為位址共用，韌體之間會互相踩到對方的資料，也會讀到對方留下的東西。
 
+伴奏類韌體在空白 flash 上第一次開機（2026-11-19）`[模擬]`：JAMTRACK 0.2.3 不寫；Polly 0.6.4 寫 `0x97000`，而且 package 本身另帶 `0xAB000`–`0xB5FFF` 的資料；CORD 1.0.3 寫 `0x9D000`。見[伴奏與 live 鼓機類韌體](../firmware/jam.md#emu)。
+
 ## 我的機器上實際發生的 `[實機]`
 
 用各階段的完整備份逐 sector 比對：

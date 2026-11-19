@@ -1,0 +1,106 @@
+# 伴奏與 live 鼓機類韌體：挑調、挑節奏就開始玩
+
+想要的是「選一個調、選一種節奏，按下去就有鼓、bass、和弦在跑，我在上面 solo」。SLOOP 也做得到，但要自己疊軌、自己排 sequence。這一頁整理 Firmware Hub 上已經把伴奏做好的韌體，並對照 Yamaha PSR 那種 arranger 的玩法。市售產品（PSR、BeatBuddy、Boss RC-10R、iReal Pro）的對照，以及自己做一個的探索，在[伴奏機與 live 鼓機（探索）](../dev/jam.md)。
+
+資料來自 Firmware Hub 的 `catalog.json` 與各專案 README（2026-11-19）`[上游]`；模擬器結果標 `[模擬]`。三個都還沒刷進實機。
+
+## PSR 的 arranger 是怎麼玩的 { #psr }
+
+Yamaha PSR 這類 arranger keyboard 的伴奏（style）分成幾種段落：
+
+| 段落 | 作用 |
+|---|---|
+| `INTRO` | 開頭的前奏，結束後接 MAIN |
+| `MAIN A`–`D` | 同一個 style 的幾種變化，通常越後面越熱鬧 |
+| `FILL IN` | 過門。演奏中按另一個 MAIN，先放一段過門再換過去（`AUTO FILL IN`） |
+| `BREAK` | 短暫的停頓 |
+| `ENDING` | 結尾，放完自動停 |
+| `SYNC START` | 開著它的話，左手在伴奏區一按下和弦，伴奏就開始 |
+| `ACMP` | 左手彈的和弦被辨識出來，伴奏跟著轉 |
+
+不同型號的按鈕不一樣：PSR-2000 是 INTRO / MAIN / ENDING，PSR-E 系列是 MAIN / AUTO FILL 加 INTRO / ENDING / rit.，PSR-S650 有獨立的 `AUTO FILL IN` 與 `SYNC START`。這些出自第三方網站轉載的使用手冊，還沒對照 Yamaha 官方 PDF `[調研]`：
+
+- [PSR-1100：Intro / Ending 與 Auto Fill In](https://www.manualsdir.com/manuals/230092/yamaha-1100.html?page=69)
+- [PSR-E433 第 41 頁](https://www.manualowl.com/m/Yamaha/PSR-E433/Manual/288825?page=41)
+- [PSR-A300 第 54 頁](https://www.manualowl.com/m/Yamaha/PSR-A300/Manual/152648?page=54)
+
+所以「在這段結尾放過門」在 PSR 上的做法是：在想要換段的那一小節按下一個 MAIN，過門就從那裡開始放，下一小節進新段落。MODX 的 scene / pattern 切換沒有過門這一層。
+
+## 三個最接近的 { #compare }
+
+| | [JAMTRACK](https://github.com/Philip-Bos/jamtrack-fm1) | [Polly](https://github.com/charlesvestal/fm1-polly) | [CORD](https://github.com/chasedeanda/cord-fm1) |
+|---|---|---|---|
+| 版本、授權 | 0.2.3，MIT | 0.6.4，GPL-3.0 | 1.0.3，GPL-3.0 |
+| 是什麼 | 跟你一起玩的 backing band | QY70 風格的口袋 arranger | 挑和弦進行、按 PLAY 就伴奏 |
+| 內建內容 | 160 個 jam（16 個曲風各 10 個）；28 種 groove、24 種 bass line、24 種伴奏手法、15 條 synth line | 16 個 style（裝自己的 QY70 ROM 可以再加 128 個），16 個和弦進行 | 130 個和弦進行點子，含 2/4、3/4、5/4、6/8、7/4 |
+| 和弦進行 | Nashville 級數（`1maj7 6m7 4maj7 5sus4`），換調、換大小調整首跟著轉；GENERATE 產生新的 | 照小節、拍子寫根音與和弦性質；`REC` 錄一個新的；`follow` 時跟著你彈的和弦走 | 可以複製後改，最多 16 格和弦；存成 Songs（6 首） |
+| 段落 | A（verse）/ B（chorus） | 一首歌由多個 section 組成，各自指定和弦進行與重複次數；每個 style 有 Groove A / B | 一個進行循環；Drop / Back |
+| 過門 | `SEQ`：**在這一輪結尾放過門**再換段；按住 `SEQ` 立刻放 | `HOME` + 黑鍵 1–5：Intro、Groove A、Groove B、Fill、Ending，**從下一小節開始** | Perform 頁 K1：排一小節的 fill，放完回原本的 groove |
+| Intro / Ending | 沒有 intro；停止可以選「立刻」或「這小節結束再加一下」 | 有，Song 頁也能設定 | 沒寫 |
+| 上面 solo | **有**：預設 `SOLO LEAD`，三個為 solo 做的 mono 音色（帶 glide），也能改用其他音色；琴鍵燈顯示和弦音與音階 | Melody M1 / M2 跟著 section 跑；有沒有專用 solo 音色 README 沒寫 | 沒有專用的 lead；你彈的會接管和聲 |
+| 音色 | 37 種音色、10 套鼓（drum samples 是 CC0） | Sonivox EAS 的 General MIDI；也能當 16 軌 GM 音源 | FM 與 virtual analog 八組 bank |
+| 外部同步 | MIDI clock in、STOP / CONTINUE、loop pedal 的 CC | MIDI in（USB、TRS），可以用自己的 clock 帶 arranger | 沒寫 |
+| 新晶片（Hub 標示） | 認得 | 認得 | 認得 |
+| 在瀏覽器裡試玩 | [模擬器](https://philip-bos.github.io/jamtrack-fm1/emulator/) | [模擬器](https://charlesvestal.github.io/fm1-polly/emu/) | [模擬器](https://chasedeanda.github.io/cord-fm1/play/) |
+
+另外幾個也有伴奏成分，但重點不同 `[上游]`：[Pocket Band](https://github.com/elpabl0/pocketband)（在 16 個曲風小鎮的地圖上選點，寫出四人編制的草稿）、[PERF-1](https://github.com/deamonSLINKY/PERF-1)（19 個曲風自己演奏，有 Jam 頁）、[HERA](https://github.com/benbadio/hera-fm1)（Roland J-6 式的 100 組和弦，只認舊晶片）、[COQUÍ](https://github.com/saulofilho/coqui-fm1)（拉丁節奏，跟著你按住的和弦彈 montuno）、[Blop](https://github.com/OSR-Experiment/OSR-1)（一指和弦加 bass 與鼓，只認舊晶片）。
+
+### 本人試玩的感想（2026-11-19） { #impressions }
+
+三個都是在作者放的網頁模擬器上玩的，不是實機 `[模擬]`：[CORD](https://chasedeanda.github.io/cord-fm1/play/)、[JAMTRACK](https://philip-bos.github.io/jamtrack-fm1/emulator/)、[Polly](https://charlesvestal.github.io/fm1-polly/emu/)。
+
+- **JAMTRACK**：會把建議彈的音 highlight 出來，尤其是調內的音和和弦組成音。對剛開始 jam 的人很有幫助。
+- **Polly**：很靈活。也有和 THEORY 一樣的和弦偵測，可以很快錄下一個和弦進行。
+- **CORD**：鍵盤燈亮著現在的和弦，**閃的是下一個和弦的根音**，很酷。但按鍵直接彈出和弦，沒有 solo 音色，不看說明不太知道怎麼用。`SEQ`、`ARP` 等頁的功能很多，還沒仔細看。
+
+### 先試哪一個
+
+- **只想挑調、挑 groove 就 solo**：JAMTRACK。它也是唯一有「這一輪結尾自動放過門」和專用 solo 音色的。
+- **想照歌曲排段落**（每段自己的和弦進行、前奏、尾奏）：Polly，最接近 PSR / QY70 的 arranger。
+- **想從和弦進行出發寫歌**：CORD。
+
+PSR 的東西這三個都沒有全部做到：沒有 MAIN A–D 四種變化，也沒有可以設定「這一段播到第幾小節才放過門」。自己做的想法在[探索頁](../dev/jam.md)，2026-11-19 決定先放著。
+
+另外兩個也是「選 style 就有整個 band」，還沒試 `[上游]`：
+
+- [RAKT](https://github.com/chasedeanda/rakt-fm1)：CORD 的作者做的，產生和弦、bass、鼓與旋律，GLO Live 頁用琴鍵 solo 某一軌、排過門與 drop。
+- [Pocket Band](https://github.com/elpabl0/pocketband)、[PERF-1](https://github.com/deamonSLINKY/PERF-1)：見上面。
+
+## 只要鼓：live 鼓機 { #drums }
+
+不要和弦、只要一個會打鼓的夥伴：選曲風、選鼓組、按下去就有 groove，想要時加一個過門。FM-1 上大多數鼓機是 step sequencer（要自己排），偏 live 的只有少數 `[上游]`：
+
+| 韌體 | 偏哪一邊 | 過門與變化 | 新晶片（Hub 標示） |
+|---|---|---|---|
+| [RHYTM-SEC-1](https://github.com/hamperj/rhytm-sec-1) | **live**：19 種 style，pattern 依曲風的機率產生、邊打邊變，加一條跟著調走的 bass | `FX` 下一小節放過門；`SAVE` 依序 breakdown → build → drop；`REC` 鎖住 pattern 不讓它變；F3–B3 開關每一軌；跟 DAW 的 MIDI clock | 認得 |
+| [Cut-A-Dor](https://github.com/kidbee85-beep/cut-a-dor-release) | 16 個節奏家族（boom bap、lo-fi、breaks），有 swing 與過門，也有 32 步的 sequencer | 有過門 | **只認舊晶片** |
+| [Amenity](https://github.com/ejtb76/amenity)、[CHOPPAH](https://github.com/profikid/fm1-break-choppah) | 經典 break（Amen 等）切片後現場演奏 | 按住白鍵 roll、build；黑鍵放單音或效果 | 認得 |
+| [COQUÍ](https://github.com/saulofilho/coqui-fm1) | 拉丁打擊樂，14 種 groove | | 認得 |
+| [Hortator](https://github.com/deadactive/hortator)、[FOMAJAM](https://github.com/konsumer/fomajam)、[X0X](https://github.com/charlesvestal/fm1-x0x) | step sequencer 型的鼓機 | 自己排 | 認得 |
+
+RHYTM-SEC-1 最接近「live 鼓機」，但它的 pattern 是產生出來的，不是固定的 intro / 段落 / 尾奏；也沒有「這段第幾小節放過門」。
+
+
+
+## 模擬器試玩 `[模擬]` { #emu }
+
+2026-11-19，fm1-emu 0.5.1（Linux 版），`--shot 6000` 開機 6 秒，兩種晶片（`uc25hq80`、`p25q80`）結果相同：
+
+![開機 6 秒：JAMTRACK、Polly、CORD](../assets/jam/boot.png)
+
+| 韌體 | 檔案 SHA-256（與 Hub catalog 相同） | 開機 6 秒 | 第一次開機寫的 sector |
+|---|---|---|---|
+| JAMTRACK 0.2.3 | `4111f8e9b2019ba4bbc1d3137c490ffcd4261574ad7265992dc15ef0806e1902` | 一開機就在放 jam（F1 GOLDEN HOUR，D 大調，104 BPM） | 沒有 |
+| Polly 0.6.4 | `e3f6a5ab9d049161d631937694dd43ba38a7e8a9ab15c0ebed72c2b913368f36` | Home 頁，Pop style，Groove A 在跑 | `0x97000` |
+| CORD 1.0.3 | `249d4d1802725b245bad395156360c0c8c42d261c89c83b98eee8d2f6a2a8643` | Open Road（C Ionian，Lo-fi，100 BPM）在放 | `0x9D000` |
+
+- 三個的程式都在 `0x92FFF` 以內；Polly 另外帶了一塊資料在 `0xAB000`–`0xB5FFF`（SLOOP 放 samples 的區域）。
+- Polly 與 CORD 第一次開機寫的位置在 SLOOP 的 project 區（`0x97000` 起）。這台機器的 SLOOP project 已經在 2026-11-17 被 ChoralRoot 蓋掉（見 [Flash 配置](../hardware/flash-map.md)），但之後如果又在 SLOOP 裡存了曲子，裝這兩個會再蓋一次。
+- 這是空白 flash 上的結果，不是疊在這台機器的備份上。**刷機前要在 Mac 上用最新的備份跑 `just emu-rehearse`**，再把結果寫進[多韌體切換](switching.md)。
+
+在 Mac 上下載並核對 GitHub release 的 digest：
+
+```sh
+just fm1-fetch-more
+just emu-run downloads/jamtrack-0.2.3.fwsc
+```

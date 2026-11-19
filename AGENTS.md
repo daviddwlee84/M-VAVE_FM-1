@@ -55,7 +55,7 @@ just emu-fetch         # fm1-emu into tools/fm1-emu/ (git-ignored), digest-verif
 just emu-run FILE [CHIP]   # play a .fwsc in a window; CHIP defaults to uc25hq80 (this unit)
 just emu-shot FILE [CHIP] [MS]  # headless boot: LCD image + flash write count
 just agtdeck-fetch     # Agent Deck package, digest + attestation verified
-just fm1-fetch-more    # CTL-1, ChoralRoot, RemoteFM1 packages, digest-verified
+just fm1-fetch-more    # CTL-1, ChoralRoot, RemoteFM1, JAMTRACK, Polly, CORD packages, digest-verified
 just emu-rehearse PKG BACKUP.bin  # boot PKG's firmware over a real backup in the emulator
 just agtdeck-doctor    # Agent Deck host daemon self-check (clones upstream into vendor/)
 just agtdeck-sim       # Agent Deck daemon without an FM-1 (interactive; prints frames)
@@ -280,7 +280,7 @@ from a test. There is no auto-approve; do not add one without the owner asking.
 
 A repo-owned skill for operating the unit and an `fm1` CLI wrapper (the `Justfile` covers it for now;
 `fm1-hub-listing` covers publishing only). `fm1-emu` is a downloaded binary, not a source checkout.
-A vocabulary app is at the idea stage (`docs/dev/vocab.md`). A deck written to the flash data area would need
+A vocabulary app is at the idea stage (`docs/dev/vocab.md`). An arranger (JAM) or a live drum machine is explored, not planned (owner put it on hold 2026-11-19): `docs/dev/jam.md` compares PSR, BeatBuddy, RC-10R and sketches both directions, and `docs/dev/drums.md` is the live drum machine's design (standalone firmware, synth kits first, design only); THEORY's planned GROOVE page folds into it. Existing backing-band and live drum firmwares are compared in `docs/firmware/jam.md`. A deck written to the flash data area would need
 the firmware-development rule "never compute flash addresses or call erase/program directly" changed first,
 with the owner's approval; the proposed wording is in that page. THEORY (`docs/dev/theory.md`) has flash cards from 0.2; importing
 own content (progressions, melodies) is still to come and is meant to go through the store layer (`APP_STORE_MAP`), which needs
