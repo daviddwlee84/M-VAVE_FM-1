@@ -33,6 +33,7 @@ experimental firmware apps under `firmware/`, built on the `fm1-base` submodule.
 | `firmware/guitar/` | GUITAR, own guitar neck and chord book (GPL-3.0-or-later, identity `FM-1_55`, settings at `0xD4000`; separate firmware, decided 2026-11-18). v0.1: NECK (a key's scale on frets 0-12, CAGED / NPS positions, eight tunings) and SHAPE (chord diagrams found by search, easiest first). v0.2 (draft PR #3): power chords, SHAPE filters, LEARN (chord course by key in `lesson.c`, Leitner, progress in the same record). Includes THEORY's `theory.c`, `synth.c`, `gtext.c` from `../theory`. Its platform-free core `fret.c` has `just guitar-unit`. Verified in the host simulator and fm1-emu (both chips, rehearsed over a backup); not on the unit yet. Design: `docs/dev/guitar.md`. |
 | `firmware/voicelab/` | Spike app (MIT): each key says a test word with the `lpc` / `adpcm` decoders. Not for installing. Its data (`gen/`) is generated and git-ignored. Design: `docs/dev/tts.md`. |
 | `firmware/rhythm/` | RHYTHM, own rhythm trainer (GPL-3.0-or-later, identity `FM-1_54`, settings at `0xD2000`). v0.1: METRO (metronome, subdivisions, tap tempo, gap click) and ECHO (hear a bar or two, tap it back, per-onset ms error and a hint); verified in fm1-emu on both chips, not flashed yet. v0.2: one-line percussion notation, ECHO READ mode, ENDLESS (call and response without breaks, health bar, speeds up). Platform-free core `rhythm.c`. Design: `docs/dev/rhythm.md`. |
+| `firmware/drums/` | DRUMS, own live drum machine (GPL-3.0-or-later, identity `FM-1_58`, settings at `0xD0000`). v0.1: 10 styles (`styles.h`, text, one line a lane) with MAIN A/B and fills, FILL AT (NOW / NEXT BAR / PHRASE of 4, 8, 16 bars), AUTO FILL, transition and ending on REC (tap / hold / twice), 15 pads, mutes, swing, two synthesised kits (`kit.c`, at -O2). Platform-free player `groove.c`. Verified in the simulator, device build and fm1-emu on both chips; not flashed, not rehearsed over a backup. Design: `docs/dev/drums.md`. |
 | `host/conductor/` | Conductor's host daemon (Python, MIT): backends `hc`, `herdr`, `fake`. Protocol spec in `PROTOCOL.md`; tests in `host/tests/`. |
 | `host/morse/` | Morse's host (Python, MIT): types what the FM-1 reads into the Mac, sends text for it to play. Protocol in `PROTOCOL.md` (keying is Vail-format MIDI note 0). |
 | `host/voicelab/` | Listening lab (Python, MIT): renders test words with every speech option (macOS `say`, Moonshine Klatt, 386DX, LPC, ADPCM, SPELLBOX in fm1-emu) into `build/voicelab/`, scores them with Whisper. GPL engines stay in `vendor/`; generated audio is never committed. |
@@ -98,6 +99,10 @@ just voice-fw          # the test words into firmware/voicelab (gen/, git-ignore
 
 just rhythm-unit       # firmware/rhythm core on this computer (strict C99)
 just rhythm-emu [CHIP] # RHYTHM in fm1-emu (after `just fw-build rhythm`; `just fw-test rhythm` is its simulator test)
+
+just drums-unit        # firmware/drums groove.c (every FILL AT lands right) and kit.c (every drum sounds and ends)
+just drums-emu [CHIP]  # DRUMS in fm1-emu (after `just fw-build drums`; `just fw-test drums` is its simulator test)
+just fw-sdk-from PKG   # gitee.com unreachable: the 3 AC79 SDK files a USB-only build needs, from a package, hash-checked
 
 just fw-setup          # submodules + Python tools (needs `brew install libraqm`)
 just fw-test [APP]     # host simulator build + tests/basic.txt; no toolchain, no hardware
@@ -280,7 +285,7 @@ from a test. There is no auto-approve; do not add one without the owner asking.
 
 A repo-owned skill for operating the unit and an `fm1` CLI wrapper (the `Justfile` covers it for now;
 `fm1-hub-listing` covers publishing only). `fm1-emu` is a downloaded binary, not a source checkout.
-A vocabulary app is at the idea stage (`docs/dev/vocab.md`). An arranger (JAM) or a live drum machine is explored, not planned (owner put it on hold 2026-11-19): `docs/dev/jam.md` compares PSR, BeatBuddy, RC-10R and sketches both directions, and `docs/dev/drums.md` is the live drum machine's design (standalone firmware, synth kits first, design only); THEORY's planned GROOVE page folds into it. Existing backing-band and live drum firmwares are compared in `docs/firmware/jam.md`. A deck written to the flash data area would need
+A vocabulary app is at the idea stage (`docs/dev/vocab.md`). An arranger (JAM) or a live drum machine is explored, not planned (owner put it on hold 2026-11-19): `docs/dev/jam.md` compares PSR, BeatBuddy, RC-10R and sketches both directions, and `docs/dev/drums.md` is the live drum machine's design; its v0.1 is `firmware/drums/` (see Layout); THEORY's planned GROOVE page folds into it. Existing backing-band and live drum firmwares are compared in `docs/firmware/jam.md`. A deck written to the flash data area would need
 the firmware-development rule "never compute flash addresses or call erase/program directly" changed first,
 with the owner's approval; the proposed wording is in that page. THEORY (`docs/dev/theory.md`) has flash cards from 0.2; importing
 own content (progressions, melodies) is still to come and is meant to go through the store layer (`APP_STORE_MAP`), which needs

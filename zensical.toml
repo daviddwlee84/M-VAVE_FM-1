@@ -71,7 +71,7 @@ nav = [
     { "樂理練習機（構想）" = "dev/theory.md" },
     { "吉他指板與和弦書" = "dev/guitar.md" },
     { "伴奏機與 live 鼓機（探索）" = "dev/jam.md" },
-    { "Live 鼓機（設計）" = "dev/drums.md" },
+    { "Live 鼓機 DRUMS" = "dev/drums.md" },
   ] },
   { "線上試玩" = "playground.md" },
   { "生態是怎麼來的" = "ecosystem.md" },

@@ -1,0 +1,32 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+# DRUMS' words for a screen reader (fm1-reader): the text on the screen <TAB> what to say.
+# url: https://daviddwlee84.github.io/M-VAVE_FM-1/dev/drums/
+DRUMS	drums
+BPM	beats per minute
+MAIN A	main A
+MAIN B	main B
+FILL	fill
+FILL AT	fill at
+NEXT BAR	next bar
+PHRASE	phrase
+AUTO	auto fill
+SWING	swing
+TRANSITION	transition
+ENDING	ending
+STOPPED	stopped
+KIT	kit
+STYLE	style
+808	eight oh eight
+STUDIO	studio
+MUTED	muted
+TAP TEMPO	tap tempo
+ROCK 8	rock eight beat
+POP 16	pop sixteen beat
+FUNK	funk
+SHUFFLE	shuffle
+DISCO	disco
+HIP-HOP	hip hop
+BOSSA	bossa nova
+REGGAE	reggae
+WALTZ 3/4	waltz in three four
+BALLAD 6/8	ballad in six eight

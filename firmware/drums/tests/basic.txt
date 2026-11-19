@@ -1,0 +1,183 @@
+# DRUMS in the host simulator: just fw-test drums (screenshots and audio in firmware/drums/build/host/)
+# Defaults: ROCK 8 at 110 BPM (a bar 2.18 s), 808, FILL AT PHRASE, phrase 4, AUTO FILL on.
+# part: 0 MAIN A, 1 MAIN B, 2 FILL A, 3 FILL B, 4 ENDING; state: 0 stopped, 1 playing, 2 ending; fill_at: 0 NOW, 1 BAR, 2 PHRASE
+wait 600
+shot boot.png
+expect styles 10
+expect style 0
+expect bpm 110
+expect kit 0
+expect fill_at 2
+expect phrase 4
+expect auto_fill 1
+expect running 0
+
+# ---- tap tempo while stopped (REC), then back to 110 with K1
+tap REC
+wait 420
+tap REC
+wait 420
+tap REC
+wait 50
+expect bpm 120
+turn K1 -10
+expect bpm 110
+
+# ---- PLAY: MAIN A, it sounds
+peakreset
+wav rock.wav
+tap PLAY
+expect running 1
+wait 1500
+expect state 1
+expect part 0
+expect peak_db_min -30
+shot main_a.png
+
+# ---- one tap on REC (PHRASE): the fill waits for bar 4 of the phrase
+tap REC
+wait 400
+expect req_fill 1
+expect part 0
+shot fill_queued.png
+wait 5200
+expect bar 3
+expect part 2
+shot fill.png
+wait 2300
+expect part 0
+expect hits_X 1
+wavstop
+
+# ---- FILL AT NEXT BAR (K3 back once): F#3 asks, the next bar is the fill
+turn K3 -1
+expect fill_at 1
+key 1 down
+wait 30
+key 1 up
+wait 30
+expect req_fill 1
+wait 2300
+expect part 2
+
+# ---- MAIN B (G3) with AUTO FILL: the fill, then B from its bar 1
+wait 2300
+expect part 0
+key 2 down
+wait 30
+key 2 up
+wait 2300
+expect part 2
+wait 2300
+expect sec 1
+expect part 1
+expect bar 0
+shot main_b.png
+
+# ---- FILL AT NOW: the fill from the next step
+turn K3 -1
+expect fill_at 0
+key 1 down
+wait 30
+key 1 up
+wait 30
+expect part 3
+
+# ---- hold REC: a transition, then MAIN A when let go
+wait 2300
+press REC
+wait 700
+expect hold 1
+expect part 3
+shot transition.png
+wait 2300
+expect part 3
+release REC
+wait 30
+expect hold 0
+wait 2300
+expect sec 0
+expect part 0
+
+# ---- the pads (F4 kick, G4 snare) and SEL + a pad mutes that drum
+key 12 down
+wait 20
+key 12 up
+key 14 down
+wait 20
+key 14 up
+wait 30
+expect pads 2
+press SEL
+key 12 down
+wait 20
+key 12 up
+release SEL
+wait 30
+expect mutes 1
+expect pads 2
+shot muted.png
+press SEL
+key 12 down
+wait 20
+key 12 up
+release SEL
+wait 30
+expect mutes 0
+
+# ---- style and kit while playing: the style at the next bar, the tempo stays
+turn SELECT 2
+expect style 2
+expect bpm 110
+turn PRESET 1
+expect kit 1
+wait 2400
+peakreset
+wav funk_studio.wav
+wait 2400
+expect peak_db_min -30
+wavstop
+shot funk_studio.png
+
+# ---- REC twice: the ending, then stopped
+tap REC
+wait 120
+tap REC
+wait 50
+expect req_end 1
+wait 2400
+expect state 2
+shot ending.png
+wait 2400
+expect running 0
+expect state 0
+peakreset
+wait 1500
+expect peak_db_max -60
+
+# ---- PLAY held: stop at once
+tap PLAY
+wait 1000
+expect running 1
+press PLAY
+wait 800
+release PLAY
+expect running 0
+
+# ---- settings kept: swing, phrase, AUTO FILL off; saved 3 s after, read back after a restart
+turn K2 8
+expect swing 8
+turn K4 1
+expect phrase 8
+tap ARP
+expect auto_fill 0
+wait 3500
+reboot
+wait 600
+expect style 2
+expect kit 1
+expect swing 8
+expect phrase 8
+expect auto_fill 0
+expect fill_at 0
+shot settings.png

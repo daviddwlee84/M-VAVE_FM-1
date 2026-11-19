@@ -1,0 +1,18 @@
+# DRUMS' build settings (fm1-base tools/build.py)
+name = "DRUMS"
+title = "DRUMS"
+id_prefix = "FM-1_58"          # package identity: dev FM-1_5800, release 0.1 FM-1_58000100 (no other package's in the Hub's catalog of 2026-11-19)
+usb_manufacturer = "fm1-base"
+usb_product = "DRUMS FM-1"
+o2 = ["kit.c"]                 # the drum voices, at -O2
+include = ["../common"]        # ledfx (firmware/common, MIT)
+words = "words.tsv"
+ble = false                    # USB only for now
+tagline = "a live drum machine to jam with"
+repo = "https://github.com/daviddwlee84/M-VAVE_FM-1"
+site = "https://daviddwlee84.github.io/M-VAVE_FM-1/dev/drums/"
+licence = "GPL-3.0-or-later"
+credits = "Built on fm1-base by Charles Vestal. The transport follows this repository's RHYTHM."
+author = "daviddwlee84"
+description = "A drum machine to play along with, not to program. Pick a style (rock, pop, funk, shuffle, disco, hip-hop, bossa, reggae, waltz, 6/8) and a kit (808 or STUDIO), press PLAY, and steer it live: two MAIN variations, fills that come now, at the next bar or on the last bar of a 4, 8 or 16-bar phrase, an automatic fill when you change MAIN, a crash into the next bar, and an ending. REC is one button for all of it: tap for a fill, hold for the other MAIN, tap twice to end. The right half of the keys are pads to play over the groove; SEL and a pad mutes that drum."
+tags = ["drum-machine"]

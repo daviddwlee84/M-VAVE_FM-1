@@ -31,6 +31,22 @@ tools/fw-AC79_AIoT_SDK/    JieLi AC79 SDK，固定 tag（gitignore）
 | `just fw-toolchain` | 下載 JieLi toolchain 與 AC79 SDK 到 `tools/`（約 1.2 GB） | 是 |
 | `just fw-build [app]` | build 實機套件 `firmware/<app>/build/*.fwsc` | 是，約 17 秒，產出 `template.fwsc`（616 KB，identity `FM-1_1100`） |
 
+## 在 Linux 上 build { #linux }
+
+2026-11-19 在雲端的 Linux x86-64 容器裡 build 過（[DRUMS](drums.md) v0.1）：JieLi toolchain 本來就是 Linux 版，`build.py` 直接執行，不需要 Docker。要裝的是 `libraqm-dev`（Pillow 從原始碼編）與 `libasound2-dev`（host 端的 `python-rtmidi`），以及 `just`（`uv tool install rust-just`）。
+
+### 連不到 gitee.com 時的 SDK { #sdk-from-package }
+
+`just fw-toolchain` 從 gitee.com clone AC79 SDK。那個容器的網路設定是不限制，gitee.com 仍然直接斷線（`Connection reset by peer`），看起來是 gitee 那端擋的，不是這邊的設定。
+
+不開 Bluetooth（`ble = false`）的 build 只用到 SDK 裡三個檔案：`uboot.boot`、`cfg_tool.bin`、`cfg/eq_cfg_hw.bin`。fm1-base 的 `tools/build.py` 記著它們的 SHA-256（`SDK_SHA256`），而且每個 fm1-base 做出來的 package 都把它們包在裡面。所以可以從一個已經核對過的 package 取出來：
+
+```sh
+just fw-sdk-from downloads/jamtrack-0.2.3.fwsc
+```
+
+`scripts/ac79_sdk_from_fwsc.py` 把 package 的打包倒過來做，三個檔案的 SHA-256 都和 `SDK_SHA256` 一樣才寫進 `tools/fw-AC79_AIoT_SDK/`（`just fw-toolchain` 看到這個資料夾就不再 clone）。雜湊一致就是 SDK 本身的位元組，和誰做的 package 無關。JAMTRACK 0.2.3、Polly 0.6.4 與自己 build 的 package 都取得出來（舊的 package 存的是原樣，新的 package 先加過密，腳本兩種都試）。Bluetooth 或 WiFi 的 build 還是要完整的 SDK。
+
 ## 前置需求（macOS）
 
 - `uv`、`just`、Xcode command line tools（`cc`）。
