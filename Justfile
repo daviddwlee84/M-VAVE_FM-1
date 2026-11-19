@@ -654,7 +654,24 @@ metro-unit:
 
 # METRONOME in the emulator (build it first: just fw-build metronome). Its simulator test is `just fw-test metronome`.
 metro-emu chip="uc25hq80":
-    just emu-run firmware/metronome/build/metronome.fwsc "{{chip}}"
+    just emu-run firmware/metronome/build/metronome.fwsc "{{chip}}" --usb
+
+# METRONOME's computer side and its web page: host/tests (pytest) and web/tests (node), the same frames as tests/basic.txt.
+metro-test:
+    cd firmware/metronome && PYTHONPATH=host uv run --project ../.. --locked --all-groups pytest -q host/tests
+    node firmware/metronome/web/tests/setlist_test.js
+
+# The setlist of an FM-1 running METRONOME 0.3+ into a JSON file (read-only on the unit), and back (it asks: PLAY yes).
+metro-backup file:
+    PYTHONPATH=firmware/metronome/host uv run --locked --all-groups python -m fm1_metronome backup "{{file}}"
+metro-restore file:
+    PYTHONPATH=firmware/metronome/host uv run --locked --all-groups python -m fm1_metronome restore "{{file}}"
+
+# METRONOME's release package (identity FM-1_59 + XXYYZZ), and a copy for its try page (web/try/metronome.fwsc).
+metro-release version: fw-setup fw-toolchain
+    JIELI_TOOLCHAIN="$PWD/tools/jieli/toolchain" AC79_SDK="$PWD/tools/fw-AC79_AIoT_SDK" \
+      uv run --locked --all-groups python "{{fm1_base}}/tools/build.py" firmware/metronome --release "{{version}}"
+    cp "firmware/metronome/build/metronome-{{version}}.fwsc" firmware/metronome/web/try/metronome.fwsc
 
 # Where gitee.com cannot be reached: the three AC79 SDK files a USB-only build needs, out of an fm1-base package,
 # kept only if they match fm1-base's pinned SHA-256 (scripts/ac79_sdk_from_fwsc.py; docs/dev/index.md).
