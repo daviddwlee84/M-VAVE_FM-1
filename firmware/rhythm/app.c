@@ -1,5 +1,5 @@
 /* SPDX-License-Identifier: GPL-3.0-or-later */
-/* RHYTHM v0.1: METRO and ECHO (see app.h). The rhythms and the scoring are rhythm.c.
+/* RHYTHM v0.3: METRO, ECHO, ENDLESS, and PULSE, JUDGE, QUIZ (see app.h). The rhythms and the scoring are rhythm.c.
  *
  * Time: the audio's sample count is the clock. The render plays every click and note on its exact sample (a tick
  * of 12 a beat), not on the next block (which would wobble by up to 5.8 ms). The 1 kHz tick reads the keys and
@@ -12,15 +12,16 @@
 #include "ledfx.c"
 
 #define FW_MAJOR 0
-#define FW_MINOR 2
+#define FW_MINOR 3
 #define SR 44100u
 
 /* ---------------------------------------------------------------- settings --- */
 #define REC_MAGIC 0x31304852u            /* "RH01" */
-#define REC_VER 1u
+#define REC_VER 2u                       /* 2: 0.3's pages (a v1 record is read and kept) */
 
-enum { PG_METRO, PG_ECHO, PG_ENDLESS, PG_N };
-static const char *const PG_NAME[PG_N] = { "METRO", "ECHO", "ENDLESS" };
+enum { PG_METRO, PG_ECHO, PG_ENDLESS, PG_PULSE, PG_JUDGE, PG_QUIZ, PG_N };
+static const char *const PG_NAME[PG_N] = { "METRO", "ECHO", "ENDLESS", "PULSE", "JUDGE", "QUIZ" };
+static const uint8_t PULSE_BARS[] = { 2, 4, 8, 16 }, PULSE_COUNT[] = { 1, 2, 4 };
 enum { SUB_NONE, SUB_8, SUB_TRIP, SUB_16, SUB_N };
 static const char *const SUB_NAME[SUB_N] = { "OFF", "8THS", "TRIPLETS", "16THS" };
 static const uint8_t GAPS[][2] = { { 0, 0 }, { 1, 1 }, { 2, 1 }, { 2, 2 }, { 4, 2 }, { 4, 4 } };   /* bars on, off */
@@ -40,7 +41,20 @@ typedef struct {
     uint8_t read;                        /* ECHO: 0 HEAR (blind), 1 READ (the notes shown, nothing played) (0.2) */
     uint8_t rsv;
     uint16_t best;                       /* ENDLESS: most rounds survived (0.2) */
+    /* v2 (0.3) */
+    uint8_t pmode;                       /* PULSE: 0 GUIDED (a count-in), 1 COLD (the BPM alone) */
+    uint8_t pbars;                       /* PULSE: PULSE_BARS[] tapped blind */
+    uint8_t pcount;                      /* PULSE: PULSE_COUNT[] bars of count-in (GUIDED) */
+    uint8_t jtype;                       /* JUDGE: RH_J_* */
+    uint8_t jrand;                       /* JUDGE: each trial at a tempo near the BPM, not at it */
+    uint8_t qtype;                       /* QUIZ: RH_Q_* */
+    uint8_t qlevel;                      /* QUIZ: 1..3 */
+    uint8_t rsv2;
+    uint16_t pbest[2];                   /* PULSE: the closest tempo, |%| x10 + 1 (0 none), per mode */
+    uint16_t jbest[3];                   /* JUDGE: the smallest threshold, x10 (0 none), per type */
+    uint16_t qbest;                      /* QUIZ: the longest streak */
 } rec_t;
+#define REC_V1_SIZE 20u                  /* (v1 ended at best) */
 static rec_t rec;
 static uint32_t saves, dirty_at;
 
@@ -56,12 +70,28 @@ static void defaults(void)
     rec.lat = 0;
 }
 
+static void defaults_v2(void)            /* the fields 0.3 added (a v1 record keeps the rest) */
+{
+    rec.pmode = 0;
+    rec.pbars = 1;
+    rec.pcount = 0;
+    rec.jtype = RH_J_TEMPO;
+    rec.jrand = 0;
+    rec.qtype = RH_Q_TERM_BPM;
+    rec.qlevel = 1;
+    rec.rsv2 = 0;
+    rec.pbest[0] = rec.pbest[1] = 0;
+    rec.jbest[0] = rec.jbest[1] = rec.jbest[2] = 0;
+    rec.qbest = 0;
+}
+
 static int rec_valid(const rec_t *r)
 {
     return r->magic == REC_MAGIC && r->ver == REC_VER && r->size == sizeof *r && r->page < PG_N && r->bpm >= 30
            && r->bpm <= 240 && r->bpb >= 2 && r->bpb <= 4 && r->sub < SUB_N && r->gap < NGAPS && r->level >= 1
            && r->level <= RH_LEVELS && r->bars >= 1 && r->bars <= 2 && r->lat >= -30 && r->lat <= 90
-           && r->read <= 1u;
+           && r->read <= 1u && r->pmode <= 1u && r->pbars < sizeof PULSE_BARS && r->pcount < sizeof PULSE_COUNT
+           && r->jtype < RH_J_N && r->jrand <= 1u && r->qtype < RH_Q_N && r->qlevel >= 1 && r->qlevel <= 3;
 }
 
 static void rec_save(void)
@@ -74,8 +104,8 @@ static void rec_save(void)
 }
 
 /* ------------------------------------------------------- audio and clock --- */
-enum { EV_ACCENT = 1, EV_CLICK = 2, EV_SOFT = 4, EV_SUB = 8, EV_NOTE = 16 };
-enum { TR_METRO, TR_ECHO };
+enum { EV_ACCENT = 1, EV_CLICK = 2, EV_SOFT = 4, EV_SUB = 8, EV_NOTE = 16, EV_LOW = 32 };   /* = RH_S_* */
+enum { TR_METRO, TR_ECHO, TR_SEQ };      /* TR_SEQ: a list of sounds at their own samples (rh_seq_t) */
 #define EN_ROUNDS 4                      /* ENDLESS: call-and-response rounds a stage */
 #define EV_MAX ((4 + 2 * 4 * EN_ROUNDS + 2) * RH_TPB)   /* the longest: an ENDLESS stage in 4/4 (ECHO's is shorter) */
 
@@ -92,7 +122,11 @@ static struct {
     uint8_t bpb, sub, gap_on, gap_off;   /* METRO */
     uint16_t len;                        /* ECHO: ticks in ev[] */
     uint8_t ev[EV_MAX];                  /* ECHO: what sounds on each tick */
+    uint8_t sn, si;                      /* TR_SEQ: sounds, the next one */
+    uint32_t sq_at[RH_SEQ_MAX];          /* TR_SEQ: samples from start */
+    uint8_t sq_ev[RH_SEQ_MAX];
 } tr;
+static volatile uint32_t snd_at;         /* the sample of the last click or note (the keys' lights follow it) */
 
 typedef struct {
     float ph, inc, amp, dec;
@@ -144,6 +178,7 @@ static void sound(uint8_t e)
     if (e & EV_SOFT) voice(1047.0f, 0.13f, 12.0f);
     if (e & EV_SUB) voice(784.0f, 0.16f, 12.0f);
     if (e & EV_NOTE) voice(523.0f, 0.60f, 70.0f);
+    if (e & EV_LOW) voice(262.0f, 0.70f, 90.0f);
 }
 
 static float gain_now;
@@ -164,12 +199,18 @@ void app_render(int32_t *lr, uint32_t n, uint32_t master_q12)
     for (i = 0; i < n; i++) {
         float s = 0.0f;
         uint32_t now = s0 + i;
-        while (tr.run && (int32_t)(now - tr.next_at) >= 0) {
-            uint8_t e = event_at(tr.next);
-            if (e) sound(e);
-            tr.next++;
-            tr.next_at = tick_at(tr.next);
-        }
+        if (tr.mode == TR_SEQ)
+            while (tr.run && tr.si < tr.sn && (int32_t)(now - (tr.start + tr.sq_at[tr.si])) >= 0) {
+                sound(tr.sq_ev[tr.si++]);
+                snd_at = now;
+            }
+        else
+            while (tr.run && (int32_t)(now - tr.next_at) >= 0) {
+                uint8_t e = event_at(tr.next);
+                if (e) sound(e), snd_at = now;
+                tr.next++;
+                tr.next_at = tick_at(tr.next);
+            }
         for (k = 0; k < NV; k++) {
             voice_t *v = &vo[k];
             if (v->amp < 0.0005f) continue;
@@ -201,6 +242,7 @@ static uint32_t now_smp(void)            /* the clock, now (main loop or tick) *
 /* -------------------------------------------------------------- the taps --- */
 #define TAPQ 32
 static volatile uint32_t tq[TAPQ], tq_w;  /* key presses, as samples (the tick writes) */
+static volatile uint8_t tq_k[TAPQ];      /* and which key (the lowest pressed in that tick) */
 static uint32_t tq_r, tk_keys;
 #ifdef PLAT_HOST
 static uint32_t host_tap[RH_MAX_TAPS], host_ntap, host_itap, host_down, host_armed;   /* autotap: presses at these samples */
@@ -227,7 +269,10 @@ void app_tick(void)
     down = keys & ~tk_keys;
     tk_keys = keys;
     if (down) {
+        uint8_t k = 0;
+        while (!(down >> k & 1u)) k++;
         tq[tq_w % TAPQ] = at ? at : now_smp();
+        tq_k[tq_w % TAPQ] = k;
         tq_w++;
         tap_snd++;
     }
@@ -659,12 +704,347 @@ static int en_part(void)                 /* 0 counting in, 1 listening (a call),
 }
 
 /* ----------------------------------------------------------------- input --- */
+/* -------------------------------------------------------------- TR_SEQ --- */
+#define LEAD_SMP 2205u                   /* rh_*_seq start their first sound 50 ms in */
+
+/* sounds at these samples from start (at most RH_SEQ_MAX) */
+static void seq_load(uint32_t start, uint32_t n, const uint32_t *at, const uint8_t *ev, uint32_t bpm)
+{
+    uint32_t f = plat_lock(), i;
+    tr.mode = TR_SEQ;
+    tr.start = start;
+    tr.tick_q8 = beat_q8_at(bpm) / RH_TPB;
+    tr.sn = (uint8_t)n;
+    for (i = 0; i < n; i++) tr.sq_at[i] = at[i], tr.sq_ev[i] = ev[i];
+    tr.si = 0;
+    tr.next = 0;
+    tr.next_at = 0;
+    tr.run = 1;
+    plat_unlock(f);
+    ui.running = 1;
+}
+
+static void seq_go(uint32_t start, const rh_seq_t *q, uint32_t bpm)
+{
+    uint32_t at[RH_SEQ_MAX], i;
+    for (i = 0; i < q->n; i++) at[i] = (uint32_t)((float)q->us[i] * 0.0441f + 0.5f);   /* us -> samples, 44.1 kHz */
+    seq_load(start, q->n, at, q->ev, bpm);
+}
+
+static int seq_over(void) { return tr.mode == TR_SEQ && tr.run && tr.si >= tr.sn; }
+
+static uint32_t seq_end(void)            /* the sample of the last sound */
+{
+    return tr.start + (tr.sn ? tr.sq_at[tr.sn - 1] : 0);
+}
+
+/* ------------------------------------------------------------------ PULSE --- */
+/* tap every beat with no click. GUIDED: a count-in you hear, then the click stops and the grid goes on without it.
+ * COLD: nothing to hear, only the BPM; your first tap is beat 1. After the last beat the click comes back for a bar
+ * on the true grid (GUIDED) or from your first tap (COLD), so you hear where it would have been */
+enum { PS_IDLE, PS_COUNT, PS_WAIT, PS_BLIND, PS_RESULT };
+static struct {
+    uint8_t st, cold, have;
+    uint8_t beats, count;                /* blind beats, count-in beats */
+    uint32_t anchor;                     /* sample of the first blind beat */
+    uint32_t end;                        /* sample where it is scored */
+    int32_t taps[RH_PULSE_TAPS];
+    uint16_t ntaps;
+    rh_pulse_t res;
+    uint8_t new_best;
+} pl;
+
+static uint32_t pl_beat(uint32_t k) { return pl.anchor + q8_mul(k, beat_smp_q8()); }
+static uint32_t pl_grid_end(void) { return pl_beat(pl.beats); }   /* a beat after the last: no tap for it yet */
+
+static void pl_start(void)
+{
+    rh_seq_t q;
+    uint32_t now = now_smp();
+    zero(&pl.res, sizeof pl.res);
+    pl.cold = rec.pmode;
+    pl.beats = (uint8_t)(PULSE_BARS[rec.pbars] * rec.bpb);
+    if (pl.beats > RH_PULSE_MAX) pl.beats = RH_PULSE_MAX;
+    pl.ntaps = 0;
+    pl.have = 0;
+    pl.new_best = 0;
+    tq_r = tq_w;
+    tr_stop();
+    if (pl.cold) {
+        pl.count = 0;
+        pl.st = PS_WAIT;
+    } else {
+        pl.count = (uint8_t)(PULSE_COUNT[rec.pcount] * rec.bpb);
+        rh_clicks_seq(rec.bpm, rec.bpb, PULSE_COUNT[rec.pcount], &q);
+        seq_go(now, &q, rec.bpm);
+        pl.anchor = now + LEAD_SMP + q8_mul(pl.count, beat_smp_q8());
+        pl.end = pl_grid_end();
+        pl.st = PS_COUNT;
+    }
+    ui.redraw |= R_ALL;
+}
+
+static void pl_tap(uint32_t smp)
+{
+    if (pl.st == PS_WAIT) {              /* COLD: the first tap is beat 1 */
+        pl.anchor = smp;
+        pl.end = pl_grid_end();
+        pl.st = PS_BLIND;
+        ui.running = 1;
+    }
+    if (pl.st != PS_COUNT && pl.st != PS_BLIND) return;
+    if ((int32_t)(smp - pl.anchor) < -(int32_t)(beat_smp_q8() / 512u)) return;   /* counting in: tap along, not scored */
+    if (pl.ntaps < RH_PULSE_TAPS)
+        pl.taps[pl.ntaps++] = smp_ms((int32_t)(smp - pl.anchor)) - (pl.cold ? 0 : rec.lat);
+    /* the end: a quarter beat after the tap that answers the last beat, by your own pulse (late if you drag); with
+     * no such tap, a beat after the grid's last, held on while taps keep coming (up to a quarter of the length) */
+    rh_pulse(rec.bpm, pl.beats, pl.taps, pl.ntaps, &pl.res);
+    if (pl.res.tap_of[pl.beats - 1u] >= 0) pl.end = smp + beat_smp_q8() / 1024u;
+    else {
+        uint32_t later = smp + q8_mul(5u, beat_smp_q8()) / 4u, cap = pl_beat(pl.beats + pl.beats / 4u + 1u);
+        if ((int32_t)(later - pl.end) > 0) pl.end = (int32_t)(later - cap) > 0 ? cap : later;
+    }
+    ui.redraw |= R_MAIN;
+}
+
+static void pl_done(void)
+{
+    uint32_t k, bq = beat_smp_q8(), at[4];
+    uint8_t ev[4];
+    rh_pulse(rec.bpm, pl.beats, pl.taps, pl.ntaps, &pl.res);
+    pl.st = PS_RESULT;
+    pl.have = 1;
+    tr_stop();
+    if (pl.res.answered * 10u >= pl.beats * 9u && pl.res.bpm_x10) {   /* a best: nine beats in ten answered */
+        int a = pl.res.tempo_x10 < 0 ? -pl.res.tempo_x10 : pl.res.tempo_x10;
+        uint16_t *b = &rec.pbest[pl.cold];
+        if (!*b || a + 1 < *b) {
+            *b = (uint16_t)(a + 1);
+            pl.new_best = 1;
+            changed(0);
+        }
+    }
+    /* the click again for a bar, where the grid is now (a beat from the last one) */
+    for (k = 0; k < rec.bpb; k++) {
+        at[k] = q8_mul(pl.beats + 1u + k, bq);
+        ev[k] = (uint8_t)(k ? EV_CLICK : EV_ACCENT);
+    }
+    seq_load(pl.anchor, rec.bpb, at, ev, rec.bpm);
+    {
+        char t[48];
+        t[0] = 0;
+        tcat(t, rh_pulse_hint(pl.res.hint));
+        if (ann_on()) ann_say(t, 0, ANN_NOW);
+    }
+    ui.redraw |= R_ALL;
+}
+
+static void pl_follow(void)
+{
+    uint32_t now = now_smp();
+    if (pl.st == PS_COUNT && (int32_t)(now - pl.anchor) >= -(int32_t)(beat_smp_q8() / 512u)) {
+        pl.st = PS_BLIND;
+        ui.redraw |= R_ALL;
+    }
+    if (pl.st == PS_BLIND && (int32_t)(now - pl.end) >= 0) pl_done();
+    if (pl.st == PS_RESULT && seq_over() && (int32_t)(now - seq_end()) > (int32_t)(SR / 5u)) tr_stop();
+}
+
+static void pl_stop(void)
+{
+    if (pl.st == PS_BLIND && pl.ntaps) pl_done();   /* scored with what there is */
+    else {
+        tr_stop();
+        pl.st = pl.have ? PS_RESULT : PS_IDLE;
+    }
+    tr_stop();
+    ui.redraw |= R_ALL;
+}
+
+/* ------------------------------------------------------------------ JUDGE --- */
+/* hear a trial, answer on the low keys (slower, dragging) or the high ones (faster, rushing). The staircase makes
+ * the change smaller after two right in a row and bigger after a wrong one, and ends with your threshold */
+enum { JS_IDLE, JS_PLAY, JS_ASK, JS_FEED, JS_DONE };
+static struct {
+    uint8_t st, ok, new_best, type;
+    int8_t sign, said;                   /* the trial's direction; your answer */
+    uint16_t bpm;
+    rh_stair_t s;
+    rh_seq_t q;
+    uint32_t until;                      /* JS_FEED ends (ms) */
+    float thr;
+} jd;
+
+static void jd_play(void)                /* the trial (again) */
+{
+    tr_stop();
+    seq_go(now_smp(), &jd.q, jd.bpm);
+    jd.st = JS_PLAY;
+    ui.redraw |= R_ALL;
+}
+
+static void jd_trial(void)
+{
+    jd.sign = (int8_t)(rnd(&ui.seed) & 1u ? 1 : -1);
+    jd.bpm = rec.bpm;
+    if (rec.jrand) jd.bpm = (uint16_t)clamp((int32_t)rec.bpm * (85 + (int32_t)(rnd(&ui.seed) % 31u)) / 100, 30, 240);
+    rh_judge_seq(jd.type, jd.bpm, rec.bpb, jd.s.d, jd.sign, &jd.q);
+    jd.said = 0;
+    jd_play();
+}
+
+static void jd_start(void)
+{
+    jd.type = rec.jtype;
+    rh_stair_init(&jd.s, jd.type);
+    jd.new_best = 0;
+    jd.thr = 0.0f;
+    jd_trial();
+}
+
+static void jd_answer(int dir)
+{
+    int done;
+    if (jd.st != JS_PLAY && jd.st != JS_ASK) return;
+    tr_stop();
+    jd.said = (int8_t)dir;
+    jd.ok = (uint8_t)(dir == jd.sign);
+    done = rh_stair_answer(&jd.s, jd.ok);
+    jd.st = JS_FEED;
+    jd.until = plat_ms() + (jd.ok ? 700u : 1400u);
+    if (done) {
+        uint16_t t;
+        jd.thr = rh_stair_threshold(&jd.s);
+        t = (uint16_t)(jd.thr * 10.0f + 0.5f);
+        if (!t) t = 1;
+        if (!rec.jbest[jd.type] || t < rec.jbest[jd.type]) {
+            rec.jbest[jd.type] = t;
+            jd.new_best = 1;
+            changed(0);
+        }
+    }
+    app_say(jd.ok ? "RIGHT" : "WRONG", "");
+    ui.redraw |= R_ALL;
+}
+
+static void jd_key(uint32_t k)
+{
+    if (k == NKEYS / 2) return;          /* (the middle key is neither) */
+    jd_answer(k < NKEYS / 2 ? -1 : 1);
+}
+
+static void jd_follow(void)
+{
+    if (jd.st == JS_PLAY && seq_over() && (int32_t)(now_smp() - seq_end()) > (int32_t)(SR / 4u)) {
+        tr_stop();
+        jd.st = JS_ASK;
+        ui.redraw |= R_ALL;
+    }
+    if (jd.st == JS_FEED && (int32_t)(plat_ms() - jd.until) >= 0) {
+        if (jd.s.done) {
+            char t[24];
+            jd.st = JS_DONE;
+            t[0] = 0;
+            tint(t, (int)(jd.thr * 10.0f + 0.5f) / 10);
+            tcat(t, ".");
+            tint(t, (int)(jd.thr * 10.0f + 0.5f) % 10);
+            tcat(t, rh_judge_unit(jd.type));
+            app_say(jd.new_best ? "NEW BEST" : "THRESHOLD", t);
+            ui.redraw |= R_ALL;
+        } else
+            jd_trial();
+    }
+}
+
+/* ------------------------------------------------------------------- QUIZ --- */
+/* four choices on four zones of the keyboard (A lowest .. D highest). HEAR and METER play their question (REC
+ * again). A term or meter you miss comes back more often for the rest of the session */
+enum { QS_IDLE, QS_ASK, QS_FEED };
+static struct {
+    uint8_t st, type, level, chosen, ok;
+    rh_quiz_t q;
+    uint16_t asked, right, streak;
+    uint8_t miss[RH_NTERMS];
+    int prev;
+    uint32_t until;
+    uint8_t new_best;
+} qz;
+
+static void qz_sound(void)
+{
+    rh_seq_t s;
+    tr_stop();
+    if (qz.q.type == RH_Q_HEAR) rh_clicks_seq(qz.q.bpm, 4, 2, &s);
+    else if (qz.q.type == RH_Q_METER) rh_meter_seq(qz.q.ask, qz.q.bpm, qz.level, 3, &s);
+    else return;
+    seq_go(now_smp(), &s, qz.q.bpm);
+}
+
+static void qz_next(void)
+{
+    rh_quiz_make(&ui.seed, qz.type, qz.level, qz.miss, qz.prev, &qz.q);
+    qz.prev = qz.q.ask;
+    qz.st = QS_ASK;
+    qz_sound();
+    ui.redraw |= R_ALL;
+}
+
+static void qz_start(void)
+{
+    if (qz.type != rec.qtype || qz.level != rec.qlevel) zero(qz.miss, sizeof qz.miss);
+    qz.type = rec.qtype;
+    qz.level = rec.qlevel;
+    qz.asked = qz.right = qz.streak = 0;
+    qz.prev = -1;
+    qz.new_best = 0;
+    qz_next();
+}
+
+static void qz_answer(int z)
+{
+    if (qz.st != QS_ASK) return;
+    tr_stop();
+    qz.chosen = (uint8_t)z;
+    qz.ok = (uint8_t)(z == qz.q.answer);
+    qz.asked++;
+    if (qz.ok) {
+        qz.right++;
+        qz.streak++;
+        if (qz.miss[qz.q.ask]) qz.miss[qz.q.ask]--;
+        if (qz.streak > rec.qbest) {
+            rec.qbest = qz.streak;
+            qz.new_best = 1;
+            changed(0);
+        }
+    } else {
+        qz.streak = 0;
+        if (qz.miss[qz.q.ask] < 4) qz.miss[qz.q.ask] += 2;
+    }
+    qz.st = QS_FEED;
+    qz.until = plat_ms() + (qz.ok ? 900u : 2400u);
+    app_say(qz.ok ? "RIGHT" : "WRONG", "");
+    ui.redraw |= R_ALL;
+}
+
+static void qz_key(uint32_t k) { qz_answer((int)(k * 4u / NKEYS)); }
+
+static void qz_follow(void)
+{
+    if (qz.st == QS_FEED && (int32_t)(plat_ms() - qz.until) >= 0) qz_next();
+    if (seq_over() && (int32_t)(now_smp() - seq_end()) > (int32_t)(SR / 4u)) tr_stop();
+}
+
+static int pl_busy(void) { return pl.st == PS_COUNT || pl.st == PS_WAIT || pl.st == PS_BLIND; }
+
 static void set_page(int p)
 {
     tr_stop();
     rh_en.on = 0;
     rec.page = (uint8_t)p;
     ui.es = ES_IDLE;
+    if (pl.st != PS_RESULT) pl.st = PS_IDLE;
+    if (jd.st != JS_DONE) jd.st = JS_IDLE;
+    qz.st = QS_IDLE;
     app_say("PAGE", PG_NAME[p]);
     changed(R_ALL);
 }
@@ -678,7 +1058,24 @@ static void input(void)
         uint32_t bit = 1u << k;
         if (!(btn & bit) || (ui.btn & bit)) continue;
         if (k == B_HOME) set_page((rec.page + 1) % PG_N);
-        else if (k == B_PLAY) {
+        else if (k == B_PLAY && rec.page == PG_PULSE) {
+            if (pl.st == PS_COUNT || pl.st == PS_WAIT || pl.st == PS_BLIND) pl_stop();
+            else pl_start();
+        } else if (k == B_PLAY && rec.page == PG_JUDGE) {
+            if (jd.st == JS_IDLE || jd.st == JS_DONE) jd_start();
+            else {
+                tr_stop();
+                jd.st = JS_IDLE;
+                ui.redraw |= R_ALL;
+            }
+        } else if (k == B_PLAY && rec.page == PG_QUIZ) {
+            if (qz.st == QS_IDLE) qz_start();
+            else {
+                tr_stop();
+                qz.st = QS_IDLE;
+                ui.redraw |= R_ALL;
+            }
+        } else if (k == B_PLAY) {
             if (rec.page == PG_ENDLESS) {
                 if (rh_en.on) en_end();
                 else en_start();
@@ -692,11 +1089,24 @@ static void input(void)
             rec.read = (uint8_t)!rec.read;
             app_say("ECHO", rec.read ? "READ" : "HEAR");
             changed(R_ALL);
+        } else if (k == B_SEL && rec.page == PG_PULSE && !pl_busy()) {
+            rec.pcount = (uint8_t)((rec.pcount + 1u) % sizeof PULSE_COUNT);
+            t[0] = 0;
+            tint(t, PULSE_COUNT[rec.pcount]);
+            tcat(t, PULSE_COUNT[rec.pcount] > 1 ? " BARS" : " BAR");
+            app_say("COUNT-IN", t);
+            changed(R_ALL);
+        } else if (k == B_SEL && rec.page == PG_JUDGE) {
+            rec.jrand = (uint8_t)!rec.jrand;
+            app_say("TEMPO", rec.jrand ? "VARIED" : "FIXED");
+            changed(R_ALL);
         } else if (k == B_REC) {
             if (rec.page == PG_METRO) tap_tempo();
             else if (rec.page == PG_ECHO && !ui.running && ui.have_pat) echo_start(0);   /* the same rhythm again */
+            else if (rec.page == PG_JUDGE && (jd.st == JS_PLAY || jd.st == JS_ASK)) jd_play();
+            else if (rec.page == PG_QUIZ && qz.st == QS_ASK) qz_sound();
         } else if (k == B_OCTDN || k == B_OCTUP) {
-            if (rh_en.on) continue;
+            if (rh_en.on || pl_busy()) continue;
             rec.bpm = (uint8_t)clamp(rec.bpm + (k == B_OCTUP ? 5 : -5), 30, 240);
             goto bpm_changed;
         }
@@ -709,7 +1119,7 @@ static void input(void)
         changed(R_ALL);
     }
     ui.btn = btn;
-    if ((e = plat_enc(EN_SELECT)) != 0 && !rh_en.on) {
+    if ((e = plat_enc(EN_SELECT)) != 0 && !rh_en.on && !pl_busy()) {
         rec.bpm = (uint8_t)clamp(rec.bpm + e, 30, 240);
         t[0] = 0;
         tint(t, rec.bpm);
@@ -717,7 +1127,7 @@ static void input(void)
         if (ui.running && rec.page == PG_METRO) metro_start();
         changed(R_ALL);
     }
-    if ((e = plat_enc(EN_K1)) != 0 && !(ui.running && rec.page != PG_METRO)) {
+    if ((e = plat_enc(EN_K1)) != 0 && !(ui.running && rec.page != PG_METRO) && !pl_busy()) {
         rec.bpb = (uint8_t)clamp(rec.bpb + (e > 0 ? 1 : -1), 2, 4);
         t[0] = 0;
         tint(t, rec.bpb);
@@ -728,11 +1138,26 @@ static void input(void)
         changed(R_ALL);
     }
     if ((e = plat_enc(EN_K2)) != 0) {
-        if (rec.page == PG_METRO) {
+        if (rec.page == PG_PULSE) {
+            if (!pl_busy()) {
+                rec.pmode = (uint8_t)(e > 0);
+                app_say("PULSE", rec.pmode ? "COLD" : "GUIDED");
+            }
+        } else if (rec.page == PG_JUDGE) {
+            if (jd.st == JS_IDLE || jd.st == JS_DONE) {
+                rec.jtype = (uint8_t)clamp(rec.jtype + (e > 0 ? 1 : -1), 0, RH_J_N - 1);
+                app_say("JUDGE", rh_judge_name(rec.jtype));
+                jd.st = JS_IDLE;
+            }
+        } else if (rec.page == PG_QUIZ) {
+            rec.qtype = (uint8_t)clamp(rec.qtype + (e > 0 ? 1 : -1), 0, RH_Q_N - 1);
+            app_say("QUIZ", rh_quiz_name(rec.qtype));
+            if (qz.st != QS_IDLE) qz_start();
+        } else if (rec.page == PG_METRO) {
             rec.sub = (uint8_t)clamp(rec.sub + (e > 0 ? 1 : -1), 0, SUB_N - 1);
             app_say("SUB", SUB_NAME[rec.sub]);
             if (ui.running) metro_start();
-        } else if (!ui.running) {          /* ECHO and ENDLESS: the level (ENDLESS starts from it) */
+        } else if (!ui.running && rec.page != PG_PULSE) {   /* ECHO and ENDLESS: the level (ENDLESS starts from it) */
             rec.level = (uint8_t)clamp(rec.level + (e > 0 ? 1 : -1), 1, RH_LEVELS);
             for (k = 0; k < RH_NCELLS; k++)
                 if (rh_cell_level((int)k) == rec.level) break;
@@ -746,7 +1171,22 @@ static void input(void)
         changed(R_ALL);
     }
     if ((e = plat_enc(EN_K3)) != 0) {
-        if (rec.page == PG_METRO) {
+        if (rec.page == PG_PULSE) {
+            if (!pl_busy()) {
+                rec.pbars = (uint8_t)clamp(rec.pbars + (e > 0 ? 1 : -1), 0, (int)sizeof PULSE_BARS - 1);
+                t[0] = 0;
+                tint(t, PULSE_BARS[rec.pbars]);
+                tcat(t, " BARS");
+                app_say("BLIND", t);
+            }
+        } else if (rec.page == PG_QUIZ) {
+            rec.qlevel = (uint8_t)clamp(rec.qlevel + (e > 0 ? 1 : -1), 1, 3);
+            t[0] = 0;
+            tint(t, rec.qlevel);
+            app_say("LEVEL", t);
+            if (qz.st != QS_IDLE) qz_start();
+        } else if (rec.page == PG_JUDGE) {
+        } else if (rec.page == PG_METRO) {
             rec.gap = (uint8_t)clamp(rec.gap + (e > 0 ? 1 : -1), 0, NGAPS - 1);
             t[0] = 0;
             if (!rec.gap) tcat(t, "OFF");
@@ -777,9 +1217,12 @@ static void input(void)
     (void)plat_enc(EN_ALGO);
     (void)plat_enc(EN_PRESET);
     while (tq_r != tq_w) {               /* the taps the tick dated */
-        uint32_t s = tq[tq_r % TAPQ];
+        uint32_t s = tq[tq_r % TAPQ], key = tq_k[tq_r % TAPQ];
         tq_r++;
-        if (rec.page == PG_METRO) metro_tap(s);
+        if (rec.page == PG_PULSE) pl_tap(s);
+        else if (rec.page == PG_JUDGE) jd_key(key);
+        else if (rec.page == PG_QUIZ) qz_key(key);
+        else if (rec.page == PG_METRO) metro_tap(s);
         else if (rec.page == PG_ENDLESS) en_tap(s);
         else echo_tap(s);
     }
@@ -799,7 +1242,9 @@ static void lights(uint32_t now)
     ledfx_set(&bb, B_OCTUP, FX_GLOW, now);
     if (ui.running && c >= 0) {
         uint32_t beat = (uint32_t)c / RH_TPB, in = (uint32_t)c % RH_TPB;
-        if (rec.page == PG_METRO) {
+        if (tr.mode == TR_SEQ) {
+            if (now_smp() - snd_at < SR * 6u / 100u) flash = 2;   /* 60 ms after each sound */
+        } else if (rec.page == PG_METRO) {
             if (in < 2 && !metro_gap(beat)) flash = beat % rec.bpb ? 1 : 2;
         } else if ((uint32_t)c < tr.len) {
             uint32_t t;                  /* LISTEN: the notes light; counting in: the beats */
@@ -814,6 +1259,9 @@ static void lights(uint32_t now)
     }
     for (k = 0; k < NKEYS; k++) {
         int fx = flash == 2 ? FX_LIT : flash == 1 ? FX_MID : half ? FX_GLOW : FX_OFF;
+        if (!flash && rec.page == PG_JUDGE && (jd.st == JS_PLAY || jd.st == JS_ASK) && k != NKEYS / 2)
+            fx = k < NKEYS / 2 ? FX_GLOW : FX_MID;   /* the two answers: low keys slower, high keys faster */
+        if (!flash && rec.page == PG_QUIZ && qz.st == QS_ASK) fx = (k * 4u / NKEYS) % 2u ? FX_MID : FX_GLOW;   /* A..D */
         if (tk_keys >> k & 1u) fx = FX_LIT;
         ledfx_set(&kb, k, fx, now);
     }
@@ -1161,6 +1609,327 @@ static void draw_endless(int32_t oy)
     text_c(120, 136 - oy, &FONT_T, t, rh_en.delta >= 0 ? C_GOOD : C_OK);
 }
 
+static void tx10(char *d, int v, int sign)   /* x10 -> "+2.4" (sign: always show it) */
+{
+    int a = v < 0 ? -v : v;
+    if (v < 0) tcat(d, "-");
+    else if (sign) tcat(d, "+");
+    tint(d, a / 10);
+    tcat(d, ".");
+    tint(d, a % 10);
+}
+
+static void draw_pulse(int32_t oy)
+{
+    char t[48];
+    const rh_pulse_t *r = &pl.res;
+    int32_t i;
+    if (pl.st != PS_RESULT) {
+        const char *big = "PULSE", *sub = rec.pmode ? "COLD: ONLY THE BPM, NO CLICK" : "GUIDED: COUNT-IN, THEN BLIND";
+        uint16_t bc = C_HI;
+        t[0] = 0;
+        if (pl.st == PS_COUNT && ui.cur >= 0) {
+            int32_t d = (int32_t)(now_smp() - tr.start - LEAD_SMP);
+            uint32_t b = d < 0 ? 0 : (uint32_t)((float)d * 256.0f / (float)beat_smp_q8());
+            tint(t, (int)(b % rec.bpb) + 1);
+            big = t, bc = C_WHITE, sub = "LISTEN, THEN KEEP IT GOING";
+        } else if (pl.st == PS_WAIT) {
+            tint(t, rec.bpm);
+            big = t, bc = C_WHITE, sub = "YOUR FIRST TAP IS BEAT 1";
+        } else if (pl.st == PS_BLIND)
+            big = "KEEP TAPPING", bc = C_WHITE, sub = "";
+        text_c(120, 6 - oy, &FONT_L, big, bc);
+        text_c(120, 46 - oy, &FONT_T, sub, C_GRAY);
+        if (pl.st == PS_BLIND) {          /* how far, never where: no beat shown, it is blind */
+            int32_t w = 200 * (pl.ntaps < pl.beats ? pl.ntaps : pl.beats) / (pl.beats ? pl.beats : 1);
+            cv_rect(20, 80 - oy, 200, 6, C_LINE);
+            cv_rect(20, 80 - oy, w, 6, C_HI);
+            t[0] = 0;
+            tint(t, pl.ntaps);
+            tcat(t, " / ");
+            tint(t, pl.beats);
+            tcat(t, " TAPS");
+            text_c(120, 92 - oy, &FONT_T, t, C_GRAY);
+        } else if (pl.st == PS_IDLE) {
+            t[0] = 0;
+            tcat(t, rec.pmode ? "COLD  " : "GUIDED  ");
+            if (!rec.pmode) {
+                tint(t, PULSE_COUNT[rec.pcount]);
+                tcat(t, " IN + ");
+            }
+            tint(t, PULSE_BARS[rec.pbars]);
+            tcat(t, " BARS BLIND");
+            text_c(120, 80 - oy, &FONT_T, t, C_HI);
+            t[0] = 0;
+            tcat(t, "BEST  GUIDED ");
+            if (rec.pbest[0]) tcat(t, "+-"), tx10(t, rec.pbest[0] - 1, 0), tcat(t, "%");
+            else tcat(t, "-");
+            tcat(t, "  COLD ");
+            if (rec.pbest[1]) tcat(t, "+-"), tx10(t, rec.pbest[1] - 1, 0), tcat(t, "%");
+            else tcat(t, "-");
+            text_c(120, 100 - oy, &FONT_T, t, C_GRAY);
+            text_c(120, 130 - oy, &FONT_T, "K2: GUIDED/COLD  K3: BARS  SEL: COUNT-IN", C_DIM);
+        }
+        return;
+    }
+    /* the result: your tempo, then where every beat fell, then how they spread */
+    t[0] = 0;
+    if (r->bpm_x10) {
+        int a = r->tempo_x10 < 0 ? -r->tempo_x10 : r->tempo_x10;
+        tx10(t, r->bpm_x10, 0);
+        tcat(t, " BPM");
+        cv_text(8, 2 - oy, &FONT_M, t, a <= 10 ? C_GOOD : a <= 20 ? C_OK : C_BAD);
+        t[0] = 0;
+        tx10(t, r->tempo_x10, 1);
+        tcat(t, "%");
+        cv_text(232 - text_w(&FONT_M, t), 2 - oy, &FONT_M, t, a <= 10 ? C_GOOD : a <= 20 ? C_OK : C_BAD);
+    } else
+        cv_text(8, 2 - oy, &FONT_M, "TOO FEW TAPS", C_BAD);
+    t[0] = 0;
+    tcat(t, "GOOD ");
+    tint(t, r->good);
+    tcat(t, "/");
+    tint(t, r->n);
+    tcat(t, "  JITTER ");
+    tint(t, r->jitter);
+    tcat(t, "MS  TREND ");
+    tx10(t, r->trend_x10, 1);
+    tcat(t, "%");
+    text_c(120, 30 - oy, &FONT_T, t, C_HI);
+    t[0] = 0;
+    if (!pl.cold) {
+        tcat(t, "MEAN ");
+        tms(t, r->mean);
+        tcat(t, "  END ");
+        tms(t, r->end_ms);
+    }
+    if (r->missed) tcat(t, "  MISS "), tint(t, r->missed);
+    if (r->extra) tcat(t, "  EXTRA "), tint(t, r->extra);
+    if (pl.new_best) tcat(t, "  NEW BEST");
+    text_c(120, 45 - oy, &FONT_T, t, pl.new_best ? C_GOOD : C_GRAY);
+    /* each beat's error over time: +-150 ms over 24 px either side of the line */
+    {
+        int32_t y0 = 86, x0 = 10, w = 220, tg = r->tol_good;
+        cv_rect(x0, y0 - oy, w, 1, C_LINE);
+        cv_rect(x0, y0 - tg * 24 / 150 - oy, w, 2 * tg * 24 / 150 + 1, C_LINE);
+        cv_text(x0, 60 - oy, &FONT_T, "LATE", C_DIM);
+        cv_text(x0, 100 - oy, &FONT_T, "EARLY", C_DIM);
+        for (i = 0; i < r->n; i++) {
+            int32_t x = x0 + (r->n > 1 ? i * (w - 3) / (r->n - 1) : w / 2), y;
+            if (r->tap_of[i] < 0) {
+                cv_rect(x, y0 - 1 - oy, 3, 3, C_BAD);
+                continue;
+            }
+            y = y0 - clamp(r->err[i], -150, 150) * 24 / 150;
+            cv_rect(x, y - 1 - oy, 3, 3, grade_col(r->grade[i]));
+        }
+    }
+    /* the spread: one bar a GOOD window wide */
+    {
+        int32_t mx = 1, bw = 18, x0 = 120 - RH_HIST * bw / 2, yb = 164;
+        for (i = 0; i < RH_HIST; i++) mx = r->hist[i] > mx ? r->hist[i] : mx;
+        for (i = 0; i < RH_HIST; i++) {
+            int32_t h = r->hist[i] * 44 / mx, d = i - RH_HIST / 2;
+            uint16_t c = !d ? C_GOOD : d == 1 || d == -1 ? C_OK : C_BAD;
+            if (h) cv_rect(x0 + i * bw + 2, yb - h - oy, bw - 4, h, c);
+            cv_rect(x0 + i * bw + 2, yb - oy, bw - 4, 1, C_LINE);
+        }
+        cv_text(x0 - 2, yb + 2 - oy, &FONT_T, "EARLY", C_DIM);
+        cv_text(x0 + RH_HIST * bw - text_w(&FONT_T, "LATE") + 2, yb + 2 - oy, &FONT_T, "LATE", C_DIM);
+    }
+}
+
+static float lg2(float x)                /* log2, near enough to place a dot (no libm) */
+{
+    float e = 0.0f;
+    if (x <= 0.0f) return -10.0f;
+    while (x >= 2.0f) x *= 0.5f, e += 1.0f;
+    while (x < 1.0f) x *= 2.0f, e -= 1.0f;
+    return e + (x - 1.0f) * (1.3466f - 0.3466f * x);   /* (within 0.01 on 1..2) */
+}
+
+static void tval(char *t, float v, int type)   /* "2.4%", "18MS" */
+{
+    int x = (int)(v * 10.0f + 0.5f);
+    if (type == RH_J_FEEL && x >= 100) tint(t, (x + 5) / 10);
+    else tx10(t, x, 0);
+    tcat(t, rh_judge_unit(type));
+}
+
+static void draw_judge(int32_t oy)
+{
+    char t[48];
+    const char *lo = jd.type == RH_J_FEEL || (jd.st == JS_IDLE && rec.jtype == RH_J_FEEL) ? "DRAGGING" : "SLOWER",
+               *hi = lo[0] == 'D' ? "RUSHING" : "FASTER", *big;
+    int type = jd.st == JS_IDLE ? rec.jtype : jd.type, i;
+    uint16_t bc = C_HI;
+    switch (jd.st) {
+    case JS_PLAY: big = "LISTEN"; break;
+    case JS_ASK: big = lo[0] == 'D' ? "RUSHING OR DRAGGING?" : "FASTER OR SLOWER?", bc = C_WHITE; break;
+    case JS_FEED: big = jd.ok ? "RIGHT" : "WRONG", bc = jd.ok ? C_GOOD : C_BAD; break;
+    case JS_DONE: big = jd.new_best ? "NEW BEST" : "DONE", bc = jd.new_best ? C_GOOD : C_HI; break;
+    default: big = rh_judge_name(type); break;
+    }
+    text_c(120, 4 - oy, &FONT_M, big, bc);
+    t[0] = 0;
+    if (jd.st == JS_FEED) {
+        tcat(t, "IT WAS ");
+        tcat(t, jd.sign > 0 ? hi : lo);
+        tcat(t, ", BY ");
+        tval(t, jd.s.hist_x10[jd.s.trials - 1] / 10.0f, jd.type);
+    } else if (jd.st == JS_DONE) {
+        tcat(t, "YOU HEAR ");
+        tval(t, jd.thr, jd.type);
+        tcat(t, " (71% RIGHT)");
+    } else if (jd.st == JS_IDLE)
+        tcat(t, type == RH_J_TEMPO ? "TWO BARS, THEN TWO MORE: FASTER?"
+                : type == RH_J_FEEL ? "THE PLAYER AGAINST THE CLICK"
+                                    : "DOES IT SPEED UP OR SLOW DOWN?");
+    else {
+        tcat(t, "TRIAL ");
+        tint(t, jd.s.trials + 1);
+        tcat(t, "  STEP ");
+        tval(t, jd.s.d, jd.type);
+        tcat(t, "  TURNS ");
+        tint(t, jd.s.revs);
+        tcat(t, "/");
+        tint(t, RH_ST_REVS);
+    }
+    text_c(120, 34 - oy, &FONT_T, t, jd.st == JS_DONE ? C_WHITE : C_GRAY);
+    /* the staircase so far: each trial's step (log scale), green right, red wrong */
+    if (jd.st != JS_IDLE && jd.s.trials) {
+        float top = lg2(jd.type == RH_J_FEEL ? 150.0f : 40.0f), bot = lg2(rh_judge_min(jd.type));
+        int32_t x0 = 16, w = 208, y0 = 56, h = 72;
+        cv_rect(x0, y0 + h - oy, w, 1, C_LINE);
+        cv_rect(x0, y0 - oy, 1, h, C_LINE);
+        if (jd.st == JS_DONE) {
+            int32_t y = y0 + (int32_t)((top - lg2(jd.thr)) / (top - bot) * (float)h);
+            cv_rect(x0, y - oy, w, 1, C_AMB);
+        }
+        for (i = 0; i < jd.s.trials; i++) {
+            int32_t x = x0 + 2 + i * (w - 6) / (RH_ST_TRIALS - 1),
+                    y = y0 + (int32_t)((top - lg2((float)jd.s.hist_x10[i] / 10.0f)) / (top - bot) * (float)h);
+            cv_rect(x, clamp(y, y0, y0 + h) - 1 - oy, 4, 3, jd.s.right[i] ? C_GOOD : C_BAD);
+        }
+    } else if (jd.st == JS_IDLE) {
+        t[0] = 0;
+        tcat(t, "BEST  TEMPO ");
+        if (rec.jbest[0]) tval(t, rec.jbest[0] / 10.0f, RH_J_TEMPO);
+        else tcat(t, "-");
+        tcat(t, "  FEEL ");
+        if (rec.jbest[1]) tval(t, rec.jbest[1] / 10.0f, RH_J_FEEL);
+        else tcat(t, "-");
+        tcat(t, "  DRIFT ");
+        if (rec.jbest[2]) tval(t, rec.jbest[2] / 10.0f, RH_J_DRIFT);
+        else tcat(t, "-");
+        text_c(120, 64 - oy, &FONT_T, t, C_GRAY);
+        text_c(120, 84 - oy, &FONT_T, rec.jrand ? "TEMPO VARIES A LITTLE (SEL)" : "TEMPO FIXED AT THE BPM (SEL)", C_DIM);
+        text_c(120, 104 - oy, &FONT_T, "K2: TEMPO / FEEL / DRIFT   PLAY: START", C_DIM);
+    }
+    /* the two answers, where they are on the keyboard */
+    {
+        int on = jd.st == JS_PLAY || jd.st == JS_ASK;
+        uint16_t cl = on ? C_HI : C_DIM;
+        if (jd.st == JS_FEED) cl = jd.said < 0 ? (jd.ok ? C_GOOD : C_BAD) : C_DIM;
+        cv_rect(8, 140 - oy, 108, 30, C_LINE);
+        text_c(62, 142 - oy, &FONT_B, lo, cl);
+        text_c(62, 157 - oy, &FONT_T, "LOW KEYS", C_DIM);
+        cl = on ? C_HI : C_DIM;
+        if (jd.st == JS_FEED) cl = jd.said > 0 ? (jd.ok ? C_GOOD : C_BAD) : C_DIM;
+        cv_rect(124, 140 - oy, 108, 30, C_LINE);
+        text_c(178, 142 - oy, &FONT_B, hi, cl);
+        text_c(178, 157 - oy, &FONT_T, "HIGH KEYS", C_DIM);
+    }
+}
+
+static void qz_opt_text(int i, char *t)  /* choice i as shown */
+{
+    const rh_quiz_t *q = &qz.q;
+    t[0] = 0;
+    switch (q->type) {
+    case RH_Q_TERM_BPM: tint(t, q->val[i]); tcat(t, " BPM"); break;
+    case RH_Q_CHANGE: tcat(t, q->dir ? RH_CHANGES[q->opt[i]].name : RH_CHANGES[q->opt[i]].meaning); break;
+    case RH_Q_METER: tcat(t, RH_METERS[q->opt[i]].name); break;
+    default: tcat(t, RH_TERMS[q->opt[i]].name); break;
+    }
+}
+
+static void draw_quiz(int32_t oy)
+{
+    char t[48];
+    const rh_quiz_t *q = &qz.q;
+    int i;
+    if (qz.st == QS_IDLE) {
+        text_c(120, 6 - oy, &FONT_M, rh_quiz_name(rec.qtype), C_HI);
+        t[0] = 0;
+        tcat(t, "LEVEL ");
+        tint(t, rec.qlevel);
+        tcat(t, "  ");
+        tint(t, rh_quiz_items(rec.qtype, rec.qlevel));
+        tcat(t, rec.qtype == RH_Q_METER ? " METERS" : " TERMS");
+        tcat(t, "   BEST STREAK ");
+        tint(t, rec.qbest);
+        text_c(120, 40 - oy, &FONT_T, t, C_GRAY);
+        text_c(120, 64 - oy,
+               &FONT_T,
+               rec.qtype == RH_Q_TERM_BPM   ? "A TEMPO MARKING: WHICH BPM FITS IT?"
+               : rec.qtype == RH_Q_BPM_TERM ? "A BPM: WHICH MARKING HOLDS IT?"
+               : rec.qtype == RH_Q_HEAR     ? "HEAR A TEMPO: WHICH MARKING?"
+               : rec.qtype == RH_Q_CHANGE   ? "ACCEL., RIT., A TEMPO: WHAT IT MEANS"
+                                            : "HEAR A FEW BARS: WHICH METER?",
+               C_HI);
+        text_c(120, 84 - oy, &FONT_T, "BPM: EN.WIKIPEDIA, BASIC TEMPO MARKINGS", C_DIM);
+        text_c(120, 112 - oy, &FONT_T, "K2: KIND  K3: LEVEL  PLAY: START", C_DIM);
+        text_c(120, 128 - oy, &FONT_T, "ANSWER ON FOUR KEY ZONES, A LOW .. D HIGH", C_DIM);
+        return;
+    }
+    /* the question */
+    t[0] = 0;
+    switch (q->type) {
+    case RH_Q_TERM_BPM: tcat(t, RH_TERMS[q->ask].name); break;
+    case RH_Q_BPM_TERM: tint(t, q->bpm); tcat(t, " BPM"); break;
+    case RH_Q_HEAR: tcat(t, qz.st == QS_FEED ? "" : "WHICH MARKING?"); if (qz.st == QS_FEED) tint(t, q->bpm), tcat(t, " BPM"); break;
+    case RH_Q_CHANGE: tcat(t, q->dir ? RH_CHANGES[q->ask].meaning : RH_CHANGES[q->ask].name); break;
+    default: tcat(t, "WHICH METER?"); break;
+    }
+    text_c(120, 2 - oy, &FONT_M, t, C_WHITE);
+    t[0] = 0;
+    if (q->type == RH_Q_TERM_BPM && qz.st == QS_FEED) tcat(t, "IS "), rh_term_range(q->ask, t + 3), tcat(t, " BPM");
+    else if (q->type == RH_Q_HEAR || q->type == RH_Q_METER) tcat(t, "REC: HEAR IT AGAIN");
+    else if (q->type == RH_Q_CHANGE) tcat(t, q->dir ? "WHICH TERM?" : "MEANS?");
+    else tcat(t, q->type == RH_Q_TERM_BPM ? "WHICH BPM?" : "WHICH MARKING?");
+    text_c(120, 30 - oy, &FONT_T, t, C_GRAY);
+    /* the choices, A at the top = the lowest keys */
+    for (i = 0; i < 4; i++) {
+        int32_t y = 48 + i * 26;
+        uint16_t c = C_HI, box = C_LINE;
+        char lab[2] = { (char)('A' + i), 0 };
+        if (qz.st == QS_FEED) {
+            if (i == q->answer) c = C_GOOD, box = C_GOOD;
+            else if (i == qz.chosen) c = C_BAD, box = C_BAD;
+            else c = C_DIM;
+        }
+        cv_rect(8, y - oy, 20, 22, box);
+        text_c(18, y + 3 - oy, &FONT_B, lab, qz.st == QS_FEED && (i == q->answer || i == qz.chosen) ? C_BLACK : C_WHITE);
+        qz_opt_text(i, t);
+        cv_text(36, y + 3 - oy, &FONT_B, t, c);
+        if (qz.st == QS_FEED && (q->type == RH_Q_BPM_TERM || q->type == RH_Q_HEAR)) {   /* every term's range */
+            char r[12];
+            rh_term_range(q->opt[i], r);
+            cv_text(232 - text_w(&FONT_T, r), y + 6 - oy, &FONT_T, r, c == C_DIM ? C_DIM : C_GRAY);
+        }
+    }
+    t[0] = 0;
+    tint(t, qz.right);
+    tcat(t, "/");
+    tint(t, qz.asked);
+    tcat(t, "  STREAK ");
+    tint(t, qz.streak);
+    tcat(t, "  BEST ");
+    tint(t, rec.qbest);
+    text_c(120, 158 - oy, &FONT_T, t, qz.new_best && qz.streak == rec.qbest ? C_GOOD : C_GRAY);
+}
+
 static void draw_main(void)
 {
     int32_t h;
@@ -1168,6 +1937,9 @@ static void draw_main(void)
         cv_begin(240, MAIN_H / 2, C_BLACK);
         if (rec.page == PG_METRO) draw_metro(h * MAIN_H / 2);
         else if (rec.page == PG_ENDLESS) draw_endless(h * MAIN_H / 2);
+        else if (rec.page == PG_PULSE) draw_pulse(h * MAIN_H / 2);
+        else if (rec.page == PG_JUDGE) draw_judge(h * MAIN_H / 2);
+        else if (rec.page == PG_QUIZ) draw_quiz(h * MAIN_H / 2);
         else draw_echo(h * MAIN_H / 2);
         cv_blit(0, 32 + (uint32_t)h * MAIN_H / 2);
     }
@@ -1185,11 +1957,19 @@ static void draw_footer(void)
         int32_t x = cv_text(8, 7, &FONT_B, rh_hint_text(ui.res.hint), col);
         const char *m = rh_hint_more(ui.res.hint);
         if (x + 8 + text_w(&FONT_T, m) <= 232) cv_text(232 - text_w(&FONT_T, m), 10, &FONT_T, m, C_GRAY);
+    } else if (rec.page == PG_PULSE && pl.st == PS_RESULT) {
+        uint16_t col = pl.res.hint == RH_P_GOOD ? C_GOOD : pl.res.hint == RH_P_CLOSE ? C_OK : C_BAD;
+        int32_t x = cv_text(8, 7, &FONT_B, rh_pulse_hint(pl.res.hint), col);
+        const char *m = rh_pulse_more(pl.res.hint);
+        if (x + 8 + text_w(&FONT_T, m) <= 232) cv_text(232 - text_w(&FONT_T, m), 10, &FONT_T, m, C_GRAY);
     } else
         cv_text(8, 10, &FONT_T,
-                rec.page == PG_METRO ? "HOME: ECHO   PLAY: START/STOP"
-                : rec.page == PG_ECHO ? "HOME: ENDLESS   PLAY: NEW   REC: AGAIN"
-                                      : "HOME: METRO   PLAY: START/STOP",
+                rec.page == PG_METRO     ? "HOME: ECHO   PLAY: START/STOP"
+                : rec.page == PG_ECHO    ? "HOME: ENDLESS   PLAY: NEW   REC: AGAIN"
+                : rec.page == PG_ENDLESS ? "HOME: PULSE   PLAY: START/STOP"
+                : rec.page == PG_PULSE   ? "HOME: JUDGE   PLAY: START/STOP"
+                : rec.page == PG_JUDGE   ? "HOME: QUIZ   PLAY: START   REC: AGAIN"
+                                         : "HOME: METRO   PLAY: START   REC: AGAIN",
                 C_DIM);
     cv_blit(0, 208);
 }
@@ -1225,10 +2005,23 @@ void app_init(void)
     zero(&tr, sizeof tr);
     saves = 0;
     dirty_at = 0;
-    if (plat_store_load(OBJ_RHYTHM, &rec, sizeof rec) != (int)sizeof rec || !rec_valid(&rec)) {
-        zero(&rec, sizeof rec);
-        defaults();
+    {
+        int n = plat_store_load(OBJ_RHYTHM, &rec, sizeof rec);
+        if (n == (int)REC_V1_SIZE && rec.magic == REC_MAGIC && rec.ver == 1u && rec.size == REC_V1_SIZE) {
+            defaults_v2();               /* 0.1 / 0.2's settings: kept, 0.3's fields from their defaults */
+            rec.ver = REC_VER;
+            rec.size = (uint16_t)sizeof rec;
+            n = (int)sizeof rec;
+        }
+        if (n != (int)sizeof rec || !rec_valid(&rec)) {
+            zero(&rec, sizeof rec);
+            defaults();
+            defaults_v2();
+        }
     }
+    zero(&pl, sizeof pl);
+    zero(&jd, sizeof jd);
+    zero(&qz, sizeof qz);
     ui.seed = 0x5EED1234u;
     app_panic();
 }
@@ -1254,6 +2047,9 @@ void app_frame(void)
         if (ui.running && (c / 3 != old / 3 || c < 0)) ui.redraw |= R_MAIN;   /* the playhead, the beat */
     }
     if (rec.page == PG_ECHO) echo_follow();
+    if (rec.page == PG_PULSE) pl_follow();
+    if (rec.page == PG_JUDGE) jd_follow();
+    if (rec.page == PG_QUIZ) qz_follow();
     if (rec.page == PG_ENDLESS) {
         int part = rh_en.on ? en_part() : -1;
         static int last_part = -1;
@@ -1314,6 +2110,44 @@ int app_expect(const char *what, int *got)
     else if (!strcmp(what, "en_notes")) *got = rh_en.last.n;
     else if (!strcmp(what, "lit_keys")) *got = (int)ui.lit;
     else if (!strcmp(what, "saves")) *got = (int)saves;
+    else if (!strcmp(what, "ver")) *got = rec.ver;
+    else if (!strcmp(what, "seq_n")) *got = tr.mode == TR_SEQ && tr.run ? tr.sn : 0;
+    else if (!strcmp(what, "pmode")) *got = rec.pmode;
+    else if (!strcmp(what, "pbars")) *got = rec.pbars;
+    else if (!strcmp(what, "pcount")) *got = rec.pcount;
+    else if (!strcmp(what, "pbest0")) *got = rec.pbest[0];
+    else if (!strcmp(what, "pbest1")) *got = rec.pbest[1];
+    else if (!strcmp(what, "pulse_st")) *got = pl.st;
+    else if (!strcmp(what, "pulse_beats")) *got = pl.beats;
+    else if (!strcmp(what, "pulse_taps")) *got = pl.ntaps;
+    else if (!strcmp(what, "pulse_good")) *got = pl.res.good;
+    else if (!strcmp(what, "pulse_missed")) *got = pl.res.missed;
+    else if (!strcmp(what, "pulse_extra")) *got = pl.res.extra;
+    else if (!strcmp(what, "pulse_hint")) *got = pl.res.hint;
+    else if (!strcmp(what, "pulse_mean")) *got = pl.res.mean;
+    else if (!strcmp(what, "pulse_bpm10")) *got = pl.res.bpm_x10;
+    else if (!strcmp(what, "pulse_tempo10")) *got = pl.res.tempo_x10;
+    else if (!strcmp(what, "pulse_trend10")) *got = pl.res.trend_x10;
+    else if (!strcmp(what, "pulse_jitter")) *got = pl.res.jitter;
+    else if (!strcmp(what, "jtype")) *got = rec.jtype;
+    else if (!strcmp(what, "jrand")) *got = rec.jrand;
+    else if (!strcmp(what, "jbest0")) *got = rec.jbest[0];
+    else if (!strcmp(what, "jbest1")) *got = rec.jbest[1];
+    else if (!strcmp(what, "jbest2")) *got = rec.jbest[2];
+    else if (!strcmp(what, "judge_st")) *got = jd.st;
+    else if (!strcmp(what, "judge_trials")) *got = jd.s.trials;
+    else if (!strcmp(what, "judge_revs")) *got = jd.s.revs;
+    else if (!strcmp(what, "judge_d10")) *got = (int)(jd.s.d * 10.0f + 0.5f);
+    else if (!strcmp(what, "judge_thr10")) *got = (int)(jd.thr * 10.0f + 0.5f);
+    else if (!strcmp(what, "judge_ok")) *got = jd.ok;
+    else if (!strcmp(what, "qtype")) *got = rec.qtype;
+    else if (!strcmp(what, "qlevel")) *got = rec.qlevel;
+    else if (!strcmp(what, "qbest")) *got = rec.qbest;
+    else if (!strcmp(what, "quiz_st")) *got = qz.st;
+    else if (!strcmp(what, "quiz_asked")) *got = qz.asked;
+    else if (!strcmp(what, "quiz_right")) *got = qz.right;
+    else if (!strcmp(what, "quiz_streak")) *got = qz.streak;
+    else if (!strcmp(what, "quiz_type")) *got = qz.q.type;
     else return 0;
     return 1;
 }
@@ -1363,6 +2197,44 @@ int app_host_cmd(const char *cmd, const char *a, const char *b, const char *c, c
                     host_tap[host_ntap++] = tick_at(en_resp(k))
                                             + (uint32_t)(((int64_t)rh_onset_ms(&rh_en.pat[k], (int)i, rh_en.bpm) + off) * SR / 1000);
         host_itap = 0;
+        return 1;
+    }
+    if (!strcmp(cmd, "pulsetap")) {      /* pulsetap OFFSET [DRIFT_X10 [SKIP]]: PULSE's beats, each DRIFT/10 ms more off */
+        int off = atoi(a), dr = b[0] ? atoi(b) : 0, skip = c[0] ? atoi(c) : -1;
+        uint32_t k, base = pl.st == PS_WAIT ? now_smp() + SR * 3u / 10u : pl.anchor;   /* COLD: 300 ms from now */
+        host_ntap = 0;
+        for (k = 0; k < pl.beats && host_ntap < RH_MAX_TAPS; k++)
+            if ((int)k != skip)
+                host_tap[host_ntap++] = base + q8_mul(k, beat_smp_q8())
+                                        + (uint32_t)(((int64_t)off * 10 + (int64_t)dr * (int64_t)k) * SR / 10000);
+        host_itap = 0;
+        return 1;
+    }
+    if (!strcmp(cmd, "judgeans")) {      /* judgeans right|wrong: JUDGE's answer, as the keys give it */
+        jd_answer(!strcmp(a, "right") ? jd.sign : -jd.sign);
+        return 1;
+    }
+    if (!strcmp(cmd, "judgeseq")) {      /* judgeseq RRW...: a run answered at once (R right, W wrong) */
+        for (; *a; a++) {
+            if (jd.st == JS_DONE || jd.s.done) break;
+            if (jd.st == JS_FEED) jd_trial();
+            jd_answer(*a == 'R' ? jd.sign : -jd.sign);
+        }
+        return 1;
+    }
+    if (!strcmp(cmd, "quizans")) {       /* quizans right|wrong */
+        qz_answer(!strcmp(a, "right") ? qz.q.answer : (qz.q.answer + 1) % 4);
+        return 1;
+    }
+    if (!strcmp(cmd, "v1record")) {      /* v1record BPM: 0.2's settings record (ECHO page), as an old unit has it */
+        rec_t o = rec;
+        o.magic = REC_MAGIC;
+        o.ver = 1u;
+        o.size = (uint16_t)REC_V1_SIZE;
+        o.page = PG_ECHO;
+        o.bpm = (uint8_t)atoi(a);
+        o.best = 9;
+        plat_store_save(OBJ_RHYTHM, &o, REC_V1_SIZE);
         return 1;
     }
     if (!strcmp(cmd, "metrotap")) {      /* metrotap N OFFSET: the next N beats from now, tapped OFFSET ms off */
