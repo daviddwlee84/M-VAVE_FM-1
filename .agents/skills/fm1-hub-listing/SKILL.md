@@ -159,6 +159,9 @@ The form at https://thefirmwarehub.com/submit/ (fmhub.md still mentions email; t
 - The pink dashed box is the **VIBE Box Challenge** (VIBE FM SDK builds using something the FM-1 lacks, rules at
   https://thefirmwarehub.com/lab/rules/). An FM-1 firmware does not enter: leave it unticked, its fields empty.
 - "How you tested it": from which firmware, back to which, and how (the tool, the chip).
+- The sounds box ("If it carries sounds, samples, banks or ROMs: I may share them all, as the `sounds` line of my
+  fmhub.json says") must be ticked even for `"sounds": "none"`: the form refuses to send without it and says "none:
+  just tick it" (METRONOME, 2026-11-20).
 - "Anything Sven should know": built on, licence, kind and why (a tool that makes sound filed as `other`; the KB says
   tools without sound are not listed), how the release was built (locally, so no built-from-source badge, which needs
   zvenson/fm1-build's workflow), chips tested.
@@ -167,10 +170,13 @@ The result page (its address is the owner's only; changes also come by mail) run
 fmhub.json, sounds, release, identity, update loader, flash chip. All green means "waiting for Sven". As of 2026-11-20 the submit page says "Sven looks at every firmware himself – nothing goes on the hub without him" and the KB "on the test site first, then live"; releases after the first are still listed by themselves within three hours. In 2026-11, before that wording,
 a fully green check with "tested" and "rights" ticked went live by itself: MORSE was submitted
 2026-11-17 19:03 UTC, checked 19:06, and went live automatically at 23:00 ("no click of Sven's"), on the hub with the
-next sync. Fixes: push, then "Check again", or send the form again for the same repo (it updates).
+next sync. METRONOME went the same way after that wording: submitted 2026-11-19 21:42 UTC, checked 21:45, live
+automatically at 23:00 ("no click of Sven's"). Fixes: push, then "Check again", or send the form again for the same repo (it updates).
 After listing: new versions are new releases; card changes are fmhub.json edits (live within three hours). MORSE v0.5,
 released 2026-11-18, was in `catalog.json` the same day (`beta: true` for 0.x). The catalog's `chip` said `new` while
-the check page said both chips: read from the package, not tested.
+the check page said both chips: read from the package, not tested (MORSE and METRONOME alike). The catalog `id` is
+the repository name without `fm1-` (`morse`, `metronome`): the page is `https://thefirmwarehub.com/firmware/<id>/` and
+the try page can switch to fm1-emu's `?fw=<id>`, dropping any package copy kept for it.
 
 ### 9. Community lists (owner's go-ahead per PR)
 

@@ -668,11 +668,10 @@ metro-backup file:
 metro-restore file:
     PYTHONPATH=firmware/metronome/host uv run --locked --all-groups python -m fm1_metronome restore "{{file}}"
 
-# METRONOME's release package (identity FM-1_59 + XXYYZZ), and a copy for its try page (web/try/metronome.fwsc).
+# METRONOME's release package (identity FM-1_59 + XXYYZZ). Its try page runs The Firmware Hub's package (?fw=metronome).
 metro-release version: fw-setup fw-toolchain
     JIELI_TOOLCHAIN="$PWD/tools/jieli/toolchain" AC79_SDK="$PWD/tools/fw-AC79_AIoT_SDK" \
       uv run --locked --all-groups python "{{fm1_base}}/tools/build.py" firmware/metronome --release "{{version}}"
-    cp "firmware/metronome/build/metronome-{{version}}.fwsc" firmware/metronome/web/try/metronome.fwsc
 
 # Where gitee.com cannot be reached: the three AC79 SDK files a USB-only build needs, out of an fm1-base package,
 # kept only if they match fm1-base's pinned SHA-256 (scripts/ac79_sdk_from_fwsc.py; docs/dev/index.md).
