@@ -367,11 +367,37 @@ JSON 檔：`{"app": "METRONOME", "kind": "setlist", "format": 1, "active": 5, "s
 5. 藍牙下用編輯器讀一次、送一次歌單。
 6. `K4` 關藍牙，重開機後還是關的。
 
+## v0.5：PING 對時、藍牙開關好找 { #v05 }
+
+本人 2026-11-20 定的範圍：PING 對時（麥克風校正之後再說），以及讓藍牙開關比較容易發現。在 fm1-metronome 的 branch `dev-0.5`（不和 tag 同名，見 `fm1-hub-listing` skill）。`FW_MINOR 5`、host 0.5.0。
+
+### PING / PONG { #v05-ping }
+
+- CTRL `06` 加 op 7 PING，帶 4 個 7-bit byte 的 token。機器立刻回 PONG `47`：同樣 4 個 byte，加上回覆當下的 sample（4 byte，7-bit pack）。PING 不改任何狀態，也不觸發 STATE。
+- 網頁每秒送一次 PING。PONG 回來時，用送出時間 t0、收到時間 t1（USB 用 Web MIDI 的 timeStamp，藍牙用通知到達的時間）和機器的 sample，算出 offset = (t0 + t1) / 2 − 機器時間。8 秒內取來回時間最短的那次，和 NTP 一樣假設去回各一半。
+- 這樣拿掉的是傳輸的單程延遲本身，不只是 jitter：0.4 用 STATE 的最小延遲，這段延遲還留在裡面，要靠校正補。剩下的誤差是去回不對稱的部分，加上兩邊的音訊輸出延遲。
+- 沒有 PONG 時（機器是 0.4）退回 STATE 的最小延遲。校正值依「哪種對時」分開存，因為兩種方式剩下要補的量不同。
+- `python -m fm1_metronome watch` 每秒 PING 一次，印出來回時間，結束時印最短與中位數，可以拿來量 USB 的延遲。
+
+### 藍牙開關 { #v05-bt-hint }
+
+SET EDIT 的頁尾每 3 秒在兩種提示之間切換，第二種是 `K4: BLUETOOTH OFF (NOW ON)` 或 `K4: BLUETOOTH ON (NOW OFF)`，用比較亮的顏色。舞台上的 SET（非 EDIT）頁不變。
+
+### v0.5 驗證 { #v05-verify }
+
+| 項目 | 結果 |
+|---|---|
+| `just fw-test metronome` | 新增：PING 立刻回 PONG（完整 frame 釘在腳本裡），不改狀態；EDIT 頁尾的藍牙提示（截圖） |
+| `just metro-test` | pytest 14 個；node：setlist 29 個、live 73 個。新增：USB 去回各 1 ms，對時誤差 1 ms 以內；藍牙去回各 12 ms、jitter 15 ms，1.5 ms 以內；藍牙三次回覆有兩次晚 25 ms，3 ms 以內（只用 STATE 的最小延遲會差 12 ms 以上） |
+| `just fw-build metronome` | app 127,892 B；package SHA-256 `ae5b57ebaaa51fac2d7fa37abd2c7e85bd92061ee661dbfd45d3b52486a857bd` |
+| fm1-emu 兩種晶片，虛擬 USB | PING 後 2 ms 回 PONG，兩次 PONG 的 sample 差 22,060（0.5 s）；開機 0 次寫入 `[模擬]` |
+| 實機 | 還沒裝 |
+
 ## 之後 { #next }
 
 - 畫面主題：擺錘之外，指揮棒的拍子圖形、可愛的角色。先量一張圖要多少 flash 再決定（[CORD](https://github.com/chasedeanda/cord-fm1) 證明放得下圖）。
 - 更多音色、swing。
-- v0.5（本人 2026-11-20 定）：PING 來回時間對時；讓藍牙開關比較容易發現。
+- v0.5（本人 2026-11-20 定）：PING 來回時間對時；讓藍牙開關比較容易發現。見[上面](#v05)。
 - 之後：麥克風校正（同時收機器和網頁的 click，見[實機結果](#v04-unit)）；網頁上更多動畫（角色、畫面主題）。
 - 每首歌的名字（要先想好怎麼輸入文字）：本人 2026-11-20 說放到很後面。曲目順序表演者自己記得，演完用[全部清空](#clear-all)。
 - 實機上校正延遲：tap tempo 只看按鍵間隔，不受延遲影響；要比較 click 與 LED 有沒有對齊。v0.4 的 live 頁有網頁端的校正。
