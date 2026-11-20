@@ -351,6 +351,13 @@ JSON 檔：`{"app": "METRONOME", "kind": "setlist", "format": 1, "active": 5, "s
 1. **來回時間（不用麥克風）**：網頁送一個 PING，機器立刻回它當下的 sample 時間，網頁量來回時間，取一半當單程延遲，像 NTP 那樣對時。這可以拿掉傳輸那段（USB 約 1–2 ms，藍牙約 10–20 ms），USB 和藍牙也不用各自校正。剩下的是機器自己的音訊緩衝（固定值，量一次就能寫死）和電腦的輸出延遲（`getOutputTimestamp` 已經處理一部分）。要韌體加一個回應 frame。
 2. **麥克風**：機器照常出聲，網頁同時用另一個音高放自己的 click，麥克風同時收到兩者，量兩者的時間差，調到 0。兩個聲音都經過同一個麥克風，所以麥克風本身的延遲會互相抵消，而且最接近「聽起來有沒有對齊」。需要麥克風權限和不太吵的環境。
 
+### 發佈 { #v04-release }
+
+- 2026-11-20 本人同意 merge（#16 → #17 → fm1-metronome #1）並發佈。[fm1-metronome v0.4](https://github.com/daviddwlee84/fm1-metronome/releases/tag/v0.4)：`metronome-0.4.fwsc`，identity `FM-1_59000400`（對當天 catalog 查過，只有萬用的 `FM-1_\d{3,8}` 會比對到），SHA-256 `81a09bef0852ea0322edb6f4a71fb94e2bb19dee112da7753e08d4bdc1c3a19e`，附 `firmware.json`。在 fm1-emu 兩種晶片疊在 `pre-metronome-0.4` 備份上：開機 0 次寫入，經虛擬 USB 有 HELLO 和 STATE `[模擬]`。Hub 會自動跟上新 release。
+- tag 打在 `140e4c5`，不是 main 最新的 commit：`metro-release` 先跑 `fw-setup`，會把 submodule 切回 superproject 記錄的 commit。差別只有 `fmhub.json` 的介紹文字，程式碼相同。原本和 tag 同名的 branch `v0.4` 已 merge，刪掉了。這兩個坑寫進了 `fm1-hub-listing` skill。
+- `fmhub.json` 的介紹改成提到 live 頁和藍牙（297 字，卡片會截掉超過 300 字的部分）。
+- 機器上目前是同樣程式碼的開發版 build（`FM-1_5900`）。要換成 release 版，需要本人另外刷一次。
+
 ### 實機上要試的 { #v04-try }
 
 1. USB 連 live 頁：Start/Stop、換歌（下一小節換）、BPM，畫面跟著動。
