@@ -242,7 +242,7 @@ record 的格式沒變（`REC_VER 1`），v0.1 存的歌直接沿用。
 | `web/index.html` | 歌單編輯器：16 首歌、速度（術語跳段、tap）、GRID 的格子與拍號 preset、CLASSIC 的四層，WebAudio 試聽（照 `metro.c` 的 tick 與 `app.c` 的音色），存檔、開檔、從機器讀、送進機器。編輯和試聽不用接機器；按 *Connect* 才要 MIDI 權限。不支援 Web MIDI 的瀏覽器（Safari、iPhone、iPad）會明講要改用 Chrome 或 Edge |
 | `web/setlist.js` | 網頁的協定、紀錄、JSON、速度術語、拍號 preset，瀏覽器和 node 都能載入 |
 | `web/cheatsheet.html` | 可列印，開頭是[使用邏輯](#how)的圖 |
-| `web/try/` | fm1-emu 的 iframe；package 是這個網站上的 release 複本（`web/try/metronome.fwsc`，GitHub Pages 有 CORS）。Hub 上架後改成 `?fw=<hub id>` |
+| `web/try/` | fm1-emu 的 iframe。原本 package 是這個網站上的 release 複本（GitHub Pages 有 CORS），2026-11-20 Hub 上架後改成 `?fw=metronome`，複本刪掉 |
 
 JSON 檔：`{"app": "METRONOME", "kind": "setlist", "format": 1, "active": 5, "switch": "now", "page": "set", "songs": [{"key": 1, "bpm": 96, "mode": "grid", "sound": "wood", "grid": {"beats": 3, "div": 2, "steps": "AgNgNg"}, "classic": {"accent_every": 4, "quarter": 7, ...}}]}`。只寫有存的歌；steps 用 `. g N A`。手寫只要給 `key` 和 `bpm`，其他用預設。
 
@@ -263,6 +263,8 @@ JSON 檔：`{"app": "METRONOME", "kind": "setlist", "format": 1, "active": 5, "s
 
 - 2026-11-20：[fm1-metronome v0.3](https://github.com/daviddwlee84/fm1-metronome/releases/tag/v0.3) 發佈，附 `metronome-0.3.fwsc`（release asset 的 digest 是 `sha256:b1163655…6e925a54`，就是實機測過的那份）和 `firmware.json`。tag 在 `aa1d2c7`。
 - The Firmware Hub（2026-11-20 讀的規則 `[上游]`）：Sven 每個都親自看，先上測試站再上線；之後的 release 三小時內自動跟上。要用這份 release 檔在實機做三種測試，2026-11-20 都用 `fm1_install.py`（USB-MIDI，和 Hub 網頁安裝同一套）做完 `[實機]`：從 METRONOME 裝 SLOOP 2.8.5（classic install）；從 SLOOP 裝回 METRONOME（fast install，歌單在 SLOOP 期間沒被動到）；在 M-Flasher 還原原廠 015 後從原廠裝 METRONOME（fast install，預設一首 120 BPM），之後用 `metro-restore` 送回歌單。紀錄在 [device-log](../device-log.md)。
+- 2026-11-20 05:42（UTC 2026-11-19 21:42）本人送出 Hub 的表單，identity `FM-1_59000300`（送出前對當天的 catalog 查過沒人用）。結果頁的網址只有本人知道，不記在這裡；送出後頁面先顯示 `checking`。表單的 sounds 勾選框即使 `"sounds": "none"` 也要勾，不勾送不出去（表單提示「none: just tick it」）。
+- 2026-11-19 21:45 UTC 八項檢查全綠（source 17 個檔案、LICENSE、fmhub.json、sounds none、release 0.3、identity、Felucca 的 update loader、flash chip 兩種），23:00 UTC **自動上線**，沒等 Sven 按（「auto: live – every line of the check is green, tested and rights ticked」）`[上游]`。頁面是 <https://thefirmwarehub.com/firmware/metronome/>，catalog 的 id 是 `metronome`（取自 repo 名），`chip` 寫 `new`（從 package 讀的，檢查頁寫兩種晶片）。之後 try 頁改用 `?fw=metronome`，`fm1.toml` 的 credits 改成指向這個 repo 的 RHYTHM（fm1-metronome `eb68fbd`）。
 - 社群清單：aroum/fm1-custom-fw 會放在 1.1.4 節（Morse 是 127 號，維護者用自己的 commit 收錄後關掉 PR）；awesome-fm-1 放 *Not a synth*，但那個 repo 從 2026-11-12 起沒有 merge 任何 PR。
 
 ### 即時連線（之後） { #live }
@@ -278,7 +280,6 @@ JSON 檔：`{"app": "METRONOME", "kind": "setlist", "format": 1, "active": 5, "s
 - 畫面主題：擺錘之外，指揮棒的拍子圖形、可愛的角色。先量一張圖要多少 flash 再決定（[CORD](https://github.com/chasedeanda/cord-fm1) 證明放得下圖）。
 - 更多音色、swing。
 - 即時連線與網頁上的動畫，見[上面](#live)。
-- 上 The Firmware Hub：照 `fm1-hub-listing` skill 的三個硬體測試（從原廠 V15 裝、從別的韌體裝、從它裝別的），再送表單；上架後 try 頁改用 `?fw=<hub id>`。
 - 每首歌的名字（要先想好怎麼輸入文字）：本人 2026-11-20 說放到很後面。曲目順序表演者自己記得，演完用[全部清空](#clear-all)。
 - 實機上校正延遲：tap tempo 只看按鍵間隔，不受延遲影響；要比較 click 與 LED 有沒有對齊。
 - 和 [RHYTHM](rhythm.md) 共用 click 與 transport（抽到 `firmware/common/`）。
