@@ -162,6 +162,7 @@ M-Flasher 在兩次寫入前各自動存了一份：`~/Documents/M-Flasher/backu
 | 2026-11-20 05:34 | agent 執行 `fm1-download-mode`（原廠執行中）、`fm1-info`、`fm1-backup pre-hub-test-3-stock-metronome`、`fm1-restart` | bootloader stock、firmware `FM-1 015 (stock)`；備份 SHA-256 `c6a47902…44fd38`，和 2026-11-17 的原廠備份逐 sector 相同：還原完整。重開回原廠 |
 | 2026-11-20 05:36 前後 | METRONOME 的 Hub 測試 3：本人執行 `fm1_install.py firmware/metronome/build/metronome-0.3.fwsc`，機器上是原廠 015（`FM-1_015`，port `FM-1`） | 成功：`checking the package (34 reads)` → `switching to update mode` → `the loader writes only the sectors that changed (fast install)` → `done: the FM-1 runs FM-1_59000300`。開機是預設的一首 120 BPM（原廠映像裡沒有 METRONOME 的資料）。Hub 要求的三項實機測試全部通過 |
 | 2026-11-20 05:38 | agent 執行 `just metro-restore backups/progress/metronome-2026-11-20-pre-hub-test-3.json`，本人在機器上按 `PLAY` | `[metronome] loaded`。agent 再用 `just metro-backup` 讀出：4 首（141、119、179、208），和送出的 JSON 相同 |
+| 2026-11-20 19:40 | 測試 METRONOME 0.4 的網頁時，Chrome 的歌單編輯器（`link.js`）先聽到插在電腦上的實機（埠名「Felucca」），送了 SET_REQ，讀出實機的歌單。這是唯讀的，沒有寫入，也沒有送 CTRL | 讀到 4 首（120、119、106、148），和 05:38 送回的那份不同，是本人之後在機器上改的。之後的瀏覽器測試就停了 |
 
 ## Phase 1 驗收
 

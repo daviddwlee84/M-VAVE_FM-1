@@ -657,16 +657,20 @@ metro-unit:
 metro-emu chip="uc25hq80":
     just emu-run firmware/metronome/build/metronome.fwsc "{{chip}}" --usb
 
-# METRONOME's computer side and its web page: host/tests (pytest) and web/tests (node), the same frames as tests/basic.txt.
+# METRONOME's computer side and its web page: host/tests (pytest) and web/tests (node: the setlist, the live link), the same frames as tests/basic.txt.
 metro-test:
     cd firmware/metronome && PYTHONPATH=host uv run --project ../.. --locked --all-groups pytest -q host/tests
     node firmware/metronome/web/tests/setlist_test.js
+    node firmware/metronome/web/tests/live_test.js
 
 # The setlist of an FM-1 running METRONOME 0.3+ into a JSON file (read-only on the unit), and back (it asks: PLAY yes).
 metro-backup file:
     PYTHONPATH=firmware/metronome/host uv run --locked --all-groups python -m fm1_metronome backup "{{file}}"
 metro-restore file:
     PYTHONPATH=firmware/metronome/host uv run --locked --all-groups python -m fm1_metronome restore "{{file}}"
+# METRONOME 0.4+: each STATE (what plays, when) as it comes; extra arguments: --start, --stop, --seconds N.
+metro-watch *args:
+    PYTHONPATH=firmware/metronome/host uv run --locked --all-groups python -m fm1_metronome watch {{args}}
 
 # METRONOME's release package (identity FM-1_59 + XXYYZZ). Its try page runs The Firmware Hub's package (?fw=metronome).
 metro-release version: fw-setup fw-toolchain
