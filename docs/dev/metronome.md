@@ -230,7 +230,7 @@ record 的格式沒變（`REC_VER 1`），v0.1 存的歌直接沿用。
 - frame：`F0 7D 4D 54 <ver=1> <type> <payload> F7`（`MT`），payload 每個 byte 都是 7-bit。
 - 機器 → 電腦：HELLO `41`（protocol、韌體 major、minor、transport）、HEARTBEAT `42`、SET `44`（第幾片、共幾片、pack7 後的資料）、SET_DONE `45`（0 載入、1 拒絕、2 資料壞了）。
 - 電腦 → 機器：HELLO_ACK `01`、SET_REQ `04`、SET_LOAD `05`（格式同 SET）。
-- `46` / `06` 保留給之後的即時連線（[見下](#live)）。
+- `46` / `06` 在 v0.4 變成即時連線的 STATE 和 CTRL（[見下](#v04-protocol)）。
 - 紀錄 454 B：格式 1、目前的歌、換歌時機、頁，16 首歌各 28 B（逐欄位寫，不是直接倒 struct），CRC-16/CCITT-FALSE（低位元組在前）。切成 10 片、每片 49 B。
 - 收到完整的歌單後畫面問 `LOAD THIS SETLIST?`、顯示幾首歌；`PLAY` 載入（播放中會先停）並存檔，`HOME` 不載入，其他鍵都不理。CRC 或數值不對就直接拒絕，不會問。
 
@@ -267,19 +267,105 @@ JSON 檔：`{"app": "METRONOME", "kind": "setlist", "format": 1, "active": 5, "s
 - 2026-11-19 21:45 UTC 八項檢查全綠（source 17 個檔案、LICENSE、fmhub.json、sounds none、release 0.3、identity、Felucca 的 update loader、flash chip 兩種），23:00 UTC **自動上線**，沒等 Sven 按（「auto: live – every line of the check is green, tested and rights ticked」）`[上游]`。頁面是 <https://thefirmwarehub.com/firmware/metronome/>，catalog 的 id 是 `metronome`（取自 repo 名），`chip` 寫 `new`（從 package 讀的，檢查頁寫兩種晶片）。之後 try 頁改用 `?fw=metronome`，`fm1.toml` 的 credits 改成指向這個 repo 的 RHYTHM（fm1-metronome `eb68fbd`）。
 - 社群清單：aroum/fm1-custom-fw 會放在 1.1.4 節（Morse 是 127 號，維護者用自己的 commit 收錄後關掉 PR）；awesome-fm-1 放 *Not a synth*，但那個 repo 從 2026-11-12 起沒有 merge 任何 PR。
 
-### 即時連線（之後） { #live }
+## v0.4：即時連線、藍牙、live 頁與指揮動畫 { #v04 }
 
-本人 2026-11-20 提到：網頁和機器即時互動，機器靜音、網頁出聲，或網頁畫指揮動畫。設計方向：
+本人 2026-11-20 選的範圍：即時連線，USB 和藍牙一起做；網頁要有跟著拍子動的畫面、網頁出聲時機器靜音、從網頁遙控，以及依拍號指揮的動畫。在 fm1-metronome 的 branch `v0.4`。`FW_MINOR 4`、host 0.4.0。record 格式不變，實機上的歌單沿用。
 
-- 不要每拍送一個 MIDI 訊息。USB 有幾 ms 的抖動，藍牙 MIDI 常見 10–30 ms，而且會成批到達。
-- 用同步時鐘：機器只在開始、停止、換歌、改速度時送 STATE（`46`：這首歌的設定、BPM、目前的 tick 與它在機器上的時間），網頁用自己的 audio clock 推算之後每一拍。剩下的只有一個固定延遲，網頁上用一個「對拍」滑桿或拍手校正。
-- METRONOME 目前是 `ble = false`。延遲要在實機上量過才定案。指揮動畫、角色這些在網頁上做比在 240×240 的螢幕上容易，也不佔韌體 flash。
+### 設計：同步時鐘，不是每拍一個訊息 { #live }
+
+- USB 有幾 ms 的抖動，藍牙 MIDI 常見 10–30 ms，而且會成批到達，所以不每拍送訊息。
+- 機器只在狀態改變時送 STATE：開始、停止、換歌（排定和真的換過去）、改速度或改歌的設定。另外播放中每秒送一次，讓網頁追上兩邊時鐘的漂移（晶振差 100 ppm，一分鐘約 6 ms）。
+- STATE 描述一段「segment」：這首歌、一個 anchor tick 和它在機器上的 sample、q8（每 tick 的 sample 數 ×256），以及送出當下的 sample。網頁照 `app.c` 的 `q8_mul` 算出之後每一拍的時間，和機器的 render 用同一套 32-bit 算式。
+- 有換歌排在下一小節時，機器緊接著再送一份帶 flag 4 的 STATE，網頁可以提前排好。
+- 網頁端的時鐘：偏移量取最近 8 秒內「到達時間減機器時間」的最小值，一律用訊息的 timeStamp（藍牙用 BLE-MIDI 的 timestamp），不用網頁讀到它的時間。剩下的固定延遲用校正處理：跟著機器的 click 按 8 下，取中位數。
+
+### 協定 { #v04-protocol }
+
+| 方向 | type | 內容 |
+|---|---|---|
+| 機器 → 電腦 | STATE `46` | 48 B，7-bit pack：seq；flags（1 播放中、2 靜音、4 這是等著的換歌、8 switch NOW）；active；這段的歌號；歌的 28 B（和 record 同排法）；anchor tick、anchor sample、q8、now（u32，low byte first，44.1 kHz） |
+| 電腦 → 機器 | CTRL `06` | 1 START、2 STOP、3 PICK n、4 BPM（兩個 7-bit）、5 MUTE 0/1、6 STATE? |
+
+- CTRL 走和實體按鍵一樣的函式（`key_play`、`song_try`、`bpm_by`），所以畫面、LED、語音、存檔都一樣。
+- 機器在問問題（LOAD THIS SETLIST?、CLEAR ALL?）時，只接受 STOP 和 STATE?。
+- 每個 CTRL 都會回一份 STATE，所以網頁看得到結果，包括被拒絕的情況。
+- `MT_PROTO` 維持 1。舊網頁連 0.4 不受影響；0.3 收到 CTRL 會忽略。
+
+### 靜音的安全規則 { #v04-mute }
+
+- 靜音只放在 RAM，不存檔，只有網頁能開。標頭會顯示紅色 `MUTE`。
+- 電腦一離開（hostlink 逾時、USB 拔掉、藍牙斷線），機器自己恢復出聲：舞台上不會因為電腦而沒聲音。
+- 靜音時開始播放，第一拍排在 150 ms 後（平常是 50 ms），讓網頁先收到 STATE、排好第一個 click。
+
+### 藍牙 { #v04-ble }
+
+- 設定：`ble = true`、`ble_stack = "own"`（JieLi 的 stack 會丟掉進來的 SysEx）、`ble_diag = false`。沿用 Morse 0.5 的作法。
+- 開關：SET EDIT 轉 `K4`（只在 EDIT 有效，舞台上碰到也不會切），存在 record 原本空著的那個 byte 的 bit 0。0.3 以前那個 byte 一律是 0，所以舊 record 讀起來是藍牙開。從電腦載入歌單時這個設定會保留。
+- 藍牙不寫 flash：own stack 的位址由 flash 晶片的 unique ID 算出來，也沒有配對資料要存（`app_ble_load` / `app_ble_save` 回 0）。[flash 用途表](../hardware/flash-map.md)不用改。
+- 標頭：`BT` 沒連線時灰色、連上時藍色；`PC` 表示有電腦在講話。
+- 大小：app 從 0.3 的約 91 KB 變成 127,604 B，RAM（`.data+.bss`）從 25,992 變成 35,320 / 98,304 B，和 Morse 加藍牙時的增量相近。
+
+### 網頁 { #v04-web }
+
+| 檔案 | 做什麼 |
+|---|---|
+| `web/link.js` | USB（Web MIDI）或藍牙（Web Bluetooth），從 Morse 的頁面搬來：看埠講什麼話來認，兩邊都有回應時 USB 優先；藍牙封包照 timestamp 對時。歌單編輯器也改用它，所以 0.4 讀取、傳送歌單也能走藍牙 |
+| `web/live.js` | 純邏輯：時鐘與 segment 計畫（`ticks(from, to)`、`where(t)`），node 測 |
+| `web/conductor.js` | 依歌選指揮圖形，畫指揮家。`patternFor` 和 `pos` 是純函式 |
+| `web/live/` | 舞台頁：大字 BPM、速度術語、拍號、小節與拍點、指揮家；Start/Stop、BPM ±1/±5、16 首歌（按一下等於按機器的白鍵）；「Clicks from this computer」；校正（按 `T`，USB 和藍牙分開記在瀏覽器裡）；沒有機器時可以跑 demo |
+
+指揮圖形的選法（`conductor.js`）：
+
+| 歌 | 打法 |
+|---|---|
+| GRID，一拍分成四分、八分、十六分 | 照拍數（1–9）。第 1 拍往下，最後一拍往上，中間的先左後右（3 拍：下、右、上；4 拍：下、左、右、上；6 拍德式） |
+| GRID 三連音（6/8、9/8、12/8） | 打附點四分：6/8 打 2、12/8 打 4 |
+| 以八分為一拍、有分組的 preset | 一組一拍，長短不同：5/8 3+2 打 2、7/8 2+2+3 打 3。6/8 IN 6 打 6 |
+| CLASSIC | 照 BEAT（重音間隔），BEAT 0 打 1 |
+
+### v0.4 驗證 { #v04-verify }
+
+| 項目 | 結果 |
+|---|---|
+| `just fw-test metronome` | 新增：ack 後立刻送 STATE；START、每秒、PICK 下一小節（兩份）、BPM 都會送；空歌位和超出範圍的 BPM 不接受；MUTE 時 click 照算、輸出峰值 −180 dBFS，解除後 −17.6 dBFS；CLEAR ALL? 時 START 不接受；靜音中拔掉 USB 自動解除；藍牙連線、ack、START、斷線後解除靜音；`K4` 關藍牙、重開保留、載入歌單後保留。三份 STATE 以完整 frame 釘在腳本裡 |
+| `just metro-test` | pytest 13 個（STATE 解碼、CTRL frame 與腳本一致）；node：setlist 29 個、live 66 個。live 包括：USB 2–5 ms jitter、藍牙按 timestamp、藍牙成批到達（四個裡有一個晚 30 ms）、100 ppm 漂移，拍點都在固定延遲之外 1 ms 以內；u32 sample 回繞；跨換歌的 tick；每種拍號的指揮圖形與軌跡連續；藍牙封包來回 |
+| `just fw-build metronome` | package 616,003 B，SHA-256 `d961e3b1f5ecdff605e927b728641b69d0d1686cbf06e2912941cd5283bc0086`（identity `FM-1_5900`，開發版） |
+| fm1-emu 兩種晶片，headless、虛擬 USB | 新 flash：ack → STATE；START、每秒 STATE、PICK 空歌位回 STATE（不換）、MUTE（flags 3）、STOP。經 CTRL 改 BPM 100：寫 4 次；重開 0 次寫入，讀回 100 `[模擬]` |
+| 疊在實機備份上預演 | 疊在 `2026-11-20-pre-hub-test-3-metronome`（0.3 存的歌）上，兩種晶片開機 0 次寫入，經虛擬 USB 讀出 4 首（141、119、179、208）`[模擬]` |
+| Chrome 接 fm1-emu（`just metro-emu`，「METRONOME FM-1 (emu)」） | live 頁用 Web MIDI 連上，讀出歌單；從網頁按 Start、+5 BPM（125）、網頁出聲（機器 muted），指揮家跟著機器的拍子走；歌單編輯器透過 `link.js` 讀取正常 `[模擬]` |
+| 網頁畫面 | Playwright：demo 的 4/4、5/8 3+2、6/8、7/8，淺色和深色模式，手機寬度 390 px 沒有橫向捲動，沒有 JS 錯誤 |
+| 藍牙 | 模擬器沒有無線電，**只能在實機上驗證**：連線、歌單、STATE 的延遲、校正 |
+
+測試時本人的 FM-1 也插在電腦上（埠名「Felucca」，跑 0.3）。編輯器的 hunt 先聽到實機，讀到實機的歌單（唯讀，見 [device-log](../device-log.md)）。之後的瀏覽器測試就停了，以免碰到實機。
+
+### 實機結果 { #v04-unit }
+
+2026-11-20 裝上 0.4（`FM-1_5900`）`[實機]`：
+
+- 藍牙第一次沒反應：機器的 `BT` 和 `PC` 都是藍的，但頁面收不到任何訊息。原因是**機器一次只對一台電腦說話**：只要 USB 上有程式在回應它（當時是 Chrome 裡還開著的舊頁面，機器重開後它自己又連上了），HEARTBEAT 就只走 USB，藍牙那邊沒有訊息。修法：`link.js` 接上藍牙後先送 HELLO_ACK，連線會跟著移到藍牙（hostlink 照回應的那條路回話）。之後藍牙連上，live 頁可以用。
+- 之後的步驟都正常：「Clicks from this computer」；藍牙下歌單馬上同步；`K4` 關藍牙、再打開後網頁馬上能重連；機器上新增的歌網頁馬上看得到。本人的意見：`K4` 關藍牙太隱密，一般情況下很難發現（列進 v0.5）。
+- 延遲：按 `T` 8 下校正得到 −24 ms；本人用耳朵調到約 −50 ms 才覺得對齊（負的表示頁面原本比機器的聲音晚）。兩者有差距，一個可能的原因是人跟著節拍按鍵時通常會比拍子早一點（negative mean asynchrony，文獻常見 20–50 ms），所以按鍵校正會偏。
+
+自動校正的兩個方向（之後，見[之後](#next)）：
+
+1. **來回時間（不用麥克風）**：網頁送一個 PING，機器立刻回它當下的 sample 時間，網頁量來回時間，取一半當單程延遲，像 NTP 那樣對時。這可以拿掉傳輸那段（USB 約 1–2 ms，藍牙約 10–20 ms），USB 和藍牙也不用各自校正。剩下的是機器自己的音訊緩衝（固定值，量一次就能寫死）和電腦的輸出延遲（`getOutputTimestamp` 已經處理一部分）。要韌體加一個回應 frame。
+2. **麥克風**：機器照常出聲，網頁同時用另一個音高放自己的 click，麥克風同時收到兩者，量兩者的時間差，調到 0。兩個聲音都經過同一個麥克風，所以麥克風本身的延遲會互相抵消，而且最接近「聽起來有沒有對齊」。需要麥克風權限和不太吵的環境。
+
+### 實機上要試的 { #v04-try }
+
+1. USB 連 live 頁：Start/Stop、換歌（下一小節換）、BPM，畫面跟著動。
+2. 「Clicks from this computer」：機器標頭出現 `MUTE`，聲音改由電腦出；拔掉 USB 或關掉頁面，機器自己恢復出聲。
+3. 跟著機器的 click 按 `T` 8 下校正，記下 USB 的校正值。
+4. SET EDIT 轉 `K4` 確認藍牙開著。macOS 的 Audio MIDI 設定或 live 頁的「Connect over Bluetooth」連上，重做 1–3，記下藍牙的校正值和手感。
+5. 藍牙下用編輯器讀一次、送一次歌單。
+6. `K4` 關藍牙，重開機後還是關的。
 
 ## 之後 { #next }
 
 - 畫面主題：擺錘之外，指揮棒的拍子圖形、可愛的角色。先量一張圖要多少 flash 再決定（[CORD](https://github.com/chasedeanda/cord-fm1) 證明放得下圖）。
 - 更多音色、swing。
-- 即時連線與網頁上的動畫，見[上面](#live)。
+- v0.5（本人 2026-11-20 定）：PING 來回時間對時；讓藍牙開關比較容易發現。
+- 之後：麥克風校正（同時收機器和網頁的 click，見[實機結果](#v04-unit)）；網頁上更多動畫（角色、畫面主題）。
 - 每首歌的名字（要先想好怎麼輸入文字）：本人 2026-11-20 說放到很後面。曲目順序表演者自己記得，演完用[全部清空](#clear-all)。
-- 實機上校正延遲：tap tempo 只看按鍵間隔，不受延遲影響；要比較 click 與 LED 有沒有對齊。
+- 實機上校正延遲：tap tempo 只看按鍵間隔，不受延遲影響；要比較 click 與 LED 有沒有對齊。v0.4 的 live 頁有網頁端的校正。
 - 和 [RHYTHM](rhythm.md) 共用 click 與 transport（抽到 `firmware/common/`）。
