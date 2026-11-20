@@ -80,6 +80,12 @@ git clone --branch <app>-split . /tmp/<repo> && cd /tmp/<repo> && git checkout -
 - If the app has screen-reader words, point `words.tsv`'s `# url:` at where `web/words/*.json` is served (e.g.
   raw.githubusercontent.com of the new repo) and commit `web/words/`.
 - Build: `just morse-release X.Y` style recipe, i.e. `build.py firmware/<app> --release X.Y` → `<name>-X.Y.fwsc`.
+- For an app that is a submodule here: the release recipes depend on `fw-setup`, whose `git submodule update` puts the
+  submodule back on the commit the superproject records (detached). Bump the pointer to the commit you mean to
+  release first, or the package and the tag come from the recorded one (METRONOME 0.4, 2026-11-20: built and tagged
+  on `140e4c5`, main's code without its last `fmhub.json` edit; harmless only because no code differed).
+- Do not name a work branch like its tag (`v0.4`): `git push origin v0.4` then fails as ambiguous, and a tree link
+  to `v0.4` is ambiguous too. Use `dev-0.5` or similar; push tags as `refs/tags/vX.Y`.
 
 ### 4. fmhub.json
 

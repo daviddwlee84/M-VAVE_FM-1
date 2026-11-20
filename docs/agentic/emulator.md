@@ -89,7 +89,7 @@ cargo run --release -p fm1-live -- --fwsc FM-1.fwsc     # M-VAVE 原廠套件
 | `--usb` | 插上 USB 線：host 會 enumerate，USB-MIDI 韌體在電腦上出現為「(emu)」MIDI 裝置（macOS、Linux） |
 | `FM1_STRICT=1` | 照實機的方式跑：未對齊存取會 fault、每條指令照量測的 cycle 數、LCD 傳輸照 SPI 時脈。只能 interpret，比較慢 |
 | `--shot` | headless 執行；配 `FM1_USB_SEND` 在指定時間送 USB MIDI 並印出回應 |
-| `FM1_BENCH_KEYS` | 輸入腳本：`ms:mHEX` 從 DIN 送 MIDI、`ms:id` 按鍵、`ms:eN:clicks` 轉 encoder |
+| `FM1_BENCH_KEYS` | 輸入腳本：`ms:mHEX` 從 DIN 送 MIDI、`ms:id` 按鍵、`ms:eN:clicks` 轉 encoder。FM-1 的 `N`：`e0` SELECT、`e1` ALGO、`e2`–`e5` K1–K4（沒有 PRESET，和 fm1-base `plat.h` 的 `EN_*` 編號不同；2026-11-20 用 METRONOME 的提示逐一試出來的）`[模擬]` |
 | `--mhz` | 降低時脈。原生 JIT 預設跑真實的 240 MHz |
 | `--flaky-core1 RATE` | 第二顆核心偶爾讀錯 RAM，測試韌體退回單核的能力 |
 
