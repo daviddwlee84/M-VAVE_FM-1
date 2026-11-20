@@ -367,9 +367,9 @@ JSON 檔：`{"app": "METRONOME", "kind": "setlist", "format": 1, "active": 5, "s
 5. 藍牙下用編輯器讀一次、送一次歌單。
 6. `K4` 關藍牙，重開機後還是關的。
 
-## v0.5：PING 對時、藍牙開關好找 { #v05 }
+## v0.5：PING 對時、藍牙開關好找、全部歌曲同一種音色 { #v05 }
 
-本人 2026-11-20 定的範圍：PING 對時（麥克風校正之後再說），以及讓藍牙開關比較容易發現。在 fm1-metronome 的 branch `dev-0.5`（不和 tag 同名，見 `fm1-hub-listing` skill）。`FW_MINOR 5`、host 0.5.0。
+本人 2026-11-20 定的範圍：PING 對時（麥克風校正之後再說）、讓藍牙開關比較容易發現，以及（同日 22:30 提出）讓全部歌曲暫時用同一種音色。在 fm1-metronome 的 branch `dev-0.5` 開發（不和 tag 同名，見 `fm1-hub-listing` skill），2026-11-20 merge 進 main，還沒發佈 release。`FW_MINOR 5`、host 0.5.0。
 
 ### PING / PONG { #v05-ping }
 
@@ -381,17 +381,60 @@ JSON 檔：`{"app": "METRONOME", "kind": "setlist", "format": 1, "active": 5, "s
 
 ### 藍牙開關 { #v05-bt-hint }
 
-SET EDIT 的頁尾每 3 秒在兩種提示之間切換，第二種是 `K4: BLUETOOTH OFF (NOW ON)` 或 `K4: BLUETOOTH ON (NOW OFF)`，用比較亮的顏色。舞台上的 SET（非 EDIT）頁不變。
+SET EDIT 的頁尾每 3 秒輪流顯示三種提示：按鍵說明、`K3: ALL SONGS' SOUND NOW …`、`K4: BLUETOOTH OFF (NOW ON)` 或 `K4: BLUETOOTH ON (NOW OFF)`。後兩種用比較亮的顏色。
+
+### 全部歌曲同一種音色 { #v05-all-sound }
+
+- 0.4 以前的作法：每首歌各有自己的音色（`ALGO` 轉，CLICK／WOOD／BEEP），CLASSIC 還各有四層的音量。全域的只有機器的總音量。
+- v0.5 新增：在 SET EDIT 轉 `K3`，依序是 `OWN SOUND`（每首用自己的）、`CLICK`、`WOOD`、`BEEP`，全部歌曲都改用選定的音色。
+  - 每首歌自己的音色不會被改掉，轉回 `OWN SOUND` 就恢復。
+  - 這個設定存在 record 的 `flags` bit 1–2，和藍牙開關一樣是這台機器自己的設定。所以重開機還在；電腦送來歌單時也會保留，歌單本身不帶這個設定。
+  - 舊的 record 這兩個 bit 都是 0，讀起來就是 `OWN SOUND`。
+- 只影響音色。CLASSIC 各層的音量和 GRID 的重音仍然照每首歌自己的設定。
+- `K3` 只在 EDIT 裡能轉，和 `K4` 一樣，避免舞台上不小心碰到。
+- 畫面上：
+  - 舞台的 SET 頁，設了全部同一種時，頁尾每 6 秒會出現一次 `ALL SONGS IN BEEP (SET EDIT, K3)`；
+  - GRID 和 CLASSIC 頁的音色欄會以亮色顯示 `ALL BEEP`；
+  - 在歌曲頁轉 `ALGO` 時，提示會寫成 `WOOD, ALL BEEP`：改的是這首歌自己的音色，要等轉回 `OWN SOUND` 才聽得到。
+- STATE 裡那首歌的第 7 個 byte 是實際播放的音色，所以 live 頁出聲時也跟著變。0.4 的網頁不用改。
+
+### 換通道時的靜音 { #v05-mute-move }
+
+2026-11-20 在實機上發現 `[實機]`：網頁出聲、機器靜音時，從 USB 改連藍牙，兩邊都沒有聲音。
+
+- **原因**：機器只在電腦離開 10 秒後才解除靜音。換通道時，藍牙那邊馬上就回應了，所以機器不認為電腦離開過，靜音一直留著。網頁這邊斷線時把「Clicks from this computer」關掉了，重連後也沒有再打開。
+- **韌體的修法**：收到另一個通道的 HELLO_ACK 時解除靜音。靜音屬於原本那個通道上的網頁；新的網頁如果要靜音，會自己再要求一次。
+- **網頁的修法**：
+  - 記住使用者最後一次選的「Clicks from this computer」，斷線後保留，重連時接著出聲，並重新送 MUTE 1。
+  - 收到 STATE 說機器靜音、但這個網頁沒有在出聲時，送 MUTE 0。這可能是舊網頁留下的靜音，例如 pagehide 的 MUTE 0 沒送到。這樣接 0.4 的機器也不會兩邊都沒聲音。
+- **測試**：`basic.txt` 新增一項：藍牙上靜音後，USB 送 HELLO_ACK，`transport` 變成 0、`muted` 變成 0。
 
 ### v0.5 驗證 { #v05-verify }
 
 | 項目 | 結果 |
 |---|---|
-| `just fw-test metronome` | 新增：PING 立刻回 PONG（完整 frame 釘在腳本裡），不改狀態；EDIT 頁尾的藍牙提示（截圖） |
+| `just fw-test metronome` | 新增：PING 立刻回 PONG（完整 frame 釘在腳本裡），不改狀態；EDIT 頁尾的三種提示（截圖）。`K3`：不在 EDIT 時轉了沒有作用；EDIT 裡會停在 BEEP，不會轉過頭；`flags` 是 6；播放中的音色和 STATE 帶的音色會跟著改；重開機後還在；歌曲自己的音色不變；轉回 `OWN SOUND` 後 `flags` 是 0 |
 | `just metro-test` | pytest 14 個；node：setlist 29 個、live 73 個。新增：USB 去回各 1 ms，對時誤差 1 ms 以內；藍牙去回各 12 ms、jitter 15 ms，1.5 ms 以內；藍牙三次回覆有兩次晚 25 ms，3 ms 以內（只用 STATE 的最小延遲會差 12 ms 以上） |
-| `just fw-build metronome` | app 127,892 B；package SHA-256 `ae5b57ebaaa51fac2d7fa37abd2c7e85bd92061ee661dbfd45d3b52486a857bd` |
+| `just fw-build metronome` | 加上 `K3` 之後：app 約 129 KB；package SHA-256 `420ee130515649bd15757aecbbbd3af3d3ec178b21f5203dfb9a7e9ab2b90963`（PING 那一版是 `ae5b57eb…486a857bd`） |
 | fm1-emu 兩種晶片，虛擬 USB | PING 後 2 ms 回 PONG，兩次 PONG 的 sample 差 22,060（0.5 s）；開機 0 次寫入 `[模擬]` |
-| 實機 | 還沒裝 |
+| fm1-emu 兩種晶片，`K3` | 依序按 `REC`、轉 `K3` +3、再按 `REC`：存檔寫 4 次；重開機 0 次寫入，舞台頁尾顯示 `ALL SONGS IN BEEP` `[模擬]`。注意 fm1-emu 的 encoder 編號沒有 PRESET：`e0` SELECT、`e1` ALGO、`e2`–`e5` 是 K1–K4，和 fm1-base 的 `EN_*` 編號不同 |
+| 實機 | 2026-11-20 22:50 前後裝了 `420ee130` 那一版 `[實機]`。<br>• K3、EDIT 的三種提示、網頁跟著換音色：都正常。<br>• 來回時間：藍牙約 60 ms（±10 ms）、USB 約 1 ms（跳動不到 1 ms）。對時之後仍需要校正，原因見[剩下的校正](#v05-cal)。<br>• 從 USB 改連藍牙時兩邊都沒聲音：已修，見[換通道時的靜音](#v05-mute-move)，修好的版本還沒裝 |
+
+### 剩下的校正 { #v05-cal }
+
+PING 對時已經在每次來回時，動態扣掉了連線本身的延遲。live 頁上那個「round trip」數字，就是拿來做這件事的。剩下要靠校正補的，是來回時間本身看不出來的部分：
+
+1. **去程和回程不一樣長**：只量得到來回的總時間，分不出哪一邊比較慢，這是 NTP 這類作法的極限。
+   - 對時的誤差是（回程 − 去程）÷ 2，最多是來回時間的一半，所以藍牙最多約 30 ms。
+   - USB 的來回時間只有 1 ms，這一項幾乎是 0。
+2. **兩邊的音訊輸出延遲**：
+   - 機器從算出某個 sample 到 DAC 把它送出去，中間有一段延遲；
+   - 電腦端 `getOutputTimestamp` 對內建喇叭還算準，對藍牙耳機或喇叭常常不準。
+   - 這一項在同一套設備上是固定的。
+
+**判斷方法**：先在 USB 上校正，得到的值就是第 2 項；再用同一組喇叭在藍牙上校正，兩者的差就是第 1 項。如果這個差每次都約等於來回時間的某個固定比例（例如一半），就可以讓網頁依來回時間自動補，不用再分開校正。
+
+**另一個可改的地方**：藍牙的來回時間每次跳約 ±10 ms，網頁目前取 8 秒內最短的那次。換成新的一次時，時鐘會整個跳過去，click 就跟著移幾 ms。可以改成每拍最多移 1 ms，並把視窗拉長。
 
 ## 之後 { #next }
 
