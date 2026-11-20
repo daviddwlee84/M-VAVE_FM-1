@@ -167,6 +167,12 @@ expect best 6
 expect en_rounds 6
 shot endless_over.png
 tap HOME
+expect page 3
+tap HOME
+expect page 4
+tap HOME
+expect page 5
+tap HOME
 expect page 0
 expect echo 0
 turn SELECT 30
@@ -237,3 +243,228 @@ expect lat 12
 expect read 0
 expect best 6
 shot reboot.png
+
+# ==== 0.3: PULSE (blind tapping), JUDGE (faster or slower), QUIZ (tempo markings, meters)
+# hint numbers (rhythm.h RH_P_*): 1 STEADY, 3 MISSED BEATS, 5 SPEEDING UP, 6 SLOWING DOWN, 7 RUSHING, 8 DRAGGING
+turn K4 -12
+expect lat 0
+turn SELECT -20
+expect bpm 100
+tap HOME
+tap HOME
+tap HOME
+expect page 3
+expect pmode 0
+expect pbars 1
+expect pcount 0
+shot pulse_idle.png
+# ---- GUIDED: a bar counted in, four bars blind, every beat on time
+tap PLAY
+expect pulse_st 1
+expect pulse_beats 16
+expect seq_n 4
+peakreset
+pulsetap 0
+wait 2600
+expect pulse_st 3
+expect peak_db_min -30
+shot pulse_blind.png
+wait 10000
+expect pulse_st 4
+expect pulse_taps 16
+expect pulse_good 16
+expect pulse_hint 1
+expect pulse_bpm10 1000
+expect pulse_tempo10 0
+expect pulse_jitter 0
+expect pbest0 1
+shot pulse_steady.png
+# the click comes back for a bar
+peakreset
+wait 1400
+expect peak_db_min -30
+# ---- 3 % fast (17.5 ms less a beat): RUSHING
+tap PLAY
+pulsetap 0 -175
+wait 13000
+expect pulse_st 4
+expect pulse_good 3
+expect pulse_tempo10 30
+expect pulse_hint 7
+shot pulse_rushing.png
+# ---- 4 % slow: DRAGGING; a beat left out is counted as one
+tap PLAY
+pulsetap 0 250 7
+wait 13000
+expect pulse_missed 1
+expect pulse_hint 8
+expect pulse_tempo10 -40
+# ---- COLD: no count-in; the first tap is beat 1
+turn K2 1
+expect pmode 1
+tap PLAY
+expect pulse_st 2
+expect seq_n 0
+shot pulse_cold_wait.png
+pulsetap 0
+wait 10500
+expect pulse_st 4
+expect pulse_good 16
+expect pulse_hint 1
+expect pbest1 1
+shot pulse_cold.png
+# SEL: count-in bars (GUIDED), K3: blind bars
+turn K2 -1
+tap SEL
+expect pcount 1
+turn K3 1
+expect pbars 2
+turn K3 -1
+tap SEL
+tap SEL
+expect pcount 0
+
+# ---- JUDGE: TEMPO, a staircase answered by the script
+tap HOME
+expect page 4
+expect jtype 0
+shot judge_idle.png
+tap PLAY
+expect judge_st 1
+expect seq_n 16
+wait 11000
+expect judge_st 2
+shot judge_ask.png
+judgeans right
+expect judge_st 3
+expect judge_trials 1
+expect judge_ok 1
+expect judge_d10 80
+wait 60
+shot judge_right.png
+wait 800
+expect judge_st 1
+judgeans right
+expect judge_d10 56
+wait 1600
+judgeans wrong
+expect judge_ok 0
+expect judge_d10 80
+expect judge_revs 1
+wait 60
+shot judge_wrong.png
+wait 1600
+judgeans right
+expect judge_trials 4
+judgeseq RRWRRWRRWRRW
+judgeseq RRWRRWRRWRRW
+judgeseq RRWRRWRRWRRW
+judgeseq RRWRRWRRWRRW
+wait 1600
+expect judge_st 4
+expect judge_revs 10
+expect judge_thr10 61
+expect jbest0 61
+shot judge_done.png
+# ---- FEEL: the player ahead of or behind the click
+turn K2 1
+expect jtype 1
+tap PLAY
+expect seq_n 28
+wait 8500
+expect judge_st 2
+shot judge_feel.png
+# a real key: the high half answers RUSHING (the low half DRAGGING)
+tapkey 20
+expect judge_trials 1
+tap PLAY
+expect judge_st 0
+turn K2 1
+expect jtype 2
+tap SEL
+expect jrand 1
+tap PLAY
+expect seq_n 16
+tap PLAY
+tap SEL
+turn K2 -2
+
+# ---- QUIZ: tempo markings
+tap HOME
+expect page 5
+expect qtype 0
+expect qlevel 1
+shot quiz_idle.png
+tap PLAY
+expect quiz_st 1
+shot quiz_term_bpm.png
+quizans right
+expect quiz_streak 1
+expect qbest 1
+wait 60
+shot quiz_right.png
+wait 1000
+expect quiz_st 1
+quizans wrong
+expect quiz_streak 0
+expect quiz_asked 2
+wait 60
+shot quiz_wrong.png
+wait 2500
+# a key: the lowest zone is A
+tapkey 0
+expect quiz_asked 3
+wait 2500
+turn K2 1
+expect quiz_type 1
+shot quiz_bpm_term.png
+quizans wrong
+wait 60
+shot quiz_bpm_term_feed.png
+turn K2 1
+expect quiz_type 2
+peakreset
+wait 1500
+expect peak_db_min -30
+shot quiz_hear.png
+turn K2 1
+expect quiz_type 3
+shot quiz_change.png
+turn K2 1
+expect quiz_type 4
+peakreset
+wait 1500
+expect peak_db_min -30
+shot quiz_meter.png
+turn K3 1
+expect qlevel 2
+quizans right
+wait 60
+shot quiz_meter_feed.png
+tap PLAY
+expect quiz_st 0
+turn K2 -4
+turn K3 -1
+
+# ---- settings kept over a restart (0.3's too)
+wait 3500
+reboot
+wait 600
+expect page 5
+expect pbest0 1
+expect pbest1 1
+expect jbest0 61
+expect qbest 1
+expect ver 2
+
+# ---- a 0.2 record (v1) is read: its settings kept, 0.3's from their defaults
+v1record 133
+reboot
+wait 600
+expect ver 2
+expect page 1
+expect bpm 133
+expect best 9
+expect pmode 0
+expect qlevel 1
+expect jbest0 0

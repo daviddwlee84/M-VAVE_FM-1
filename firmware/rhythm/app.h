@@ -1,5 +1,7 @@
 /* SPDX-License-Identifier: GPL-3.0-or-later */
 /* RHYTHM: the FM-1 as a pocket rhythm trainer (design: docs/dev/rhythm.md in github.com/daviddwlee84/M-VAVE_FM-1).
+ * v0.3 adds PULSE (blind tapping: your tempo, drift, jitter), JUDGE (faster or slower, rushing or dragging, to a
+ * threshold) and QUIZ (tempo markings, tempo changes, meters by ear) to the three below.
  * v0.1 has two pages. METRO: a metronome with subdivisions, tap tempo and a gap click (it goes quiet for some bars
  * and shows how far you drifted). ECHO: hear one or two bars after a count-in, tap them back on any key, and see each
  * note early or late in ms, with a hint for the one thing most worth fixing (RUSHING, DRAGGING, LATE AFTER RESTS...).
@@ -30,7 +32,8 @@ void app_input_only(void);
 void app_say(const char *a, const char *b);
 void app_tick(void);
 
-/* host simulator: checks (page, bpm, echo, score, hint, ...), commands (pattern, autotap, metrotap) */
+/* host simulator: checks (page, bpm, echo, score, hint, pulse_*, judge_*, quiz_*, ...), commands (pattern, autotap,
+ * metrotap, endtap, pulsetap, judgeans, judgeseq, quizans, v1record) */
 #define APP_HOST_EXPECT
 int app_expect(const char *what, int *got);
 #define APP_HOST_CMD
