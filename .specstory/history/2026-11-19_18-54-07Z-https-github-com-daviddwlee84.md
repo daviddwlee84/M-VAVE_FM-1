@@ -32873,3 +32873,4188 @@ merge 和 release 0.4 都完成了，v0.5 的第一版也寫好了，但還沒�
 
 1. live 頁顯示的 USB 和藍牙來回時間是多少。
 2. 對時之後還需不需要原本那個 −50 ms 的校正。
+
+---
+
+_**User (2026-11-20 13:23:07Z)**_
+
+This session is being continued from a previous conversation that ran out of context. The summary below covers the earlier portion of the conversation.
+
+<system-reminder>
+<tools-used-before-summary>Agent, AskUserQuestion, Bash, Edit, ExitPlanMode, Read, Skill, TaskStop, ToolSearch, WebFetch, Write</tools-used-before-summary>
+</system-reminder>
+Summary:
+1. Primary Request and Intent:
+   - Earlier work (from the previous summary): METRONOME 0.1 → 0.3, its own repository fm1-metronome, the web editor, and the Firmware Hub submission.
+   - This session's requests, in order:
+     - (a) The user reported METRONOME is live on the Hub (status page URL and the Hub page https://thefirmwarehub.com/firmware/metronome/).
+     - (b) "現在是不是可以考慮做 v0.4？", answered via AskUserQuestion:
+       - scope: 即時連線;
+       - USB 和藍牙一起做;
+       - web: 跟著拍子動的畫面, 網頁出聲、機器靜音, 從網頁遙控, and "也許可以考慮做一些小動畫 例如根據我們 GRID 設的拍號 有一個指揮家指揮".
+     - (c) Plan approved, implement it (Step 0 listing housekeeping, then v0.4).
+     - (d) "我現在插上了 可以考慮來實機測驗 preflight".
+     - (e) Debug: Bluetooth was silent; USB connected without new features.
+     - (f) Results: Bluetooth and the live page work; about 50 ms latency felt; question about automatic sync via MIDI timestamps or a microphone; "可以commit".
+     - (g) "PING 對時留到 v0.5吧"; reported the remaining steps passed; K4 is too hidden; "可以 merge #16 → #17 → fm1-metronome #1，然後發 release 0.4 並開始 v0.5開發測試".
+
+2. Key Technical Concepts:
+   - fm1-base: unity build, host simulator scripts (basic.txt), APP_STORE_MAP, hostlink SysEx (F0 7D 4D 54 01 type payload F7).
+   - hostlink transport rule: the device talks to one host at a time. HELLO goes on every transport until it is acked; after that, HEARTBEAT goes only on the acked transport. hl_acked switches to the transport the ack came on. The host counts as gone 10 s after its last frame.
+   - Live link: STATE 0x46 (48 bytes, pack7):
+     - seq, flags (1 running, 2 muted, 4 next-segment, 8 switch NOW), active, segment song, 28-byte song;
+     - anchor tick, anchor sample, q8, now (u32 little-endian, 44.1 kHz);
+     - tick t sounds at start + q8_mul(t, q8).
+   - CTRL 0x06 ops: 1 START, 2 STOP, 3 PICK n, 4 BPM lo7 hi7, 5 MUTE 0/1, 6 STATE?, 7 PING t0..t3 (0.5). PONG 0x47 (0.5): the token's 4 bytes plus the device sample, packed.
+   - Page clock (live.js):
+     - by STATE: the minimum lag over 8 s (min(arrived − device ms)), which still includes the one-way link delay;
+     - by PING (0.5): offset = (t0 + t1) / 2 − device ms, using the trip with the smallest round trip.
+   - Web Audio scheduling: getOutputTimestamp, 120–150 ms lookahead, cancel and replan when the plan changes.
+   - BLE: Web Bluetooth BLE-MIDI, 20-byte packets, 13-bit timestamps. Firmware: `ble_stack = "own"`, `ble_diag = false`, nothing written to flash.
+   - Conductor patterns: GRID beats; div 3 conducted in dotted quarters; presets with "+" grouped by A/N steps; CLASSIC by accent_every.
+   - fm1-emu: `--usb`, `FM1_USB_SEND`, `FM1_BENCH_KEYS`, `--shot`; `just metro-emu` exposes "METRONOME FM-1 (emu)" to CoreMIDI.
+   - Release pitfalls:
+     - `metro-release` depends on fw-setup, which runs `git submodule update` and resets the submodule to the recorded pointer;
+     - a branch named like its tag (v0.4) makes the push ambiguous: use dev-0.5 and push `refs/tags/vX.Y`.
+   - fmhub.json "what": at most 300 characters (the card cuts longer text).
+   - Tap calibration is biased because people tap early (negative mean asynchrony).
+
+3. Files and Code Sections:
+   - **firmware/metronome/app.c** (fm1-metronome):
+     - v0.4:
+       - FW_MINOR 4; `rec.flags` (formerly rsv), `F_BT_OFF 1`, `bt_off()`;
+       - `static volatile uint8_t au_mute`; sound() skips voice() when muted but still counts nv;
+       - tr.song and tr.psong;
+       - st_due, st_now, ST_GAP 40;
+       - `enum { T_HELLO_ACK=1, T_SET_REQ=4, T_SET_LOAD=5, T_CTRL=6, T_HELLO=0x41, T_HEARTBEAT=0x42, T_SET=0x44, T_SET_DONE=0x45, T_STATE=0x46 }`;
+       - C_START..C_STATE; SF_RUN, SF_MUTE, SF_NEXT, SF_NOW; ST_N 48;
+       - `song_put()` (shared with sl_fill), put32, `st_send(next)`, `st_pump(now)` (owe_next retry, 1 s periodic);
+       - mute_set; ctrl_in, which goes through key_play() and song_try() (refactored out of input and key_set);
+       - `host_frame(p, n, transport)`;
+       - FM1B_BLE: ble_pkt, ble_in (plat_midi_in in the main loop), app_ble_load and app_ble_save return 0;
+       - `metro_ble_off()`, `ble_toggle()` (SET EDIT K4);
+       - header PC/BT/MUTE (C_BLUE); ask_answer keeps rec.flags;
+       - app_frame: ble_in, auto-unmute when `!hl_host`, st_pump, STATE due when a switch lands;
+       - expect keys: states, ctrls, muted, host, transport, ble_off, flags;
+       - host command `ble_frame hello_ack|set_req|start|stop|mute1|mute0|pickN|state`.
+     - v0.5 (dev-0.5):
+       - FW_MINOR 5; T_PONG 0x47; C_PING;
+       - `pong(tok)` sends the token plus pack7(now_smp); ctrl_in handles PING first and returns without STATE or ctrls;
+       - live.pongs and expect "pongs";
+       - SET EDIT footer alternates every 3 s with "K4: BLUETOOTH OFF   (NOW ON)" or "K4: BLUETOOTH ON   (NOW OFF)" (in C_AMB);
+       - redraw every 3 s.
+   - **app.h**: APP_BLE_STORE, `int metro_ble_off(void); #define APP_BLE_AT_BOOT (!metro_ble_off())`, plus the v0.4 and v0.5 comments.
+   - **fm1.toml**: `ble = true`, `ble_stack = "own"`, `ble_diag = false`; description 554 characters; credits fixed.
+   - **tests/basic.txt**:
+     - HELLO vector now `...41 01 00 05 00`;
+     - 0.4 live section with three pinned STATE frames, CTRL tests, mute peak checks, CLEAR ALL? refusal, USB-unplug unmute, BLE, K4 persistence;
+     - 0.5: PING `sysex F0 7D 4D 54 01 06 07 01 02 03 04 F7` → `expect_sysex F0 7D 4D 54 01 47 01 02 03 04 01 30 15 42 00 F7`, and the shot set_edit_bt_hint.png.
+   - **host/fm1_metronome**:
+     - protocol.py: T_CTRL, T_STATE, T_PONG; C_*; LIVE_MINOR 4; PING_MINOR 5; ctrl();
+     - live.py: State, decode, q8_mul, describe, ping(token), decode_pong;
+     - setlist.py: song_from;
+     - `__main__.py`: `watch [--start|--stop] [--seconds]`, sends a PING each second and prints round trips;
+     - `__init__` version 0.5.0.
+     - tests/test_live.py: 14 pytest tests pass.
+   - **web/setlist.js**: T.CTRL, T.STATE, T.PONG; C; SF; LIVE_MINOR; PING_MINOR; SR; TPB; songFrom, ctrl, q8Mul, decodeState, ping, decodePong.
+   - **web/link.js** (new): `MTLink.create({onFrame(m, timeStamp, raw, arrived), onStatus, onConnect, onLost})`; usb(), ble(), send, firmware, via, pace(); pure blePackets and bleParser (feed returns {data, timeStamp, arrived}). On BLE connect it sends HELLO_ACK up to 4 times, a second apart, until connected.
+   - **web/live.js** (new):
+     - `clock()`: observe, sync(t0, t1, devNow), offset, by ("ping" or "lag"), rtt, toPage, toDevice, reset;
+     - `plan(clk)`: take(st, arrived) returns whether something changed (a landed switch counts as no change); reset, at, ticks(from, to), where(dev);
+     - segment, unwrapper.
+   - **web/conductor.js** (new): patternFor, points, pos, draw (a figure with a baton), groupsOf.
+   - **web/live/index.html** (new):
+     - connect over USB or BLE; readout, beat dots, canvas conductor;
+     - Start/Stop, BPM ±1/±5, 16 song keys (PICK);
+     - "Clicks from this computer" (MUTE plus a WebAudio scheduler); volume;
+     - calibration slider, key `metronome.live.cal.${via}.${clk.by}`, tap-to-calibrate with T;
+     - demo select; pinger (0.5) with a `#sync` info line.
+   - **web/index.html**: uses link.js plus an "Over Bluetooth" button; link to live/.
+   - **web/cheatsheet.html**, **README.md**: K4, live page, watch, PING text, screens.
+   - **web/tests/live_test.js**: 73 checks.
+   - **docs/screens**: live_page.png, live_mute.png, live_bt_off.png, set_edit_bt_hint.png.
+   - **fmhub.json**: what updated (297 characters).
+   - **Superproject files**:
+     - Justfile: metro-test runs live_test.js; `metro-watch *args`; metro-release no longer copies to web/try.
+     - AGENTS.md: metronome row (v0.4 released, v0.5 branch dev-0.5) and the metro-watch command.
+     - docs/dev/metronome.md: v0.4 sections (#live, #v04-protocol, #v04-mute, #v04-ble, #v04-web, #v04-verify, #v04-unit, #v04-release, #v04-try) and v0.5 (#v05, #v05-ping, #v05-bt-hint, #v05-verify).
+     - docs/device-log.md: entries 19:40 (accidental read-only read), 19:50 preflight, the backup row 19:51, 20:00 install and BLE finding, 20:10 and 20:20 unit results.
+     - docs/hardware/flash-map.md: BLE writes nothing.
+     - .agents/skills/fm1-hub-listing/SKILL.md: sounds box, automatic listing, catalog id, fw-setup pitfall, branch and tag naming.
+     - docs/index.md and README.md: rows updated.
+
+4. Errors and fixes:
+   - HELLO vector minor changed (03 → 04 → 05): updated basic.txt.
+   - The n_accent check failed because the muted window was too short: lengthened to 2000 ms and added n_normal.
+   - pytest expectations: the mix is [7,4,0,2]; the timing window loosened to 20–50 ms.
+   - live.js clock test compared against the truth including fixed latency: now measured past the base latency.
+   - A landed switch was counted as a change: same() compares start, q8 and song; the `landed` logic was fixed.
+   - The plan used a bogus now:0 stop state: added plan.reset().
+   - Conductor figure overlapped the field: resized and moved the layout.
+   - Cheatsheet anchor was wrong: fixed.
+   - The editor read "4 songs" from the real unit ("Felucca") instead of the emulator: stopped browser tests and logged it.
+   - BLE silent on the unit (another USB host acked): link.js acks first over BLE.
+   - Tag push was ambiguous (a branch was also named v0.4): verified the branch was merged, deleted it, pushed refs/tags/v0.4.
+   - The tag landed on 140e4c5 (fw-setup reset the submodule): code is identical apart from fmhub.json; kept and documented.
+   - fmhub what was 331, then 301 characters: trimmed to 297.
+   - The bunched-BLE ping test was 2.24 ms off: set honest tolerances (1, 1.5 and 3 ms).
+   - A catalog.json parse error (dict versus list): handled.
+   - A commit message contained the placeholder hash "7xxxxxx": amended to 140e4c5.
+
+5. Problem Solving:
+   - End-to-end verification of the live link: simulator, emulator headless on both chips, Chrome on the emulator, and the real unit (BLE and USB live page, mute, setlist sync, K4).
+   - Release 0.4 published and the Hub follows automatically.
+   - v0.5 PING sync implemented and tested in the simulator, node, pytest and fm1-emu; not yet on the unit.
+   - Pages: web/live/ returns 200.
+
+6. All user messages:
+   - "https://thefirmwarehub.com/submit/status/?id=17ff10e0bb2e&k=dd07f782d0c1aa41a995c19e https://thefirmwarehub.com/firmware/metronome/ [Image #1] 我們已經成功上線啦！"
+   - "現在是不是可以考慮做 v0.4？" (sent mid-turn)
+   - AskUserQuestion answers: 即時連線 (Recommended); USB 和藍牙一起做 (Recommended); 跟著拍子動的畫面, 網頁出聲、機器靜音, 從網頁遙控, "也許可以考慮做一些小動畫 例如根據我們 GRID 設的拍號 有一個指揮家指揮".
+   - (Plan approved via ExitPlanMode.)
+   - "我現在插上了 可以考慮來實機測驗 preflight"
+   - "我剛剛用 `open firmware/metronome/web/index.html` 用藍牙 `Connected, but METRONOME said nothing: is it METRONOME 0.4 or newer, with Bluetooth on (SET EDIT, K4)?` 失敗 （但是 BT, PC 都有亮藍） 換USB連 `Connected: METRONOME over USB ("Felucca").` 不過好像沒有正常的 feature 是因為網頁path不對嗎？ （剩 PC 亮藍）"
+   - "藍牙連上了，live 頁也能用 [Image #2] 然後我手動測大概感覺延遲 50ms （我們是不是能夠somehow通過MIDI信號的時間戳還是什麼的自動sync？ 還是這個比較難？） 或是複雜一點就是 提供一個功能是 電腦有麥克風收音的話 可以通過收音自動調整 不過整體效果不錯了 可以commit"
+   - "PING 對時留到 v0.5吧 （Clicks from this computer 成功） 歌單馬上同步 REC K4 關藍牙可以 再打開重連馬上又能有 機器新增歌網頁也馬上同步了 （不過就是這個關藍牙操作比較隱秘 普通情況可能比較難發現） 可以 merge #16 → #17 → fm1-metronome #1，然後發 release 0.4 並開始 v0.5開發測試"
+   - Security and operation constraints (from AGENTS.md and the user):
+     - firmware writes only after the owner approves that specific write, run by the owner, never `--yes`;
+     - `bootloader`, `restore`, `run-ram` and erase are forbidden to initiate;
+     - a full preflight before any write;
+     - fm1-backup-release only when the owner asks;
+     - commit or push only when asked;
+     - never commit backups or credentials;
+     - the Hub result page URL is the owner's only and must not be recorded in the repo;
+     - the user's email must not go to external services.
+
+7. Pending Tasks:
+   - Report the v0.5 state to the user (draft PRs #18 and fm1-metronome #2, preview link).
+   - v0.5 on the unit: needs a fresh preflight (backup, info, rehearsal), then the owner flashes, then the PR #18 step list:
+     - EDIT hint visible;
+     - round-trip value over USB and BLE;
+     - whether the −50 ms is gone;
+     - `watch --seconds 10`.
+   - Optional: install release 0.4 on the unit (it currently runs a dev build of the same code, FM-1_5900); needs approval.
+   - Later items:
+     - microphone calibration;
+     - more animations and themes;
+     - the community-list PRs (await the owner);
+     - uploading the four pre-hub-test backups and pre-metronome-0.4 (owner's decision);
+     - THEORY and Morse data restore if switching back (data is in the backups and JSON).
+   - Remove preview pr-18 once PR #18 is merged.
+
+8. Current Work:
+   Just finished setting up v0.5 development and testing:
+   - fm1-metronome `dev-0.5` at `1e319c1` (PING/PONG, K4 hint, host ping, web round-trip clock), draft PR https://github.com/daviddwlee84/fm1-metronome/pull/2.
+   - Superproject `claude/metronome-0.5`: commits `a6ec633` (0.4 release bookkeeping) and `1a84a77` (v0.5 docs), draft PR https://github.com/daviddwlee84/M-VAVE_FM-1/pull/18.
+   - Preview: https://joakimeriksson.github.io/fm1-emu/?package=https://raw.githubusercontent.com/daviddwlee84/M-VAVE_FM-1/previews/pr-18/metronome.fwsc&name=metronome&chip=uc25hq80
+   - 0.5 dev package SHA-256 `ae5b57ebaaa51fac2d7fa37abd2c7e85bd92061ee661dbfd45d3b52486a857bd`, app 127,892 B.
+   - Tests: metro.c 2319, simulator all pass, pytest 14, node 29 + 73.
+   - fm1-emu both chips: PONG 2 ms after PING, two PONGs 0.5 s apart, 0 writes at boot.
+   - Release 0.4: https://github.com/daviddwlee84/fm1-metronome/releases/tag/v0.4 (FM-1_59000400, 81a09bef…c1c3a19e).
+   - The last action checked that the GitHub Pages URLs web/live/, web/link.js and web/try/ all return 200. No reply has been written to the user yet.
+
+9. Optional Next Step:
+   Reply to the user, in Traditional Chinese, summarizing the completion of their last request ("可以 merge #16 → #17 → fm1-metronome #1，然後發 release 0.4 並開始 v0.5開發測試"):
+   - merges done; release 0.4 published (and the tag-on-140e4c5 note);
+   - the live page is now at https://daviddwlee84.github.io/fm1-metronome/web/live/;
+   - what v0.5 contains (PING round-trip clock, K4 hint), its tests, the draft PRs and the preview link.
+   
+   Then offer to run a preflight for flashing v0.5 onto the unit. Any write needs the owner's approval and the owner runs `fm1_install.py`. Do not flash or start new features without the user's go-ahead.
+
+If you need specific details from before compaction (like exact code snippets, error messages, or content you generated), read the full transcript at: /Users/zhouhanru/.claude/projects/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/1baf212e-01fd-4b1a-8cf9-45fc7a274a17.jsonl
+Continue the conversation from where it left off without asking the user any further questions. Resume directly — do not acknowledge the summary, do not recap what was happening, do not preface with "I'll continue" or similar. Pick up the last task as if the break never happened.
+
+The messages after this summary are the most recent messages from before compaction, kept verbatim. The summary was written without seeing them, so something it says has not happened yet may already have happened in them.
+
+---
+
+_**User (2026-11-20 14:34:18Z)**_
+
+可以考慮上機 不過我們現在每個song都有自己的click聲設定 是否有什麼可以臨時global一致的設定 假設要一致可以暫時性的設成同一個
+
+---
+
+_**Agent (claude-opus-5-5 2026-11-20 14:34:25Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Check branch state and find per-song sound settings
+
+`git status --short && git log --oneline -3 && grep -n "sound\|voice\|SOUND\|kit\|KIT" app.c | head -80`
+
+```text
+1e319c1 METRONOME 0.5 (in progress): PING / PONG sets the page's clock by round trips; Bluetooth's K4 shown in EDIT
+cd755a2 fmhub.json: the card's text under 300 characters (the card cuts longer ones)
+e698166 fmhub.json: 0.4's live page and Bluetooth in the card's text
+3: * plays along with (STATE out, CTRL in), over USB or Bluetooth. What sounds when is metro.c.
+91:    volatile uint32_t nv[MT_NV];         /* voices sounded (checks) */
+93:static volatile uint8_t au_mute;         /* the web page sounds the clicks: counted, not heard (RAM only, never kept) */
+97:} voice_t;
+99:static voice_t vo[NV];
+107:static void voice(float hz, float amp, float tau_ms)
+109:    voice_t *v = &vo[vo_rr++ % NV];
+116:/* the sounds: each voice's pitch (Hz), loudness and decay (ms), per sound set */
+126:static void sound(uint32_t t)
+133:        if (!au_mute) voice(SND[tr.s.sound].hz[v], V_AMP[v] * (float)h.vol[i] / (float)MT_VOL_MAX, SND[tr.s.sound].tau);
+162:            sound(tr.next);
+167:            voice_t *v = &vo[k];
+314:/* the meter as the screens and the voice say it: GRID "4/4 8THS", in triplets the compound meter ("6/8": two
+367:    /* 50 ms ahead: the first click whole; 150 ms while the web page sounds them, so its STATE gets there first */
+561: *   sample (the segment's anchor: tick t sounds at sample + (t - tick) * q8 / 256), 40..43 q8 (samples a tick x256,
+564: * CTRL: 1 START, 2 STOP, 3 PICK song, 4 BPM lo7 hi7, 5 MUTE 0/1 (the clicks off here: the page sounds them; off by
+615:    d[7] = s->sound;
+652:        s->sound = d[7];
+1085:        CUR->sound = (uint8_t)clamp(CUR->sound + (e > 0 ? 1 : -1), 0, MT_NSND - 1);
+1086:        app_say("SOUND", SND_NAME[CUR->sound]);
+1361:    tcat(t, SND_NAME[s->sound]);
+1376:    tcat(t, "SOUND ");
+1377:    tcat(t, SND_NAME[CUR->sound]);
+1560:    else if (!strcmp(what, "sound")) *got = CUR->sound;
+1626:    if (!strcmp(cmd, "count_reset")) {   /* count_reset: the voice counters back to 0 */
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-20 14:34:29Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Read sound sets and volume handling
+
+`sed -n 100,140p app.c && grep -n "MT_NSND\|SND_NAME\|vol\[" metro.h app.c | head -30 && grep -n "sound\|vol" web/live/index.html | head -40`
+
+```text
+static uint32_t vo_rr;
+
+/* q8 steps in 32-bit arithmetic only (no 64-bit division on the device; see RHYTHM) */
+static uint32_t q8_mul(uint32_t n, uint32_t q8) { return n * (q8 >> 8) + ((n * (q8 & 255u) + 128u) >> 8); }
+
+static uint32_t tick_at(uint32_t t) { return tr.start + q8_mul(t, tr.tick_q8); }
+
+static void voice(float hz, float amp, float tau_ms)
+{
+    voice_t *v = &vo[vo_rr++ % NV];
+    v->ph = 0.0f;
+    v->inc = hz / (float)SR;
+    v->amp = amp;
+    v->dec = 1.0f - 1000.0f / (tau_ms * (float)SR);   /* e^(-1 / (tau * SR)), near enough */
+}
+
+/* the sounds: each voice's pitch (Hz), loudness and decay (ms), per sound set */
+static const struct {
+    float hz[MT_NV], tau;
+} SND[MT_NSND] = {
+    { { 1568.0f, 1047.0f, 1047.0f, 784.0f, 880.0f, 659.0f }, 16.0f },    /* CLICK: RHYTHM's */
+    { { 1175.0f, 784.0f, 784.0f, 587.0f, 659.0f, 494.0f }, 7.0f },       /* WOOD: lower, shorter */
+    { { 2093.0f, 1568.0f, 1568.0f, 1319.0f, 1397.0f, 1175.0f }, 45.0f }, /* BEEP: higher, longer */
+};
+static const float V_AMP[MT_NV] = { 0.55f, 0.38f, 0.13f, 0.30f, 0.30f, 0.26f };
+
+static void sound(uint32_t t)
+{
+    mt_hits_t h;
+    uint32_t i;
+    mt_hits(&tr.s, t, &h);
+    for (i = 0; i < h.n; i++) {
+        uint32_t v = h.v[i];
+        if (!au_mute) voice(SND[tr.s.sound].hz[v], V_AMP[v] * (float)h.vol[i] / (float)MT_VOL_MAX, SND[tr.s.sound].tau);
+        tr.nv[v]++;
+    }
+}
+
+static float gain_now;
+
+void app_render(int32_t *lr, uint32_t n, uint32_t master_q12)
+metro.h:18:enum { MT_SND_CLICK, MT_SND_WOOD, MT_SND_BEEP, MT_NSND };
+metro.h:38:    uint8_t vol[MT_NLAYER];              /* 1..MT_VOL_MAX */
+app.c:25:static const char *const SND_NAME[MT_NSND] = { "CLICK", "WOOD", "BEEP" };
+app.c:119:} SND[MT_NSND] = {
+app.c:133:        if (!au_mute) voice(SND[tr.s.sound].hz[v], V_AMP[v] * (float)h.vol[i] / (float)MT_VOL_MAX, SND[tr.s.sound].tau);
+app.c:1085:        CUR->sound = (uint8_t)clamp(CUR->sound + (e > 0 ? 1 : -1), 0, MT_NSND - 1);
+app.c:1086:        app_say("SOUND", SND_NAME[CUR->sound]);
+app.c:1361:    tcat(t, SND_NAME[s->sound]);
+app.c:1377:    tcat(t, SND_NAME[CUR->sound]);
+5:     own clock (live.js), draws a conductor beating the song's meter (conductor.js), can sound the clicks itself
+110:      <button id="sound" disabled title="The FM-1 falls silent while this page sounds the clicks; it sounds again when the page lets go or goes away">Clicks from this computer</button>
+111:      <label class="dim">volume <input type="range" id="vol" min="0" max="100" value="70"></label>
+123:        then land with its sound. Kept for USB and Bluetooth apart, in this browser.</span>
+130:      comes out too; what is left is the sound's way out of the FM-1 and of this computer.</p>
+163:  onLost() { enable(false); pinger.stop(); plan.reset(); sound.cancel(); songs = null; drawKeys(); syncInfo(); },
+178:  for (const b of document.querySelectorAll("[data-bpm], #play, #sound, #tapcal")) b.disabled = !on;
+179:  if (!on) { $("sound").classList.remove("on"); sound.on = false; }
+200:    if (by !== clk.by) { loadCal(); sound.replan(); }
+215:  if (changed) sound.replan();
+216:  $("sound").classList.toggle("on", st.muted && sound.on);
+254:const sound = {
+260:    this.gain.gain.value = $("vol").value / 100;
+270:  cancel() {   // the clicks planned and not yet sounded
+280:      const when = this.ctxTime(clk.toPage(dev) + cal()), snd = MT.SND[seg.song.sound];
+282:      for (const [v, vol] of MT.hits(seg.song, tick)) {
+285:        a.gain.setValueAtTime(MT.V_AMP[v] * vol / 7 * 0.7, when);
+294:$("vol").oninput = () => { if (sound.gain) sound.gain.gain.value = $("vol").value / 100; };
+295:$("sound").onclick = () => {
+296:  if (sound.on) { sound.stop(); send(MT.ctrl(MT.C.MUTE, 0)); $("sound").classList.remove("on"); }
+297:  else { sound.start(); if (demo) $("sound").classList.add("on"); else send(MT.ctrl(MT.C.MUTE, 1)); sound.replan(); }
+299:window.addEventListener("pagehide", () => { if (sound.on) send(MT.ctrl(MT.C.MUTE, 0)); });
+305:$("cal").oninput = () => { $("calv").textContent = cal(); store.set(calKey(), cal()); sound.replan(); };
+351:  $("sound").disabled = false;
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-20 14:34:47Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Find knob assignments and the flags field use
+
+`grep -n "K1\|K2\|K3\|K4\|knob\|case 0:\|case 1:\|case 2:\|case 3:" app.c | head -60 && grep -n "F_BT_OFF\|bt_off\|ble_toggle\|rec.flags" app.c | head -30`
+
+```text
+35:    uint8_t flags;                       /* bit 0: Bluetooth off (SET EDIT K4); the rest 0. (0.3 and before: a spare
+511:static void marking_by(int d)            /* SET K2: the next tempo marking's typical tempo */
+902:static void ble_toggle(void)             /* SET EDIT K4 */
+1091:        if ((e = plat_enc(EN_K1)) != 0) {
+1096:        if ((e = plat_enc(EN_K2)) != 0) marking_by(e);
+1097:        (void)plat_enc(EN_K3);
+1098:        if ((e = plat_enc(EN_K4)) != 0 && ui.edit) ble_toggle();   /* (EDIT only: not by a brush on stage) */
+1100:        if ((e = plat_enc(EN_K1)) != 0) {
+1107:        if ((e = plat_enc(EN_K2)) != 0) {
+1113:        if ((e = plat_enc(EN_K3)) != 0) {  /* the meter presets; off a preset, the first click lands on the nearest */
+1128:        (void)plat_enc(EN_K4);
+1131:            if ((e = plat_enc((int)(EN_K1 + k))) != 0) {
+1356:    tcat(t, "K1 BEATS ");
+1358:    tcat(t, "   K2 ");
+1365:static void draw_mix(int32_t oy)         /* CLASSIC's bottom: the four layers' volumes, K1..K4 */
+1378:    text_c(214, 20 - oy, &FONT_T, "K1-K4", C_DIM);
+1425:            h = plat_ms() / 3000u % 2u ? (!FM1B_BLE ? "K4: BLUETOOTH (NOT IN THIS BUILD)" : bt_off() ? "K4: BLUETOOTH ON   (NOW OFF)" : "K4: BLUETOOTH OFF   (NOW ON)")
+1427:        else if (rec.page == PG_SET) h = "KEY: SONG   REC: EDIT   K2: TEMPO MARK";
+1428:        else if (CUR->mode == MT_GRID) h = "K1 BEATS  K2 DIV  K3 METER  SEL CLASSIC";
+1429:        else h = "K1-K4: MIX   OCT: BEAT   SEL: GRID";
+42:#define F_BT_OFF 1u
+43:static int bt_off(void) { return rec.flags & F_BT_OFF; }
+732:        uint8_t keep = rec.flags;        /* (this unit's own setting, not the setlist's) */
+735:        rec.flags = keep;
+899:    return r.flags & F_BT_OFF;
+902:static void ble_toggle(void)             /* SET EDIT K4 */
+904:    rec.flags ^= F_BT_OFF;
+906:    plat_ble_enable(!bt_off());
+908:    app_say("BLUETOOTH", !FM1B_BLE ? "NOT IN THIS BUILD" : bt_off() ? "OFF" : "ON");
+1098:        if ((e = plat_enc(EN_K4)) != 0 && ui.edit) ble_toggle();   /* (EDIT only: not by a brush on stage) */
+1216:        if (FM1B_BLE && !bt_off()) {    /* grey while it waits for a computer, blue once one is connected */
+1425:            h = plat_ms() / 3000u % 2u ? (!FM1B_BLE ? "K4: BLUETOOTH (NOT IN THIS BUILD)" : bt_off() ? "K4: BLUETOOTH ON   (NOW OFF)" : "K4: BLUETOOTH OFF   (NOW ON)")
+1594:    else if (!strcmp(what, "ble_off")) *got = bt_off();
+1595:    else if (!strcmp(what, "flags")) *got = rec.flags;
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-20 14:34:56Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Read record, BLE toggle, input and drawing code
+
+`sed -n 28,48p app.c; sed -n 600,620p app.c; sed -n 890,915p app.c; sed -n 1075,1135p app.c; sed -n 1200,1235p app.c; sed -n 1340,1440p app.c`
+
+```text
+typedef struct {
+    uint32_t magic;
+    uint16_t ver, size;
+    uint8_t page;                        /* PG_* */
+    uint8_t active;                      /* the song on, 0..MT_NSLOT-1 */
+    uint8_t swap_now;                    /* SET: another song starts 0 at the next bar, 1 at once */
+    uint8_t flags;                       /* bit 0: Bluetooth off (SET EDIT K4); the rest 0. (0.3 and before: a spare
+                                          * byte, always 0, so an older record reads as Bluetooth on) */
+    mt_slot_t slot[MT_NSLOT];
+} rec_t;
+static rec_t rec;
+static uint32_t saves, dirty_at;
+#define CUR (&rec.slot[rec.active])
+#define F_BT_OFF 1u
+static int bt_off(void) { return rec.flags & F_BT_OFF; }
+
+static void defaults(void)
+{
+    uint32_t i;
+    for (i = 0; i < MT_NSLOT; i++) mt_slot_default(&rec.slot[i]);
+        for (k = 0; k < 8u; k++) c = (uint16_t)(c & 0x8000u ? (c << 1) ^ 0x1021u : c << 1);
+    }
+    return c;
+}
+
+static void song_put(uint8_t *d, const mt_slot_t *s)  /* SL_SONG bytes: a song as the record and STATE carry it */
+{
+    uint32_t j;
+    d[0] = s->used;
+    d[1] = s->mode;
+    d[2] = (uint8_t)s->bpm;
+    d[3] = (uint8_t)(s->bpm >> 8);
+    d[4] = s->bpb;
+    d[5] = s->div;
+    d[6] = s->beat;
+    d[7] = s->sound;
+    for (j = 0; j < MT_NLAYER; j++) d[8 + j] = s->mix[j];
+    for (j = 0; j < MT_STEPS; j++) d[12 + j] = s->steps[j];
+}
+
+static void sl_fill(const rec_t *r, uint8_t *b)       /* SL_N bytes */
+    return 0;
+}
+#endif
+
+/* APP_BLE_AT_BOOT: the device asks before app_init, so it reads the record itself, into its own copy */
+int metro_ble_off(void)
+{
+    static rec_t r;
+    if (plat_store_load(OBJ_METRO, &r, sizeof r) != (int)sizeof r || !rec_valid(&r)) return 0;
+    return r.flags & F_BT_OFF;
+}
+
+static void ble_toggle(void)             /* SET EDIT K4 */
+{
+    rec.flags ^= F_BT_OFF;
+#if FM1B_BLE
+    plat_ble_enable(!bt_off());
+#endif
+    app_say("BLUETOOTH", !FM1B_BLE ? "NOT IN THIS BUILD" : bt_off() ? "OFF" : "ON");
+    changed(R_HEAD);
+}
+
+/* ----------------------------------------------------------------- input --- */
+static void set_page(int p)
+{
+    rec.page = (uint8_t)p;
+                bpm_by(5 * d);
+        }
+    }
+    ui.btn = btn;
+    if ((e = plat_enc(EN_SELECT)) != 0) {  /* +-1 a detent; turned fast (under 50 ms a detent), +-5 */
+        int fast = e > 1 || e < -1 || (ui.sel_turn_at && now - ui.sel_turn_at < 50u);
+        ui.sel_turn_at = now ? now : 1u;
+        bpm_by(fast ? 5 * e : e);
+    }
+    if ((e = plat_enc(EN_ALGO)) != 0) {
+        CUR->sound = (uint8_t)clamp(CUR->sound + (e > 0 ? 1 : -1), 0, MT_NSND - 1);
+        app_say("SOUND", SND_NAME[CUR->sound]);
+        edited(R_ALL);
+    }
+    (void)plat_enc(EN_PRESET);
+    if (rec.page == PG_SET) {
+        if ((e = plat_enc(EN_K1)) != 0) {
+            rec.swap_now = (uint8_t)(e > 0);
+            app_say("SWITCH", rec.swap_now ? "NOW" : "NEXT BAR");
+            changed(R_ALL);
+        }
+        if ((e = plat_enc(EN_K2)) != 0) marking_by(e);
+        (void)plat_enc(EN_K3);
+        if ((e = plat_enc(EN_K4)) != 0 && ui.edit) ble_toggle();   /* (EDIT only: not by a brush on stage) */
+    } else if (CUR->mode == MT_GRID) {
+        if ((e = plat_enc(EN_K1)) != 0) {
+            CUR->bpb = (uint8_t)clamp(CUR->bpb + (e > 0 ? 1 : -1), 1, 9);
+            if (CUR->div > mt_div_max(CUR->bpb)) CUR->div = (uint8_t)mt_div_max(CUR->bpb);
+            mt_grid_default(CUR);
+            meter_say();
+            edited(R_ALL);
+        }
+        if ((e = plat_enc(EN_K2)) != 0) {
+            CUR->div = (uint8_t)clamp(CUR->div + (e > 0 ? 1 : -1), 1, mt_div_max(CUR->bpb));
+            mt_grid_default(CUR);
+            meter_say();
+            edited(R_ALL);
+        }
+        if ((e = plat_enc(EN_K3)) != 0) {  /* the meter presets; off a preset, the first click lands on the nearest */
+            int m = mt_preset_match(CUR), i;
+            if (m < 0) {
+                for (i = 0; i < MT_NPRESET; i++) {
+                    mt_slot_t t = *CUR;
+                    mt_preset_apply(&t, i);
+                    if (t.bpb == CUR->bpb && t.div == CUR->div) break;
+                }
+                m = i < MT_NPRESET ? i : 2;   /* (else 4/4) */
+            } else
+                m = clamp(m + (e > 0 ? 1 : -1), 0, MT_NPRESET - 1);
+            mt_preset_apply(CUR, m);
+            meter_say();
+            edited(R_ALL);
+        }
+        (void)plat_enc(EN_K4);
+    } else {
+        for (k = 0; k < MT_NLAYER; k++)
+            if ((e = plat_enc((int)(EN_K1 + k))) != 0) {
+                CUR->mix[k] = (uint8_t)clamp(CUR->mix[k] + (e > 0 ? 1 : -1), 0, MT_VOL_MAX);
+                say_int(LAYER_NAME[k], CUR->mix[k], "");
+                edited(R_INFO);
+            }
+
+static void draw_header(void)
+{
+    char t[32];
+    cv_begin(240, 32, C_BLACK);
+    cv_text(8, 8, &FONT_B, page_name(), rec.page == PG_SET && ui.edit ? C_WHITE : C_HI);
+    t[0] = 0;
+    tcat(t, "SONG ");
+    tint(t, rec.active + 1);
+    {                                    /* then, leftwards: the computer (PC), Bluetooth (BT), MUTE */
+        int32_t x = 232 - text_w(&FONT_T, t);
+        cv_text(x, 11, &FONT_T, t, C_GRAY);
+        if (hl_host(&link, plat_ms())) {
+            x -= 8 + text_w(&FONT_T, "PC");
+            cv_text(x, 11, &FONT_T, "PC", C_BLUE);
+        }
+        if (FM1B_BLE && !bt_off()) {    /* grey while it waits for a computer, blue once one is connected */
+            x -= 8 + text_w(&FONT_T, "BT");
+            cv_text(x, 11, &FONT_T, "BT", plat_ble_connected() ? C_BLUE : C_DIM);
+        }
+        if (au_mute) {
+            x -= 8 + text_w(&FONT_T, "MUTE");
+            cv_text(x, 11, &FONT_T, "MUTE", C_RED);
+        }
+    }
+    cv_rect(0, 31, 240, 1, C_LINE);
+    cv_blit(0, 0);
+}
+
+/* the pendulum: a rod from a pivot below, at one side on each beat, through the middle between them */
+static void draw_pendulum(int32_t cx, int32_t py, int32_t len, int32_t oy)
+{
+    float b = ui.running ? beats_now() : 0.0f, th, sx, cy;
+    int32_t x1, y1, i, wx, wy, accent;
+    int beat = beat_info(&accent);
+    float ph = b - (float)(int32_t)(b / 2.0f) * 2.0f;        /* 0..2: one swing out and back */
+    int32_t n = (int32_t)mt_nsteps(s), i, w = 224 / n, x0 = 8 + (224 - w * n) / 2, play = -1;
+    static const int32_t H[4] = { 0, 12, 26, 44 };
+    char t[40];
+    if (ui.running && ui.cur >= 0 && tr.s.mode == MT_GRID) play = mt_step_at(&tr.s, (uint32_t)ui.cur);
+    for (i = 0; i < n; i++) {
+        int32_t x = x0 + i * w, lv = s->steps[i], h = H[lv];
+        uint16_t col = lv == MT_ACCENT ? C_WHITE : lv == MT_NORMAL ? C_HI : C_AMB;
+        if (i % s->div == 0) cv_rect(x, 6 - oy, 1, 56, C_DIM);   /* a beat begins */
+        cv_rect(x + 2, 58 - oy, w - 4, 2, C_LINE);
+        if (h) cv_rect(x + 2, 58 - h - oy, w - 4, h, i == play ? C_GRN : col);
+        else if (i == play) cv_rect(x + 2, 54 - oy, w - 4, 4, C_GRN);
+        t[0] = 0;
+        tint(t, i + 1);
+        if (w >= 14 || i % s->div == 0) text_c(x + w / 2, 62 - oy, &FONT_T, t, i == play ? C_GRN : C_DIM);
+    }
+    t[0] = 0;
+    tcat(t, "K1 BEATS ");
+    tint(t, s->bpb);
+    tcat(t, "   K2 ");
+    tcat(t, DIV_NAME[s->div]);
+    tcat(t, "   ");
+    tcat(t, SND_NAME[s->sound]);
+    text_c(120, 76 - oy, &FONT_T, t, C_GRAY);
+}
+
+static void draw_mix(int32_t oy)         /* CLASSIC's bottom: the four layers' volumes, K1..K4 */
+{
+    int32_t k, j;
+    char t[24];
+    for (k = 0; k < (int32_t)MT_NLAYER; k++) {
+        int32_t x = 14 + k * 46;
+        for (j = 0; j < MT_VOL_MAX; j++)
+            cv_rect(x, 52 - j * 7 - oy, 30, 5, j < CUR->mix[k] ? (k == 0 ? C_WHITE : C_HI) : C_LINE);
+        text_c(x + 15, 60 - oy, &FONT_T, LAYER_NAME[k], CUR->mix[k] ? C_HI : C_DIM);
+    }
+    t[0] = 0;
+    tcat(t, "SOUND ");
+    tcat(t, SND_NAME[CUR->sound]);
+    text_c(214, 20 - oy, &FONT_T, "K1-K4", C_DIM);
+    text_c(120, 76 - oy, &FONT_T, t, C_GRAY);
+}
+
+static void draw_band(int which)         /* the main area's halves: 0 the top (it moves), 1 the bottom */
+{
+    cv_begin(240, BAND, C_BLACK);
+    if (ui.ask) {                        /* a setlist from the computer */
+        uint32_t i, n = 0;
+        char t[24];
+        for (i = 0; i < MT_NSLOT; i++) n += xfer.in.slot[i].used;
+        if (!which) {
+            cv_text(16, 20, &FONT_B, "LOAD THIS SETLIST?", C_WHITE);
+            t[0] = 0;
+            tint(t, (int)n);
+            tcat(t, n == 1 ? " SONG" : " SONGS");
+            cv_text(16, 50, &FONT_B, t, C_HI);
+        } else {
+            cv_text(16, 8, &FONT_T, "IT REPLACES THE SONGS HERE", C_GRAY);
+            cv_text(16, 40, &FONT_B, "PLAY: YES   HOME: NO", C_HI);
+        }
+    } else if (!which) {
+        if (rec.page == PG_PAT && CUR->mode == MT_CLASSIC) draw_classic_top(0);
+        else draw_tempo_left(0);
+    } else if (rec.page == PG_SET)
+        draw_songs(0);
+    else if (CUR->mode == MT_GRID)
+        draw_steps(0);
+    else
+        draw_mix(0);
+    cv_blit(0, 32 + (uint32_t)(which ? BAND : 0));
+}
+
+static void draw_footer(void)
+{
+    cv_begin(240, 32, C_BLACK);
+    cv_rect(0, 0, 240, 1, C_LINE);
+    if (ui.ask)
+        cv_text(8, 7, &FONT_B, "FROM THE COMPUTER", C_RED);
+    else if (ui.confirm_until)
+        cv_text(8, 7, &FONT_B, "CLEAR ALL?  PLAY = YES", C_RED);
+    else if (plat_ms() < ui.toast_until) {
+        int32_t x = cv_text(8, 10, &FONT_T, ui.toast[0], C_GRAY);
+        cv_text(x + 8, 7, &FONT_B, ui.toast[1], C_HI);
+    } else {
+        const char *h;
+        if (rec.page == PG_SET && ui.edit)   /* two hints, 3 s each: the second shows where Bluetooth is (0.5) */
+            h = plat_ms() / 3000u % 2u ? (!FM1B_BLE ? "K4: BLUETOOTH (NOT IN THIS BUILD)" : bt_off() ? "K4: BLUETOOTH ON   (NOW OFF)" : "K4: BLUETOOTH OFF   (NOW ON)")
+                                       : "KEY: PICK, TAP   SEL+KEY: DEL   HOLD SEL: DEL ALL";
+        else if (rec.page == PG_SET) h = "KEY: SONG   REC: EDIT   K2: TEMPO MARK";
+        else if (CUR->mode == MT_GRID) h = "K1 BEATS  K2 DIV  K3 METER  SEL CLASSIC";
+        else h = "K1-K4: MIX   OCT: BEAT   SEL: GRID";
+        cv_text(8, 10, &FONT_T, h, h[0] == 'K' && h[1] == '4' ? C_AMB : C_DIM);   /* (the Bluetooth hint stands out) */
+    }
+    cv_blit(0, 208);
+}
+
+static void draw(void)
+{
+    uint32_t r = ui.redraw;
+    ui.redraw = 0;
+    if (r & R_HEAD) draw_header();
+    if (r & R_ANIM) {
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-20 14:35:26Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Read change tracking, STATE send, expect keys and K4 tests
+
+`grep -n "^static void changed\|^static void edited\|st_due\s*=\|st_due =\|static void st_send\|rec_valid" app.c | head; sed -n '/^static void changed/,/^}/p;/^static void edited/,/^}/p;/^static void st_send/,/^}/p' app.c; sed -n 1540,1600p app.c; grep -n "K4\|ble_off\|flags" tests/basic.txt | head -40`
+
+```text
+55:static int rec_valid(const rec_t *r)
+340:static void changed(uint32_t r)
+343:    st_due = 1;
+358:    st_due = st_now = 1;
+377:    st_due = st_now = 1;
+407:    st_due = 1;
+538:static void edited(uint32_t r)           /* the active song changed: play it so, keep it */
+659:    return rec_valid(r);
+790:    if (!hl_host(&link, now)) { st_due = st_now = owe_next = 0; return; }
+795:    if (ui.running && now - live.sent_at >= 1000u) st_due = 1;   /* the clocks' drift */
+static void changed(uint32_t r)
+{
+    ui.redraw |= r;
+    st_due = 1;
+    dirty_at = plat_ms();
+    if (!dirty_at) dirty_at = 1u;
+}
+static void edited(uint32_t r)           /* the active song changed: play it so, keep it */
+{
+    CUR->used = 1;
+    tr_follow(FOLLOW_EDIT);
+    changed(r);
+}
+    }
+    lights(now);
+    speak();
+    ann_tick(now);
+    if (ui.redraw) draw();
+}
+
+/* --------------------------------------------------------- host simulator --- */
+#ifdef PLAT_HOST
+int app_expect(const char *what, int *got)
+{
+    uint32_t i;
+    if (!strcmp(what, "page")) *got = rec.page;
+    else if (!strcmp(what, "active")) *got = rec.active;
+    else if (!strcmp(what, "edit")) *got = ui.edit;
+    else if (!strcmp(what, "bpm")) *got = CUR->bpm;
+    else if (!strcmp(what, "mode")) *got = CUR->mode;
+    else if (!strcmp(what, "bpb")) *got = CUR->bpb;
+    else if (!strcmp(what, "div")) *got = CUR->div;
+    else if (!strcmp(what, "beat")) *got = CUR->beat;
+    else if (!strcmp(what, "sound")) *got = CUR->sound;
+    else if (!strcmp(what, "swap_now")) *got = rec.swap_now;
+    else if (!strcmp(what, "used")) {    /* the stored songs, bit w = white key w */
+        *got = 0;
+        for (i = 0; i < MT_NSLOT; i++) *got |= (int)rec.slot[i].used << i;
+    } else if (!strncmp(what, "step", 4)) *got = CUR->steps[atoi(what + 4) & 15];
+    else if (!strncmp(what, "mix", 3)) *got = CUR->mix[atoi(what + 3) & 3];
+    else if (!strncmp(what, "slotbpm", 7)) *got = rec.slot[atoi(what + 7) & 15].bpm;
+    else if (!strcmp(what, "running")) *got = ui.running;
+    else if (!strcmp(what, "pend")) *got = ui.pend;
+    else if (!strcmp(what, "play_bpm")) *got = tr.s.bpm;   /* what the render plays now */
+    else if (!strcmp(what, "switches")) *got = (int)tr.switches;
+    else if (!strcmp(what, "n_accent")) *got = (int)tr.nv[MT_V_ACCENT];
+    else if (!strcmp(what, "n_normal")) *got = (int)tr.nv[MT_V_NORMAL];
+    else if (!strcmp(what, "n_ghost")) *got = (int)tr.nv[MT_V_GHOST];
+    else if (!strcmp(what, "n_8")) *got = (int)tr.nv[MT_V_8];
+    else if (!strcmp(what, "n_3")) *got = (int)tr.nv[MT_V_3];
+    else if (!strcmp(what, "n_16")) *got = (int)tr.nv[MT_V_16];
+    else if (!strcmp(what, "lit_keys")) *got = (int)ui.lit;
+    else if (!strcmp(what, "mid_keys")) *got = (int)ui.mid;
+    else if (!strcmp(what, "dim_keys")) *got = (int)ui.dim;
+    else if (!strcmp(what, "saves")) *got = (int)saves;
+    else if (!strcmp(what, "marking")) *got = mt_marking(CUR->bpm);
+    else if (!strcmp(what, "preset")) *got = mt_preset_match(CUR);
+    else if (!strcmp(what, "ask")) *got = ui.ask;
+    else if (!strcmp(what, "loads")) *got = (int)xfer.loads;
+    else if (!strcmp(what, "locked")) *got = (int)ui.locked;
+    else if (!strcmp(what, "confirm")) *got = ui.confirm_until != 0;
+    else if (!strcmp(what, "states")) *got = (int)live.states;   /* STATEs sent */
+    else if (!strcmp(what, "ctrls")) *got = (int)live.ctrls;
+    else if (!strcmp(what, "pongs")) *got = (int)live.pongs;
+    else if (!strcmp(what, "muted")) *got = au_mute;
+    else if (!strcmp(what, "host")) *got = hl_host(&link, plat_ms());
+    else if (!strcmp(what, "transport")) *got = link.transport;
+    else if (!strcmp(what, "ble_off")) *got = bt_off();
+    else if (!strcmp(what, "flags")) *got = rec.flags;
+    else return 0;
+    return 1;
+}
+
+int app_host_cmd(const char *cmd, const char *a, const char *b, const char *c, const char *d)
+401:# ---- 0.4: the live link. A page answers HELLO: one STATE at once (stopped: flags 0, the active song 5, CLASSIC 150)
+523:# SET EDIT K4: Bluetooth off, kept across a power cycle and a setlist loaded from the computer
+524:expect ble_off 0
+525:turn K4 1
+526:expect ble_off 0
+528:turn K4 1
+529:expect ble_off 1
+535:expect ble_off 1
+551:expect ble_off 1
+552:expect flags 1
+554:turn K4 1
+555:expect ble_off 0
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-20 14:35:32Z)**_
+
+<think><details><summary>Thought Process</summary>
+目前只有每首歌各自的音色（CLICK／WOOD／BEEP）和 CLASSIC 四層音量，總音量才是全域的。我會在 v0.5 加一個全歌通用音色的設定，放在 SET EDIT 的 K3，讓刷機時一起帶上。
+
+</details></think>
+
+_**Agent (claude-opus-5-5 2026-11-20 14:35:33Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Read K4 test block, STATE sender and page sound use
+
+`sed -n 515,560p tests/basic.txt; sed -n '/^static void st_send/,/^}/p' app.c; grep -n "app_say(const\|^static void app_say\|void app_say" app.c; grep -n "^static void draw_songs" app.c; grep -n "sound" web/live/index.html host/fm1_metronome/live.py | head`
+
+```text
+wait 50
+expect muted 1
+ble disconnect
+wait 11000
+expect muted 0
+expect running 1
+tap PLAY
+expect running 0
+# SET EDIT K4: Bluetooth off, kept across a power cycle and a setlist loaded from the computer
+expect ble_off 0
+turn K4 1
+expect ble_off 0
+tap REC
+turn K4 1
+expect ble_off 1
+shot live_bt_off.png
+tap REC
+wait 3500
+reboot
+wait 600
+expect ble_off 1
+sysex F0 7D 4D 54 01 01 01 F7
+sysex F0 7D 4D 54 01 05 00 0A 00 01 04 01 00 01 00 60 00 00 03 02 04 01 07 00 00 00 00 03 01 02 01 02 00 01 00 00 00 00 00 00 00 00 00 00 00 00 00 78 00 00 04 01 04 00 07 00 00 00 00 03 02 02 02 00 F7
+sysex F0 7D 4D 54 01 05 01 0A 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 78 00 00 04 01 04 00 07 00 00 00 00 03 02 02 02 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 78 00 00 04 01 04 00 07 00 F7
+sysex F0 7D 4D 54 01 05 02 0A 00 00 00 03 02 02 02 00 00 00 00 00 00 00 00 00 40 00 00 00 00 01 01 16 00 00 04 01 03 00 07 04 00 00 02 03 02 02 02 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 78 F7
+sysex F0 7D 4D 54 01 05 03 0A 00 00 04 01 04 00 07 00 00 00 00 03 02 02 02 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 78 00 00 04 01 04 00 07 00 00 00 00 03 02 02 02 00 00 00 00 00 00 00 00 00 F7
+sysex F0 7D 4D 54 01 05 04 0A 00 00 00 00 00 00 00 78 00 00 04 01 04 00 07 00 00 00 00 03 02 02 02 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 78 00 00 04 01 04 00 07 00 00 00 00 03 02 02 02 00 F7
+sysex F0 7D 4D 54 01 05 05 0A 00 00 00 00 00 00 00 00 40 00 00 00 00 01 00 48 00 00 07 01 04 02 07 00 00 00 00 03 01 02 01 02 00 01 01 00 00 00 00 00 00 00 00 00 00 00 00 78 00 00 04 01 04 00 07 00 F7
+sysex F0 7D 4D 54 01 05 06 0A 00 00 00 03 02 02 02 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 78 00 00 04 01 04 00 07 00 00 00 00 03 02 02 02 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 78 F7
+sysex F0 7D 4D 54 01 05 07 0A 00 00 04 01 04 00 07 00 00 00 00 03 02 02 02 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 78 00 00 04 01 04 00 07 00 00 00 00 03 02 02 02 00 00 00 00 00 00 00 00 00 F7
+sysex F0 7D 4D 54 01 05 08 0A 00 00 00 00 00 00 00 78 00 00 04 01 04 00 07 00 00 00 00 03 02 02 02 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 78 00 00 04 01 04 00 07 00 00 00 00 03 02 02 02 00 F7
+sysex F0 7D 4D 54 01 05 09 0A 00 00 00 00 00 00 00 00 20 00 00 00 00 19 16 F7
+wait 100
+expect ask 1
+tap PLAY
+expect loads 1
+expect ble_off 1
+expect flags 1
+tap REC
+turn K4 1
+expect ble_off 0
+tap REC
+
+# ---- 0.5: PING (06 07, 4 bytes) is answered at once with PONG 47: the same 4 bytes, then the sample now (packed);
+# it changes nothing and asks no STATE (host/tests and web/tests decode this PONG)
+sysex F0 7D 4D 54 01 01 01 F7
+292:void app_say(const char *a, const char *b)
+1310:static void draw_songs(int32_t oy)       /* SET's bottom: the 16 songs, as the white keys */
+web/live/index.html:5:     own clock (live.js), draws a conductor beating the song's meter (conductor.js), can sound the clicks itself
+web/live/index.html:110:      <button id="sound" disabled title="The FM-1 falls silent while this page sounds the clicks; it sounds again when the page lets go or goes away">Clicks from this computer</button>
+web/live/index.html:123:        then land with its sound. Kept for USB and Bluetooth apart, in this browser.</span>
+web/live/index.html:130:      comes out too; what is left is the sound's way out of the FM-1 and of this computer.</p>
+web/live/index.html:163:  onLost() { enable(false); pinger.stop(); plan.reset(); sound.cancel(); songs = null; drawKeys(); syncInfo(); },
+web/live/index.html:178:  for (const b of document.querySelectorAll("[data-bpm], #play, #sound, #tapcal")) b.disabled = !on;
+web/live/index.html:179:  if (!on) { $("sound").classList.remove("on"); sound.on = false; }
+web/live/index.html:200:    if (by !== clk.by) { loadCal(); sound.replan(); }
+web/live/index.html:215:  if (changed) sound.replan();
+web/live/index.html:216:  $("sound").classList.toggle("on", st.muted && sound.on);
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-20 14:35:37Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Locate the STATE sender
+
+`grep -n "st_send\|song_put" app.c | head; sed -n '/^static int st_send\|^static void st_send/,/^}/p' app.c; grep -n "^static.*st_" app.c`
+
+```text
+605:static void song_put(uint8_t *d, const mt_slot_t *s)  /* SL_SONG bytes: a song as the record and STATE carry it */
+628:    for (i = 0; i < MT_NSLOT; i++) song_put(b + 4u + i * SL_SONG, &r->slot[i]);
+755:static int st_send(int next)
+775:    song_put(b + 4, &s);
+792:        if (tr.pend && st_send(1) != 0) return;
+797:    if (st_send(0) != 0) return;         /* (no room: the next pass) */
+800:    if (tr.pend && st_send(1) != 0) owe_next = 1;
+251:static uint8_t st_due, st_now;
+253:static int host_fails;
+755:static int st_send(int next)
+787:static void st_pump(uint32_t now)        /* STATE when due (main loop: plat_sysex_send is not for the render) */
+844:static int host_frame(const uint8_t *p, uint32_t n, int transport)
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-20 14:35:40Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Read st_send and draw_songs
+
+`sed -n 750,786p app.c; sed -n 1310,1340p app.c`
+
+```text
+{
+    b[0] = (uint8_t)v, b[1] = (uint8_t)(v >> 8), b[2] = (uint8_t)(v >> 16), b[3] = (uint8_t)(v >> 24);
+}
+
+/* one STATE: what plays now (next 0), or the switch waiting (next 1); 0 = queued */
+static int st_send(int next)
+{
+    uint8_t b[ST_N], f[ST_N + ST_N / 7u + 1u];
+    mt_slot_t s;
+    uint32_t fl, tick = 0, at = 0, q8 = 0, now, k;
+    int song = rec.active;
+    k = plat_lock();
+    fl = (tr.run ? SF_RUN : 0u) | (au_mute ? SF_MUTE : 0u) | (rec.swap_now ? SF_NOW : 0u);
+    if (next && tr.run && tr.pend)
+        s = tr.ps, song = tr.psong, tick = tr.pend_tick, at = tr.pend_at, q8 = tr.pend_q8, fl |= SF_NEXT;
+    else if (tr.run)
+        s = tr.s, song = tr.song, at = tr.start, q8 = tr.tick_q8;
+    else
+        s = *CUR;
+    now = au_blk + APP_BLOCK + tk_since * (SR / 1000u);
+    plat_unlock(k);
+    b[0] = live.seq;
+    b[1] = (uint8_t)fl;
+    b[2] = rec.active;
+    b[3] = (uint8_t)song;
+    song_put(b + 4, &s);
+    put32(b + 32, tick);
+    put32(b + 36, at);
+    put32(b + 40, q8);
+    put32(b + 44, now);
+    k = pack7(b, ST_N, f);
+    if (hl_send(&link, T_STATE, f, k) != 0) return -1;
+    live.seq = (uint8_t)((live.seq + 1u) & 0x7Fu);
+    live.states++;
+    return 0;
+}
+
+static void draw_songs(int32_t oy)       /* SET's bottom: the 16 songs, as the white keys */
+{
+    int32_t i;
+    for (i = 0; i < (int32_t)MT_NSLOT; i++) {
+        int32_t x = (i % 8) * 30, y = 4 + (i / 8) * 42 - oy;
+        const mt_slot_t *s = &rec.slot[i];
+        char t[8];
+        int on = i == rec.active, pend = i == ui.pend;
+        uint16_t fg = on ? C_BLACK : s->used ? C_HI : C_DIM;
+        if (on) cv_rect(x + 1, y, 28, 38, ui.edit ? C_WHITE : C_HI);
+        else {
+            uint16_t ln = pend ? C_WHITE : s->used ? C_DIM : C_LINE;
+            cv_rect(x + 1, y, 28, 1, ln);
+            cv_rect(x + 1, y + 37, 28, 1, ln);
+            cv_rect(x + 1, y, 1, 38, ln);
+            cv_rect(x + 28, y, 1, 38, ln);
+        }
+        t[0] = 0;
+        tint(t, i + 1);
+        text_c(x + 15, y + 3, &FONT_T, t, on ? C_BLACK : C_GRAY);
+        t[0] = 0;
+        if (s->used) tint(t, s->bpm);
+        else tcat(t, "-");
+        text_c(x + 15, y + 19, &FONT_T, t, fg);
+    }
+}
+
+static void draw_steps(int32_t oy)       /* GRID's bottom: the bar, a column a step (a white key) */
+{
+    const mt_slot_t *s = CUR;
+    int32_t n = (int32_t)mt_nsteps(s), i, w = 224 / n, x0 = 8 + (224 - w * n) / 2, play = -1;
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-20 14:36:00Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Find footer redraw timer, app_say and live struct
+
+`grep -n "3000u" app.c; sed -n 285,300p app.c; grep -n "toast\[" app.c | head -5; grep -n "struct {" app.c | head; grep -n "pongs;" app.c`
+
+```text
+1425:            h = plat_ms() / 3000u % 2u ? (!FM1B_BLE ? "K4: BLUETOOTH (NOT IN THIS BUILD)" : bt_off() ? "K4: BLUETOOTH ON   (NOW OFF)" : "K4: BLUETOOTH OFF   (NOW ON)")
+1514:        uint32_t hint = now / 3000u;
+    ui.toast[0][i] = 0;
+    for (i = 0; i < 27u && b[i]; i++) ui.toast[1][i] = b[i];
+    ui.toast[1][i] = 0;
+    ui.toast_until = plat_ms() + 1500u;
+    ui.redraw |= R_FOOT;
+}
+
+void app_say(const char *a, const char *b)
+{
+    char t[64];
+    toast(a ? a : "", b ? b : "");
+    if (ann_on()) {
+        t[0] = 0;
+        tcat(t, ui.toast[0]);
+        tcat(t, " ");
+        tcat(t, ui.toast[1]);
+236:    char toast[2][28];
+284:    for (i = 0; i < 27u && a[i]; i++) ui.toast[0][i] = a[i];
+285:    ui.toast[0][i] = 0;
+286:    for (i = 0; i < 27u && b[i]; i++) ui.toast[1][i] = b[i];
+287:    ui.toast[1][i] = 0;
+29:typedef struct {
+80:static struct {
+95:typedef struct {
+117:static const struct {
+234:static struct {
+583:static struct {
+589:static struct {
+591:    uint32_t sent_at, states, ctrls, pongs;   /* the last STATE; STATEs sent, CTRLs taken, PONGs sent (checks) */
+1590:    else if (!strcmp(what, "pongs")) *got = (int)live.pongs;
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-20 14:36:03Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Read live struct and hint redraw
+
+`sed -n 586,596p app.c; sed -n 1508,1522p app.c`
+
+```text
+    rec_t in;                            /* a setlist waiting for PLAY */
+    uint32_t loads;                      /* setlists loaded (checks) */
+} xfer;
+static struct {
+    uint8_t seq;
+    uint32_t sent_at, states, ctrls, pongs;   /* the last STATE; STATEs sent, CTRLs taken, PONGs sent (checks) */
+} live;
+
+static uint16_t crc16(const uint8_t *p, uint32_t n)   /* CRC-16/CCITT-FALSE */
+{
+    uint16_t c = 0xFFFFu;
+        last_beat = b;
+        last_step = st;
+    }
+    if (ui.running && now - ui.anim_at >= 33u) ui.redraw |= R_ANIM;   /* the pendulum, ~30 frames a second */
+    {                                    /* SET EDIT's footer turns between its two hints */
+        static uint32_t last_hint;
+        uint32_t hint = now / 3000u;
+        if (rec.page == PG_SET && ui.edit && hint != last_hint) ui.redraw |= R_FOOT;
+        last_hint = hint;
+    }
+    if ((ui.toast_until && now >= ui.toast_until) != last_toast) {
+        last_toast = ui.toast_until && now >= ui.toast_until;
+        ui.redraw |= R_FOOT;
+    }
+    if (dirty_at && (int32_t)(now - dirty_at) > 3000) rec_save();
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-20 14:36:06Z)**_
+
+Now the edits.
+
+_**Agent (claude-opus-5-5 2026-11-20 14:36:23Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Add the all-songs sound setting to app.c
+
+```bash
+python3 - <<'EOF'
+import re
+p='app.c'; s=open(p).read()
+def rep(a,b,n=1):
+    global s
+    assert s.count(a)==n, (a, s.count(a))
+    s=s.replace(a,b)
+rep("""    uint8_t flags;                       /* bit 0: Bluetooth off (SET EDIT K4); the rest 0. (0.3 and before: a spare
+                                          * byte, always 0, so an older record reads as Bluetooth on) */""",
+"""    uint8_t flags;                       /* bit 0: Bluetooth off (SET EDIT K4); bits 1-2 (0.5): one sound for every
+                                          * song, 0 each its own, 1 CLICK, 2 WOOD, 3 BEEP (SET EDIT K3); the rest 0.
+                                          * (0.3 and before: a spare byte, always 0, so an older record reads as
+                                          * Bluetooth on, each song its own sound) */""")
+rep("""#define F_BT_OFF 1u
+static int bt_off(void) { return rec.flags & F_BT_OFF; }""",
+"""#define F_BT_OFF 1u
+#define F_ALL_SND 6u                     /* (bits 1-2) */
+static int bt_off(void) { return rec.flags & F_BT_OFF; }
+static int all_snd(void) { return (rec.flags & F_ALL_SND) >> 1; }   /* 0, or the sound for all + 1 */
+/* the sound a song plays in: its own, or the one SET EDIT K3 set for all (the songs keep theirs) */
+static uint8_t snd_of(const mt_slot_t *s) { return all_snd() ? (uint8_t)(all_snd() - 1) : s->sound; }""")
+rep("""        if (!au_mute) voice(SND[tr.s.sound].hz[v], V_AMP[v] * (float)h.vol[i] / (float)MT_VOL_MAX, SND[tr.s.sound].tau);""",
+"""        if (!au_mute) voice(SND[snd_of(&tr.s)].hz[v], V_AMP[v] * (float)h.vol[i] / (float)MT_VOL_MAX, SND[snd_of(&tr.s)].tau);""")
+rep("""    uint32_t sent_at, states, ctrls, pongs;   /* the last STATE; STATEs sent, CTRLs taken, PONGs sent (checks) */""",
+"""    uint32_t sent_at, states, ctrls, pongs;   /* the last STATE; STATEs sent, CTRLs taken, PONGs sent (checks) */
+    uint8_t snd;                         /* the last STATE's sound (checks) */""")
+rep("""    song_put(b + 4, &s);
+    put32(b + 32, tick);""",
+"""    song_put(b + 4, &s);
+    b[4 + 7] = live.snd = snd_of(&s);    /* the sound it plays in (SET EDIT K3 may set one for all), as the page should */
+    put32(b + 32, tick);""")
+rep("""static void ble_toggle(void)             /* SET EDIT K4 */""",
+"""static void all_snd_by(int e)            /* SET EDIT K3: OWN (each song its own sound), CLICK, WOOD, BEEP for all */
+{
+    int a = clamp(all_snd() + (e > 0 ? 1 : -1), 0, MT_NSND);
+    rec.flags = (uint8_t)((rec.flags & ~F_ALL_SND) | (a << 1));
+    app_say("ALL SONGS", a ? SND_NAME[a - 1] : "OWN SOUND");
+    changed(R_ALL);
+}
+
+static void ble_toggle(void)             /* SET EDIT K4 */""")
+rep("""        CUR->sound = (uint8_t)clamp(CUR->sound + (e > 0 ? 1 : -1), 0, MT_NSND - 1);
+        app_say("SOUND", SND_NAME[CUR->sound]);""",
+"""        char t[28];
+        CUR->sound = (uint8_t)clamp(CUR->sound + (e > 0 ? 1 : -1), 0, MT_NSND - 1);
+        t[0] = 0;
+        tcat(t, SND_NAME[CUR->sound]);
+        if (all_snd()) tcat(t, ", ALL "), tcat(t, SND_NAME[all_snd() - 1]);   /* (kept; heard once K3 is OWN) */
+        app_say("SOUND", t);""")
+rep("""        (void)plat_enc(EN_K3);
+        if ((e = plat_enc(EN_K4)) != 0 && ui.edit) ble_toggle();   /* (EDIT only: not by a brush on stage) */""",
+"""        if ((e = plat_enc(EN_K3)) != 0 && ui.edit) all_snd_by(e);   /* (EDIT only: not by a brush on stage) */
+        if ((e = plat_enc(EN_K4)) != 0 && ui.edit) ble_toggle();""")
+# draw_steps
+rep("""    tcat(t, "   ");
+    tcat(t, SND_NAME[s->sound]);
+    text_c(120, 76 - oy, &FONT_T, t, C_GRAY);""",
+"""    tcat(t, "   ");
+    if (all_snd()) tcat(t, "ALL ");
+    tcat(t, SND_NAME[snd_of(s)]);
+    text_c(120, 76 - oy, &FONT_T, t, all_snd() ? C_AMB : C_GRAY);""")
+rep("""    tcat(t, "SOUND ");
+    tcat(t, SND_NAME[CUR->sound]);
+    text_c(214, 20 - oy, &FONT_T, "K1-K4", C_DIM);
+    text_c(120, 76 - oy, &FONT_T, t, C_GRAY);""",
+"""    tcat(t, all_snd() ? "SOUND ALL " : "SOUND ");
+    tcat(t, SND_NAME[snd_of(CUR)]);
+    text_c(214, 20 - oy, &FONT_T, "K1-K4", C_DIM);
+    text_c(120, 76 - oy, &FONT_T, t, all_snd() ? C_AMB : C_GRAY);""")
+open(p,'w').write(s)
+EOF
+grep -n "static int clamp\|^static.*clamp(" app.c | head -3; grep -n "tcat(" app.c | head -2
+```
+
+```text
+267:static void tcat(char *d, const char *s)
+304:        tcat(t, ui.toast[0]);
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-20 14:36:26Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Find the clamp helper
+
+`grep -n "clamp" app.c metro.h | head -4`
+
+```text
+app.c:509:    CUR->bpm = (uint16_t)clamp(CUR->bpm + d, MT_BPM_MIN, MT_BPM_MAX);
+app.c:912:    int a = clamp(all_snd() + (e > 0 ? 1 : -1), 0, MT_NSND);
+app.c:1086:                CUR->beat = (uint8_t)clamp(CUR->beat + d, 0, MT_BEAT_MAX);
+app.c:1102:        CUR->sound = (uint8_t)clamp(CUR->sound + (e > 0 ? 1 : -1), 0, MT_NSND - 1);
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-20 14:36:30Z)**_
+
+Now the footer hints.
+
+_**Agent (claude-opus-5-5 2026-11-20 14:36:41Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Add footer hints and test keys
+
+```bash
+python3 - <<'EOF'
+p='app.c'; s=open(p).read()
+def rep(a,b):
+    global s
+    assert s.count(a)==1, a
+    s=s.replace(a,b)
+rep("""        const char *h;
+        if (rec.page == PG_SET && ui.edit)   /* two hints, 3 s each: the second shows where Bluetooth is (0.5) */
+            h = plat_ms() / 3000u % 2u ? (!FM1B_BLE ? "K4: BLUETOOTH (NOT IN THIS BUILD)" : bt_off() ? "K4: BLUETOOTH ON   (NOW OFF)" : "K4: BLUETOOTH OFF   (NOW ON)")
+                                       : "KEY: PICK, TAP   SEL+KEY: DEL   HOLD SEL: DEL ALL";
+        else if (rec.page == PG_SET) h = "KEY: SONG   REC: EDIT   K2: TEMPO MARK";""",
+"""        const char *h;
+        char t[48];
+        uint32_t turn = plat_ms() / 3000u;
+        if (rec.page == PG_SET && ui.edit && turn % 3u == 1u) {   /* three hints, 3 s each (0.5): the keys, K3, K4 */
+            t[0] = 0;
+            tcat(t, "K3: ALL SONGS' SOUND   NOW ");
+            tcat(t, all_snd() ? SND_NAME[all_snd() - 1] : "EACH ITS OWN");
+            h = t;
+        } else if (rec.page == PG_SET && ui.edit && turn % 3u == 2u)
+            h = !FM1B_BLE ? "K4: BLUETOOTH (NOT IN THIS BUILD)" : bt_off() ? "K4: BLUETOOTH ON   (NOW OFF)" : "K4: BLUETOOTH OFF   (NOW ON)";
+        else if (rec.page == PG_SET && ui.edit)
+            h = "KEY: PICK, TAP   SEL+KEY: DEL   HOLD SEL: DEL ALL";
+        else if (rec.page == PG_SET && all_snd() && turn % 2u) {   /* on stage, a sound for all says so, every 6 s */
+            t[0] = 0;
+            tcat(t, "K3: ALL SONGS' SOUND   NOW ");
+            tcat(t, SND_NAME[all_snd() - 1]);
+            h = t;
+        } else if (rec.page == PG_SET) h = "KEY: SONG   REC: EDIT   K2: TEMPO MARK";""")
+rep("""        cv_text(8, 10, &FONT_T, h, h[0] == 'K' && h[1] == '4' ? C_AMB : C_DIM);   /* (the Bluetooth hint stands out) */""",
+"""        cv_text(8, 10, &FONT_T, h, h[0] == 'K' && (h[1] == '3' || h[1] == '4') ? C_AMB : C_DIM);   /* (they stand out) */""")
+rep("""    {                                    /* SET EDIT's footer turns between its two hints */
+        static uint32_t last_hint;
+        uint32_t hint = now / 3000u;
+        if (rec.page == PG_SET && ui.edit && hint != last_hint) ui.redraw |= R_FOOT;""",
+"""    {                                    /* SET EDIT's footer turns between its hints (SET's too, with a sound for all) */
+        static uint32_t last_hint;
+        uint32_t hint = now / 3000u;
+        if (rec.page == PG_SET && (ui.edit || all_snd()) && hint != last_hint) ui.redraw |= R_FOOT;""")
+rep("""    else if (!strcmp(what, "flags")) *got = rec.flags;""",
+"""    else if (!strcmp(what, "flags")) *got = rec.flags;
+    else if (!strcmp(what, "all_sound")) *got = all_snd();   /* 0 each its own, else the sound for all + 1 */
+    else if (!strcmp(what, "play_sound")) *got = snd_of(&tr.s);   /* what the render sounds now */
+    else if (!strcmp(what, "state_sound")) *got = live.snd;""")
+open(p,'w').write(s)
+EOF
+grep -n "^ \* \|STATE:" app.c | sed -n 1,5p; sed -n 560,585p app.c
+```
+
+```text
+3: * plays along with (STATE out, CTRL in), over USB or Bluetooth. What sounds when is metro.c.
+5: * Time: the audio's sample count is the clock, as in RHYTHM. The render plays every click on its exact sample (a
+6: * tick is a twelfth of a beat), not on the next block. A change while playing (another song, a new tempo, a step)
+7: * is handed to the render as a switch at a tick: the next bar for a song, the next tick for an edit, so the beat
+8: * goes on without a gap or a jump.
+ * The record: a format byte, the active song, the switch, the page, 16 songs of 28 bytes field by field, a
+ * CRC-16/CCITT-FALSE (low byte first). A setlist that comes in waits on the screen for PLAY.
+ *
+ * STATE: what plays and when, so a page plays along on its own clock instead of a message a beat. Sent when it
+ * changes (a start, a stop, a song, a tempo, an edit) and once a second while playing (the two clocks drift apart).
+ *   0 seq, 1 flags (1 running, 2 muted, 4 this is the switch waiting, not what plays now, 8 switch NOW),
+ *   2 the active song, 3 this segment's song, 4..31 its 28 bytes (as the record's), 32..35 a tick and 36..39 its
+ *   sample (the segment's anchor: tick t sounds at sample + (t - tick) * q8 / 256), 40..43 q8 (samples a tick x256,
+ *   a tick a twelfth of a beat), 44..47 the sample now (when it was sent); u32 low byte first, 44.1 kHz samples.
+ * While a switch waits a second STATE (flag 4) follows the first with it. Stopped: flags 0, the active song's.
+ * CTRL: 1 START, 2 STOP, 3 PICK song, 4 BPM lo7 hi7, 5 MUTE 0/1 (the clicks off here: the page sounds them; off by
+ *   itself when the computer goes), 6 STATE? (one now). As the keys do it; while a question waits only STOP, STATE?.
+ *   7 PING t0 t1 t2 t3 (0.5): answered at once with PONG, the same 4 bytes and the sample now, so the page times the
+ *   round trip and puts the FM-1's clock on its own as NTP does (half the round trip each way); STATE's smallest lag
+ *   stays the fallback. A PING changes nothing and asks no STATE. */
+enum { T_HELLO_ACK = 0x01, T_SET_REQ = 0x04, T_SET_LOAD = 0x05, T_CTRL = 0x06,
+       T_HELLO = 0x41, T_HEARTBEAT = 0x42, T_SET = 0x44, T_SET_DONE = 0x45, T_STATE = 0x46, T_PONG = 0x47 };
+enum { C_START = 1, C_STOP, C_PICK, C_BPM, C_MUTE, C_STATE, C_PING };
+enum { SF_RUN = 1, SF_MUTE = 2, SF_NEXT = 4, SF_NOW = 8 };
+#define ST_N 48u
+enum { SD_LOADED, SD_DECLINED, SD_BAD };
+#define MT_PROTO 1u
+#define SL_FORMAT 1u
+#define SL_SONG 28u
+#define SL_N (1u + 3u + MT_NSLOT * SL_SONG + 2u)
+#define SL_CHUNK 49u
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-20 14:36:50Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Document STATE sound byte and run simulator tests
+
+```bash
+python3 - <<'EOF'
+p='app.c'; s=open(p).read()
+a=""" *   2 the active song, 3 this segment's song, 4..31 its 28 bytes (as the record's), 32..35 a tick and 36..39 its"""
+b=""" *   2 the active song, 3 this segment's song, 4..31 its 28 bytes (as the record's, but byte 11, the sound, is the one
+ *   it plays in: 0.5's SET EDIT K3 may set one for all songs), 32..35 a tick and 36..39 its"""
+assert s.count(a)==1; s=s.replace(a,b); open(p,'w').write(s)
+EOF
+cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1 && just fw-test metronome 2>&1 | tail -5
+```
+
+```text
+  ok sysex out (16 bytes)
+  ok running == 0
+  ok edit == 0
+host: 101477 ms simulated, 1422 blits, render 0.0% of real time (host CPU)
+screenshots and audio: firmware/metronome/build/host/
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-20 14:36:53Z)**_
+
+Existing tests pass. Now new checks in `basic.txt`.
+
+_**Agent (claude-opus-5-5 2026-11-20 14:36:55Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Read the 0.5 test section and knob syntax
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/firmware/metronome && sed -n '/^# ---- 0.5/,$p' tests/basic.txt; grep -n "^turn\|^tap\|^hold\|^expect sound\|ALGO" tests/basic.txt | head -20`
+
+```text
+# ---- 0.5: PING (06 07, 4 bytes) is answered at once with PONG 47: the same 4 bytes, then the sample now (packed);
+# it changes nothing and asks no STATE (host/tests and web/tests decode this PONG)
+sysex F0 7D 4D 54 01 01 01 F7
+wait 50
+count_reset
+sysex_out
+sysex F0 7D 4D 54 01 06 07 01 02 03 04 F7
+wait 20
+expect pongs 1
+expect_sysex F0 7D 4D 54 01 47 01 02 03 04 01 30 15 42 00 F7
+expect running 0
+# SET EDIT: the footer turns between its hints; the second says where Bluetooth is
+tap REC
+wait 3100
+shot set_edit_bt_hint.png
+tap REC
+expect edit 0
+36:tap PLAY
+47:tap PLAY
+49:tap REC
+51:tapkey w1
+53:tapkey w1
+55:tapkey w1
+57:tapkey w1
+63:tapkey w2
+64:turn SELECT 40
+66:tapkey w3
+67:tap OCT-
+68:tap OCT-
+69:tap OCT-
+70:tap OCT-
+71:tap OCT-
+72:tap OCT-
+73:tap OCT-
+74:tap OCT-
+75:tap OCT-
+76:tap OCT-
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-20 14:37:12Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Add K3 tests and rerun the simulator
+
+```bash
+python3 - <<'EOF'
+p='tests/basic.txt'; s=open(p).read()
+a="""# SET EDIT: the footer turns between its hints; the second says where Bluetooth is
+tap REC
+wait 3100
+shot set_edit_bt_hint.png
+tap REC
+expect edit 0
+"""
+b="""# 0.5 SET EDIT K3: one sound for every song (each keeps its own, heard again at OWN), kept across a power cycle;
+# STATE carries the sound that plays, so the page sounds the same. Not on stage (SET without EDIT).
+expect edit 0
+expect all_sound 0
+turn K3 1
+expect all_sound 0
+tap REC
+turn K3 1
+expect all_sound 1
+turn K3 2
+expect all_sound 3
+turn K3 1
+expect all_sound 3
+expect flags 6
+expect sound 0
+tap PLAY
+wait 200
+expect running 1
+expect play_sound 2
+expect state_sound 2
+turn K3 -1
+wait 100
+expect play_sound 1
+expect state_sound 1
+turn K3 1
+wait 100
+expect play_sound 2
+tap PLAY
+expect running 0
+# the footer turns between three hints, 3 s each: the keys, K3 (the sound for all), K4 (Bluetooth)
+wait 3000
+shot set_edit_hint_a.png
+wait 3000
+shot set_edit_hint_b.png
+wait 3000
+shot set_edit_hint_c.png
+tap REC
+expect edit 0
+wait 3000
+shot set_all_sound_a.png
+wait 3000
+shot set_all_sound_b.png
+tap REC
+wait 3500
+reboot
+wait 600
+expect all_sound 3
+expect play_sound 2
+expect sound 0
+tap REC
+turn K3 -3
+expect all_sound 0
+expect flags 0
+tap REC
+expect edit 0
+"""
+assert s.count(a)==1; s=s.replace(a,b); open(p,'w').write(s)
+EOF
+cd .. && cd .. && just fw-test metronome 2>&1 | grep -v "^  ok" | tail -15
+```
+
+```text
+  sysex< F0 7D 4D 54 01 41 01 00 05 00 F7
+  sysex< F0 7D 4D 54 01 41 01 00 05 00 F7
+  sysex< F0 7D 4D 54 01 41 01 00 05 00 F7
+  sysex< F0 7D 4D 54 01 41 01 00 05 00 F7
+  sysex< F0 7D 4D 54 01 41 01 00 05 00 F7
+  sysex< F0 7D 4D 54 01 41 01 00 05 00 F7
+  sysex< F0 7D 4D 54 01 41 01 00 05 00 F7
+  sysex< F0 7D 4D 54 01 41 01 00 05 00 F7
+  sysex< F0 7D 4D 54 01 41 01 00 05 00 F7
+  sysex< F0 7D 4D 54 01 46 00 00 00 00 00 01 00 64 00 00 03 02 04 01 07 00 00 00 00 03 01 02 01 02 00 01 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 08 00 00 58 45 41 00 F7
+  sysex< F0 7D 4D 54 01 45 00 F7
+  sysex< F0 7D 4D 54 01 46 40 01 08 04 04 01 01 16 00 00 04 01 03 00 07 04 00 00 02 03 02 02 02 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 08 00 00 2C 74 41 00 F7
+  sysex< F0 7D 4D 54 01 42 01 00 F7
+host: 119077 ms simulated, 1505 blits, render 0.0% of real time (host CPU)
+screenshots and audio: firmware/metronome/build/host/
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-20 14:37:18Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Check for failures and new screenshots
+
+`just fw-test metronome 2>&1 | grep -n "FAIL\|fail\|error" | head; echo "exit: ${PIPESTATUS[0]}"; ls firmware/metronome/build/host/ | grep -E "hint|all_sound"`
+
+```text
+exit: 
+set_all_sound_a.png
+set_all_sound_b.png
+set_edit_bt_hint.png
+set_edit_hint.png
+set_edit_hint_a.png
+set_edit_hint_b.png
+set_edit_hint_c.png
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-20 14:37:27Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Confirm pass and combine screenshots
+
+```bash
+just fw-test metronome >/dev/null 2>&1; echo exit $?; cd firmware/metronome/build/host && python3 -c "
+from PIL import Image
+ims=[Image.open(f) for f in ['set_edit_hint_a.png','set_edit_hint_b.png','set_edit_hint_c.png','set_all_sound_a.png','set_all_sound_b.png']]
+w=sum(i.width for i in ims)+40; h=max(i.height for i in ims)
+o=Image.new('RGB',(w,h),'white'); x=0
+for i in ims: o.paste(i,(x,0)); x+=i.width+10
+o.save('/private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/1baf212e-01fd-4b1a-8cf9-45fc7a274a17/scratchpad/k3.png')"
+```
+
+```text
+Exit code 1
+exit 0
+Traceback (most recent call last):
+  File "<string>", line 2, in <module>
+    from PIL import Image
+ModuleNotFoundError: No module named 'PIL'
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-20 14:37:33Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Combine screenshots with pillow via uv
+
+```bash
+cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/firmware/metronome/build/host && uv run --with pillow python -c "
+from PIL import Image
+ims=[Image.open(f) for f in ['set_edit_hint_a.png','set_edit_hint_b.png','set_edit_hint_c.png','set_all_sound_a.png','set_all_sound_b.png']]
+w=sum(i.width for i in ims)+40; h=max(i.height for i in ims)
+o=Image.new('RGB',(w,h),'white'); x=0
+for i in ims: o.paste(i,(x,0)); x+=i.width+10
+o.save('/private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/1baf212e-01fd-4b1a-8cf9-45fc7a274a17/scratchpad/k3.png')" 2>&1 | tail -2
+```
+
+```text
+(Bash completed with no output)
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-20 14:37:36Z)**_
+
+<tool-use data-tool-type="read" data-tool-name="Read"><details>
+<summary>Tool use: **Read**</summary>
+ `/private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/1baf212e-01fd-4b1a-8cf9-45fc7a274a17/scratchpad/k3.png`
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-20 14:37:43Z)**_
+
+模擬器的測試和截圖都正常。我再調整一處：舞台用的 SET 頁上 K3 其實不能轉，所以那裡的提示改成「在 SET EDIT 用 K3 設定」。
+
+_**Agent (claude-opus-5-5 2026-11-20 14:37:49Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Reword the stage hint and retest
+
+```bash
+cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/firmware/metronome && python3 - <<'EOF'
+p='app.c'; s=open(p).read()
+def rep(a,b):
+    global s
+    assert s.count(a)==1, a
+    s=s.replace(a,b)
+rep("""        else if (rec.page == PG_SET && all_snd() && turn % 2u) {   /* on stage, a sound for all says so, every 6 s */
+            t[0] = 0;
+            tcat(t, "K3: ALL SONGS' SOUND   NOW ");
+            tcat(t, SND_NAME[all_snd() - 1]);
+            h = t;""",
+"""        else if (rec.page == PG_SET && all_snd() && turn % 2u) {   /* on stage, a sound for all says so, every 6 s */
+            t[0] = 0;
+            tcat(t, "ALL SONGS IN ");
+            tcat(t, SND_NAME[all_snd() - 1]);
+            tcat(t, "   (SET EDIT, K3)");
+            h = t;""")
+rep("""        cv_text(8, 10, &FONT_T, h, h[0] == 'K' && (h[1] == '3' || h[1] == '4') ? C_AMB : C_DIM);   /* (they stand out) */""",
+"""        cv_text(8, 10, &FONT_T, h, h == t || (h[0] == 'K' && h[1] == '4') ? C_AMB : C_DIM);   /* (K3, K4 stand out) */""")
+open(p,'w').write(s)
+EOF
+cd ../.. && just fw-test metronome >/dev/null 2>&1; echo exit $?
+```
+
+```text
+exit 0
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-20 14:37:55Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Find how tests switch to the pattern page
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/firmware/metronome && grep -n "expect page" tests/basic.txt | head -5; sed -n "$(grep -n 'expect page 1' tests/basic.txt | head -1 | cut -d: -f1),+0p" tests/basic.txt; grep -n -B3 "expect page 1" tests/basic.txt | head -8`
+
+```text
+25:expect page 0
+128:expect page 1
+203:expect page 1
+215:expect page 0
+330:expect page 0
+expect page 1
+125-
+126-# ---- GRID: 4/4 eighths at 140 (song 3), the "and" of 2 accented, beat 3 off: A g N A . g N g
+127-tap HOME
+128:expect page 1
+--
+200-expect saves 2
+201-reboot
+202-wait 600
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-20 14:38:03Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Add a GRID screen check with the override
+
+```bash
+python3 - <<'EOF'
+p='tests/basic.txt'; s=open(p).read()
+a="""expect all_sound 3
+expect play_sound 2
+expect sound 0
+tap REC
+turn K3 -3
+"""
+b="""expect all_sound 3
+expect play_sound 2
+expect sound 0
+tapkey w10
+tap HOME
+expect page 1
+shot grid_all_sound.png
+turn ALGO 1
+expect sound 1
+expect play_sound 2
+tap HOME
+expect page 0
+tapkey w5
+tap REC
+turn K3 -3
+"""
+assert s.count(a)==1; s=s.replace(a,b); open(p,'w').write(s)
+EOF
+cd ../.. && just fw-test metronome 2>&1 | grep -E "FAIL|!!|expect" | head; just fw-test metronome >/dev/null 2>&1; echo exit $?
+```
+
+```text
+exit 0
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-20 14:38:09Z)**_
+
+<tool-use data-tool-type="read" data-tool-name="Read"><details>
+<summary>Tool use: **Read**</summary>
+ `./firmware/metronome/build/host/grid_all_sound.png`
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-20 14:38:19Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Clean up the screen check and rerun tests
+
+```bash
+cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/firmware/metronome && python3 - <<'EOF'
+p='tests/basic.txt'; s=open(p).read()
+a="""tapkey w10
+tap HOME
+expect page 1
+shot grid_all_sound.png
+turn ALGO 1
+expect sound 1
+expect play_sound 2
+tap HOME
+expect page 0
+tapkey w5
+"""
+b="""tap HOME
+expect page 1
+shot classic_all_sound.png
+turn ALGO 1
+expect sound 1
+expect play_sound 2
+turn ALGO -1
+expect sound 0
+tap HOME
+expect page 0
+"""
+assert s.count(a)==1; s=s.replace(a,b); open(p,'w').write(s)
+EOF
+rm -f build/host/grid_all_sound.png; cd ../.. && just fw-test metronome >/dev/null 2>&1; echo exit $?; just metro-unit 2>&1 | tail -1
+```
+
+```text
+exit 0
+ok: 2319 checks, 0 failed
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-20 14:38:28Z)**_
+
+Simulator and unit tests pass. Next: host and web tests, then the device build.
+
+_**Agent (claude-opus-5-5 2026-11-20 14:38:36Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Run host/web tests and build the device package
+
+`just metro-test 2>&1 | tail -4 && just fw-build metronome 2>&1 | tail -4`
+
+```text
+node firmware/metronome/web/tests/setlist_test.js
+ok: 29 checks
+node firmware/metronome/web/tests/live_test.js
+ok: 73 checks
+loader   /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/firmware/metronome/build/loader/ota.bin  12847 B
+package  /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/firmware/metronome/build/metronome.fwsc  616003 B, identity FM-1_5900
+build    BFE572FD  (FM1B_BUILD: the build a crash record names, fm1_remote.py crashes)
+about    /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/firmware/metronome/build/firmware.json  (for firmware hubs)
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-20 14:38:44Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Hash package, boot it on both emulated chips, look for the unit
+
+`shasum -a 256 firmware/metronome/build/metronome.fwsc; ls -l firmware/metronome/build/*.bin 2>/dev/null | head; for c in uc25hq80 p25q80; do just emu-shot firmware/metronome/build/metronome.fwsc $c 3000 2>&1 | tail -3; done; just fm1-find 2>&1 | tail -5`
+
+```text
+420ee130515649bd15757aecbbbd3af3d3ec178b21f5203dfb9a7e9ab2b90963  firmware/metronome/build/metronome.fwsc
+.rw-r--r--@   88 zhouhanru 20 Nov 22:38 firmware/metronome/build/data.bin
+.rw-r--r--@ 129k zhouhanru 20 Nov 22:38 firmware/metronome/build/metronome.bin
+.rw-r--r--@ 5.6k zhouhanru 20 Nov 22:38 firmware/metronome/build/ramtext.bin
+.rw-r--r--@ 123k zhouhanru 20 Nov 22:38 firmware/metronome/build/text.bin
+flash: 0 erases / programs
+LCD: tools/emu-state/metronome-uc25hq80.ppm
+flash: 0 erases / programs
+LCD: tools/emu-state/metronome-p25q80.ppm
+"/Applications/M-Flasher.app/Contents/MacOS/M-Flasher" find
+midi	Felucca (running; download-mode switches it)
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-20 14:38:49Z)**_
+
+Both chips boot with 0 flash writes. Next I'll check the K3 save → restart → reload cycle in fm1-emu, the same way the v0.5 verification did it.
+
+_**Agent (claude-opus-5-5 2026-11-20 14:38:50Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Find the earlier emulator verification commands
+
+`grep -n "BENCH_KEYS\|FM1_USB_SEND\|--shot" docs/dev/metronome.md | head -12`
+
+```text
+188:| fm1-emu `uc25hq80`、`p25q80` | 2026-11-20 在 Mac 上 headless 跑 PR #10 的 preview package（SHA-256 `698e08b1…bec75c6fd`）：空白 flash 開機 0 次寫入；`FM1_BENCH_KEYS` 腳本 REC、在 `D4`（第 6 首）tap 4 下、REC，存檔寫 4 次、只改 `0xCE000`；重開 0 次寫入，讀回第 6 首 100 BPM `[模擬]` |
+256:| fm1-emu，虛擬 USB 線 | 兩種晶片，`FM1_USB_SEND` 送 frame、`FM1_BENCH_KEYS` 按 `PLAY`，headless：備份 10 片；還原三首歌回 `45 00`、寫 4 次；重開機再備份，讀回的和送出的相同 `[模擬]` |
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-20 14:38:55Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Look up the emulator's key-script syntax
+
+`grep -n "FM1_BENCH_KEYS" -r Justfile docs/dev/*.md tools/fm1-emu/*.md 2>/dev/null | head -8; ls tools/fm1-emu/ | head; tools/fm1-emu/fm1-emu --help 2>&1 | grep -i -A2 "bench\|state\|flash" | head -30`
+
+```text
+(eval):1: no matches found: tools/fm1-emu/*.md
+fm1-emu
+fm1-live
+README.txt
+run:   [--flash DECRYPTED.bin] [--raw-flash CHIP.bin] [--syx BANK.syx] [--entry 0x02000000]
+       [--steps N (5000000)] [--ms MS] [--ram BYTES (1048576, at most 4194304)] [--quiet]
+       [--flaky-core1 RATE [--seed N]] [--cpu1-survives (a fault on core 1 stops it alone; cpu0 goes on)]
+       [--flash-chip p25q80|uc25hq80 (the FM-1's flash part: the stock Puya, or the newer units')]
+input: [--keys 'T[-T2]:PLAY,T:n7,T:k12,T:enc0:+3,T:pot:512,T:midi:903c64'] (times in ms;
+        the SMK-37's buttons by their printed names too: T:PATCH, T:SEQPLAY)
+--
+       FM1_IRQ_TRACE, FM1_DUAL_TRACE, FM1_FLASH_TRACE, FM1_LCD_TRACE, FM1_AUDIO_TRACE,
+       FM1_GPIO_TRACE, FM1_TRACE  logs
+       FM1_FWSC_XIP=FILE          save a package's XIP window; FM1_FWSC_DIR lists its directory
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-20 14:38:59Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Read emulator input options and the Justfile recipes
+
+`grep -n "keys\|raw-flash\|state\|enc" tools/fm1-emu/README.txt | head -40; grep -n "emu-shot\|emu-rehearse" -A12 Justfile | grep -v "^--$" | head -50`
+
+```text
+5:as the keys, every MIDI input of the computer, audio out.
+160:emu-shot package chip="uc25hq80" ms="6000":
+161-    #!/usr/bin/env bash
+162-    set -euo pipefail
+163-    mkdir -p tools/emu-state/work
+164-    name="$(basename "{{package}}" .fwsc)-{{chip}}"
+165-    pkg="$(cd "$(dirname "{{package}}")" && pwd)/$(basename "{{package}}")"
+166-    cd tools/emu-state
+167-    ../fm1-emu/fm1-live --fwsc "$pkg" --flash-chip "{{chip}}" --flash "$name.flash" --midi none \
+168-      --shot "{{ms}}" --lcd-only 2>&1 | grep -i -E "^flash:|fault|error" || true
+169-    mv work/lcd.ppm "$name.ppm" && echo "LCD: tools/emu-state/$name.ppm"
+170-
+171-# Rehearse a switch in the emulator: lay PACKAGE over a real BACKUP (.bin) as M-Flasher would, then boot it.
+172-# Shows how the new firmware copes with the data the old one left behind. Extra args go to fm1-live.
+173:emu-rehearse package backup chip="uc25hq80" *args:
+174-    #!/usr/bin/env bash
+175-    set -euo pipefail
+176-    mkdir -p tools/emu-state/work
+177-    name="$(basename "{{package}}" .fwsc)"
+178-    pkg="$(cd "$(dirname "{{package}}")" && pwd)/$(basename "{{package}}")"
+179-    bak="$(cd "$(dirname "{{backup}}")" && pwd)/$(basename "{{backup}}")"
+180-    cd tools/emu-state
+181-    rm -f "pristine-$name.flash"
+182-    ../fm1-emu/fm1-live --fwsc "$pkg" --flash-chip "{{chip}}" --flash "pristine-$name.flash" --midi none --shot 1 --lcd-only >/dev/null 2>&1
+183-    python3 ../../scripts/emu_rehearse.py "pristine-$name.flash" "$bak" "rehearse-$name.flash"
+184-    cp "rehearse-$name.flash" "rehearse-$name.before"
+185-    echo "booting $name over $(basename "$bak") (window; Esc quits). State: tools/emu-state/rehearse-$name.flash"
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-20 14:39:04Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Find fm1-live key script syntax and previous usage
+
+`tools/fm1-emu/fm1-live --help 2>&1 | grep -i -B1 -A3 "BENCH\|keys" | head -30; grep -rn "BENCH_KEYS" .specstory/history/*.md 2>/dev/null | grep -o "FM1_BENCH_KEYS=[^ ]*" | head -5`
+
+```text
+         [--flaky-core1 RATE [--seed N]] [--cpu1-survives] [--version] [--help]
+headless: --bench MS   run MS emulated ms as fast as it goes, report the speed
+          --shot MS    run MS ms, then write the panel to work/panel.ppm
+          --record DIR with --shot: a PPM frame every 16 ms (62.5 fps) as DIR/000000.ppm…, and the audio
+                       from boot as DIR/audio.raw (44118 Hz stereo s16le; silence until the DMA starts)
+          --record -   the frames as one PPM stream on stdout (tools/bench_video.sh pipes it into ffmpeg),
+                       audio.raw in work/; the run's reports go to stderr then
+          --lcd-only   --shot, --record: the 240x240 LCD alone (work/lcd.ppm), not the panel
+env: FM1_BENCH_KEYS='T:PLAY,T:PLAY^,T:C4@100,T:e0:+3,T:pot:512,T:mHEX'  scripted input (--bench, --shot;
+                         times in ms; ^ releases, @VEL the velocity, eN an encoder's clicks, mHEX: MIDI
+                         bytes into the DIN jack; @FILE: the script from a file)
+     FM1_BENCH_WAV=FILE    --bench: the audio (44.1 kHz stereo s16le, no header)
+     FM1_BENCH_PANEL=FILE  --bench: the panel at the end (PPM)
+     FM1_BENCH_FRAMES=DIR[,MS]  --bench: a film: the panel every MS ms (40) as DIR/000000.ppm..., and
+                           DIR/audio.raw from the boot (tools/film.py turns them into a video)
+     FM1_DUMPRAM=FILE      --bench, --shot: the 1 MiB of RAM at the end
+     FM1_BENCH_JSON=FILE   --bench: the speed as JSON
+     FM1_BENCH_NOKEYS, FM1_WARMUP_MS=N (1000), FM1_BENCH_THREAD, FM1_BENCH_TRACE, FM1_BENCH_PCS,
+     FM1_BENCH_ROUTES      --bench: no default keys, the steady-speed start, a thread, checkpoints, profiles
+     FM1_KEY_AT, FM1_KEY_UP, FM1_NO_PLAY, FM1_NO_SKIP, FM1_SKIP_FROM, FM1_DUMP=ADDR  --shot
+     FM1_NO_JIT            the interpreter (byte-identical, slower); FM1_NO_BLOCKS: a step at a time
+     FM1_NO_LOOPSKIP       run polling loops round by round instead of skipping them (byte-identical, slower)
+--
+     FM1_USB_SIE_NS=N      --usb: each SIE register access takes N ns (default 1000)
+     FM1_USB_WAV=FILE      --usb, --bench / --shot: record the USB audio as a computer would (s16le, no header);
+                           FM1_USB_RATE=HZ asks for that rate if the device lists it (default 44100)
+     FM1_LCD_TIMED=1       the LCD's transfers take their time at the SPI clock, as on an FM-1 (a 240 x 240
+                           frame ~77 ms at 12 MHz; by default they finish at once). On with FM1_STRICT too;
+FM1_BENCH_KEYS='60000:PLAY'`），否則它會把剛存的琴鍵模式切回去。
+FM1_BENCH_KEYS='60000:PLAY'`），否則它會把剛存的琴鍵模式切回去。
+FM1_BENCH_KEYS='60000:PLAY'`），否則它會把剛存的琴鍵模式切回去。
+FM1_BENCH_KEYS=['\"][^'\"]{0,120}"
+FM1_BENCH_KEYS='60000:PLAY
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-20 14:39:10Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Recall earlier key scripts and encoder numbering
+
+`grep -o "FM1_BENCH_KEYS=[^|]\{0,160\}" ~/.claude/projects/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/1baf212e-01fd-4b1a-8cf9-45fc7a274a17.jsonl | sort -u | head -10; grep -rn "EN_K1\|EN_K3" third_party/fm1-base/platform/*.h 2>/dev/null | head -4`
+
+```text
+FM1_BENCH_KEYS='1000:REC,1300:D4@100,1400:D4^,1900:D4@100,2000:D4^,2500:D4@100,2600:D4^,3100:D4@100,3200:D4^,3700:REC' ../fm1-emu/fm1-live --fwsc \"$PKG\" --flash-chip $c --fl
+FM1_BENCH_KEYS='3500:PLAY,3600:PLAY^' ../fm1-emu/fm1-live --fwsc \"$PKG\" --flash-chip $c --flash rs-$c.flash --midi none --usb --shot 9000 --lcd-only 2>&1 
+FM1_BENCH_KEYS='60000:PLAY' ../fm1-emu/fm1-live --fwsc \"$PKG\" --flash-chip $c --flash q3-$c.flash --midi none --usb --shot 4000 --lcd-only 2>&1 
+FM1_BENCH_KEYS='60000:PLAY' ../fm1-emu/fm1-live --fwsc \"$PKG\" --flash-chip $c --flash r3-$c.flash --midi none --shot 4000 --lcd-only 2>&1 
+FM1_BENCH_KEYS='60000:PLAY' ../fm1-emu/fm1-live --fwsc \"$PKG\" --flash-chip $c --flash reh-$c.flash --midi none --shot 4000 --lcd-only 2>&1 
+FM1_BENCH_KEYS='60000:PLAY' ../fm1-emu/fm1-live --fwsc \"$PKG\" --flash-chip $c --flash reh-$c.flash --midi none --shot 5000 --lcd-only 2>&1 
+FM1_BENCH_KEYS='60000:PLAY' ../fm1-emu/fm1-live --fwsc \"$PKG\" --flash-chip $c --flash reh2-$c.flash --midi none --shot 5000 --lcd-only 2>&1 
+FM1_BENCH_KEYS='60000:PLAY' ../fm1-emu/fm1-live --fwsc \"$PKG\" --flash-chip $c --flash rh3-$c.flash --midi none --usb --shot 4000 --lcd-only 2>&1 
+FM1_BENCH_KEYS='60000:PLAY' ../fm1-emu/fm1-live --fwsc \"$PKG\" --flash-chip $c --flash rs-$c.flash --midi none --usb --shot 4000 --lcd-only 2>&1 
+FM1_BENCH_KEYS='60000:PLAY' ../fm1-emu/fm1-live --fwsc \"$PKG\" --flash-chip $c --flash save-$c.flash --midi none --shot 4000 --lcd-only 2>&1 
+(eval):1: no matches found: third_party/fm1-base/platform/*.h
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-20 14:39:16Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Map K3 to the emulator's encoder number
+
+`grep -rn "EN_K1\b\|EN_K1 \|EN_K1=" third_party/fm1-base --include=*.h | head -3; grep -n "e[0-9]:\|encoder" tools/fm1-emu/README.txt | head -10`
+
+```text
+(eval):1: no matches found: --include=*.h
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-20 14:39:20Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Map K3 to the emulator's encoder number
+
+`grep -rn "EN_K1" third_party/fm1-base | grep -v "^Binary" | head -3; grep -n -i "encoder\|e0\|K1" tools/fm1-emu/README.txt | head -10`
+
+```text
+third_party/fm1-base/include/plat.h:51:enum { EN_SELECT, EN_ALGO, EN_PRESET, EN_K1, EN_K2, EN_K3, EN_K4, NE };
+third_party/fm1-base/tests/mirror_test.mjs:87:const B_SEL = 1, B_PLAY = 10, EN_PRESET = 2, EN_K1 = 3, EN_K2 = 4;
+third_party/fm1-base/tests/mirror_test.mjs:91:check(sum[EN_K1] === 3 && sum[EN_PRESET] === -2 && sum[EN_K2] === 4, `the turns: ${sum} (K1 3, PRESETS -2, K2 4)`);
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-20 14:39:27Z)**_
+
+K3 maps to encoder 5 in fm1-base. I'm running a scripted K3 turn in fm1-emu on both chips: save, then restart and read it back.
+
+_**Agent (claude-opus-5-5 2026-11-20 14:39:41Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Emulate K3 save, restart, reload on both chips
+
+```bash
+cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/tools/emu-state && PKG=$(cd ../../firmware/metronome/build && pwd)/metronome.fwsc; for c in uc25hq80 p25q80; do rm -f k3-$c.flash; echo "== $c save"; FM1_BENCH_KEYS='1000:REC,1100:REC^,1500:e5:+3,2000:REC,2100:REC^' ../fm1-emu/fm1-live --fwsc "$PKG" --flash-chip $c --flash k3-$c.flash --midi none --shot 10000 --lcd-only 2>&1 | grep -i -E "^flash:|fault|error"; mv work/lcd.ppm k3-$c-a.ppm; echo "== $c reload"; FM1_BENCH_KEYS='60000:PLAY' ../fm1-emu/fm1-live --fwsc "$PKG" --flash-chip $c --flash k3-$c.flash --midi none --shot 4000 --lcd-only 2>&1 | grep -i -E "^flash:|fault|error"; mv work/lcd.ppm k3-$c-b.ppm; done; uv run --with pillow python -c "
+from PIL import Image
+ims=[Image.open(f'k3-{c}-{s}.ppm') for c in ['uc25hq80','p25q80'] for s in 'ab']
+o=Image.new('RGB',(4*250,240),'white')
+for k,i in enumerate(ims): o.paste(i,(k*250,0))
+o.save('/private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/1baf212e-01fd-4b1a-8cf9-45fc7a274a17/scratchpad/k3emu.png')"
+```
+
+```text
+== uc25hq80 save
+flash: 4 erases / programs
+== uc25hq80 reload
+flash: 0 erases / programs
+== p25q80 save
+flash: 4 erases / programs
+== p25q80 reload
+flash: 0 erases / programs
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-20 14:39:45Z)**_
+
+<tool-use data-tool-type="read" data-tool-name="Read"><details>
+<summary>Tool use: **Read**</summary>
+ `/private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/1baf212e-01fd-4b1a-8cf9-45fc7a274a17/scratchpad/k3emu.png`
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-20 14:39:50Z)**_
+
+Nothing shows in the hint, so encoder 5 in the emulator is probably not K3. I'll capture the toast for each encoder number to find K3.
+
+_**Agent (claude-opus-5-5 2026-11-20 14:40:00Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Find which emulator encoder is K3 via toasts
+
+```bash
+PKG=$(cd ../../firmware/metronome/build && pwd)/metronome.fwsc; for e in 0 1 2 3 4 5 6; do rm -f enc.flash; FM1_BENCH_KEYS="1000:REC,1100:REC^,1500:e$e:+1" ../fm1-emu/fm1-live --fwsc "$PKG" --flash-chip uc25hq80 --flash enc.flash --midi none --shot 2000 --lcd-only >/dev/null 2>&1; mv work/lcd.ppm enc$e.ppm; done; uv run --with pillow python -c "
+from PIL import Image
+o=Image.new('RGB',(7*250,40),'white')
+for e in range(7): o.paste(Image.open(f'enc{e}.ppm').crop((0,200,240,240)),(e*250,0))
+o.save('/private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/1baf212e-01fd-4b1a-8cf9-45fc7a274a17/scratchpad/enc.png')"
+```
+
+```text
+(Bash completed with no output)
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-20 14:40:04Z)**_
+
+<tool-use data-tool-type="read" data-tool-name="Read"><details>
+<summary>Tool use: **Read**</summary>
+ `/private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/1baf212e-01fd-4b1a-8cf9-45fc7a274a17/scratchpad/enc.png`
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-20 14:40:08Z)**_
+
+In the emulator, K3 is encoder 4 (no PRESET in its numbering), so the earlier run had turned K4, the Bluetooth switch. Running again with e4:
+
+_**Agent (claude-opus-5-5 2026-11-20 14:40:22Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Rerun the K3 save and reload with the right encoder
+
+```bash
+PKG=$(cd ../../firmware/metronome/build && pwd)/metronome.fwsc; for c in uc25hq80 p25q80; do rm -f k3-$c.flash; echo "== $c save"; FM1_BENCH_KEYS='1000:REC,1100:REC^,1500:e4:+3,2000:REC,2100:REC^' ../fm1-emu/fm1-live --fwsc "$PKG" --flash-chip $c --flash k3-$c.flash --midi none --shot 10000 --lcd-only 2>&1 | grep -i -E "^flash:|fault|error"; mv work/lcd.ppm k3-$c-a.ppm; echo "== $c reload"; FM1_BENCH_KEYS='60000:PLAY' ../fm1-emu/fm1-live --fwsc "$PKG" --flash-chip $c --flash k3-$c.flash --midi none --shot 4000 --lcd-only 2>&1 | grep -i -E "^flash:|fault|error"; mv work/lcd.ppm k3-$c-b.ppm; done; uv run --with pillow python -c "
+from PIL import Image
+ims=[Image.open(f'k3-{c}-{s}.ppm') for c in ['uc25hq80','p25q80'] for s in 'ab']
+o=Image.new('RGB',(4*250,240),'white')
+for k,i in enumerate(ims): o.paste(i,(k*250,0))
+o.save('/private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/1baf212e-01fd-4b1a-8cf9-45fc7a274a17/scratchpad/k3emu.png')"; rm -f enc*.ppm enc.flash
+```
+
+```text
+== uc25hq80 save
+flash: 4 erases / programs
+== uc25hq80 reload
+flash: 0 erases / programs
+== p25q80 save
+flash: 4 erases / programs
+== p25q80 reload
+flash: 0 erases / programs
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-20 14:40:26Z)**_
+
+<tool-use data-tool-type="read" data-tool-name="Read"><details>
+<summary>Tool use: **Read**</summary>
+ `/private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/1baf212e-01fd-4b1a-8cf9-45fc7a274a17/scratchpad/k3emu.png`
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-20 14:40:31Z)**_
+
+Both chips: the save writes 4 times, a restart writes nothing, and BEEP for all songs is still there after reload `[模擬]`. Now the preflight on the unit (read-only): info and a full backup.
+
+_**Agent (claude-opus-5-5 2026-11-20 14:40:32Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Read device log tail and list backups
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1 && tail -30 docs/device-log.md; ls backups/ | tail -5`
+
+```text
+| 2026-11-20 03:00 | 刷 METRONOME 0.1（PR #10）前的 preflight。agent 執行：`just theory-backup`（唯讀）、`just fm1-download-mode`、`fm1-info`、`fm1-backup pre-metronome-0.1`、`fm1-verify-backups`、`fm1-restart` | `theory-backup`：round 1、63 項開了 6 項、答 6 對 6。`info`：bootloader stock、firmware `FM-1 490`、app OK、flash `0xB36014`（新）、M-Flasher 1.3。備份 SHA-256 `b09767c3…d119b0d0`。重開回 THEORY 0.3。package 是 `previews/pr-10/metronome.fwsc`，SHA-256 `698e08b1…bec75c6fd`，和 PR 寫的一致（同一 commit 在這台 Mac 本地 build 出來的大小一樣，有 43 bytes 不同：檔頭 CRC 和 `FM1B_BUILD`）。fm1-emu 兩種晶片 `[模擬]`：空白 flash 開機 0 次寫入；REC + tap 存一首歌寫 4 次、只寫 `0xCE000`；重開 0 次寫入、讀回。疊在這份備份上預演，兩種晶片都是開機 0 次寫入（song 1、120 BPM），存檔只改 `0xCE000`，`0xD6000`/`0xD8000`/`0xDA000` 不變 |
+| 2026-11-20 03:05 前後 | 本人執行 `fm1_install.py downloads/metronome-pr10/metronome.fwsc`（METRONOME 0.1 dev build，`FM-1_5900`，SHA-256 `698e08b1…bec75c6fd`），機器上是 THEORY 0.3 | 成功。03:10 agent 用 `fm1_install.py --info` 確認 `FM-1_5900 [running] port: Felucca`。本人試用：「感覺效果不錯」 |
+| 2026-11-20 03:48 | 刷 METRONOME 0.2 前的 preflight。agent 執行：`just fm1-download-mode`、`fm1-info`、`fm1-backup pre-metronome-0.2`、`fm1-verify-backups`、`fm1-restart` | `info`：bootloader stock、firmware `FM-1 590`、app OK、flash `0xB36014`。備份 SHA-256 `d0e71df6…252ce2071`。重開回 METRONOME 0.1。package 是 PR #11 的 build（SHA-256 `831b3fa5…f9d614c`，和 `previews/pr-11` 相同）。疊在這份備份上預演，兩種晶片開機 0 次寫入，歌單照舊；存檔只寫 `0xCF000` `[模擬]` |
+| 2026-11-20 04:00 前後 | 本人執行 `fm1_install.py firmware/metronome/build/metronome.fwsc`（METRONOME 0.2 dev build，`FM-1_5900`，SHA-256 `831b3fa5…f9d614c`），機器上是 0.1 | 成功。agent 用 `--info` 確認 `FM-1_5900 [running]`（0.1 與 0.2 的 identity 相同，`--info` 分不出版本，以本人回報為準）。本人試用後同意 merge PR #11 |
+| 2026-11-20 04:35 | 刷 METRONOME 0.3 release 前的 preflight。agent 執行：`just fm1-download-mode`、`fm1-info`、`fm1-backup pre-metronome-0.3`、`fm1-restart`、`fm1-verify-backups` | `info`：bootloader stock、firmware `FM-1 590`、app OK、flash `0xB36014`。備份 SHA-256 `ff4e5729…66bd9ab`。重開回 METRONOME 0.2。package 是 `metronome-0.3.fwsc`（`FM-1_59000300`，SHA-256 `b1163655…6e925a54`，和 fm1-metronome 的 `web/try/metronome.fwsc` 相同）。疊在這份備份上預演，兩種晶片開機 0 次寫入；經虛擬 USB 讀出的歌單是 1 首、141 BPM、GRID `[模擬]` |
+| 2026-11-20 04:40 前後 | 本人執行 `fm1_install.py firmware/metronome/build/metronome-0.3.fwsc`（METRONOME 0.3 release，`FM-1_59000300`，SHA-256 `b1163655…6e925a54`），機器上是 0.2 | 成功。04:41 agent 用 `--info` 確認 `FM-1_59000300 [running] port: Felucca`。本人在 Chrome 開[歌單編輯器](https://daviddwlee84.github.io/fm1-metronome/web/)：連得上、讀得出機器的歌單、新增歌後送進機器，機器跳出確認頁，`PLAY` 後套用；關機重開設定還在 |
+| 2026-11-20 05:24 | METRONOME 的 Hub 測試 1 的 preflight。agent 執行：`just metro-backup`（唯讀）、`fm1-download-mode`、`fm1-info`、`fm1-backup pre-hub-test-1-metronome`、`fm1-restart`、`fm1-verify-backups` | 歌單 4 首存成 JSON。`info`：bootloader stock、firmware `FM-1 590`、flash `0xB36014`。備份 SHA-256 `1d4fa96a…30844938`。`downloads/sloop-2.8.5.fwsc` SHA-256 `b0446eff…ae67`，和 2026-11-17 記的相同。fm1-emu 把 SLOOP 疊在這份備份上開機：0 次寫入，`0xCE000` 不變 `[模擬]` |
+| 2026-11-20 05:26 前後 | METRONOME 的 Hub 測試 1：本人執行 `fm1_install.py downloads/sloop-2.8.5.fwsc`，機器上是 METRONOME 0.3 release（`FM-1_59000300`） | 成功：`checking the package (18 reads)` → `switching to update mode` → `the loader reads and writes the whole package (classic install)` → `done: the FM-1 runs FM-1_900`。證明可以從 METRONOME 換到別的韌體。本人同時上傳了 `pre-metronome-0.1`、`0.2`、`0.3` 三份備份到 GitHub Release，agent 核對 digest 相符 |
+| 2026-11-20 05:27 | METRONOME 的 Hub 測試 2 的 preflight。agent 執行：`fm1_install.py --info`、`fm1-download-mode`、`fm1-info`、`fm1-backup pre-hub-test-2-metronome`、`fm1-restart`、`fm1-verify-backups` | `--info`：`FM-1_900 [running]`。`info`：firmware SLOOP 2.8.5、flash `0xB36014`。備份 SHA-256 `1cc9c090…569b2c47`。和測試 1 前的備份比：SLOOP 只改了 `0x04000`–`0x8FFFF` 與 `0x9F000`，`0xCE000`（METRONOME）、`0xD6000`–`0xDBFFF`（THEORY、Morse）不變 `[實機]`。fm1-emu 把 METRONOME 0.3 疊在這份備份上：兩種晶片開機 0 次寫入，經虛擬 USB 讀出 4 首歌 `[模擬]` |
+| 2026-11-20 05:30 前後 | METRONOME 的 Hub 測試 2：本人執行 `fm1_install.py firmware/metronome/build/metronome-0.3.fwsc`，機器上是 SLOOP 2.8.5（`FM-1_900`） | 成功：`checking the package (30 reads)` → `switching to update mode` → `the loader writes only the sectors that changed (fast install)` → `done: the FM-1 runs FM-1_59000300`。證明可以從別的韌體裝 METRONOME。agent 用 `just metro-backup` 讀出歌單：4 首（141、119、179、208），和測試 1 前存的 JSON 完全相同：SLOOP 期間歌單沒被動到 |
+| 2026-11-20 05:31 | METRONOME 的 Hub 測試 3 的準備。agent 執行：`just metro-backup`、`fm1-download-mode`、`fm1-info`、`fm1-backup pre-hub-test-3-metronome`、`fm1-restart`、`fm1-verify-backups` | firmware `FM-1 590`、flash `0xB36014`；備份 SHA-256 `ed6cce48…733eafe1`。原廠備份 `2026-11-17-stock` verify ok，SHA-256 仍是 `c6a47902…44fd38`。重開回 METRONOME |
+| 2026-11-20 05:33 | 本人用 M-Flasher GUI 還原 `backups/2026-11-17-stock/fm1-20261117-011632.bin`（RESTORE FULL FLASH；M-Flasher 先自動存了 `fm1-20261120-053303.bin`） | `156 sectors written, read back and verified`。原廠開機；`fm1-find`：`midi FM-1 (running)`，`--info`：`FM-1_015 [running] port: FM-1` |
+| 2026-11-20 05:34 | agent 執行 `fm1-download-mode`（原廠執行中）、`fm1-info`、`fm1-backup pre-hub-test-3-stock-metronome`、`fm1-restart` | bootloader stock、firmware `FM-1 015 (stock)`；備份 SHA-256 `c6a47902…44fd38`，和 2026-11-17 的原廠備份逐 sector 相同：還原完整。重開回原廠 |
+| 2026-11-20 05:36 前後 | METRONOME 的 Hub 測試 3：本人執行 `fm1_install.py firmware/metronome/build/metronome-0.3.fwsc`，機器上是原廠 015（`FM-1_015`，port `FM-1`） | 成功：`checking the package (34 reads)` → `switching to update mode` → `the loader writes only the sectors that changed (fast install)` → `done: the FM-1 runs FM-1_59000300`。開機是預設的一首 120 BPM（原廠映像裡沒有 METRONOME 的資料）。Hub 要求的三項實機測試全部通過 |
+| 2026-11-20 05:38 | agent 執行 `just metro-restore backups/progress/metronome-2026-11-20-pre-hub-test-3.json`，本人在機器上按 `PLAY` | `[metronome] loaded`。agent 再用 `just metro-backup` 讀出：4 首（141、119、179、208），和送出的 JSON 相同 |
+| 2026-11-20 19:40 | 測試 METRONOME 0.4 的網頁時，Chrome 的歌單編輯器（`link.js`）先聽到插在電腦上的實機（埠名「Felucca」），送了 SET_REQ，讀出實機的歌單。這是唯讀的，沒有寫入，也沒有送 CTRL | 讀到 4 首（120、119、106、148），和 05:38 送回的那份不同，是本人之後在機器上改的。之後的瀏覽器測試就停了 |
+| 2026-11-20 19:50 | METRONOME 0.4 的 preflight。agent 執行：`just metro-backup`（唯讀）、`fm1-download-mode`、`fm1-info`、`fm1-backup pre-metronome-0.4`、`fm1-restart`、`fm1-verify-backups`、`fm1_install.py --info` | 歌單 4 首（120、119、106、148）存成 `backups/progress/metronome-2026-11-20-pre-0.4.json`。`info`：bootloader stock、firmware `FM-1 590`、flash `0xB36014`。備份 SHA-256 `1c000698961e9b0226a1f20e4a515de320179d602cc93016cbdf8e25631c8f07`，verify ok。`--info`：`FM-1_59000300 [running]`。和 05:31 的備份比：`0x9F000` 和 `0xD6000`–`0xDBFFF`（THEORY 的進度與設定、Morse 的紀錄）現在是空的，和原廠映像相同，是 05:34 還原原廠時清掉的，不是這次造成的；資料還在 `pre-hub-test-3-metronome` 備份與 `backups/progress/theory-2026-11-20-pre-metronome.json` 裡。0.4（`d961e3b1…3bc0086`）疊在這份備份上：兩種晶片開機 0 次寫入，經虛擬 USB 讀出同樣的 4 首 `[模擬]` |
+| 2026-11-20 20:00 前後 | 本人用 `fm1_install.py` 裝 METRONOME 0.4（PR #17 的 build，`d961e3b1…3bc0086`）。agent 之後執行 `fm1_install.py --info`，並在 USB 上被動聽 3 秒 | `--info`：`FM-1_5900 [running]`。USB 上每秒一個 HEARTBEAT（transport USB）和 STATE（播放中、switch NOW、第 4 首 148 BPM）。本人從 `file://` 開歌單編輯器：藍牙接上了，機器的 `BT` 和 `PC` 都是藍的，但頁面沒收到任何訊息；USB 連上，只看到 HEARTBEAT（沒有版本號）。原因：機器一次只對一台電腦說話，當時 USB 上已經有別的程式在回應它（應該是 Chrome 裡還開著的舊頁面），所以藍牙那邊沒有訊息。修法：`link.js` 接上藍牙後先送 HELLO_ACK，讓連線移到藍牙 |
+| 2026-11-20 20:10 前後 | 本人改用新版 `link.js`（接上藍牙先送 HELLO_ACK）再試，然後用 live 頁 | 藍牙連上，live 頁可以用：讀出 4 首、Start/Stop、指揮家跟著拍子走 `[實機]`。按 `T` 8 下得到 −24 ms（8 下之間差 69 ms）；本人用耳朵調到約 −50 ms 才覺得對齊 |
+| 2026-11-20 20:20 前後 | 本人繼續試 PR #17 的步驟 | 「Clicks from this computer」成功；藍牙下歌單馬上同步；SET EDIT（`REC`）轉 `K4` 能關藍牙，再打開後網頁馬上能重連；機器上新增的歌網頁也馬上看得到 `[實機]`。本人的意見：關藍牙的操作太隱密，一般情況下很難發現 |
+
+## Phase 1 驗收
+
+- [x] 原廠韌體版本已記錄
+- [x] M-Flasher 已安裝，首次授權完成
+- [x] `FLASH CHIP` / JEDEC ID 已記錄
+- [x] 完整 flash 備份已存，SHA-256 已記錄
+- [x] 備份另存一份到這台電腦以外的地方（GitHub Release）
+- [x] SLOOP 2.8.5 已刷入
+- [x] Save → 關機 → 開機 → Load 測試通過
+2026-11-20-pre-metronome-0.1
+2026-11-20-pre-metronome-0.2
+2026-11-20-pre-metronome-0.3
+2026-11-20-pre-metronome-0.4
+progress
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-20 14:40:39Z)**_
+
+Next: read the setlist into JSON, switch the unit to download mode (a mode switch, not a write), read the chip info, take a full backup, and restart it back into METRONOME.
+
+_**Agent (claude-opus-5-5 2026-11-20 14:40:44Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Read the unit's setlist into JSON (read-only)
+
+`date "+%H:%M" && just metro-backup backups/progress/metronome-2026-11-20-pre-0.5.json 2>&1 | tail -4`
+
+```text
+22:40
+PYTHONPATH=firmware/metronome/host uv run --locked --all-groups python -m fm1_metronome backup "backups/progress/metronome-2026-11-20-pre-0.5.json"
+[metronome] no FM-1 running METRONOME found on MIDI (inputs: ['Felucca']). Is METRONOME 0.3 or newer running, on a USB data cable? Close other programs that hold the FM-1's MIDI port (a DAW, M-Flasher, a browser tab with the setlist page).
+error: recipe `metro-backup` failed on line 668 with exit code 1
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-20 14:40:49Z)**_
+
+No answer on USB. Most likely a Chrome page is still holding the link (the unit only talks to one computer at a time). The full backup covers the setlist too, so I'll continue.
+
+_**Agent (claude-opus-5-5 2026-11-20 14:41:11Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Switch to download mode and read chip info
+
+`just fm1-download-mode 2>&1 | tail -3 && just fm1-info 2>&1 | tail -12`
+
+```text
+Sent the Felucca the download-mode message over USB MIDI; waiting for it
+Refused: the Felucca did not come back in download mode within 20 s: its firmware may not know the soft key; use its keys instead (see the window's HOW TO CONNECT)
+error: recipe `fm1-download-mode` failed on line 530 with exit code 1
+"/Applications/M-Flasher.app/Contents/MacOS/M-Flasher" info
+Refused: the unit is running, not in download mode: `m-flasher download-mode` switches it
+error: recipe `fm1-info` failed on line 501 with exit code 1
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-20 14:41:17Z)**_
+
+The soft-key switch to download mode was refused. At 19:50 the same step worked. Following the rules, I'm not working around it. I'll only check the unit's current state (read-only):
+
+_**Agent (claude-opus-5-5 2026-11-20 14:41:20Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Check the unit's state after the refused switch
+
+`just fm1-find 2>&1 | tail -3; uv run --project firmware/metronome/host python third_party/fm1-base/tools/fm1_install.py --info 2>&1 | tail -3 || true; ls third_party/fm1-base/tools | grep -i install`
+
+```text
+"/Applications/M-Flasher.app/Contents/MacOS/M-Flasher" find
+midi	Felucca (running; download-mode switches it)
+FM-1_5900  [running]  port: Felucca
+fm1_install.py
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-20 14:41:28Z)**_
+
+<think><details><summary>Thought Process</summary>
+The unit runs normally over USB, but METRONOME doesn't answer there (likely a Bluetooth page holding the link) and the download-mode soft key timed out. I'll record both in device-log and the docs, then ask how you'd like to proceed.
+
+</details></think>
+
+_**Agent (claude-opus-5-5 2026-11-20 14:41:29Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Check docs for emulator encoder notes and v0.5 sections
+
+`grep -rn "e4\b\|e0:\|encoder" docs/agentic/emulator.md 2>/dev/null | head -5; ls docs/agentic/; grep -n "v05\|## " docs/dev/metronome.md | tail -15`
+
+```text
+docs/agentic/emulator.md:39:FM-1 的核心是 JieLi AC791N：兩顆 JieLi 自家的 32-bit pi32v2 核心，沒有公開的指令集手冊。fm1-emu 從韌體本身還原出指令集，再用 JieLi toolchain 編的測試程式核對，上面疊上 timer、中斷、flash、240×240 螢幕、按鍵矩陣與 encoder、旋鈕、音訊輸出、MIDI UART 與 USB controller 的模型。熱門程式碼會被編譯成原生碼（瀏覽器裡是 WebAssembly）。`[上游]`
+docs/agentic/emulator.md:92:| `FM1_BENCH_KEYS` | 輸入腳本：`ms:mHEX` 從 DIN 送 MIDI、`ms:id` 按鍵、`ms:eN:clicks` 轉 encoder |
+docs/agentic/emulator.md:103:| 按鍵、encoder、MIDI 輸入 | 可以 | `FM1_BENCH_KEYS` |
+agent-deck.md
+conductor-changelog.md
+conductor-cheatsheet.md
+conductor.md
+emulator.md
+index.md
+m-flasher-cli.md
+skills.md
+274:### 設計：同步時鐘，不是每拍一個訊息 { #live }
+282:### 協定 { #v04-protocol }
+294:### 靜音的安全規則 { #v04-mute }
+300:### 藍牙 { #v04-ble }
+308:### 網頁 { #v04-web }
+326:### v0.4 驗證 { #v04-verify }
+341:### 實機結果 { #v04-unit }
+354:### 發佈 { #v04-release }
+361:### 實機上要試的 { #v04-try }
+370:## v0.5：PING 對時、藍牙開關好找 { #v05 }
+374:### PING / PONG { #v05-ping }
+382:### 藍牙開關 { #v05-bt-hint }
+386:### v0.5 驗證 { #v05-verify }
+396:## 之後 { #next }
+400:- v0.5（本人 2026-11-20 定）：PING 來回時間對時；讓藍牙開關比較容易發現。見[上面](#v05)。
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-20 14:41:33Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Read v0.5 docs and emulator key table
+
+`sed -n 368,402p docs/dev/metronome.md; sed -n 88,95p docs/agentic/emulator.md`
+
+```text
+6. `K4` 關藍牙，重開機後還是關的。
+
+## v0.5：PING 對時、藍牙開關好找 { #v05 }
+
+本人 2026-11-20 定的範圍：PING 對時（麥克風校正之後再說），以及讓藍牙開關比較容易發現。在 fm1-metronome 的 branch `dev-0.5`（不和 tag 同名，見 `fm1-hub-listing` skill）。`FW_MINOR 5`、host 0.5.0。
+
+### PING / PONG { #v05-ping }
+
+- CTRL `06` 加 op 7 PING，帶 4 個 7-bit byte 的 token。機器立刻回 PONG `47`：同樣 4 個 byte，加上回覆當下的 sample（4 byte，7-bit pack）。PING 不改任何狀態，也不觸發 STATE。
+- 網頁每秒送一次 PING。PONG 回來時，用送出時間 t0、收到時間 t1（USB 用 Web MIDI 的 timeStamp，藍牙用通知到達的時間）和機器的 sample，算出 offset = (t0 + t1) / 2 − 機器時間。8 秒內取來回時間最短的那次，和 NTP 一樣假設去回各一半。
+- 這樣拿掉的是傳輸的單程延遲本身，不只是 jitter：0.4 用 STATE 的最小延遲，這段延遲還留在裡面，要靠校正補。剩下的誤差是去回不對稱的部分，加上兩邊的音訊輸出延遲。
+- 沒有 PONG 時（機器是 0.4）退回 STATE 的最小延遲。校正值依「哪種對時」分開存，因為兩種方式剩下要補的量不同。
+- `python -m fm1_metronome watch` 每秒 PING 一次，印出來回時間，結束時印最短與中位數，可以拿來量 USB 的延遲。
+
+### 藍牙開關 { #v05-bt-hint }
+
+SET EDIT 的頁尾每 3 秒在兩種提示之間切換，第二種是 `K4: BLUETOOTH OFF (NOW ON)` 或 `K4: BLUETOOTH ON (NOW OFF)`，用比較亮的顏色。舞台上的 SET（非 EDIT）頁不變。
+
+### v0.5 驗證 { #v05-verify }
+
+| 項目 | 結果 |
+|---|---|
+| `just fw-test metronome` | 新增：PING 立刻回 PONG（完整 frame 釘在腳本裡），不改狀態；EDIT 頁尾的藍牙提示（截圖） |
+| `just metro-test` | pytest 14 個；node：setlist 29 個、live 73 個。新增：USB 去回各 1 ms，對時誤差 1 ms 以內；藍牙去回各 12 ms、jitter 15 ms，1.5 ms 以內；藍牙三次回覆有兩次晚 25 ms，3 ms 以內（只用 STATE 的最小延遲會差 12 ms 以上） |
+| `just fw-build metronome` | app 127,892 B；package SHA-256 `ae5b57ebaaa51fac2d7fa37abd2c7e85bd92061ee661dbfd45d3b52486a857bd` |
+| fm1-emu 兩種晶片，虛擬 USB | PING 後 2 ms 回 PONG，兩次 PONG 的 sample 差 22,060（0.5 s）；開機 0 次寫入 `[模擬]` |
+| 實機 | 還沒裝 |
+
+## 之後 { #next }
+
+- 畫面主題：擺錘之外，指揮棒的拍子圖形、可愛的角色。先量一張圖要多少 flash 再決定（[CORD](https://github.com/chasedeanda/cord-fm1) 證明放得下圖）。
+- 更多音色、swing。
+- v0.5（本人 2026-11-20 定）：PING 來回時間對時；讓藍牙開關比較容易發現。見[上面](#v05)。
+- 之後：麥克風校正（同時收機器和網頁的 click，見[實機結果](#v04-unit)）；網頁上更多動畫（角色、畫面主題）。
+- 每首歌的名字（要先想好怎麼輸入文字）：本人 2026-11-20 說放到很後面。曲目順序表演者自己記得，演完用[全部清空](#clear-all)。
+| `FM1_FLASH_CUT=N` | 在第 N 次 erase 或 page program 寫到一半時斷電，看韌體怎麼處理寫一半的存檔 |
+| `--usb` | 插上 USB 線：host 會 enumerate，USB-MIDI 韌體在電腦上出現為「(emu)」MIDI 裝置（macOS、Linux） |
+| `FM1_STRICT=1` | 照實機的方式跑：未對齊存取會 fault、每條指令照量測的 cycle 數、LCD 傳輸照 SPI 時脈。只能 interpret，比較慢 |
+| `--shot` | headless 執行；配 `FM1_USB_SEND` 在指定時間送 USB MIDI 並印出回應 |
+| `FM1_BENCH_KEYS` | 輸入腳本：`ms:mHEX` 從 DIN 送 MIDI、`ms:id` 按鍵、`ms:eN:clicks` 轉 encoder |
+| `--mhz` | 降低時脈。原生 JIT 預設跑真實的 240 MHz |
+| `--flaky-core1 RATE` | 第二顆核心偶爾讀錯 RAM，測試韌體退回單核的能力 |
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-20 14:41:36Z)**_
+
+Updating docs: the K3 section, the emulator encoder numbering, and today's preflight attempt.
+
+_**Agent (claude-opus-5-5 2026-11-20 14:42:00Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Update metronome docs, emulator notes, device log
+
+```bash
+python3 - <<'EOF'
+p='docs/dev/metronome.md'; s=open(p).read()
+def rep(a,b):
+    global s
+    assert s.count(a)==1, a
+    s=s.replace(a,b)
+rep("""## v0.5：PING 對時、藍牙開關好找 { #v05 }
+
+本人 2026-11-20 定的範圍：PING 對時（麥克風校正之後再說），以及讓藍牙開關比較容易發現。""",
+"""## v0.5：PING 對時、藍牙開關好找、全部歌曲同一種音色 { #v05 }
+
+本人 2026-11-20 定的範圍：PING 對時（麥克風校正之後再說）、讓藍牙開關比較容易發現，以及（同日 22:30 提出）讓全部歌曲暫時用同一種音色。""")
+rep("""SET EDIT 的頁尾每 3 秒在兩種提示之間切換，第二種是 `K4: BLUETOOTH OFF (NOW ON)` 或 `K4: BLUETOOTH ON (NOW OFF)`，用比較亮的顏色。舞台上的 SET（非 EDIT）頁不變。
+""",
+"""SET EDIT 的頁尾每 3 秒輪流顯示三種提示：按鍵說明、`K3: ALL SONGS' SOUND NOW …`、`K4: BLUETOOTH OFF (NOW ON)` 或 `K4: BLUETOOTH ON (NOW OFF)`。後兩種用比較亮的顏色。
+
+### 全部歌曲同一種音色 { #v05-all-sound }
+
+- 0.4 以前的作法：每首歌各有自己的音色（`ALGO` 轉，CLICK／WOOD／BEEP），CLASSIC 還各有四層的音量。全域的只有機器的總音量。
+- v0.5 新增：在 SET EDIT 轉 `K3`，依序是 `OWN SOUND`（每首用自己的）、`CLICK`、`WOOD`、`BEEP`，全部歌曲都改用選定的音色。
+  - 每首歌自己的音色不會被改掉，轉回 `OWN SOUND` 就恢復。
+  - 這個設定存在 record 的 `flags` bit 1–2，和藍牙開關一樣是這台機器自己的設定。所以重開機還在；電腦送來歌單時也會保留，歌單本身不帶這個設定。
+  - 舊的 record 這兩個 bit 都是 0，讀起來就是 `OWN SOUND`。
+- 只影響音色。CLASSIC 各層的音量和 GRID 的重音仍然照每首歌自己的設定。
+- `K3` 只在 EDIT 裡能轉，和 `K4` 一樣，避免舞台上不小心碰到。
+- 畫面上：
+  - 舞台的 SET 頁，設了全部同一種時，頁尾每 6 秒會出現一次 `ALL SONGS IN BEEP (SET EDIT, K3)`；
+  - GRID 和 CLASSIC 頁的音色欄會以亮色顯示 `ALL BEEP`；
+  - 在歌曲頁轉 `ALGO` 時，提示會寫成 `WOOD, ALL BEEP`：改的是這首歌自己的音色，要等轉回 `OWN SOUND` 才聽得到。
+- STATE 裡那首歌的第 7 個 byte 是實際播放的音色，所以 live 頁出聲時也跟著變。0.4 的網頁不用改。
+""")
+rep("""| `just fw-test metronome` | 新增：PING 立刻回 PONG（完整 frame 釘在腳本裡），不改狀態；EDIT 頁尾的藍牙提示（截圖） |""",
+"""| `just fw-test metronome` | 新增：PING 立刻回 PONG（完整 frame 釘在腳本裡），不改狀態；EDIT 頁尾的三種提示（截圖）。`K3`：不在 EDIT 時轉了沒有作用；EDIT 裡會停在 BEEP，不會轉過頭；`flags` 是 6；播放中的音色和 STATE 帶的音色會跟著改；重開機後還在；歌曲自己的音色不變；轉回 `OWN SOUND` 後 `flags` 是 0 |""")
+rep("""| `just fw-build metronome` | app 127,892 B；package SHA-256 `ae5b57ebaaa51fac2d7fa37abd2c7e85bd92061ee661dbfd45d3b52486a857bd` |
+| fm1-emu 兩種晶片，虛擬 USB | PING 後 2 ms 回 PONG，兩次 PONG 的 sample 差 22,060（0.5 s）；開機 0 次寫入 `[模擬]` |""",
+"""| `just fw-build metronome` | 加上 `K3` 之後：app 約 129 KB；package SHA-256 `420ee130515649bd15757aecbbbd3af3d3ec178b21f5203dfb9a7e9ab2b90963`（PING 那一版是 `ae5b57eb…486a857bd`） |
+| fm1-emu 兩種晶片，虛擬 USB | PING 後 2 ms 回 PONG，兩次 PONG 的 sample 差 22,060（0.5 s）；開機 0 次寫入 `[模擬]` |
+| fm1-emu 兩種晶片，`K3` | 依序按 `REC`、轉 `K3` +3、再按 `REC`：存檔寫 4 次；重開機 0 次寫入，舞台頁尾顯示 `ALL SONGS IN BEEP` `[模擬]`。注意 fm1-emu 的 encoder 編號沒有 PRESET：`e0` SELECT、`e1` ALGO、`e2`–`e5` 是 K1–K4，和 fm1-base 的 `EN_*` 編號不同 |""")
+open(p,'w').write(s)
+
+p='docs/agentic/emulator.md'; s=open(p).read()
+a="| `FM1_BENCH_KEYS` | 輸入腳本：`ms:mHEX` 從 DIN 送 MIDI、`ms:id` 按鍵、`ms:eN:clicks` 轉 encoder |"
+b="| `FM1_BENCH_KEYS` | 輸入腳本：`ms:mHEX` 從 DIN 送 MIDI、`ms:id` 按鍵、`ms:eN:clicks` 轉 encoder。FM-1 的 `N`：`e0` SELECT、`e1` ALGO、`e2`–`e5` K1–K4（沒有 PRESET，和 fm1-base `plat.h` 的 `EN_*` 編號不同；2026-11-20 用 METRONOME 的提示逐一試出來的）`[模擬]` |"
+assert s.count(a)==1; s=s.replace(a,b); open(p,'w').write(s)
+
+p='docs/device-log.md'; s=open(p).read()
+a="""
+
+## Phase 1 驗收"""
+b="""
+| 2026-11-20 22:40 | METRONOME 0.5 的 preflight，只做到一半。agent 執行：`just metro-backup`（唯讀）、`just fm1-download-mode`、`fm1-info`，之後執行 `fm1-find`、`fm1_install.py --info` 查看狀態 | `metro-backup`：USB 上沒有 METRONOME 回應。可能是 Chrome 裡的 live 頁還用藍牙連著，機器一次只對一台電腦說話。`fm1-download-mode`：`Refused: the Felucca did not come back in download mode within 20 s`（19:50 同一步驟是成功的）。`fm1-info` 因為機器不在 download mode 而拒絕。之後的狀態：`fm1-find` 顯示 `midi Felucca (running)`，`--info` 顯示 `FM-1_5900 [running]`，機器正常運作，沒有寫入。照規則停下來，回報本人 |
+
+## Phase 1 驗收"""
+assert s.count(a)==1; s=s.replace(a,b); open(p,'w').write(s)
+EOF
+grep -n "K4\|K3" firmware/metronome/README.md firmware/metronome/web/cheatsheet.html | head -10
+```
+
+```text
+firmware/metronome/README.md:25:  - **CLASSIC**, quick: the rhythm-watch way, four volumes (quarter, eighth, triplet, sixteenth) mixed on `K1`–`K4`
+firmware/metronome/README.md:42:| SET: EDIT | white key: pick it (an empty one starts as a copy), press it again on the beat to tap its tempo; `SEL` + key: clear it; `SEL` held 2 s: CLEAR ALL? (`PLAY` yes); `K4` Bluetooth on / off (the footer says so every other 3 s); `REC` leave |
+firmware/metronome/README.md:43:| GRID | white key: a step's level; `K1` beats 1–9; `K2` a beat in quarters / 8ths / triplets / 16ths; `K3` meter presets; `OCT±` tempo ±5; `REC` tap tempo; `SEL` CLASSIC |
+firmware/metronome/README.md:44:| CLASSIC | `K1`–`K4` the four layers' volumes 0–7; `OCT-` / `OCT+` an accent every 1–9 beats (0 none); any key or `REC` tap tempo; `SEL` GRID |
+firmware/metronome/README.md:68:METRONOME 0.4 does the same over Bluetooth (`SET EDIT`, `K4`: on by default), with *Over Bluetooth* on the page.
+firmware/metronome/README.md:97:| ![GRID](docs/screens/grid.png) GRID, 4/4 eighths | ![6/8](docs/screens/grid_6_8.png) GRID 6/8 | ![7/8](docs/screens/grid_7_8.png) `K3`: 7/8 2+2+3 |
+firmware/metronome/README.md:99:| ![mute](docs/screens/live_mute.png) the page sounds the clicks (0.4) | ![bt](docs/screens/live_bt_off.png) `K4`: Bluetooth off | ![hint](docs/screens/set_edit_bt_hint.png) EDIT's footer: where Bluetooth is (0.5) |
+firmware/metronome/web/cheatsheet.html:111:        <tr><td><kbd>K4</kbd></td><td>Bluetooth on / off (kept; on by default). The header shows <code>BT</code>,
+firmware/metronome/web/cheatsheet.html:123:        <tr><td><kbd>K3</kbd></td><td>meter presets: 2/4 3/4 4/4 5/4, 6/8, 6/8 IN 6, 9/8, 12/8, 5/8 3+2, 7/8 2+2+3</td></tr>
+firmware/metronome/web/cheatsheet.html:136:        <tr><td><kbd>K1</kbd>–<kbd>K4</kbd></td><td>volume 0–7 of the quarter, eighth, triplet and sixteenth layers, mixed</td></tr>
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-20 14:42:04Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Read the cheatsheet's SET EDIT rows
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/firmware/metronome && sed -n 105,115p web/cheatsheet.html; grep -n "ALGO\|sound" README.md web/cheatsheet.html | head`
+
+```text
+        <tr><td>white key</td><td>pick it (an empty one starts as a copy of the song on); press it again on the beat
+          to tap its tempo</td></tr>
+        <tr><td><kbd>SELECT</kbd>, <kbd>OCT±</kbd></td><td>its tempo exactly</td></tr>
+        <tr><td><kbd>SEL</kbd> + white key</td><td>clear that song (the last one stays)</td></tr>
+        <tr><td><kbd>SEL</kbd> held 2 s</td><td><code>CLEAR ALL?</code> <kbd>PLAY</kbd> clears every song (one at 120,
+          4/4 stays); any other button, or 5 s, keeps them</td></tr>
+        <tr><td><kbd>K4</kbd></td><td>Bluetooth on / off (kept; on by default). The header shows <code>BT</code>,
+          grey until a computer connects, then blue. (0.5: EDIT's footer says so every other 3 s)</td></tr>
+        <tr><td><kbd>REC</kbd></td><td>leave EDIT</td></tr>
+      </table>
+    </section>
+web/cheatsheet.html:80:        <tr><td><kbd>ALGO</kbd></td><td>sound: CLICK, WOOD, BEEP</td></tr>
+web/cheatsheet.html:120:        <tr><td>white key</td><td>a step of the bar: off → ghost → normal → accent. The key is as bright as it sounds</td></tr>
+README.md:5:meter, step pattern and sound; press a key and the next song starts at the next bar. GPL-3.0-or-later.
+README.md:23:    as it sounds), beats a bar, a beat in quarters, eighths, triplets or sixteenths, and meter presets (6/8,
+README.md:36:| `ALGO` | sound: CLICK, WOOD, BEEP |
+README.md:66:The file is plain JSON: the stored songs by key, each with its tempo, sound, GRID steps (`. g N A` for off, ghost,
+README.md:77:- *Clicks from this computer*: the page sounds them, the FM-1 falls silent (`MUTE` on its header) until the page lets
+README.md:78:  go. If the computer goes (the cable out, the page closed, Bluetooth lost), the FM-1 sounds again by itself: a
+README.md:82:sounds at, the tempo) when that changes and once a second, and the page counts the beats on its own clock, so USB's
+README.md:99:| ![mute](docs/screens/live_mute.png) the page sounds the clicks (0.4) | ![bt](docs/screens/live_bt_off.png) `K4`: Bluetooth off | ![hint](docs/screens/set_edit_bt_hint.png) EDIT's footer: where Bluetooth is (0.5) |
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-20 14:42:21Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Update README, cheatsheet, screens, AGENTS.md; check docs site
+
+```bash
+cp build/host/set_edit_hint_b.png docs/screens/set_edit_bt_hint.png && cp build/host/set_edit_hint_a.png docs/screens/set_edit_all_sound.png && cp build/host/set_all_sound_a.png docs/screens/set_all_sound.png && cp build/host/classic_all_sound.png docs/screens/classic_all_sound.png && python3 - <<'EOF'
+def edit(p, pairs):
+    s=open(p).read()
+    for a,b in pairs:
+        assert s.count(a)==1,(p,a); s=s.replace(a,b)
+    open(p,'w').write(s)
+edit('README.md',[
+("`K4` Bluetooth on / off (the footer says so every other 3 s); `REC` leave |",
+ "`K3` one sound for every song (0.5: OWN, CLICK, WOOD, BEEP; the songs keep their own); `K4` Bluetooth on / off (0.5: the footer shows both in turn); `REC` leave |"),
+("| `ALGO` | sound: CLICK, WOOD, BEEP |",
+ "| `ALGO` | the song's sound: CLICK, WOOD, BEEP (0.5: SET EDIT's `K3` can set one for every song) |"),
+("| ![mute](docs/screens/live_mute.png) the page sounds the clicks (0.4) | ![bt](docs/screens/live_bt_off.png) `K4`: Bluetooth off | ![hint](docs/screens/set_edit_bt_hint.png) EDIT's footer: where Bluetooth is (0.5) |",
+ "| ![mute](docs/screens/live_mute.png) the page sounds the clicks (0.4) | ![bt](docs/screens/live_bt_off.png) `K4`: Bluetooth off | ![hint](docs/screens/set_edit_bt_hint.png) EDIT's footer: where Bluetooth is (0.5) |\n| ![all](docs/screens/set_edit_all_sound.png) `K3`: one sound for every song (0.5) | ![stage](docs/screens/set_all_sound.png) on stage, SET says so | ![classic](docs/screens/classic_all_sound.png) a song's page: `ALL BEEP` |"),
+])
+edit('web/cheatsheet.html',[
+("""        <tr><td><kbd>K4</kbd></td><td>Bluetooth on / off (kept; on by default).""",
+"""        <tr><td><kbd>K3</kbd></td><td>0.5: one sound for every song: OWN SOUND (each its own), CLICK, WOOD, BEEP (kept).
+          The songs keep their own sounds, heard again at OWN SOUND; the volumes and accents stay theirs</td></tr>
+        <tr><td><kbd>K4</kbd></td><td>Bluetooth on / off (kept; on by default)."""),
+("(0.5: EDIT's footer says so every other 3 s)", "(0.5: EDIT's footer shows K3 and K4 in turn, 3 s each)"),
+("<td>sound: CLICK, WOOD, BEEP</td>", "<td>the song's sound: CLICK, WOOD, BEEP (0.5: SET EDIT <kbd>K3</kbd> may set one for all)</td>"),
+])
+EOF
+sed -n 96,101p README.md | head -3; cd ../.. && sed -i '' 's/SET EDIT.s footer shows where Bluetooth is\./SET EDIT'"'"'s footer shows where Bluetooth is; SET EDIT `K3` sets one sound for every song (kept in the record'"'"'s flags, the songs keep theirs)./' AGENTS.md && grep -c "K3. sets one sound" AGENTS.md; just docs-check 2>&1 | tail -2
+```
+
+```text
+| ![SET](docs/screens/set_playing.png) SET, playing | ![marking](docs/screens/set_marking.png) `K2`: a tempo marking | ![pending](docs/screens/set_pending.png) the next song waits for the bar |
+| ![GRID](docs/screens/grid.png) GRID, 4/4 eighths | ![6/8](docs/screens/grid_6_8.png) GRID 6/8 | ![7/8](docs/screens/grid_7_8.png) `K3`: 7/8 2+2+3 |
+| ![CLASSIC](docs/screens/classic.png) CLASSIC | ![clear](docs/screens/set_clear_ask.png) CLEAR ALL? | ![load](docs/screens/load_ask.png) a setlist from the computer |
+1
+uv run --locked --all-groups python scripts/check-docs-site.py
+{"status": "ok", "pages": 56, "llm_pages": 56, "deployed": false}
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-20 14:42:38Z)**_
+
+你問的「全部歌曲暫時用同一種音色」我加進 v0.5 了，可以跟這次一起刷。不過 preflight 只做到一半就停了，機器還沒有任何寫入。
+
+## 全部歌曲同一種音色（SET EDIT 轉 K3）
+- **原本的狀況**：音色（用 `ALGO` 轉的 CLICK／WOOD／BEEP）和 CLASSIC 的四層音量都是每首歌各自設定，全域的只有機器的總音量。
+- **怎麼用**：進 SET EDIT（按 `REC`）轉 `K3`，依序是 `OWN SOUND`（每首用自己的）、`CLICK`、`WOOD`、`BEEP`，選了之後全部歌曲都用那個音色。
+- **每首歌原本的音色不會被改掉**，轉回 `OWN SOUND` 就恢復。這個設定和藍牙開關一樣存在這台機器上，重開機還在，電腦送歌單過來也不會蓋掉。
+- **只換音色**：CLASSIC 各層的音量和 GRID 的重音，還是照每首歌自己的。
+- **畫面上看得到**：
+  - 舞台的 SET 頁尾每 6 秒會出現 `ALL SONGS IN BEEP (SET EDIT, K3)`；
+  - 歌曲頁的音色欄會以亮色顯示 `ALL BEEP`；
+  - SET EDIT 頁尾輪流顯示按鍵說明、K3、K4（藍牙）三種提示。
+- **live 頁**：網頁出聲時也會用同一種音色，因為機器回報的是實際在播的音色。
+- **驗證**：
+  - 模擬器全部通過，包括播放中切換、重開機後還在、歌曲自己的音色不變；
+  - pytest 和 node 測試也都通過；
+  - fm1-emu 兩種晶片：轉 K3 後存檔寫 4 次，重開機 0 次寫入，設定還在 `[模擬]`。
+- 新的 package SHA-256 是 `420ee130…2b90963`。
+
+## Preflight 停下來的原因
+1. `just metro-backup` 在 USB 上沒有聽到 METRONOME 回應。最可能是 Chrome 裡的 live 頁還用藍牙連著，機器一次只對一台電腦說話。
+2. `just fm1-download-mode` 失敗：`did not come back in download mode within 20 s`。今天 19:50 同一個步驟是成功的。
+
+機器現在正常運作（`FM-1_5900 [running]`）。照規則，工具拒絕時我不繞過去，所以停在這裡，這次嘗試已記在 `docs/device-log.md`。
+
+要繼續的話，請你：
+- 關掉所有連著機器的網頁（live 頁、歌單編輯器），然後按停止播放，我再重試一次；
+- 如果還是進不了 download mode，就照 M-Flasher 視窗 HOW TO CONNECT 寫的方式，用機器上的按鍵進去，跟我說一聲，我接著做讀晶片、完整備份、疊在新備份上預演。
+
+## 文件和 commit
+- 改了 `docs/dev/metronome.md`（新增 `#v05-all-sound`）、`docs/agentic/emulator.md`、`docs/device-log.md`、`AGENTS.md`，以及 fm1-metronome 的 README、cheatsheet 和截圖。
+- `docs/agentic/emulator.md` 記了一個坑：fm1-emu 的 encoder 編號沒有 PRESET，K3 是 `e4`，不是 fm1-base 裡的 5。
+- 以上都還沒 commit。要我 commit 並 push 到 `dev-0.5` 和 PR #18、順便更新 preview 嗎？
+
+---
+
+_**User (2026-11-20 14:43:39Z)**_
+
+網頁關掉了 試試看
+
+---
+
+_**Agent (claude-opus-5-5 2026-11-20 14:43:46Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Read the setlist into JSON (read-only)
+
+`date "+%H:%M" && just metro-backup backups/progress/metronome-2026-11-20-pre-0.5.json 2>&1 | tail -3`
+
+```text
+22:43
+PYTHONPATH=firmware/metronome/host uv run --locked --all-groups python -m fm1_metronome backup "backups/progress/metronome-2026-11-20-pre-0.5.json"
+[metronome] 7 songs: 1:120, 2:123, 3:106, 4:122, 5:122, 6:110, 11:110 -> backups/progress/metronome-2026-11-20-pre-0.5.json
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-20 14:43:48Z)**_
+
+Setlist read (7 songs). Now download mode (mode switch), info, and the full backup.
+
+_**Agent (claude-opus-5-5 2026-11-20 14:43:57Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Switch to download mode and read chip info
+
+`just fm1-download-mode 2>&1 | tail -2 && just fm1-info 2>&1 | tail -12`
+
+```text
+Sent the Felucca the download-mode message over USB MIDI; waiting for it
+In download mode: usb:2-3	WL82 UBOOT1.00 (USB bus 2, device 3)
+Read in 1.3 s (808 KB/s)
+Checked: the chip's CRC32 of the flash matches the read
+  model       FM-1
+  bootloader  stock (M-VAVE)
+  firmware    FM-1 590
+  app         OK
+  chip key    0x980F
+  flash       0xB36014
+  unit id     55227286a0cb022a
+  loader      M-Flasher 1.3, CPU at 96 MHz
+    - the firmware uses the FM-1 flash layout
+    - flash chip 0xB36014 (new)
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-20 14:44:12Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Full backup, restart, verify backups
+
+`just fm1-backup pre-metronome-0.5 2>&1 | tail -5 && just fm1-restart 2>&1 | tail -2 && just fm1-verify-backups 2>&1 | tail -4`
+
+```text
+    - the firmware uses the FM-1 flash layout
+    - flash chip 0xB36014 (new)
+Backup saved: backups/2026-11-20-pre-metronome-0.5/fm1-20261120-224407.bin
+7e22465bb2bdc10eb0941b388804ae42ad91848b09c16c2aba6225ef337560fe  backups/2026-11-20-pre-metronome-0.5/fm1-20261120-224407.bin
+Record this in docs/device-log.md and keep a copy off this machine.
+Sent the restart (a 34-byte program at 0x01C28000); waiting for the unit to reset
+Running: the Felucca is on USB MIDI
+ok   backups/2026-11-20-pre-metronome-0.2/fm1-20261120-034820.bin
+ok   backups/2026-11-20-pre-metronome-0.3/fm1-20261120-043501.bin
+ok   backups/2026-11-20-pre-metronome-0.4/fm1-20261120-195109.bin
+ok   backups/2026-11-20-pre-metronome-0.5/fm1-20261120-224407.bin
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-20 14:44:17Z)**_
+
+Backup is done and verified, and the unit is back in METRONOME. Next: rehearse in fm1-emu with the new package laid over this backup (both chips, headless).
+
+_**Agent (claude-opus-5-5 2026-11-20 14:44:29Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Rehearse over the new backup and diff against the last one
+
+```bash
+cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/tools/emu-state && PKG=$(cd ../../firmware/metronome/build && pwd)/metronome.fwsc; BAK=$(cd ../../backups/2026-11-20-pre-metronome-0.5 && pwd)/fm1-20261120-224407.bin; for c in uc25hq80 p25q80; do rm -f pr-$c.flash; ../fm1-emu/fm1-live --fwsc "$PKG" --flash-chip $c --flash pr-$c.flash --midi none --shot 1 --lcd-only >/dev/null 2>&1; python3 ../../scripts/emu_rehearse.py pr-$c.flash "$BAK" reh5-$c.flash | tail -1; cp reh5-$c.flash reh5-$c.before; echo "== $c boot"; FM1_BENCH_KEYS='60000:PLAY' ../fm1-emu/fm1-live --fwsc "$PKG" --flash-chip $c --flash reh5-$c.flash --midi none --shot 5000 --lcd-only 2>&1 | grep -i -E "^flash:|fault|error"; mv work/lcd.ppm reh5-$c.ppm; cmp -s reh5-$c.flash reh5-$c.before && echo "flash unchanged"; done; uv run --with pillow python -c "
+from PIL import Image
+o=Image.new('RGB',(500,240),'white')
+for k,c in enumerate(['uc25hq80','p25q80']): o.paste(Image.open(f'reh5-{c}.ppm'),(k*250,0))
+o.save('/private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/1baf212e-01fd-4b1a-8cf9-45fc7a274a17/scratchpad/reh5.png')"; cd ../.. && uv run --with pillow python - <<'EOF'
+a=open('backups/2026-11-20-pre-metronome-0.4/fm1-20261120-195109.bin','rb').read()
+b=open('backups/2026-11-20-pre-metronome-0.5/fm1-20261120-224407.bin','rb').read()
+d=[i for i in range(0,len(a),4096) if a[i:i+4096]!=b[i:i+4096]]
+print(len(d),'sectors differ vs pre-0.4; first/last', hex(d[0]) if d else None, hex(d[-1]) if d else None, 'data area:', [hex(x) for x in d if x>=0x97000])
+EOF
+```
+
+```text
+package image 0x04000-0x92FFF laid over the backup
+== uc25hq80 boot
+flash: 0 erases / programs
+flash unchanged
+package image 0x04000-0x92FFF laid over the backup
+== p25q80 boot
+flash: 0 erases / programs
+flash unchanged
+34 sectors differ vs pre-0.4; first/last 0x4000 0xcf000 data area: ['0xce000', '0xcf000']
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-20 14:44:33Z)**_
+
+<tool-use data-tool-type="read" data-tool-name="Read"><details>
+<summary>Tool use: **Read**</summary>
+ `/private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/1baf212e-01fd-4b1a-8cf9-45fc7a274a17/scratchpad/reh5.png`
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-20 14:44:42Z)**_
+
+<think><details><summary>Thought Process</summary>
+模擬では両方のチップで書き込み0回で起動し、7曲もJSONの[模擬]と一致しました。これから記録を取り、ビルドで結果が変わらないようパッケージを固定します。
+
+</details></think>
+
+_**Agent (claude-opus-5-5 2026-11-20 14:44:47Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Pin the package copy and record the preflight
+
+```bash
+mkdir -p downloads/metronome-0.5-dev && cp firmware/metronome/build/metronome.fwsc downloads/metronome-0.5-dev/ && shasum -a 256 downloads/metronome-0.5-dev/metronome.fwsc && python3 - <<'EOF'
+p='docs/device-log.md'; s=open(p).read()
+a="""
+
+## Phase 1 驗收"""
+b="""
+| 2026-11-20 22:43 | 本人關掉網頁後重做 METRONOME 0.5 的 preflight。agent 執行：`just metro-backup`（唯讀）、`fm1-download-mode`、`fm1-info`、`fm1-backup pre-metronome-0.5`、`fm1-restart`、`fm1-verify-backups` | 22:40 的兩個失敗都是網頁還連著造成的，網頁關掉後兩步都成功。歌單 7 首（1:120、2:123、3:106、4:122、5:122、6:110、11:110），存成 `backups/progress/metronome-2026-11-20-pre-0.5.json`。`info`：bootloader stock、firmware `FM-1 590`、app OK、flash `0xB36014`、CRC 相符。備份 SHA-256 `7e22465bb2bdc10eb0941b388804ae42ad91848b09c16c2aba6225ef337560fe`，verify ok；重開回 METRONOME。和 `pre-metronome-0.4` 比有 34 個 sector 不同：程式區（20:00 裝了 0.4）和 `0xCE000`/`0xCF000`（歌單），其他資料區不變。0.5 dev build（PING、K4 提示、K3 全部同一種音色；SHA-256 `420ee130515649bd15757aecbbbd3af3d3ec178b21f5203dfb9a7e9ab2b90963`，複製到 `downloads/metronome-0.5-dev/`）疊在這份備份上：兩種晶片開機 0 次寫入，畫面上的 7 首和 JSON 相同 `[模擬]` |
+
+## Phase 1 驗收"""
+assert s.count(a)==1; s=s.replace(a,b); open(p,'w').write(s)
+EOF
+```
+
+```text
+420ee130515649bd15757aecbbbd3af3d3ec178b21f5203dfb9a7e9ab2b90963  downloads/metronome-0.5-dev/metronome.fwsc
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-20 14:44:58Z)**_
+
+Preflight 全部過了，等你決定要不要刷。剛才兩步失敗確實是網頁連著造成的，關掉後都成功了。
+
+## Preflight
+1. **備份**：`backups/2026-11-20-pre-metronome-0.5/fm1-20261120-224407.bin`
+   - SHA-256 `7e22465bb2bdc10eb0941b388804ae42ad91848b09c16c2aba6225ef337560fe`，verify 通過。
+   - 歌單另外存成 JSON：7 首（1:120、2:123、3:106、4:122、5:122、6:110、11:110）。
+2. **晶片**：`0xB36014`（新的 UCUN）。fm1-base 支援兩種晶片，這次 build 在 fm1-emu 上兩種晶片也都跑過。
+3. **Package**：這是本機 build 的 0.5 開發版，不是上游的 release，程式碼還沒 commit。
+   - 內容：PING 對時、藍牙開關提示、K3 全部歌曲同一種音色。
+   - 已固定放在 `downloads/metronome-0.5-dev/metronome.fwsc`，SHA-256 `420ee130515649bd15757aecbbbd3af3d3ec178b21f5203dfb9a7e9ab2b90963`。
+4. **現在裝的和這次會改的**：
+   - 現在：bootloader 是原廠的，韌體是 METRONOME 0.4 開發版（`FM-1_5900`）。
+   - 這次只換程式區，identity 不變。
+   - record 格式沒變，歌單會留著。
+   - 疊在這份備份上預演：兩種晶片開機都是 0 次寫入，7 首歌都在 `[模擬]`。
+
+## 要刷的話，請你自己執行
+```
+uv run --project firmware/metronome/host python third_party/fm1-base/tools/fm1_install.py downloads/metronome-0.5-dev/metronome.fwsc
+```
+
+## 刷完後要試的
+1. 進 SET EDIT（按 `REC`）：頁尾會輪流顯示按鍵說明、`K3: ALL SONGS' SOUND …`、`K4: BLUETOOTH …`。
+2. 轉 `K3` 到 `BEEP`：播放中每首歌都變成 BEEP。轉回 `OWN SOUND` 各首恢復自己的音色，重開機後設定還在。
+3. live 頁分別用 USB 和藍牙連：看顯示的「round trip N ms」是多少，再看原本那個 −50 ms 的校正還需不需要。
+4. live 頁開「Clicks from this computer」：設了 K3 之後，網頁出的聲音也要跟著變。
+
+這次 preflight 已記在 `docs/device-log.md`。
+
+---
+
+_**User (2026-11-20 14:54:47Z)**_
+
+1. 成功
+2. 成功
+3.a. 藍牙： Clock set by round trips: 60 ms there and back, the link's delay taken out.  但是不是穩定的數字 可能 +- 10ms 波動
+3.b. USB：Clock set by round trips: 1 ms there and back, the link's delay taken out. 也是有波動 但+-不到 1ms
+4. 成功
+
+看起來矯正是需要 但如果有這個其實動態調到這個 round trips 基本能對上？
+
+（然後有一個就是 我從 USB 斷開連成藍牙 如果原本是 click from this computer 的情況 此時會兩邊都不發出聲音 不過再多點兩下就可以糾正回來）
+
+---
+
+_**Agent (claude-opus-5-5 2026-11-20 14:55:25Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Inspect clock sync and reconnect handling in the live page
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/firmware/metronome && grep -n "sync\|rtt\|best\|offset\|observe" web/live.js | head -40; grep -n "pinger\|syncInfo\|onConnect\|onLost\|muted\|sound.on\|sound.start\|sound.stop" web/live/index.html | head -50`
+
+```text
+6://     then or later, so the smallest lag over the last few seconds is the offset (USB's and Bluetooth's jitter and
+8://     by when the page got round to reading it. That offset still holds the link's one-way delay; with 0.5's PING
+33:    const win = windowMs || 8000, seen = [], trips = [];   // [arrived ms, lag ms]; [back ms, round trip, offset]
+36:      offset: null,                            // page ms = device ms + offset
+38:      rtt: null,                               // the shortest round trip in the window, ms
+40:      observe(devNow, arrivedMs) {
+47:      sync(t0, t1, devNow) {
+53:      reset() { seen.length = trips.length = 0; C.offset = C.by = C.rtt = null; },
+54:      toPage(devSamples) { return devSamples / SR * 1000 + C.offset; },   // an extended sample -> page ms
+55:      toDevice(pageMs) { return (pageMs - C.offset) / 1000 * SR; },
+60:        const best = fresh.reduce((a, b) => (b[1] < a[1] ? b : a));
+61:        C.offset = best[2]; C.by = "ping"; C.rtt = best[1];
+62:      } else if (seen.length) { C.offset = Math.min(...seen.map(x => x[1])); C.by = "lag"; C.rtt = null; }
+63:      return C.offset;
+90:        clk.observe(st.now, arrivedMs);
+150:  onConnect(L) {
+161:    pinger.start(L);
+163:  onLost() { enable(false); pinger.stop(); plan.reset(); sound.cancel(); songs = null; drawKeys(); syncInfo(); },
+166:    else if (m.type === MT.T.PONG) pinger.pong(MT.decodePong(m.payload), arrived);
+179:  if (!on) { $("sound").classList.remove("on"); sound.on = false; }
+184:const pinger = {
+201:    syncInfo();
+204:function syncInfo() {
+216:  $("sound").classList.toggle("on", st.muted && sound.on);
+296:  if (sound.on) { sound.stop(); send(MT.ctrl(MT.C.MUTE, 0)); $("sound").classList.remove("on"); }
+297:  else { sound.start(); if (demo) $("sound").classList.add("on"); else send(MT.ctrl(MT.C.MUTE, 1)); sound.replan(); }
+299:window.addEventListener("pagehide", () => { if (sound.on) send(MT.ctrl(MT.C.MUTE, 0)); });
+348:  const st = () => ({ seq: 0, flags: 1, active: 0, songNo: 0, song: g, tick: 0, at, q8, now: dev(), running: true, muted: false, next: false });
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-20 14:55:29Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Read the clock code and the page's connect, sound and calibration code
+
+`sed -n 25,70p web/live.js; sed -n 145,300p web/live/index.html`
+
+```text
+        if (d < WRAP / 2) { if (s < last) base += WRAP; } else if (s > last) base -= WRAP;   // forward / a little back
+      }
+      last = s;
+      return base + s;
+    };
+  }
+
+  function clock(windowMs) {
+    const win = windowMs || 8000, seen = [], trips = [];   // [arrived ms, lag ms]; [back ms, round trip, offset]
+    const ext = unwrapper();
+    const C = {
+      offset: null,                            // page ms = device ms + offset
+      by: null,                                // "ping" (round trips) or "lag" (STATEs' smallest lag)
+      rtt: null,                               // the shortest round trip in the window, ms
+      ext,
+      observe(devNow, arrivedMs) {
+        const devMs = ext(devNow) / SR * 1000, lag = arrivedMs - devMs;
+        seen.push([arrivedMs, lag]);
+        while (seen.length > 1 && arrivedMs - seen[0][0] > win) seen.shift();
+        return settle(arrivedMs);
+      },
+      // a PING sent at t0, its PONG back at t1 (page ms), the FM-1's sample when it answered
+      sync(t0, t1, devNow) {
+        const devMs = ext(devNow) / SR * 1000;
+        trips.push([t1, t1 - t0, (t0 + t1) / 2 - devMs]);
+        while (trips.length > 1 && t1 - trips[0][0] > win) trips.shift();
+        return settle(t1);
+      },
+      reset() { seen.length = trips.length = 0; C.offset = C.by = C.rtt = null; },
+      toPage(devSamples) { return devSamples / SR * 1000 + C.offset; },   // an extended sample -> page ms
+      toDevice(pageMs) { return (pageMs - C.offset) / 1000 * SR; },
+    };
+    function settle(now) {
+      const fresh = trips.filter(t => now - t[0] <= win * 2);
+      if (fresh.length) {
+        const best = fresh.reduce((a, b) => (b[1] < a[1] ? b : a));
+        C.offset = best[2]; C.by = "ping"; C.rtt = best[1];
+      } else if (seen.length) { C.offset = Math.min(...seen.map(x => x[1])); C.by = "lag"; C.rtt = null; }
+      return C.offset;
+    }
+    return C;
+  }
+
+  // a segment: tick t sounds at start + q8Mul(t, q8) (extended samples); from its anchor tick on
+  function segment(st, ext) {
+    const at = ext(st.at), start = at - MT.q8Mul(st.tick, st.q8);
+  set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { /* private window */ } } };
+
+// ------------------------------------------------------------------ the link ---
+const link = MTLink.create({
+  onStatus: status,
+  onConnect(L) {
+    const fw = L.firmware ? `${L.firmware[0]}.${L.firmware[1]}` : "";
+    live = !L.firmware || L.firmware[0] > 0 || L.firmware[1] >= MT.LIVE_MINOR;
+    stopDemo();
+    if (!live) { status(`METRONOME ${fw} has no live link: install 0.4 or newer (the setlist editor still works with it).`, "bad"); return; }
+    status(`Connected: METRONOME ${fw} over ${L.via}${L.via === "USB" ? ` ("${L.name}")` : ""}.`, "ok");
+    loadCal();
+    asm = MT.assembler();
+    L.send(MT.frame(MT.T.SET_REQ));   // the 16 songs, for the keys
+    L.send(MT.ctrl(MT.C.STATE));
+    enable(true);
+    pinger.start(L);
+  },
+  onLost() { enable(false); pinger.stop(); plan.reset(); sound.cancel(); songs = null; drawKeys(); syncInfo(); },
+  onFrame(m, ts, raw, arrived) {
+    if (m.type === MT.T.STATE) { live = true; takeState(MT.decodeState(m.payload), ts); }
+    else if (m.type === MT.T.PONG) pinger.pong(MT.decodePong(m.payload), arrived);
+    else if (m.type === MT.T.SET && asm) {
+      try { const s = asm.feed(m.payload); if (s) { songs = s.songs; asm = null; drawKeys(); } } catch (err) { asm = null; }
+    }
+  },
+});
+let asm = null;
+$("usb").onclick = () => link.usb();
+$("ble").onclick = () => link.ble();
+if (link.bleAvailable) $("ble").hidden = false;
+function send(f) { if (link.connected && live) link.send(f); }
+function enable(on) {
+  for (const b of document.querySelectorAll("[data-bpm], #play, #sound, #tapcal")) b.disabled = !on;
+  if (!on) { $("sound").classList.remove("on"); sound.on = false; }
+}
+
+// ------------------------------------------------- the clock by round trips ---
+// 0.5: a PING a second; each PONG's round trip sets the clock (live.js), the link's own delay taken out
+const pinger = {
+  timer: 0, token: 0, sent: new Map(),
+  start(L) {
+    this.stop();
+    if (L.firmware && L.firmware[0] === 0 && L.firmware[1] < MT.PING_MINOR) return;   // (0.4: no PONG)
+    const go = () => { this.token = (this.token + 1) & 0xFFFFFFF; this.sent.set(this.token, performance.now()); L.send(MT.ping(this.token));
+      if (this.sent.size > 20) this.sent.delete(this.sent.keys().next().value); };
+    go(); this.timer = setInterval(go, 1000);
+  },
+  stop() { clearInterval(this.timer); this.sent.clear(); },
+  pong(p, arrived) {
+    const t0 = this.sent.get(p.token);
+    if (t0 === undefined) return;
+    this.sent.delete(p.token);
+    const by = clk.by;
+    clk.sync(t0, arrived, p.now);
+    if (by !== clk.by) { loadCal(); sound.replan(); }
+    syncInfo();
+  },
+};
+function syncInfo() {
+  $("sync").textContent = clk.by === "ping" ? `Clock set by round trips: ${clk.rtt.toFixed(1)} ms there and back, the link's delay taken out.`
+    : clk.by === "lag" ? "Clock set by the STATEs (METRONOME 0.4: no round trips), the link's delay still in it: calibrate." : "";
+}
+
+// ---------------------------------------------------------- a STATE comes in ---
+let shown = null;   // the song on the readout
+function takeState(st, arrived) {
+  const changed = plan.take(st, arrived);
+  if (songs && st.song.used) songs[st.songNo] = st.song;   // (an edit on the FM-1)
+  if (!st.next) shown = st.song;
+  if (changed) sound.replan();
+  $("sound").classList.toggle("on", st.muted && sound.on);
+  $("play").textContent = st.running ? "Stop" : "Start";
+  drawKeys();
+  readout();
+}
+function readout() {
+  const g = shown;
+  if (!g) return;
+  $("bpm").textContent = g.bpm;
+  $("mark").textContent = MT.MARKS[MT.marking(g.bpm)][0];
+  $("meter").textContent = MT.meterText(g).replace(/\s+/g, " ");
+  const p = MTConductor.patternFor(g);
+  $("pattern").textContent = `conducted ${p.name}`;
+  const dots = $("dots");
+  if (dots.childElementCount !== p.beats.length || dots.dataset.k !== p.beats.join()) {
+    dots.innerHTML = ""; dots.dataset.k = p.beats.join();
+    for (const b of p.beats) { const i = document.createElement("i"); if (b > 12) i.className = "wide"; dots.appendChild(i); }
+  }
+}
+function drawKeys() {
+  const k = $("keys");
+  k.innerHTML = "";
+  for (let i = 0; i < MT.NSLOT; i++) {
+    const g = songs ? songs[i] : null, b = document.createElement("button");
+    b.className = "key" + (g && g.used ? "" : " empty") + (i === plan.active && (songs || plan.running) ? " active" : "")
+      + (plan.next && plan.next.songNo === i ? " pend" : "");
+    b.innerHTML = `<span class="n">${i + 1}</span><span class="b">${g && g.used ? g.bpm : "–"}</span>`;
+    b.disabled = !link.connected || !(g && g.used);
+    b.onclick = () => send(MT.ctrl(MT.C.PICK, i));
+    k.appendChild(b);
+  }
+}
+$("play").onclick = () => send(MT.ctrl(plan.running ? MT.C.STOP : MT.C.START));
+for (const b of document.querySelectorAll("[data-bpm]"))
+  b.onclick = () => shown && send(MT.ctrl(MT.C.BPM, Math.max(MT.BPM_MIN, Math.min(MT.BPM_MAX, shown.bpm + +b.dataset.bpm))));
+
+// ---------------------------------------------------------------- the clicks ---
+// planned ahead on the audio clock: the FM-1's time -> the page's (clk) -> the audio's (getOutputTimestamp)
+const sound = {
+  on: false, ctx: null, gain: null, nodes: [], last: -Infinity, timer: 0,
+  start() {
+    this.ctx = this.ctx || new (window.AudioContext || window.webkitAudioContext)();
+    this.ctx.resume();
+    if (!this.gain) { this.gain = this.ctx.createGain(); this.gain.connect(this.ctx.destination); }
+    this.gain.gain.value = $("vol").value / 100;
+    this.on = true; this.last = -Infinity;
+    clearInterval(this.timer); this.timer = setInterval(() => this.pump(), 25);
+  },
+  stop() { this.on = false; clearInterval(this.timer); this.cancel(); },
+  ctxTime(pageMs) {
+    const t = this.ctx.getOutputTimestamp ? this.ctx.getOutputTimestamp() : null;
+    if (t && t.performanceTime) return t.contextTime + (pageMs - t.performanceTime) / 1000;
+    return this.ctx.currentTime + (pageMs - performance.now()) / 1000 - (this.ctx.outputLatency || 0);
+  },
+  cancel() {   // the clicks planned and not yet sounded
+    if (!this.ctx) return;
+    const now = this.ctx.currentTime + 0.003;
+    this.nodes = this.nodes.filter(([when, o]) => { if (when > now) { try { o.stop(); o.disconnect(); } catch (e) { /* done */ } return false; } return when > now - 1; });
+  },
+  replan() { if (!this.on) return; this.cancel(); this.last = clk.toDevice(performance.now() - cal()); this.pump(); },
+  pump() {
+    if (!this.on || !plan.running || clk.offset === null) return;
+    const nowDev = clk.toDevice(performance.now() - cal()), to = nowDev + 0.15 * SR, from = Math.max(this.last, nowDev);
+    for (const { tick, dev, seg } of plan.ticks(from, to)) {
+      const when = this.ctxTime(clk.toPage(dev) + cal()), snd = MT.SND[seg.song.sound];
+      if (when < this.ctx.currentTime) continue;
+      for (const [v, vol] of MT.hits(seg.song, tick)) {
+        const o = this.ctx.createOscillator(), a = this.ctx.createGain(), len = snd.tau / 1000 * 7;
+        o.frequency.value = snd.hz[v];
+        a.gain.setValueAtTime(MT.V_AMP[v] * vol / 7 * 0.7, when);
+        a.gain.exponentialRampToValueAtTime(0.0001, when + len);
+        o.connect(a).connect(this.gain); o.start(when); o.stop(when + len + 0.02);
+        this.nodes.push([when, o]);
+      }
+    }
+    this.last = Math.max(this.last, to);
+  },
+};
+$("vol").oninput = () => { if (sound.gain) sound.gain.gain.value = $("vol").value / 100; };
+$("sound").onclick = () => {
+  if (sound.on) { sound.stop(); send(MT.ctrl(MT.C.MUTE, 0)); $("sound").classList.remove("on"); }
+  else { sound.start(); if (demo) $("sound").classList.add("on"); else send(MT.ctrl(MT.C.MUTE, 1)); sound.replan(); }
+};
+window.addEventListener("pagehide", () => { if (sound.on) send(MT.ctrl(MT.C.MUTE, 0)); });
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-20 14:55:59Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Read the firmware's host frame and mute handling
+
+`sed -n '/^static int host_frame/,/^}/p' app.c; grep -n "mute_set\|hl_acked" app.c ../common/hostlink.h | head -20`
+
+```text
+static int host_frame(const uint8_t *p, uint32_t n, int transport)
+{
+    uint8_t type;
+    uint32_t len;
+    const uint8_t *d = hl_match(&link, p, n, &type, &len);
+    if (!d) return 0;
+    hl_seen(&link, plat_ms());
+    if (type == T_HELLO_ACK) {
+        if (!hl_host(&link, plat_ms())) st_due = st_now = 1;   /* a page is here: it learns the state at once */
+        hl_acked(&link, plat_ms(), transport);
+    } else if (type == T_SET_REQ) { xfer.tx_on = 1; xfer.tx_i = 0; }
+    else if (type == T_SET_LOAD) sl_in(d, len);
+    else if (type == T_CTRL) ctrl_in(d, len);
+    return 1;
+}
+app.c:812:static void mute_set(int on)
+app.c:849:    } else if (op == C_MUTE && len >= 2u) mute_set(d[1] != 0);
+app.c:862:        hl_acked(&link, plat_ms(), transport);
+app.c:1568:        if (!host && au_mute) mute_set(0);   /* the computer gone: the clicks back here, never a silent stage */
+../common/hostlink.h:23: *             hl_acked(&hl, now, transport); ...
+../common/hostlink.h:60:void hl_acked(hostlink_t *h, uint32_t now, int transport);
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-20 14:56:06Z)**_
+
+<think><details><summary>Thought Process</summary>
+Next I'm fixing the USB-to-Bluetooth silence on two fronts: the page needs to stop bringing back "Clicks from this computer" after a reconnect, and the firmware has to stop lifting the mute when the link changes transport.
+
+</details></think>
+
+_**Agent (claude-opus-5-5 2026-11-20 14:56:06Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Read mute_set and BLE test commands
+
+`sed -n 808,820p app.c; grep -n "ble_frame\|^ble \|ble connect" tests/basic.txt | head; grep -n "transport" ../common/hostlink.h | head -5`
+
+```text
+    live.sent_at = now;
+    if (tr.pend && st_send(1) != 0) owe_next = 1;
+}
+
+static void mute_set(int on)
+{
+    if ((uint8_t)on == au_mute) return;
+    au_mute = (uint8_t)on;
+    app_say("CLICK", on ? "ON THE COMPUTER" : "HERE");
+    ui.redraw |= R_HEAD;
+    st_due = st_now = 1;
+}
+
+500:ble connect
+505:ble_frame hello_ack
+510:ble_frame start
+514:ble_frame mute1
+517:ble disconnect
+6: * The device says HELLO once a second (on every transport that has a computer) until the host answers, then a
+7: * HEARTBEAT once a second on the transport the answer came by; the host counts as present while frames keep
+23: *             hl_acked(&hl, now, transport); ...
+25: * HELLO carries the app's payload and then the transport byte (HL_USB / HL_BLE); HEARTBEAT carries ver, transport.
+42:    uint8_t transport;                   /* HL_USB / HL_BLE: where the answer came from, where we reply */
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-20 14:56:10Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Read the BLE section of the simulator test
+
+`sed -n 490,522p tests/basic.txt`
+
+```text
+expect host 0
+expect muted 0
+usb plug
+wait 1100
+sysex F0 7D 4D 54 01 01 01 F7
+wait 50
+expect host 1
+
+# ---- 0.4: Bluetooth. A computer connects: HELLO there too; its answer, then START, over Bluetooth
+out
+ble connect
+wait 11000
+expect host 0
+wait 1100
+expect_out BLE F0 7D 4D
+ble_frame hello_ack
+wait 50
+expect host 1
+expect transport 1
+out
+ble_frame start
+wait 50
+expect running 1
+expect_out BLE 54 01 46
+ble_frame mute1
+wait 50
+expect muted 1
+ble disconnect
+wait 11000
+expect muted 0
+expect running 1
+tap PLAY
+expect running 0
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-20 14:56:24Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Lift mute on transport change, add test, run simulator
+
+```bash
+python3 - <<'EOF'
+def edit(p, pairs):
+    s=open(p).read()
+    for a,b in pairs:
+        assert s.count(a)==1,(p,a); s=s.replace(a,b)
+    open(p,'w').write(s)
+edit('app.c',[("""    if (type == T_HELLO_ACK) {
+        if (!hl_host(&link, plat_ms())) st_due = st_now = 1;   /* a page is here: it learns the state at once */
+        hl_acked(&link, plat_ms(), transport);""",
+"""    if (type == T_HELLO_ACK) {
+        if (!hl_host(&link, plat_ms())) st_due = st_now = 1;   /* a page is here: it learns the state at once */
+        else if (link.transport != transport && au_mute) mute_set(0);   /* (0.5) the link moved (USB to Bluetooth):
+                                          * the mute was the old link's page; one that wants it asks again */
+        hl_acked(&link, plat_ms(), transport);""")])
+edit('tests/basic.txt',[("""ble_frame mute1
+wait 50
+expect muted 1
+ble disconnect
+""","""ble_frame mute1
+wait 50
+expect muted 1
+# 0.5: the link moves to another transport (a page on USB answers, or the page reconnects): the mute was the old
+# link's, so it lifts; the page that wants it asks again
+sysex F0 7D 4D 54 01 01 01 F7
+wait 50
+expect transport 0
+expect muted 0
+ble_frame hello_ack
+ble_frame mute1
+wait 50
+expect transport 1
+expect muted 1
+ble disconnect
+""")])
+EOF
+cd ../.. && just fw-test metronome >/dev/null 2>&1; echo exit $?
+```
+
+```text
+exit 1
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-20 14:56:31Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Show the failing check
+
+`just fw-test metronome 2>&1 | grep -v "^  ok\|sysex<" | tail -12`
+
+```text
+  out 00 00 00 -> BLE
+  out 00 00 00 -> BLE
+  out 00 00 00 -> BLE
+  out 00 00 00 -> BLE
+  out 00 00 00 -> BLE
+  out 00 00 00 -> BLE
+  out 04 00 00 -> BLE
+  out 5C 3A 37 -> BLE
+  out 00 F7 00 -> BLE
+FAIL expect_sysex: not sent (16 bytes)
+host: 119498 ms simulated, 1530 blits, render 0.0% of real time (host CPU), EXPECTATIONS FAILED
+error: recipe `fw-test` failed with exit code 1
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-20 14:56:39Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Find the PONG frame actually sent
+
+`just fw-test metronome 2>&1 | grep -n "47 01 02 03 04\|FAIL" | head`
+
+```text
+468:FAIL expect_sysex: not sent (16 bytes)
+497:host: 119498 ms simulated, 1530 blits, render 0.0% of real time (host CPU), EXPECTATIONS FAILED
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-20 14:56:50Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Look at the output before the failure
+
+`just fw-test metronome 2>&1 | sed -n 380,470p | grep -v "^  ok" | grep -v "sysex< F0 7D 4D 54 01 41" | head -60`
+
+```text
+  out 00 00 00 -> BLE
+  out 00 00 00 -> BLE
+  out 00 00 00 -> BLE
+  out 04 00 00 -> BLE
+  out 5C 3A 37 -> BLE
+  out 00 F7 00 -> BLE
+  sysex< F0 7D 4D 54 01 46 40 01 01 04 04 01 01 16 00 00 04 01 03 00 07 04 00 00 02 03 02 02 02 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 44 00 21 17 27 00 00 3E 0C 05 00 04 10 27 00 F7
+  sysex< F0 7D 4D 54 01 42 01 00 F7
+  sysex< F0 7D 4D 54 01 46 40 02 01 04 04 01 01 16 00 00 04 01 03 00 07 04 00 00 02 03 02 02 02 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 44 00 21 17 27 00 00 3E 00 05 00 2C 3E 28 00 F7
+  sysex< F0 7D 4D 54 01 46 40 03 01 00 04 01 01 16 00 00 04 01 03 00 07 04 00 00 02 03 02 02 02 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 44 00 21 17 27 00 00 3E 04 05 00 30 43 28 00 F7
+  sysex< F0 7D 4D 54 01 46 00 04 05 00 00 01 00 60 00 00 03 02 04 01 07 00 00 00 00 03 01 02 01 02 00 01 00 00 00 00 00 00 00 00 00 00 00 00 00 00 62 00 59 65 28 00 60 78 04 08 00 30 43 28 00 F7
+  sysex< F0 7D 4D 54 01 42 01 00 F7
+  sysex< F0 7D 4D 54 01 46 00 05 01 00 00 01 00 60 00 00 03 02 04 01 07 00 00 00 00 03 01 02 01 02 00 01 00 00 00 00 00 00 00 00 00 00 00 00 00 00 62 00 59 65 28 00 60 78 04 08 00 04 67 28 00 F7
+  sysex< F0 7D 4D 54 01 42 01 00 F7
+  sysex< F0 7D 4D 54 01 46 00 06 01 00 00 01 00 60 00 00 03 02 04 01 07 00 00 00 00 03 01 02 01 02 00 01 00 00 00 00 00 00 00 00 00 00 00 00 00 00 62 00 59 65 28 00 60 78 00 08 00 2C 15 29 00 F7
+  sysex< F0 7D 4D 54 01 46 00 07 01 00 00 01 00 60 00 00 03 02 04 01 07 00 00 00 00 03 01 02 01 02 00 01 00 00 00 00 00 00 00 00 00 00 00 00 00 00 62 00 59 65 28 00 60 78 0C 08 00 30 21 29 00 F7
+  sysex< F0 7D 4D 54 01 46 00 08 05 00 00 01 00 64 00 00 03 02 04 01 07 00 00 00 00 03 01 02 01 02 00 01 00 00 00 00 00 00 00 00 00 00 00 24 00 00 46 00 59 28 29 00 00 1D 0C 08 00 30 21 29 00 F7
+  sysex< F0 7D 4D 54 01 46 00 09 01 00 00 01 00 64 00 00 03 02 04 01 07 00 00 00 00 03 01 02 01 02 00 01 00 00 00 00 00 00 00 00 00 00 00 00 00 00 42 00 45 72 28 00 00 1D 08 08 00 00 2A 29 00 F7
+  sysex< F0 7D 4D 54 01 46 00 0A 01 00 00 01 00 64 00 00 03 02 04 01 07 00 00 00 00 03 01 02 01 02 00 01 00 00 00 00 00 00 00 00 00 00 00 00 00 00 42 00 45 72 28 00 00 1D 08 08 00 00 35 29 00 F7
+  sysex< F0 7D 4D 54 01 42 01 00 F7
+  sysex< F0 7D 4D 54 01 46 00 0B 03 00 00 01 00 64 00 00 03 02 04 01 07 00 00 00 00 03 01 02 01 02 00 01 00 00 00 00 00 00 00 00 00 00 00 00 00 00 42 00 45 72 28 00 00 1D 08 08 00 58 3D 29 00 F7
+  sysex< F0 7D 4D 54 01 42 01 00 F7
+  sysex< F0 7D 4D 54 01 46 00 0C 03 00 00 01 00 64 00 00 03 02 04 01 07 00 00 00 00 03 01 02 01 02 00 01 00 00 00 00 00 00 00 00 00 00 00 00 00 00 42 00 45 72 28 00 00 1D 00 08 00 00 6B 2A 00 F7
+  sysex< F0 7D 4D 54 01 42 01 00 F7
+  sysex< F0 7D 4D 54 01 46 00 0D 03 00 00 01 00 64 00 00 03 02 04 01 07 00 00 00 00 03 01 02 01 02 00 01 00 00 00 00 00 00 00 00 00 00 00 00 00 00 42 00 45 72 28 00 00 1D 04 08 00 04 18 2B 00 F7
+  sysex< F0 7D 4D 54 01 46 00 0E 01 00 00 01 00 64 00 00 03 02 04 01 07 00 00 00 00 03 01 02 01 02 00 01 00 00 00 00 00 00 00 00 00 00 00 00 00 00 42 00 45 72 28 00 00 1D 00 08 00 2C 1E 2B 00 F7
+  sysex< F0 7D 4D 54 01 42 01 00 F7
+  sysex< F0 7D 4D 54 01 46 00 0F 01 00 00 01 00 64 00 00 03 02 04 01 07 00 00 00 00 03 01 02 01 02 00 01 00 00 00 00 00 00 00 00 00 00 00 00 00 00 42 00 45 72 28 00 00 1D 0C 08 00 30 4B 2B 00 F7
+  sysex< F0 7D 4D 54 01 46 00 10 00 00 00 01 00 64 00 00 03 02 04 01 07 00 00 00 00 03 01 02 01 02 00 01 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 04 00 00 04 29 2C 00 F7
+  sysex< F0 7D 4D 54 01 42 01 00 F7
+  sysex< F0 7D 4D 54 01 42 01 00 F7
+  sysex< F0 7D 4D 54 01 46 00 11 00 00 00 01 00 64 00 00 03 02 04 01 07 00 00 00 00 03 01 02 01 02 00 01 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 08 00 00 58 2B 2D 00 F7
+  sysex< F0 7D 4D 54 01 42 01 00 F7
+  sysex< F0 7D 4D 54 01 46 00 12 02 00 00 01 00 64 00 00 03 02 04 01 07 00 00 00 00 03 01 02 01 02 00 01 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 08 00 00 2C 4F 2D 00 F7
+  sysex< F0 7D 4D 54 01 46 00 13 00 00 00 01 00 64 00 00 03 02 04 01 07 00 00 00 00 03 01 02 01 02 00 01 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 04 00 00 5C 0E 2F 00 F7
+  sysex< F0 7D 4D 54 01 42 01 00 F7
+  sysex< F0 7D 4D 54 01 42 01 00 F7
+  sysex< F0 7D 4D 54 01 42 01 00 F7
+  sysex< F0 7D 4D 54 01 42 01 00 F7
+  sysex< F0 7D 4D 54 01 42 01 00 F7
+  sysex< F0 7D 4D 54 01 42 01 00 F7
+  sysex< F0 7D 4D 54 01 42 01 00 F7
+  sysex< F0 7D 4D 54 01 42 01 00 F7
+  sysex< F0 7D 4D 54 01 42 01 00 F7
+  sysex< F0 7D 4D 54 01 42 01 00 F7
+  sysex< F0 7D 4D 54 01 46 00 17 01 00 00 01 00 64 00 00 03 02 04 01 07 00 00 00 00 03 01 02 01 02 00 01 00 00 00 00 00 00 00 00 00 00 00 00 00 00 42 00 1D 4B 37 00 00 1D 04 08 00 04 56 37 00 F7
+  sysex< F0 7D 4D 54 01 46 00 00 00 00 00 01 00 64 00 00 03 02 04 01 07 00 00 00 00 03 01 02 01 02 00 01 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 0C 00 00 5C 55 41 00 F7
+  sysex< F0 7D 4D 54 01 45 00 F7
+  sysex< F0 7D 4D 54 01 46 40 01 08 04 04 01 01 16 00 00 04 01 03 00 07 04 00 00 02 03 02 02 02 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 04 00 00 30 04 42 00 F7
+  sysex< F0 7D 4D 54 01 42 01 00 F7
+FAIL expect_sysex: not sent (16 bytes)
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-20 14:56:59Z)**_
+
+The simulator test is failing on the pinned PONG frame. I'm checking whether it's only the sample number inside it, which shifted with the 100 ms of waits I added.
+
+_**Agent (claude-opus-5-5 2026-11-20 14:57:02Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Search output for the PONG frame
+
+`just fw-test metronome 2>&1 | grep -n " 47 \|pongs" | head`
+
+```text
+467:  ok pongs == 1
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-20 14:57:13Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Find how the simulator logs sent SysEx
+
+`ls firmware/metronome/build/host/ | grep -v png | head; grep -n "expect_sysex" third_party/fm1-base/host/*.c 2>/dev/null | head -3; grep -rn "not sent" third_party/fm1-base --include=*.c 2>/dev/null | head -3`
+
+```text
+o2
+classic.wav
+grid.wav
+live.syx
+metronome_host
+midi_out.txt
+pong.syx
+set.wav
+third_party/fm1-base/host/plat_host.c:95: *   expect_sysex HEX..           check that this frame went out since the last "sysex_out" (F0 .. F7, hex)
+third_party/fm1-base/host/plat_host.c:1059: * ("sysex_out", "expect_sysex") and written to the "sysex_log" file */
+third_party/fm1-base/host/plat_host.c:2477:    printf("FAIL expect_sysex: not sent (%u bytes)\n", n);
+(eval):1: no matches found: --include=*.c
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-20 14:57:18Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Read the logged PONG frame
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/firmware/metronome && xxd -p build/host/pong.syx | head; grep -n "pong.syx\|sysex_log" tests/basic.txt`
+
+```text
+f07d4d540147010203040130154200f7f07d4d5401420100f7f07d4d5401
+420100f7f07d4d5401420100f7
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-20 14:57:27Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Find where pong.syx is written
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/firmware/metronome && grep -n "sysex_log\|pong.syx" tests/*.txt ../../Justfile | head; sed -n 2440,2480p ../../third_party/fm1-base/host/plat_host.c | grep -n "sysex_out\|log" | head`
+
+```text
+29:static int hsx_expect(const char *hex)            /* 0: this frame went out since the last "sysex_out" */
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-20 14:57:37Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Probe transport and host state before the PING check
+
+```bash
+cp tests/basic.txt /private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/1baf212e-01fd-4b1a-8cf9-45fc7a274a17/scratchpad/basic.bak && python3 - <<'EOF'
+p='tests/basic.txt'; s=open(p).read()
+a="sysex F0 7D 4D 54 01 06 07 01 02 03 04 F7\nwait 20\nexpect pongs 1\n"
+s=s.replace(a, a+"sysex_log build/host/pongdbg.syx\n") if False else s
+s=s.replace(a, "expect transport 0\nexpect host 1\n"+a)
+open(p,'w').write(s)
+EOF
+cd ../.. && just fw-test metronome 2>&1 | grep -B2 -A2 "FAIL" | head; cp /private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/1baf212e-01fd-4b1a-8cf9-45fc7a274a17/scratchpad/basic.bak firmware/metronome/tests/basic.txt
+```
+
+```text
+  ok host == 1
+  ok pongs == 1
+FAIL expect_sysex: not sent (16 bytes)
+  ok running == 0
+  ok edit == 0
+--
+  ok flags == 0
+  ok edit == 0
+host: 119498 ms simulated, 1530 blits, render 0.0% of real time (host CPU), EXPECTATIONS FAILED
+error: recipe `fw-test` failed with exit code 1
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-20 14:57:42Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Learn how to log sent SysEx in the simulator
+
+`sed -n 1055,1065p third_party/fm1-base/host/plat_host.c; grep -n '"sysex_log"\|sysex_log' third_party/fm1-base/host/plat_host.c | head -5; grep -n "sysex_log" firmware/metronome/tests/basic.txt`
+
+```text
+    data_writes++;
+    return 0;
+}
+/* the app's SysEx to the computer (plat_sysex_send): the computer reads it at once; each frame is kept for the script
+ * ("sysex_out", "expect_sysex") and written to the "sysex_log" file */
+#define HSX_KEEP 65536u
+static uint8_t hsx_out[HSX_KEEP];               /* the frames sent since the last "sysex_out", one after another */
+static uint32_t hsx_n, hsx_lost;
+static FILE *hsx_log;
+static void hsx_keep(const uint8_t *p, uint32_t n)
+{
+96: *   sysex_log FILE|off           every frame the app sends from now on, appended to FILE as it went out (raw)
+1059: * ("sysex_out", "expect_sysex") and written to the "sysex_log" file */
+2935:        } else if (!strcmp(cmd, "sysex_log")) {
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-20 14:57:51Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Capture the actual PONG bytes with the simulator's log
+
+```bash
+cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/firmware/metronome && B=/private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/1baf212e-01fd-4b1a-8cf9-45fc7a274a17/scratchpad; python3 - <<EOF
+p='tests/basic.txt'; s=open(p).read()
+a="sysex F0 7D 4D 54 01 06 07 01 02 03 04 F7\n"
+s=s.replace(a, "sysex_log $B/pongdbg.syx\n"+a+"wait 20\nsysex_log off\n",1)
+open(p,'w').write(s)
+EOF
+rm -f $B/pongdbg.syx; cd ../.. && just fw-test metronome >/dev/null 2>&1; cp $B/basic.bak firmware/metronome/tests/basic.txt; xxd -p $B/pongdbg.syx | tr -d '\n' | grep -o "f07d4d540147[0-9a-f]*f7" | head -2
+```
+
+```text
+f07d4d54014701020304002c274200f7
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-20 14:57:57Z)**_
+
+<think><details><summary>Thought Process</summary>
+The PONG sample shifted by 4,476 (about 100 ms), which matches my extra waits, so it's just timing. I'm updating the pinned frame and then checking whether the pytest and node tests use the same bytes.
+
+</details></think>
+
+_**Agent (claude-opus-5-5 2026-11-20 14:57:58Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Find copies of the pinned PONG vector
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/firmware/metronome && grep -rn "30 15 42\|0x30, 0x15\|30, 0x15\|4330928\|0x4215" tests host web | grep -v "^web/try" | head`
+
+```text
+tests/basic.txt:578:expect_sysex F0 7D 4D 54 01 47 01 02 03 04 01 30 15 42 00 F7
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-20 14:58:02Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+See how the other tests read the PONG vector
+
+`grep -rn "47 01 02 03 04\|pong" host/tests/test_live.py web/tests/live_test.js | head -6`
+
+```text
+host/tests/test_live.py:49:def test_pong_in_basic():
+host/tests/test_live.py:50:    pongs = frames_in_basic("expect_sysex", P.T_PONG)
+host/tests/test_live.py:51:    assert len(pongs) == 1
+host/tests/test_live.py:52:    token, now = L.decode_pong(P.parse(pongs[0]).payload)
+web/tests/live_test.js:124:  const pongs = framesIn("expect_sysex", MT.T.PONG);
+web/tests/live_test.js:125:  ok(pongs.length === 1, "a PONG in basic.txt");
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-20 14:58:06Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Read the PONG decode assertions
+
+`sed -n 49,58p host/tests/test_live.py; sed -n 124,132p web/tests/live_test.js`
+
+```text
+def test_pong_in_basic():
+    pongs = frames_in_basic("expect_sysex", P.T_PONG)
+    assert len(pongs) == 1
+    token, now = L.decode_pong(P.parse(pongs[0]).payload)
+    assert token == 1 | 2 << 7 | 3 << 14 | 4 << 21
+    assert 0 < now < 44100 * 3600
+    assert L.ping(token) in frames_in_basic("sysex", P.T_CTRL)
+  const pongs = framesIn("expect_sysex", MT.T.PONG);
+  ok(pongs.length === 1, "a PONG in basic.txt");
+  const pg = MT.decodePong(MT.parse(pongs[0]).payload);
+  ok(pg.token === (1 | 2 << 7 | 3 << 14 | 4 << 21) && pg.now > 0, "its token and the FM-1's sample");
+  ok(framesIn("sysex", MT.T.CTRL).map(f => f.join(" ")).includes(MT.ping(pg.token).join(" ")), "the PING in basic.txt");
+  function trial(name, oneWay, jitter, bunch, tol) {   // tol: half the jitter of the best trip left is the bound   // the true page ms = device ms + 5000; a PING a second for 30 s
+    const clk = Live.clock(), r = rng(3);
+    for (let k = 0; k < 30; k++) {
+      const t0 = 5000 + 1000 * k + r() * 50, up = oneWay + r() * jitter, down = oneWay + r() * jitter + (bunch && k % 3 ? 25 : 0);
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-20 14:58:09Z)**_
+
+Those two read it generically, so only `basic.txt` changes.
+
+_**Agent (claude-opus-5-5 2026-11-20 14:58:15Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Update the pinned PONG and rerun all tests
+
+`sed -i '' 's/^expect_sysex F0 7D 4D 54 01 47 01 02 03 04 01 30 15 42 00 F7$/expect_sysex F0 7D 4D 54 01 47 01 02 03 04 00 2C 27 42 00 F7/' tests/basic.txt && cd ../.. && just fw-test metronome >/dev/null 2>&1; echo sim $?; just metro-test 2>&1 | grep -E "passed|ok:|failed"`
+
+```text
+sim 0
+14 passed in 0.69s
+ok: 29 checks
+ok: 73 checks
+[This command modified 1 file you've previously read: firmware/metronome/tests/basic.txt. Call Read before editing.]
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-20 14:58:30Z)**_
+
+All tests pass. Now the page side: it remembers that "Clicks from this computer" was on and resumes it after a reconnect. A leftover mute that no page is sounding gets lifted.
+
+_**Agent (claude-opus-5-5 2026-11-20 14:58:36Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Keep page clicks across reconnects, lift stray mutes
+
+```bash
+cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/firmware/metronome && python3 - <<'EOF'
+p='web/live/index.html'; s=open(p).read()
+def rep(a,b):
+    global s
+    assert s.count(a)==1, a
+    s=s.replace(a,b)
+rep("""    enable(true);
+    pinger.start(L);
+  },""","""    enable(true);
+    pinger.start(L);
+    if (wantSound) { sound.start(); send(MT.ctrl(MT.C.MUTE, 1)); }   // (reconnected, say from USB to Bluetooth: as before)
+  },""")
+rep("""  if (changed) sound.replan();
+  $("sound").classList.toggle("on", st.muted && sound.on);""","""  if (changed) sound.replan();
+  // muted with nothing sounding here: an earlier page's (or link's) mute; the clicks back on the FM-1, never silence
+  if (st.muted && !sound.on && !demo) send(MT.ctrl(MT.C.MUTE, 0));
+  $("sound").classList.toggle("on", st.muted && sound.on);""")
+rep("""$("sound").onclick = () => {
+  if (sound.on) { sound.stop(); send(MT.ctrl(MT.C.MUTE, 0)); $("sound").classList.remove("on"); }
+  else { sound.start(); if (demo) $("sound").classList.add("on"); else send(MT.ctrl(MT.C.MUTE, 1)); sound.replan(); }
+};""","""let wantSound = false;   // the clicks from here, as last asked: kept over a lost link, taken up again on the next
+$("sound").onclick = () => {
+  if (sound.on) { wantSound = false; sound.stop(); send(MT.ctrl(MT.C.MUTE, 0)); $("sound").classList.remove("on"); }
+  else { wantSound = true; sound.start(); if (demo) $("sound").classList.add("on"); else send(MT.ctrl(MT.C.MUTE, 1)); sound.replan(); }
+};""")
+open(p,'w').write(s)
+EOF
+grep -n "let demo\|demo =" web/live/index.html | head -3; grep -n "^let wantSound\|wantSound" web/live/index.html | head
+```
+
+```text
+337:let demo = null;
+344:function stopDemo() { if (!demo) return; clearInterval(demo.timer); demo = null; $("demo").value = ""; plan.reset(); }
+347:  if (demo) { clearInterval(demo.timer); demo = null; }
+162:    if (wantSound) { sound.start(); send(MT.ctrl(MT.C.MUTE, 1)); }   // (reconnected, say from USB to Bluetooth: as before)
+298:let wantSound = false;   // the clicks from here, as last asked: kept over a lost link, taken up again on the next
+300:  if (sound.on) { wantSound = false; sound.stop(); send(MT.ctrl(MT.C.MUTE, 0)); $("sound").classList.remove("on"); }
+301:  else { wantSound = true; sound.start(); if (demo) $("sound").classList.add("on"); else send(MT.ctrl(MT.C.MUTE, 1)); sound.replan(); }
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-20 14:58:49Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Load the live page in a browser, run demo with page clicks, check errors
+
+`playwright-cli open "file://$PWD/web/live/index.html" >/dev/null 2>&1; playwright-cli select "#demo" "$(playwright-cli --raw eval "document.querySelector('#demo').options[1].value")" >/dev/null 2>&1; playwright-cli click "#sound" >/dev/null 2>&1; sleep 1; playwright-cli console 2>&1 | grep -i -E "error|warn" | head -5; playwright-cli --raw eval "document.querySelector('#sound').className + ' ' + document.querySelector('#bpm').textContent"; playwright-cli close >/dev/null 2>&1`
+
+```text
+The browser 'default' is not open, please run open first
+
+  playwright-cli open [params]
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-20 14:58:54Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Open the live page in Playwright
+
+`playwright-cli open "file://$PWD/web/live/index.html" 2>&1 | tail -3`
+
+```text
+}
+
+Node.js v24.13.0
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-20 14:58:59Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+See why Playwright fails to open
+
+`playwright-cli open "file://$PWD/web/live/index.html" 2>&1 | head -15`
+
+```text
+/Users/zhouhanru/.local/share/mise/installs/node/24.13.0/lib/node_modules/@playwright/cli/node_modules/playwright-core/lib/tools/cli-client/session.js:172
+    const rejectWithPid = (reject, message) => reject(Object.assign(new Error(`Daemon pid=${child.pid}: ${message}`), { daemonPid: child.pid }));
+                                                                    ^
+
+Error: Daemon pid=11457: Daemon process exited with code 1
+[PlaywrightError: Chromium distribution 'chrome' is not found at /Applications/Google Chrome.app/Contents/MacOS/Google Chrome
+Run "npx playwright install chrome"] {
+  log: []
+}
+
+    at rejectWithPid (/Users/zhouhanru/.local/share/mise/installs/node/24.13.0/lib/node_modules/@playwright/cli/node_modules/playwright-core/lib/tools/cli-client/session.js:172:69)
+    at ChildProcess.<anonymous> (/Users/zhouhanru/.local/share/mise/installs/node/24.13.0/lib/node_modules/@playwright/cli/node_modules/playwright-core/lib/tools/cli-client/session.js:182:11)
+    at ChildProcess.emit (node:events:508:28)
+    at maybeClose (node:internal/child_process:1101:16)
+    at ChildProcess._handle.onexit (node:internal/child_process:305:5) {
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-20 14:59:09Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Open in bundled Chromium, run demo with page clicks, check errors
+
+`playwright-cli open --browser=chromium "file://$PWD/web/live/index.html" 2>&1 | grep -i "error\|Page URL" | head -3; V=$(playwright-cli --raw eval "document.querySelector('#demo').options[1].value"); playwright-cli select "#demo" "$V" >/dev/null 2>&1; playwright-cli click "#sound" >/dev/null 2>&1; sleep 1; playwright-cli console 2>&1 | grep -i -E "error" | head -5; playwright-cli --raw eval "document.querySelector('#sound').className + ' / bpm ' + document.querySelector('#bpm').textContent"; playwright-cli close >/dev/null 2>&1`
+
+```text
+### Error
+Error: Access to "file:" protocol is blocked. Attempted URL: "file:///Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/firmware/metronome/web/live/index.html"
+Total messages: 0 (Errors: 0, Warnings: 0)
+TypeError: Cannot read properties of null (reading 'className')
+    at eval (eval at <anonymous> (eval at evaluate (:367:30)), <anonymous>:1:34)
+    at eval (eval at evaluate (:367:30), <anonymous>:2:29)
+    at UtilityScript.evaluate (<anonymous>:369:16)
+    at UtilityScript.<anonymous> (<anonymous>:1:44)
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-20 14:59:30Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Serve locally and smoke-test the live page in Chromium
+
+`(python3 -m http.server 8791 --bind 127.0.0.1 >/dev/null 2>&1 &) ; sleep 1; playwright-cli open --browser=chromium "http://127.0.0.1:8791/web/live/index.html" >/dev/null 2>&1; V=$(playwright-cli --raw eval "document.querySelector('#demo').options[1].value"); playwright-cli select "#demo" "$V" >/dev/null 2>&1; playwright-cli click "#sound" >/dev/null 2>&1; sleep 1; playwright-cli console 2>&1 | grep -i -E "error" | head -5; playwright-cli --raw eval "document.querySelector('#sound').className + ' / bpm ' + document.querySelector('#bpm').textContent"; playwright-cli close >/dev/null 2>&1; pkill -f "http.server 8791"`
+
+```text
+Total messages: 1 (Errors: 1, Warnings: 0)
+[ERROR] Failed to load resource: the server responded with a status of 404 (File not found) @ http://127.0.0.1:8791/favicon.ico:0
+" / bpm 120"
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-20 14:59:37Z)**_
+
+The page loads with no JS errors. One small old bug turned up: in demo mode the button's lit state gets wiped by each STATE. Fixing it in passing:
+
+_**Agent (claude-opus-5-5 2026-11-20 14:59:59Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Fix demo button state, retest page and web tests
+
+```bash
+python3 - <<'EOF'
+p='web/live/index.html'; s=open(p).read()
+a='''  $("sound").classList.toggle("on", st.muted && sound.on);
+  $("play")'''
+b='''  $("sound").classList.toggle("on", sound.on && (st.muted || !!demo));
+  $("play")'''
+assert s.count(a)==1; s=s.replace(a,b); open(p,'w').write(s)
+EOF
+(python3 -m http.server 8791 --bind 127.0.0.1 >/dev/null 2>&1 &) ; sleep 1; playwright-cli open --browser=chromium "http://127.0.0.1:8791/web/live/index.html" >/dev/null 2>&1; V=$(playwright-cli --raw eval "document.querySelector('#demo').options[1].value"); playwright-cli select "#demo" "$V" >/dev/null 2>&1; playwright-cli click "#sound" >/dev/null 2>&1; sleep 1.5; playwright-cli console 2>&1 | grep -E "^\[ERROR\]" | grep -v favicon | head; playwright-cli --raw eval "document.querySelector('#sound').className"; playwright-cli close >/dev/null 2>&1; pkill -f "http.server 8791"; cd ../.. && just metro-test 2>&1 | grep -E "passed|ok:"
+```
+
+```text
+""
+14 passed in 0.68s
+ok: 29 checks
+ok: 73 checks
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-20 15:00:15Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Debug the demo button state step by step
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/firmware/metronome && (python3 -m http.server 8791 --bind 127.0.0.1 >/dev/null 2>&1 &) ; sleep 1; playwright-cli open --browser=chromium "http://127.0.0.1:8791/web/live/index.html" >/dev/null 2>&1; playwright-cli --raw eval "[...document.querySelector('#demo').options].map(o=>o.value).join('|')"; V=$(playwright-cli --raw eval "document.querySelector('#demo').options[1].value" | tr -d '"'); echo "V=$V"; playwright-cli select "#demo" "$V" 2>&1 | grep -i error; sleep 0.5; playwright-cli --raw eval "JSON.stringify({dis: document.querySelector('#sound').disabled, demo: document.querySelector('#demo').value})"; playwright-cli click "#sound" 2>&1 | grep -i error; sleep 1; playwright-cli --raw eval "JSON.stringify({cls: document.querySelector('#sound').className, on: sound.on})"; playwright-cli close >/dev/null 2>&1; pkill -f "http.server 8791"`
+
+```text
+"|1|2|3|4|5|6|7|8|9|10|11"
+V=1
+- Console: 1 errors, 0 warnings
+"{\"dis\":false,\"demo\":\"1\"}"
+- Console: 2 errors, 0 warnings
+"{\"cls\":\"on\",\"on\":true}"
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-20 15:00:25Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+List the console errors
+
+`(python3 -m http.server 8791 --bind 127.0.0.1 >/dev/null 2>&1 &) ; sleep 1; playwright-cli open --browser=chromium "http://127.0.0.1:8791/web/live/index.html" >/dev/null 2>&1; playwright-cli select "#demo" 1 >/dev/null 2>&1; sleep 0.5; playwright-cli click "#sound" >/dev/null 2>&1; sleep 1; playwright-cli console 2>&1 | grep "ERROR"; playwright-cli close >/dev/null 2>&1; pkill -f "http.server 8791"`
+
+```text
+[ERROR] Failed to load resource: the server responded with a status of 404 (File not found) @ http://127.0.0.1:8791/favicon.ico:0
+[ERROR] Failed to load resource: the server responded with a status of 404 (File not found) @ http://127.0.0.1:8791/favicon.ico:0
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-20 15:00:37Z)**_
+
+The page works: no errors apart from the missing favicon. Next, rebuilding the firmware and checking it in fm1-emu on both chips over today's backup.
+
+_**Agent (claude-opus-5-5 2026-11-20 15:00:54Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Rebuild, rehearse over backup and blank-boot on both chips
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1 && just fw-build metronome 2>&1 | grep -E "package|build " ; shasum -a 256 firmware/metronome/build/metronome.fwsc; cd tools/emu-state && PKG=$(cd ../../firmware/metronome/build && pwd)/metronome.fwsc; BAK=$(cd ../../backups/2026-11-20-pre-metronome-0.5 && pwd)/fm1-20261120-224407.bin; for c in uc25hq80 p25q80; do rm -f pr-$c.flash; ../fm1-emu/fm1-live --fwsc "$PKG" --flash-chip $c --flash pr-$c.flash --midi none --shot 1 --lcd-only >/dev/null 2>&1; echo "== $c blank: $(grep -c . /dev/null)"; python3 ../../scripts/emu_rehearse.py pr-$c.flash "$BAK" reh6-$c.flash >/dev/null; FM1_BENCH_KEYS='60000:PLAY' ../fm1-emu/fm1-live --fwsc "$PKG" --flash-chip $c --flash reh6-$c.flash --midi none --shot 5000 --lcd-only 2>&1 | grep -i -E "^flash:|fault|error"; mv work/lcd.ppm reh6-$c.ppm; done; for c in uc25hq80 p25q80; do rm -f bl-$c.flash; ../fm1-emu/fm1-live --fwsc "$PKG" --flash-chip $c --flash bl-$c.flash --midi none --shot 3000 --lcd-only 2>&1 | grep -i -E "^flash:"; done`
+
+```text
+Resolved 21 packages in 3ms
+Checked 18 packages in 4ms
+package  /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/firmware/metronome/build/metronome.fwsc  616003 B, identity FM-1_5900
+build    9CB32CB0  (FM1B_BUILD: the build a crash record names, fm1_remote.py crashes)
+faa1af0e2e5809d6f5b4277b47cb7f16a1b910cb72bcae810531cae2613a751f  firmware/metronome/build/metronome.fwsc
+== uc25hq80 blank: 0
+flash: 0 erases / programs
+== p25q80 blank: 0
+flash: 0 erases / programs
+flash: 0 erases / programs
+flash: 0 erases / programs
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-20 15:01:01Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Pin the new build and read the unit's identity
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1 && cp firmware/metronome/build/metronome.fwsc downloads/metronome-0.5-dev/metronome-2.fwsc && uv run --project firmware/metronome/host python third_party/fm1-base/tools/fm1_install.py --info 2>&1 | tail -1; date +%H:%M`
+
+```text
+FM-1_5900  [running]  port: Felucca
+23:01
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-20 15:01:05Z)**_
+
+Recording the results in the docs.
+
+_**Agent (claude-opus-5-5 2026-11-20 15:01:28Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Record install results, the fix and the calibration notes
+
+```bash
+python3 - <<'EOF'
+def edit(p, pairs):
+    s=open(p).read()
+    for a,b in pairs:
+        assert s.count(a)==1,(p,a); s=s.replace(a,b)
+    open(p,'w').write(s)
+edit('docs/device-log.md',[("""
+
+## Phase 1 驗收""","""
+| 2026-11-20 22:50 前後 | 本人用 `fm1_install.py` 裝 METRONOME 0.5 dev build（`downloads/metronome-0.5-dev/metronome.fwsc`，SHA-256 `420ee130…2b90963`），機器上是 0.4 dev build。23:01 agent 用 `fm1_install.py --info` 確認 | `--info`：`FM-1_5900 [running]`。本人試用 `[實機]`：SET EDIT 頁尾三種提示輪流出現；`K3` 全部同一種音色正常；live 頁的「Clicks from this computer」也跟著換音色。live 頁的來回時間：藍牙約 60 ms，上下跳約 ±10 ms；USB 約 1 ms，跳動不到 1 ms。對時之後還是需要校正。發現一個問題：在「Clicks from this computer」開著時，從 USB 改連藍牙，機器和網頁都沒有聲音，要再按兩下按鈕才恢復。原因是 hostlink 換通道時，機器沒有把它當成電腦離開，所以靜音沒有解除；網頁重連後又沒有接著出聲。已在 dev-0.5 修好，還沒裝（`metronome-2.fwsc`，SHA-256 `faa1af0e…2613a751f`） |
+
+## Phase 1 驗收""")])
+edit('docs/dev/metronome.md',[("""- STATE 裡那首歌的第 7 個 byte 是實際播放的音色，所以 live 頁出聲時也跟著變。0.4 的網頁不用改。
+""","""- STATE 裡那首歌的第 7 個 byte 是實際播放的音色，所以 live 頁出聲時也跟著變。0.4 的網頁不用改。
+
+### 換通道時的靜音 { #v05-mute-move }
+
+2026-11-20 在實機上發現 `[實機]`：網頁出聲、機器靜音時，從 USB 改連藍牙，兩邊都沒有聲音。
+
+- **原因**：機器只在電腦離開 10 秒後才解除靜音。換通道時，藍牙那邊馬上就回應了，所以機器不認為電腦離開過，靜音一直留著。網頁這邊斷線時把「Clicks from this computer」關掉了，重連後也沒有再打開。
+- **韌體的修法**：收到另一個通道的 HELLO_ACK 時解除靜音。靜音屬於原本那個通道上的網頁；新的網頁如果要靜音，會自己再要求一次。
+- **網頁的修法**：
+  - 記住使用者最後一次選的「Clicks from this computer」，斷線後保留，重連時接著出聲，並重新送 MUTE 1。
+  - 收到 STATE 說機器靜音、但這個網頁沒有在出聲時，送 MUTE 0。這可能是舊網頁留下的靜音，例如 pagehide 的 MUTE 0 沒送到。這樣接 0.4 的機器也不會兩邊都沒聲音。
+- **測試**：`basic.txt` 新增一項：藍牙上靜音後，USB 送 HELLO_ACK，`transport` 變成 0、`muted` 變成 0。
+""")])
+edit('docs/dev/metronome.md',[("""| 實機 | 還沒裝 |""","""| 實機 | 2026-11-20 22:50 前後裝了 `420ee130` 那一版 `[實機]`。<br>• K3、EDIT 的三種提示、網頁跟著換音色：都正常。<br>• 來回時間：藍牙約 60 ms（±10 ms）、USB 約 1 ms（跳動不到 1 ms）。對時之後仍需要校正，原因見[剩下的校正](#v05-cal)。<br>• 從 USB 改連藍牙時兩邊都沒聲音：已修，見[換通道時的靜音](#v05-mute-move)，修好的版本還沒裝 |
+
+### 剩下的校正 { #v05-cal }
+
+PING 對時已經在每次來回時，動態扣掉了連線本身的延遲。live 頁上那個「round trip」數字，就是拿來做這件事的。剩下要靠校正補的，是來回時間本身看不出來的部分：
+
+1. **去程和回程不一樣長**：只量得到來回的總時間，分不出哪一邊比較慢，這是 NTP 這類作法的極限。
+   - 對時的誤差是（回程 − 去程）÷ 2，最多是來回時間的一半，所以藍牙最多約 30 ms。
+   - USB 的來回時間只有 1 ms，這一項幾乎是 0。
+2. **兩邊的音訊輸出延遲**：
+   - 機器從算出某個 sample 到 DAC 把它送出去，中間有一段延遲；
+   - 電腦端 `getOutputTimestamp` 對內建喇叭還算準，對藍牙耳機或喇叭常常不準。
+   - 這一項在同一套設備上是固定的。
+
+**判斷方法**：先在 USB 上校正，得到的值就是第 2 項；再用同一組喇叭在藍牙上校正，兩者的差就是第 1 項。如果這個差每次都約等於來回時間的某個固定比例（例如一半），就可以讓網頁依來回時間自動補，不用再分開校正。
+
+**另一個可改的地方**：藍牙的來回時間每次跳約 ±10 ms，網頁目前取 8 秒內最短的那次。換成新的一次時，時鐘會整個跳過去，click 就跟著移幾 ms。可以改成每拍最多移 1 ms，並把視窗拉長。""")])
+EOF
+just docs-check 2>&1 | tail -1
+```
+
+```text
+{"status": "ok", "pages": 56, "llm_pages": 56, "deployed": false}
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-20 15:01:44Z)**_
+
+先回答你的問題：round trip 已經在每次 PING 時動態套用了，「the link's delay taken out」指的就是這個。所以剩下要校正的不是連線延遲，直接把校正值設成 round trip 也對不上。
+
+## 為什麼還需要校正
+- **去程和回程不一樣長**：只量得到來回的總時間，分不出哪一邊比較慢，這是這類對時方式的極限。
+  - 誤差是（回程 − 去程）÷ 2，最多是來回時間的一半。
+  - 藍牙 60 ms 的來回，最多差 30 ms；USB 只有 1 ms，這項幾乎是 0。
+- **兩邊喇叭出聲的延遲**：機器從算好一個 click 到 DAC 真的發出聲音有一段延遲，電腦的喇叭也有。
+  - 電腦用內建喇叭時還算準，用藍牙耳機或喇叭常常不準。
+  - 這一項在同一套設備上是固定的。
+
+## 想請你量兩個數字
+用同一組喇叭，分別在 USB 和藍牙上把校正調到聽起來對齊，告訴我各是多少：
+- **USB 的值**：就是喇叭延遲那一項。
+- **藍牙減掉 USB 的差**：就是去回不對稱那一項。
+
+如果這個差每次都大約是來回時間的固定比例（例如一半），我就能讓網頁照 round trip 自動補，校正只要在 USB 上調一次。
+
+另外，藍牙那 ±10 ms 的跳動會讓網頁時鐘偶爾跳幾 ms。這可以改成每拍最多移 1 ms、把取樣時間拉長，讓它比較穩，要做的話跟我說。
+
+## 從 USB 改連藍牙時兩邊都沒聲音：已修好，還沒裝
+- **原因**：機器要等電腦離開 10 秒才會解除靜音。換通道時藍牙馬上就接上了，所以機器沒有解除靜音；網頁斷線時又把「Clicks from this computer」關掉了，重連後也沒有接著出聲。
+- **韌體**：從另一個通道收到連線回應時，解除靜音，由新連上的網頁自己決定要不要再靜音。模擬器加了這一項測試。
+- **網頁**：
+  - 會記住你有沒有開「Clicks from this computer」，重連後自動接著出聲，並重新叫機器靜音；
+  - 如果發現機器是靜音的、但這個網頁沒在出聲，就叫機器恢復出聲。這樣接 0.4 的機器也不會兩邊都沒聲音。
+- **順便修的小問題**：demo 模式下那顆按鈕的亮燈狀態會被洗掉。
+- **驗證**：
+  - 模擬器全部通過，pytest 14 個、node 29 + 73 個也都通過。
+  - 新的 build 在兩種晶片上開機 0 次寫入；疊在 22:44 的備份上開機也是 0 次寫入 `[模擬]`。
+  - 新 package 是 `downloads/metronome-0.5-dev/metronome-2.fwsc`，SHA-256 `faa1af0e2e5809d6f5b4277b47cb7f16a1b910cb72bcae810531cae2613a751f`。
+- **只修網頁那部分也有效**：用本機的 `web/live/index.html` 現在就能試，機器不用重刷。
+
+要裝修好的韌體，請你自己執行下面這行。22:44 的備份還是有效的，因為這次只換程式區，歌單不動：
+```
+uv run --project firmware/metronome/host python third_party/fm1-base/tools/fm1_install.py downloads/metronome-0.5-dev/metronome-2.fwsc
+```
+
+結果記在 `docs/device-log.md`。`docs/dev/metronome.md` 新增了兩節：`#v05-mute-move`（換通道時的靜音）和 `#v05-cal`（剩下的校正）。程式和文件都還沒 commit，要不要 commit 並 push 到 PR #18，由你決定。
+
+---
+
+_**User (2026-11-20 15:24:13Z)**_
+
+燒錄了
+[Image #3] 我目前幾乎感覺不出差異 感覺藍牙連接下 螢幕慢一點點點
+
+現在從藍牙<->USB 斷開瞬間 機器會馬上接回來響兩聲左右又配對上就會變成我們的設置 （應該是正確的）
+
+---
+
+_**User (2026-11-20 15:24:13Z)**_
+
+[Image: source: /private/tmp/claude-501/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/1baf212e-01fd-4b1a-8cf9-45fc7a274a17/images/3.png]
+
+---
+
+_**Agent (claude-opus-5-5 2026-11-20 15:24:45Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Check whether the conductor drawing applies calibration
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/firmware/metronome && grep -n "requestAnimationFrame\|where(" web/live/index.html | head; grep -n "function frame\|function anim" -A8 web/live/index.html | head -20`
+
+```text
+314:  const now = performance.now(), w = plan.where(clk.toDevice(now - cal()));
+365:  const w = plan.where(clk.offset === null ? -1 : clk.toDevice(performance.now() - cal()));
+388:  requestAnimationFrame(frame);
+394:requestAnimationFrame(frame);
+363:function frame() {
+364-  const g = shown || MT.song({ used: true }), p = MTConductor.patternFor(g);
+365-  const w = plan.where(clk.offset === null ? -1 : clk.toDevice(performance.now() - cal()));
+366-  let at = null;
+367-  if (w) {
+368-    const bar = MT.barTicks(w.seg.song), q = MTConductor.patternFor(w.seg.song);
+369-    let t = w.inBar, beat = 0;
+370-    while (beat < q.beats.length - 1 && t >= q.beats[beat]) t -= q.beats[beat++];
+371-    at = { inBar: w.inBar, beat, frac: t / q.beats[beat] };
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-20 15:24:58Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Confirm unit identity and log the install
+
+```bash
+cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1 && uv run --project firmware/metronome/host python third_party/fm1-base/tools/fm1_install.py --info 2>&1 | tail -1; date +%H:%M; python3 - <<'EOF'
+p='docs/device-log.md'; s=open(p).read()
+a="""
+
+## Phase 1 驗收"""
+b="""
+| 2026-11-20 23:10 前後 | 本人用 `fm1_install.py` 裝 `downloads/metronome-0.5-dev/metronome-2.fwsc`（SHA-256 `faa1af0e…2613a751f`；修了換通道時的靜音），機器上是 `420ee130` 那一版 | 成功，agent 用 `--info` 確認是 `FM-1_5900 [running]`。本人試用 `[實機]`：「Clicks from this computer」開著時切換藍牙和 USB，斷開的瞬間機器馬上自己出聲（約兩下），網頁重連後又回到網頁出聲、機器靜音，符合設計。藍牙下的 live 頁：來回 66.3 ms，校正 −63 ms，網頁和機器的 click 幾乎聽不出差別；本人覺得藍牙下畫面「慢一點點點」 |
+
+## Phase 1 驗收"""
+assert s.count(a)==1; s=s.replace(a,b); open(p,'w').write(s)
+EOF
+```
+
+```text
+FM-1_5900  [running]  port: Felucca
+23:24
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-20 15:25:09Z)**_
+
+修好的版本裝上了，`--info` 確認是 `FM-1_5900 [running]`。切換通道時，機器先自己響兩下，網頁重連後又變回網頁出聲、機器靜音。這就是設計的行為：連線斷開的那一刻，機器不能沒有聲音。
+
+## 校正 −63 ms、round trip 66 ms
+這兩個數字很接近，但光看藍牙還分不出原因。照上次的推算，去回不對稱最多只能造成 round trip 的一半，大約 33 ms，所以 −63 ms 裡至少有一半是別的固定延遲。最可能是電腦或機器出聲的延遲。
+
+請用同一組喇叭在 USB 上也調一次校正，告訴我數字：
+- **USB 也大約 −60 ms**：這段是出聲的延遲，和藍牙無關。這種情況下可以讓 USB 和藍牙共用同一個校正值，不必各調一次。
+- **USB 接近 0**：藍牙這邊確實多了一段，大約和 round trip 一樣長，可以讓網頁照 round trip 自動補。
+
+另外，你現在聽聲音用的是電腦內建喇叭，還是藍牙耳機或喇叭？藍牙耳機本身就會多出幾十到一兩百毫秒。
+
+## 「螢幕慢一點點點」
+你是說網頁上的指揮動畫，還是機器的螢幕？
+- **網頁動畫**：網頁的 click 有算進電腦出聲的延遲，動畫卻沒有算進螢幕顯示要多花的時間（大約一兩個 frame，20–30 ms），所以畫面會比聲音稍微晚一點。這個好修，讓動畫提前一個固定量就行，在 USB 下應該也會有同樣的感覺。
+- **機器的螢幕**：可能是藍牙的處理佔用了 CPU，讓擺錘重畫變慢。這我要另外量。
+
+這次裝機和試用結果記在 `docs/device-log.md`。程式和文件還沒 commit，要不要 commit 並 push 到 PR #18，等你決定。
+
+---
+
+_**User (2026-11-20 15:49:30Z)**_
+
+我剛剛是說網頁螢幕 然後聽聲音用機器 不過我覺得差不多了 以後再優化也可以 可以先commit and push PR & merge
+
+---
+
+_**Agent (claude-opus-5-5 2026-11-20 15:49:48Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Check branches, changes and PR states in both repos
+
+`git branch --show-current && git status --short | head -20 && cd firmware/metronome && echo "--- sub" && git branch --show-current && git status --short && git log --oneline -1 && gh pr view 2 --json state,isDraft,headRefName -q '.state+" "+(.isDraft|tostring)+" "+.headRefName' && cd ../.. && gh pr view 18 --json state,isDraft,headRefName -q '.state+" "+(.isDraft|tostring)+" "+.headRefName'`
+
+```text
+claude/metronome-0.5
+ M .specstory/history/2026-11-19_18-54-07Z-https-github-com-daviddwlee84.md
+ M .specstory/statistics.json
+ M AGENTS.md
+ M docs/agentic/emulator.md
+ M docs/dev/metronome.md
+ M docs/device-log.md
+ m firmware/metronome
+--- sub
+dev-0.5
+ M README.md
+ M app.c
+ M tests/basic.txt
+ M web/cheatsheet.html
+ M web/live/index.html
+?? .playwright-cli/
+?? docs/screens/classic_all_sound.png
+?? docs/screens/set_all_sound.png
+?? docs/screens/set_edit_all_sound.png
+1e319c1 METRONOME 0.5 (in progress): PING / PONG sets the page's clock by round trips; Bluetooth's K4 shown in EDIT
+OPEN true dev-0.5
+OPEN true claude/metronome-0.5
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-20 15:49:55Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Clean test artifact and find in-progress wording
+
+`cd /Users/zhouhanru/Documents/David/Program/M-VAVE_FM-1/firmware/metronome && rm -rf .playwright-cli && grep -rn "in progress\|not released\|0\.5.*branch" README.md app.c app.h fm1.toml host/fm1_metronome/*.py | head; cd ../.. && grep -n "dev-0.5\|in progress" AGENTS.md README.md docs/index.md docs/dev/metronome.md | head`
+
+```text
+AGENTS.md:37:| `firmware/metronome/` | Submodule: [fm1-metronome](https://github.com/daviddwlee84/fm1-metronome), own stage metronome (GPL-3.0-or-later; `common/` in it is MIT; its own repo for The Firmware Hub, with `LICENSE`, `fmhub.json` and GitHub Pages: `web/` is the setlist editor, `web/cheatsheet.html`, `web/try/` runs the Hub's package). Identity `FM-1_59`, settings and 16 songs at `0xCE000`. v0.1 SET / GRID / CLASSIC; v0.2 tempo markings, meter presets (K3), CLEAR ALL, stage tap lock, on the owner's unit since 2026-11-20; v0.3 the setlist over USB (SysEx "MT", `host/fm1_metronome`, `web/setlist.js`, same frames as `tests/basic.txt`), release 0.3 (`FM-1_59000300`) on the owner's unit since 2026-11-20, the web page's read / send checked there; on The Firmware Hub (id `metronome`) since 2026-11-19. v0.4, released 2026-11-20 (`FM-1_59000400`; the unit runs a development build of the same code, `FM-1_5900`): the live link (STATE 46 out on a change and once a second, CTRL 06 in: start, stop, pick, BPM, mute; the mute lifts by itself when the computer goes), Bluetooth MIDI (own stack, SET EDIT K4, nothing written), `web/live/` (a conductor beating the meter, the clicks from the computer, calibration), `web/link.js` (USB or Bluetooth, after MORSE's), `web/live.js`, `web/conductor.js`, host `watch`. v0.5 (branch `dev-0.5`, not on the unit): PING / PONG (CTRL op 7, type 47) so the page sets its clock by round trips; SET EDIT's footer shows where Bluetooth is; SET EDIT `K3` sets one sound for every song (kept in the record's flags, the songs keep theirs). Built here with `third_party/fm1-base`; commit inside it, then bump the pointer here. Design: `docs/dev/metronome.md`. |
+README.md:33:| **GUITAR** | A pocket guitar neck and chord book. v0.1: NECK, a key's scale on frets 0-12, whole or one CAGED / NPS position at a time, on guitar, bass, ukulele or mandolin in eight tunings; play a note and every place it lies lights up. SHAPE: chord diagrams with fingers and barres found by search, easiest first; play a chord to see its shapes, PLAY strums it. 0.2 (in progress): power chords, a BARRE / OPEN / MOVABLE filter, and LEARN, chords taught key by key (C, then G, D, A and E, then F with barre chords) on Leitner cards | [`firmware/guitar/`](firmware/guitar/) | — | Firmware 0.1, simulator and fm1-emu only; 0.2 simulator only; [design](docs/dev/guitar.md) |
+docs/dev/metronome.md:372:本人 2026-11-20 定的範圍：PING 對時（麥克風校正之後再說）、讓藍牙開關比較容易發現，以及（同日 22:30 提出）讓全部歌曲暫時用同一種音色。在 fm1-metronome 的 branch `dev-0.5`（不和 tag 同名，見 `fm1-hub-listing` skill）。`FW_MINOR 5`、host 0.5.0。
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-20 15:49:59Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Find METRONOME rows in README and docs index
+
+`grep -n -i "metronome" README.md docs/index.md | head -6`
+
+```text
+README.md:19:- [METRONOME](docs/dev/metronome.md) — our own stage metronome with a web setlist editor ([fm1-metronome](https://github.com/daviddwlee84/fm1-metronome)), see below
+README.md:25:Built here on [fm1-base](https://github.com/charlesvestal/fm1-base) (MPL-2.0). Conductor and the shared modules are MIT; the Morse, THEORY, GUITAR and METRONOME firmwares are GPL-3.0-or-later (Morse's host program here is MIT).
+README.md:34:| **METRONOME** | A stage metronome: 16 songs on the white keys, each with its own tempo, meter, step pattern and sound, switched at the next bar; tempo markings (LARGO … PRESTO) beside the BPM, meter presets (6/8, 7/8 2+2+3 …), a rhythm-watch mix page, CLEAR ALL after a show. 0.3: the setlist to a JSON file and back over USB, and a [web editor](https://daviddwlee84.github.io/fm1-metronome/web/) that plans, plays and sends it. 0.4 (released 2026-11-20): a live link over USB or Bluetooth, a page with a conductor beating the meter, the clicks from the computer, the transport | [`firmware/metronome/`](firmware/metronome/) (submodule: [fm1-metronome](https://github.com/daviddwlee84/fm1-metronome)) | its `host/` (Python) and `web/` | 0.3 (release build) on my unit since 2026-11-20, the web editor's read / send checked on it; on [The Firmware Hub](https://thefirmwarehub.com/firmware/metronome/) since 2026-11-19; [design](docs/dev/metronome.md), [cheatsheet](https://daviddwlee84.github.io/fm1-metronome/web/cheatsheet.html) |
+docs/index.md:25:| 上台用的節拍器、歌單（自製） | [節拍器 METRONOME](dev/metronome.md)、[網頁歌單編輯器](https://daviddwlee84.github.io/fm1-metronome/web/)、[cheatsheet](https://daviddwlee84.github.io/fm1-metronome/web/cheatsheet.html)、[Hub 上的頁面](https://thefirmwarehub.com/firmware/metronome/) |
+docs/index.md:49:在 [fm1-base](dev/index.md) 上寫的。Conductor 和共用模組是 MIT；Morse、THEORY、GUITAR 與 METRONOME 的韌體是 GPL-3.0-or-later（Morse 的電腦端仍是 MIT）。每個專案是一套 FM-1 韌體，需要的話再加一個電腦端程式。
+docs/index.md:57:| **METRONOME** | 上台用的節拍器：16 首歌對應白鍵，每首有自己的速度、拍號、節奏型與音色，下一小節換歌；BPM 旁顯示速度術語、拍號 preset（6/8、7/8 2+2+3 …）、rhythm watch 式的混音頁、演完全部清空。0.3：歌單經 USB 匯出／匯入 JSON，加上[網頁歌單編輯器](https://daviddwlee84.github.io/fm1-metronome/web/)（排歌單、試聽、送進機器）。0.4（2026-11-20 發佈）：經 USB 或藍牙即時連線，live 頁有依拍號指揮的指揮家、電腦出聲、遙控 | `firmware/metronome/`（submodule：[fm1-metronome](https://github.com/daviddwlee84/fm1-metronome)） | 它的 `host/`（Python）與 `web/` | 0.3（release build）從 2026-11-20 起在我的機器上，網頁讀出／送回在實機上試過；2026-11-19 起上架 [The Firmware Hub](https://thefirmwarehub.com/firmware/metronome/)；見[設計](dev/metronome.md) |
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-20 15:50:03Z)**_
+
+Updating the status rows, then committing the submodule first.
+
+_**Agent (claude-opus-5-5 2026-11-20 15:50:18Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Update status rows; commit and push the submodule
+
+```bash
+python3 - <<'EOF'
+def edit(p, pairs):
+    s=open(p).read()
+    for a,b in pairs:
+        assert s.count(a)==1,(p,a); s=s.replace(a,b)
+    open(p,'w').write(s)
+edit('AGENTS.md',[("v0.5 (branch `dev-0.5`, not on the unit): PING / PONG","v0.5 (merged to fm1-metronome main 2026-11-20, not released; a development build of it, `FM-1_5900`, on the owner's unit since 2026-11-20): PING / PONG"),
+("(kept in the record's flags, the songs keep theirs).","(kept in the record's flags, the songs keep theirs); the mute lifts when the link moves to another transport, and the live page takes its clicks up again after a reconnect.")])
+edit('README.md',[("the clicks from the computer, the transport | [`firmware/metronome/`]","the clicks from the computer, the transport. 0.5 (merged, not released): the page sets its clock by round trips, one sound for every song (SET EDIT `K3`) | [`firmware/metronome/`]"),
+("| 0.3 (release build) on my unit since 2026-11-20, the web editor's read / send checked on it;","| 0.5 (development build) on my unit since 2026-11-20, the live page over USB and Bluetooth checked on it;")])
+edit('docs/index.md',[("電腦出聲、遙控 | `firmware/metronome/`","電腦出聲、遙控。0.5（已 merge，還沒發佈）：網頁用來回時間對時、全部歌曲同一種音色（SET EDIT `K3`） | `firmware/metronome/`"),
+("| 0.3（release build）從 2026-11-20 起在我的機器上，網頁讀出／送回在實機上試過；","| 0.5（開發版）從 2026-11-20 起在我的機器上，live 頁經 USB 和藍牙在實機上試過；")])
+edit('docs/dev/metronome.md',[("在 fm1-metronome 的 branch `dev-0.5`（不和 tag 同名，見 `fm1-hub-listing` skill）。","在 fm1-metronome 的 branch `dev-0.5` 開發（不和 tag 同名，見 `fm1-hub-listing` skill），2026-11-20 merge 進 main，還沒發佈 release。")])
+EOF
+cd firmware/metronome && git add -A && git commit -q -F - <<'EOF'
+METRONOME 0.5: one sound for every song (SET EDIT K3); the mute follows the link
+
+- SET EDIT K3: OWN SOUND (each song its own), CLICK, WOOD, BEEP for every song; kept in the
+  record's flags (bits 1-2) like Bluetooth's, kept over a setlist from the computer; the songs
+  keep their own sounds. SET says so on stage every 6 s, the song pages show ALL <sound>.
+  STATE's song carries the sound that plays, so the live page sounds the same.
+- EDIT's footer turns between three hints: the keys, K3, K4.
+- The mute lifts when a HELLO_ACK comes on another transport (USB to Bluetooth): it was the
+  old link's page's. Before, both fell silent until the page was asked again.
+- Live page: the clicks from this computer are kept over a lost link and taken up again on
+  reconnect; a STATE muted with nothing sounding here asks MUTE 0. Demo keeps the button lit.
+- Checked on the owner's unit (2026-11-20): K3, the hints, the page's clicks, USB / Bluetooth
+  switching; round trips 66 ms Bluetooth, 1 ms USB.
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+EOF
+git push -q origin dev-0.5 2>&1 | tail -2; git log --oneline -1
+```
+
+```text
+21957c1 METRONOME 0.5: one sound for every song (SET EDIT K3); the mute follows the link
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-20 15:50:25Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Read fm1-metronome PR #2 description
+
+`gh pr view 2 --json title,body -q '.title+"\n----\n"+.body' | head -60`
+
+```text
+METRONOME 0.5: the clock by round trips, Bluetooth's K4 in EDIT
+----
+METRONOME 0.5 in progress: PING / PONG (CTRL op 7, type 47) so the live page sets its clock by round trips; SET EDIT shows where Bluetooth is (K4).
+
+Design and verification: daviddwlee84/M-VAVE_FM-1#18. Not on the unit yet.
+
+🤖 Generated with [Claude Code](https://claude.com/claude-code)
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-20 15:50:46Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Update, ready and merge fm1-metronome PR #2
+
+```bash
+gh pr edit 2 --title "METRONOME 0.5: the clock by round trips, one sound for every song, Bluetooth's K4 in EDIT" --body "$(cat <<'EOF'
+METRONOME 0.5:
+
+- PING / PONG (CTRL op 7, type 47): the live page sets its clock by round trips, so the link's own delay comes out.
+- SET EDIT K3: one sound for every song (OWN / CLICK / WOOD / BEEP; the songs keep theirs; kept in the record's flags). STATE carries the sound that plays.
+- SET EDIT's footer shows K3 and K4 (Bluetooth) in turn.
+- The mute lifts when the link moves to another transport; the live page takes its clicks up again after a reconnect.
+
+Checked on the owner's unit on 2026-11-20 (development build `FM-1_5900`):
+- K3, the hints and the page's clicks work.
+- Switching between USB and Bluetooth: the FM-1 sounds at once, then the page takes over again.
+- Round trips: about 66 ms over Bluetooth, 1 ms over USB.
+
+Design, verification and device log: daviddwlee84/M-VAVE_FM-1#18. Not released yet.
+
+🤖 Generated with [Claude Code](https://claude.com/claude-code)
+EOF
+)" >/dev/null && gh pr ready 2 >/dev/null && gh pr merge 2 --merge 2>&1 | tail -2; git fetch -q origin && git log --oneline -1 origin/main
+```
+
+```text
+✓ Pull request daviddwlee84/fm1-metronome#2 is marked as "ready for review"
+fadfb68 Merge pull request #2 from daviddwlee84/dev-0.5
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-20 15:51:22Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Bump the pointer and commit superproject docs; push
+
+```bash
+git checkout -q main && git pull -q --ff-only origin main && git log --oneline -1 && cd ../.. && git add AGENTS.md README.md docs/index.md docs/agentic/emulator.md docs/dev/metronome.md docs/device-log.md firmware/metronome && git commit -q -F - <<'EOF'
+METRONOME 0.5 merged: one sound for every song (K3), the mute follows the link (pointer, docs, device log)
+
+- Pointer: fm1-metronome main (merge of its PR #2).
+- docs/dev/metronome.md: K3 (#v05-all-sound), the mute on a transport change (#v05-mute-move),
+  what calibration is left after the round trips (#v05-cal), the unit's results.
+- docs/device-log.md: the 0.5 preflight (a page holding the link made the first try fail),
+  backup pre-metronome-0.5, two installs of the 0.5 development build, what was tried on them.
+- docs/agentic/emulator.md: fm1-emu's encoder numbers on the FM-1 (no PRESET: e2-e5 are K1-K4).
+- AGENTS.md, README.md, docs/index.md: METRONOME 0.5 merged, on the unit as a development build.
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+EOF
+git push -q origin claude/metronome-0.5 2>&1 | tail -2; git log --oneline -2
+```
+
+```text
+fadfb68 Merge pull request #2 from daviddwlee84/dev-0.5
+6f6b599 METRONOME 0.5 merged: one sound for every song (K3), the mute follows the link (pointer, docs, device log)
+79d900b chore: backup plan and chat history
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-20 15:51:27Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Read PR #18 description
+
+`gh pr view 18 --json title,body -q '.title+"\n----\n"+.body'`
+
+```text
+METRONOME 0.5: the clock by round trips, Bluetooth's K4 in EDIT (and 0.4's release notes)
+----
+Two parts: the 0.4 release's bookkeeping (`a6ec633`), and METRONOME 0.5 in progress (firmware: daviddwlee84/fm1-metronome branch `dev-0.5`).
+
+**0.4 released**: [fm1-metronome v0.4](https://github.com/daviddwlee84/fm1-metronome/releases/tag/v0.4), `FM-1_59000400`, `81a09bef…c1c3a19e`. Submodule pointer to fm1-metronome main; the hub-listing skill notes two pitfalls (the release recipe's `fw-setup` resets the submodule to the recorded commit; a branch named like the tag makes the push ambiguous). The Hub card's text trimmed under 300 characters.
+
+## What changes for the player (0.5)
+
+- **The clock set by round trips**: the live page sends a PING each second; the FM-1 answers at once with PONG and its clock. The page takes half of the shortest round trip each way (as NTP does), so the link's own delay comes out, not only its jitter. Less to calibrate, and USB and Bluetooth come out alike. 0.4 firmware: falls back to the STATEs, as before.
+- **Bluetooth easier to find**: SET EDIT's footer turns every 3 s to `K4: BLUETOOTH OFF (NOW ON)` (the owner found K4 hard to discover).
+
+## 1. Try it (how it plays)
+
+- fm1-emu link: https://joakimeriksson.github.io/fm1-emu/?package=https://raw.githubusercontent.com/daviddwlee84/M-VAVE_FM-1/previews/pr-18/metronome.fwsc&name=metronome&chip=uc25hq80
+
+## 2. Screens
+
+`firmware/metronome/docs/screens/set_edit_bt_hint.png`.
+
+## 3. Before it goes on the unit
+
+- [x] `just fw-test metronome`: all pass (new: PING answered at once by PONG, pinned frame, nothing changes; the EDIT hint)
+- [x] unit tests: metro.c 2319; pytest 14; node setlist 29, live 73 (round-trip clock: USB within 1 ms of the truth; Bluetooth 12 ms each way, jitter 15, within 1.5 ms; replies often 25 ms late, within 3 ms; the STATEs' lag alone would be 12+ ms off)
+- [x] `just fw-build metronome`: app 127,892 B, `.data+.bss` 35,320 / 98,304; package SHA-256 `ae5b57ebaaa51fac2d7fa37abd2c7e85bd92061ee661dbfd45d3b52486a857bd`
+- [x] fm1-emu `uc25hq80` and `p25q80`: PONG 2 ms after PING, two PONGs 22,060 samples (0.5 s) apart; 0 writes at boot
+- [ ] a save, restart, reload and a rehearsal over a fresh backup: at the preflight (the record format is unchanged from 0.4)
+- [x] stored data: format unchanged
+
+## 4. On the unit (the owner)
+
+- [ ] SET EDIT: the footer turns to the Bluetooth hint every 3 s
+- [ ] Live page over USB: "Clock set by round trips: N ms there and back" → note N
+- [ ] The same over Bluetooth → note N; does the beat now land without the −50 ms? Tap-calibrate both and compare with 0.4's
+- [ ] `python -m fm1_metronome watch --seconds 10` (USB) → round trips, least and median
+
+🤖 Generated with [Claude Code](https://claude.com/claude-code)
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-20 15:51:48Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Update PR #18, mark ready, check CI
+
+```bash
+gh pr edit 18 --title "METRONOME 0.5: the clock by round trips, one sound for every song, Bluetooth's K4 in EDIT (and 0.4's release notes)" --body "$(cat <<'EOF'
+Two parts: the 0.4 release's bookkeeping (`a6ec633`), and METRONOME 0.5. The firmware is in daviddwlee84/fm1-metronome#2, merged; the pointer here is its main.
+
+**0.4 released**: [fm1-metronome v0.4](https://github.com/daviddwlee84/fm1-metronome/releases/tag/v0.4), `FM-1_59000400`, `81a09bef…c1c3a19e`.
+- The submodule pointer moves to fm1-metronome main.
+- The hub-listing skill notes two pitfalls:
+  - the release recipe's `fw-setup` resets the submodule to the recorded commit;
+  - a branch named like the tag makes the push ambiguous.
+- The Hub card's text is trimmed under 300 characters.
+
+## What changes for the player (0.5)
+
+- **The clock set by round trips**: the live page sends a PING each second, and the FM-1 answers at once with PONG and its clock. The page takes half of the shortest round trip each way, as NTP does. With 0.4 firmware it falls back to the STATEs.
+- **One sound for every song**: SET EDIT `K3` cycles OWN SOUND, CLICK, WOOD, BEEP. The songs keep their own sounds, and the setting is kept in the record's flags. SET says so on stage, and the live page sounds the same.
+- **Bluetooth easier to find**: SET EDIT's footer turns between three hints: the keys, K3 and K4.
+- **The mute follows the link**: the FM-1's mute lifts when the link moves to another transport, and the live page takes its clicks up again after a reconnect. Before this, switching from USB to Bluetooth left both silent.
+
+## 1. Try it
+
+The preview is removed now that this is merged; fm1-metronome's release will carry the package.
+
+## 2. Screens
+
+`firmware/metronome/docs/screens/`:
+- `set_edit_bt_hint.png`
+- `set_edit_all_sound.png`
+- `set_all_sound.png`
+- `classic_all_sound.png`
+
+## 3. Before it went on the unit
+
+- [x] `just fw-test metronome`: all pass. New checks:
+  - PING is answered by PONG;
+  - K3: the limits, flags, the sound that plays and the one STATE carries, kept after a reboot, the songs' own sounds untouched;
+  - the mute lifts on a transport change;
+  - the three hints.
+- [x] metro.c 2319; pytest 14; node setlist 29, live 73
+- [x] fm1-emu `uc25hq80` and `p25q80`: 0 writes at boot; K3 saved with 4 writes, 0 writes on restart, read back
+- [x] Preflight on 2026-11-20 22:43: backup `pre-metronome-0.5` (`7e22465b…7560fe`); the rehearsal over it boots with 0 writes and keeps the 7 songs on both chips
+- [x] Stored data: format unchanged (flags bits 1-2 were always 0)
+
+## 4. On the unit (owner, 2026-11-20)
+
+- [x] Build `420ee130…`: the EDIT hints, K3 and the page's clicks in that sound all work.
+- [x] Round trips: Bluetooth about 66 ms (±10), USB about 1 ms. Calibration is still needed, about −63 ms over Bluetooth with the FM-1's speaker: see `docs/dev/metronome.md#v05-cal`.
+- [x] Build `faa1af0e…` (the mute fix): switching between USB and Bluetooth with the page sounding, the FM-1 sounds at once and the page takes over again on reconnect.
+- [ ] Later: share one calibration between USB and Bluetooth, or derive it from the round trip; lead the conductor drawing by a frame or two (the owner finds it a touch late).
+
+🤖 Generated with [Claude Code](https://claude.com/claude-code)
+EOF
+)" >/dev/null && gh pr ready 18 >/dev/null; gh pr checks 18 2>&1 | tail -4
+```
+
+```text
+✓ Pull request daviddwlee84/M-VAVE_FM-1#18 is marked as "ready for review"
+deploy	skipping	0	https://github.com/daviddwlee84/M-VAVE_FM-1/actions/runs/44767464483/job/136395997926	
+build	pass	15s	https://github.com/daviddwlee84/M-VAVE_FM-1/actions/runs/44767464483/job/136395827246
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-20 15:51:52Z)**_
+
+fm1-metronome #2 is merged, and the superproject PR #18 is updated and marked ready. I'm waiting for its CI on the latest commit before merging.
+
+_**Agent (claude-opus-5-5 2026-11-20 15:51:58Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Confirm CI runs on the latest commit and wait
+
+`git log -1 --format=%H && gh run list --branch claude/metronome-0.5 --limit 2 --json headSha,status,conclusion -q '.[]|.headSha[:7]+" "+.status+" "+.conclusion' && gh pr checks 18 --watch --interval 10 2>&1 | tail -3`
+
+```text
+6f6b599f599e79ec27799974cbfd3705066aba07
+6f6b599 completed success
+1a84a77 completed success
+build	pass	15s	https://github.com/daviddwlee84/M-VAVE_FM-1/actions/runs/44767464483/job/136395827246	
+deploy	skipping	0	https://github.com/daviddwlee84/M-VAVE_FM-1/actions/runs/44767464483/job/136395997926	
+build	pass	15s	https://github.com/daviddwlee84/M-VAVE_FM-1/actions/runs/44767464483/job/136395827246
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-20 15:52:41Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Merge PR #18 and remove its preview
+
+`git log -1 --format=%h && gh pr merge 18 --merge 2>&1 | tail -2 && git fetch -q origin && git log --oneline -1 origin/main && just fw-preview metronome pr-18 --remove 2>&1 | tail -2`
+
+```text
+6f6b599
+e7d626d Merge pull request #18 from daviddwlee84/claude/metronome-0.5
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-20 15:52:58Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+Check the preview removal result
+
+`just fw-preview metronome pr-18 --remove; echo "exit $?"; git ls-remote origin previews | head -2; gh api repos/daviddwlee84/M-VAVE_FM-1/contents?ref=previews -q '.[].name' 2>&1 | head`
+
+```text
+fw-preview: nothing changed
+exit 0
+8ed52465af520facd1ef74558acb3ca61a56d04a	refs/heads/previews
+(eval):1: no matches found: repos/daviddwlee84/M-VAVE_FM-1/contents?ref=previews
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-20 15:53:04Z)**_
+
+<tool-use data-tool-type="shell" data-tool-name="Bash"><details>
+<summary>Tool use: **Bash**</summary>
+List preview branch files and sync local main
+
+`gh api "repos/daviddwlee84/M-VAVE_FM-1/git/trees/previews?recursive=1" -q '.tree[].path' | head; git checkout -q main && git pull -q --ff-only origin main && git log --oneline -1 && git submodule status firmware/metronome && git status --short | head`
+
+```text
+Exit code 1
+README.md
+main
+main/theory.fwsc
+pr-12
+pr-12/drums.fwsc
+pr-14
+pr-14/rhythm.fwsc
+pr-7
+pr-7/guitar.fwsc
+error: Your local changes to the following files would be overwritten by checkout:
+	.specstory/history/2026-11-19_18-54-07Z-https-github-com-daviddwlee84.md
+	.specstory/statistics.json
+Please commit your changes or stash them before you switch branches.
+Aborting
+```
+</details></tool-use>
+
+_**Agent (claude-opus-5-5 2026-11-20 15:53:15Z)**_
+
+The merges are done. The local superproject stays on `claude/metronome-0.5` because the `.specstory` transcripts have unsaved changes; I didn't touch them.
+
+## fm1-metronome
+- `21957c1`: K3 sets one sound for every song, and the mute follows the link, plus the live page fixes.
+- PR #2 is merged, so main is now at `fadfb68`.
+- No release has been published yet. Your unit runs a development build of this same code (`metronome-2.fwsc`).
+
+## M-VAVE_FM-1
+- `6f6b599`: moves the submodule pointer to fm1-metronome main, plus the docs and device log.
+- CI passed. PR #18 is merged, so main is now at `e7d626d`.
+- The pr-18 preview is no longer on the previews branch.
+- PR #18 lists the later items, so they won't get lost:
+  - USB and Bluetooth sharing one calibration, or deriving it from the round trip;
+  - the web page's conductor drawing a frame or two ahead.
+
+## Updated pages
+- `docs/dev/metronome.md`: three new sections, `#v05-all-sound`, `#v05-mute-move`, `#v05-cal`.
+- `docs/device-log.md`: tonight's preflight, the backup and both installs.
+- `docs/agentic/emulator.md`: fm1-emu's encoder numbers.
+- `AGENTS.md`, `README.md`, `docs/index.md`: METRONOME now shows 0.5 merged and on the unit as a development build.
+
+When you want release 0.5, say the word. It follows the 0.4 flow: `metro-release 0.5`, publish it on GitHub, and the Hub picks it up automatically. Installing the release build on your unit would be a separate flash.
