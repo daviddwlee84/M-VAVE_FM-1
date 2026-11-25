@@ -37058,3 +37058,181 @@ The merges are done. The local superproject stays on `claude/metronome-0.5` beca
 - `AGENTS.md`, `README.md`, `docs/index.md`: METRONOME now shows 0.5 merged and on the unit as a development build.
 
 When you want release 0.5, say the word. It follows the 0.4 flow: `metro-release 0.5`, publish it on GitHub, and the Hub picks it up automatically. Installing the release build on your unit would be a separate flash.
+
+---
+
+_**User (2026-11-20 16:47:59Z)**_
+
+This session is being continued from a previous conversation that ran out of context. The summary below covers the earlier portion of the conversation.
+
+<system-reminder>
+<tools-used-before-summary>Agent, AskUserQuestion, Bash, Edit, ExitPlanMode, Read, Skill, TaskStop, ToolSearch, WebFetch, Write</tools-used-before-summary>
+</system-reminder>
+Summary:
+1. Primary Request and Intent:
+   - Earlier in the session (before the previous summary):
+     - v0.4 was released and the Hub listing went live.
+     - v0.5 (PING/PONG round-trip clock, K4 hint) was started on fm1-metronome branch `dev-0.5` (PR #2) and superproject branch `claude/metronome-0.5` (PR #18).
+   - In this part of the session, the user asked, in order:
+     1. "可以考慮上機 不過我們現在每個song都有自己的click聲設定 是否有什麼可以臨時global一致的設定 假設要一致可以暫時性的設成同一個"
+        - I implemented a global sound override on SET EDIT K3, then ran the preflight.
+     2. "網頁關掉了 試試看"
+        - I retried the preflight, which then passed.
+     3. The user flashed and reported:
+        - 1, 2 and 4 succeeded;
+        - Bluetooth round trip about 60 ms (±10); USB about 1 ms (±<1);
+        - "看起來矯正是需要 但如果有這個其實動態調到這個 round trips 基本能對上？";
+        - bug: switching USB→Bluetooth with "Clicks from this computer" on left both sides silent.
+        - I fixed the bug (firmware and page) and explained what calibration is left.
+     4. "燒錄了 … 我目前幾乎感覺不出差異 感覺藍牙連接下 螢幕慢一點點點 / 現在從藍牙<->USB 斷開瞬間 機器會馬上接回來響兩聲左右又配對上就會變成我們的設置（應該是正確的）"
+        - Screenshot values: Bluetooth calibration −63 ms, round trip 66.3 ms.
+     5. "我剛剛是說網頁螢幕 然後聽聲音用機器 不過我覺得差不多了 以後再優化也可以 可以先commit and push PR & merge"
+
+2. Key Technical Concepts:
+   - The rec.flags byte:
+     - bit 0: Bluetooth off;
+     - bits 1–2: one sound for all songs (0 = each song's own, 1 CLICK, 2 WOOD, 3 BEEP).
+   - `snd_of()` gives the effective sound.
+   - STATE byte `b[4+7]` carries the effective sound.
+   - hostlink: the device talks to one host at a time. HELLO_ACK on another transport moves the link there. The mute now lifts when the transport changes.
+   - Live page:
+     - `wantSound` persists across a reconnect;
+     - a stray mute (STATE says muted but this page isn't sounding) gets MUTE 0.
+   - Calibration theory:
+     - link asymmetry error = (b − a)/2, at most RTT/2;
+     - the rest is audio output latency (constant per setup);
+     - the conductor drawing doesn't lead by the display latency.
+   - fm1-emu `FM1_BENCH_KEYS` encoder numbering on the FM-1: e0 SELECT, e1 ALGO, e2–e5 = K1–K4 (no PRESET). This differs from fm1-base `EN_*` (EN_SELECT, EN_ALGO, EN_PRESET, EN_K1..K4).
+   - Simulator `sysex_log FILE|off` captures sent frames. A pinned PONG frame contains a sample count that shifts when waits are added to the test.
+   - Playwright needs `--browser=chromium` (Chrome isn't installed), and the page must be served over http (file: is blocked): `python3 -m http.server 8791`.
+
+3. Files and Code Sections:
+   - **firmware/metronome/app.c** (fm1-metronome):
+     - flags comment updated;
+     - added after F_BT_OFF:
+       ```c
+       #define F_ALL_SND 6u                     /* (bits 1-2) */
+       static int all_snd(void) { return (rec.flags & F_ALL_SND) >> 1; }   /* 0, or the sound for all + 1 */
+       static uint8_t snd_of(const mt_slot_t *s) { return all_snd() ? (uint8_t)(all_snd() - 1) : s->sound; }
+       ```
+     - sound() uses `SND[snd_of(&tr.s)]`;
+     - `live.snd` field added;
+     - st_send: `b[4 + 7] = live.snd = snd_of(&s);`;
+     - STATE protocol comment notes that byte 11 is the sound that plays;
+     - `all_snd_by(int e)`: clamps 0..MT_NSND, sets the flags, `app_say("ALL SONGS", a ? SND_NAME[a-1] : "OWN SOUND")`, `changed(R_ALL)`;
+     - SET page input: `if ((e = plat_enc(EN_K3)) != 0 && ui.edit) all_snd_by(e);`;
+     - ALGO toast "WOOD, ALL BEEP" when the override is on;
+     - draw_steps and draw_mix show "ALL <snd>" in C_AMB;
+     - draw_footer:
+       - EDIT cycles three hints (`turn % 3`: keys / "K3: ALL SONGS' SOUND   NOW …" / K4 hint);
+       - stage SET with the override alternates every 3 s with "ALL SONGS IN BEEP   (SET EDIT, K3)";
+       - colour: `h == t || (h[0]=='K' && h[1]=='4') ? C_AMB : C_DIM`;
+     - hint redraw condition: `rec.page == PG_SET && (ui.edit || all_snd())`;
+     - expect keys all_sound, play_sound, state_sound;
+     - host_frame HELLO_ACK:
+       ```c
+       if (!hl_host(&link, plat_ms())) st_due = st_now = 1;
+       else if (link.transport != transport && au_mute) mute_set(0);   /* (0.5) the link moved ... */
+       hl_acked(&link, plat_ms(), transport);
+       ```
+   - **tests/basic.txt**:
+     - K3 section replaces the old EDIT-hint section:
+       - no effect outside EDIT; clamps at 3; flags 6; expect sound 0;
+       - play_sound and state_sound 2 → 1 → 2;
+       - shots set_edit_hint_a/b/c, set_all_sound_a/b, classic_all_sound.png;
+       - reboot keeps the setting; ALGO ±1 on the CLASSIC page; K3 −3 → 0, flags 0;
+     - BLE section: USB HELLO_ACK after mute1 over BLE → transport 0, muted 0; then ble hello_ack + mute1 again;
+     - PONG expectation changed to `expect_sysex F0 7D 4D 54 01 47 01 02 03 04 00 2C 27 42 00 F7`.
+   - **web/live/index.html**:
+     - onConnect adds `if (wantSound) { sound.start(); send(MT.ctrl(MT.C.MUTE, 1)); }`;
+     - takeState adds `if (st.muted && !sound.on && !demo) send(MT.ctrl(MT.C.MUTE, 0));`;
+     - button state: `toggle("on", sound.on && (st.muted || !!demo))`;
+     - `let wantSound = false;`, set in the #sound onclick.
+   - **README.md**, **web/cheatsheet.html**: K3 rows, ALGO notes, screen rows.
+   - **docs/screens**: set_edit_bt_hint.png, set_edit_all_sound.png, set_all_sound.png, classic_all_sound.png.
+   - **Superproject**:
+     - docs/dev/metronome.md: #v05 title and scope, #v05-bt-hint, #v05-all-sound, #v05-mute-move, verification rows, unit results, #v05-cal; dev-0.5 merged wording.
+     - docs/agentic/emulator.md: encoder numbering.
+     - docs/device-log.md: entries 22:40 (failed preflight), 22:43 (preflight OK), 22:50 (install 420ee130 plus results), 23:10 (install faa1af0e plus results).
+     - AGENTS.md, README.md, docs/index.md: 0.5 merged, a development build on the unit.
+
+4. Errors and fixes:
+   - **Stage hint said "K3: …" although K3 is inert on stage**: reworded to "ALL SONGS IN BEEP (SET EDIT, K3)".
+   - **Emulator e5 is K4, not K3** (the first run toggled Bluetooth off): found by toasts per encoder; e4 = K3.
+   - **metro-backup got no answer and fm1-download-mode was refused (20 s)**: I stopped and reported, per the rules. The cause was the open web page holding the link; after the user closed it, both worked.
+   - **PONG pinned frame failed after adding 100 ms of waits**: captured with sysex_log; the sample shifted by 4476; updated the vector (pytest and node read it generically).
+   - **Playwright Chrome missing and file: blocked**: used chromium plus a local http server.
+   - **Demo button "on" class wiped by STATE**: fixed.
+   - **The `git checkout main` failed** because of locally modified `.specstory/history/2026-11-19_18-54-07Z-…md` and `.specstory/statistics.json` (touched by an external hook; never commit them manually).
+
+5. Problem Solving:
+   - Preflight on 2026-11-20 22:43:
+     - setlist JSON `backups/progress/metronome-2026-11-20-pre-0.5.json` (7 songs: 1:120, 2:123, 3:106, 4:122, 5:122, 6:110, 11:110);
+     - info: stock bootloader, FM-1 590, flash 0xB36014, CRC OK;
+     - backup `backups/2026-11-20-pre-metronome-0.5/fm1-20261120-224407.bin`, SHA-256 `7e22465bb2bdc10eb0941b388804ae42ad91848b09c16c2aba6225ef337560fe`, verified;
+     - rehearsal on both chips: 0 writes, 7 songs.
+   - Builds:
+     - `downloads/metronome-0.5-dev/metronome.fwsc` (420ee130…2b90963), installed by the owner;
+     - `metronome-2.fwsc` (faa1af0e2e5809d6f5b4277b47cb7f16a1b910cb72bcae810531cae2613a751f), installed by the owner;
+     - `--info` FM-1_5900 [running].
+   - Unit results:
+     - K3, the hints and the page clicks all work;
+     - the mute fix works (the device sounds immediately on disconnect, then the page takes over);
+     - Bluetooth: round trip 66 ms, calibration −63 ms;
+     - the web conductor feels slightly late (it doesn't lead by the display latency). The user deferred optimization.
+
+6. All user messages:
+   - "可以考慮上機 不過我們現在每個song都有自己的click聲設定 是否有什麼可以臨時global一致的設定 假設要一致可以暫時性的設成同一個"
+   - "網頁關掉了 試試看"
+   - "1. 成功 2. 成功 3.a. 藍牙： Clock set by round trips: 60 ms there and back, the link's delay taken out.  但是不是穩定的數字 可能 +- 10ms 波動 3.b. USB：Clock set by round trips: 1 ms there and back, the link's delay taken out. 也是有波動 但+-不到 1ms 4. 成功 看起來矯正是需要 但如果有這個其實動態調到這個 round trips 基本能對上？ （然後有一個就是 我從 USB 斷開連成藍牙 如果原本是 click from this computer 的情況 此時會兩邊都不發出聲音 不過再多點兩下就可以糾正回來）"
+   - "燒錄了 [Image #3] 我目前幾乎感覺不出差異 感覺藍牙連接下 螢幕慢一點點點 現在從藍牙<->USB 斷開瞬間 機器會馬上接回來響兩聲左右又配對上就會變成我們的設置 （應該是正確的）"
+   - "我剛剛是說網頁螢幕 然後聽聲音用機器 不過我覺得差不多了 以後再優化也可以 可以先commit and push PR & merge"
+   - Security and operation constraints (from AGENTS.md and earlier):
+     - firmware writes only after the owner approves that specific write; the owner runs `fm1_install.py`; never `--yes`;
+     - `bootloader`, `restore`, `run-ram` and erase are forbidden to initiate;
+     - a full preflight before any write;
+     - stop and report on a tool refusal; do not work around it;
+     - fm1-backup-release only when asked;
+     - commit or push only when the owner asks;
+     - never commit backups or credentials;
+     - the Hub status URL must not be recorded in the repo;
+     - the user's email must not be sent to external services.
+
+7. Pending Tasks:
+   - Finish the post-merge cleanup:
+     - sync local superproject main (the checkout failed because of the .specstory changes);
+     - confirm the pr-18 preview is gone: `fw-preview --remove` said "nothing changed" and the previews tree showed no pr-18, so it is likely already absent.
+   - Later, deferred by the user ("以後再優化"):
+     - share or derive the calibration from the round trip;
+     - smooth the clock (slew limit, longer window);
+     - lead the conductor drawing by 1–2 frames;
+     - release 0.5 (not requested yet);
+     - microphone calibration.
+
+8. Current Work:
+   Executing "commit and push PR & merge":
+   - fm1-metronome:
+     - committed `21957c1` on dev-0.5 and pushed;
+     - PR #2 retitled, body updated, marked ready, merged → origin/main `fadfb68`;
+     - submodule checked out main at fadfb68.
+   - Superproject:
+     - committed `6f6b599` ("METRONOME 0.5 merged: one sound for every song (K3), the mute follows the link (pointer, docs, device log)") on `claude/metronome-0.5` and pushed;
+     - PR #18 retitled, body updated, marked ready;
+     - CI build passed on 6f6b599;
+     - merged → origin/main `e7d626d`.
+   - `just fw-preview metronome pr-18 --remove` reported "nothing changed"; the previews tree lists main, pr-12, pr-14, pr-7 and no pr-18.
+   - Last command: `git checkout -q main` in the superproject failed with "Your local changes to the following files would be overwritten by checkout: .specstory/history/2026-11-19_18-54-07Z-https-github-com-daviddwlee84.md, .specstory/statistics.json".
+
+9. Optional Next Step:
+   - Sync local main without committing the .specstory files. For example, stash them, `git checkout main && git pull --ff-only`, then `git stash pop`, or leave the branch as is.
+   - Verify `git submodule status firmware/metronome` shows fadfb68.
+   - Then report to the user, in Traditional Chinese, that the request "可以先commit and push PR & merge" is done:
+     - fm1-metronome #2 merged (fadfb68), M-VAVE_FM-1 #18 merged (e7d626d), CI passed, preview removed;
+     - 0.5 is merged but not released;
+     - the deferred optimizations are listed in `docs/dev/metronome.md#v05-cal` and in PR #18's last checklist item.
+   - Do not start a release or new features without the user asking.
+
+If you need specific details from before compaction (like exact code snippets, error messages, or content you generated), read the full transcript at: /Users/zhouhanru/.claude/projects/-Users-zhouhanru-Documents-David-Program-M-VAVE-FM-1/1baf212e-01fd-4b1a-8cf9-45fc7a274a17.jsonl
+Continue the conversation from where it left off without asking the user any further questions. Resume directly — do not acknowledge the summary, do not recap what was happening, do not preface with "I'll continue" or similar. Pick up the last task as if the break never happened.
+
+The messages after this summary are the most recent messages from before compaction, kept verbatim. The summary was written without seeing them, so something it says has not happened yet may already have happened in them.
