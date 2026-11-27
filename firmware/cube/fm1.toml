@@ -1,0 +1,19 @@
+# CUBE's build settings (fm1-base tools/build.py)
+name = "CUBE"
+title = "CUBE"
+id_prefix = "FM-1_40"          # package identity: dev FM-1_4000, release 0.1 FM-1_40000100 (free in the Hub's catalog of 2026-11-27: no identity starts with 40, none is a prefix of it)
+usb_manufacturer = "fm1-base"
+usb_product = "CUBE FM-1"
+o2 = ["solve.c"]               # the scramble search, at -O2
+include = ["../common", "../theory", "gen"]   # ledfx, chime (firmware/common, MIT); srs.c, gtext.c (GPL-3.0-or-later); gen/cube_tables.h (just cube-tables)
+words = "words.tsv"
+font_full = ["T", "M"]         # lower case in the 12 px and 24 px fonts (wide moves r u f, rotations x y z)
+ble = false                    # USB only for now
+tagline = "a Rubik's cube timer, scrambler and formula book"
+repo = "https://github.com/daviddwlee84/M-VAVE_FM-1"
+site = "https://daviddwlee84.github.io/M-VAVE_FM-1/dev/cube/"
+licence = "GPL-3.0-or-later"
+credits = "Built on fm1-base by Charles Vestal. Scrambles by Herbert Kociemba's two-phase algorithm (our own implementation, tables after min2phase by Chen Shuang). Flash cards are THEORY's (firmware/theory)."
+author = "daviddwlee84"
+description = "A Rubik's cube companion. TIMER: WCA inspection, hold a key and let go to start (or both end keys, like a timer's pads), ao5, ao12, ao100, with random-state scrambles the FM-1 finds itself, as the WCA's are, or random-move ones. CUBE: a virtual cube turned from the keys (four layouts, or your own) and seen from any side. ALGS: beginner's, 2-look, OLL, PLL and F2L formulas, each case drawn from its formula. DRILL: the cases as flash cards, on your own cube with a setup scramble and a timer, or on the virtual one."
+tags = ["utility"]

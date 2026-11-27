@@ -37,6 +37,7 @@ Felucca、SLOOP、ChoralRoot 以及 Dinghy、fm1-base 系的韌體大多沿用�
 | `0x97000` 起 | project（曲子） |
 | `0x9F000` | SLOOP 的 autosave（和 ChoralRoot 的 FM6 bank 是同一個物件編號） |
 | `0xA0000` 起 | samples |
+| `0xC8000`–`0xCDFFF` | 自製 [CUBE](../dev/cube.md#storage)：`0xC8000` DRILL 的進度、`0xCA000` 最近 100 筆 solve、`0xCC000` 設定與自訂鍵位（v0.1，還沒刷進實機）。這台機器 2026-11-25 的備份 `pre-morse-0.8` 裡 `0xC0000`–`0xCDFFF` 全是空的 `[實機]`；疊在那份備份上預演，計時與改設定只寫 `0xCA000`、`0xCC000`，THEORY、Morse、METRONOME 的 sector 不變 `[模擬]` |
 | `0xCE000`–`0xCFFFF` | 自製 [METRONOME](../dev/metronome.md#storage) 的設定與 16 首歌（v0.1，2026-11-20 刷進實機）。這台機器 2026-11-20 的備份 `pre-metronome-0.1` 裡這段是空的 `[實機]`；fm1-emu 兩種晶片上存檔只寫 `0xCE000`，疊在那份備份上預演時 THEORY 與 Morse 的 sector 不變 `[模擬]`。v0.4 加了藍牙，但藍牙什麼都不寫（own stack 的位址由晶片的 unique ID 算出，沒有配對資料）；藍牙開關存在同一份 record 裡 |
 | `0xD0000`–`0xD1FFF` | 自製 [DRUMS](../dev/drums.md) 的設定（v0.1，還沒刷進實機）。空白 flash 上只有改設定後寫 `0xD0000` `[模擬]`；這台機器的備份裡是不是空的還沒查 |
 | `0xD6000`–`0xD7FFF` | 自製 [THEORY](../dev/theory.md#srs) 0.2 的閃卡進度（2026-11-18 刷進實機）。這台機器的備份裡都是空的；疊在刷 0.1 前的備份上預演，回合結束或離開 TODAY 時才寫 `[模擬]` |

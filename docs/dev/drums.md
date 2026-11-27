@@ -7,7 +7,7 @@
 - **v0.1**：在 host simulator、device build 與 fm1-emu 兩種晶片驗證過 `[模擬]`，見 [v0.1](#v01) 與 [v0.1 驗證](#v01-verify)。還沒刷進實機，也還沒疊在這台機器的備份上預演。
 - 獨立的韌體，不是 [RHYTHM](rhythm.md) 的一頁（本人 2026-11-19 決定）。在 `firmware/drums/`，名稱暫定 DRUMS，正式名稱發布前對照 Hub 再定。
 - 授權 GPL-3.0-or-later，因為搬了 RHYTHM 的 transport。
-- 識別碼 `FM-1_58`（開發版 `FM-1_5800`）：2026-11-19 對照 Hub 的 catalog 沒人用。
+- 識別碼 `FM-1_58`（開發版 `FM-1_5800`）：2026-11-19 對照 Hub 的 catalog 沒人用。**2026-11-27 再對照時，`FM-1_58` 已經被別人的 `gio`（release `FM-1_58000301`）用掉了**：發布或上 Hub 之前要換一個識別碼（那天 `07`、`09`、`85` 還是空的；`40` 給了 [CUBE](cube.md)）。
 - 存檔在 `0xD0000`（`APP_STORE_MAP {0xDC000, 0xD0000}`），上面一格 `0xD2000` 是 RHYTHM。刷機前用 `just emu-rehearse` 確認這一格在最新的備份裡是空的。
 
 ## v0.1 { #v01 }

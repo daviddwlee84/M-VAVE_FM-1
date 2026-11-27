@@ -1,0 +1,34 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+# CUBE's words for a screen reader (fm1-reader): the text on the screen <TAB> what to say.
+# url: https://daviddwlee84.github.io/M-VAVE_FM-1/dev/cube/
+CUBE	cube
+TIMER	timer
+ALGS	formulas
+DRILL	drill
+STATS	statistics
+SETTINGS	settings
+MENU	menu
+SCRAMBLE	scramble
+INSPECTION	inspection
+READY	ready
+DNF	did not finish
++2	plus two
+AO5	average of five
+AO12	average of twelve
+AO50	average of fifty
+AO100	average of a hundred
+MO3	mean of three
+BEST	best
+SOLVED	solved
+UNDO	undo
+RANDOM STATE	random state
+RANDOM MOVE	random move
+OLL	O L L
+PLL	P L L
+F2L	F two L
+LBL	layer by layer
+2LOOK OLL	two look O L L
+2LOOK PLL	two look P L L
+RECOGNIZE	recognize
+REAL	real cube
+VIRTUAL	virtual cube

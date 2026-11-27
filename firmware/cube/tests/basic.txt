@@ -1,0 +1,448 @@
+# CUBE in the host simulator: just cube-tables, then just fw-test cube (screenshots in firmware/cube/build/host/)
+# pages: 0 MENU 1 TIMER 2 CUBE 3 ALGS 4 DRILL 5 STATS 6 SETTINGS 7 KEYS
+# timer: 0 idle 1 inspection 2 hold 3 ready 4 running 5 done; penalties: 0 OK 1 +2 2 DNF
+# keys (BLACK KEYS): 0 F3 L, 12 F4 U, 13 F#4 U', 23 E5 undo, 24 F5 R, 25 F#5 R'
+wait 600
+shot boot.png
+expect page 1
+expect algs 145
+expect scr_type 0
+expect inspect 1
+expect scr_n >15
+expect scr_kind 1
+
+# ---- the first random-state scramble found on the FM-1 (searched in the background)
+wait 6000
+expect found >0
+expect next_ok 1
+
+# ---- inspection, then hold, ready, let go, solve, stop
+key 5 down
+wait 30
+key 5 up
+wait 30
+expect timer 1
+shot inspect.png
+key 5 down
+wait 100
+expect timer 2
+wait 300
+expect timer 3
+shot ready.png
+key 5 up
+wait 20
+expect timer 4
+wait 2500
+shot running.png
+key 7 down
+wait 20
+expect timer 5
+expect solves 1
+expect last_ms >2490
+expect last_ms <2530
+expect last_pen 0
+expect last_scr >15
+expect scr_kind 0
+key 7 up
+wait 30
+shot done.png
+
+# ---- K1: the last solve +2, DNF, OK again
+turn K1 1
+expect last_pen 1
+turn K1 1
+expect last_pen 2
+turn K1 1
+expect last_pen 0
+
+# ---- let go before it is ready: back to the inspection, nothing starts
+key 5 down
+wait 30
+key 5 up
+wait 30
+expect timer 1
+key 9 down
+wait 150
+key 9 up
+wait 30
+expect timer 1
+
+# ---- over 15 s of inspection: +2
+wait 15200
+key 9 down
+wait 400
+key 9 up
+wait 1000
+key 9 down
+wait 20
+key 9 up
+wait 30
+expect solves 2
+expect last_pen 1
+expect last_ms >990
+expect last_ms <1010
+
+# ---- over 17 s: DNF by itself
+key 5 down
+wait 30
+key 5 up
+wait 17200
+expect timer 5
+expect solves 3
+expect last_pen 2
+
+# ---- SEL twice: the last solve deleted
+tap SEL
+tap SEL
+expect solves 2
+
+# ---- REC: a new scramble
+tap REC
+expect scr_n >15
+
+# ---- settings: no inspection, start with both end keys
+tap HOME
+expect page 0
+turn SELECT 5
+tap PLAY
+expect page 6
+turn SELECT 2
+turn K1 1
+expect inspect 0
+turn SELECT 1
+turn K1 1
+expect start 1
+shot settings.png
+tap HOME
+turn SELECT -5
+tap PLAY
+expect page 1
+key 0 down
+wait 400
+expect timer 0
+key 26 down
+wait 100
+expect timer 2
+wait 300
+expect timer 3
+key 0 up
+wait 10
+key 26 up
+wait 800
+key 3 down
+wait 20
+key 3 up
+wait 30
+expect solves 3
+expect last_ms >785
+expect last_ms <815
+
+# ---- three more: ao5
+key 0 down
+key 26 down
+wait 400
+key 0 up
+key 26 up
+wait 1200
+tapkey 3
+wait 30
+key 0 down
+key 26 down
+wait 400
+key 0 up
+key 26 up
+wait 1400
+tapkey 3
+wait 30
+key 0 down
+key 26 down
+wait 400
+key 0 up
+key 26 up
+wait 1000
+tapkey 3
+wait 30
+expect solves 6
+shot ao5.png
+
+# ---- the virtual cube: R, undo, R four times, SEL + R
+tap HOME
+turn SELECT 1
+tap PLAY
+expect page 2
+expect solved 1
+tapkey 24
+wait 200
+expect moves 1
+expect solved 0
+shot cube_r.png
+tapkey 23
+wait 200
+expect moves 0
+expect solved 1
+tapkey 24
+tapkey 24
+tapkey 24
+tapkey 24
+wait 200
+expect solved 1
+press SEL
+tapkey 24
+release SEL
+wait 200
+expect solved 0
+tapkey 24
+wait 200
+expect solved 1
+key 24 down
+wait 50
+shot cube_turning.png
+key 24 up
+wait 200
+tapkey 25
+wait 200
+expect solved 1
+
+# ---- views: K4 presets, K1..K3 turn it
+turn K4 1
+expect view 1
+turn K4 2
+expect view 3
+shot cube_back.png
+turn K4 -3
+turn K1 2
+turn K2 -1
+turn K3 1
+shot cube_turned.png
+turn K4 1
+turn K4 -1
+
+# ---- SEL alone: the key map
+tap SEL
+wait 50
+shot cube_keys.png
+tap SEL
+
+# ---- REC: follow a scramble by the lit keys
+tap REC
+wait 50
+expect follow 1
+expect hint >-1
+shot cube_follow.png
+expect follow_all 1
+expect follow 0
+wait 300
+shot cube_scrambled.png
+
+# ---- off the scramble: the undo key lights, undo puts it back
+tap REC
+wait 50
+expect follow 1
+tapkey 0
+tapkey 0
+tapkey 0
+tapkey 0
+wait 200
+expect fdev >0
+expect hint 23
+tapkey 23
+tapkey 23
+tapkey 23
+tapkey 23
+wait 200
+expect fdev 0
+expect follow_all 1
+
+# ---- REC held: scrambled at once; SEL + undo: solved again
+press REC
+wait 700
+release REC
+wait 50
+expect solved 0
+expect follow 0
+press SEL
+tapkey 23
+release SEL
+wait 50
+expect solved 1
+
+# ---- the formula book: T-perm, played back on the cube
+tap HOME
+turn SELECT 1
+tap PLAY
+expect page 3
+expect alg_set 0
+shot algs_lbl.png
+turn SELECT 4
+expect alg_set 4
+turn K1 15
+expect alg_pos 15
+shot algs_pll_t.png
+tap PLAY
+expect playing 1
+wait 300
+shot algs_playing.png
+wait 10000
+expect playing 0
+expect d_solved 1
+turn SELECT -1
+turn K1 26
+shot algs_oll27.png
+turn SELECT 2
+shot algs_f2l.png
+
+# ---- DRILL: recognize PLL (the first cards are new ones, shown)
+tap HOME
+turn SELECT 1
+tap PLAY
+expect page 4
+turn SELECT 4
+expect d_state 0
+shot drill_setup.png
+tap PLAY
+expect d_state 2
+shot drill_new.png
+tap PLAY
+tap PLAY
+tap PLAY
+tap PLAY
+tap PLAY
+tap PLAY
+tap PLAY
+expect d_ok >0
+expect d_miss 0
+shot drill_recognize.png
+# (on to the end of the round: its progress saved; more presses only start the next round)
+tap PLAY
+tap PLAY
+tap PLAY
+tap PLAY
+tap PLAY
+tap PLAY
+tap PLAY
+tap PLAY
+tap PLAY
+tap PLAY
+tap PLAY
+tap PLAY
+tap PLAY
+tap PLAY
+tap PLAY
+tap PLAY
+tap PLAY
+tap PLAY
+tap PLAY
+tap PLAY
+tap PLAY
+tap PLAY
+tap PLAY
+tap PLAY
+tap PLAY
+tap PLAY
+tap PLAY
+tap PLAY
+tap PLAY
+tap PLAY
+tap PLAY
+tap PLAY
+tap PLAY
+tap PLAY
+tap PLAY
+tap PLAY
+tap PLAY
+tap PLAY
+tap PLAY
+tap PLAY
+expect d_rounds4 >0
+
+# ---- DRILL on the virtual cube: the case turned back by the lit keys
+tap HOME
+tap PLAY
+turn K1 2
+expect d_state 0
+turn SELECT -4
+tap PLAY
+tap PLAY
+tap PLAY
+tap PLAY
+expect d_state 1
+shot drill_virtual.png
+expect d_follow_all 1
+expect d_state 2
+# (a formula with a half turn, R U2 R' U' R U R': no key turns U2, U is pressed twice)
+expect d_case2 2
+expect d_follow_all 1
+expect d_state 2
+
+# ---- DRILL on a real cube: the setup, then the timer
+tap HOME
+tap PLAY
+turn K1 -1
+expect d_state 0
+tap PLAY
+tap PLAY
+tap PLAY
+tap PLAY
+expect d_state 1
+shot drill_real.png
+key 4 down
+key 26 down
+key 0 down
+wait 400
+key 4 up
+key 26 up
+key 0 up
+wait 1500
+tapkey 6
+wait 30
+expect d_state 2
+expect d_real >140
+shot drill_real_done.png
+
+# ---- STATS
+tap HOME
+turn SELECT 1
+tap PLAY
+expect page 5
+turn SELECT 2
+shot stats.png
+
+# ---- SETTINGS: random-move scrambles of 30, the TWO HANDS keys, then an own layout
+tap HOME
+turn SELECT 1
+tap PLAY
+expect page 6
+turn SELECT -3
+turn K1 1
+expect scr_type 1
+expect scr_n 25
+turn SELECT 1
+turn K1 5
+turn SELECT 3
+turn K1 1
+expect layout 1
+expect key0 53
+turn SELECT 1
+tap PLAY
+expect page 7
+expect layout 3
+tapkey 0
+turn SELECT 1
+expect custom0 255
+shot keyedit.png
+tap HOME
+expect page 6
+wait 3500
+
+# ---- after a restart: the settings, the layout, the solves
+reboot
+wait 600
+expect page 1
+expect scr_type 1
+expect scr_n 30
+expect layout 3
+expect custom0 255
+expect inspect 0
+expect start 1
+expect solves 6
+expect d_rounds4 >0
