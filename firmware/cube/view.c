@@ -215,3 +215,38 @@ static void view_ll(const cube_t *c, int32_t x, int32_t y, int32_t s, int oll, c
     }
 #undef LLC
 }
+
+/* PLL: arrows on view_ll's top face, from where each piece is to where the formula takes it. setup: the moves that
+ * make the case from solved (the formula's inverse); a sticker label rides along with every move */
+static void arrow(int32_t x0, int32_t y0, int32_t x1, int32_t y1, uint16_t c)
+{
+    float dx = (float)(x1 - x0), dy = (float)(y1 - y0), l = fm_sqrtf(dx * dx + dy * dy), ux, uy;
+    int32_t k;
+    if (l < 1.0f) return;
+    ux = dx / l, uy = dy / l;
+    x0 += (int32_t)(ux * 5.0f), y0 += (int32_t)(uy * 5.0f);   /* start and end off the cell centres */
+    x1 -= (int32_t)(ux * 5.0f), y1 -= (int32_t)(uy * 5.0f);
+    for (k = -1; k <= 1; k++) cv_line(x0 + (uy != 0.0f ? k : 0), y0 + (ux != 0.0f ? k : 0), x1 + (uy != 0.0f ? k : 0),
+                                      y1 + (ux != 0.0f ? k : 0), c);
+    for (k = 0; k < 2; k++) {            /* the head: two strokes back at about 30 degrees */
+        float s = k ? 0.5f : -0.5f;
+        float hx = -ux * 0.87f - uy * s, hy = -uy * 0.87f + ux * s;
+        cv_line(x1, y1, x1 + (int32_t)(hx * 7.0f), y1 + (int32_t)(hy * 7.0f), c);
+        cv_line(x1 + 1, y1, x1 + 1 + (int32_t)(hx * 7.0f), y1 + (int32_t)(hy * 7.0f), c);
+    }
+}
+
+static void view_ll_arrows(const uint8_t *setup, int n, int32_t x, int32_t y, int32_t s)
+{
+    cube_t lab;
+    int32_t t = s / 3 > 4 ? s / 3 : 4;
+    int i;
+    for (i = 0; i < 54; i++) lab.f[i] = (uint8_t)i;
+    cube_apply(&lab, setup, n);
+    for (i = 0; i < 9; i++) {
+        int h = lab.f[i];
+        if (i == 4 || h == i || h >= 9) continue;   /* in place, or not a top sticker (not a PLL) */
+        arrow(x + t + 1 + (i % 3) * s + (s - 2) / 2, y + t + 1 + (i / 3) * s + (s - 2) / 2,
+              x + t + 1 + (h % 3) * s + (s - 2) / 2, y + t + 1 + (h / 3) * s + (s - 2) / 2, RGB(30, 30, 36));
+    }
+}

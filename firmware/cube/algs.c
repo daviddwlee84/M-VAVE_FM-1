@@ -23,105 +23,105 @@ static const alg_t ALGS[] = {
     {ALG_OLL2, "EDGES: DOT", "F R U R' U' F' f R U R' U' f'", 0},
     {ALG_OLL2, "SUNE", "R U R' U R U2 R'", 0},
     {ALG_OLL2, "ANTISUNE", "R U2 R' U' R U' R'", 0},
-    {ALG_OLL2, "H", "R U2 R' U' R U R' U' R U' R'", 0},
-    {ALG_OLL2, "PI", "R U2 R2 U' R2 U' R2 U2 R", 0},
+    {ALG_OLL2, "H", "R U2 R' U' R U R' U' R U' R'", "F R U R' U' R U R' U' R U R' U' F'"},
+    {ALG_OLL2, "PI", "R U2 R2 U' R2 U' R2 U2 R", "f R U R' U' f' F R U R' U' F'"},
     {ALG_OLL2, "HEADLIGHTS", "R2 D' R U2 R' D R U2 R", 0},
     {ALG_OLL2, "CHAMELEON", "r U R' U' r' F R F'", 0},
-    {ALG_OLL2, "BOWTIE", "F' r U R' U' r' F R", 0},
+    {ALG_OLL2, "BOWTIE", "F' r U R' U' r' F R", "y' R' F R B' R' F' R B"},
 
     /* ---- 2-look PLL: the corners (2), then the edges (4) */
-    {ALG_PLL2, "CORNERS: ADJACENT", "R U R' U' R' F R2 U' R' U' R U R' F'", 0},
-    {ALG_PLL2, "CORNERS: DIAGONAL", "F R U' R' U' R U R' F' R U R' U' R' F R F'", 0},
+    {ALG_PLL2, "CORNERS: ADJACENT", "R U R' U' R' F R2 U' R' U' R U R' F'", "y x R' U R' D2 R U' R' D2 R2 x'"},
+    {ALG_PLL2, "CORNERS: DIAGONAL", "F R U' R' U' R U R' F' R U R' U' R' F R F'", "R U R' U' R' F R2 U' R' U' R U R' F' U2 R U R' U' R' F R2 U' R' U' R U R' F'"},
     {ALG_PLL2, "EDGES: UA", "M2 U M U2 M' U M2", "R U' R U R U R U' R' U' R2"},
     {ALG_PLL2, "EDGES: UB", "M2 U' M U2 M' U' M2", "R2 U R U R' U' R' U' R' U R'"},
-    {ALG_PLL2, "EDGES: H", "M2 U M2 U2 M2 U M2", 0},
-    {ALG_PLL2, "EDGES: Z", "M' U M2 U M2 U M' U2 M2", 0},
+    {ALG_PLL2, "EDGES: H", "M2 U M2 U2 M2 U M2", "R2 U2 R U2 R2 U2 R2 U2 R U2 R2"},
+    {ALG_PLL2, "EDGES: Z", "M' U M2 U M2 U M' U2 M2", "R' U' R U' R U R U' R' U R U R2 U' R'"},
 
     /* ---- OLL 1 .. 57 */
-    {ALG_OLL, "OLL 1", "R U2 R2 F R F' U2 R' F R F'", 0},
-    {ALG_OLL, "OLL 2", "F R U R' U' F' f R U R' U' f'", 0},
-    {ALG_OLL, "OLL 3", "f R U R' U' f' U' F R U R' U' F'", 0},
-    {ALG_OLL, "OLL 4", "f R U R' U' f' U F R U R' U' F'", 0},
-    {ALG_OLL, "OLL 5", "r' U2 R U R' U r", 0},
-    {ALG_OLL, "OLL 6", "r U2 R' U' R U' r'", 0},
-    {ALG_OLL, "OLL 7", "r U R' U R U2 r'", 0},
-    {ALG_OLL, "OLL 8", "r' U' R U' R' U2 r", 0},
-    {ALG_OLL, "OLL 9", "R U R' U' R' F R2 U R' U' F'", 0},
+    {ALG_OLL, "OLL 1", "R U2 R2 F R F' U2 R' F R F'", "R U B' R B R2 U' R' F R F'"},
+    {ALG_OLL, "OLL 2", "F R U R' U' F' f R U R' U' f'", "y r U r' U2 r U2 R' U2 R U' r'"},
+    {ALG_OLL, "OLL 3", "f R U R' U' f' U' F R U R' U' F'", "y r' R2 U R' U r U2 r' U M'"},
+    {ALG_OLL, "OLL 4", "f R U R' U' f' U F R U R' U' F'", "y M U' r U2 r' U' R U' R' M'"},
+    {ALG_OLL, "OLL 5", "r' U2 R U R' U r", "y2 l' U2 L U L' U l"},
+    {ALG_OLL, "OLL 6", "r U2 R' U' R U' r'", "y2 l U2 L' U' L U' l'"},
+    {ALG_OLL, "OLL 7", "r U R' U R U2 r'", "F R' F' R U2 R U2 R'"},
+    {ALG_OLL, "OLL 8", "r' U' R U' R' U2 r", "y2 l' U' L U' L' U2 l"},
+    {ALG_OLL, "OLL 9", "R U R' U' R' F R2 U R' U' F'", "y R' U' R U' R' U R' F R F' U R"},
     {ALG_OLL, "OLL 10", "R U R' U R' F R F' R U2 R'", 0},
-    {ALG_OLL, "OLL 11", "r U R' U R' F R F' R U2 r'", 0},
-    {ALG_OLL, "OLL 12", "F R U R' U' F' U F R U R' U' F'", 0},
-    {ALG_OLL, "OLL 13", "F U R U' R2 F' R U R U' R'", 0},
+    {ALG_OLL, "OLL 11", "r U R' U R' F R F' R U2 r'", "y2 M R U R' U R U2 R' U M'"},
+    {ALG_OLL, "OLL 12", "F R U R' U' F' U F R U R' U' F'", "y' M' R' U' R U' R' U2 R U' M"},
+    {ALG_OLL, "OLL 13", "F U R U' R2 F' R U R U' R'", "r U' r' U' r U r' F' U F"},
     {ALG_OLL, "OLL 14", "R' F R U R' F' R F U' F'", 0},
-    {ALG_OLL, "OLL 15", "r' U' r R' U' R U r' U r", 0},
+    {ALG_OLL, "OLL 15", "r' U' r R' U' R U r' U r", "y2 l' U' l L' U' L U l' U l"},
     {ALG_OLL, "OLL 16", "r U r' R U R' U' r U' r'", 0},
     {ALG_OLL, "OLL 17", "R U R' U R' F R F' U2 R' F R F'", 0},
     {ALG_OLL, "OLL 18", "r U R' U R U2 r2 U' R U' R' U2 r", 0},
-    {ALG_OLL, "OLL 19", "r' R U R U R' U' M' R' F R F'", 0},
+    {ALG_OLL, "OLL 19", "r' R U R U R' U' M' R' F R F'", "M U R U R' U' M' R' F R F'"},
     {ALG_OLL, "OLL 20", "r U R' U' M2 U R U' R' U' M'", 0},
-    {ALG_OLL, "OLL 21", "R U2 R' U' R U R' U' R U' R'", 0},
-    {ALG_OLL, "OLL 22", "R U2 R2 U' R2 U' R2 U2 R", 0},
-    {ALG_OLL, "OLL 23", "R2 D' R U2 R' D R U2 R", 0},
+    {ALG_OLL, "OLL 21", "R U2 R' U' R U R' U' R U' R'", "y R U R' U R U' R' U R U2 R' | F R U R' U' R U R' U' R U R' U' F'"},
+    {ALG_OLL, "OLL 22", "R U2 R2 U' R2 U' R2 U2 R", "f R U R' U' f' F R U R' U' F'"},
+    {ALG_OLL, "OLL 23", "R2 D' R U2 R' D R U2 R", "y2 R2 D R' U2 R D' R' U2 R'"},
     {ALG_OLL, "OLL 24", "r U R' U' r' F R F'", 0},
-    {ALG_OLL, "OLL 25", "F' r U R' U' r' F R", 0},
-    {ALG_OLL, "OLL 26", "R U2 R' U' R U' R'", 0},
+    {ALG_OLL, "OLL 25", "F' r U R' U' r' F R", "y' R' F R B' R' F' R B"},
+    {ALG_OLL, "OLL 26", "R U2 R' U' R U' R'", "y L' U' L U' L' U2 L"},
     {ALG_OLL, "OLL 27", "R U R' U R U2 R'", 0},
-    {ALG_OLL, "OLL 28", "r U R' U' r' R U R U' R'", 0},
-    {ALG_OLL, "OLL 29", "R U R' U' R U' R' F' U' F R U R'", 0},
-    {ALG_OLL, "OLL 30", "F R' F R2 U' R' U' R U R' F2", 0},
+    {ALG_OLL, "OLL 28", "r U R' U' r' R U R U' R'", "r U R' U' M U R U' R'"},
+    {ALG_OLL, "OLL 29", "R U R' U' R U' R' F' U' F R U R'", "y' r2 D' r U r' D r2 U' r' U' r"},
+    {ALG_OLL, "OLL 30", "F R' F R2 U' R' U' R U R' F2", "F U R U2 R' U' R U2 R' U' F'"},
     {ALG_OLL, "OLL 31", "R' U' F U R U' R' F' R", 0},
-    {ALG_OLL, "OLL 32", "L U F' U' L' U L F L'", 0},
-    {ALG_OLL, "OLL 33", "R U R' U' R' F R F'", 0},
+    {ALG_OLL, "OLL 32", "L U F' U' L' U L F L'", "y2 S R U R' U' R' F R f'"},
+    {ALG_OLL, "OLL 33", "R U R' U' R' F R F'", "F R U' R' U R U R' F'"},
     {ALG_OLL, "OLL 34", "R U R2 U' R' F R U R U' F'", 0},
     {ALG_OLL, "OLL 35", "R U2 R2 F R F' R U2 R'", 0},
     {ALG_OLL, "OLL 36", "L' U' L U' L' U L U L F' L' F", 0},
-    {ALG_OLL, "OLL 37", "F R' F' R U R U' R'", 0},
+    {ALG_OLL, "OLL 37", "F R' F' R U R U' R'", "F R U' R' U' R U R' F'"},
     {ALG_OLL, "OLL 38", "R U R' U R U' R' U' R' F R F'", 0},
-    {ALG_OLL, "OLL 39", "L F' L' U' L U F U' L'", 0},
+    {ALG_OLL, "OLL 39", "L F' L' U' L U F U' L'", "y2 R U R' F' U' F U R U2 R'"},
     {ALG_OLL, "OLL 40", "R' F R U R' U' F' U R", 0},
     {ALG_OLL, "OLL 41", "R U R' U R U2 R' F R U R' U' F'", 0},
-    {ALG_OLL, "OLL 42", "R' U' R U' R' U2 R F R U R' U' F'", 0},
-    {ALG_OLL, "OLL 43", "f' L' U' L U f", 0},
-    {ALG_OLL, "OLL 44", "f R U R' U' f'", 0},
+    {ALG_OLL, "OLL 42", "R' U' R U' R' U2 R F R U R' U' F'", "y R' F R F' R' F R F' R U R' U' R U R'"},
+    {ALG_OLL, "OLL 43", "f' L' U' L U f", "y R' U' F' U F R"},
+    {ALG_OLL, "OLL 44", "f R U R' U' f'", "y2 F U R U' R' F'"},
     {ALG_OLL, "OLL 45", "F R U R' U' F'", 0},
     {ALG_OLL, "OLL 46", "R' U' R' F R F' U R", 0},
-    {ALG_OLL, "OLL 47", "R' U' R' F R F' R' F R F' U R", 0},
+    {ALG_OLL, "OLL 47", "R' U' R' F R F' R' F R F' U R", "F' L' U' L U L' U' L U F"},
     {ALG_OLL, "OLL 48", "F R U R' U' R U R' U' F'", 0},
-    {ALG_OLL, "OLL 49", "r U' r2 U r2 U r2 U' r", 0},
+    {ALG_OLL, "OLL 49", "r U' r2 U r2 U r2 U' r", "y2 R B' R2 F R2 B R2 F' R"},
     {ALG_OLL, "OLL 50", "r' U r2 U' r2 U' r2 U r'", 0},
-    {ALG_OLL, "OLL 51", "f R U R' U' R U R' U' f'", 0},
-    {ALG_OLL, "OLL 52", "R U R' U R U' B U' B' R'", 0},
-    {ALG_OLL, "OLL 53", "r' U' R U' R' U R U' R' U2 r", 0},
-    {ALG_OLL, "OLL 54", "r U R' U R U' R' U R U2 r'", 0},
-    {ALG_OLL, "OLL 55", "R U2 R2 U' R U' R' U2 F R F'", 0},
-    {ALG_OLL, "OLL 56", "r U r' U R U' R' U R U' R' r U' r'", 0},
-    {ALG_OLL, "OLL 57", "R U R' U' M' U R U' r'", 0},
+    {ALG_OLL, "OLL 51", "f R U R' U' R U R' U' f'", "y2 F U R U' R' U R U' R' F'"},
+    {ALG_OLL, "OLL 52", "R U R' U R U' B U' B' R'", "R' U' R U' R' U F' U F R"},
+    {ALG_OLL, "OLL 53", "r' U' R U' R' U R U' R' U2 r", "y' l' U2 L U L' U' L U L' U l"},
+    {ALG_OLL, "OLL 54", "r U R' U R U' R' U R U2 r'", "y' r U2 R' U' R U R' U' R U' r'"},
+    {ALG_OLL, "OLL 55", "R U2 R2 U' R U' R' U2 F R F'", "y R' F R U R U' R2 F' R2 U' R' U R U R'"},
+    {ALG_OLL, "OLL 56", "r U r' U R U' R' U R U' R' r U' r'", "F R U R' U' R F' r U R' U' r'"},
+    {ALG_OLL, "OLL 57", "R U R' U' M' U R U' r'", "R U R' U' r R' U R U' r'"},
 
     /* ---- PLL: the 21 */
-    {ALG_PLL, "AA", "x R' U R' D2 R U' R' D2 R2 x'", 0},
-    {ALG_PLL, "AB", "x R2 D2 R U R' D2 R U' R x'", 0},
-    {ALG_PLL, "E", "x' R U' R' D R U R' D' R U R' D R U' R' D' x", 0},
-    {ALG_PLL, "F", "R' U' F' R U R' U' R' F R2 U' R' U' R U R' U R", 0},
-    {ALG_PLL, "GA", "R2 U R' U R' U' R U' R2 U' D R' U R D'", 0},
-    {ALG_PLL, "GB", "R' U' R U D' R2 U R' U R U' R U' R2 D", 0},
-    {ALG_PLL, "GC", "R2 U' R U' R U R' U R2 U D' R U' R' D", 0},
-    {ALG_PLL, "GD", "R U R' U' D R2 U' R U' R' U R' U R2 D'", 0},
-    {ALG_PLL, "H", "M2 U M2 U2 M2 U M2", 0},
-    {ALG_PLL, "JA", "x R2 F R F' R U2 r' U r U2 x'", 0},
-    {ALG_PLL, "JB", "R U R' F' R U R' U' R' F R2 U' R'", 0},
-    {ALG_PLL, "NA", "R U R' U R U R' F' R U R' U' R' F R2 U' R' U2 R U' R'", 0},
-    {ALG_PLL, "NB", "R' U R U' R' F' U' F R U R' F R' F' R U' R", 0},
-    {ALG_PLL, "RA", "R U' R' U' R U R D R' U' R D' R' U2 R'", 0},
-    {ALG_PLL, "RB", "R2 F R U R U' R' F' R U2 R' U2 R", 0},
-    {ALG_PLL, "T", "R U R' U' R' F R2 U' R' U' R U R' F'", 0},
-    {ALG_PLL, "UA", "M2 U M U2 M' U M2", "R U' R U R U R U' R' U' R2"},
-    {ALG_PLL, "UB", "M2 U' M U2 M' U' M2", "R2 U R U R' U' R' U' R' U R'"},
-    {ALG_PLL, "V", "R' U R' U' B' R' B2 U' B' U B' R B R", 0},
-    {ALG_PLL, "Y", "F R U' R' U' R U R' F' R U R' U' R' F R F'", 0},
-    {ALG_PLL, "Z", "M' U M2 U M2 U M' U2 M2", 0},
+    {ALG_PLL, "AA", "x R' U R' D2 R U' R' D2 R2 x'", "y' x L2 D2 L' U' L D2 L' U L' x' | R' F R' B2 R F' R' B2 R2"},
+    {ALG_PLL, "AB", "x R2 D2 R U R' D2 R U' R x'", "y2 x' L2 D2 L U L' D2 L U' L x | y R B' R F2 R' B R F2 R2"},
+    {ALG_PLL, "E", "x' R U' R' D R U R' D' R U R' D R U' R' D' x", "y R2 U R' U' y R U R' U' R U R' U' R U R' y' R U' R2"},
+    {ALG_PLL, "F", "R' U' F' R U R' U' R' F R2 U' R' U' R U R' U R", "y' R' U R U' R2 F' U' F U R F R' F' R2"},
+    {ALG_PLL, "GA", "R2 U R' U R' U' R U' R2 U' D R' U R D'", "R2 u R' U R' U' R u' R2 y' R' U R"},
+    {ALG_PLL, "GB", "R' U' R U D' R2 U R' U R U' R U' R2 D", "R' U' R y R2 u R' U R U' R u' R2"},
+    {ALG_PLL, "GC", "R2 U' R U' R U R' U R2 U D' R U' R' D", "R2 u' R U' R U R' u R2 y R U' R'"},
+    {ALG_PLL, "GD", "R U R' U' D R2 U' R U' R' U R' U R2 D'", "R U R' y' R2 u' R U' R' U R' u R2"},
+    {ALG_PLL, "H", "M2 U M2 U2 M2 U M2", "R2 U2 R U2 R2 U2 R2 U2 R U2 R2"},
+    {ALG_PLL, "JA", "x R2 F R F' R U2 r' U r U2 x'", "y2 L' U' L F L' U' L U L F' L2 U L | y' R' U L' U2 R U' R' U2 R L"},
+    {ALG_PLL, "JB", "R U R' F' R U R' U' R' F R2 U' R'", "R U2 R' U' R U2 L' U R' U' L"},
+    {ALG_PLL, "NA", "R U R' U R U R' F' R U R' U' R' F R2 U' R' U2 R U' R'", "L U' R U2 L' U R' L U' R U2 L' U R'"},
+    {ALG_PLL, "NB", "R' U R U' R' F' U' F R U R' F R' F' R U' R", "R' U L' U2 R U' L R' U L' U2 R U' L"},
+    {ALG_PLL, "RA", "R U' R' U' R U R D R' U' R D' R' U2 R'", "R U R' F' R U2 R' U2 R' F R U R U2 R'"},
+    {ALG_PLL, "RB", "R2 F R U R U' R' F' R U2 R' U2 R", "y' R' U2 R U2 R' F R U R' U' R' F' R2"},
+    {ALG_PLL, "T", "R U R' U' R' F R2 U' R' U' R U R' F'", "F R U' R' U R U R2 F' R U R U' R'"},
+    {ALG_PLL, "UA", "M2 U M U2 M' U M2", "R U' R U R U R U' R' U' R2 | y2 R2 U' R' U' R U R U R U' R"},
+    {ALG_PLL, "UB", "M2 U' M U2 M' U' M2", "R2 U R U R' U' R' U' R' U R' | y2 R' U R' U' R' U' R' U R U R2"},
+    {ALG_PLL, "V", "R' U R' U' B' R' B2 U' B' U B' R B R", "R' U R' U' y R' F' R2 U' R' U R' F R F"},
+    {ALG_PLL, "Y", "F R U' R' U' R U R' F' R U R' U' R' F R F'", "R2 U' R2 U' R2 U R' F' R U R2 U' R' F R"},
+    {ALG_PLL, "Z", "M' U M2 U M2 U M' U2 M2", "y M2 U M2 U M' U2 M2 U2 M' | R' U' R U' R U R U' R' U R U R2 U' R'"},
 
     /* ---- F2L: the front-right pair, every case */
-    {ALG_F2L, "F2L 1", "U R U' R'", 0},
-    {ALG_F2L, "F2L 2", "U' F' U F", 0},
+    {ALG_F2L, "F2L 1", "U R U' R'", "R' F R F'"},
+    {ALG_F2L, "F2L 2", "U' F' U F", "F R' F' R"},
     {ALG_F2L, "F2L 3", "F' U' F", 0},
     {ALG_F2L, "F2L 4", "R U R'", 0},
     {ALG_F2L, "F2L 5", "U' R U R' U2 R U' R'", 0},
@@ -196,6 +196,37 @@ int alg_pos(int i)
 
 int alg_moves(int i, uint8_t *out) { return cube_parse(alg_get(i)->alg, out, ALG_MAX); }
 
+int alg_forms(int i)
+{
+    const char *p = alg_get(i)->alt;
+    int n = 1;
+    if (!p || !*p) return 1;
+    for (n = 2; *p; p++) n += *p == '|';
+    return n > ALG_FORMS ? ALG_FORMS : n;
+}
+
+int alg_form_text(int i, int k, char *out, int max)
+{
+    const char *p = k == 0 ? alg_get(i)->alg : alg_get(i)->alt;
+    int n = 0;
+    if (!p) return out[0] = 0, 0;
+    for (; k > 1 && *p; p++)             /* skip k - 1 bars */
+        if (*p == '|') k--;
+    if (k > 1) return out[0] = 0, 0;
+    while (*p == ' ') p++;
+    while (*p && *p != '|' && n < max - 1) out[n++] = *p++;
+    while (n && out[n - 1] == ' ') n--;
+    out[n] = 0;
+    return n;
+}
+
+int alg_form(int i, int k, uint8_t *out)
+{
+    char t[160];
+    if (k >= alg_forms(i) || !alg_form_text(i, k, t, sizeof t)) return -1;
+    return cube_parse(t, out, ALG_MAX);
+}
+
 int alg_setup(int i, uint8_t *out, int auf)
 {
     int n = alg_moves(i, out);
@@ -242,6 +273,57 @@ int alg_ll_oriented(const cube_t *c)
 }
 
 int alg_solved_auf(const cube_t *c) { return cube_solved_turn(c); }
+
+static int upright(const cube_t *c, cube_t *o)   /* c turned whole so that U and F are where they belong */
+{
+    static const char *const TILT[6] = {"", "x", "x2", "x'", "z", "z'"};
+    int t, y;
+    uint8_t m[4];
+    for (t = 0; t < 6; t++)
+        for (y = 0; y < 4; y++) {
+            int n = cube_parse(TILT[t], m, 4);
+            *o = *c;
+            cube_apply(o, m, n);
+            if (y) cube_move(o, MV(MB_y, y));
+            if (o->f[4] == CF_U && o->f[22] == CF_F) return 1;
+        }
+    return 0;
+}
+
+static int corners_placed(const cube_t *c)   /* the last layer's corners where they belong, up to a U turn */
+{
+    static const uint8_t SIDE_CORNER[8] = {18, 20, 9, 11, 45, 47, 36, 38};
+    int a, i;
+    for (a = 0; a < 4; a++) {
+        cube_t t = *c;
+        if (a) cube_move(&t, MV(MB_U, a));
+        for (i = 0; i < 8 && t.f[SIDE_CORNER[i]] == SIDE_CORNER[i] / 9; i++) {}
+        if (i == 8) return 1;
+    }
+    return 0;
+}
+
+int alg_goal_met(int i, const cube_t *c)
+{
+    cube_t u;
+    int set = alg_get(i)->set, a;
+    if (!upright(c, &u)) return 0;
+    switch (set) {
+    case ALG_OLL:
+    case ALG_OLL2:
+        for (a = 0; a < 4; a++) {        /* (a last U turn changes nothing here, D or a slice turn might) */
+            cube_t t = u;
+            if (a) cube_move(&t, MV(MB_U, a));
+            if (cube_f2l_solved(&t) && alg_ll_oriented(&t)) return 1;
+        }
+        return cube_solved_turn(&u);
+    case ALG_F2L: return cube_f2l_solved(&u) || cube_solved_turn(&u);
+    case ALG_PLL2:
+        if (alg_pos(i) < 2) return cube_f2l_solved(&u) && alg_ll_oriented(&u) && corners_placed(&u);
+        return cube_solved_turn(&u);
+    default: return cube_solved_turn(&u);
+    }
+}
 
 /* a case's fingerprint, the same from any side and with any last-layer turn */
 static const uint8_t LL_SIDE[12] = {18, 19, 20, 9, 10, 11, 45, 46, 47, 36, 37, 38};   /* F R B L top rows */

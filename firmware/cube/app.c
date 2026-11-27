@@ -399,6 +399,7 @@ static struct {
     uint32_t vt_start, vt_ms;
     uint8_t show_map;
     /* ALGS */
+    uint8_t alg_form, alg_3d;            /* which of the case's formulas; the picture in 3D (OLL, PLL: top view) */
     uint8_t play;                        /* the formula being played */
     uint8_t pm[ALG_MAX], pn, pi;
     uint32_t p_next;
@@ -411,6 +412,8 @@ static struct {
     /* SETTINGS */
     uint8_t set_row, key_sel, clear_armed, stats_at;
     uint8_t lit_keys_dbg;
+    uint8_t help, home_used;             /* HOME held: this page's controls */
+    uint32_t home_at;
     uint32_t lit;
 } ui;
 
@@ -447,6 +450,7 @@ static void go(int page)
     if (page == P_MENU && ui.page >= P_TIMER && ui.page <= P_SET) ui.menu_at = (uint8_t)(ui.page - 1);   /* where you were */
     if (page == P_DRILL) ui.d_state = D_SETUP;
     ui.page = (uint8_t)page;
+    ui.help = 0;
     ui.play = 0;
     ui.show_map = 0;
     ui.redraw = R_ALL;
@@ -741,9 +745,20 @@ static int alg_cur(void)
     return i < 0 ? 0 : i;
 }
 
+static void algs_case_step(int d)
+{
+    int n = alg_count(set.alg_set);
+    set.alg_pos = (uint8_t)((set.alg_pos + n * 8 + d) % n);
+    ui.alg_form = 0;
+    ui.play = 0;
+    app_say(alg_get(alg_cur())->name, "");
+    set_changed();
+    ui.redraw = R_ALL;
+}
+
 static void algs_play_start(void)
 {
-    int n = alg_moves(alg_cur(), ui.pm);
+    int n = alg_form(alg_cur(), ui.alg_form, ui.pm);
     if (n <= 0) return;
     ui.pn = (uint8_t)n;
     ui.pi = 0;
@@ -753,7 +768,6 @@ static void algs_play_start(void)
     ui.dv.hn = 0;
     ui.play = 1;
     ui.p_next = plat_ms() + 700u;
-    m3_view(&ui.dcam, VIEW_YAW[0], VIEW_PITCH[0]);
     ui.redraw = R_ALL;
 }
 
@@ -827,17 +841,27 @@ static void drill_real_done(void)        /* REAL: the time into the case's avera
     ui.redraw = R_ALL;
 }
 
+static int drill_par(void)               /* the shortest of the case's formulas, plus 2 (and the U to line it up) */
+{
+    uint8_t mv[ALG_MAX];
+    int k, best = 99;
+    for (k = 0; k < alg_forms(ui.d_alg); k++) {
+        int n = alg_form(ui.d_alg, k, mv), j, f = 0;
+        for (j = 0; j < n; j++) f += MV_BASE(mv[j]) < MB_x;
+        if (n > 0 && f < best) best = f;
+    }
+    return best + 2 + (ui.d_auf != 0);
+}
+
 static void drill_virtual_turn(int m)
 {
     vc_move(&ui.dv, m, 1);
     if (!ui.d_moves) ui.tm.t_start = plat_ms();
     if (MV_BASE(m) < MB_x) ui.d_moves++;
-    if (cube_solved_turn(&ui.dv.c)) {
-        uint8_t mv[ALG_MAX];
-        int n = alg_moves(ui.d_alg, mv);
+    if (alg_goal_met(ui.d_alg, &ui.dv.c)) {   /* any formula that does the job counts */
         ui.d_ms = plat_ms() - ui.tm.t_start;
         ui.d_state = D_ANSWER;
-        app_say("SOLVED", ui.d_moves <= n + 2 ? "RIGHT" : "SLOW");
+        app_say("SOLVED", ui.d_moves <= drill_par() ? "RIGHT" : "SLOW");
         ui.redraw = R_ALL;
     }
     ui.redraw |= R_ALL;
@@ -963,14 +987,9 @@ static void button_down(int b, uint32_t t)
     entropy(t ^ (uint32_t)b << 24);
     ui.btn_at[b] = t;
     if (b == B_SEL) ui.sel_used = 0;
-    if (b == B_HOME) {
-        if (ui.page == P_KEYEDIT) {
-            set_save();
-            go(P_SET);
-        } else if (ui.page == P_MENU)
-            go(ui.menu_at + 1);
-        else
-            go(P_MENU);
+    if (b == B_HOME) {                   /* on release: a tap is the menu, a hold the help (input) */
+        ui.home_at = t;
+        ui.home_used = 0;
         return;
     }
     switch (ui.page) {
@@ -1014,7 +1033,11 @@ static void button_down(int b, uint32_t t)
         if (b == B_PLAY) {
             if (ui.play) ui.play = 0, ui.redraw = R_ALL;
             else algs_play_start();
-        }
+        } else if (b == B_SEL) {
+            ui.alg_3d ^= 1u;
+            ui.redraw = R_ALL;
+        } else if (b == B_OCTUP || b == B_OCTDN)
+            algs_case_step(b == B_OCTUP ? 1 : -1);
         break;
     case P_DRILL:
         if (ui.d_state == D_SETUP || ui.d_state == D_DONE) {
@@ -1026,12 +1049,10 @@ static void button_down(int b, uint32_t t)
             const sr_card_t *c = sr_card(&ui.d_round);
             int show = c && c->kind == SR_SHOW;
             if (b == B_PLAY) {
-                uint8_t mv[ALG_MAX];
-                int n = alg_moves(ui.d_alg, mv);
                 drill_grade(show ? SR_RIGHT
                             : ui.d_moves == 0xFF ? SR_WRONG
-                            : ui.d_mode == DM_VIRTUAL && ui.d_moves > n + 2 ? SR_SLOW
-                                                                          : SR_RIGHT);
+                            : ui.d_mode == DM_VIRTUAL && ui.d_moves > drill_par() ? SR_SLOW
+                                                                                : SR_RIGHT);
             } else if (b == B_REC && !show)
                 drill_grade(SR_WRONG);
             else if (b == B_SEL && !show)
@@ -1071,8 +1092,26 @@ static void button_down(int b, uint32_t t)
     }
 }
 
+static void home_tap(void)
+{
+    if (ui.help) {
+        ui.help = 0;
+        ui.redraw = R_ALL;
+    } else if (ui.page == P_KEYEDIT) {
+        set_save();
+        go(P_SET);
+    } else if (ui.page == P_MENU)
+        go(ui.menu_at + 1);
+    else
+        go(P_MENU);
+}
+
 static void button_up(int b, uint32_t t)
 {
+    if (b == B_HOME) {
+        if (!ui.home_used) home_tap();
+        return;
+    }
     if (ui.page == P_CUBE && b == B_REC) {
         if (t - ui.btn_at[B_REC] >= 600u) cube_apply_scramble_now();
         else follow_start();
@@ -1111,16 +1150,35 @@ static void enc_turn(int e, int32_t d)
         if (e == EN_SELECT) {
             set.alg_set = (uint8_t)((set.alg_set + ALG_SETS * 8 + d) % ALG_SETS);
             set.alg_pos = 0;
+            ui.alg_form = 0;
+            ui.play = 0;
             app_say(alg_set_name(set.alg_set), "");
-        } else if (e == EN_PRESET || e == EN_K1) {
-            int n = alg_count(set.alg_set);
-            set.alg_pos = (uint8_t)((set.alg_pos + n * 8 + d) % n);
-            app_say(alg_get(alg_cur())->name, "");
-        } else
-            break;
-        ui.play = 0;
-        set_changed();
-        ui.redraw = R_ALL;
+            set_changed();
+            ui.redraw = R_ALL;
+        } else if (e == EN_PRESET)
+            algs_case_step(d);
+        else if (e == EN_ALGO) {         /* the case's next formula */
+            int n = alg_forms(alg_cur());
+            char b[12];
+            ui.alg_form = (uint8_t)((ui.alg_form + n * 8 + d) % n);
+            ui.play = 0;
+            b[0] = 0;
+            tint(b, ui.alg_form + 1);
+            tcat(b, " OF ");
+            tint(b, n);
+            app_say("FORMULA", b);
+            ui.redraw = R_ALL;
+        } else if (e == EN_K1 || e == EN_K2 || e == EN_K3) {
+            m3_turn(&ui.dcam, e - EN_K1, 15.0f * (float)d);
+            ui.alg_3d = 1;
+            ui.redraw |= R_MAIN;
+        } else if (e == EN_K4) {
+            set.view = (uint8_t)((set.view + VIEW_PRESETS * 8 + d) % VIEW_PRESETS);
+            m3_view(&ui.dcam, VIEW_YAW[set.view], VIEW_PITCH[set.view]);
+            ui.alg_3d = 1;
+            app_say("VIEW", VIEW_NAME[set.view]);
+            ui.redraw |= R_MAIN;
+        }
         break;
     case P_DRILL:
         if (ui.d_state != D_SETUP && ui.d_state != D_DONE) break;
@@ -1187,6 +1245,11 @@ static void input(void)
             if (ev.down) ui.btn |= 1u << ev.idx;
             else ui.btn &= ~(1u << ev.idx);
         }
+        if (ui.help && ev.down && !(ev.kind == EV_BTN && ev.idx == B_HOME)) {   /* the help open: anything closes it */
+            ui.help = 0;
+            ui.redraw = R_ALL;
+            continue;
+        }
         /* the timer takes its edges first */
         if (ui.page == P_TIMER && !(ev.kind == EV_BTN && ev.idx == B_HOME)
             && timer_edge(&ui.tm, ev.kind, ev.idx, ev.down, ev.t))
@@ -1211,6 +1274,12 @@ static void input(void)
     }
     if (ui.page == P_TIMER || (ui.page == P_DRILL && ui.d_mode == DM_REAL)) timer_poll(&ui.tm, now);
     if (ui.del_armed && now - ui.del_at > 2500u) ui.del_armed = 0;
+    if ((ui.btn >> B_HOME & 1u) && !ui.home_used && now - ui.home_at >= 600u) {
+        ui.home_used = 1;
+        ui.help = 1;
+        ui.redraw = R_ALL;
+        app_say("HELP", PAGE_NAME[ui.page]);
+    }
 }
 
 void app_input_only(void) { input(); }
@@ -1284,8 +1353,12 @@ static void draw_header(void)
         break;
     case P_DRILL:
         tcat(t, alg_set_short(set.drill_set));
-        tcat(t, "  ");
-        tcat(t, DM_NAME[ui.d_state == D_SETUP || ui.d_state == D_DONE ? set.drill_mode : ui.d_mode]);
+        if (ui.d_state == D_CARD || ui.d_state == D_ANSWER) {
+            tcat(t, "  CARD ");
+            tint(t, ui.d_round.at + 1);
+            tcat(t, "/");
+            tint(t, ui.d_round.n);
+        }
         break;
     case P_STATS:
         tint(t, sol.n);
@@ -1417,112 +1490,192 @@ static void draw_cube_page(int32_t oy)
     view_draw(oy, MAIN_H / 2);
 }
 
+static int ll_set(int set) { return set == ALG_OLL || set == ALG_PLL || set == ALG_OLL2 || set == ALG_PLL2; }
+static int pll_set(int set) { return set == ALG_PLL || set == ALG_PLL2; }
+
+/* a case's picture in the top-left 100 x 100: the last layer from above (PLL with its arrows), or the 3D quads
+ * build_views made */
+static void draw_case(int i, int auf, int top, int arrows, int32_t oy)
+{
+    const alg_t *a = alg_get(i);
+    if (top && ll_set(a->set)) {
+        cube_t c;
+        alg_case(i, &c, auf);
+        view_ll(&c, 8, 6 - oy, 22, !pll_set(a->set), SCHEME_YELLOW);
+        if (arrows && pll_set(a->set)) {
+            uint8_t m[ALG_MAX + 1];
+            int n = alg_setup(i, m, auf);
+            view_ll_arrows(m, n, 8, 6 - oy, 22);
+        }
+    } else
+        view_draw(oy, MAIN_H / 2);
+}
+
+/* a button and what it does, as a small key cap */
+static int32_t legend(int32_t x, int32_t y, const char *btn, const char *what, uint16_t c)
+{
+    int32_t w = text_w(&FONT_XS, btn) + 6;
+    cv_rect(x, y, w, 15, c);
+    cv_text(x + 3, y + 1, &FONT_XS, btn, C_BLACK);
+    return cv_text(x + w + 4, y + 1, &FONT_XS, what, C_GRAY) + 10;
+}
+
 static void draw_algs(int32_t oy)
 {
     const alg_t *a = alg_get(alg_cur());
-    char t[120];
+    char t[160];
+    int n = alg_forms(alg_cur());
     if (ui.play) {
         view_draw(oy, MAIN_H / 2);
-        if (oy) {
-            cube_print(ui.pm, ui.pi, t, sizeof t);
-            gtext_wrap(8, 150 - oy, 224, 13, &FONT_XS, t[0] ? t : "...", C_HI);
-        }
+        t[0] = 0;
+        tint(t, ui.pi);
+        tcat(t, "/");
+        tint(t, ui.pn);
+        cv_text(232 - text_w(&FONT_XS, t), 2 - oy, &FONT_XS, t, C_GRAY);
+        cube_print(ui.pm, ui.pi, t, sizeof t);
+        gtext_wrap(8, 146 - oy, 224, 14, &FONT_XS, t[0] ? t : "...", C_HI);
         return;
     }
-    if (a->set == ALG_OLL || a->set == ALG_PLL || a->set == ALG_OLL2 || a->set == ALG_PLL2) {
-        cube_t c;
-        alg_case(alg_cur(), &c, 0);
-        view_ll(&c, 8, 8 - oy, 22, a->set == ALG_OLL || a->set == ALG_OLL2, SCHEME_YELLOW);
-    } else
-        view_draw(oy, MAIN_H / 2);
+    draw_case(alg_cur(), 0, !ui.alg_3d, 1, oy);
     {
-        int32_t y;
-        gtext_wrap(100, 10 - oy, 136, 18, &FONT_B, a->name, C_WHITE);
-        y = gtext_wrap(8, 102 - oy, 224, 17, &FONT_B, a->alg, C_HI);
-        if (a->alt) {
-            t[0] = 0;
-            tcat(t, "OR ");
-            tcat(t, a->alt);
-            gtext_wrap(8, y + 4, 224, 14, &FONT_XS, t, C_GRAY);
-        }
+        int32_t y = gtext_wrap(106, 6 - oy, 130, 18, &FONT_B, a->name, C_WHITE);
+        t[0] = 0;
+        tcat(t, "FORMULA ");
+        tint(t, ui.alg_form + 1);
+        tcat(t, " OF ");
+        tint(t, n);
+        cv_text(106, y + 4, &FONT_XS, t, n > 1 ? C_HI : C_DIM);
+        if (n > 1) cv_text(106, y + 20, &FONT_XS, "ALGORITHM: NEXT", C_DIM);
+        if (ll_set(a->set)) cv_text(106, y + 34, &FONT_XS, ui.alg_3d ? "SEL: FROM ABOVE" : "SEL: 3D, K1-K4 TURN", C_DIM);
     }
+    alg_form_text(alg_cur(), ui.alg_form, t, sizeof t);
+    gtext_wrap(8, 104 - oy, 224, 17, &FONT_B, t, C_HI);
 }
+
+static const char *const DRILL_STEPS[3][3] = {
+    {"1  LOOK AT THE CASE", "2  SAY ITS FORMULA TO YOURSELF", "3  PLAY: SEE IT, THEN SAY HOW IT WENT"},
+    {"1  SCRAMBLE YOUR CUBE AS SHOWN, YELLOW UP", "2  HOLD A KEY, LET GO: THE CLOCK RUNS", "3  SOLVE THE CASE, PRESS A KEY"},
+    {"1  THE CUBE ON THE SCREEN IS THE CASE", "2  TURN IT BACK ON THE KEYS (LIT: NEXT)", "3  DONE: IT CHECKS ITSELF"}};
 
 static void draw_drill(int32_t oy)
 {
     const alg_t *a = alg_get(ui.d_alg);
+    const sr_card_t *card = sr_card(&ui.d_round);
     char t[160];
-    int ll = a->set == ALG_OLL || a->set == ALG_PLL || a->set == ALG_OLL2 || a->set == ALG_PLL2;
+    int i, show = card && card->kind == SR_SHOW;
     if (ui.d_state == D_SETUP || ui.d_state == D_DONE) {
         sr_state_t *s = &dst[set.drill_set];
-        text_c(120, 8 - oy, &FONT_B, alg_set_name(set.drill_set), C_WHITE);
-        text_c(120, 30 - oy, &FONT_T, DM_NAME[set.drill_mode], C_HI);
+        cv_text(8, 6 - oy, &FONT_XS, "SET", C_GRAY);
+        cv_text(48, 3 - oy, &FONT_B, alg_set_name(set.drill_set), C_WHITE);
+        cv_text(232 - text_w(&FONT_XS, "SELECT"), 6 - oy, &FONT_XS, "SELECT", C_DIM);
+        cv_text(8, 30 - oy, &FONT_XS, "MODE", C_GRAY);
+        cv_text(48, 27 - oy, &FONT_B, DM_NAME[set.drill_mode], C_HI);
+        cv_text(232 - text_w(&FONT_XS, "K1"), 30 - oy, &FONT_XS, "K1", C_DIM);
+        cv_rect(0, 50 - oy, 240, 1, C_LINE);
         t[0] = 0;
-        tint(t, s->open);
-        tcat(t, " OF ");
-        tint(t, alg_count(set.drill_set));
-        tcat(t, " CASES OPEN, ");
-        tint(t, sr_due_count(s, &dcourse[set.drill_set], SR_FOCUS_SEGS));
-        tcat(t, " DUE");
-        text_c(120, 56 - oy, &FONT_XS, t, C_GRAY);
         if (ui.d_state == D_DONE) {
-            t[0] = 0;
+            tcat(t, "ROUND DONE: ");
             tint(t, ui.d_round.ok);
             tcat(t, " RIGHT, ");
             tint(t, ui.d_round.miss);
-            tcat(t, " WRONG");
-            text_c(120, 84 - oy, &FONT_B, t, C_OK);
+            tcat(t, " MISSED");
+            cv_text(8, 58 - oy, &FONT_B, t, C_OK);
+        } else {
+            tint(t, s->open);
+            tcat(t, " OF ");
+            tint(t, alg_count(set.drill_set));
+            tcat(t, " CASES OPEN, ");
+            tint(t, sr_due_count(s, &dcourse[set.drill_set], SR_FOCUS_SEGS));
+            tcat(t, " DUE (MORE OPEN AS YOU LEARN)");
+            gtext_wrap(8, 58 - oy, 224, 14, &FONT_XS, t, C_GRAY);
         }
-        gtext_wrap(12, 112 - oy, 216, 14, &FONT_XS,
-                   set.drill_mode == DM_RECOGNIZE ? "SEE THE CASE, SAY ITS FORMULA, PLAY TO CHECK."
-                   : set.drill_mode == DM_REAL    ? "SCRAMBLE YOUR CUBE AS SHOWN, HOLD A KEY AND LET GO, SOLVE THE CASE."
-                                                  : "TURN THE CASE BACK ON THE KEYS.",
-                   C_DIM);
+        for (i = 0; i < 3; i++) cv_text(8, 90 + i * 18 - oy, &FONT_XS, DRILL_STEPS[set.drill_mode][i], C_AMB);
+        legend(8, 152 - oy, "PLAY", ui.d_state == D_DONE ? "ANOTHER ROUND" : "START A ROUND", C_HI);
         return;
     }
     if (ui.d_mode == DM_VIRTUAL && ui.d_state == D_CARD) {
         view_draw(oy, MAIN_H / 2);
+        cv_text(8, 2 - oy, &FONT_XS, "TURN IT BACK", C_GRAY);
         return;
     }
-    if (ll) {
-        cube_t c;
-        alg_case(ui.d_alg, &c, ui.d_auf);
-        view_ll(&c, 8, 8 - oy, 20, a->set == ALG_OLL || a->set == ALG_OLL2, SCHEME_YELLOW);
-    } else
-        view_draw(oy, MAIN_H / 2);
-    if (ui.d_mode == DM_REAL && ui.d_state == D_CARD) {
+    if (ui.d_mode == DM_REAL && ui.d_state == D_CARD && ui.tm.st == T_RUN) {
+        st_format((int32_t)(plat_ms() - ui.tm.t_start), t);
+        text_c(120, 60 - oy, &FONT_L, t, C_WHITE);
+        return;
+    }
+    /* the case on the left, what to do on the right */
+    draw_case(ui.d_alg, ui.d_auf, 1, ui.d_state == D_ANSWER, oy);
+    if (ui.d_state == D_CARD && ui.d_mode == DM_RECOGNIZE) {
+        gtext_wrap(106, 10 - oy, 130, 18, &FONT_B, "WHICH CASE? ITS FORMULA?", C_WHITE);
+        legend(8, 152 - oy, "PLAY", "SHOW THE ANSWER", C_HI);
+        return;
+    }
+    if (ui.d_state == D_CARD && ui.d_mode == DM_REAL) {
+        cv_text(106, 6 - oy, &FONT_XS, "1 SCRAMBLE, YELLOW UP:", C_GRAY);
         cube_print(ui.d_setup, ui.d_setup_n, t, sizeof t);
-        if (ui.tm.st == T_RUN) {
-            st_format((int32_t)(plat_ms() - ui.tm.t_start), t);
-            text_c(120, 60 - oy, &FONT_L, t, C_WHITE);
-            return;
-        }
-        cv_text(96, 8 - oy, &FONT_XS, "SCRAMBLE YELLOW UP:", C_GRAY);
-        gtext_wrap(96, 24 - oy, 140, 15, &FONT_T, t, C_HI);
-        text_c(120, 120 - oy, &FONT_B, ui.tm.st == T_READY ? "READY" : ui.tm.st == T_HOLD ? "HOLD" : "HOLD A KEY",
+        gtext_wrap(106, 22 - oy, 130, 17, &FONT_B, t, C_HI);
+        cv_text(8, 112 - oy, &FONT_XS, "2 THEN HOLD A KEY, LET GO, SOLVE IT", C_GRAY);
+        text_c(120, 130 - oy, &FONT_B, ui.tm.st == T_READY ? "READY: LET GO" : ui.tm.st == T_HOLD ? "HOLD..." : "HOLD A KEY",
                ui.tm.st == T_READY ? C_GO : ui.tm.st == T_HOLD ? C_WAIT : C_DIM);
+        legend(8, 156 - oy, "REC", "SKIP", C_GRAY);
         return;
     }
-    if (ui.d_state == D_ANSWER) {
-        const sr_card_t *c = sr_card(&ui.d_round);
-        gtext_wrap(ll ? 92 : 8, 10 - oy, ll ? 144 : 224, 18, &FONT_B, a->name, c && c->kind == SR_SHOW ? C_HI : C_WHITE);
-        gtext_wrap(8, 108 - oy, 224, 17, &FONT_B, a->alg, C_HI);
-        if (ui.d_mode != DM_RECOGNIZE && ui.d_moves != 0xFF && ui.d_ms) {
+    /* the answer */
+    {
+        int32_t y = gtext_wrap(106, 6 - oy, 130, 18, &FONT_B, a->name, show ? C_HI : C_WHITE);
+        if (show) cv_text(106, y + 2, &FONT_XS, "NEW CASE: LEARN IT", C_HI);
+        else if (ui.d_mode != DM_RECOGNIZE && ui.d_moves != 0xFF && ui.d_ms) {
             st_format((int32_t)ui.d_ms, t);
-            cv_text(ll ? 92 : 150, 52 - oy, &FONT_B, t, C_OK);
-        }
-        if (ui.d_mode == DM_REAL && drec.real_cs[ui.d_alg]) {
-            t[0] = 0;
-            tcat(t, "AVG ");
-            {
+            cv_text(106, y + 2, &FONT_B, t, C_OK);
+            if (ui.d_mode == DM_REAL && drec.real_cs[ui.d_alg]) {
                 char b[12];
+                t[0] = 0;
+                tcat(t, "AVERAGE ");
                 st_format(drec.real_cs[ui.d_alg] * 10, b);
                 tcat(t, b);
+                cv_text(106, y + 22, &FONT_XS, t, C_GRAY);
             }
-            cv_text(ll ? 92 : 150, 76 - oy, &FONT_T, t, C_GRAY);
-        }
-    } else
-        text_c(ll ? 166 : 120, 40 - oy, &FONT_B, "WHICH ONE?", C_GRAY);
+        } else if (ui.d_moves == 0xFF)
+            cv_text(106, y + 2, &FONT_XS, "GIVEN UP", C_BAD);
+    }
+    gtext_wrap(8, 100 - oy, 224, 17, &FONT_B, a->alg, C_HI);
+    if (show) legend(8, 156 - oy, "PLAY", "NEXT", C_HI);
+    else {
+        int32_t x = legend(4, 156 - oy, "PLAY", "KNEW IT", C_OK);
+        x = legend(x, 156 - oy, "SEL", "SLOW", C_AMB);
+        legend(x, 156 - oy, "REC", "MISSED", C_BAD);
+    }
+}
+
+/* HOME held: what every control does on this page */
+static const char *const HELP[P_N][8] = {
+    {"SELECT|CHOOSE A PAGE", "PLAY|OPEN IT", "HOME|BACK TO IT", "HOLD HOME|THIS HELP (ANY PAGE)"},
+    {"ANY KEY|INSPECTION (IF ON)", "HOLD, LET GO|START (OR F3 + G5)", "ANY KEY|STOP", "K1|LAST: OK / +2 / DNF",
+     "SEL TWICE|DELETE LAST SOLVE", "REC|NEW SCRAMBLE"},
+    {"KEYS|TURN (SEE SETTINGS)", "SEL + KEY|THE OTHER WAY", "UNDO KEY|BACK; +SEL: SOLVED", "REC|SCRAMBLE, LIT KEYS",
+     "HOLD REC|SCRAMBLED AT ONCE", "PLAY|CLOCK AT 1ST TURN", "K1 K2 K3, K4|TURN THE VIEW, PRESETS", "SEL|THE KEY MAP"},
+    {"SELECT|SET", "PRESETS, OCT|CASE", "ALGORITHM|NEXT FORMULA FOR IT", "K1 K2 K3, K4|TURN THE VIEW, PRESETS",
+     "SEL|PICTURE: ABOVE OR 3D", "PLAY|PLAY IT ON THE CUBE"},
+    {"SELECT, K1|SET, MODE", "PLAY|START; SHOW; KNEW IT", "SEL|SLOW", "REC|MISSED; GIVE UP; SKIP",
+     "KEYS|TURN IT (VIRTUAL)", "HOLD A KEY|THE CLOCK (REAL CUBE)"},
+    {"SELECT|SCROLL THE SOLVES"},
+    {"SELECT|ROW", "K1, OCT|CHANGE IT", "PLAY|EDIT KEYS; CLEAR x2"},
+    {"A KEY|PICK IT", "SELECT|WHAT IT TURNS", "HOME|SAVE AND BACK"}};
+
+static void draw_help(int32_t oy)
+{
+    int i;
+    text_c(120, 4 - oy, &FONT_B, PAGE_NAME[ui.page], C_WHITE);
+    for (i = 0; i < 8 && HELP[ui.page][i]; i++) {
+        const char *h = HELP[ui.page][i];
+        char k[24];
+        int j = 0;
+        while (h[j] && h[j] != '|' && j < 23) k[j] = h[j], j++;
+        k[j] = 0;
+        cv_text(8, 28 + i * 18 - oy, &FONT_XS, k, C_HI);
+        cv_text(96, 28 + i * 18 - oy, &FONT_XS, h[j] == '|' ? h + j + 1 : "", C_AMB);
+    }
+    cv_text(8, 160 - oy, &FONT_XS, "ANY BUTTON: CLOSE", C_DIM);
 }
 
 static void draw_stats(int32_t oy)
@@ -1597,16 +1750,14 @@ static void draw_keyedit(int32_t oy)
 
 static void build_views(void)            /* the 3D quads, once a frame (both bands draw them) */
 {
+    if (ui.help) return;
     if (ui.page == P_CUBE && !ui.show_map) vc_build(&ui.v, &ui.cam, 120, MAIN_H / 2, 30.0f, SCHEME_WHITE);
     else if (ui.page == P_ALGS) {
-        const alg_t *a = alg_get(alg_cur());
-        if (ui.play) vc_build(&ui.dv, &ui.dcam, 120, 72, 24.0f, SCHEME_YELLOW);
-        else if (!(a->set == ALG_OLL || a->set == ALG_PLL || a->set == ALG_OLL2 || a->set == ALG_PLL2)) {
+        if (ui.play) vc_build(&ui.dv, &ui.dcam, 120, 74, 24.0f, SCHEME_YELLOW);
+        else if (ui.alg_3d || !ll_set(alg_get(alg_cur())->set)) {
             cube_t c;
-            mat3_t cam;
             alg_case(alg_cur(), &c, 0);
-            m3_view(&cam, VIEW_YAW[0], VIEW_PITCH[0]);
-            view_build(&c, &cam, 50, 50, 16.0f, -1, 0.0f, SCHEME_YELLOW);
+            view_build(&c, &ui.dcam, 52, 50, 16.0f, -1, 0.0f, SCHEME_YELLOW);
         }
     } else if (ui.page == P_DRILL) {
         if (ui.d_mode == DM_VIRTUAL && ui.d_state == D_CARD) vc_build(&ui.dv, &ui.dcam, 120, MAIN_H / 2, 30.0f, SCHEME_YELLOW);
@@ -1615,7 +1766,7 @@ static void build_views(void)            /* the 3D quads, once a frame (both ban
             mat3_t cam;
             alg_case(ui.d_alg, &c, ui.d_auf);
             m3_view(&cam, VIEW_YAW[0], VIEW_PITCH[0]);
-            view_build(&c, &cam, 46, 50, 15.0f, -1, 0.0f, SCHEME_YELLOW);
+            view_build(&c, &cam, 52, 50, 16.0f, -1, 0.0f, SCHEME_YELLOW);
         }
     }
 }
@@ -1627,6 +1778,11 @@ static void draw_main(void)
     for (h = 0; h < 2; h++) {
         int32_t oy = h * MAIN_H / 2;
         cv_begin(240, MAIN_H / 2, C_BLACK);
+        if (ui.help) {
+            draw_help(oy);
+            cv_blit(0, (uint32_t)(MAIN_Y + oy));
+            continue;
+        }
         switch (ui.page) {
         case P_MENU: draw_menu(oy); break;
         case P_TIMER: draw_timer(oy); break;
@@ -1644,7 +1800,7 @@ static void draw_main(void)
 static const char *footer_hint(void)
 {
     switch (ui.page) {
-    case P_MENU: return "SELECT: CHOOSE   PLAY: OPEN";
+    case P_MENU: return "SELECT: CHOOSE   PLAY: OPEN   HOLD HOME: HELP";
     case P_TIMER:
         if (ui.tm.st == T_RUN) return "ANY KEY: STOP";
         if (ui.tm.st == T_DONE) return "K1: OK +2 DNF   SEL: DELETE   REC: NEW";
@@ -1652,14 +1808,14 @@ static const char *footer_hint(void)
     case P_CUBE:
         if (ui.follow) return ui.fdev ? "OFF THE SCRAMBLE: UNDO" : "FOLLOW THE LIT KEYS";
         return "REC: SCRAMBLE (HOLD: AT ONCE)  K1-4: VIEW";
-    case P_ALGS: return ui.play ? "PLAY: STOP" : "SELECT: SET   K1: CASE   PLAY: SHOW";
+    case P_ALGS: return ui.play ? "PLAY: STOP" : "SELECT: SET  PRESETS: CASE  PLAY: SHOW";
     case P_DRILL:
-        if (ui.d_state == D_SETUP || ui.d_state == D_DONE) return "SELECT: SET   K1: MODE   PLAY: GO";
+        if (ui.d_state == D_SETUP || ui.d_state == D_DONE) return "HOLD HOME: HELP";
         if (ui.d_state == D_ANSWER) {
             const sr_card_t *c = sr_card(&ui.d_round);
-            return c && c->kind == SR_SHOW ? "NEW CASE.  PLAY: NEXT" : "PLAY: RIGHT   SEL: SLOW   REC: WRONG";
+            return c && c->kind == SR_SHOW ? "THE NEXT TIME IT ASKS" : "HOW DID IT GO?";
         }
-        return ui.d_mode == DM_RECOGNIZE ? "PLAY: SHOW THE FORMULA" : "REC: GIVE UP";
+        return ui.d_mode == DM_VIRTUAL ? "UNDO KEY: BACK   REC: GIVE UP" : "HOLD HOME: HELP";
     case P_STATS: return "SELECT: SCROLL";
     case P_SET:
         if (ui.set_row == SR_SCR && sv_found) {   /* how long the FM-1 took to find the last scramble */
@@ -1872,6 +2028,10 @@ int app_expect(const char *what, int *got)
     else if (!strcmp(what, "alg_set")) *got = set.alg_set;
     else if (!strcmp(what, "alg_pos")) *got = set.alg_pos;
     else if (!strcmp(what, "playing")) *got = ui.play;
+    else if (!strcmp(what, "alg_form")) *got = ui.alg_form;
+    else if (!strcmp(what, "alg_forms")) *got = alg_forms(alg_cur());
+    else if (!strcmp(what, "alg_3d")) *got = ui.alg_3d;
+    else if (!strcmp(what, "help")) *got = ui.help;
     else if (!strcmp(what, "d_state")) *got = ui.d_state;
     else if (!strcmp(what, "d_mode")) *got = ui.d_mode;
     else if (!strcmp(what, "d_ok")) *got = ui.d_round.ok;

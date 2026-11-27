@@ -13,7 +13,7 @@ typedef struct {
     uint8_t set;
     const char *name;
     const char *alg;
-    const char *alt;                     /* 0: none */
+    const char *alt;                     /* more formulas for the same case, "|" between them; 0: none */
 } alg_t;
 
 int alg_total(void);
@@ -25,6 +25,10 @@ int alg_pos(int i);                      /* its place in its set */
 const char *alg_set_name(int set);       /* "LBL", "2-LOOK OLL", ... */
 const char *alg_set_short(int set);
 int alg_moves(int i, uint8_t *out);      /* the formula parsed (-1: it does not parse) */
+#define ALG_FORMS 6                      /* formulas for one case at most */
+int alg_forms(int i);                    /* how many formulas the case has (the first and its alternatives) */
+int alg_form_text(int i, int k, char *out, int max);   /* formula k as text (0: the first) */
+int alg_form(int i, int k, uint8_t *out);  /* formula k parsed (-1: none, or it does not parse) */
 /* the case: the formula's inverse on a solved cube, then U^auf (the pieces of the last layer turned, as a real
  * cube comes) */
 int alg_case(int i, cube_t *c, int auf);
@@ -37,3 +41,7 @@ int alg_cross_kept(const cube_t *c);     /* the cross and the FL, BL, BR pairs s
 int alg_ll_oriented(const cube_t *c);    /* the last layer's top all one colour */
 int alg_solved_auf(const cube_t *c);     /* solved but for a turn of one layer */
 int alg_same_case(int a, int b);         /* one case (any side, any last U turn) */
+/* what entry i's formulas reach, on cube c after one of them (any whole-cube rotation undone): OLL the last layer
+ * oriented, PLL solved, F2L the first two layers, 2-look PLL's corner cases the corners placed, LBL solved (all up
+ * to a last turn of one layer) */
+int alg_goal_met(int i, const cube_t *c);

@@ -231,7 +231,7 @@ static void test_keymap(void)
 
 static void test_algs(void)
 {
-    int i, set, counts[ALG_SETS] = {0};
+    int i, set, counts[ALG_SETS] = {0}, alts_seen = 0;
     for (i = 0; i < ALG_N; i++) {
         const alg_t *a = alg_get(i);
         uint8_t m[ALG_MAX], inv[ALG_MAX];
@@ -240,19 +240,22 @@ static void test_algs(void)
         counts[a->set]++;
         CHECK(n > 0, "%s: '%s' does not parse", a->name, a->alg);
         if (n <= 0) continue;
-        if (a->alt && a->alt[0]) {
-            int n2 = cube_parse(a->alt, inv, ALG_MAX);
-            cube_t c1, c2;
-            CHECK(n2 > 0, "%s: alternative does not parse", a->name);
-            /* the alternative solves the same case (up to a last U turn and a rotation) */
-            cube_reset(&c1);
-            cube_invert(m, n, inv + 32);
-            cube_apply(&c1, inv + 32, n);
-            c2 = c1;
-            n2 = cube_parse(a->alt, inv, ALG_MAX);
-            cube_apply(&c2, inv, n2);
-            CHECK(cube_solved_turn(&c2) || alg_solved_auf(&c2), "%s: alternative does not solve the case", a->name);
-            (void)c1;
+        {                                /* every formula of the case reaches the set's goal from it */
+            int k, nf = alg_forms(i);
+            CHECK(nf >= 1 && nf <= ALG_FORMS, "%s: %d formulas", a->name, nf);
+            for (k = 0; k < nf; k++) {
+                uint8_t f[ALG_MAX];
+                char t[200];
+                int nk = alg_form(i, k, f);
+                cube_t c1;
+                alg_form_text(i, k, t, sizeof t);
+                CHECK(nk > 0, "%s: formula %d '%s' does not parse", a->name, k + 1, t);
+                if (nk <= 0) continue;
+                alg_case(i, &c1, 0);
+                cube_apply(&c1, f, nk);
+                CHECK(alg_goal_met(i, &c1), "%s: formula %d '%s' does not solve the case", a->name, k + 1, t);
+            }
+            if (nf > 1) alts_seen++;
         }
         /* the case: the inverse on a solved cube; it keeps what the set keeps */
         cube_reset(&c);
@@ -281,6 +284,16 @@ static void test_algs(void)
     CHECK(counts[ALG_OLL2] == 10, "2-look OLL %d", counts[ALG_OLL2]);
     CHECK(counts[ALG_PLL2] == 6, "2-look PLL %d", counts[ALG_PLL2]);
     CHECK(counts[ALG_LBL] >= 5, "LBL %d", counts[ALG_LBL]);
+    CHECK(alts_seen >= 60, "only %d cases with more than one formula", alts_seen);
+    {                                    /* a formula that only orients is not a PLL answer; another OLL one is */
+        cube_t c;
+        uint8_t m[ALG_MAX];
+        int oll27 = alg_index(ALG_OLL, 26), n;
+        alg_case(oll27, &c, 0);
+        n = cube_parse("y' R' U2 R U R' U R", m, ALG_MAX);   /* a left-handed Sune from the back: orients it */
+        cube_apply(&c, m, n);
+        CHECK(alg_goal_met(oll27, &c) == alg_ll_oriented(&c), "OLL goal is orientation");
+    }
 }
 
 int main(void)

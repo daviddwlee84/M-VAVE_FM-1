@@ -275,8 +275,9 @@ expect alg_set 0
 shot algs_lbl.png
 turn SELECT 4
 expect alg_set 4
-turn K1 15
+turn PRESET 15
 expect alg_pos 15
+expect alg_forms 2
 shot algs_pll_t.png
 tap PLAY
 expect playing 1
@@ -285,8 +286,37 @@ shot algs_playing.png
 wait 10000
 expect playing 0
 expect d_solved 1
+# ---- the second formula for T, played: the cube ends solved too
+turn ALGO 1
+expect alg_form 1
+shot algs_pll_t2.png
+tap PLAY
+wait 10500
+expect playing 0
+expect d_solved 1
+turn ALGO 1
+expect alg_form 0
+# ---- the picture: SEL to 3D, K1..K4 turn it, SEL back to the top view
+tap SEL
+expect alg_3d 1
+turn K1 2
+turn K2 3
+shot algs_3d.png
+tap SEL
+expect alg_3d 0
+# ---- HOME held: this page's help; a press closes it and does nothing else
+press HOME
+wait 700
+expect help 1
+shot help_algs.png
+release HOME
+wait 50
+expect page 3
+tap PLAY
+expect help 0
+expect playing 0
 turn SELECT -1
-turn K1 26
+turn PRESET 26
 shot algs_oll27.png
 turn SELECT 2
 shot algs_f2l.png
