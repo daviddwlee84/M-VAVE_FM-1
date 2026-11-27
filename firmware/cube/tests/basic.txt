@@ -5,7 +5,7 @@
 wait 600
 shot boot.png
 expect page 1
-expect algs 145
+expect algs 159
 expect scr_type 0
 expect inspect 1
 expect scr_n >15
@@ -271,12 +271,17 @@ tap HOME
 turn SELECT 1
 tap PLAY
 expect page 3
+expect alg_list 1
 expect alg_set 0
-shot algs_lbl.png
-turn SELECT 4
-expect alg_set 4
-turn PRESET 15
-expect alg_pos 15
+shot algs_list.png
+# (the groups in solving order: 0 LBL, 1 CROSS, 2 F2L, 3 2-look OLL, 4..18 OLL by shape, 19 2-look PLL, 20..24 PLL
+# by kind, 25 patterns; T is the first of 22, PLL side swaps)
+turn SELECT 22
+expect alg_set 22
+shot algs_list_pll.png
+tap PLAY
+expect alg_list 0
+expect alg_pos 0
 expect alg_forms 2
 shot algs_pll_t.png
 tap PLAY
@@ -315,11 +320,26 @@ expect page 3
 tap PLAY
 expect help 0
 expect playing 0
-turn SELECT -1
-turn PRESET 26
+tap REC
+expect alg_list 1
+turn SELECT -18
+expect alg_set 4
+tap PLAY
+turn PRESET 6
 shot algs_oll27.png
-turn SELECT 2
+turn SELECT -2
 shot algs_f2l.png
+turn SELECT -1
+shot algs_cross.png
+turn SELECT -2
+expect alg_set 25
+shot algs_pattern.png
+turn PRESET 3
+shot algs_superflip.png
+tap PLAY
+wait 15000
+expect playing 0
+shot algs_superflip_played.png
 
 # ---- DRILL: recognize PLL (the first cards are new ones, shown)
 tap HOME
@@ -428,6 +448,80 @@ wait 30
 expect d_state 2
 expect d_real >140
 shot drill_real_done.png
+
+# ---- DRILL CHOOSE: three formulas, the right one by its key
+tap HOME
+tap PLAY
+turn K1 2
+expect drill_mode 3
+tap PLAY
+tap PLAY
+tap PLAY
+tap PLAY
+expect d_state 1
+shot drill_choose.png
+expect d_pick_right 1
+wait 100
+shot drill_choose_answer.png
+tap PLAY
+
+# ---- DRILL A TO B: two cubes, four ways between them; look around with K1..K4 first
+tap HOME
+tap PLAY
+turn K1 1
+expect drill_mode 4
+turn SELECT 1
+tap PLAY
+expect d_state 1
+expect sp_valid 1
+shot drill_ab.png
+turn K1 2
+turn K2 -2
+shot drill_ab_turned.png
+expect d_pick_right 1
+expect sp_ok 1
+wait 100
+shot drill_ab_answer.png
+tap PLAY
+expect sp_q 1
+expect sp_valid 1
+tapkey 0
+expect d_state 2
+tap PLAY
+expect sp_valid 1
+tapkey 0
+expect d_state 2
+tap PLAY
+expect sp_valid 1
+tapkey 0
+expect d_state 2
+tap PLAY
+expect sp_valid 1
+tapkey 0
+expect d_state 2
+tap PLAY
+expect sp_valid 1
+tapkey 0
+expect d_state 2
+tap PLAY
+expect sp_valid 1
+tapkey 0
+expect d_state 2
+tap PLAY
+expect sp_valid 1
+tapkey 0
+expect d_state 2
+tap PLAY
+expect sp_valid 1
+tapkey 0
+expect d_state 2
+tap PLAY
+expect sp_valid 1
+tapkey 2
+tap PLAY
+expect d_state 3
+expect sp_ok >0
+shot drill_ab_done.png
 
 # ---- STATS
 tap HOME

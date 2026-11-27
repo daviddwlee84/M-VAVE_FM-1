@@ -8,6 +8,8 @@
 #include "../stats.c"
 #include "../keymap.c"
 #include "../algs.c"
+#define SOLVE_GEN                        /* (only its cubie and sticker conversions: no tables built) */
+#include "../solve.c"
 #include "vectors.h"
 
 static int fails, checks;
@@ -284,6 +286,7 @@ static void test_algs(void)
     CHECK(counts[ALG_OLL2] == 10, "2-look OLL %d", counts[ALG_OLL2]);
     CHECK(counts[ALG_PLL2] == 6, "2-look PLL %d", counts[ALG_PLL2]);
     CHECK(counts[ALG_LBL] >= 5, "LBL %d", counts[ALG_LBL]);
+    CHECK(counts[ALG_CROSS] >= 5 && counts[ALG_PAT] >= 6, "cross %d, patterns %d", counts[ALG_CROSS], counts[ALG_PAT]);
     CHECK(alts_seen >= 60, "only %d cases with more than one formula", alts_seen);
     {                                    /* a formula that only orients is not a PLL answer; another OLL one is */
         cube_t c;
@@ -296,6 +299,123 @@ static void test_algs(void)
     }
 }
 
+static void test_groups(void)            /* each set's groups take every case once */
+{
+    int set, g, k, i;
+    for (set = 0; set < ALG_SETS; set++) {
+        int seen[200] = {0}, n = 0;
+        for (g = 0; g < alg_groups(); g++) {
+            if (alg_group_set(g) != set) continue;
+            for (k = 0; k < alg_group_count(g); k++) {
+                i = alg_group_item(g, k);
+                CHECK(i >= 0 && alg_get(i)->set == set, "group %s item %d", alg_group_name(g), k);
+                if (i >= 0) seen[i]++, n++;
+            }
+        }
+        CHECK(n == alg_count(set), "set %d: groups hold %d of %d", set, n, alg_count(set));
+        for (i = 0; i < alg_total(); i++)
+            if (alg_get(i)->set == set) CHECK(seen[i] == 1, "%s in %d groups", alg_get(i)->name, seen[i]);
+    }
+    i = alg_index(ALG_OLL, 26);
+    CHECK(!strcmp(alg_group_name(alg_group_of(i)), "3 OLL: CROSS (OCLL)"), "OLL 27 in %s", alg_group_name(alg_group_of(i)));
+}
+
+static int case_of(int set, const cube_t *c)   /* which entry of set this state is, -1: none (or solved) */
+{
+    uint32_t f = alg_print_state(set, c);
+    int i;
+    for (i = 0; i < alg_total(); i++)
+        if (alg_get(i)->set == set) {
+            cube_t k;
+            alg_case(i, &k, 0);
+            if (alg_print_state(set, &k) == f) return i;
+        }
+    return -1;
+}
+
+static void test_freq(void)              /* every last-layer state counted: alg_freq's table is right */
+{
+    static int cnt[300];
+    int a, e, b, d, i, den, total = 0;
+    char fl[55];
+    cube_t c;
+    for (a = 0; a < 27; a++)             /* OLL: the corners' twists and the edges' flips */
+        for (e = 0; e < 16; e++) {
+            cc_t x;
+            cc_ident(&x);
+            x.co[0] = (uint8_t)(a % 3), x.co[1] = (uint8_t)(a / 3 % 3), x.co[2] = (uint8_t)(a / 9 % 3);
+            x.co[3] = (uint8_t)((6 - x.co[0] - x.co[1] - x.co[2]) % 3);
+            for (b = 0; b < 4; b++) x.eo[b] = (uint8_t)(e >> b & 1);
+            if ((e ^ e >> 1 ^ e >> 2 ^ e >> 3) & 1) continue;
+            cc_facelets(&x, fl);
+            cube_from_facelets(&c, fl);
+            total++;
+            if (alg_ll_oriented(&c)) continue;
+            i = case_of(ALG_OLL, &c);
+            CHECK(i >= 0, "an OLL state with no case");
+            if (i >= 0) cnt[i]++;
+        }
+    CHECK(total == 216, "OLL states %d", total);
+    total = 0;
+    for (a = 0; a < 24; a++)             /* PLL: the corners' and the edges' places */
+        for (b = 0; b < 24; b++) {
+            cc_t x;
+            cc_ident(&x);
+            unrank_perm(x.cp, 4, a);
+            unrank_perm(x.ep, 4, b);
+            if (parity(x.cp, 8) != parity(x.ep, 12)) continue;
+            cc_facelets(&x, fl);
+            cube_from_facelets(&c, fl);
+            total++;
+            if (cube_solved_turn(&c)) continue;
+            i = case_of(ALG_PLL, &c);
+            CHECK(i >= 0, "a PLL state with no case");
+            if (i >= 0) cnt[i]++;
+        }
+    CHECK(total == 288, "PLL states %d", total);
+    for (i = 0; i < alg_total(); i++) {
+        int f = alg_freq(i, &den), set = alg_get(i)->set;
+        if (set != ALG_OLL && set != ALG_PLL) continue;
+        CHECK(f == cnt[i] && den == (set == ALG_OLL ? 216 : 288), "%s: %d/%d, counted %d", alg_get(i)->name, f, den, cnt[i]);
+    }
+    for (d = 0; d < 1; d++) {            /* the learning order: PLL starts with the U perms, ends with the 1/72 ones */
+        uint8_t o[SR_ORDER_MAX];
+        int n = alg_learn_order(ALG_PLL, o);
+        CHECK(n == 21, "PLL order %d", n);
+        CHECK(!strcmp(alg_get(alg_index(ALG_PLL, o[0]))->name, "UA") || !strcmp(alg_get(alg_index(ALG_PLL, o[0]))->name, "UB"),
+              "PLL first %s", alg_get(alg_index(ALG_PLL, o[0]))->name);
+        {
+            int f = alg_freq(alg_index(ALG_PLL, o[20]), &den);
+            CHECK(f == 4, "PLL last is a 1/72 one (%s)", alg_get(alg_index(ALG_PLL, o[20]))->name);
+        }
+    }
+}
+
+static void test_patterns(void)
+{
+    cube_t c;
+    int i, f;
+    alg_case(alg_index(ALG_PAT, 3), &c, 0);   /* superflip: every edge flipped in place, nothing else moved */
+    {
+        cube_t s;
+        int ok = 1;
+        cube_reset(&s);
+        for (i = 0; i < 54; i++) {
+            int corner_or_centre = (i % 9) % 2 == 0;
+            if (corner_or_centre && c.f[i] != s.f[i]) ok = 0;
+            if (!corner_or_centre && c.f[i] == s.f[i]) ok = 0;
+        }
+        CHECK(ok, "superflip");
+    }
+    alg_case(alg_index(ALG_PAT, 0), &c, 0);   /* checkerboard: corners and centre one colour, edges the opposite */
+    for (f = 0; f < 6; f++)
+        for (i = 0; i < 9; i++) CHECK(c.f[f * 9 + i] == (i % 2 ? (f + 3) % 6 : f), "checkerboard face %d sticker %d", f, i);
+    alg_case(alg_index(ALG_PAT, 1), &c, 0);   /* six spots: a centre in a ring of one other colour */
+    for (f = 0; f < 6; f++)
+        for (i = 0; i < 9; i++)
+            if (i != 4) CHECK(c.f[f * 9 + i] == c.f[f * 9] && c.f[f * 9] != c.f[f * 9 + 4], "six spots face %d", f);
+}
+
 int main(void)
 {
     test_notation();
@@ -306,6 +426,9 @@ int main(void)
     test_stats();
     test_keymap();
     test_algs();
+    test_groups();
+    test_freq();
+    test_patterns();
     printf("cube: %d checks, %d failed\n", checks, fails);
     return fails != 0;
 }

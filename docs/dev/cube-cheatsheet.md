@@ -16,15 +16,18 @@
 | | `PLAY` | 虛擬計時（第一轉開始、復原時停） |
 | | `K1` `K2` `K3` / `K4` | 繞 x、y、z 轉視角 / 斜看的 preset |
 | | 只按 `SEL` | 鍵位圖 |
-| ALGS | `SELECT` | 公式集 |
+| ALGS | `SELECT` / `PLAY` | 目錄：選組 / 打開（組照解方塊的順序：CROSS → F2L → OLL → PLL，再來是圖案） |
+| | `REC` | 回目錄 |
 | | `PRESETS`、`OCT-` / `OCT+` | case |
 | | `ALGORITHM` | 這個 case 的下一個公式（畫面寫「FORMULA 2 OF 3」） |
 | | `K1` `K2` `K3` / `K4` | 轉 3D 視角 / preset |
 | | `SEL` | 圖：從上面看（PLL 有箭頭）或 3D |
 | | `PLAY` | 在方塊上播放選中的公式（燈亮鍵位） |
-| DRILL | `SELECT` / `K1` / `PLAY` | 公式集 / 模式 / 開始一回合 |
-| | `PLAY` | 翻面；答完：記得 |
-| | `SEL` / `REC` | 答完：慢 / 不會；VIRTUAL：`REC` 放棄；REAL：`REC` 跳過 |
+| DRILL | `SELECT` / `K1` / `PLAY` | 公式集（照學習順序 STEP 1–6；A TO B 時是相隔幾步）/ 模式 / 開始一回合 |
+| | `PLAY` | 翻面；答完：記得；CHOOSE、A TO B：作答、下一題 |
+| | `F3` `G3` `A3` `B3` | CHOOSE、A TO B：選項 1 2 3 4 |
+| | `SEL` / `REC` | 答完：慢 / 不會；VIRTUAL：`REC` 放棄；REAL、CHOOSE、A TO B：`REC` 跳過 |
+| | `K1`–`K4` | 題目畫面：轉視角（A TO B 兩顆一起轉） |
 | STATS | `SELECT` | 捲動 |
 | SETTINGS | `SELECT` / `K1` 或 `OCT±` / `PLAY` | 選行 / 改 / 執行 |
 

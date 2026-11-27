@@ -6,7 +6,7 @@
 #include <stdint.h>
 #include "cube.h"
 
-enum { ALG_LBL, ALG_OLL2, ALG_PLL2, ALG_OLL, ALG_PLL, ALG_F2L, ALG_SETS };
+enum { ALG_LBL, ALG_OLL2, ALG_PLL2, ALG_OLL, ALG_PLL, ALG_F2L, ALG_CROSS, ALG_PAT, ALG_SETS };   /* (append only) */
 #define ALG_MAX 48                       /* moves in one formula at most */
 
 typedef struct {
@@ -41,6 +41,18 @@ int alg_cross_kept(const cube_t *c);     /* the cross and the FL, BL, BR pairs s
 int alg_ll_oriented(const cube_t *c);    /* the last layer's top all one colour */
 int alg_solved_auf(const cube_t *c);     /* solved but for a turn of one layer */
 int alg_same_case(int a, int b);         /* one case (any side, any last U turn) */
+uint32_t alg_print_state(int set, const cube_t *c);   /* a state's fingerprint as a case of set */
+
+/* browsing in solving order: groups (LBL; 1 CROSS, 2 F2L, 3 OLL by shape, 4 PLL by kind; patterns) */
+int alg_groups(void);
+const char *alg_group_name(int g);
+int alg_group_set(int g);
+int alg_group_count(int g);
+int alg_group_item(int g, int k);        /* entry index of the k-th case of group g */
+int alg_group_of(int i);
+int alg_freq(int i, int *den);           /* how often it comes up: returns the count out of *den (0: not counted) */
+#define SR_ORDER_MAX 64
+int alg_learn_order(int set, uint8_t *out);   /* positions, most frequent (then shortest) first; returns n */
 /* what entry i's formulas reach, on cube c after one of them (any whole-cube rotation undone): OLL the last layer
  * oriented, PLL solved, F2L the first two layers, 2-look PLL's corner cases the corners placed, LBL solved (all up
  * to a last turn of one layer) */

@@ -161,11 +161,31 @@ static const alg_t ALGS[] = {
     {ALG_F2L, "F2L 39", "R U' R' U R U2 R' U R U' R'", 0},
     {ALG_F2L, "F2L 40", "R F U R U' R' F' U' R'", 0},
     {ALG_F2L, "F2L 41", "R U F R U R' U' F' R'", 0},
+
+    /* ---- the cross: the white-green edge home, the other three cross edges kept (found by a search for the
+     * shortest, so the case pictures come out right) */
+    {ALG_CROSS, "TOP, WHITE UP", "F2", 0},
+    {ALG_CROSS, "TOP, WHITE FRONT", "U' R' F R", 0},
+    {ALG_CROSS, "TOP RIGHT, WHITE RIGHT", "R' F R", 0},
+    {ALG_CROSS, "MIDDLE RIGHT, WHITE RIGHT", "F", 0},
+    {ALG_CROSS, "MIDDLE LEFT, WHITE LEFT", "F'", 0},
+    {ALG_CROSS, "MIDDLE RIGHT, WHITE FRONT", "D R' D'", 0},
+    {ALG_CROSS, "BOTTOM, FLIPPED", "D' L' D F'", 0},
+
+    /* ---- patterns: the formula done on a solved cube (not undone) */
+    {ALG_PAT, "CHECKERBOARD", "M2 E2 S2", "R2 L2 U2 D2 F2 B2"},
+    {ALG_PAT, "SIX SPOTS", "U D' R L' F B' U D'", 0},
+    {ALG_PAT, "CUBE IN A CUBE", "F L F U' R U F2 L2 U' L' B D' B' L2 U", 0},
+    {ALG_PAT, "SUPERFLIP", "U R2 F B R B2 R U2 L B2 R U' D' R2 F R' L B2 U2 F2", 0},
+    {ALG_PAT, "TETRIS", "L R F B U' D' L' R'", 0},
+    {ALG_PAT, "ANACONDA", "L U B' U' R L' B R' F B' D R D' F'", 0},
+    {ALG_PAT, "CROSSES AND STRIPES", "U2 R2 L2 U2 R2 L2", 0},
 };
 
 #define NALGS ((int)(sizeof ALGS / sizeof ALGS[0]))
-static const char *const SET_NAME[ALG_SETS] = {"LAYER BY LAYER", "2-LOOK OLL", "2-LOOK PLL", "OLL", "PLL", "F2L"};
-static const char *const SET_SHORT[ALG_SETS] = {"LBL", "2LOOK OLL", "2LOOK PLL", "OLL", "PLL", "F2L"};
+static const char *const SET_NAME[ALG_SETS] = {"LAYER BY LAYER", "2-LOOK OLL", "2-LOOK PLL", "OLL", "PLL", "F2L",
+                                              "CROSS", "PATTERNS"};
+static const char *const SET_SHORT[ALG_SETS] = {"LBL", "2LOOK OLL", "2LOOK PLL", "OLL", "PLL", "F2L", "CROSS", "PATTERN"};
 
 int alg_total(void) { return NALGS; }
 const alg_t *alg_get(int i) { return &ALGS[i < 0 || i >= NALGS ? 0 : i]; }
@@ -231,6 +251,7 @@ int alg_setup(int i, uint8_t *out, int auf)
 {
     int n = alg_moves(i, out);
     if (n < 0) return -1;
+    if (alg_get(i)->set == ALG_PAT) return n;   /* a pattern: the formula itself, from solved */
     cube_invert(out, n, out);
     if (auf & 3) out[n++] = MV(MB_U, auf & 3);
     return cube_merge(out, n);
@@ -318,6 +339,13 @@ int alg_goal_met(int i, const cube_t *c)
         }
         return cube_solved_turn(&u);
     case ALG_F2L: return cube_f2l_solved(&u) || cube_solved_turn(&u);
+    case ALG_CROSS: {
+        static const uint8_t CROSS[] = {28, 30, 32, 34, 25, 16, 52, 43};
+        int k;
+        for (k = 0; k < 8 && u.f[CROSS[k]] == CROSS[k] / 9; k++) {}
+        return k == 8;
+    }
+    case ALG_PAT: return 1;
     case ALG_PLL2:
         if (alg_pos(i) < 2) return cube_f2l_solved(&u) && alg_ll_oriented(&u) && corners_placed(&u);
         return cube_solved_turn(&u);
@@ -366,16 +394,14 @@ static uint32_t print_f2l(const cube_t *c)
     return (uint32_t)(((cp * 3 + co) * 12 + ep) * 2 + eo);
 }
 
-static uint32_t fingerprint(int i, uint32_t *lbl)
+uint32_t alg_print_state(int set, const cube_t *c0)   /* a state's case fingerprint for set */
 {
-    cube_t c;
+    cube_t c = *c0;
     uint32_t best = 0xFFFFFFFFu;
-    int a, s, set = alg_get(i)->set;
-    alg_case(i, &c, 0);
-    if (set == ALG_LBL) {                /* the whole cube, as it is */
+    int a, s;
+    if (set == ALG_LBL || set >= ALG_CROSS) {   /* the whole cube, as it is */
         uint32_t h = 2166136261u;
         for (a = 0; a < 54; a++) h = (h ^ c.f[a]) * 16777619u;
-        *lbl = h;
         return h;
     }
     for (a = 0; a < 4; a++) {
@@ -390,8 +416,15 @@ static uint32_t fingerprint(int i, uint32_t *lbl)
         if (v < best) best = v;
         cube_move(&c, MV(MB_U, 1));
     }
-    *lbl = best;
     return best;
+}
+
+static uint32_t fingerprint(int i, uint32_t *lbl)
+{
+    cube_t c;
+    alg_case(i, &c, 0);
+    *lbl = alg_print_state(alg_get(i)->set, &c);
+    return *lbl;
 }
 
 int alg_same_case(int a, int b)
@@ -399,4 +432,108 @@ int alg_same_case(int a, int b)
     uint32_t x, y;
     if (alg_get(a)->set != alg_get(b)->set) return 0;
     return fingerprint(a, &x) == fingerprint(b, &y);
+}
+
+/* ------------------------------------------------------- groups and order --- */
+/* OLL and PLL by the shapes they are recognised by (the usual groups; OLL by number, PLL by position in the set) */
+static const uint8_t G_DOT[] = {1, 2, 3, 4, 17, 18, 19, 20}, G_LINE[] = {51, 52, 55, 56},
+                     G_CROSS[] = {21, 22, 23, 24, 25, 26, 27}, G_CORN[] = {28, 57}, G_SQUARE[] = {5, 6},
+                     G_SLIGHT[] = {7, 8, 11, 12}, G_FISH[] = {9, 10, 35, 37}, G_KNIGHT[] = {13, 14, 15, 16},
+                     G_AWK[] = {29, 30, 41, 42}, G_P[] = {31, 32, 43, 44}, G_T[] = {33, 45}, G_C[] = {34, 46},
+                     G_W[] = {36, 38}, G_BLIGHT[] = {39, 40}, G_L[] = {47, 48, 49, 50, 53, 54};
+/* PLL positions: AA 0 AB 1 E 2 F 3 GA 4 GB 5 GC 6 GD 7 H 8 JA 9 JB 10 NA 11 NB 12 RA 13 RB 14 T 15 UA 16 UB 17 V 18
+ * Y 19 Z 20 */
+static const uint8_t P_EDGE[] = {17, 18, 9, 21}, P_CORN[] = {1, 2, 3}, P_ADJ[] = {16, 4, 10, 11, 14, 15},
+                     P_DIAG[] = {19, 20, 12, 13}, P_G[] = {5, 6, 7, 8};   /* (1-based) */
+typedef struct {
+    uint8_t set;
+    const char *name;
+    const uint8_t *items;                /* 1-based positions in the set; 0: the whole set */
+    uint8_t n;
+} alg_group_t;
+#define GRP(set, name, a) {set, name, a, (uint8_t)sizeof a}
+static const alg_group_t GROUPS[] = {
+    {ALG_LBL, "BEGINNER: LAYER BY LAYER", 0, 0},
+    {ALG_CROSS, "1 CROSS", 0, 0},
+    {ALG_F2L, "2 F2L", 0, 0},
+    {ALG_OLL2, "3 OLL: 2-LOOK", 0, 0},
+    GRP(ALG_OLL, "3 OLL: CROSS (OCLL)", G_CROSS), GRP(ALG_OLL, "3 OLL: T SHAPES", G_T),
+    GRP(ALG_OLL, "3 OLL: P SHAPES", G_P), GRP(ALG_OLL, "3 OLL: FISH", G_FISH),
+    GRP(ALG_OLL, "3 OLL: SQUARES", G_SQUARE), GRP(ALG_OLL, "3 OLL: C SHAPES", G_C),
+    GRP(ALG_OLL, "3 OLL: W SHAPES", G_W), GRP(ALG_OLL, "3 OLL: L SHAPES", G_L),
+    GRP(ALG_OLL, "3 OLL: LINES", G_LINE), GRP(ALG_OLL, "3 OLL: SMALL LIGHTNING", G_SLIGHT),
+    GRP(ALG_OLL, "3 OLL: BIG LIGHTNING", G_BLIGHT), GRP(ALG_OLL, "3 OLL: KNIGHT MOVE", G_KNIGHT),
+    GRP(ALG_OLL, "3 OLL: AWKWARD", G_AWK), GRP(ALG_OLL, "3 OLL: CORNERS DONE", G_CORN),
+    GRP(ALG_OLL, "3 OLL: DOT", G_DOT),
+    {ALG_PLL2, "4 PLL: 2-LOOK", 0, 0},
+    GRP(ALG_PLL, "4 PLL: EDGES ONLY", P_EDGE), GRP(ALG_PLL, "4 PLL: CORNERS ONLY", P_CORN),
+    GRP(ALG_PLL, "4 PLL: SIDE SWAP", P_ADJ), GRP(ALG_PLL, "4 PLL: DIAGONAL SWAP", P_DIAG),
+    GRP(ALG_PLL, "4 PLL: G PERMS", P_G),
+    {ALG_PAT, "PATTERNS", 0, 0},
+};
+#define NGROUPS ((int)(sizeof GROUPS / sizeof GROUPS[0]))
+
+int alg_groups(void) { return NGROUPS; }
+const char *alg_group_name(int g) { return GROUPS[g < 0 || g >= NGROUPS ? 0 : g].name; }
+int alg_group_set(int g) { return GROUPS[g < 0 || g >= NGROUPS ? 0 : g].set; }
+int alg_group_count(int g)
+{
+    const alg_group_t *a = &GROUPS[g < 0 || g >= NGROUPS ? 0 : g];
+    return a->items ? a->n : alg_count(a->set);
+}
+int alg_group_item(int g, int k)         /* the k-th case of group g: its entry index */
+{
+    const alg_group_t *a = &GROUPS[g < 0 || g >= NGROUPS ? 0 : g];
+    if (k < 0 || k >= alg_group_count(g)) return -1;
+    return alg_index(a->set, a->items ? a->items[k] - 1 : k);
+}
+int alg_group_of(int i)                  /* the group entry i is shown in */
+{
+    int g, k;
+    for (g = 0; g < NGROUPS; g++)
+        for (k = 0; k < alg_group_count(g); k++)
+            if (alg_group_item(g, k) == i) return g;
+    return 0;
+}
+
+/* how often a case comes up after the step before it, out of den: every last-layer state counted
+ * (tests/cube_test.c counts them again). 0: not counted (F2L, the cross, patterns, the beginner's steps) */
+int alg_freq(int i, int *den)
+{
+    const alg_t *a = alg_get(i);
+    int p = alg_pos(i);
+    *den = 1;
+    if (a->set == ALG_OLL) {
+        *den = 216;
+        if (p == 19) return 1;           /* OLL 20 */
+        if (p == 0 || p == 20 || p == 54 || p == 55 || p == 56) return 2;   /* OLL 1, 21, 55, 56, 57 */
+        return 4;
+    }
+    if (a->set == ALG_PLL) {
+        *den = 288;
+        if (p == 8 || p == 11 || p == 12) return 4;   /* H, Na, Nb */
+        if (p == 2 || p == 20) return 8;              /* E, Z */
+        return 16;
+    }
+    return 0;
+}
+
+/* the order to learn a set in: the most frequent first, the shortest of equals first (positions in the set) */
+int alg_learn_order(int set, uint8_t *out)
+{
+    int n = alg_count(set), k, j;
+    int key[SR_ORDER_MAX];
+    for (k = 0; k < n && k < SR_ORDER_MAX; k++) {
+        int i = alg_index(set, k), den, f = alg_freq(i, &den), len;
+        uint8_t m[ALG_MAX];
+        len = alg_moves(i, m);
+        key[k] = (f ? (1000 - f * 1000 / den) : 0) * 64 + len;   /* (frequency down, length up) */
+        out[k] = (uint8_t)k;
+    }
+    for (k = 1; k < n; k++) {            /* insertion sort, stable */
+        uint8_t t = out[k];
+        for (j = k; j > 0 && key[out[j - 1]] > key[t]; j--) out[j] = out[j - 1];
+        out[j] = t;
+    }
+    return n;
 }

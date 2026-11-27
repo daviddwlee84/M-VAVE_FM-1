@@ -90,9 +90,10 @@ typedef struct {
     uint16_t c;
 } vquad_t;
 
-static vquad_t vq[54];
-static uint8_t vq_order[54];
+static vquad_t vq[108];
+static uint8_t vq_order[108];
 static int vq_n;
+static int vq_append;                    /* 1: view_build adds to the quads it made before (two cubes side by side) */
 
 static void xform(const mat3_t *cam, const float *p, float *o)
 {
@@ -114,8 +115,8 @@ static void view_build(const cube_t *c, const mat3_t *cam, int cx, int cy, float
         m3_rot(&turn, axis, deg * (float)sign);
         m3_mul(cam, &turn, &full);
     }
-    vq_n = 0;
-    for (i = 0; i < 54; i++) {
+    if (!vq_append) vq_n = 0;
+    for (i = 0; i < 54 && vq_n < 108; i++) {
         int8_t p[3], n[3];
         float ctr[3], u[3] = {0, 0, 0}, v[3] = {0, 0, 0}, nn[3], tn[3], pt[3], sp[3];
         const mat3_t *m = (layer >> i & 1) ? &full : cam;

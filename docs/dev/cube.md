@@ -55,38 +55,67 @@
 
 ### ALGS（公式書）
 
+打開 ALGS 先看到**目錄，照解方塊的順序排**，左邊的色條是階段：BEGINNER（層先法）→ 1 CROSS（白）→ 2 F2L（綠）→ 3 OLL（黃：2-LOOK，然後依形狀分 15 組）→ 4 PLL（橘：2-LOOK，然後分 5 類）→ PATTERNS。右邊是每一組有幾個。
+
 | 控制 | 作用 |
 |---|---|
-| `SELECT` | 公式集：LBL、2-LOOK OLL、2-LOOK PLL、OLL、PLL、F2L |
-| `PRESETS`、`OCT-` / `OCT+` | case |
+| `SELECT` | 目錄：選組；case 畫面：直接換到上一組 / 下一組 |
+| `PLAY` | 目錄：打開這一組；case 畫面：在方塊上一步一步播放選中的公式（燈同步亮鍵位），再按停 |
+| `REC` | 回目錄 |
+| `PRESETS`、`OCT-` / `OCT+` | 組裡的上一個 / 下一個 case |
 | `ALGORITHM` | 同一個 case 的下一個公式（畫面寫 FORMULA 2 OF 3） |
 | `K1` `K2` `K3` / `K4` | 轉 3D 視角 / 斜看的 preset（和 CUBE 頁一樣） |
 | `SEL` | 圖：從上面看，或 3D |
-| `PLAY` | 在方塊上一步一步播放選中的公式，燈同步亮對應的鍵；再按停 |
+
+分組用的是一般教材的名稱 `[調研]`：
+
+- **OLL 15 組**：CROSS（OCLL）、T、P、FISH、SQUARES、C、W、L、LINES、SMALL LIGHTNING、BIG LIGHTNING、KNIGHT MOVE、AWKWARD、CORNERS DONE、DOT。
+- **PLL 5 類**：EDGES ONLY（Ua Ub H Z）、CORNERS ONLY（Aa Ab E）、SIDE SWAP（T F Ja Jb Ra Rb）、DIAGONAL SWAP（V Y Na Nb）、G PERMS。
+
+每一組正好分到那一組的 case，沒有漏、沒有重複，由測試檢查。
+
+OLL、PLL 的 case 畫面會寫出它**多常出現**，例如 T 是 1 IN 18 SOLVES、OLL 27 是 1 IN 54。這個數字不是抄的：測試把頂層所有 216 種朝向、288 種排列一一列出來，數出每個 case 佔幾個。算出來的結果和公認的機率一致（PLL：H、Na、Nb 1/72，E、Z 1/36，其餘 1/18；OLL：20 是 1/216，1、21、55、56、57 是 1/108，其餘 1/54），所以這幾個 case 的編號也算交叉驗證過了。
 
 一個 case 常有好幾個公式（不同手法、不同起手方向），68 個 case 有第二到第五個公式，見[公式書](#algs)。
 
-case 圖不是手畫的：把公式反過來套在復原的方塊上，就是這個公式解的 case。OLL、PLL 預設從上面看，像一般的公式表：OLL 只標黃色（其他灰），側面的黃色畫成邊條；PLL 畫出側面的顏色，再用**箭頭標出哪些塊換到哪裡**（箭頭也是從公式算的：每張貼紙跟著打亂走，算出它要回到哪一格）。F2L 與 LBL 用 3D。公式書的圖都是**黃色朝上、綠色朝前**（白色十字在底下）。
+case 圖不是手畫的：把公式反過來套在復原的方塊上，就是這個公式解的 case。OLL、PLL 預設從上面看，像一般的公式表：OLL 只標黃色（其他灰），側面的黃色畫成邊條；PLL 畫出側面的顏色，再用**箭頭標出哪些塊換到哪裡**（箭頭也是從公式算的：每張貼紙跟著打亂走，算出它要回到哪一格）。F2L、CROSS 與 LBL 用 3D。公式書的圖都是**黃色朝上、綠色朝前**（白色十字在底下）。PATTERNS 例外：公式是從復原的方塊**做出**那個圖案，`PLAY` 從復原開始播。
 
-![PLL T：箭頭是邊塊左右互換、右側兩個角塊互換](../assets/cube/algs_pll_t.png){ width="240" } ![T 的第二個公式](../assets/cube/algs_pll_t2.png){ width="240" } ![SEL 換成 3D，K1–K4 轉](../assets/cube/algs_3d.png){ width="240" }
+![目錄：照解方塊的順序](../assets/cube/algs_list.png){ width="240" } ![PLL 的五類](../assets/cube/algs_list_pll.png){ width="240" } ![PLL T：頻率、箭頭](../assets/cube/algs_pll_t.png){ width="240" }
 
-![OLL 27 Sune](../assets/cube/algs_oll27.png){ width="240" } ![F2L 1](../assets/cube/algs_f2l.png){ width="240" }
+![T 的第二個公式](../assets/cube/algs_pll_t2.png){ width="240" } ![SEL 換成 3D，K1–K4 轉](../assets/cube/algs_3d.png){ width="240" } ![OLL 27 Sune](../assets/cube/algs_oll27.png){ width="240" }
+
+![CROSS](../assets/cube/algs_cross.png){ width="240" } ![PATTERNS：棋盤](../assets/cube/algs_pattern.png){ width="240" } ![superflip 播完](../assets/cube/algs_superflip_played.png){ width="240" }
 
 ### DRILL（出題）
 
 先在設定畫面用 `SELECT` 選公式集、`K1` 選模式，畫面會列出這個模式的三個步驟；`PLAY` 開始一回合（約 12 張，header 顯示 CARD 3/12）。進度用 THEORY 的 Leitner 卡片（`srs.c`）：每個公式集各自一份，四個一組慢慢打開，答錯的這回合最後再問一次。
+
+**建議的學習順序**（`SELECT` 就照這個順序走，畫面寫 STEP 1–6）：
+
+1. **LAYER BY LAYER**：10 個公式，學會就保證解得完。
+2. **2-LOOK OLL**、3. **2-LOOK PLL**：再 16 個，就是 CFOP 的 4-look 最後一層。
+4. **F2L**：前兩層一組一組做。
+5. **PLL**、6. **OLL**：完整的 21 與 57 個。
+
+PLL 與 OLL 的卡片**先開放最常出現的**（同樣常見的先開短的），所以背得越早，用到的機會越多：PLL 從 Ua、Ub、T 開始，H、Na、Nb 這些 1/72 的最後才來。OLL 幾乎每個都是 1/54，差別不大。
 
 | 模式 | 怎麼玩 | 評分 |
 |---|---|---|
 | RECOGNIZE | 看 case 圖，想它是哪一個、公式是什麼，`PLAY` 看答案 | 畫面下方三個鍵：`PLAY` 記得、`SEL` 慢、`REC` 不會 |
 | REAL CUBE | 照畫面上的打亂（公式的反向，前面加隨機的 U）在**自己的方塊**上打亂（黃色朝上），然後按住一個鍵放開開始，用公式解回來，按鍵停；`REC` 跳過 | 記下時間，每個 case 有自己的平均；再用同樣三個鍵評分 |
 | VIRTUAL | 畫面上的方塊就是那個 case，在琴鍵上轉回去；用哪一個公式都可以（OLL 只要頂層朝上、F2L 只要前兩層，最後差一個 U 也算）；`REC` 放棄 | 步數不超過最短的公式加 2 算記得，否則算慢 |
+| CHOOSE | 看 case，三個公式裡哪一個解得了它？答題前可以用 `K1`–`K4` 轉、`SEL` 換 3D | `F3` / `G3` / `A3` 直接答，或轉 `SELECT` 選再按 `PLAY`；答錯照樣顯示對的，進度照 Leitner |
+| A TO B | 空間感的題目：兩顆方塊 A、B 並排，**哪一串轉法把 A 變成 B？** 四個選項；不計時，可以先用 `K1`–`K4` 同時轉兩顆、在腦中推演 | `F3` `G3` `A3` `B3` 或 `SELECT` + `PLAY`；一回合 10 題，最後顯示答對幾題；`SELECT` 設定相隔 2–4 步 |
+
+A TO B 的 A 是隨機打亂 7 步的方塊，B 是 A 再轉 2–4 步。三個錯的選項故意很像：最後一步方向相反、第一步換一面、整串倒過來；萬一碰巧也會轉到 B，程式就換一個隨機的，所以永遠只有一個答案對（模擬器每一題都檢查）。
 
 新的 case 第一次出現時直接顯示公式（NEW CASE: LEARN IT），`PLAY` 下一張。答案畫面上 PLL 也有箭頭。HINT LIGHTS 開著時，VIRTUAL 模式會亮第一個公式的下一步；半圈（例如 `U2`）沒有對應的鍵，按 `U` 兩下，燈會等第二下。
 
-![設定畫面：公式集、模式、三個步驟](../assets/cube/drill_setup.png){ width="240" } ![新的 case](../assets/cube/drill_new.png){ width="240" } ![RECOGNIZE](../assets/cube/drill_recognize.png){ width="240" }
+![設定畫面：學習順序的第幾步、模式、三個步驟](../assets/cube/drill_setup.png){ width="240" } ![CHOOSE](../assets/cube/drill_choose.png){ width="240" } ![CHOOSE 答完](../assets/cube/drill_choose_answer.png){ width="240" }
 
-![VIRTUAL](../assets/cube/drill_virtual.png){ width="240" } ![REAL CUBE](../assets/cube/drill_real.png){ width="240" } ![答完：三個評分鍵](../assets/cube/drill_real_done.png){ width="240" }
+![A TO B](../assets/cube/drill_ab.png){ width="240" } ![先轉個視角想一想](../assets/cube/drill_ab_turned.png){ width="240" } ![答完](../assets/cube/drill_ab_answer.png){ width="240" }
+
+![新的 case](../assets/cube/drill_new.png){ width="240" } ![VIRTUAL](../assets/cube/drill_virtual.png){ width="240" } ![REAL CUBE](../assets/cube/drill_real.png){ width="240" }
 
 ### STATS 與 SETTINGS
 
@@ -174,6 +203,8 @@ WCA 的三階打亂不是隨機轉 25 下，而是從約 4.3×10¹⁹ 種狀態�
 | OLL | 57 | OLL 1–57，照常見的編號 |
 | PLL | 21 | Aa、Ab、E、F、Ga–Gd、H、Ja、Jb、Na、Nb、Ra、Rb、T、Ua、Ub、V、Y、Z |
 | F2L | 41 | 右前那一組的每一種情況 |
+| CROSS | 7 | 白綠邊塊在各種位置、另外三個十字邊已經好了：程式搜出的最短做法（例如上層白色朝前 `U' R' F R`、中層 `F`、底層反了 `D' L' D F'`） |
+| PATTERNS | 7 | 特殊圖案：CHECKERBOARD（棋盤，兩種做法）、SIX SPOTS、CUBE IN A CUBE、SUPERFLIP（所有邊塊原地翻面）、TETRIS、ANACONDA、CROSSES AND STRIPES |
 
 每個 case 的第一個公式決定它的圖；第二到第五個是同一個 case 的其他常見公式（68 個 case 有，大多是 OLL 與 PLL，例如 Aa 的 `R' F R' B2 R F' R' B2 R2`、T 的 `F R U' R' U R U R2 F' R U R U' R'`）。
 
@@ -182,6 +213,7 @@ WCA 的三階打亂不是隨機轉 25 下，而是從約 4.3×10¹⁹ 種狀態�
 替代公式是照記憶寫的候選，交給程式檢查：需要先轉 `y` 或先轉 U 才對的，程式會找出前綴補上（例如 `y` 開頭）；79 個候選裡 73 個留下，6 個錯的（多半是鏡像版本）丟掉。DRILL 的 VIRTUAL 模式用同一個檢查，所以用哪個公式做都算。
 
 - OLL 與 PLL 的公式是常見教材裡的那些，編號照慣例。編號與圖案的對應還沒有逐一和 speedsolving wiki 的圖比對過 `[調研]`。
+- 圖案的名稱都由程式印出六面確認過；棋盤、六點、superflip 還有測試檢查它們的性質（例如 superflip 每個邊塊都翻面、角塊與中心都不動）。原本還有一個 WIRE，印出來不是那個圖案，拿掉了。
 - **F2L 的編號是 CUBE 自己的順序，不是 speedsolving wiki 的 F2L 1–41。** 一開始照記憶寫的 41 個裡有一個會破壞十字、四對重複；缺的五種用程式在 ⟨R, U, F⟩ 裡搜最短的補上，所以有幾個公式不是一般人背的那種寫法（例如 F2L 40 `R F U R U' R' F' U' R'`）。
 
 ## 存檔 { #storage }
@@ -200,8 +232,8 @@ WCA 的三階打亂不是隨機轉 25 下，而是從約 4.3×10¹⁹ 種狀態�
 
 | 項目 | 結果 |
 |---|---|
-| `just cube-unit` | `cube_test` 100,107 項全過：每種記號四次回原狀、`x = R M' L'` 等關係、Kociemba 的 40 組向量、random-move 規則、WCA 平均、四種鍵位、每個 case 的每一個公式（含替代公式）。`solve_test`：RAM 裡建的表與 `gen/` 的表各解隨機狀態，全部驗證通過 |
-| `just fw-test cube` | 123 項 `ok`：inspection、按住放開開始、放開後 2,520 ms 按下記到 2,522 ms、+2 / DNF（15 秒、17 秒）、刪除、BOTH ENDS（只按一邊不開始）、ao5、虛擬方塊轉面與 UNDO、`SEL` 反向、視角、跟著燈打亂、偏離後亮 UNDO、ALGS 播完 T-perm 的兩個公式方塊都復原、切換公式、3D 與轉視角、按住 `HOME` 的說明頁（關掉的那一下不做別的事）、DRILL 三種模式（含 `U2` 要按兩下的 case）、一回合結束進度存檔、設定與鍵位與 solve 重開後還在 |
+| `just cube-unit` | `cube_test` 101,234 項全過：每種記號四次回原狀、`x = R M' L'` 等關係、Kociemba 的 40 組向量、random-move 規則、WCA 平均、四種鍵位、每個 case 的每一個公式（含替代公式）、每一組正好分完、頻率表與列舉所有頂層狀態的結果一致、圖案的性質。`solve_test`：RAM 裡建的表與 `gen/` 的表各解隨機狀態，全部驗證通過 |
+| `just fw-test cube` | 157 項 `ok`：inspection、按住放開開始、放開後 2,520 ms 按下記到 2,522 ms、+2 / DNF（15 秒、17 秒）、刪除、BOTH ENDS（只按一邊不開始）、ao5、虛擬方塊轉面與 UNDO、`SEL` 反向、視角、跟著燈打亂、偏離後亮 UNDO、ALGS 播完 T-perm 的兩個公式方塊都復原、切換公式、3D 與轉視角、按住 `HOME` 的說明頁（關掉的那一下不做別的事）、ALGS 目錄、superflip 播完、CHOOSE 用按鍵答對、A TO B 十題（每一題都只有一個選項會到 B）、DRILL 三種模式（含 `U2` 要按兩下的 case）、一回合結束進度存檔、設定與鍵位與 solve 重開後還在 |
 | `just fw-build cube` | app 501,336 B（槽 581,564 B）；`.ram_text` 5,100 / 32,768 B；`.data+.bss` 45,932 / 98,304 B；沒有 soft-double，檢查全部 `ok`；package 616,003 B，identity `FM-1_4000` |
 | fm1-emu `uc25hq80`、`p25q80` | 兩種晶片都開機、計時一筆、在 SETTINGS 關掉 inspection，重開後 1 SOLVE 與 INSPECTION OFF 都讀回；只寫 `0xCA000`、`0xCC000` `[模擬]` |
 | 疊在備份上預演 | package 疊在 `2026-11-25-2330-pre-morse-0.8` 上：安裝改了 `0x04000`–`0x7E000` 的 123 個 sector（都在韌體區）；開機後計時、改設定只寫 `0xCA000`、`0xCC000`，THEORY、Morse、METRONOME 的 sector 沒動 `[模擬]` |

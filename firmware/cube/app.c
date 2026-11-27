@@ -53,7 +53,7 @@ static void tint(char *d, int v)
 
 /* ---------------------------------------------------------------- settings --- */
 #define SET_MAGIC 0x31425543u            /* "CUB1" */
-#define SET_VER 1u
+#define SET_VER 2u
 enum { SCR_STATE, SCR_MOVE };
 enum { START_ANY, START_ENDS };
 typedef struct {
@@ -62,7 +62,8 @@ typedef struct {
     uint8_t scr_type, scr_len, inspect, start, layout, anim, hints, view;
     uint8_t alg_set, alg_pos, drill_set, drill_mode;
     uint8_t custom[NKEYS_CUBE];
-    uint8_t rsv[5];
+    uint8_t sp_len;                      /* DRILL A TO B: moves between the two cubes, 2..4 */
+    uint8_t rsv[4];
 } set_t;
 static set_t set;
 static uint8_t keymap[NKEYS_CUBE];       /* the layout in use */
@@ -78,6 +79,8 @@ static void set_defaults(void)
     set.layout = KM_BLACK;
     set.anim = 1;
     set.hints = 1;
+    set.drill_set = ALG_LBL;
+    set.sp_len = 3;
     km_preset(KM_BLACK, set.custom);
 }
 
@@ -86,8 +89,8 @@ static int set_valid(const set_t *s)
     int k;
     if (s->magic != SET_MAGIC || s->ver != SET_VER || s->size != sizeof *s) return 0;
     if (s->scr_type > 1 || s->scr_len < 15 || s->scr_len > SCR_MAX || s->inspect > 1 || s->start > 1
-        || s->layout > KM_CUSTOM || s->anim > 1 || s->hints > 1 || s->view >= VIEW_PRESETS || s->alg_set >= ALG_SETS
-        || s->drill_set >= ALG_SETS || s->drill_mode > 2)
+        || s->layout > KM_CUSTOM || s->anim > 1 || s->hints > 1 || s->view >= VIEW_PRESETS || s->alg_set >= alg_groups()
+        || s->drill_set >= ALG_SETS || s->drill_mode > 4 || s->sp_len < 2 || s->sp_len > 4)
         return 0;
     for (k = 0; k < NKEYS_CUBE; k++)
         if (s->custom[k] != KA_NONE && s->custom[k] != KA_UNDO && s->custom[k] >= MV_N) return 0;
@@ -177,7 +180,7 @@ static int32_t sol_avg(int k)
 }
 
 /* ---------------------------------------------------------------- drills --- */
-#define DRILL_MAGIC 0x31524C44u          /* "DLR1" */
+#define DRILL_MAGIC 0x32524C44u          /* "DLR2": eight sets, cards in learning order */
 #define ALG_ROOM 160                     /* entries the record has room for */
 #define BLOB_ROOM SR_BLOB_N(64)
 typedef struct {
@@ -191,6 +194,11 @@ static drill_rec_t drec;
 static sr_state_t dst[ALG_SETS];
 static sr_course_t dcourse[ALG_SETS];
 static uint8_t d_seg[SR_MAX], d_key[SR_MAX], d_groups[ALG_SETS][SR_MAX / 4 + 1];
+static uint8_t d_order[ALG_SETS][SR_ORDER_MAX];   /* a card's item -> its place in the set (learning order) */
+/* the sets DRILL offers, in the order to learn them: solve it at all, the 4-look last layer, F2L, then full PLL
+ * and full OLL, each most frequent case first */
+static const uint8_t DRILL_SETS[] = {ALG_LBL, ALG_OLL2, ALG_PLL2, ALG_F2L, ALG_PLL, ALG_OLL};
+#define NDRILL ((int)sizeof DRILL_SETS)
 
 static void drill_courses(void)
 {
@@ -198,6 +206,9 @@ static void drill_courses(void)
     for (i = 0; i < (int)SR_MAX; i++) d_seg[i] = 0, d_key[i] = SR_NOKEY;
     for (s = 0; s < ALG_SETS; s++) {
         int n = alg_count(s), g = 0;
+        if (s == ALG_OLL || s == ALG_PLL) alg_learn_order(s, d_order[s]);   /* most frequent, then shortest, first */
+        else
+            for (i = 0; i < n && i < SR_ORDER_MAX; i++) d_order[s][i] = (uint8_t)i;   /* the steps as they come */
         for (i = 4; i < n; i += 4) d_groups[s][g++] = (uint8_t)i;
         d_groups[s][g++] = (uint8_t)n;
         dcourse[s].n = (uint8_t)n;
@@ -399,7 +410,7 @@ static struct {
     uint32_t vt_start, vt_ms;
     uint8_t show_map;
     /* ALGS */
-    uint8_t alg_form, alg_3d;            /* which of the case's formulas; the picture in 3D (OLL, PLL: top view) */
+    uint8_t alg_form, alg_3d, alg_list;  /* (alg_list: the groups in solving order are on the screen) */            /* which of the case's formulas; the picture in 3D (OLL, PLL: top view) */
     uint8_t play;                        /* the formula being played */
     uint8_t pm[ALG_MAX], pn, pi;
     uint32_t p_next;
@@ -409,6 +420,9 @@ static struct {
     uint8_t d_setup[ALG_MAX + 1], d_setup_n;
     uint32_t d_ms;
     uint8_t d_moves;
+    uint8_t d_opt[4], d_nopt, d_right, d_pick, d_chosen, d_3d;   /* CHOOSE, A TO B: the options, the right one */
+    cube_t sp_a, sp_b;                   /* A TO B: the two cubes */
+    uint8_t sp_seq[4][5], sp_q, sp_ok;
     /* SETTINGS */
     uint8_t set_row, key_sel, clear_armed, stats_at;
     uint8_t lit_keys_dbg;
@@ -418,8 +432,9 @@ static struct {
 } ui;
 
 enum { D_SETUP, D_CARD, D_ANSWER, D_DONE };
-enum { DM_RECOGNIZE, DM_REAL, DM_VIRTUAL };
-static const char *const DM_NAME[3] = {"RECOGNIZE", "REAL CUBE", "VIRTUAL"};
+enum { DM_RECOGNIZE, DM_REAL, DM_VIRTUAL, DM_CHOOSE, DM_SPATIAL, DM_N };
+static const char *const DM_NAME[DM_N] = {"RECOGNIZE", "REAL CUBE", "VIRTUAL", "CHOOSE", "A TO B"};
+#define SP_QUESTIONS 10
 
 static void toast(const char *a, const char *b)
 {
@@ -449,6 +464,7 @@ static void go(int page)
 {
     if (page == P_MENU && ui.page >= P_TIMER && ui.page <= P_SET) ui.menu_at = (uint8_t)(ui.page - 1);   /* where you were */
     if (page == P_DRILL) ui.d_state = D_SETUP;
+    if (page == P_ALGS) ui.alg_list = 1;
     ui.page = (uint8_t)page;
     ui.help = 0;
     ui.play = 0;
@@ -739,15 +755,15 @@ static void cube_hints(void)
 }
 
 /* ------------------------------------------------------------------ ALGS --- */
-static int alg_cur(void)
+static int alg_cur(void)                 /* the case on the screen: set.alg_set is the group, alg_pos the case in it */
 {
-    int i = alg_index(set.alg_set, set.alg_pos);
+    int i = alg_group_item(set.alg_set, set.alg_pos);
     return i < 0 ? 0 : i;
 }
 
 static void algs_case_step(int d)
 {
-    int n = alg_count(set.alg_set);
+    int n = alg_group_count(set.alg_set);
     set.alg_pos = (uint8_t)((set.alg_pos + n * 8 + d) % n);
     ui.alg_form = 0;
     ui.play = 0;
@@ -763,6 +779,7 @@ static void algs_play_start(void)
     ui.pn = (uint8_t)n;
     ui.pi = 0;
     alg_case(alg_cur(), &ui.dv.c, 0);
+    if (alg_get(alg_cur())->set == ALG_PAT) cube_reset(&ui.dv.c);   /* a pattern grows from a solved cube */
     ui.dv.prev = ui.dv.c;
     ui.dv.anim_base = -1;
     ui.dv.hn = 0;
@@ -797,7 +814,7 @@ static void drill_card(void)
         ui.redraw = R_ALL;
         return;
     }
-    ui.d_alg = (uint8_t)alg_index(set.drill_set, c->item);
+    ui.d_alg = (uint8_t)alg_index(set.drill_set, d_order[set.drill_set][c->item]);
     ui.d_auf = (uint8_t)(cube_rand(&crng) & 3u);
     if (set.drill_set == ALG_LBL || set.drill_set == ALG_F2L) ui.d_auf = 0;
     ui.d_setup_n = (uint8_t)alg_setup(ui.d_alg, ui.d_setup, ui.d_auf);
@@ -810,12 +827,109 @@ static void drill_card(void)
     alg_case(ui.d_alg, &ui.dv.c, ui.d_auf);
     ui.dv.prev = ui.dv.c;
     m3_view(&ui.dcam, VIEW_YAW[0], VIEW_PITCH[0]);
+    ui.d_3d = 0;
+    if (ui.d_mode == DM_CHOOSE) {        /* the right formula and two others of the set, shuffled */
+        int n = alg_count(set.drill_set), k, j;
+        ui.d_nopt = 3;
+        ui.d_opt[0] = ui.d_alg;
+        for (k = 1; k < 3; k++) {
+            int o, tries = 0;
+            do {
+                o = alg_index(set.drill_set, (int)(cube_rand(&crng) % (uint32_t)n));
+                for (j = 0; j < k && ui.d_opt[j] != o; j++) {}
+            } while (j < k && ++tries < 50);
+            ui.d_opt[k] = (uint8_t)o;
+        }
+        ui.d_right = (uint8_t)(cube_rand(&crng) % 3u);
+        k = ui.d_opt[ui.d_right], ui.d_opt[ui.d_right] = ui.d_opt[0], ui.d_opt[0] = (uint8_t)k;
+        ui.d_pick = 0;
+        ui.d_chosen = 0xFF;
+    }
+    ui.redraw = R_ALL;
+}
+
+/* ---- A TO B: two cubes, the moves between them, and three wrong ones */
+static int seq_lands(const uint8_t *m, int n, const cube_t *b)   /* A, then m: is it B? */
+{
+    cube_t c = ui.sp_a;
+    cube_apply(&c, m, n);
+    return cube_equal(&c, b);
+}
+
+static void sp_new(void)
+{
+    int n = set.sp_len, k, j, tries;
+    uint8_t m[8];
+    cube_reset(&ui.sp_a);
+    cube_scramble_moves(m, 7, &crng);
+    cube_apply(&ui.sp_a, m, 7);
+    cube_scramble_moves(ui.sp_seq[0], n, &crng);
+    ui.sp_b = ui.sp_a;
+    cube_apply(&ui.sp_b, ui.sp_seq[0], n);
+    for (k = 1; k < 4; k++) {
+        for (tries = 0; tries < 60; tries++) {
+            uint8_t *q = ui.sp_seq[k];
+            int ok = 1;
+            for (j = 0; j < n; j++) q[j] = ui.sp_seq[0][j];
+            if (tries == 0 && k == 1) {  /* the last turn the other way */
+                int t = MV_TURNS(q[n - 1]);
+                q[n - 1] = MV(MV_BASE(q[n - 1]), t == 2 ? 1 : 4 - t);
+            } else if (tries == 0 && k == 2) {   /* the first turn on another face */
+                int f = (MV_BASE(q[0]) + 1 + (int)(cube_rand(&crng) % 4u)) % 6;
+                if (n > 1 && f == MV_BASE(q[1])) f = (f + 1) % 6;
+                q[0] = MV(f, MV_TURNS(q[0]));
+            } else if (tries == 0 && k == 3) {   /* the same turns, backwards */
+                for (j = 0; j < n; j++) q[j] = ui.sp_seq[0][n - 1 - j];
+            } else
+                cube_scramble_moves(q, n, &crng);
+            for (j = 1; j < n; j++)
+                if (MV_BASE(q[j]) == MV_BASE(q[j - 1])) ok = 0;
+            if (seq_lands(q, n, &ui.sp_b)) ok = 0;
+            for (j = 1; j < k && ok; j++) {
+                cube_t c1 = ui.sp_a, c2 = ui.sp_a;
+                cube_apply(&c1, q, n);
+                cube_apply(&c2, ui.sp_seq[j], n);
+                if (cube_equal(&c1, &c2)) ok = 0;
+            }
+            if (ok) break;
+        }
+    }
+    ui.d_right = (uint8_t)(cube_rand(&crng) % 4u);   /* the right one to a random place */
+    for (j = 0; j < n; j++) {
+        uint8_t t = ui.sp_seq[0][j];
+        ui.sp_seq[0][j] = ui.sp_seq[ui.d_right][j];
+        ui.sp_seq[ui.d_right][j] = t;
+    }
+    ui.d_nopt = 4;
+    ui.d_pick = 0;
+    ui.d_chosen = 0xFF;
+    ui.d_state = D_CARD;
+    m3_view(&ui.dcam, VIEW_YAW[0], VIEW_PITCH[0]);
+    ui.redraw = R_ALL;
+}
+
+static void drill_answer(int k)          /* CHOOSE, A TO B: option k picked (-1: skipped) */
+{
+    ui.d_chosen = (uint8_t)(k < 0 ? 0xFE : k);
+    ui.d_state = D_ANSWER;
+    if (ui.d_mode == DM_SPATIAL) {
+        if (k == ui.d_right) ui.sp_ok++;
+        chime_play(k == ui.d_right ? CHIME_UP : CHIME_ERROR);
+    }
+    app_say(k == ui.d_right ? "RIGHT" : "NOT THAT ONE", "");
     ui.redraw = R_ALL;
 }
 
 static void drill_start(void)
 {
     entropy(plat_ms());
+    if (set.drill_mode == DM_SPATIAL) {
+        ui.d_mode = DM_SPATIAL;
+        ui.sp_q = 0;
+        ui.sp_ok = 0;
+        sp_new();
+        return;
+    }
     sr_build(&dst[set.drill_set], &ui.d_round, &dcourse[set.drill_set], 12, SR_FOCUS_SEGS, cube_rand(&crng));
     ui.d_mode = set.drill_mode;
     drill_card();
@@ -957,6 +1071,13 @@ static void key_down(int k, uint32_t t)
             cube_turn(key_action_move(a));
         break;
     case P_DRILL:
+        if (ui.d_state == D_CARD && (ui.d_mode == DM_CHOOSE || ui.d_mode == DM_SPATIAL)) {
+            static const uint8_t ANSWER_KEY[4] = {0, 2, 4, 6};   /* F3 G3 A3 B3: option 1 2 3 4 */
+            int j;
+            for (j = 0; j < ui.d_nopt && ANSWER_KEY[j] != k; j++) {}
+            if (j < ui.d_nopt) drill_answer(j);
+            break;
+        }
         if (ui.d_state == D_CARD && ui.d_mode == DM_VIRTUAL) {
             if (a == KA_UNDO) {
                 if (ui.dv.hn) {
@@ -1030,7 +1151,21 @@ static void button_down(int b, uint32_t t)
         }
         break;
     case P_ALGS:
-        if (b == B_PLAY) {
+        if (ui.alg_list) {               /* the list: PLAY opens the group */
+            if (b == B_PLAY) {
+                ui.alg_list = 0;
+                set.alg_pos = 0;
+                ui.alg_form = 0;
+                app_say(alg_group_name(set.alg_set), alg_get(alg_cur())->name);
+                ui.redraw = R_ALL;
+            }
+            break;
+        }
+        if (b == B_REC) {
+            ui.alg_list = 1;
+            ui.play = 0;
+            ui.redraw = R_ALL;
+        } else if (b == B_PLAY) {
             if (ui.play) ui.play = 0, ui.redraw = R_ALL;
             else algs_play_start();
         } else if (b == B_SEL) {
@@ -1042,6 +1177,22 @@ static void button_down(int b, uint32_t t)
     case P_DRILL:
         if (ui.d_state == D_SETUP || ui.d_state == D_DONE) {
             if (b == B_PLAY) drill_start();
+        } else if (ui.d_mode == DM_CHOOSE || ui.d_mode == DM_SPATIAL) {
+            if (ui.d_state == D_CARD) {
+                if (b == B_PLAY) drill_answer(ui.d_pick);
+                else if (b == B_REC) drill_answer(-1);
+                else if (b == B_SEL) ui.d_3d ^= 1u, ui.redraw = R_ALL;
+            } else if (ui.d_state == D_ANSWER && b == B_PLAY) {
+                const sr_card_t *c = sr_card(&ui.d_round);
+                if (ui.d_mode == DM_CHOOSE)      /* (a new case is only shown: nothing to grade) */
+                    drill_grade(c && c->kind == SR_SHOW ? SR_RIGHT : ui.d_chosen == ui.d_right ? SR_RIGHT : SR_WRONG);
+                else if (++ui.sp_q >= SP_QUESTIONS) {
+                    ui.d_state = D_DONE;
+                    chime_play(CHIME_DONE);
+                    ui.redraw = R_ALL;
+                } else
+                    sp_new();
+            }
         } else if (ui.d_state == D_CARD) {
             if (ui.d_mode == DM_RECOGNIZE && b == B_PLAY) ui.d_state = D_ANSWER, ui.redraw = R_ALL;
             else if (b == B_REC) ui.d_state = D_ANSWER, ui.d_ms = 0, ui.redraw = R_ALL, ui.d_moves = 0xFF;   /* give up */
@@ -1147,12 +1298,13 @@ static void enc_turn(int e, int32_t d)
         ui.redraw |= R_MAIN;
         break;
     case P_ALGS:
-        if (e == EN_SELECT) {
-            set.alg_set = (uint8_t)((set.alg_set + ALG_SETS * 8 + d) % ALG_SETS);
+        if (e == EN_SELECT) {            /* the group (in the list, or the next one from a case) */
+            int g = alg_groups();
+            set.alg_set = (uint8_t)((set.alg_set + g * 8 + d) % g);
             set.alg_pos = 0;
             ui.alg_form = 0;
             ui.play = 0;
-            app_say(alg_set_name(set.alg_set), "");
+            app_say(alg_group_name(set.alg_set), "");
             set_changed();
             ui.redraw = R_ALL;
         } else if (e == EN_PRESET)
@@ -1181,12 +1333,36 @@ static void enc_turn(int e, int32_t d)
         }
         break;
     case P_DRILL:
-        if (ui.d_state != D_SETUP && ui.d_state != D_DONE) break;
-        if (e == EN_SELECT) {
-            set.drill_set = (uint8_t)((set.drill_set + ALG_SETS * 8 + d) % ALG_SETS);
+        if (ui.d_state != D_SETUP && ui.d_state != D_DONE) {   /* a card: turn the view; SELECT picks an answer */
+            if (e == EN_K1 || e == EN_K2 || e == EN_K3) {
+                m3_turn(&ui.dcam, e - EN_K1, 15.0f * (float)d);
+                ui.d_3d = 1;
+                ui.redraw |= R_MAIN;
+            } else if (e == EN_K4) {
+                set.view = (uint8_t)((set.view + VIEW_PRESETS * 8 + d) % VIEW_PRESETS);
+                m3_view(&ui.dcam, VIEW_YAW[set.view], VIEW_PITCH[set.view]);
+                ui.d_3d = 1;
+                ui.redraw |= R_MAIN;
+            } else if (e == EN_SELECT && ui.d_state == D_CARD && ui.d_nopt
+                       && (ui.d_mode == DM_CHOOSE || ui.d_mode == DM_SPATIAL)) {
+                ui.d_pick = (uint8_t)((ui.d_pick + ui.d_nopt * 8 + d) % ui.d_nopt);
+                ui.redraw |= R_MAIN;
+            }
+            break;
+        }
+        if (e == EN_SELECT && set.drill_mode == DM_SPATIAL) {
+            set.sp_len = (uint8_t)clamp(set.sp_len + d, 2, 4);
+            t[0] = 0;
+            tint(t, set.sp_len);
+            app_say("MOVES", t);
+        } else if (e == EN_SELECT) {     /* the sets in learning order */
+            int j;
+            for (j = 0; j < NDRILL && DRILL_SETS[j] != set.drill_set; j++) {}
+            j = (j + NDRILL * 8 + d) % NDRILL;
+            set.drill_set = DRILL_SETS[j];
             app_say(alg_set_name(set.drill_set), "");
         } else if (e == EN_K1 || e == EN_PRESET) {
-            set.drill_mode = (uint8_t)((set.drill_mode + 3 * 8 + d) % 3);
+            set.drill_mode = (uint8_t)((set.drill_mode + DM_N * 8 + d) % DM_N);
             app_say(DM_NAME[set.drill_mode], "");
         } else
             break;
@@ -1345,13 +1521,23 @@ static void draw_header(void)
         else tcat(t, km_name(set.layout));
         break;
     case P_ALGS:
-        tcat(t, alg_set_short(set.alg_set));
-        tcat(t, "  ");
-        tint(t, set.alg_pos + 1);
-        tcat(t, "/");
-        tint(t, alg_count(set.alg_set));
+        if (ui.alg_list) tcat(t, "IN SOLVING ORDER");
+        else {
+            tcat(t, alg_set_short(alg_group_set(set.alg_set)));
+            tcat(t, "  ");
+            tint(t, set.alg_pos + 1);
+            tcat(t, "/");
+            tint(t, alg_group_count(set.alg_set));
+        }
         break;
     case P_DRILL:
+        if (ui.d_mode == DM_SPATIAL && (ui.d_state == D_CARD || ui.d_state == D_ANSWER)) {
+            tcat(t, "A TO B  ");
+            tint(t, ui.sp_q + 1);
+            tcat(t, "/");
+            tint(t, SP_QUESTIONS);
+            break;
+        }
         tcat(t, alg_set_short(set.drill_set));
         if (ui.d_state == D_CARD || ui.d_state == D_ANSWER) {
             tcat(t, "  CARD ");
@@ -1520,11 +1706,46 @@ static int32_t legend(int32_t x, int32_t y, const char *btn, const char *what, u
     return cv_text(x + w + 4, y + 1, &FONT_XS, what, C_GRAY) + 10;
 }
 
+static void freq_text(int i, char *t)     /* "SEEN 1 IN 18 SOLVES" (OLL, PLL) */
+{
+    int den, f = alg_freq(i, &den);
+    t[0] = 0;
+    if (!f) return;
+    tcat(t, "1 IN ");
+    tint(t, (den + f / 2) / f);
+    tcat(t, " SOLVES");
+}
+
+static void draw_algs_list(int32_t oy)   /* the groups in solving order */
+{
+    int g, n = alg_groups(), rows = 8, first = (int)set.alg_set - rows / 2;
+    if (first > n - rows) first = n - rows;
+    if (first < 0) first = 0;
+    for (g = first; g < n && g < first + rows; g++) {
+        int32_t y = 4 + (g - first) * 21 - oy;
+        int on = g == set.alg_set;
+        const char *nm = alg_group_name(g);
+        char t[8];
+        uint16_t sc = nm[0] == '1' ? RGB(240, 240, 240) : nm[0] == '2' ? RGB(30, 190, 70) : nm[0] == '3' ? RGB(250, 215, 30)
+                    : nm[0] == '4' ? RGB(255, 135, 20) : C_GRAY;
+        if (on) cv_rect(0, y - 3, 240, 20, C_LINE);
+        cv_rect(4, y, 3, 14, sc);        /* the stage's colour: cross white, F2L green, OLL yellow, PLL orange */
+        cv_text(12, y, &FONT_T, nm, on ? C_WHITE : C_GRAY);
+        t[0] = 0;
+        tint(t, alg_group_count(g));
+        cv_text(232 - text_w(&FONT_T, t), y, &FONT_T, t, on ? C_HI : C_DIM);
+    }
+}
+
 static void draw_algs(int32_t oy)
 {
     const alg_t *a = alg_get(alg_cur());
     char t[160];
     int n = alg_forms(alg_cur());
+    if (ui.alg_list) {
+        draw_algs_list(oy);
+        return;
+    }
     if (ui.play) {
         view_draw(oy, MAIN_H / 2);
         t[0] = 0;
@@ -1539,6 +1760,8 @@ static void draw_algs(int32_t oy)
     draw_case(alg_cur(), 0, !ui.alg_3d, 1, oy);
     {
         int32_t y = gtext_wrap(106, 6 - oy, 130, 18, &FONT_B, a->name, C_WHITE);
+        freq_text(alg_cur(), t);
+        if (t[0]) cv_text(106, y, &FONT_XS, t, C_AMB), y += 14;
         t[0] = 0;
         tcat(t, "FORMULA ");
         tint(t, ui.alg_form + 1);
@@ -1552,10 +1775,12 @@ static void draw_algs(int32_t oy)
     gtext_wrap(8, 104 - oy, 224, 17, &FONT_B, t, C_HI);
 }
 
-static const char *const DRILL_STEPS[3][3] = {
+static const char *const DRILL_STEPS[DM_N][3] = {
     {"1  LOOK AT THE CASE", "2  SAY ITS FORMULA TO YOURSELF", "3  PLAY: SEE IT, THEN SAY HOW IT WENT"},
     {"1  SCRAMBLE YOUR CUBE AS SHOWN, YELLOW UP", "2  HOLD A KEY, LET GO: THE CLOCK RUNS", "3  SOLVE THE CASE, PRESS A KEY"},
-    {"1  THE CUBE ON THE SCREEN IS THE CASE", "2  TURN IT BACK ON THE KEYS (LIT: NEXT)", "3  DONE: IT CHECKS ITSELF"}};
+    {"1  THE CUBE ON THE SCREEN IS THE CASE", "2  TURN IT BACK ON THE KEYS (LIT: NEXT)", "3  DONE: IT CHECKS ITSELF"},
+    {"1  LOOK AT THE CASE (K1-K4 TURN IT)", "2  WHICH OF THE THREE FORMULAS SOLVES IT?", "3  F3 G3 A3, OR SELECT AND PLAY"},
+    {"1  CUBE A, THEN CUBE B (K1-K4 TURN BOTH)", "2  WHICH MOVES TAKE A TO B? NO HURRY", "3  F3 G3 A3 B3, OR SELECT AND PLAY"}};
 
 static void draw_drill(int32_t oy)
 {
@@ -1565,15 +1790,37 @@ static void draw_drill(int32_t oy)
     int i, show = card && card->kind == SR_SHOW;
     if (ui.d_state == D_SETUP || ui.d_state == D_DONE) {
         sr_state_t *s = &dst[set.drill_set];
-        cv_text(8, 6 - oy, &FONT_XS, "SET", C_GRAY);
-        cv_text(48, 3 - oy, &FONT_B, alg_set_name(set.drill_set), C_WHITE);
+        if (set.drill_mode == DM_SPATIAL) {
+            t[0] = 0;
+            tint(t, set.sp_len);
+            tcat(t, " MOVES APART");
+            cv_text(8, 6 - oy, &FONT_XS, "A TO B", C_GRAY);
+            cv_text(56, 3 - oy, &FONT_B, t, C_WHITE);
+        } else {
+            int j;
+            for (j = 0; j < NDRILL && DRILL_SETS[j] != set.drill_set; j++) {}
+            t[0] = 0;
+            tcat(t, "STEP ");
+            tint(t, j + 1);
+            cv_text(8, 6 - oy, &FONT_XS, t, C_GRAY);
+            cv_text(56, 3 - oy, &FONT_B, alg_set_name(set.drill_set), C_WHITE);
+        }
         cv_text(232 - text_w(&FONT_XS, "SELECT"), 6 - oy, &FONT_XS, "SELECT", C_DIM);
         cv_text(8, 30 - oy, &FONT_XS, "MODE", C_GRAY);
-        cv_text(48, 27 - oy, &FONT_B, DM_NAME[set.drill_mode], C_HI);
+        cv_text(56, 27 - oy, &FONT_B, DM_NAME[set.drill_mode], C_HI);
         cv_text(232 - text_w(&FONT_XS, "K1"), 30 - oy, &FONT_XS, "K1", C_DIM);
         cv_rect(0, 50 - oy, 240, 1, C_LINE);
         t[0] = 0;
-        if (ui.d_state == D_DONE) {
+        if (ui.d_state == D_DONE && ui.d_mode == DM_SPATIAL) {
+            tcat(t, "DONE: ");
+            tint(t, ui.sp_ok);
+            tcat(t, " OF ");
+            tint(t, SP_QUESTIONS);
+            tcat(t, " RIGHT");
+            cv_text(8, 58 - oy, &FONT_B, t, C_OK);
+        } else if (set.drill_mode == DM_SPATIAL) {
+            gtext_wrap(8, 58 - oy, 224, 14, &FONT_XS, "TEN QUESTIONS. SELECT: HOW MANY MOVES APART", C_GRAY);
+        } else if (ui.d_state == D_DONE) {
             tcat(t, "ROUND DONE: ");
             tint(t, ui.d_round.ok);
             tcat(t, " RIGHT, ");
@@ -1586,11 +1833,38 @@ static void draw_drill(int32_t oy)
             tint(t, alg_count(set.drill_set));
             tcat(t, " CASES OPEN, ");
             tint(t, sr_due_count(s, &dcourse[set.drill_set], SR_FOCUS_SEGS));
-            tcat(t, " DUE (MORE OPEN AS YOU LEARN)");
+            tcat(t, set.drill_set == ALG_OLL || set.drill_set == ALG_PLL ? " DUE; MOST FREQUENT FIRST" : " DUE (MORE OPEN AS YOU LEARN)");
             gtext_wrap(8, 58 - oy, 224, 14, &FONT_XS, t, C_GRAY);
         }
         for (i = 0; i < 3; i++) cv_text(8, 90 + i * 18 - oy, &FONT_XS, DRILL_STEPS[set.drill_mode][i], C_AMB);
         legend(8, 152 - oy, "PLAY", ui.d_state == D_DONE ? "ANOTHER ROUND" : "START A ROUND", C_HI);
+        return;
+    }
+    if (ui.d_mode == DM_SPATIAL || ui.d_mode == DM_CHOOSE) {
+        int k, ans = ui.d_state == D_ANSWER;
+        if (ui.d_mode == DM_SPATIAL) {
+            view_draw(oy, MAIN_H / 2);
+            text_c(120, 44 - oy, &FONT_B, "->", C_GRAY);
+            cv_text(8, 2 - oy, &FONT_B, "A", C_WHITE);
+            cv_text(224, 2 - oy, &FONT_B, "B", C_WHITE);
+        } else {
+            draw_case(ui.d_alg, ui.d_auf, !ui.d_3d, ans, oy);
+            gtext_wrap(106, 8 - oy, 130, 18, &FONT_B, ans ? a->name : "WHICH FORMULA SOLVES IT?", ans ? C_HI : C_WHITE);
+        }
+        for (k = 0; k < ui.d_nopt; k++) {   /* the options: one row each (CHOOSE), two by two (A TO B) */
+            int sp = ui.d_mode == DM_SPATIAL;
+            int32_t x = sp ? 2 + (k % 2) * 119 : 2, y = (sp ? 108 + (k / 2) * 30 : 100 + k * 25) - oy, w = sp ? 117 : 236;
+            uint16_t box = C_LINE, txt = C_AMB;
+            static const char *const KEY[4] = {"F3", "G3", "A3", "B3"};
+            if (!ans && k == ui.d_pick) box = RGB(60, 60, 70), txt = C_WHITE;
+            if (ans && k == ui.d_right) box = RGB(30, 110, 50), txt = C_WHITE;
+            else if (ans && k == ui.d_chosen) box = RGB(130, 40, 40), txt = C_WHITE;
+            cv_rect(x, y, w, sp ? 28 : 23, box);
+            cv_text(x + 3, y + 3, &FONT_XS, KEY[k], C_DIM);
+            if (sp) cube_print(ui.sp_seq[k], set.sp_len, t, sizeof t);
+            else alg_form_text(ui.d_opt[k], 0, t, sizeof t);
+            gtext_wrap(x + 22, y + (sp ? 6 : 3), w - 24, 13, sp ? &FONT_B : &FONT_XS, t, txt);
+        }
         return;
     }
     if (ui.d_mode == DM_VIRTUAL && ui.d_state == D_CARD) {
@@ -1654,10 +1928,10 @@ static const char *const HELP[P_N][8] = {
      "SEL TWICE|DELETE LAST SOLVE", "REC|NEW SCRAMBLE"},
     {"KEYS|TURN (SEE SETTINGS)", "SEL + KEY|THE OTHER WAY", "UNDO KEY|BACK; +SEL: SOLVED", "REC|SCRAMBLE, LIT KEYS",
      "HOLD REC|SCRAMBLED AT ONCE", "PLAY|CLOCK AT 1ST TURN", "K1 K2 K3, K4|TURN THE VIEW, PRESETS", "SEL|THE KEY MAP"},
-    {"SELECT|SET", "PRESETS, OCT|CASE", "ALGORITHM|NEXT FORMULA FOR IT", "K1 K2 K3, K4|TURN THE VIEW, PRESETS",
-     "SEL|PICTURE: ABOVE OR 3D", "PLAY|PLAY IT ON THE CUBE"},
-    {"SELECT, K1|SET, MODE", "PLAY|START; SHOW; KNEW IT", "SEL|SLOW", "REC|MISSED; GIVE UP; SKIP",
-     "KEYS|TURN IT (VIRTUAL)", "HOLD A KEY|THE CLOCK (REAL CUBE)"},
+    {"SELECT|GROUP (SOLVING ORDER)", "PLAY|OPEN IT; PLAY IT", "REC|BACK TO THE LIST", "PRESETS, OCT|CASE",
+     "ALGORITHM|NEXT FORMULA FOR IT", "K1 K2 K3, K4|TURN THE VIEW, PRESETS", "SEL|PICTURE: ABOVE OR 3D"},
+    {"SELECT, K1|SET (MOVES), MODE", "PLAY|START; SHOW; ANSWER", "F3 G3 A3 B3|ANSWER 1 2 3 4", "SEL|SLOW; ABOVE OR 3D",
+     "REC|MISSED; SKIP; GIVE UP", "K1-K4|TURN THE VIEW (A CARD)", "KEYS|TURN IT (VIRTUAL)", "HOLD A KEY|CLOCK (REAL CUBE)"},
     {"SELECT|SCROLL THE SOLVES"},
     {"SELECT|ROW", "K1, OCT|CHANGE IT", "PLAY|EDIT KEYS; CLEAR x2"},
     {"A KEY|PICK IT", "SELECT|WHAT IT TURNS", "HOME|SAVE AND BACK"}};
@@ -1759,14 +2033,17 @@ static void build_views(void)            /* the 3D quads, once a frame (both ban
             alg_case(alg_cur(), &c, 0);
             view_build(&c, &ui.dcam, 52, 50, 16.0f, -1, 0.0f, SCHEME_YELLOW);
         }
-    } else if (ui.page == P_DRILL) {
+    } else if (ui.page == P_DRILL && ui.d_state != D_SETUP && ui.d_state != D_DONE) {
         if (ui.d_mode == DM_VIRTUAL && ui.d_state == D_CARD) vc_build(&ui.dv, &ui.dcam, 120, MAIN_H / 2, 30.0f, SCHEME_YELLOW);
-        else {
+        else if (ui.d_mode == DM_SPATIAL) {   /* A and B side by side, one camera */
+            view_build(&ui.sp_a, &ui.dcam, 58, 54, 14.0f, -1, 0.0f, SCHEME_WHITE);
+            vq_append = 1;
+            view_build(&ui.sp_b, &ui.dcam, 182, 54, 14.0f, -1, 0.0f, SCHEME_WHITE);
+            vq_append = 0;
+        } else {
             cube_t c;
-            mat3_t cam;
             alg_case(ui.d_alg, &c, ui.d_auf);
-            m3_view(&cam, VIEW_YAW[0], VIEW_PITCH[0]);
-            view_build(&c, &cam, 52, 50, 16.0f, -1, 0.0f, SCHEME_YELLOW);
+            view_build(&c, &ui.dcam, 52, 50, 16.0f, -1, 0.0f, SCHEME_YELLOW);
         }
     }
 }
@@ -1808,9 +2085,13 @@ static const char *footer_hint(void)
     case P_CUBE:
         if (ui.follow) return ui.fdev ? "OFF THE SCRAMBLE: UNDO" : "FOLLOW THE LIT KEYS";
         return "REC: SCRAMBLE (HOLD: AT ONCE)  K1-4: VIEW";
-    case P_ALGS: return ui.play ? "PLAY: STOP" : "SELECT: SET  PRESETS: CASE  PLAY: SHOW";
+    case P_ALGS:
+        if (ui.alg_list) return "SELECT: GROUP   PLAY: OPEN";
+        return ui.play ? "PLAY: STOP" : "PRESETS: CASE  PLAY: SHOW  REC: LIST";
     case P_DRILL:
         if (ui.d_state == D_SETUP || ui.d_state == D_DONE) return "HOLD HOME: HELP";
+        if (ui.d_mode == DM_CHOOSE || ui.d_mode == DM_SPATIAL)
+            return ui.d_state == D_ANSWER ? "PLAY: NEXT   K1-K4: LOOK AGAIN" : "K1-K4: TURN THE VIEW   REC: SKIP";
         if (ui.d_state == D_ANSWER) {
             const sr_card_t *c = sr_card(&ui.d_round);
             return c && c->kind == SR_SHOW ? "THE NEXT TIME IT ASKS" : "HOW DID IT GO?";
@@ -1993,6 +2274,12 @@ int app_expect(const char *what, int *got)
         *got = ui.d_alg;
         return 1;
     }
+    if (!strcmp(what, "d_pick_right")) { /* CHOOSE, A TO B: the right answer given (by its key) */
+        static const uint8_t ANSWER_KEY[4] = {0, 2, 4, 6};
+        if (ui.d_state == D_CARD && (ui.d_mode == DM_CHOOSE || ui.d_mode == DM_SPATIAL)) key_down(ANSWER_KEY[ui.d_right], plat_ms());
+        *got = ui.d_state == D_ANSWER && ui.d_chosen == ui.d_right;
+        return 1;
+    }
     if (!strcmp(what, "d_follow_all")) { /* the drill's case turned back by the lit keys: 1 if solved */
         int n = 0;
         drill_hints();
@@ -2040,6 +2327,17 @@ int app_expect(const char *what, int *got)
     else if (!strncmp(what, "d_rounds", 8)) *got = dst[atoi(what + 8) % ALG_SETS].round;   /* d_roundsN: set N's */
     else if (!strcmp(what, "d_real")) *got = drec.real_cs[ui.d_alg];
     else if (!strcmp(what, "d_alg")) *got = ui.d_alg;
+    else if (!strcmp(what, "d_right")) *got = ui.d_right;
+    else if (!strcmp(what, "d_chosen")) *got = ui.d_chosen;
+    else if (!strcmp(what, "sp_q")) *got = ui.sp_q;
+    else if (!strcmp(what, "sp_ok")) *got = ui.sp_ok;
+    else if (!strcmp(what, "sp_valid")) {   /* the right option lands on B, no other one does */
+        int k, ok = 1;
+        for (k = 0; k < 4; k++) ok &= seq_lands(ui.sp_seq[k], set.sp_len, &ui.sp_b) == (k == ui.d_right);
+        *got = ok;
+    } else if (!strcmp(what, "alg_list")) *got = ui.alg_list;
+    else if (!strcmp(what, "drill_set")) *got = set.drill_set;
+    else if (!strcmp(what, "drill_mode")) *got = set.drill_mode;
     else if (!strcmp(what, "d_auf")) *got = ui.d_auf;
     else if (!strcmp(what, "custom0")) *got = set.custom[0];
     else if (!strcmp(what, "key0")) *got = keymap[0];
