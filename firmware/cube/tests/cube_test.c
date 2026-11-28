@@ -389,6 +389,27 @@ static void test_freq(void)              /* every last-layer state counted: alg_
             CHECK(f == 4, "PLL last is a 1/72 one (%s)", alg_get(alg_index(ALG_PLL, o[20]))->name);
         }
     }
+    {                                    /* OLL: the cross cases first (21-27), the dots last (1-4, 17-20) */
+        static const int DOT[8] = {1, 2, 3, 4, 17, 18, 19, 20};
+        uint8_t o[SR_ORDER_MAX];
+        int n = alg_learn_order(ALG_OLL, o), k, tiers[5] = {0}, line, w[3] = {0};   /* w: states (of 216) dot, L, line */
+        CHECK(n == 57, "OLL order %d", n);
+        for (k = 0; k < 57; k++) {
+            int ed = alg_oll_edges(alg_index(ALG_OLL, k), &line);
+            CHECK(ed == 0 || ed == 2 || ed == 4, "OLL %d edges %d", k + 1, ed);
+            if (ed >= 0 && ed <= 4) tiers[ed]++;
+            if (ed == 0 || ed == 2) w[ed == 0 ? 0 : 1 + line] += alg_freq(alg_index(ALG_OLL, k), &den);
+        }
+        CHECK(tiers[4] == 7 && tiers[2] == 42 && tiers[0] == 8, "OLL tiers %d %d %d", tiers[4], tiers[2], tiers[0]);
+        CHECK(w[0] == 27 && w[1] == 108 && w[2] == 54, "OLL edge states dot %d L %d line %d", w[0], w[1], w[2]);   /* 1, 4, 2 of the 8 */
+        for (k = 0; k < 7; k++) CHECK(o[k] >= 20 && o[k] <= 26, "OLL order %d: OLL %d is not a cross case", k, o[k] + 1);
+        for (k = 0; k < 8; k++) {
+            int j, in = 0;
+            for (j = 0; j < 8; j++) in |= o[49 + k] + 1 == DOT[j];
+            CHECK(in, "OLL order %d: OLL %d is not a dot case", 49 + k, o[49 + k] + 1);
+        }
+        CHECK(alg_oll_edges(alg_index(ALG_PLL, 0), 0) == -1, "edges of a PLL");
+    }
 }
 
 static void test_patterns(void)

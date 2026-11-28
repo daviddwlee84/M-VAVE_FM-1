@@ -206,7 +206,7 @@ static void drill_courses(void)
     for (i = 0; i < (int)SR_MAX; i++) d_seg[i] = 0, d_key[i] = SR_NOKEY;
     for (s = 0; s < ALG_SETS; s++) {
         int n = alg_count(s), g = 0;
-        if (s == ALG_OLL || s == ALG_PLL) alg_learn_order(s, d_order[s]);   /* most frequent, then shortest, first */
+        if (s == ALG_OLL || s == ALG_PLL) alg_learn_order(s, d_order[s]);   /* most frequent, then shortest, first (OLL: by edges first) */
         else
             for (i = 0; i < n && i < SR_ORDER_MAX; i++) d_order[s][i] = (uint8_t)i;   /* the steps as they come */
         for (i = 4; i < n; i += 4) d_groups[s][g++] = (uint8_t)i;
@@ -1762,6 +1762,11 @@ static void draw_algs(int32_t oy)
         int32_t y = gtext_wrap(106, 6 - oy, 130, 18, &FONT_B, a->name, C_WHITE);
         freq_text(alg_cur(), t);
         if (t[0]) cv_text(106, y, &FONT_XS, t, C_AMB), y += 14;
+        {
+            int line, e = alg_oll_edges(alg_cur(), &line);   /* what 2-look does with it, if not learned yet */
+            if (e >= 0)
+                cv_text(106, y, &FONT_XS, e == 4 ? "EDGES: CROSS" : e == 0 ? "EDGES: DOT" : line ? "EDGES: LINE" : "EDGES: L", C_DIM), y += 14;
+        }
         t[0] = 0;
         tcat(t, "FORMULA ");
         tint(t, ui.alg_form + 1);

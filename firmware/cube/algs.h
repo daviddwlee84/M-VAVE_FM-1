@@ -52,7 +52,9 @@ int alg_group_item(int g, int k);        /* entry index of the k-th case of grou
 int alg_group_of(int i);
 int alg_freq(int i, int *den);           /* how often it comes up: returns the count out of *den (0: not counted) */
 #define SR_ORDER_MAX 64
-int alg_learn_order(int set, uint8_t *out);   /* positions, most frequent (then shortest) first; returns n */
+int alg_learn_order(int set, uint8_t *out);   /* positions, most frequent (then shortest) first; OLL: cross cases,
+                                                 * then L / line, dots last; returns n */
+int alg_oll_edges(int i, int *line);     /* OLL case's edges on top: 4, 2 (line: opposite) or 0; -1 not OLL */
 /* what entry i's formulas reach, on cube c after one of them (any whole-cube rotation undone): OLL the last layer
  * oriented, PLL solved, F2L the first two layers, 2-look PLL's corner cases the corners placed, LBL solved (all up
  * to a last turn of one layer) */

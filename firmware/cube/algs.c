@@ -518,16 +518,34 @@ int alg_freq(int i, int *den)
     return 0;
 }
 
-/* the order to learn a set in: the most frequent first, the shortest of equals first (positions in the set) */
+/* an OLL case's edges on top, as 2-look OLL sees them: 4 the cross (only the corners left), 2 an L or a line (one
+ * F R U R' U' F' from the cross), 0 a dot (two); *line: the two are opposite. -1: not a full OLL case */
+int alg_oll_edges(int i, int *line)
+{
+    static const uint8_t E[4] = {1, 5, 7, 3};   /* U's edge stickers, going round */
+    cube_t c;
+    int k, n = 0, up[4];
+    if (line) *line = 0;
+    if (alg_get(i)->set != ALG_OLL) return -1;
+    alg_case(i, &c, 0);
+    for (k = 0; k < 4; k++) n += up[k] = c.f[E[k]] == c.f[4];
+    if (line && n == 2) *line = up[0] == up[2];
+    return n;
+}
+
+/* the order to learn a set in: the most frequent first, the shortest of equals first (positions in the set). OLL
+ * goes by the six-move fallback first: the cross cases (2-look's own), then the L and line cases, the dots last, so
+ * a case not learned yet is always one look or two away by the 2-look route */
 int alg_learn_order(int set, uint8_t *out)
 {
     int n = alg_count(set), k, j;
-    int key[SR_ORDER_MAX];
+    int32_t key[SR_ORDER_MAX];
     for (k = 0; k < n && k < SR_ORDER_MAX; k++) {
-        int i = alg_index(set, k), den, f = alg_freq(i, &den), len;
+        int i = alg_index(set, k), den, f = alg_freq(i, &den), len, tier = 0;
         uint8_t m[ALG_MAX];
         len = alg_moves(i, m);
-        key[k] = (f ? (1000 - f * 1000 / den) : 0) * 64 + len;   /* (frequency down, length up) */
+        if (set == ALG_OLL) tier = 2 - alg_oll_edges(i, 0) / 2;   /* cross 0, L / line 1, dot 2 */
+        key[k] = ((int32_t)tier * 1001 + (f ? (1000 - f * 1000 / den) : 0)) * 64 + len;   /* (tier, frequency down, length up) */
         out[k] = (uint8_t)k;
     }
     for (k = 1; k < n; k++) {            /* insertion sort, stable */
