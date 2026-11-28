@@ -1,3 +1,16 @@
 {
-  "plansDirectory": "./.claude/plans"
+  "plansDirectory": "./.claude/plans",
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"$CLAUDE_PROJECT_DIR/scripts/doctor.py\" --brief",
+            "timeout": 10
+          }
+        ]
+      }
+    ]
+  }
 }

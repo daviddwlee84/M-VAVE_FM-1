@@ -13,6 +13,7 @@ nav = [
   { "Getting Started" = [
     { "總覽與順序" = "getting-started/index.md" },
     { "安裝 M-Flasher" = "getting-started/install-m-flasher.md" },
+    { "換電腦" = "getting-started/new-computer.md" },
     { "備份原廠與確認晶片" = "getting-started/backup-and-chip.md" },
     { "刷 SLOOP 2.8.5" = "getting-started/flash-sloop.md" },
     { "變磚的原理與分級" = "getting-started/bricking.md" },

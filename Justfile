@@ -29,6 +29,53 @@ evilgenius_version := "0.1.4"
 default:
     @just --list
 
+# ---- this computer ------------------------------------------------------------
+
+# What this computer is missing (offline, read-only; the SessionStart hook runs it too).
+doctor:
+    @python3 scripts/doctor.py
+
+# Downloads only, digest-checked; never touches the unit.
+# New computer or fresh clone: submodules, Python env, M-Flasher + SLOOP, fm1-emu, the release backups.
+setup:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    git submodule update --init --recursive
+    uv sync --locked --all-groups
+    just fm1-fetch
+    if [ "$(uname -s)-$(uname -m)" = "Darwin-arm64" ]; then just emu-fetch; else echo "skip emu-fetch: fm1-emu has no build for $(uname -s) $(uname -m) here"; fi
+    just fm1-backup-pull
+    mkdir -p backups/progress
+    echo
+    python3 scripts/doctor.py
+
+# Read-only: skips a folder that already has its .bin.
+# Download every backup-* GitHub Release (public full-flash backups) into backups/<name>/, digest-checked.
+fm1-backup-pull:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    for tag in $(gh release list -L 200 --json tagName --jq '.[].tagName | select(startswith("backup-"))'); do
+      d="backups/${tag#backup-}"
+      if ls "$d"/*.bin >/dev/null 2>&1; then echo "have $d"; continue; fi
+      mkdir -p "$d"
+      gh release download "$tag" -D "$d" --clobber
+      gh release view "$tag" --json assets --jq '.assets[] | "\(.name) \(.digest)"' | while read -r name digest; do
+        got=$(shasum -a 256 "$d/$name" | cut -d' ' -f1)
+        [ "sha256:$got" = "$digest" ] || { echo "FAIL $d/$name: got $got, release says $digest" >&2; exit 1; }
+      done
+      echo "ok   $d"
+    done
+    mkdir -p backups/progress
+    for tag in $(gh release list -L 200 --json tagName --jq '.[].tagName | select(startswith("progress-"))'); do
+      gh release view "$tag" --json assets --jq '.assets[] | "\(.name) \(.digest)"' | while read -r name digest; do
+        f="backups/progress/$name"
+        if [ ! -f "$f" ]; then gh release download "$tag" -p "$name" -D backups/progress; fi
+        got=$(shasum -a 256 "$f" | cut -d' ' -f1)
+        [ "sha256:$got" = "$digest" ] && echo "ok   $f" || { echo "FAIL $f: got $got, release says $digest (a local file of the same name differs?)" >&2; exit 1; }
+      done
+    done
+    just fm1-verify-backups
+
 # ---- docs -------------------------------------------------------------------
 
 # Build the site in strict mode.
@@ -606,6 +653,22 @@ fm1-backup-release dir:
       gh release upload "$tag" "$d"/*.bin "$d"/*.json --clobber
     else
       gh release create "$tag" "$d"/*.bin "$d"/*.json --title "Backup $name" --notes "$notes" --latest=false
+    fi
+    gh release view "$tag" --json url,assets --jq '.url, (.assets[] | "\(.name) \(.digest)")'
+
+# Upload one progress JSON (backups/progress/*.json, from morse-/theory-/metro-backup) as a PUBLIC release progress-<name>.
+[confirm("Publish this progress file as a PUBLIC release asset?")]
+fm1-progress-release file:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    f="{{file}}"; test -f "$f" || { echo "no such file: $f" >&2; exit 1; }
+    name=$(basename "$f" .json); tag="progress-$name"
+    sum=$(shasum -a 256 "$f" | cut -d' ' -f1)
+    notes=$(printf 'Progress saved from my own FM-1 over USB MIDI (JSON). Restore with the matching *-restore recipe; see docs/device-log.md.\n\nSHA-256: %s\n' "$sum")
+    if gh release view "$tag" >/dev/null 2>&1; then
+      gh release upload "$tag" "$f" --clobber
+    else
+      gh release create "$tag" "$f" --title "Progress $name" --notes "$notes" --latest=false
     fi
     gh release view "$tag" --json url,assets --jq '.url, (.assets[] | "\(.name) \(.digest)")'
 

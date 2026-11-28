@@ -40,6 +40,7 @@ downloads/
 | 2026-11-17 | 原廠 015 → SLOOP 2.8.5 | M-Flasher GUI 安裝 `.fwsc` | 成功，存檔正常 |
 | 2026-11-17 | SLOOP 2.8.5 → Agent Deck 0.7 | `fm1-download-mode` → `fm1-backup` → `fm1-flash` → `fm1-restart`，全程不需要按機器上的鍵 | 成功 |
 | 2026-11-17 | CTL-1 1.0.3 → ChoralRoot 0.41 | `just fm1-switch <檔案>` | 成功。寫入 152 個 sector 到 `0x9EFFF`，**蓋掉了 SLOOP 的 project sector** |
+| 2026-11-28 | Morse 0.8 release → SLOOP 2.8.5 | `just fm1-switch sloop`（新的 Intel Mac） | 成功。寫入 140 個 sector（`0x04000`–`0x8FFFF`），CRC 相符；macOS 的 MIDI port 名稱還是 `MORSE FM-1`：這台新 Mac 第一次看到這個 USB 裝置時它是 Morse，macOS 就一直沿用這個名字，見[MIDI port 的名稱](../agentic/conductor.md#port-name) `[實機]` |
 | 2026-11-25 | METRONOME 0.5 dev → Morse 0.8 release | `just fm1-switch firmware/morse/build/morse-0.8.fwsc` | 成功。寫入 43 個 sector（`0x04000`–`0x2EFFF`）；第一次 download-mode 逾時，重跑就成功 |
 | 2026-11-18 | 原廠 015 → Morse 0.3 release | `fm1_install.py`（USB-MIDI，Hub 測試 3）；原廠是本人用 M-Flasher GUI 還原的 | 成功，fast install |
 | 2026-11-18 | Morse 0.3 → SLOOP 2.8.5 | `fm1_install.py`（USB-MIDI，Hub 測試 1） | 成功，classic install；SLOOP 的曲子還在 |
