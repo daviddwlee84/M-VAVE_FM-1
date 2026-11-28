@@ -80,6 +80,23 @@ WPM 是每分鐘幾個字，以 PARIS 這個字（50 個單位）為準：**dit 
 - **先選擇，後回想**：「認得」的卡在 0–2 號盒是聽完從四個裡選（四個選項對應 E4 F4 G4 A4 四個亮燈的鍵，干擾選項挑碼型相近的），3 號盒以上改成聽完直接打出來。
 - 回合結束顯示答對、答錯、升了幾盒，以及連續幾回合正確率 80% 以上（streak）。中途按 `HOME` 離開，已答的部分照樣存。
 
+### 每個字的答題紀錄（0.9） { #stats }
+
+盒號只說明一張卡「現在」在哪一盒。答錯的卡回 0 號盒，但只要之後連續答對，就會一路升回 5 號盒，看不出它是一次就會、還是錯了很多次才爬上去的（2026-11-27 本人的回饋）。到了 5 號盒要 32 回合才再出現，但這個字其實還不穩。
+
+0.9 起，每個字的兩張卡（認得、打得出）各記：
+
+- **首次作答次數**：一回合裡第一次被問到才算。答錯後回合最後的補問不算（剛聽過答案）；新字介紹、分級測驗也不算。
+- **答錯**、**ALMOST**：上面那些作答裡答錯幾次、差一點幾次。錯誤率 = (答錯 + ALMOST ÷ 2) ÷ 首次作答次數。
+- **lapse（`LOST`）**：在 2 號盒以上（已經學會）時答錯的次數，對應 Anki 的 lapses。
+- **最近的視窗**：另外記最近 8–16 次作答的錯誤（每滿 16 次砍半），用來判斷「最近難不難」，讓已經練好的字不會被很久以前的錯誤拖住。上面的總數則一直累積。
+
+**CHART 上看得到**：footer 第二行是游標所在字的紀錄，例如 `MISSED: HEAR 13% OF 8  SEND 0% OF 4  LOST 1`（`-` 是還沒考過）。最近常錯的字，格子右上角有小點：黃點是難（最近錯誤率 20% 以上），紅點是很難（40% 以上），至少要考過 4 次才判斷。`SEQ` 把整張字表改成依錯誤率上色（綠：很少錯，紅：常錯，灰：還沒考過），再按一次回到依等級上色。
+
+**排程**：難的卡排程時當作低一盒，很難的當作低兩盒，所以 5 號盒的很難字每 8 回合就會回來，不是 32 回合。補空位時也先挑難的。盒號和 CHART 的等級不變，開下一組的門檻也照舊。這些門檻是我們參考 SM-2 的 easiness 和 Anki 的 lapse 自己訂的，不是研究得出的數字（fm1-morse `LEARNING.md` 有出處）。
+
+**存在哪**：和進度同一筆紀錄（見[存檔](#flash)），不進 USB 備份：還原備份時只換進度，機器上的紀錄留著。
+
 ### 打碼卡怎麼判 { #judging }
 
 0.3 以前，打碼卡（看字打碼、聽了照打）是用**發報速度**判斷長短：解碼器從 SEND 的 dit 起算，長過 2 個 dit 才算 dah。預設 SEND 10 WPM 時，dah 要按到 240 ms 以上。但 PRACTICE 播給你聽的是 20 WPM，dah 只有 180 ms。照著聽到的節奏打，劃就被當成點：M（−−）讀成 I、T 讀成 E。
@@ -369,7 +386,9 @@ MORSE on the web 的 *Over Bluetooth, directly*（2026-11-18 加入，韌體 0.5
 
 ### 存檔 { #flash }
 
-一筆紀錄（設定 + 學習進度，約 280 bytes）放在 `0xDA000`–`0xDBFFF`，透過 fm1-base 的 storage 層存（A/B 兩份、CRC）。在回合結束或離開、改設定 3 秒後才寫。不碰 SLOOP、Agent Deck、CTL-1 共用的 `0xFC000`。這台機器所有備份的 `0xDA000`–`0xDBFFF` 都是空的。
+一筆紀錄（設定 + 學習進度，約 280 bytes；0.9 加上[答題紀錄](#stats)後 1,020 bytes）放在 `0xDA000`–`0xDBFFF`，透過 fm1-base 的 storage 層存（A/B 兩份、CRC）。在回合結束或離開、改設定 3 秒後才寫。不碰 SLOOP、Agent Deck、CTL-1 共用的 `0xFC000`。這台機器所有備份的 `0xDA000`–`0xDBFFF` 都是空的。
+
+0.9 第一次改紀錄格式：`REC_VER` 從 1 升到 2，答題紀錄（738 bytes）接在原本 280 bytes 的後面。0.9 讀到版本 1 的紀錄（0.1–0.8 寫的）時，設定和進度照舊、答題紀錄從 0 開始；在模擬器裡用 0.8 的 host build 玩兩回合、`flash_dump`，再用 0.9 `flash_load` 開機，ROUND 2 保留、答題紀錄是 0，再玩一回合重開後紀錄還在 `[模擬]`。**降回 0.8 會把整筆紀錄當成壞的而重設**（0.8 只認版本 1、280 bytes），進度也會不見：降版前先備份。
 
 0.7 也沒改格式：設定的 `mute` 改名 `flags`，原本只用 bit 0（靜音）和 bit 1（藍牙關），bit 2–4 放 START PAGE（0 是 MENU，所以舊紀錄升級後開機進 MENU）。用 fm1-emu 把 0.7 疊在 2026-11-18 刷 THEORY 前的整片備份上（實機上真正的 0.6 紀錄，ROUND 30），兩種晶片都是：開機進 MENU、進度保留、開機 0 次寫入；改 START PAGE 存一次（4 次 erase／program），重開直接進 KEY `[模擬]`。注意 `fm1-live --shot` 沒給按鍵時會自己按一下 `PLAY`，在 MENU 上就會打開 PRACTICE，要加 `FM1_NO_PLAY=1` 才看得到開機頁。
 
@@ -437,6 +456,9 @@ MORSE on the web 的 *Over Bluetooth, directly*（2026-11-18 加入，韌體 0.5
 | 0.7：START PAGE、0.6 紀錄升級進 MENU、格式 2 匯出、格式 1 和 2 載入（HOME 不變、PLAY 換進度和設定）、不合法的 `flags` 回到預設 | `just fw-test morse` | 全過 `[模擬]` |
 | 0.7：host 的格式 2、設定的名字、只給 0.7 送設定 | `just morse-test` | 25 項全過；網頁的程式碼用 node 跑，位元組和 host 向量相同 |
 | 0.8：`SAVE` 立刻存、沒存就斷電會不見、沒東西要存時的提示 | `just fw-test morse` | 全過 `[模擬]` |
+| 0.9：答題紀錄只算首次作答、難的卡提早回來、統計視窗會淡掉、滿了砍半 | `just morse-unit` | 3,095 項全過 |
+| 0.9：一回合後 `st_all` 3、重開保留；CHART 的 K：8 次、錯 1、LOST 1、13%、難；`SEQ` 切換 | `just fw-test morse` | 全過 `[模擬]` |
+| 0.9：0.8 的紀錄（`flash_dump`）給 0.9 讀 | host 模擬器 | 進度保留、答題紀錄 0 `[模擬]`。fm1-emu 兩種晶片、device build 還沒做 |
 | 0.8：K1 改速度、按 `SAVE`、0.5 秒後關機重開 | fm1-emu `uc25hq80`、`p25q80` | 按下就寫（4 次 erase／program），重開讀回 21 WPM `[模擬]` |
 | 0.7 刷進實機 | `fm1_install.py`（USB-MIDI，fast install） | 成功；開機進 MENU，ROUND 30 保留，START PAGE 改了關機再開照設定 `[實機]` |
 | 0.7：改 START PAGE、重開讀回；疊在刷 THEORY 前的實機備份上 | fm1-emu `uc25hq80`、`p25q80` | 開機進 MENU，ROUND 30 保留，開機 0 次寫入；改成 KEY 後重開進 KEY `[模擬]` |
@@ -449,6 +471,7 @@ MORSE on the web 的 *Over Bluetooth, directly*（2026-11-18 加入，韌體 0.5
 | 版本 | 日期 | 要刷機 | 內容 |
 |---|---|---|---|
 | 韌體 0.1、host 0.1.0 | 2026-11-17 | 是（22:54 刷入，`c3b5cd6`） | 第一版：KEY、TYPE、PRACTICE、CHART、SETTINGS，兩種學習方式，Vail 格式的 MIDI，host 的 `type`／`send`／`listen`。原本規劃分成 0.1（核心）和 0.2（閃卡），因為一起做完、都還沒刷，合併成 0.1 |
+| 韌體 0.9、host 0.9.0 | 2026-11-27 | 是（還沒刷） | [每個字的答題紀錄](#stats)：首次作答、答錯、ALMOST、lapse；CHART footer 顯示、`SEQ` 依錯誤率上色、難字有小點；難的卡排程當作低一到兩盒。紀錄格式版本 2（0.8 的紀錄自動帶過來；降回 0.8 會重設）。host 只改版本號 |
 | 韌體 0.8、host 0.8.0 | 2026-11-18 | 是（19:55 前後用 USB-MIDI 裝 release build `FM-1_41000800`，fm1-morse `8467a08`，release [v0.8](https://github.com/daviddwlee84/fm1-morse/releases/tag/v0.8)；本人試用「效果不錯」`[實機]`） | `SAVE` 鍵：設定立刻存，不用等最後一次改動後的 3 秒（實機回饋：在 SETTINGS 改完馬上關機，改動沒存到）；有還沒存的設定時，`SAVE` 燈亮、header 頁名後面多一個琥珀色 `*`，自動存或按 `SAVE` 後消失；沒東西要存時按 `SAVE` 顯示 `ALL SAVED`；CHART 編輯時 `SAVE` 和 `PLAY`／`REC` 一樣問 SAVE CHANGES? |
 | 韌體 0.7、host 0.7.0 | 2026-11-18 | 是（19:45 前後用 USB-MIDI 裝 release build，實機確認；release [v0.7](https://github.com/daviddwlee84/fm1-morse/releases/tag/v0.7)，`FM-1_41000700`，fm1-morse `52b048e`） | 開機頁：SETTINGS 加 **START PAGE**（MENU、PRACTICE、LISTEN、KEY、RHYTHM、TYPE、CHART），預設 MENU（0.6 以前直接進 PRACTICE）；存在設定的 `flags`（原本叫 `mute`）bit 2–4，紀錄格式不變。[備份格式 2](#backup)：進度後面接 12 bytes 的設定，JSON 的 `version` 2 多一個 `settings`，載入時設定一起還原；舊的格式 1 照樣能載入，給 0.6 以前的韌體時 host 和網頁自動退回格式 1。SETTINGS 只畫完整的列（第 14 列不會被頁尾切一半）。網頁：Hub 的 [Try 頁](#release)（fm1-emu 嵌入）和英文 [cheatsheet](https://daviddwlee84.github.io/fm1-morse/web/cheatsheet.html) |
 | 韌體 0.6、host 0.6.0 | 2026-11-18 | 是（17:00 前用 USB-MIDI 裝 release build `FM-1_41000600`，fm1-morse `60f76cf`，release [v0.6](https://github.com/daviddwlee84/fm1-morse/releases/tag/v0.6)） | 拔線後 `PC` 在 0.5 秒內消失（hostlink：USB 收不了 SysEx 就判定電腦離開，`firmware/common` 同步），實機確認，接著線時沒看到閃 `[實機]`；網頁：*Over Bluetooth, directly*（[Web Bluetooth](#web-bluetooth)）、USB 和藍牙都在時用 USB、*Timing* 區、自己的解碼器（字元速度、劃長、停頓幾個點、整體 WPM）、*With Vail* 和 PRESET 的說明、*Only show it*（只讀進度不存檔）、備份檔名加上時分 |
@@ -493,7 +516,9 @@ MORSE on the web 的 *Over Bluetooth, directly*（2026-11-18 加入，韌體 0.5
 | 0.5 | [藍牙](#bluetooth) peripheral：Mac、iPad、手機上的 Vail 和 MORSE on the web 走藍牙。已做好，等實機驗證和量抖動 |
 | 0.7 | 開機頁（START PAGE）、備份帶設定（格式 2）。2026-11-18 刷進實機 |
 | 0.8 | `SAVE` 鍵立刻存、沒存的設定有標示。2026-11-18 刷進實機 |
-| 0.9 | 兩台 FM-1 互打：`ble_central`，一台掃描、選另一台、連上。等有第二台 |
+| 0.9 | [每個字的答題紀錄](#stats)，難字提早複習。2026-11-27 做好，還沒刷 |
+| 之後 | 答題紀錄進 USB 備份（備份格式 3，frame 數會變）；PRACTICE 開始畫面列出最近常錯的字 |
+| 之後 | 兩台 FM-1 互打：`ble_central`，一台掃描、選另一台、連上。等有第二台 |
 | 之後 | host 送日期，讓間隔複習改成天數；USB-C 直連（見[接口與連線](../hardware/io.md#two-units)） |
 
 ### Backlog { #backlog }

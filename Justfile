@@ -422,7 +422,7 @@ morse-shots: (fw-test "morse")
     dst.mkdir(parents=True, exist_ok=True)
     names = """menu boot card_new card_new_peek card_hear card_see_key card_hear_key result_right result_keyed result_keyed_wrong
     result_almost done practice_test placement_ask listen listen_hidden key key_code key_timing rhythm rhythm_good
-    rhythm_dahs type type_code type_phrases chart chart_edit chart_save load_ask settings settings_bt settings_start load_settings unsaved""".split()
+    rhythm_dahs type type_code type_phrases chart chart_edit chart_save load_ask settings settings_bt settings_start load_settings unsaved chart_stats chart_miss""".split()
     for n in names:
         im = Image.open(src / f"{n}.png").convert("RGB")
         im.resize((im.width * 2, im.height * 2), Image.NEAREST).save(dst / f"{n}.png", optimize=True)
