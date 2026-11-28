@@ -10,6 +10,29 @@ flashing procedures, firmware notes (SLOOP first), usage notes, and the context
 agents need to help operate the device safely. It also holds the owner's own
 experimental firmware apps under `firmware/`, built on the `fm1-base` submodule.
 
+## Every session: is this computer set up?
+
+The owner works on more than one computer (a new Intel Mac since 2026-11-28). Everything the device
+work depends on is git-ignored and machine-local: `backups/`, `downloads/`, `tools/`, `.venv`, the
+submodules, M-Flasher in `/Applications`. A fresh clone has none of it.
+
+- Claude Code runs `scripts/doctor.py --brief` at session start (hook in `.claude/settings.json`); its
+  output appears in the context. Other agents: run `just doctor` before anything else.
+- If it reports anything missing, run `just setup` right away, without asking: submodules, `uv sync`,
+  M-Flasher and SLOOP downloads, fm1-emu where a build exists, every `backup-*` and `progress-*` GitHub
+  Release into `backups/`. Downloads only, digest-checked, no device access. Then run `just doctor` again and tell
+  the owner what is still missing.
+- What only the owner can do: install M-Flasher from the dmg (`just fm1-install-flasher`) and open it
+  once in the GUI (first-run authorization), `brew install libraqm`, Docker, `gh auth login`.
+- Backups listed in `docs/device-log.md` as not uploaded exist only on the computer that made them.
+  Before any firmware write on a new computer, make a fresh `just fm1-backup` there; the release copies
+  are older than the unit's current state.
+- fm1-emu has no macOS x86_64 build. On an Intel Mac the `emu-*` recipes do not work: say so instead of
+  skipping the emulator checks silently, and use the web emulator (`just fw-preview`) or ask the owner
+  to run them on an Apple silicon machine.
+- Progress kept on the unit (Morse, THEORY, METRONOME) can be saved to `backups/progress/` with the
+  `*-backup` recipes; they need only `uv` and the USB cable, not M-Flasher.
+
 ## Layout
 
 | Path | Purpose |
@@ -44,11 +67,17 @@ experimental firmware apps under `firmware/`, built on the `fm1-base` submodule.
 | `docs/watch.md` | Ledger of upstream checks for things on hold (m-bootloader on the new chip, SLOOP 3). Append, do not rewrite. |
 | `backups/`, `downloads/` | Git-ignored. Flash backups and downloaded installers/firmware. Never commit. Off-machine copies of backups go to GitHub Release assets (`just fm1-backup-release`). |
 | `zensical.toml`, `scripts/check-docs-site.py`, `Justfile` | Site config, output checker, task runner. |
+| `scripts/doctor.py` | What this computer is missing (offline, read-only). `just doctor`; the SessionStart hook runs it. |
 | `.agents/skills/` | Agent skills, linked from `.claude/skills/`: `zensical-site-bootstrap` (installed) and `fm1-hub-listing` (repo-owned: listing an own firmware on The Firmware Hub and the community lists). |
 
 ## Commands
 
 ```sh
+just doctor            # what this computer is missing (offline)
+just setup             # new computer / fresh clone: everything downloadable, digest-checked
+just fm1-backup-pull   # the public backup-* and progress-* releases into backups/ (setup runs it)
+just fm1-progress-release FILE  # PUBLISH a progress JSON as a public release: only on request
+
 just docs-build        # uv run zensical build --strict
 just docs-check        # build, then scripts/check-docs-site.py
 just docs-serve        # preview on 127.0.0.1:8000 (just docs-serve 8769 for another port)
