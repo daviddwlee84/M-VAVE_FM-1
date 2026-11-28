@@ -705,6 +705,46 @@ drums-unit:
 drums-emu chip="uc25hq80":
     just emu-run firmware/drums/build/drums.fwsc "{{chip}}"
 
+# ---- cube: CUBE, a Rubik's cube timer, scrambler, formula book and virtual cube (firmware/cube, docs/dev/cube.md) ----
+
+# The scramble search's tables (about 350 KB, in flash) and a bank of random-state scrambles into
+# firmware/cube/gen/cube_tables.h (git-ignored, deterministic). Needed before `just fw-test cube` / `fw-build cube`.
+cube-tables:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    mkdir -p build firmware/cube/gen
+    cc -std=c99 -O2 -Wall -Wextra -Wno-unused-function -DSOLVE_GEN -o build/cube_gen firmware/cube/tools/gen_tables.c
+    build/cube_gen firmware/cube/gen/cube_tables.h
+
+# cube.c, stats.c, keymap.c and the formula book on this computer (moves, notation, Kociemba's vectors, WCA averages,
+# every formula solves its case and every set covers its cases), then the scramble search: its tables built in RAM
+# and the ones in gen/ (what the firmware carries), each solving random states (SOLVES: how many, default 300).
+cube-unit solves="300": cube-tables
+    #!/usr/bin/env bash
+    set -euo pipefail
+    flags="-std=c99 -O2 -Wall -Wextra -pedantic -Wdouble-promotion -Wshadow -Wno-unused-function"
+    cc $flags -o build/cube_test firmware/cube/tests/cube_test.c
+    build/cube_test
+    cc $flags -DSOLVE_GEN -o build/solve_test firmware/cube/tests/solve_test.c
+    build/solve_test 100
+    cc $flags -Ifirmware/cube/gen -o build/solve_test_gen firmware/cube/tests/solve_test.c
+    build/solve_test_gen {{solves}}
+
+# Regenerate firmware/cube/tests/vectors.h: our stickers for random scrambles, solved by Kociemba's own solver
+# (the kociemba package, fetched by uv; only its output is kept).
+cube-vectors:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    mkdir -p build
+    cc -std=c99 -O2 -Wall -Wextra -o build/cube_dump firmware/cube/tests/cube_dump.c
+    build/cube_dump 40 | uv run --no-project --with kociemba python -I host/cube/make_vectors.py \
+      > firmware/cube/tests/vectors.h
+    echo "firmware/cube/tests/vectors.h: $(grep -c '^    {' firmware/cube/tests/vectors.h) vectors"
+
+# CUBE in the emulator (build it first: just cube-tables && just fw-build cube). Its simulator test is `just fw-test cube`.
+cube-emu chip="uc25hq80":
+    just emu-run firmware/cube/build/cube.fwsc "{{chip}}"
+
 # ---- metronome: METRONOME, a stage metronome with a setlist (firmware/metronome, docs/dev/metronome.md) ----
 
 # metro.c on this computer: slots, GRID and CLASSIC timing on every meter, tap tempo.
